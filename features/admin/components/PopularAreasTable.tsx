@@ -400,31 +400,29 @@ export function PopularAreasTable({
       {/* Mode Indicator */}
       {isMultiTenantEnabled && (
         <div className={cn(
-          "flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border animate-in slide-in-from-top-2 duration-500",
+          "flex items-center gap-2 px-4 py-2 rounded-2xl text-[11px] font-semibold border animate-in slide-in-from-top-2 duration-500 italic",
           isGlobalMode 
-            ? "bg-indigo-50 border-indigo-100 text-indigo-700" 
-            : "bg-emerald-50 border-emerald-100 text-emerald-700"
+            ? "bg-indigo-50 border-indigo-100/50 text-indigo-700" 
+            : "bg-emerald-50 border-emerald-100/50 text-emerald-700"
         )}>
           <Info className="h-3.5 w-3.5" />
           <span>
             กำลังแสดงยอดทรัพย์แบบ 
-            <span className="font-bold underline underline-offset-2 mx-1">
-              {isGlobalMode ? "ภาพรวมทุกสาขา (Global)" : `เฉพาะสาขา ${activeTenant?.name || "ปัจจุบัน"}`}
+            <span className="font-semibold underline underline-offset-2 mx-1">
+              {isGlobalMode ? "ภาพรวมทุกสาขา (Global Override)" : `เฉพาะสาขา ${activeTenant?.name || "ปัจจุบัน"}`}
             </span>
             {isGlobalMode ? " • ตัวเลขรวมจากทรัพย์ที่มีอยู่ในทุกสาขา" : " • ตัวเลขเฉพาะทรัพย์ที่สังกัดสาขานี้เท่านั้น"}
           </span>
         </div>
       )}
 
-     
-
       {/* Desktop Table */}
-      <div className="hidden lg:block rounded-xl bg-white overflow-hidden shadow-sm border border-slate-200 animate-in fade-in duration-500">
+      <div className="hidden lg:block rounded-[32px] bg-white overflow-hidden shadow-sm border border-slate-200/60 animate-in fade-in duration-500 min-h-[400px]">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} modifiers={[restrictToVerticalAxis]}>
           <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow>
-                <TableHead className={cn("px-6", isDraggingEnabled ? "w-[120px]" : "w-[60px]")}>
+            <TableHeader className="bg-slate-50/40 border-b border-slate-100/30">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className={cn("px-6 py-6", isDraggingEnabled ? "w-[120px]" : "w-[60px]")}>
                   <div className="flex items-center gap-3">
                     {isDraggingEnabled && <div className="w-8 shrink-0" />}
                     <Checkbox
@@ -437,38 +435,38 @@ export function PopularAreasTable({
                     />
                   </div>
                 </TableHead>
-                <TableHead className="w-[80px] font-bold text-slate-900 px-6 cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => toggleSort("sort_order")}>
+                <TableHead className="w-[80px] font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("sort_order")}>
                   <div className="flex items-center">ลำดับ <SortIcon column="sort_order" /></div>
                 </TableHead>
-                <TableHead className="font-bold text-slate-900 px-6 cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => toggleSort("name")}>
-                  <div className="flex items-center">ชื่อพื้นที่ / จังหวัด <SortIcon column="name" /></div>
+                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("name")}>
+                  <div className="flex items-center">ชื่อพื้นที่ <span className="ml-1 opacity-50 font-normal">(Area Name)</span> <SortIcon column="name" /></div>
                 </TableHead>
-                <TableHead className="font-bold text-slate-900 px-6 text-sm">English (EN)</TableHead>
-                <TableHead className="font-bold text-slate-900 px-6 text-sm">中文 (CN)</TableHead>
-                <TableHead className="font-bold text-slate-900 px-6 text-center cursor-pointer hover:bg-slate-50 transition-colors" onClick={() => toggleSort("property_count")}>
-                  <div className="flex items-center justify-center">จำนวนทรัพย์ <SortIcon column="property_count" /></div>
+                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษาอังกฤษ <span className="opacity-50 font-normal">(EN)</span></TableHead>
+                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษาจีน <span className="opacity-50 font-normal">(CN)</span></TableHead>
+                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 text-center cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("property_count")}>
+                  <div className="flex items-center justify-center">ทรัพย์ <span className="ml-1 opacity-50 font-normal">(Stock)</span> <SortIcon column="property_count" /></div>
                 </TableHead>
-                <TableHead className="text-right font-bold text-slate-900 px-6">จัดการ</TableHead>
+                <TableHead className="text-right font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">จัดการ</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isAllSelected && totalCount > data.length && (
-                <TableRow className="bg-indigo-50/50 border-b border-indigo-100 hover:bg-indigo-50/80 transition-colors">
-                  <TableCell colSpan={8} className="py-3 px-6 text-center">
-                    <div className="flex items-center justify-center gap-2 text-sm">
-                      <span className="text-slate-600 font-medium">เลือกทำเล {data.length} รายการในหน้านี้แล้ว</span>
+                <TableRow className="bg-indigo-50/30 border-b border-indigo-100/50 hover:bg-indigo-50/50 transition-colors italic">
+                  <TableCell colSpan={8} className="py-4 px-6 text-center">
+                    <div className="flex items-center justify-center gap-2 text-[13px]">
+                      <span className="text-slate-500 font-semibold">เลือกทำเล {data.length} รายการในหน้านี้แล้ว</span>
                       <button 
                         onClick={() => setIsAllAcrossSelected(!isAllAcrossSelected)}
-                        className="text-indigo-600 hover:text-indigo-700 font-bold underline underline-offset-4 cursor-pointer"
+                        className="text-indigo-600 hover:text-indigo-700 font-semibold underline underline-offset-4 cursor-pointer"
                       >
-                        {isAllAcrossSelected ? "ยกเลิกการเลือกทั้งหมด" : `เลือกทำเลทั้งหมด ${totalCount} รายการ`}
+                        {isAllAcrossSelected ? "ยกเลิก (Clear Selection)" : `เลือกทั้งหมด ${totalCount} รายการ (Select All Across Pages)`}
                       </button>
                     </div>
                   </TableCell>
                 </TableRow>
               )}
               {data.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-20 text-slate-400 bg-white font-medium">ไม่พบข้อมูลที่ต้องการ</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center py-32 text-slate-400 bg-white font-semibold italic">ไม่พบข้อมูลที่ต้องการ (No Records Found)</TableCell></TableRow>
               ) : (
                 <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
                   {data.map((item, index) => (
@@ -493,15 +491,15 @@ export function PopularAreasTable({
       </div>
 
       {/* Mobile Card View */}
-      <div className="lg:hidden space-y-3 animate-in fade-in duration-500">
+      <div className="lg:hidden space-y-4 animate-in fade-in duration-500">
         {data.map((item, index) => (
-          <div key={item.id} className={cn("p-4 bg-white rounded-2xl border transition-all shadow-sm", isSelected(item.id) ? "border-indigo-200 bg-indigo-50/30" : "border-slate-200")} onClick={() => toggleSelect(item.id)}>
+          <div key={item.id} className={cn("p-5 bg-white rounded-[24px] border transition-all shadow-sm italic", isSelected(item.id) ? "border-indigo-200 bg-indigo-50/30" : "border-slate-200/60")} onClick={() => toggleSelect(item.id)}>
             <div className="flex items-start justify-between gap-4">
-              <div className="flex gap-3 min-w-0">
+              <div className="flex gap-4 min-w-0">
                 <Checkbox checked={isSelected(item.id)} className="rounded-md mt-1" />
                 <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                       <span className="text-[10px] font-mono text-slate-400">#{start + index + 1}</span>
+                    <div className="flex items-center gap-2.5">
+                       <span className="text-[10px] font-mono text-slate-400 font-semibold">#{start + index + 1}</span>
                        <button
                          type="button"
                          disabled={(item.property_count || 0) === 0}
@@ -510,22 +508,22 @@ export function PopularAreasTable({
                            setViewingAreaProperties(item);
                          }}
                          className={cn(
-                           "text-[10px] px-2 py-0.5 rounded-full font-bold transition-all",
+                           "text-[10px] px-3 py-1 rounded-full font-semibold transition-all border shadow-xs",
                            (item.property_count || 0) > 0
-                             ? "bg-emerald-50 text-emerald-700 cursor-pointer active:scale-95"
-                             : "bg-slate-50 text-slate-400 cursor-not-allowed"
+                             ? "bg-emerald-50 text-emerald-700 border-emerald-100/50 cursor-pointer active:scale-95"
+                             : "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed"
                          )}
                        >
-                         {item.property_count || 0} ทรัพย์
+                         {item.property_count || 0} ทรัพย์ (Units)
                        </button>
                     </div>
-                   <h4 className="font-bold text-slate-900 truncate mt-1">{item.name}</h4>
-                   <p className="text-xs text-blue-600 font-bold">{item.province}</p>
+                   <h4 className="font-semibold text-slate-900 truncate mt-1.5 text-lg">{item.name}</h4>
+                   <p className="text-[11px] text-blue-600 font-semibold uppercase tracking-wider">{item.province}</p>
                 </div>
               </div>
-              <div className="flex gap-1 shrink-0">
-                <Button variant="outline" size="icon" className="h-8 w-8 text-blue-600 border-blue-50" onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}><Pencil className="h-3 w-3" /></Button>
-                <Button variant="outline" size="icon" className="h-8 w-8 text-rose-600 border-rose-50" onClick={(e) => { e.stopPropagation(); setDeleteConfirmItem(item); }}><Trash2 className="h-3 w-3" /></Button>
+              <div className="flex gap-1.5 shrink-0">
+                <Button variant="outline" size="icon" className="h-10 w-10 text-blue-600 border-blue-50/50 rounded-xl shadow-xs" onClick={(e) => { e.stopPropagation(); setEditingItem(item); }}><Pencil className="h-4 w-4" /></Button>
+                <Button variant="outline" size="icon" className="h-10 w-10 text-rose-600 border-rose-50/50 rounded-xl shadow-xs" onClick={(e) => { e.stopPropagation(); setDeleteConfirmItem(item); }}><Trash2 className="h-4 w-4" /></Button>
               </div>
             </div>
           </div>
@@ -545,34 +543,34 @@ export function PopularAreasTable({
 
       <EditPopularAreaDialog area={editingItem} open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)} onSuccess={() => router.refresh()} />
 
-      <ResponsiveDialog open={!!deleteConfirmItem} onOpenChange={(open) => !open && setDeleteConfirmItem(null)} title="ยืนยันการลบทำเล" className="md:max-w-md">
-        <div className="p-6 text-center space-y-4">
-          <div className="mx-auto w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 mb-2"><TriangleAlert className="h-6 w-6" /></div>
+      <ResponsiveDialog open={!!deleteConfirmItem} onOpenChange={(open) => !open && setDeleteConfirmItem(null)} title="ยืนยันการลบทำเล (Delete Confirm)" className="md:max-w-md">
+        <div className="p-8 text-center space-y-5 italic">
+          <div className="mx-auto w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 mb-2 border border-rose-100 shadow-sm"><TriangleAlert className="h-7 w-7" /></div>
           <div>
-            <h3 className="text-lg font-bold text-slate-900">คุณแน่ใจหรือไม่?</h3>
-            <p className="text-sm text-slate-500 mt-1">กำลังจะลบทำเล "<span className="font-bold text-slate-900">{deleteConfirmItem?.name}</span>" ข้อมูลนี้จะไม่สามารถกู้คืนได้</p>
+            <h3 className="text-xl font-semibold text-slate-900">คุณแน่ใจหรือไม่? (Are you sure?)</h3>
+            <p className="text-[13px] text-slate-500 mt-2 font-medium">กำลังจะลบทำเล "<span className="font-semibold text-slate-900">{deleteConfirmItem?.name}</span>" ข้อมูลนี้จะไม่สามารถกู้คืนได้</p>
           </div>
-          <div className="flex gap-3 pt-2">
-            <Button variant="outline" className="flex-1 rounded-xl h-11 font-bold" onClick={() => setDeleteConfirmItem(null)}>ยกเลิก</Button>
-            <Button className="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-xl h-11 font-bold" onClick={handleDelete} disabled={isDeleting}>
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "ยืนยันการลบ"}
+          <div className="flex gap-3 pt-4">
+            <Button variant="outline" className="flex-1 rounded-2xl h-12 font-semibold" onClick={() => setDeleteConfirmItem(null)}>ยกเลิก (Cancel)</Button>
+            <Button className="flex-1 bg-rose-600 hover:bg-rose-700 text-white rounded-2xl h-12 font-semibold shadow-lg shadow-rose-200 transition-all" onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "ยืนยันการลบ (Delete)"}
             </Button>
           </div>
         </div>
       </ResponsiveDialog>
 
-      <ResponsiveDialog open={isBulkDeleteOpen} onOpenChange={(open) => !open && !isDeleting && setIsBulkDeleteOpen(false)} title={isAllAcrossSelected ? "⚠️ ยืนยันการลบข้อมูลทั้งหมด" : "ยืนยันการลบหลายรายการ"} className="md:max-w-md">
-        <div className="p-6 text-center space-y-4">
-          <div className={cn("mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-2 animate-pulse", isAllAcrossSelected ? "bg-rose-100 text-rose-600" : "bg-amber-100 text-amber-600")}><TriangleAlert className="h-8 w-8" /></div>
+      <ResponsiveDialog open={isBulkDeleteOpen} onOpenChange={(open) => !open && !isDeleting && setIsBulkDeleteOpen(false)} title={isAllAcrossSelected ? "⚠️ ยืนยันการลบข้อมูลทั้งหมดในระบบ" : "ยืนยันการลบหลายรายการ"} className="md:max-w-md">
+        <div className="p-8 text-center space-y-6 italic">
+          <div className={cn("mx-auto w-20 h-20 rounded-[32px] flex items-center justify-center mb-2 animate-pulse border shadow-lg", isAllAcrossSelected ? "bg-rose-100 text-rose-600 border-rose-200" : "bg-amber-100 text-amber-600 border-amber-200")}><TriangleAlert className="h-10 w-10" /></div>
           <div>
-            <h3 className="text-xl font-extrabold text-slate-900">{isAllAcrossSelected ? "ลบข้อมูลทั้งหมดในระบบ!" : "ยืนยันการลบที่เลือก"}</h3>
-            <p className="text-sm text-slate-500 mt-2">คุณกำลังจะลบทำเลจำนวน <span className="font-bold text-rose-600 text-lg">{isAllAcrossSelected ? totalCount : selectedCount}</span> รายการ {isAllAcrossSelected && "จากทุกหน้าเพจ"} ข้อมูลเบสนี้จะถูกลบออกถาวรและไม่สามารถกู้คืนได้</p>
-            {isAllAcrossSelected && <div className="mt-4 p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-700 text-xs font-bold font-mono uppercase tracking-widest">High Risk Action Required</div>}
+            <h3 className="text-2xl font-semibold text-slate-900 tracking-tight">{isAllAcrossSelected ? "ลบทิ้งทั้งหมด! (Delete All Archives)" : "ยืนยันการลบที่เลือก"}</h3>
+            <p className="text-[13px] text-slate-500 mt-2 font-medium">คุณกำลังจะลบทำเลจำนวน <span className="font-semibold text-rose-600 text-xl">{isAllAcrossSelected ? totalCount : selectedCount}</span> รายการ {isAllAcrossSelected && "จากทุกหน้าเพจ"} ข้อมูลเบสนี้จะถูกลบออกถาวรและไม่สามารถกู้คืนได้</p>
+            {isAllAcrossSelected && <div className="mt-4 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-[10px] font-semibold font-mono uppercase tracking-widest leading-relaxed shadow-sm">High Risk Admin Override Action Required</div>}
           </div>
           <div className="flex gap-3 pt-4">
-            <Button variant="outline" className="flex-1 rounded-xl h-12 font-bold" onClick={() => setIsBulkDeleteOpen(false)} disabled={isDeleting}>ยกเลิก</Button>
-            <Button className={cn("flex-1 text-white rounded-xl h-12 font-bold shadow-lg shadow-rose-200 transition-all", isAllAcrossSelected ? "bg-rose-600 hover:bg-rose-700" : "bg-slate-900 hover:bg-black")} onClick={executeBulkDelete} disabled={isDeleting}>
-              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "ยืนยันการลบ"}
+            <Button variant="outline" className="flex-1 rounded-2xl h-14 font-semibold" onClick={() => setIsBulkDeleteOpen(false)} disabled={isDeleting}>ยกเลิก (Cancel)</Button>
+            <Button className={cn("flex-1 text-white rounded-2xl h-14 font-semibold shadow-xl transition-all", isAllAcrossSelected ? "bg-rose-600 hover:bg-rose-700 shadow-rose-200" : "bg-slate-900 hover:bg-black shadow-slate-200")} onClick={executeBulkDelete} disabled={isDeleting}>
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "ยืนยันลบข้อมูล (Execute Delete)"}
             </Button>
           </div>
         </div>

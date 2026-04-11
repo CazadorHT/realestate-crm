@@ -32,15 +32,15 @@ export function FacebookPostPreview({
   };
 
   return (
-    <div className="bg-white border rounded-xl border-slate-200 shadow-sm overflow-hidden max-w-md mx-auto sticky top-24">
+    <div className="bg-white border rounded-2xl border-slate-200 shadow-sm overflow-hidden max-w-md mx-auto sticky top-24 italic">
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold">
+          <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
             VC
           </div>
           <div>
-            <div className="font-bold text-[15px] flex items-center gap-1">
+            <div className="font-semibold text-[15px] flex items-center gap-1">
               VC Connect Asset
               <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
                 <Badge className="h-2 w-2 p-0 border-0 bg-white" />
@@ -57,7 +57,7 @@ export function FacebookPostPreview({
       </div>
 
       {/* Content */}
-      <div className="px-4 pb-3 text-[15px] leading-relaxed text-slate-900 whitespace-pre-wrap">
+      <div className="px-4 pb-3 text-[15px] leading-relaxed text-slate-900 whitespace-pre-wrap font-medium">
         {renderContent(template)}
       </div>
 
@@ -69,19 +69,19 @@ export function FacebookPostPreview({
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
         />
         <div className="absolute top-3 left-3 flex gap-2">
-          <Badge className="bg-white/90 text-slate-900 border-0 shadow-sm backdrop-blur-xs font-bold">
+          <Badge className="bg-white/90 text-slate-900 border-0 shadow-sm backdrop-blur-xs font-semibold">
             {MOCK_PROPERTY_DATA.listing_type === "Sale"
               ? "FOR SALE"
               : "FOR RENT"}
           </Badge>
-          <Badge className="bg-blue-600/90 text-white border-0 shadow-sm backdrop-blur-xs font-bold">
+          <Badge className="bg-blue-600/90 text-white border-0 shadow-sm backdrop-blur-xs font-semibold">
             {MOCK_PROPERTY_DATA.price}
           </Badge>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="px-4 py-3 flex items-center justify-between border-b border-slate-200 text-[13px] text-slate-500">
+      <div className="px-4 py-3 flex items-center justify-between border-b border-slate-200 text-[13px] text-slate-500 font-semibold tracking-tight">
         <div className="flex items-center gap-1">
           <div className="flex -space-x-1">
             <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-2 border-white">
@@ -97,22 +97,22 @@ export function FacebookPostPreview({
       </div>
 
       {/* Actions */}
-      <div className="px-2 py-1 flex justify-between text-slate-500 font-bold text-[14px]">
+      <div className="px-2 py-1 flex justify-between text-slate-500 font-semibold text-[14px]">
         <Button
           variant="ghost"
-          className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10"
+          className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10 font-semibold"
         >
           <ThumbsUp className="h-5 w-5" /> Like
         </Button>
         <Button
           variant="ghost"
-          className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10"
+          className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10 font-semibold"
         >
           <MessageCircle className="h-5 w-5" /> Comment
         </Button>
         <Button
           variant="ghost"
-          className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10"
+          className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10 font-semibold"
         >
           <Share2 className="h-5 w-5" /> Share
         </Button>

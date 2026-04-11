@@ -71,7 +71,7 @@ export default async function ProfilePage() {
                </div>
                <div className="h-10 w-[2px] bg-slate-200 rounded-full mx-1" />
                <div className="space-y-0.5">
-                  <h1 className="text-3xl font-black tracking-tighter text-slate-900 italic">
+                  <h1 className="text-3xl font-bold tracking-tight text-slate-900 italic">
                     MY PROFILE
                   </h1>
                   <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] pl-0.5">

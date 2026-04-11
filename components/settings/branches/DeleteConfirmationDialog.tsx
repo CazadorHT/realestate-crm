@@ -15,7 +15,7 @@ interface DeleteConfirmationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description: string;
+  description: string | React.ReactNode;
   onConfirm: () => Promise<void>;
   isLoading?: boolean;
 }
@@ -36,7 +36,7 @@ export function DeleteConfirmationDialog({
             <Trash2 size={32} className="text-rose-600 animate-bounce" />
           </div>
           <div className="text-center space-y-2">
-            <DialogTitle className="text-2xl font-black text-slate-900">{title}</DialogTitle>
+            <DialogTitle className="text-2xl font-semibold text-slate-900">{title}</DialogTitle>
             <DialogDescription className="text-slate-500 font-medium">
               {description}
             </DialogDescription>
@@ -46,7 +46,7 @@ export function DeleteConfirmationDialog({
         <div className="py-4">
           <div className="p-4 bg-rose-50/50 rounded-2xl border border-rose-100/50 flex items-start gap-4">
             <ShieldAlert className="h-6 w-6 text-rose-600 shrink-0 mt-0.5" />
-            <p className="text-[11px] text-rose-700 leading-relaxed font-bold uppercase tracking-tight">
+            <p className="text-[11px] text-rose-700 leading-relaxed font-semibold uppercase tracking-tight">
               การดำเนินการนี้ไม่สามารถย้อนกลับได้ พนักงานจะไม่สามารเข้าถึงข้อมูลสาขาได้อีกต่อไป โปรดตรวจสอบให้แน่ใจก่อนดำเนินการ
             </p>
           </div>
@@ -62,7 +62,7 @@ export function DeleteConfirmationDialog({
             ยกเลิก
           </Button>
           <Button
-            className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl h-12 flex-1 px-8 font-black shadow-lg shadow-rose-200 transition-all active:scale-95"
+            className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl h-12 flex-1 px-8 font-semibold shadow-lg shadow-rose-200 transition-all active:scale-95"
             disabled={isLoading}
             onClick={onConfirm}
           >

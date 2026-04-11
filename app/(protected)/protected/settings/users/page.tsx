@@ -2,12 +2,16 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
-import { UsersPageHeader } from "@/features/users/UsersPageHeader";
+import { SettingsHeader } from "@/components/settings/SettingsHeader";
 import { UsersStatsSummary } from "@/features/users/UsersStatsSummary";
 import { UsersTable } from "@/features/users/UsersTable";
 import { Separator } from "@/components/ui/separator";
 import { calculateUsersStats, type EliteUser } from "@/lib/users-utils";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { siteConfig } from "@/lib/site-config";
+import { Button } from "@/components/ui/button";
+import { Users2 } from "lucide-react";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -108,7 +112,27 @@ export default async function UsersManagementPage() {
 
       <div className="max-w-screen-2xl mx-auto p-4 md:p-8 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
         {/* Elite Header */}
-        <UsersPageHeader />
+        <SettingsHeader 
+          title="จัดการรายชื่อสมาชิกพนักงาน"
+          description={`ตรวจสอบและจัดการบทบาทของสมาชิกทีม ${siteConfig.company} เพื่อความปลอดภัยและการเข้าถึงข้อมูลระดับสูงสุด`}
+          subPath={[
+            { label: "System Control", href: "/protected/settings" },
+            { label: "พนักงานทั้งหมด (Users)" }
+          ]}
+          actions={
+            <Link href="/protected/settings/teams" className="w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                className="rounded-2xl w-full h-12 px-6 border-slate-200 bg-white/50 hover:bg-white hover:border-slate-300 transition-all duration-300 flex items-center gap-2 group shadow-sm"
+              >
+                <div className="p-1.5 rounded-lg bg-slate-100 group-hover:bg-blue-50 transition-colors">
+                  <Users2 className="h-4 w-4 text-slate-600 group-hover:text-blue-600" />
+                </div>
+                <span className="font-semibold text-slate-700 whitespace-nowrap">จัดการทีม</span>
+              </Button>
+            </Link>
+          }
+        />
 
         {/* Statistics Summary - Elite Glassmorphism */}
         <UsersStatsSummary

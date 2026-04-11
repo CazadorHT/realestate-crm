@@ -6,11 +6,19 @@ import { logAudit } from "@/lib/audit";
 import { Tables, TablesInsert, TablesUpdate } from "@/lib/database.types";
 import { validateManagerRole, validateTeamName } from "../utils";
 
+import { createAdminClient } from "@/lib/supabase/admin";
+
 export type TeamWithManager = Tables<"teams"> & {
   manager?: {
     full_name: string | null;
+    avatar_url: string | null;
   } | null;
   agent_count?: number;
+  member_previews?: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  }[];
 };
 
 /**
@@ -19,31 +27,46 @@ export type TeamWithManager = Tables<"teams"> & {
 export async function getTeamsAction() {
   try {
     const ctx = await requireAuthContext();
+    const tId = ctx.tenantId;
 
-    // ดึงข้อมูลทีมพร้อมข้อมูล Manager
-    let query = ctx.supabase
+    // ใช้ Admin Client เพื่อดึงข้อมูลรายชื่อทีมให้ครบถ้วน 100% (Bypass RLS)
+    // เนื่องจาก RLS ของ Teams อาจจะไม่ Sync กับ Metadata ในบางกรณี
+    const adminSupa = createAdminClient();
+
+    let query = adminSupa
       .from("teams")
-      .select(
-        `
-        *,
-        manager:profiles!teams_manager_id_fkey(full_name)
-      `,
-      );
+      .select(`
+        id,
+        name,
+        created_at,
+        tenant_id,
+        manager_id,
+        manager:profiles!teams_manager_id_fkey (
+          full_name, 
+          avatar_url
+        ),
+        members:profiles!profiles_team_id_fkey (
+          id, 
+          full_name, 
+          avatar_url
+        )
+      `);
 
-    if (ctx.tenantId && ctx.tenantId !== "ALL") {
-      query = query.eq("tenant_id", ctx.tenantId);
+    if (tId && tId !== "ALL") {
+      query = query.eq("tenant_id", tId);
     }
 
     const { data, error } = await query.order("created_at", { ascending: false });
 
+    // --- Diagnostic Logs ---
+    console.log(`[getTeamsAction] TenantID: ${tId}, Success: ${!error}, DataCount: ${data?.length || 0}`);
+
     if (error) {
-      console.error(
-        "DEBUG: Error fetching teams:",
-        JSON.stringify(error, null, 2),
-      );
-      return {
-        success: false,
-        message: "ไม่สามารถโหลดข้อมูลทีมได้ (Database Error)",
+      console.error("TRACE [getTeamsAction]:", JSON.stringify(error, null, 2));
+      return { 
+        success: false, 
+        message: "ระบบไม่สามารถดึงข้อมูลรายชื่อทีมได้ในขณะนี้",
+        error: error.message 
       };
     }
 
@@ -51,16 +74,169 @@ export async function getTeamsAction() {
       return { success: true, data: [], message: "ยังไม่มีข้อมูลทีมในระบบ" };
     }
 
-    // Since we removed nested count to prevent query failure, we set agent_count to 0 for now
-    // or we can fetch counts in a separate loop if needed, but for MVP let's get it working first.
-    const formattedData = (data as any[]).map((team) => ({
+    const formattedData: TeamWithManager[] = data.map((team: any) => ({
       ...team,
-      agent_count: 0, // Placeholder
+      agent_count: team.members?.length || 0,
+      member_previews: team.members?.slice(0, 5) || [],
     }));
 
-    return { success: true, data: formattedData as TeamWithManager[] };
+    return { success: true, data: formattedData };
   } catch (error) {
-    return { success: false, message: "Unauthorized" };
+    console.error("CRITICAL [getTeamsAction]:", error);
+    return { success: false, message: "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์" };
+  }
+}
+
+/**
+ * ดึงสถิติรวมสำหรับ Dashboard จัดการทีม (Scoped by Tenant)
+ */
+export async function getTeamManagementStatsAction() {
+  try {
+    const ctx = await requireAuthContext();
+    const tId = ctx.tenantId;
+    const adminSupa = createAdminClient();
+
+    // 1. จำนวนทีม
+    let teamsQuery = adminSupa.from("teams").select("id", { count: "exact", head: true });
+    if (tId && tId !== "ALL") teamsQuery = teamsQuery.eq("tenant_id", tId);
+    const { count: teamCount } = await teamsQuery;
+
+    // 2. จำนวนเอเจนท์ที่มีสังกัดทีม (ในสาขานี้)
+    let agentsQuery = adminSupa.from("profiles").select("id", { count: "exact", head: true }).not("team_id", "is", null);
+    if (tId && tId !== "ALL") {
+        const { data: branchTeams } = await adminSupa.from("teams").select("id").eq("tenant_id", tId);
+        const teamIds = branchTeams?.map(t => t.id) || [];
+        agentsQuery = agentsQuery.in("team_id", teamIds);
+    }
+    const { count: agentCount } = await agentsQuery;
+
+    // 3. จำนวน Lead ในระบบ (Scoped)
+    let leadsQuery = adminSupa.from("leads").select("id", { count: "exact", head: true });
+    if (tId && tId !== "ALL") leadsQuery = leadsQuery.eq("tenant_id", tId);
+    const { count: leadCount } = await leadsQuery;
+
+    return {
+      success: true,
+      data: {
+        totalTeams: teamCount || 0,
+        totalAgents: agentCount || 0,
+        totalLeads: leadCount || 0
+      }
+    };
+  } catch (err) {
+    return { success: false, message: "Failed to fetch stats" };
+  }
+}
+
+/**
+ * ดึงสมาชิกในทีมพร้อมข้อมูลสถิติ
+ */
+export async function getTeamMembersAction(teamId: string) {
+  try {
+    const ctx = await requireAuthContext();
+    const adminSupa = createAdminClient();
+
+    // 0. ดึงข้อมูลทีมเพื่อหา Manager ID
+    const { data: teamInfo } = await adminSupa
+      .from("teams")
+      .select("manager_id")
+      .eq("id", teamId)
+      .single();
+
+    const leaderId = teamInfo?.manager_id;
+
+    // 1. ดึงรายชื่อสมาชิกในทีม (Profiles where team_id = teamId) 
+    // และรวมตัวหัวหน้าทีมเข้าไปด้วย (Profiles where id = leaderId)
+    const query = adminSupa
+      .from("profiles")
+      .select(`
+        id,
+        full_name,
+        role,
+        avatar_url
+      `);
+    
+    // ใช้ OR เพื่อดึงทั้งสมาชิกปกติ และตัวหัวหน้าทีม
+    if (leaderId) {
+      query.or(`team_id.eq.${teamId},id.eq.${leaderId}`);
+    } else {
+      query.eq("team_id", teamId);
+    }
+
+    const { data: profiles, error: pError } = await query.order("full_name");
+
+    if (pError) {
+      console.error("TRACE [getTeamMembersAction] Profile Error:", pError);
+      return { success: false, message: "ไม่สามารถโหลดรายชื่อสมาชิกได้" };
+    }
+
+    if (!profiles || profiles.length === 0) {
+      return { success: true, data: [] };
+    }
+
+    // 2. ดึงจำนวน Lead ที่แต่ละคนถือครอง (ใช้ Promise.all เพื่อความเร็ว)
+    const formatted = await Promise.all(profiles.map(async (profile) => {
+      const { count } = await adminSupa
+        .from("leads")
+        .select("*", { count: "exact", head: true })
+        .eq("assigned_to", profile.id);
+      
+      return {
+        ...profile,
+        lead_count: count || 0,
+        isLeader: profile.id === leaderId
+      };
+    }));
+
+    console.log(`[getTeamMembersAction] Success, Members: ${formatted.length}`);
+    return { success: true, data: formatted };
+  } catch (error) {
+    return { success: false, message: "Server error fetching members" };
+  }
+}
+
+/**
+ * ถอดหรือย้ายสมาชิกทีม
+ */
+export async function updateUserTeamAction(
+  userId: string,
+  teamId: string | null,
+) {
+  try {
+    const ctx = await requireAuthContext();
+    const adminSupa = createAdminClient();
+
+    // 1) ต้องเป็น ADMIN เท่านั้นที่จัดการทีมได้ (อ้างอิงจาก UserRole type)
+    if (ctx.role !== "ADMIN") {
+      return { success: false, message: "ไม่มีสิทธิ์ในการดำเนินการนี้" };
+    }
+
+    // 2) ตรวจสอบว่าทีมมีอยู่จริง (ในกรณีที่ย้ายเข้าทีม)
+    if (teamId) {
+      const { data: team } = await adminSupa
+        .from("teams")
+        .select("id")
+        .eq("id", teamId)
+        .maybeSingle();
+
+      if (!team) return { success: false, message: "ไม่พบทีมที่ระบุ" };
+    }
+
+    // 3) อัปเดตข้อมูลผ่าน Admin Client เพื่อความชัวร์ (RLS Bypass)
+    const { error } = await adminSupa
+      .from("profiles")
+      .update({ team_id: teamId })
+      .eq("id", userId);
+
+    if (error) {
+      console.error("TRACE [updateUserTeamAction]:", error);
+      return { success: false, message: "เกิดข้อผิดพลาดในการอัปเดตทีม" };
+    }
+
+    revalidatePath("/protected/settings/teams");
+    return { success: true };
+  } catch (error) {
+    return { success: false, message: "Unauthorized or Server Error" };
   }
 }
 

@@ -36,7 +36,7 @@ export function PurgeLogsButton() {
         <Button
           variant="outline"
           size="sm"
-          className="text-red-500 hover:text-red-600 hover:bg-red-50 border-red-100 h-9 transition-colors rounded-xl font-bold"
+          className="text-red-500 w-full sm:w-auto h-11 hover:text-red-600 hover:bg-red-50 border-red-100 transition-colors rounded-xl font-bold"
         >
           <Trash2 className="h-4 w-4 mr-2" />
           ล้าง Log เก่า (30 วัน)

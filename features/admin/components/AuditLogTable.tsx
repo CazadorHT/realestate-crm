@@ -21,143 +21,203 @@ interface AuditLogTableProps {
   data: AuditLogWithUser[];
 }
 
+import { cn } from "@/lib/utils";
+
+interface AuditLogTableProps {
+  data: AuditLogWithUser[];
+}
+
 export function AuditLogTable({ data }: AuditLogTableProps) {
   return (
-    <div className="rounded-md border border-slate-200 bg-white shadow-sm overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-slate-50/50">
-            <TableHead className="w-[160px]">เวลา</TableHead>
-            <TableHead className="w-[200px]">ผู้ใช้งาน</TableHead>
-            <TableHead className="w-[180px]">กิจกรรม</TableHead>
-            <TableHead>รายละเอียดกิจกรรม (Summary)</TableHead>
-            <TableHead className="text-right w-[80px]"></TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
-                ไม่พบข้อมูลประวัติการใช้งาน
-              </TableCell>
+    <div className="rounded-[32px] border border-slate-200 bg-white shadow-xl shadow-slate-200/50 overflow-hidden italic">
+      {/* 🖥️ Desktop Table View */}
+      <div className="hidden lg:block">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50/50 border-b border-slate-100">
+              <TableHead className="w-[160px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">เวลา (Time)</TableHead>
+              <TableHead className="w-[200px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">ผู้ใช้งาน (User)</TableHead>
+              <TableHead className="w-[180px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">กิจกรรม (Event)</TableHead>
+              <TableHead className="px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]">รายละเอียดกิจกรรม (Activity Summary)</TableHead>
+              <TableHead className="text-right w-[80px] px-6 py-5 font-semibold text-slate-500 uppercase tracking-widest text-[9px]"></TableHead>
             </TableRow>
-          ) : (
-            data.map((log) => (
-              <TableRow
-                key={log.id}
-                className="group hover:bg-slate-50/30 transition-colors"
-              >
-                <TableCell className="text-[12px] text-muted-foreground whitespace-nowrap font-medium">
-                  {format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}
-                </TableCell>
-                <TableCell>
-                  <Link
-                    href={
-                      log.user?.id
-                        ? `/protected/settings/users/${log.user.id}`
-                        : "#"
-                    }
-                    className="flex items-center gap-2 w-fit group/user transition-all"
-                  >
-                    <Avatar className="h-8 w-8 border border-slate-100 shadow-xs">
-                      <AvatarImage src={log.user?.avatar_url || ""} />
-                      <AvatarFallback className="bg-slate-50 text-slate-400 text-[10px] font-bold">
-                        {log.user?.full_name?.substring(0, 2).toUpperCase() ||
-                          "U"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col min-w-0">
-                      <span className="text-xs font-bold text-slate-700 truncate max-w-[120px]">
-                        {log.user?.full_name || "Unknown"}
-                      </span>
-                    </div>
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <FormatActionBadge action={log.action} />
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-sm text-slate-700 font-medium">
-                      {getReadableSummary(log)}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-mono">
-                        {log.entity}
-                      </span>
-                      {log.entity_id && (
-                        <span className="text-[10px] text-slate-300 font-mono">
-                          ID: {log.entity_id.substring(0, 8)}...
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <ResponsiveDialog
-                    title="รายละเอียดประวัติการใช้งาน (Audit Log)"
-                    description="ข้อมูลทางเทคนิคและสถานะของกิจกรรมที่เกิดขึ้นในระบบ"
-                    trigger={
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-slate-100 rounded-lg">
-                        <Eye className="h-4 w-4 text-slate-500" />
-                      </Button>
-                    }
-                  >
-                    <div className="space-y-6 pt-4">
-                      {/* Condensed Meta Info */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Action</span>
-                          <span className="text-sm font-bold text-slate-700">{log.action}</span>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Entity</span>
-                          <span className="text-sm font-bold text-slate-700">{log.entity}</span>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">User</span>
-                          <span className="text-sm font-bold text-slate-700">{log.user?.full_name} ({log.user?.role})</span>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Timestamp</span>
-                          <span className="text-sm font-bold text-slate-700">
-                            {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss")}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Technical Raw Data */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 px-1">
-                          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Raw Metadata</span>
-                          <div className="h-px flex-1 bg-slate-100" />
-                        </div>
-                        <div className="rounded-2xl bg-slate-950 p-5 shadow-inner overflow-hidden">
-                          <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                            <pre className="text-[11px] text-emerald-400 font-mono leading-relaxed">
-                              {JSON.stringify(log.metadata, null, 2)}
-                            </pre>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex justify-end pt-2">
-                        <p className="text-[10px] text-slate-400 font-medium italic">
-                          ID: {log.id}
-                        </p>
-                      </div>
-                    </div>
-                  </ResponsiveDialog>
+          </TableHeader>
+          <TableBody>
+            {data.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-32 text-center text-slate-400 font-semibold italic">
+                  ไม่พบข้อมูลประวัติการใช้งาน (No records found)
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              data.map((log) => (
+                <TableRow
+                  key={log.id}
+                  className="group hover:bg-slate-50/50 transition-all duration-200 border-b border-slate-50 last:border-0"
+                >
+                  <TableCell className="px-6 py-4 text-[11px] text-slate-500 whitespace-nowrap font-semibold">
+                    {format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <Link
+                      href={
+                        log.user?.id
+                          ? `/protected/settings/users/${log.user.id}`
+                          : "#"
+                      }
+                      className="flex items-center gap-3 w-fit group/user transition-all"
+                    >
+                      <Avatar className="h-9 w-9 border-2 border-white shadow-sm ring-1 ring-slate-100 group-hover/user:ring-blue-200 transition-all">
+                        <AvatarImage src={log.user?.avatar_url || ""} />
+                        <AvatarFallback className="bg-slate-100 text-slate-400 text-[10px] font-semibold">
+                          {log.user?.full_name?.substring(0, 2).toUpperCase() ||
+                            "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col min-w-0">
+                        <span className="text-sm font-semibold text-slate-700 truncate max-w-[120px] group-hover/user:text-blue-600 transition-colors">
+                          {log.user?.full_name || "Unknown"}
+                        </span>
+                      </div>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <FormatActionBadge action={log.action} />
+                  </TableCell>
+                  <TableCell className="px-6 py-4">
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm text-slate-700 font-semibold leading-relaxed">
+                        {getReadableSummary(log)}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] text-slate-400 font-mono font-semibold uppercase tracking-tighter">
+                          {log.entity}
+                        </span>
+                        {log.entity_id && (
+                          <span className="text-[10px] text-slate-300 font-mono">
+                            ID: {log.entity_id.substring(0, 8)}...
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right px-6 py-4">
+                    <AuditLogDetailsDialog log={log} />
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* 📱 Mobile Card View */}
+      <div className="lg:hidden divide-y divide-slate-100 bg-white">
+        {data.length === 0 ? (
+          <div className="p-12 text-center text-slate-400 font-semibold italic">
+            ไม่พบข้อมูลประวัติการใช้งาน
+          </div>
+        ) : (
+          data.map((log) => (
+            <div key={log.id} className="p-5 space-y-4 hover:bg-slate-50/50 transition-colors">
+              <div className="flex justify-between items-start gap-3">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10 border-2 border-white shadow-sm ring-1 ring-slate-100">
+                    <AvatarImage src={log.user?.avatar_url || ""} />
+                    <AvatarFallback className="bg-slate-50 text-slate-400 text-[11px] font-semibold">
+                      {log.user?.full_name?.substring(0, 2).toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest text-[9px]">
+                      {format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}
+                    </span>
+                    <span className="text-sm font-semibold text-slate-800">{log.user?.full_name || "Unknown"}</span>
+                  </div>
+                </div>
+                <AuditLogDetailsDialog log={log} />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                   <FormatActionBadge action={log.action} />
+                   <span className="px-2 py-0.5 rounded-xl bg-slate-50 border border-slate-100 text-[10px] font-mono font-semibold text-slate-400 uppercase">
+                    {log.entity}
+                   </span>
+                </div>
+                <p className="text-sm font-semibold text-slate-700 leading-relaxed bg-slate-50/80 p-3 rounded-2xl border border-slate-100/50">
+                  {getReadableSummary(log)}
+                </p>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }
 
+function AuditLogDetailsDialog({ log }: { log: AuditLogWithUser }) {
+  return (
+    <ResponsiveDialog
+      title="รายละเอียดประวัติ (Audit log)"
+      description="ข้อมูลทางเทคนิคและสถานะของกิจกรรมที่เกิดขึ้นในระบบเฝ้าระวัง"
+      trigger={
+        <Button variant="ghost" size="sm" className="h-10 w-10 p-0 hover:bg-slate-50 rounded-2xl border border-slate-100/50 transition-all active:scale-90 lg:h-8 lg:w-8">
+          <Eye className="h-4 w-4 text-slate-400 group-hover:text-blue-500" />
+        </Button>
+      }
+    >
+      <div className="space-y-6 p-6 italic">
+        {/* Condensed Meta Info */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-6 rounded-[32px] bg-slate-50/50 border border-slate-100">
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">การดำเนินการ (Action)</span>
+            <span className="text-sm font-semibold text-slate-700">{log.action}</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">หมวดหมู่ (Entity)</span>
+            <span className="text-sm font-semibold text-slate-700">{log.entity}</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">ผู้ทำรายการ (User)</span>
+            <span className="text-sm font-semibold text-slate-700">{log.user?.full_name} ({log.user?.role})</span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">วันเวลา (Timestamp)</span>
+            <span className="text-sm font-semibold text-slate-700">
+              {format(new Date(log.created_at), "dd/MM/yyyy HH:mm:ss")}
+            </span>
+          </div>
+        </div>
+
+        {/* Technical Raw Data */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 px-1">
+            <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">ข้อมูลเชิงเทคนิค (Raw Metadata)</span>
+            <div className="h-px flex-1 bg-slate-100" />
+          </div>
+          <div className="rounded-[32px] bg-slate-950 p-6 shadow-xl overflow-hidden border border-slate-800">
+            <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+              <pre className="text-[11px] text-blue-400 font-mono leading-relaxed">
+                {JSON.stringify(log.metadata, null, 2)}
+              </pre>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex justify-between items-center pt-2 px-1">
+          <p className="text-[10px] text-slate-400 font-semibold italic">
+            Log ID: {log.id}
+          </p>
+          <Button variant="ghost" className="h-8 rounded-xl text-[10px] font-semibold text-slate-400 hover:text-blue-600">คัดลอกข้อมูลทางเทคนิค</Button>
+        </div>
+      </div>
+    </ResponsiveDialog>
+  );
+}
+        
+        
 interface AuditLogMetadata {
   email?: string;
   fullName?: string;

@@ -16,12 +16,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   Plus,
   Building2,
   Users,
@@ -35,15 +29,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
@@ -86,6 +72,8 @@ export default function BranchesPage() {
     name: string;
   } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [selectedBranchForMenu, setSelectedBranchForMenu] = useState<any>(null);
 
   const fetchBranches = async () => {
     setIsLoading(true);
@@ -156,85 +144,82 @@ export default function BranchesPage() {
         description="บริหารจัดการโครงสร้างองค์กรและสิทธิ์การเข้าถึงรายสาขา"
         subPath={[{ label: "System Control", href: "/protected/settings" }, { label: "จัดการสาขา" }]}
         actions={
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
+          <ResponsiveDialog
+            open={open}
+            onOpenChange={setOpen}
+            title="เพิ่มสาขาใหม่"
+            description="กรอกข้อมูลพื้นฐานเพื่อเริ่มต้นสาขาใหม่ในระบบ"
+            trigger={
               <Button className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-11 px-6 shadow-lg shadow-slate-200 transition-all active:scale-95">
                 <Plus className="mr-2 h-4 w-4" />
                 เพิ่มสาขาใหม่
               </Button>
-            </DialogTrigger>
-            <DialogContent className="rounded-3xl border-slate-100 sm:max-w-[425px] overflow-hidden">
-              <form onSubmit={handleCreate}>
-                <DialogHeader>
-                  <DialogTitle className="text-2xl font-bold text-slate-900">เพิ่มสาขาใหม่</DialogTitle>
-                  <DialogDescription className="text-slate-500">
-                    กรอกข้อมูลพื้นฐานเพื่อเริ่มต้นสาขาใหม่ในระบบ
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-6 py-8">
-                  <div className="grid gap-3">
-                    <Label htmlFor="name" className="text-sm font-semibold text-slate-700">ชื่อสาขา</Label>
-                    <Input
-                      id="name"
-                      placeholder="เช่น สาขาเชียงใหม่, Real Estate Plus"
-                      className="h-12 rounded-xl border-slate-200 focus:ring-slate-900"
-                      value={newBranch.name}
-                      onChange={(e) =>
-                        setNewBranch({ ...newBranch, name: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                  <div className="grid gap-3">
-                    <Label htmlFor="slug" className="text-sm font-semibold text-slate-700">Slug (URL)</Label>
-                    <Input
-                      id="slug"
-                      placeholder="เช่น chiang-mai"
-                      className="h-12 rounded-xl border-slate-200 focus:ring-slate-900 font-mono text-sm"
-                      value={newBranch.slug}
-                      onChange={(e) =>
-                        setNewBranch({
-                          ...newBranch,
-                          slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-                        })
-                      }
-                      required
-                    />
-                    <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1">
-                      <Layers size={12} className="text-blue-500" />
-                      ใช้สำหรับระบุตัวตนสาขาในระบบ เช่น /t/chiang-mai
-                    </p>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="rounded-xl h-12 text-slate-500 hover:bg-slate-50"
-                    onClick={() => setOpen(false)}
-                  >
-                    ยกเลิก
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={isCreating}
-                    className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-12 px-8 shadow-lg shadow-slate-200 transition-all"
-                  >
-                    {isCreating ? (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                      <Building2 className="mr-2 h-4 w-4" />
-                    )}
-                    สร้างสาขา
-                  </Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+            }
+            footer={
+              <div className="flex w-full gap-3">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="flex-1 rounded-xl h-12 text-slate-500 hover:bg-slate-50 font-semibold"
+                  onClick={() => setOpen(false)}
+                >
+                  ยกเลิก
+                </Button>
+                <Button 
+                  onClick={handleCreate}
+                  disabled={isCreating}
+                  className="flex-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12 px-8 shadow-lg shadow-slate-200 transition-all font-semibold"
+                >
+                  {isCreating ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Building2 className="mr-2 h-4 w-4" />
+                  )}
+                  สร้างสาขา
+                </Button>
+              </div>
+            }
+          >
+            <div className="grid gap-6 p-6">
+              <div className="grid gap-3">
+                <Label htmlFor="name" className="text-sm font-semibold text-slate-700">ชื่อสาขา</Label>
+                <Input
+                  id="name"
+                  placeholder="เช่น สาขาเชียงใหม่, Real Estate Plus"
+                  className="h-12 rounded-xl border-slate-200 focus:ring-slate-900 font-semibold"
+                  value={newBranch.name}
+                  onChange={(e) =>
+                    setNewBranch({ ...newBranch, name: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="grid gap-3">
+                <Label htmlFor="slug" className="text-sm font-semibold text-slate-700">Slug (URL)</Label>
+                <Input
+                  id="slug"
+                  placeholder="เช่น chiang-mai"
+                  className="h-12 rounded-xl border-slate-200 focus:ring-slate-900 font-mono text-sm"
+                  value={newBranch.slug}
+                  onChange={(e) =>
+                    setNewBranch({
+                      ...newBranch,
+                      slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+                    })
+                  }
+                  required
+                />
+                <p className="text-[11px] text-slate-400 mt-1 flex items-center gap-1 font-semibold">
+                  <Layers size={12} className="text-blue-500" />
+                  ใช้สำหรับระบุตัวตนสาขาในระบบ เช่น /t/chiang-mai
+                </p>
+              </div>
+            </div>
+          </ResponsiveDialog>
         }
       />
 
-      <div className="p-8 pt-4">
+      <div className=" pt-4">
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -266,7 +251,7 @@ export default function BranchesPage() {
                         </div>
                         <div className="flex items-center gap-3">
                           {/* 📡 Status Pulse */}
-                          <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                          <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold uppercase tracking-wider">
                             <span className="relative flex h-2 w-2">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -274,58 +259,23 @@ export default function BranchesPage() {
                             Active
                           </div>
                           
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-9 w-9 rounded-xl hover:bg-slate-100 transition-colors"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                }}
-                              >
-                                <MoreVertical className="h-4 w-4 text-slate-400" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="rounded-2xl border-slate-100 p-2 min-w-[160px] shadow-xl">
-                              <DropdownMenuItem
-                                className="rounded-xl cursor-pointer py-2.5"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setEditBranch({
-                                    id: branch.id,
-                                    name: branch.name,
-                                    slug: branch.slug,
-                                  });
-                                  setEditOpen(true);
-                                }}
-                              >
-                                <Edit2 className="mr-3 h-4 w-4 text-slate-500" />
-                                <span className="font-medium text-slate-700">แก้ไขข้อมูล</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="rounded-xl cursor-pointer py-2.5 text-red-600 focus:text-red-700 focus:bg-red-50"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setBranchToDelete({
-                                    id: branch.id,
-                                    name: branch.name,
-                                  });
-                                  setDeleteOpen(true);
-                                }}
-                              >
-                                <Trash2 className="mr-3 h-4 w-4" />
-                                <span className="font-medium">ลบสาขา</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-10 w-10 rounded-2xl hover:bg-slate-100 transition-all active:scale-95"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectedBranchForMenu(branch);
+                              setMenuOpen(true);
+                            }}
+                          >
+                            <MoreVertical className="h-5 w-5 text-slate-400" />
+                          </Button>
                         </div>
                       </div>
 
-                      <h3 className="text-xl font-bold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
+                      <h3 className="text-xl font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
                         {branch.name}
                       </h3>
                       <p className="text-slate-400 text-sm font-mono flex items-center gap-1">
@@ -366,7 +316,7 @@ export default function BranchesPage() {
               <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-xl shadow-slate-200 mb-6">
                 <Building2 className="h-10 w-10 text-slate-200" />
               </div>
-              <h4 className="text-xl font-bold text-slate-900 mb-2">ยังไม่มีสาขาในระบบ</h4>
+              <h4 className="text-xl font-semibold text-slate-900 mb-2">ยังไม่มีสาขาในระบบ</h4>
               <p className="text-slate-500 text-center max-w-sm mb-8">
                 เริ่มต้นสร้างสาขาหรือแฟรนไชส์ของคุณ เพื่อแยกการบริหารจัดการข้อมูลและพนักงาน
               </p>
@@ -382,58 +332,26 @@ export default function BranchesPage() {
         </motion.div>
       )}
 
-      {/* Edit Branch Dialog */}
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="rounded-[32px] border-slate-100 sm:max-w-[425px] overflow-hidden">
-          <form onSubmit={handleUpdate}>
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-slate-900">แก้ไขข้อมูลสาขา</DialogTitle>
-              <DialogDescription className="text-slate-500">
-                อัปเดตชื่อสาขาหรือ Slug ของคุณเพื่อให้ข้อมูลเป็นปัจจุบัน
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-6 py-8">
-              <div className="grid gap-3">
-                <Label htmlFor="edit-name" className="text-sm font-semibold text-slate-700">ชื่อสาขา</Label>
-                <Input
-                  id="edit-name"
-                  className="h-12 rounded-xl border-slate-200 focus:ring-slate-900"
-                  value={editBranch.name}
-                  onChange={(e) =>
-                    setEditBranch({ ...editBranch, name: e.target.value })
-                  }
-                  required
-                />
-              </div>
-              <div className="grid gap-3">
-                <Label htmlFor="edit-slug" className="text-sm font-semibold text-slate-700">Slug (URL)</Label>
-                <Input
-                  id="edit-slug"
-                  className="h-12 rounded-xl border-slate-200 focus:ring-slate-900 font-mono text-sm"
-                  value={editBranch.slug}
-                  onChange={(e) =>
-                    setEditBranch({
-                      ...editBranch,
-                      slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-                    })
-                  }
-                  required
-                />
-              </div>
-            </div>
-            <DialogFooter className="bg-slate-50/50 -mx-6 -mb-6 p-6 px-10">
+        {/* Edit Branch Dialog */}
+        <ResponsiveDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          title="แก้ไขข้อมูลสาขา"
+          description="อัปเดตชื่อสาขาหรือ Slug ของคุณเพื่อให้ข้อมูลเป็นปัจจุบัน"
+          footer={
+            <div className="flex w-full gap-3">
               <Button
                 type="button"
                 variant="ghost"
-                className="rounded-xl h-12 text-slate-500 hover:bg-white"
+                className="flex-1 rounded-xl h-12 text-slate-500 hover:bg-white font-semibold"
                 onClick={() => setEditOpen(false)}
               >
                 ยกเลิก
               </Button>
               <Button 
-                type="submit" 
+                onClick={handleUpdate}
                 disabled={isProcessing}
-                className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-12 px-8 shadow-lg shadow-slate-200"
+                className="flex-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-12 px-8 shadow-lg shadow-slate-200 font-semibold"
               >
                 {isProcessing ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -442,59 +360,156 @@ export default function BranchesPage() {
                 )}
                 บันทึกการเปลี่ยนแปลง
               </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </div>
+          }
+        >
+          <div className="grid gap-6 p-6">
+            <div className="grid gap-3">
+              <Label htmlFor="edit-name" className="text-sm font-semibold text-slate-700">ชื่อสาขา</Label>
+              <Input
+                id="edit-name"
+                className="h-12 rounded-xl border-slate-200 focus:ring-slate-900 font-semibold"
+                value={editBranch.name}
+                onChange={(e) =>
+                  setEditBranch({ ...editBranch, name: e.target.value })
+                }
+                required
+              />
+            </div>
+            <div className="grid gap-3">
+              <Label htmlFor="edit-slug" className="text-sm font-semibold text-slate-700">Slug (URL)</Label>
+              <Input
+                id="edit-slug"
+                className="h-12 rounded-xl border-slate-200 focus:ring-slate-900 font-mono text-sm"
+                value={editBranch.slug}
+                onChange={(e) =>
+                  setEditBranch({
+                    ...editBranch,
+                    slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+                  })
+                }
+                required
+              />
+            </div>
+          </div>
+        </ResponsiveDialog>
 
-      {/* Delete Branch Confirmation Dialog */}
-      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
-        <DialogContent className="rounded-[32px] border-slate-100 sm:max-w-md overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 text-2xl font-bold text-red-600">
+        {/* Delete Branch Confirmation Dialog */}
+        <ResponsiveDialog
+          open={deleteOpen}
+          onOpenChange={setDeleteOpen}
+          title={
+            <div className="flex items-center gap-3 text-red-600">
               <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center relative">
                 <span className="animate-ping absolute inline-flex h-6 w-6 rounded-full bg-red-400 opacity-20"></span>
                 <AlertTriangle size={20} className="relative" />
               </div>
               ยืนยันการลบสาขา
-            </DialogTitle>
-            <DialogDescription className="text-slate-600 pt-4 leading-relaxed">
-              คุณแน่ใจหรือไม่ว่าต้องการลบสาขา{" "}
-              <strong className="text-slate-900 text-lg">"{branchToDelete?.name}"</strong>?
-              <br />
-              <div className="mt-4 p-4 bg-red-50/50 rounded-2xl border border-red-100/50">
-                <span className="text-red-600 font-bold flex items-center gap-2 mb-1">
-                  <AlertTriangle size={14} /> ⚠️ คำเตือน:
-                </span>{" "}
-                ข้อมูลทั้งหมดที่เกี่ยวข้องกับสาขานี้ (Leads, Properties, สัญญา)
-                จะหายไปและไม่สามารถกู้คืนได้
-              </div>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="mt-6 -mx-6 -mb-6 p-6 px-10 bg-slate-50/50">
+            </div>
+          }
+          description={
+            <div className="pt-2 italic">
+              คุณแน่ใจหรือไม่ว่าต้องการลบสาขา <strong className="text-slate-900">"{branchToDelete?.name}"</strong>?
+            </div>
+          }
+          footer={
+            <div className="flex w-full gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                className="flex-1 rounded-xl h-12 text-slate-500 hover:bg-white font-semibold"
+                onClick={() => setDeleteOpen(false)}
+              >
+                ยกเลิก
+              </Button>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={isProcessing}
+                className="flex-1 rounded-xl h-12 px-8 font-semibold shadow-lg shadow-red-100"
+                onClick={handleDelete}
+              >
+                {isProcessing && (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                ยืนยันการลบข้อมูล
+              </Button>
+            </div>
+          }
+        >
+          <div className="p-6">
+            <div className="p-4 bg-red-50/50 rounded-2xl border border-red-100/50">
+              <span className="text-red-600 font-semibold flex items-center gap-2 mb-2 italic">
+                <AlertTriangle size={14} /> ⚠️ คำเตือนสำคัญ:
+              </span>{" "}
+              <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                ข้อมูลทั้งหมดที่เกี่ยวข้องกับสาขานี้ (Leads, Properties, สัญญา) ทั้งหมด
+                จะถูกลบออกจากระบบอย่างถาวรและไม่สามารถกู้คืนกลับมาได้อีก
+              </p>
+            </div>
+          </div>
+        </ResponsiveDialog>
+
+        {/* Action Menu Dialog/Drawer */}
+        <ResponsiveDialog
+          open={menuOpen}
+          onOpenChange={setMenuOpen}
+          title="จัดการข้อมูลสาขา"
+          description={`เลือกดำเนินการสำหรับสาขา ${selectedBranchForMenu?.name || ""}`}
+        >
+          <div className="p-6 space-y-3 italic">
             <Button
-              type="button"
+              variant="outline"
+              className="w-full justify-start h-16 rounded-[24px] border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all duration-300 group gap-4 px-6"
+              onClick={() => {
+                setEditBranch({
+                  id: selectedBranchForMenu.id,
+                  name: selectedBranchForMenu.name,
+                  slug: selectedBranchForMenu.slug,
+                });
+                setMenuOpen(false);
+                setTimeout(() => setEditOpen(true), 100);
+              }}
+            >
+              <div className="h-10 w-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                <Edit2 className="h-5 w-5" />
+              </div>
+              <div className="text-left">
+                 <p className="font-semibold text-slate-900 leading-none mb-1 group-hover:text-blue-700">แก้ไขข้อมูลพื้นฐาน</p>
+                 <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Branch Details & URL Slug</p>
+              </div>
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full justify-start h-16 rounded-[24px] border-red-100 bg-white hover:bg-red-50 hover:border-red-200 text-red-500 transition-all duration-300 group gap-4 px-6"
+              onClick={() => {
+                setBranchToDelete({
+                  id: selectedBranchForMenu.id,
+                  name: selectedBranchForMenu.name,
+                });
+                setMenuOpen(false);
+                setTimeout(() => setDeleteOpen(true), 100);
+              }}
+            >
+              <div className="h-10 w-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors">
+                <Trash2 className="h-5 w-5" />
+              </div>
+              <div className="text-left">
+                 <p className="font-semibold text-red-600 leading-none mb-1 group-hover:text-red-700">ลบสาขาออกจากระบบ</p>
+                 <p className="text-[11px] text-red-400 font-semibold uppercase tracking-wider">DANGER: Permanent Deletion</p>
+              </div>
+            </Button>
+
+            <Button
               variant="ghost"
-              className="rounded-xl h-12 text-slate-500 hover:bg-white"
-              onClick={() => setDeleteOpen(false)}
+              className="w-full h-14 rounded-[24px] text-slate-400 font-semibold mt-4"
+              onClick={() => setMenuOpen(false)}
             >
               ยกเลิก
             </Button>
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={isProcessing}
-              className="rounded-xl h-12 px-8 font-bold shadow-lg shadow-red-100"
-              onClick={handleDelete}
-            >
-              {isProcessing && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              ยืนยันการลบข้อมูล
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </ResponsiveDialog>
       </div>
     </div>
   );

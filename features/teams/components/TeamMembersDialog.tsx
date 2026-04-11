@@ -11,14 +11,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { UserRoleBadge } from "@/features/users/UserRoleBadge";
-import { createClient } from "@/lib/supabase/client";
 import { Users, Briefcase, Trash2, Loader2 } from "lucide-react";
-import { toast } from "sonner";
-import { updateUserTeamAction } from "@/features/users/actions/updateUserTeamAction";
+
+import { 
+  getTeamMembersAction,
+  updateUserTeamAction 
+} from "@/features/teams/actions/teamActions";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface TeamMembersDialogProps {
   isOpen: boolean;
@@ -39,33 +42,19 @@ export function TeamMembersDialog({
 
   const fetchMembers = async () => {
     setIsLoading(true);
-    const supabase = createClient();
-
-    // ดึงข้อมูลสมาชิกพร้อมนับจำนวน Lead ที่ได้รับมอบหมาย
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(
-        `
-        id,
-        full_name,
-        role,
-        leads:leads(count)
-      `,
-      )
-      .eq("team_id", teamId)
-      .order("full_name");
-
-    if (error) {
+    try {
+      const result = await getTeamMembersAction(teamId);
+      if (result.success) {
+        setMembers(result.data || []);
+      } else {
+        toast.error(result.message || "ไม่สามารถโหลดข้อมูลสมาชิกทีมได้");
+      }
+    } catch (error) {
       console.error("Error fetching team members:", error);
-      toast.error("ไม่สามารถโหลดข้อมูลสมาชิกทีมได้");
-    } else {
-      const formatted = data.map((m) => ({
-        ...m,
-        lead_count: m.leads?.[0]?.count || 0,
-      }));
-      setMembers(formatted);
+      toast.error("เกิดข้อผิดพลาดในการดึงข้อมูล");
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   useEffect(() => {
@@ -160,19 +149,35 @@ export function TeamMembersDialog({
                   >
                     <TableCell className="py-3 px-4">
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8 border border-slate-100 shrink-0">
-                          <AvatarFallback className="bg-indigo-50 text-indigo-600 text-[10px] font-bold">
-                            {member.full_name
-                              ?.split(" ")
-                              .map((n: any) => n[0])
-                              .join("")
-                              .toUpperCase()
-                              .slice(0, 2) || "??"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-bold text-slate-700 whitespace-nowrap">
-                          {member.full_name || "ไม่มีชื่อ"}
-                        </span>
+                        <div className="relative">
+                          <Avatar className={cn(
+                            "h-8 w-8 border shrink-0 shadow-xs",
+                            member.isLeader ? "border-amber-200 ring-2 ring-amber-50" : "border-slate-100"
+                          )}>
+                            <AvatarImage src={member.avatar_url || ""} />
+                            <AvatarFallback className={cn(
+                              "text-[10px] font-bold",
+                              member.isLeader ? "bg-amber-100 text-amber-700" : "bg-indigo-50 text-indigo-600"
+                            )}>
+                              {member.full_name?.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                          {member.isLeader && (
+                            <div className="absolute -top-1 -right-1 h-3.5 w-3.5 bg-amber-500 rounded-full border-2 border-white flex items-center justify-center">
+                              <span className="text-[6px] text-white">⭐</span>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-700 whitespace-nowrap leading-tight">
+                            {member.full_name || "ไม่มีชื่อ"}
+                          </span>
+                          {member.isLeader && (
+                            <span className="text-[9px] font-bold text-amber-600 uppercase tracking-tighter">
+                              หัวหน้าทีม (Leader)
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell className="px-4">
@@ -185,18 +190,20 @@ export function TeamMembersDialog({
                       </div>
                     </TableCell>
                     <TableCell className="px-4 text-right">
-                      <button
-                        onClick={() => setMemberToRemove(member)}
-                        disabled={!!isRemoving}
-                        className="text-slate-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50"
-                        title="ถอดออกจากทีม"
-                      >
-                        {isRemoving === member.id ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
-                      </button>
+                      {!member.isLeader && (
+                        <button
+                          onClick={() => setMemberToRemove(member)}
+                          disabled={!!isRemoving}
+                          className="text-slate-400 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50"
+                          title="ถอดออกจากทีม"
+                        >
+                          {isRemoving === member.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))

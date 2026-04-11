@@ -52,33 +52,33 @@ export function AccountSecurityCard() {
               <KeyRound className="h-5 w-5" />
             </div>
             <div>
-              <p className="font-bold text-slate-800">รหัสผ่าน</p>
+              <p className="font-semibold text-slate-800">รหัสผ่าน</p>
               <p className="text-xs text-slate-500">
                 เปลี่ยนรหัสผ่านเพื่อความปลอดภัย
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="rounded-lg h-9 border-slate-200 hover:bg-slate-900 hover:text-white transition-colors" asChild>
+          <Button variant="outline" size="sm" className="rounded-lg h-9 border-slate-200  hover:text-white transition-colors" asChild>
             <a href="/auth/update-password">แก้ไข</a>
           </Button>
         </motion.div>
 
         <div className="flex items-center gap-4 py-2">
           <Separator className="flex-1 opacity-50" />
-          <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Logout Zone</span>
+          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Logout Zone</span>
           <Separator className="flex-1 opacity-50" />
         </div>
 
         <motion.div 
           whileHover={{ x: 4 }}
-          className="flex gap-4 items-center justify-between p-4 border border-transparent rounded-xl hover:bg-rose-50/30 transition-all duration-300"
+          className="flex gap-4 items-center justify-between group p-4 border border-transparent rounded-xl hover:bg-rose-50/30 transition-all duration-300"
         >
-          <div className="flex items-center gap-3 opacity-60 group-hover:opacity-100">
+          <div className="flex items-center opacity-60 group-hover:opacity-100 gap-3">
             <div className="p-2.5 rounded-xl bg-slate-50 text-slate-400 group-hover:bg-rose-50 group-hover:text-rose-400 transition-colors">
               <LogOut className="h-5 w-5" />
             </div>
-            <div>
-              <p className="font-bold text-slate-800">ออกจากระบบ</p>
+            <div className="">
+              <p className="font-semibold text-slate-800">ออกจากระบบ</p>
               <p className="text-xs text-slate-400">ออกจากบัญชีบนอุปกรณ์นี้</p>
             </div>
           </div>

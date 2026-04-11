@@ -4,7 +4,17 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
-import { Calendar as CalendarIcon, X } from "lucide-react";
+import { 
+  Calendar as CalendarIcon, 
+  X, 
+  Filter, 
+  Check, 
+  Clock, 
+  User as UserIcon, 
+  Layers, 
+  Zap,
+  History as HistoryIcon
+} from "lucide-react";
 import { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
@@ -22,6 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { Badge } from "@/components/ui/badge";
 
 // You might want to move these labels to a shared constants file if reused
 const LOG_ACTIONS = [
@@ -59,6 +71,7 @@ interface AuditLogFiltersProps {
 export function AuditLogFilters({ users }: AuditLogFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Initial State from URL
   const [filters, setFilters] = useState({
@@ -112,11 +125,7 @@ export function AuditLogFilters({ users }: AuditLogFiltersProps) {
 
   const handleDateSelect = (newDate: DateRange | undefined) => {
     setDate(newDate);
-    if (newDate?.from && newDate?.to) {
-      // Only apply if both dates are selected or explicitly just handle 'from' if single date allowed
-      // Usually for range picker we wait for 'to' or just apply what we have.
-      // Let's apply immediately for responsiveness, but user might be mid-selection.
-      // Better to apply when popover closes? For now, let's apply on change to keep simple.
+    if (newDate?.from && (newDate?.to || !newDate?.from)) {
       applyFilters(filters, newDate);
     } else if (!newDate) {
       applyFilters(filters, undefined);
@@ -150,88 +159,103 @@ export function AuditLogFilters({ users }: AuditLogFiltersProps) {
     };
     setFilters(cleared);
     setDate(undefined);
+    setIsMobileMenuOpen(false);
     router.push("/protected/admin/audit-logs");
   };
 
-  const hasActiveFilters =
-    filters.action !== "ALL" ||
-    filters.entity !== "ALL" ||
-    filters.userId !== "ALL" ||
-    !!date;
+  const activeFilterCount = [
+    filters.action !== "ALL",
+    filters.entity !== "ALL",
+    filters.userId !== "ALL",
+    !!date,
+  ].filter(Boolean).length;
 
-  return (
-    <div className="flex flex-wrap items-center gap-3 p-4 bg-white border border-slate-200 rounded-lg shadow-sm mb-6">
-      <span className="text-sm font-medium text-muted-foreground mr-2">
-        Filter:
-      </span>
+  const hasActiveFilters = activeFilterCount > 0;
+
+  const filterContent = (
+    <div className="flex flex-col xl:flex-row xl:items-center gap-4 xl:gap-3 italic">
+      <div className="flex items-center gap-2 mb-1 xl:hidden">
+        <Layers className="h-4 w-4 text-blue-500" />
+        <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">ตัวเลือกการกรอง (Filter Options)</span>
+      </div>
 
       {/* Action Filter */}
-      <Select
-        value={filters.action}
-        onValueChange={(val) => handleFilterChange("action", val)}
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Action" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ALL">All Actions</SelectItem>
-          {LOG_ACTIONS.map((action) => (
-            <SelectItem key={action} value={action}>
-              {action}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="space-y-1.5 xl:space-y-0">
+        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">ประเภทการดำเนินการ (Event Action)</label>
+        <Select
+          value={filters.action}
+          onValueChange={(val) => handleFilterChange("action", val)}
+        >
+          <SelectTrigger className="w-full xl:w-[200px] h-12 xl:h-11 rounded-2xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm">
+            <SelectValue placeholder="ประเภทการดำเนินการ" />
+          </SelectTrigger>
+          <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
+            <SelectItem value="ALL" className="font-semibold text-slate-500 italic">การดำเนินการทั้งหมด (All Actions)</SelectItem>
+            {LOG_ACTIONS.map((action) => (
+              <SelectItem key={action} value={action} className="font-semibold text-slate-700">
+                {action}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Entity Filter */}
-      <Select
-        value={filters.entity}
-        onValueChange={(val) => handleFilterChange("entity", val)}
-      >
-        <SelectTrigger className="w-[180px]">
-          <SelectValue placeholder="Entity" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ALL">All Entities</SelectItem>
-          {LOG_ENTITIES.map((entity) => (
-            <SelectItem key={entity} value={entity}>
-              {entity}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="space-y-1.5 xl:space-y-0">
+        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">หมวดหมู่ข้อมูล (Entity Type)</label>
+        <Select
+          value={filters.entity}
+          onValueChange={(val) => handleFilterChange("entity", val)}
+        >
+          <SelectTrigger className="w-full xl:w-[200px] h-12 xl:h-11 rounded-2xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm">
+            <SelectValue placeholder="เลือกหมวดหมู่" />
+          </SelectTrigger>
+          <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
+            <SelectItem value="ALL" className="font-semibold text-slate-500 italic">หมวดหมู่ทั้งหมด (All Entities)</SelectItem>
+            {LOG_ENTITIES.map((entity) => (
+              <SelectItem key={entity} value={entity} className="font-semibold text-slate-700">
+                {entity}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* User Filter */}
-      <Select
-        value={filters.userId}
-        onValueChange={(val) => handleFilterChange("userId", val)}
-      >
-        <SelectTrigger className="w-[220px]">
-          <SelectValue placeholder="User" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="ALL">All Users</SelectItem>
-          {users.map((user) => (
-            <SelectItem key={user.id} value={user.id}>
-              {user.full_name || user.email || "Unknown"}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      <div className="space-y-1.5 xl:space-y-0">
+        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">ผู้ดำเนินการ (Triggered User)</label>
+        <Select
+          value={filters.userId}
+          onValueChange={(val) => handleFilterChange("userId", val)}
+        >
+          <SelectTrigger className="w-full xl:w-[240px] h-12 xl:h-11 rounded-2xl border-slate-200 bg-white font-semibold text-slate-700 shadow-sm">
+            <SelectValue placeholder="เลือกผู้ใช้" />
+          </SelectTrigger>
+          <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
+            <SelectItem value="ALL" className="font-semibold text-slate-500 italic">ผู้ใช้ทั้งหมด (All Users)</SelectItem>
+            {users.map((user) => (
+              <SelectItem key={user.id} value={user.id} className="font-semibold text-slate-700">
+                {user.full_name || user.email || "Unknown User"}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
       {/* Date Range Picker */}
-      <div className="grid gap-2">
+      <div className="space-y-1.5 xl:space-y-0">
+         <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-tighter xl:hidden ml-2">ช่วงเวลา (Time Range)</label>
         <Popover>
           <PopoverTrigger asChild>
             <Button
               id="date"
               variant={"outline"}
               className={cn(
-                "w-[260px] justify-start text-left font-normal",
-                !date && "text-muted-foreground",
+                "w-full xl:w-[280px] justify-start text-left font-semibold h-12 xl:h-11 rounded-2xl border-slate-200 bg-white transition-all hover:bg-slate-50 shadow-sm",
+                !date && "text-slate-400",
               )}
             >
-              <CalendarIcon className="mr-2 h-4 w-4" />
+              <CalendarIcon className="mr-2 h-4 w-4 text-indigo-500" />
               {date?.from ? (
                 date.to ? (
                   <>
@@ -242,11 +266,11 @@ export function AuditLogFilters({ users }: AuditLogFiltersProps) {
                   format(date.from, "dd MMM yyyy", { locale: th })
                 )
               ) : (
-                <span>Pick a date range</span>
+                <span>เลือกช่วงเวลา (Date range)</span>
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent className="w-auto p-0 rounded-[32px] overflow-hidden shadow-2xl border-slate-100 mt-2" align="start">
             <Calendar
               initialFocus
               mode="range"
@@ -254,6 +278,7 @@ export function AuditLogFilters({ users }: AuditLogFiltersProps) {
               selected={date}
               onSelect={handleDateSelect}
               numberOfMonths={2}
+              className="font-semibold"
             />
           </PopoverContent>
         </Popover>
@@ -264,12 +289,99 @@ export function AuditLogFilters({ users }: AuditLogFiltersProps) {
           variant="ghost"
           size="sm"
           onClick={clearFilters}
-          className="ml-auto text-red-500 hover:text-red-600 hover:bg-red-50"
+          className="xl:ml-auto text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl h-11 xl:h-10 font-semibold transition-all px-4"
         >
-          <X className="h-4 w-4 mr-1" />
-          Clear
+          <X className="h-4 w-4 mr-1.5" />
+          ล้างตัวกรอง (Clear filters)
         </Button>
       )}
+
+      <div className="pt-4 xl:hidden border-t border-slate-100 mt-2">
+         <Button 
+          className="w-full bg-slate-900 hover:bg-slate-800 text-white h-12 rounded-2xl font-semibold shadow-lg shadow-slate-200 transition-all active:scale-95"
+          onClick={() => setIsMobileMenuOpen(false)}
+         >
+           ดูผลลัพธ์ข้อมูลระบบ (Apply Filter)
+         </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="mb-8">
+      {/* 🖥️ Desktop Container */}
+      <div className={cn(
+        "hidden xl:flex items-center gap-3 p-3 bg-white/60 backdrop-blur-md border border-slate-200/60 rounded-[32px] shadow-sm",
+        hasActiveFilters && "border-blue-100 bg-blue-50/20"
+      )}>
+        <div className="px-4 border-r border-slate-200/60 mr-1 flex items-center gap-2.5">
+           <div className={cn(
+             "p-1.5 rounded-xl transition-all",
+             hasActiveFilters ? "bg-blue-500 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-400"
+           )}>
+             <Filter className="h-4 w-4" />
+           </div>
+           <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest italic">
+            Search
+           </span>
+        </div>
+        {filterContent}
+      </div>
+
+      {/* 📱 Mobile Container */}
+      <div className="xl:hidden flex items-center justify-between gap-3 p-2 bg-white/70 backdrop-blur-md border border-slate-100 rounded-[28px] shadow-sm">
+         <ResponsiveDialog
+            open={isMobileMenuOpen}
+            onOpenChange={setIsMobileMenuOpen}
+            title={
+              <div className="flex items-center gap-3">
+                 <div className="p-2.5 bg-blue-50 rounded-2xl border border-blue-100 shadow-sm">
+                    <HistoryIcon className="h-5 w-5 text-blue-600" />
+                 </div>
+                 <span className="font-semibold text-xl">ตัวกรองประวัติระบบ</span>
+              </div>
+            }
+            description="ระบุเงื่อนไขการค้นหาเพื่อตรวจสอบประวัติการใช้งาน (Audit Logs) ทั้งหมดในระบบ"
+            trigger={
+              <Button 
+                variant="outline" 
+                className={cn(
+                  "flex-1 h-14 rounded-[22px] border-slate-200 font-semibold gap-3 transition-all active:scale-95 shadow-sm bg-white/80",
+                  hasActiveFilters && "border-blue-500 bg-blue-50/50 text-blue-600 ring-2 ring-blue-100"
+                )}
+              >
+                <div className={cn(
+                  "p-1.5 rounded-lg",
+                  hasActiveFilters ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-400"
+                )}>
+                  <Filter className="h-4 w-4" />
+                </div>
+                <span className="italic">กรองข้อมูลที่ต้องการตรวจสอบ</span>
+                {hasActiveFilters && (
+                  <Badge className="ml-1 h-5 w-5 flex items-center justify-center p-0 bg-blue-600 text-[10px] rounded-lg">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </Button>
+            }
+         >
+           <div className="p-6">
+              {filterContent}
+           </div>
+         </ResponsiveDialog>
+         
+         {hasActiveFilters && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={clearFilters}
+              className="h-14 w-14 rounded-[22px] bg-red-50 text-red-500 border border-red-100 shadow-sm transition-all active:scale-95"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+         )}
+      </div>
     </div>
   );
 }
+

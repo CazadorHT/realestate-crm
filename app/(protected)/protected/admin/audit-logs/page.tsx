@@ -7,7 +7,8 @@ import {
 import { AuditLogTable } from "@/features/admin/components/AuditLogTable";
 import { AuditLogFilters } from "@/features/admin/components/AuditLogFilters"; // Added Filter Component
 import { PaginationControls } from "@/components/ui/pagination-controls";
-import { History } from "lucide-react";
+import { SettingsHeader } from "@/components/settings/SettingsHeader";
+import { History as HistoryIcon } from "lucide-react";
 import { PurgeLogsButton } from "@/features/admin/components/PurgeLogsButton";
 
 export const metadata = {
@@ -53,30 +54,33 @@ export default async function AuditLogsPage({
       page: currentPage,
       pageSize,
       filters,
-    }),
+     }),
     getAllUsers(),
   ]);
 
   const { data, count } = logsResult;
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <History className="h-6 w-6 text-blue-600" />
+    <div className="p-6 space-y-10 max-w-7xl mx-auto py-8">
+      <SettingsHeader 
+      
+        title={<>บันทึกประวัติ <span className="text-blue-600">Audit Logs</span></>}
+        description="ตรวจสอบประวัติการใช้งานระบบและการเปลี่ยนแปลงข้อมูลทั้งหมดอย่างละเอียด"
+        subPath={[
+          { label: "System Control", href: "/protected/settings" },
+          { label: "Log Management" },
+          { label: "Audit Logs (ประวัติระบบ)" }
+        ]}
+        actions={
+          <div className="flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+              <HistoryIcon className="h-3.5 w-3.5" />
+              Retaining last 30 days
+            </div>
+            <PurgeLogsButton />
           </div>
-          <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
-              Audit Logs
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              ประวัติการใช้งานระบบและการเปลี่ยนแปลงข้อมูลทั้งหมด
-            </p>
-          </div>
-        </div>
-        <PurgeLogsButton />
-      </div>
+        }
+      />
 
       {/* Filter Component */}
       <AuditLogFilters users={users} />

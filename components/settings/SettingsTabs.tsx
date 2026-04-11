@@ -11,6 +11,7 @@ import {
   CircleDollarSign,
   LucideIcon
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SettingsTabsProps {
   activeTab: string;
@@ -26,6 +27,15 @@ export function SettingsTabs({ activeTab }: SettingsTabsProps) {
     params.set("tab", value);
     router.push(`${pathname}?${params.toString()}`, { scroll: false });
   };
+
+  const tabs = [
+    { value: "general", label: "ทั่วไป (General)", description: "จัดการชื่อองค์กร สถาปัตยกรรม และข้อมูลพื้นฐาน", icon: Settings },
+    { value: "branding", label: "แบรนด์ (Branding)", description: "ปรับแต่งโลโก้ สีสัน และอัตลักษณ์ของแบรนด์", icon: Palette },
+    { value: "social", label: "Social", description: "เชื่อมต่อ FB, Line, TikTok และระบบแชท", icon: Share2 },
+    { value: "ai", label: "AI Tools", description: "ตั้งค่าระบบปัญญาประดิษฐ์และ SmartMatch", icon: Cpu },
+    { value: "admin", label: "Admin", description: "ควบคุมสิทธิ์ สาขา ทีม และความปลอดภัย", icon: ShieldCheck },
+    { value: "commission", label: "คอมมิชชั่น", description: "จัดการฐานเงินเดือนและเปอร์เซ็นต์ส่วนแบ่ง", icon: CircleDollarSign },
+  ];
 
   const TabItem = ({ value, label, icon: Icon }: { value: string; label: string; icon: LucideIcon }) => (
     <TabsTrigger
@@ -47,18 +57,63 @@ export function SettingsTabs({ activeTab }: SettingsTabsProps) {
 
   return (
     <div className="relative w-full group">
-      {/* 📱 Mobile Scroll Hint: Fade Gradient Masks */}
-      <div className="absolute left-0 top-0 bottom-4 w-12 bg-linear-to-r from-slate-50 to-transparent z-10 pointer-events-none md:hidden opacity-0 group-hover:opacity-100 transition-opacity" />
-      <div className="absolute right-0 top-0 bottom-4 w-12 bg-linear-to-l from-slate-50 to-transparent z-10 pointer-events-none md:hidden opacity-0 group-hover:opacity-100 transition-opacity" />
-      
-      <div className="w-full overflow-x-auto pb-4 scrollbar-hide mask-[linear-gradient(to_right,white_90%,transparent)] md:mask-none">
-        <TabsList className="flex items-center w-max md:w-full h-auto p-1.5 bg-slate-100/80 backdrop-blur-md rounded-2xl gap-1.5 border border-slate-200/60 shadow-inner">
-          <TabItem value="general" label="ทั่วไป" icon={Settings} />
-          <TabItem value="branding" label="แบรนด์" icon={Palette} />
-          <TabItem value="social" label="Social" icon={Share2} />
-          <TabItem value="ai" label="AI Tools" icon={Cpu} />
-          <TabItem value="admin" label="Admin" icon={ShieldCheck} />
-          <TabItem value="commission" label="คอมมิชชั่น" icon={CircleDollarSign} />
+      {/* 🖥️ Desktop View (Scrollable Tabs) */}
+      <div className="hidden md:block">
+        <div className="absolute left-0 top-0 bottom-4 w-12 bg-linear-to-r from-slate-50 to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute right-0 top-0 bottom-4 w-12 bg-linear-to-l from-slate-50 to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
+        
+        <div className="w-full overflow-x-auto pb-4 scrollbar-hide">
+          <TabsList className="flex items-center w-max md:w-full h-auto p-1.5 bg-slate-100/80 backdrop-blur-md rounded-2xl gap-1.5 border border-slate-200/60 shadow-inner">
+            {tabs.map((tab) => (
+              <TabItem key={tab.value} value={tab.value} label={tab.label} icon={tab.icon} />
+            ))}
+          </TabsList>
+        </div>
+      </div>
+
+      {/* 📱 Mobile View (Card List) */}
+      <div className="md:hidden space-y-3">
+        <TabsList className="flex flex-col w-full h-auto bg-transparent gap-3 border-none p-0 shadow-none">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.value;
+            const Icon = tab.icon;
+            return (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                onClick={() => handleTabChange(tab.value)}
+                className={cn(
+                  "w-full flex items-center gap-4 p-4 rounded-3xl border transition-all duration-300 text-left",
+                  isActive 
+                    ? "bg-white border-indigo-100 shadow-[0_4px_20px_-8px_rgba(79,70,229,0.2)] text-indigo-600" 
+                    : "bg-white/40 border-slate-100/50 text-slate-500 hover:bg-white/60"
+                )}
+              >
+                <div className={cn(
+                  "h-12 w-12 shrink-0 rounded-2xl flex items-center justify-center transition-colors shadow-xs",
+                  isActive ? "bg-indigo-600 text-white" : "bg-slate-50 text-slate-400"
+                )}>
+                  <Icon className="h-6 w-6" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={cn(
+                    "font-semibold text-base transition-colors",
+                    isActive ? "text-indigo-900" : "text-slate-700"
+                  )}>
+                    {tab.label}
+                  </p>
+                  <p className="text-[11px] font-medium text-slate-400 line-clamp-1 italic">
+                    {tab.description}
+                  </p>
+                </div>
+                {isActive && (
+                  <div className="h-5 w-5 rounded-full bg-indigo-50 flex items-center justify-center">
+                    <div className="h-2 w-2 rounded-full bg-indigo-600" />
+                  </div>
+                )}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
       </div>
     </div>

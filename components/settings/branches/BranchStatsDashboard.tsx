@@ -21,8 +21,8 @@ export function BranchStatsDashboard({ memberCount, inviteCount, propertyCount }
       >
         <div className="absolute top-0 right-0 h-full w-2 bg-indigo-500/10 group-hover:w-full transition-all duration-500 -z-10" />
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Total Members</p>
-          <h4 className="text-3xl font-black text-slate-900">{memberCount}</h4>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">สมาชิกทั้งหมด (Total Members)</p>
+          <h4 className="text-3xl font-semibold text-slate-900 leading-none">{memberCount}</h4>
         </div>
         <div className="h-14 w-14 bg-indigo-50 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300">
           <Users2 className="h-7 w-7 text-indigo-600" />
@@ -38,11 +38,11 @@ export function BranchStatsDashboard({ memberCount, inviteCount, propertyCount }
       >
         <div className="absolute top-0 right-0 h-full w-2 bg-amber-500/10 group-hover:w-full transition-all duration-500 -z-10" />
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Pending Invites</p>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">คำเชิญที่รออยู่ (Pending Invites)</p>
           <div className="flex items-center gap-2">
-            <h4 className="text-3xl font-black text-slate-900">{inviteCount}</h4>
+            <h4 className="text-3xl font-semibold text-slate-900 leading-none">{inviteCount}</h4>
             {inviteCount > 0 && (
-              <Badge className="bg-amber-100 text-amber-700 border-amber-200 font-bold animate-pulse">Waiting</Badge>
+              <Badge className="bg-amber-100/80 text-amber-700 border-amber-200 font-semibold animate-pulse rounded-lg">Waiting</Badge>
             )}
           </div>
         </div>
@@ -60,8 +60,8 @@ export function BranchStatsDashboard({ memberCount, inviteCount, propertyCount }
       >
         <div className="absolute top-0 right-0 h-full w-2 bg-emerald-500/10 group-hover:w-full transition-all duration-500 -z-10" />
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">Active Properties</p>
-          <h4 className="text-3xl font-black text-slate-900">{propertyCount}</h4>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-2">ทรัพย์เปิดขาย (Active Properties)</p>
+          <h4 className="text-3xl font-semibold text-slate-900 leading-none">{propertyCount}</h4>
         </div>
         <div className="h-14 w-14 bg-emerald-50 rounded-2xl flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-300">
           <Building2 className="h-7 w-7 text-emerald-600" />

@@ -88,7 +88,7 @@ export function NotificationBell() {
               <Bell className="h-10 w-10 text-slate-200" />
             </div>
             <div className="space-y-1">
-              <p className="font-black text-slate-900 text-lg">เงียบสงบ...</p>
+              <p className="font-semibold text-slate-900 text-lg">เงียบสงบ...</p>
               <p className="text-sm text-slate-500">ยังไม่มีการแจ้งเตือนใหม่ในขณะนี้</p>
             </div>
           </div>

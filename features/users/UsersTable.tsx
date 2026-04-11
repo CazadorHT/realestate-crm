@@ -184,7 +184,7 @@ export function UsersTable({ users, currentUserId, teams, isMultiTenant = true }
               </Button>
             }
           >
-            <div className="grid grid-cols-3 gap-2 p-4">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 p-4">
               {roleOptions.map((option) => {
                 const isActive = roleFilter === option.value;
                 return (
