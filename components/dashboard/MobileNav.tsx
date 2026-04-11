@@ -35,7 +35,10 @@ import {
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { 
+  AnimatePresence, 
+  motion 
+} from "framer-motion";
 import {
   Sheet,
   SheetContent,
@@ -43,11 +46,19 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { siteConfig } from "@/lib/site-config";
 import { TenantSwitcher } from "@/components/common/TenantSwitcher";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import type { Profile } from "@/lib/supabase/getCurrentProfile";
+import { LogOut } from "lucide-react";
+import { useState } from "react";
 
-export function MobileNav({ role }: { role: UserRole }) {
+export function MobileNav({ role, profile }: { role: UserRole, profile: Profile | null }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
   const [open, setOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<string[]>(["crm"]);
 
@@ -58,6 +69,21 @@ export function MobileNav({ role }: { role: UserRole }) {
         : [...prev, groupId],
     );
   };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/auth/login");
+    router.refresh();
+  };
+
+  const initials = profile?.full_name
+    ? profile.full_name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "??";
 
   interface NavItem {
     title: string;
@@ -274,52 +300,57 @@ export function MobileNav({ role }: { role: UserRole }) {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="sm:hidden">
-          <Menu className="h-6 w-6 text-slate-700" />
+        <Button variant="ghost" size="icon" className="sm:hidden hover:bg-slate-100/50 rounded-full transition-all">
+          <Menu className="h-5 w-5 text-slate-700" />
         </Button>
       </SheetTrigger>
       <SheetContent
         side="left"
-        className="w-[300px] p-0 overflow-y-auto border-r border-slate-200 bg-slate-50 "
+        className="w-80 p-0 flex flex-col border-r border-slate-200 bg-white/95 backdrop-blur-xl"
       >
         <SheetTitle className="sr-only">เมนูหลัก</SheetTitle>
-        <div className="p-6 border-b border-slate-200 bg-white/50 sticky top-0 z-20">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex flex-col">
-              <h1 className="text-xl font-semibold tracking-tight text-slate-800 uppercase leading-none">
+        
+        {/* 1. Header & Branding (Compact Inline) */}
+        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-4 bg-white/50">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="h-8 w-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200 shrink-0">
+              <span className="text-white font-bold text-sm">{siteConfig.name?.charAt(0)}</span>
+            </div>
+            <div className="flex flex-col min-w-0">
+              <h1 className="text-sm font-bold tracking-tight text-slate-900 uppercase truncate">
                 {siteConfig.name}
               </h1>
-              <p className="text-[10px] uppercase tracking-[0.2em] text-blue-600 font-normal mt-1">
-                {siteConfig.description || "Real Estate CRM"}
+              <p className="text-[9px] uppercase tracking-wider text-blue-600 font-bold leading-none">
+                Elite CRM
               </p>
             </div>
+          </div>
+          <div className="shrink-0 scale-90 origin-right">
             <TenantSwitcher />
           </div>
         </div>
 
-        <nav className="flex flex-col gap-1 p-4 pb-12">
+        {/* 2. Navigation List (Main Content) */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1 custom-scrollbar">
           <Link
             href="/protected"
             onClick={() => setOpen(false)}
             className={cn(
-              "flex items-center gap-4 rounded-xl px-4 py-4 transition-all duration-300 font-medium text-sm relative overflow-hidden group",
+              "flex items-center gap-3 rounded-[14px] px-3.5 h-11 transition-all duration-300 font-medium text-sm group relative",
               pathname === "/protected"
-                ? "bg-white text-blue-700 shadow-[0_4px_12px_-2px_rgba(59,130,246,0.12)] border border-blue-100/50"
-                : "text-slate-500 hover:text-slate-900 hover:bg-white hover:shadow-sm",
+                ? "bg-blue-600/10 text-blue-700 active-glow"
+                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
             )}
           >
-            {pathname === "/protected" && (
-              <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-600 rounded-r-full shadow-[2px_0_8px_rgba(37,99,235,0.4)]" />
-            )}
             <div
               className={cn(
-                "h-8 w-8 rounded-lg flex items-center justify-center transition-colors shrink-0",
+                "h-8 w-8 rounded-lg flex items-center justify-center transition-all",
                 pathname === "/protected"
-                  ? "bg-blue-50 text-blue-600"
-                  : "bg-slate-100 text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-500",
+                  ? "bg-blue-600 text-white shadow-md shadow-blue-100"
+                  : "bg-slate-100 text-slate-400 group-hover:bg-white group-hover:text-blue-600 group-hover:shadow-sm",
               )}
             >
-              <BarChart3 className="h-5 w-5" />
+              <BarChart3 className="h-4 w-4" />
             </div>
             แดชบอร์ด
           </Link>
@@ -329,68 +360,102 @@ export function MobileNav({ role }: { role: UserRole }) {
             const hasActiveItem = group.items.some((item) => item.active);
 
             return (
-              <div key={group.id} className="space-y-1">
+              <div key={group.id} className="pt-2">
                 <button
                   onClick={() => toggleGroup(group.id)}
                   className={cn(
-                    "w-full flex items-center justify-between gap-3 rounded-xl px-4 py-3.5 transition-all duration-300 font-medium text-xs uppercase tracking-[0.15em]",
+                    "w-full flex items-center justify-between gap-3 rounded-lg px-3.5 py-2 transition-all duration-300",
                     hasActiveItem
-                      ? "bg-blue-100/50 text-blue-700"
-                      : "text-slate-400 hover:text-slate-600 hover:bg-white",
+                      ? "text-blue-700 bg-blue-50/30"
+                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/50",
                   )}
                 >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={cn(
-                        "h-6 w-6 rounded flex items-center justify-center transition-colors",
-                        hasActiveItem ? "text-blue-600" : "text-slate-400",
-                      )}
-                    >
-                      <group.icon className="h-4 w-4" />
-                    </div>
-                    {group.title}
+                  <div className="flex items-center gap-2.5">
+                    <group.icon className={cn("h-4 w-4", hasActiveItem ? "text-blue-600" : "text-slate-400")} />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">
+                      {group.title}
+                    </span>
                   </div>
-                  {isOpen ? (
-                    <ChevronDown className="h-4 w-4 opacity-50" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 opacity-50" />
-                  )}
+                  <motion.div
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                  >
+                    <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                  </motion.div>
                 </button>
 
-                {isOpen && (
-                  <div className="space-y-1 ml-3 pl-3 border-l border-slate-100">
-                    {group.items.map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        onClick={() => setOpen(false)}
-                        className={cn(
-                          "flex items-center gap-3 rounded-lg px-4 py-3 transition-all duration-300 text-sm relative overflow-hidden group",
-                          item.active
-                            ? "bg-white text-blue-700 font-medium shadow-sm border border-blue-50/50"
-                            : "text-slate-500 hover:text-slate-900 hover:bg-white font-medium",
-                        )}
-                      >
-                        {item.active && (
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full shadow-[1px_0_4px_rgba(37,99,235,0.4)]" />
-                        )}
-                        <item.icon
-                          className={cn(
-                            "h-4 w-4 transition-colors shrink-0",
-                            item.active
-                              ? "text-blue-600"
-                              : "text-slate-400 group-hover:text-blue-500",
-                          )}
-                        />
-                        {item.title}
-                      </Link>
-                    ))}
-                  </div>
-                )}
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-1 mt-1 ml-2 border-l-2 border-slate-100 pl-2">
+                        {group.items.map((item) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setOpen(false)}
+                            className={cn(
+                              "flex items-center gap-3 rounded-xl px-4 h-11 transition-all duration-300 text-sm font-medium",
+                              item.active
+                                ? "bg-blue-600/10 text-blue-700 shadow-[inset_0_0_0_1px_rgba(37,99,235,0.1)] active-glow"
+                                : "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
+                            )}
+                          >
+                            <item.icon
+                              className={cn(
+                                "h-4 w-4 shrink-0 transition-colors",
+                                item.active
+                                  ? "text-blue-600 scale-110"
+                                  : "text-slate-400",
+                              )}
+                            />
+                            {item.title}
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             );
           })}
         </nav>
+
+        {/* 3. Sticky Footer (User Info & Logout - Thumb Zone) */}
+        <div className="p-4 border-t border-slate-100 bg-white/80 backdrop-blur-md">
+          <div className="bg-slate-50 rounded-[20px] p-3 flex items-center justify-between gap-3 shadow-inner">
+            <div className="flex items-center gap-3 min-w-0">
+              <Avatar className="h-9 w-9 border-2 border-white shadow-sm shrink-0">
+                <AvatarImage src={profile?.avatar_url || ""} />
+                <AvatarFallback className="bg-blue-600 text-white font-bold text-xs uppercase">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col min-w-0">
+                <p className="text-sm font-bold text-slate-800 truncate leading-tight">
+                  {profile?.full_name || "Guest"}
+                </p>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] font-black text-blue-600 uppercase bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
+                    {profile?.role || "USER"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleSignOut}
+              className="h-9 w-9 rounded-xl bg-white border border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 hover:border-red-100 flex items-center justify-center transition-all active:scale-90 shrink-0"
+              title="ออกจากระบบ"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
       </SheetContent>
     </Sheet>
   );
