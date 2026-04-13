@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowUpRight } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatThaiCurrency } from "@/lib/excel-export";
 
@@ -17,6 +17,8 @@ interface StatsCardProps {
   icon: React.ElementType;
   description: string;
   trend: string;
+  trendValue?: number; // Numeric trend for logic
+  isInverse?: boolean; // If lower is better
   color: "blue" | "emerald" | "indigo" | "amber";
   isCurrency?: boolean;
   suffix?: string;
@@ -29,6 +31,8 @@ export function StatsCard({
   icon: Icon,
   description,
   trend,
+  trendValue = 0,
+  isInverse = false,
   color,
   isCurrency = true,
   suffix = "",
@@ -41,11 +45,22 @@ export function StatsCard({
     amber: "text-amber-600 bg-amber-50 border-amber-100",
   };
 
+  // Elite Trend Logic
+  const isPositive = isInverse ? trendValue < 0 : trendValue > 0;
+  const isNeutral = trendValue === 0 || trend === "0%" || trend.includes("No comparison");
+  
+  const TrendIcon = isNeutral ? Minus : isPositive ? ArrowUpRight : ArrowDownRight;
+  const trendColorClass = isNeutral 
+    ? "text-slate-500 bg-slate-50" 
+    : isPositive 
+      ? "text-emerald-600 bg-emerald-50" 
+      : "text-rose-600 bg-rose-50";
+
   return (
-    <Card className="border-0 shadow-sm bg-white overflow-hidden relative group transition-all hover:shadow-md">
+    <Card className="border-0 shadow-sm bg-white overflow-hidden relative group transition-all duration-300 hover:shadow-md hover:-translate-y-1">
       <div
         className={cn(
-          "absolute top-0 left-0 w-1 h-full",
+          "absolute top-0 left-0 w-1 h-full transition-colors duration-300",
           color === "blue" && "bg-blue-500",
           color === "emerald" && "bg-emerald-500",
           color === "indigo" && "bg-indigo-500",
@@ -58,7 +73,7 @@ export function StatsCard({
         </CardTitle>
         <div
           className={cn(
-            "p-2 rounded-xl transition-transform group-hover:scale-110",
+            "p-2 rounded-xl transition-all duration-300 group-hover:scale-110",
             colorMap[color],
           )}
         >
@@ -66,22 +81,30 @@ export function StatsCard({
         </div>
       </CardHeader>
       <CardContent>
-        <div className="flex items-baseline justify-between">
+        <div className="flex items-baseline justify-between gap-2">
           <div className="text-2xl font-bold text-slate-900 tracking-tight">
             {isCurrency ? formatThaiCurrency(value) : value.toLocaleString()}
             {suffix}
           </div>
           {compareValue !== undefined && compareValue !== null && (
-            <div className="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+            <div className="text-[10px] font-bold text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded-lg border border-indigo-100 truncate max-w-[120px]">
               VS {isCurrency ? formatThaiCurrency(compareValue) : compareValue.toLocaleString()}
               {suffix}
             </div>
           )}
         </div>
-        <p className="text-xs text-slate-400 mt-1">{description}</p>
-        <div className="mt-4 flex items-center text-[10px] font-bold uppercase tracking-wider">
-          <ArrowUpRight className="mr-1 h-3 w-3 text-emerald-500" />
-          <span className="text-emerald-600">{trend}</span>
+        <p className="text-xs text-slate-400 mt-1 line-clamp-1">{description}</p>
+        
+        <div 
+          className={cn(
+            "mt-4 inline-flex items-center px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-300",
+            trendColorClass
+          )}
+          role="img"
+          aria-label={`Trend: ${isNeutral ? 'Neutral' : isPositive ? 'Growing' : 'Declining'} at ${trend}`}
+        >
+          <TrendIcon className="mr-1 h-3.5 w-3.5" />
+          <span>{trend}</span>
         </div>
       </CardContent>
     </Card>

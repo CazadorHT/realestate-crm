@@ -76,7 +76,7 @@ export function UserTeamSelect({
             variant="outline"
             disabled={disabled || isLoading}
             className={cn(
-              "h-10 px-3 rounded-xl border-slate-200 bg-white/50 backdrop-blur-sm transition-all duration-300 flex items-center gap-2.5 group hover:border-slate-300",
+              "h-10 px-3 rounded-xl border-slate-200 hover:text-white bg-white/50 backdrop-blur-sm transition-all duration-300 flex items-center gap-2.5 group hover:border-slate-300",
               className
             )}
           >
@@ -86,7 +86,7 @@ export function UserTeamSelect({
             )}>
               <Users className="h-3.5 w-3.5" />
             </div>
-            <span className="font-semibold text-slate-700 text-sm truncate max-w-[100px]">
+            <span className="font-semibold  text-sm truncate max-w-[100px]">
               {currentTeam?.name || "ไม่มีทีม"}
             </span>
             {isLoading ? (

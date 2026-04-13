@@ -9,22 +9,25 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { PieChart as PieChartIcon } from "lucide-react";
-import { formatThaiCurrency } from "@/lib/excel-export";
+import { cn } from "@/lib/utils";
 import { ExecutiveStats, QuarterlyRevenue } from "../../executive-queries";
+import { formatThaiCurrency } from "@/lib/excel-export";
 
 interface QuarterlyBreakdownProps {
   stats: ExecutiveStats;
   quarterlyData: QuarterlyRevenue[];
+  className?: string;
 }
 
 export function QuarterlyBreakdown({
   stats,
   quarterlyData,
+  className,
 }: QuarterlyBreakdownProps) {
   return (
-    <Card className="lg:col-span-3 border-slate-100 shadow-sm border-0 bg-white/50 backdrop-blur-sm">
+    <Card className={cn("border-slate-100 shadow-sm border-0 bg-white/50 backdrop-blur-sm", className)}>
       <CardHeader>
-        <CardTitle className="text-lg font-bold flex items-center gap-2">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
           <PieChartIcon className="h-5 w-5 text-indigo-500" />
           สรุปรายไตรมาส (Quarterly)
         </CardTitle>
@@ -32,15 +35,15 @@ export function QuarterlyBreakdown({
           ผลงานแยกตามไตรมาสของปีปัจจุบัน
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 sm:px-6">
         <div className="space-y-6">
           {quarterlyData.map((q) => (
             <div key={q.quarter} className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-semibold text-slate-700">
+              <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-1 text-xs sm:text-sm">
+                <span className="font-semibold text-slate-600 uppercase tracking-tight">
                   {q.quarter}
                 </span>
-                <span className="font-bold text-slate-900">
+                <span className="font-semibold text-slate-900">
                   {formatThaiCurrency(q.total)}
                 </span>
               </div>
@@ -52,9 +55,15 @@ export function QuarterlyBreakdown({
                   }}
                 />
               </div>
-              <div className="flex justify-between text-[10px] text-slate-500">
-                <span>Sales: {formatThaiCurrency(q.sales)}</span>
-                <span>Rent: {formatThaiCurrency(q.rent)}</span>
+              <div className="flex justify-between text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-tighter">
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                  Sales: {formatThaiCurrency(q.sales)}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  Rent: {formatThaiCurrency(q.rent)}
+                </span>
               </div>
             </div>
           ))}

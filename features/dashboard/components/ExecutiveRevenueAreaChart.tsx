@@ -24,8 +24,8 @@ export default function ExecutiveRevenueAreaChart({
 }: ExecutiveRevenueAreaChartProps) {
   return (
     <ResponsiveContainer
-      width="99%"
-      height={350}
+      width="100%"
+      height="100%"
     >
       <AreaChart
         data={monthlyData.map((m, i) => ({
@@ -57,14 +57,17 @@ export default function ExecutiveRevenueAreaChart({
           dataKey="month"
           axisLine={false}
           tickLine={false}
-          tick={{ fill: "#64748b", fontSize: 12 }}
+          tick={{ fill: "#64748b", fontSize: 10 }}
           dy={10}
+          interval="preserveStartEnd"
+          minTickGap={10}
         />
         <YAxis
           axisLine={false}
           tickLine={false}
-          tick={{ fill: "#64748b", fontSize: 12 }}
+          tick={{ fill: "#64748b", fontSize: 10 }}
           tickFormatter={(val) => `฿${(val / 1000000).toFixed(1)}M`}
+          width={45}
         />
         <RechartsTooltip
           contentStyle={{

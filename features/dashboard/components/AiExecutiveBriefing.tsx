@@ -14,18 +14,37 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface AiExecutiveBriefingProps {
-  insights: ExecutiveAiInsights;
+  insights?: ExecutiveAiInsights | null;
+  isLoading?: boolean;
   className?: string;
 }
 
 export function AiExecutiveBriefing({
   insights,
+  isLoading,
   className,
 }: AiExecutiveBriefingProps) {
+  if (isLoading) {
+    return (
+      <div className={cn("space-y-6 animate-pulse", className)}>
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+          <div className="md:col-span-2 h-40 bg-indigo-600/40 rounded-2xl relative overflow-hidden" />
+          <div className="h-40 bg-white border-l-4 border-amber-200 rounded-xl shadow-sm" />
+        </div>
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="h-64 bg-slate-100/50 rounded-2xl border border-slate-100" />
+          <div className="h-64 bg-slate-100/50 rounded-2xl border border-slate-100" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!insights) return null;
+
   return (
     <div className={cn("space-y-6", className)}>
       {/* Main Summary & Forecast */}
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-3 ">
         <Card className="md:col-span-2 border-0 shadow-lg bg-linear-to-br from-indigo-500 to-blue-600 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-10">
             <Sparkles className="w-32 h-32" />

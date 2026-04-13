@@ -15,15 +15,19 @@ export function TransactionSummary({
   quarterlyData,
 }: TransactionSummaryProps) {
   return (
-    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+    <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-7">
       {/* Quarterly Breakdown */}
       <QuarterlyBreakdown 
         stats={stats} 
-        quarterlyData={quarterlyData} 
+        quarterlyData={quarterlyData}
+        className="lg:col-span-3"
       />
 
       {/* Transaction Volume Table/Summary */}
-      <TransactionTable stats={stats} />
+      <TransactionTable 
+        stats={stats}
+        className="lg:col-span-4" 
+      />
     </div>
   );
 }

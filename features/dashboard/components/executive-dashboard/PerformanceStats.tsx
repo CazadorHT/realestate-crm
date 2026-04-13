@@ -8,17 +8,47 @@ import { ExecutiveStats } from "../../executive-queries";
 interface PerformanceStatsProps {
   stats: ExecutiveStats;
   compareStats?: ExecutiveStats | null;
+  allBranches: { id: string; name: string }[];
+  compareTenantId?: string | null;
 }
 
-export function PerformanceStats({ stats, compareStats }: PerformanceStatsProps) {
+import { 
+  calculateTrendPercentage, 
+  calculateWeightedEfficiencyScore, 
+  getComparisonDisplayLabel 
+} from "../../executive-utils";
+
+interface PerformanceStatsProps {
+  stats: ExecutiveStats;
+  compareStats?: ExecutiveStats | null;
+  allBranches: { id: string; name: string }[];
+  compareTenantId?: string | null;
+}
+
+export function PerformanceStats({ 
+  stats, 
+  compareStats, 
+  allBranches, 
+  compareTenantId 
+}: PerformanceStatsProps) {
+  // BI Logic Delegation
+  const compareLabel = getComparisonDisplayLabel(compareTenantId, allBranches);
+  
+  const revenueTrend = calculateTrendPercentage(stats.totalRevenue, compareStats?.totalRevenue, compareLabel);
+  const commissionTrend = calculateTrendPercentage(stats.totalCommission, compareStats?.totalCommission, compareLabel);
+  const dealsTrend = calculateTrendPercentage(stats.totalDeals, compareStats?.totalDeals, compareLabel);
+  
+  const scoreData = calculateWeightedEfficiencyScore(stats, compareStats);
+
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
       <StatsCard
         title="ยอดขายรวม (Revenue)"
         value={stats.totalRevenue}
         icon={DollarSign}
         description="รวมยอดขายและยอดเช่าทั้งหมด"
-        trend="+12.5% vs last year"
+        trend={revenueTrend.text}
+        trendValue={revenueTrend.value}
         color="blue"
         compareValue={compareStats?.totalRevenue}
       />
@@ -27,7 +57,8 @@ export function PerformanceStats({ stats, compareStats }: PerformanceStatsProps)
         value={stats.totalCommission}
         icon={TrendingUp}
         description="รายได้จริงจากค่าคอมมิชชั่น"
-        trend="+8.2% vs last year"
+        trend={commissionTrend.text}
+        trendValue={commissionTrend.value}
         color="emerald"
         compareValue={compareStats?.totalCommission}
       />
@@ -36,21 +67,23 @@ export function PerformanceStats({ stats, compareStats }: PerformanceStatsProps)
         value={stats.totalDeals}
         icon={Briefcase}
         description={`ยอดขาย ${stats.salesCount} | ยอดเช่า ${stats.rentalCount}`}
-        trend={`${stats.totalDeals} Deals Closed`}
+        trend={dealsTrend.text}
+        trendValue={dealsTrend.value}
         color="indigo"
         isCurrency={false}
         compareValue={compareStats?.totalDeals}
       />
       <StatsCard
         title="Performance Score"
-        value={85}
+        value={scoreData.score}
         icon={PieChartIcon}
-        description="ประสิทธิภาพเทียบกับเป้าหมาย"
-        trend="+5.4% vs last month"
+        description="ดัชนีชี้วัดประสิทธิภาพรายปี"
+        trend={scoreData.trend}
+        trendValue={scoreData.value}
         color="amber"
         isCurrency={false}
         suffix="%"
-        compareValue={compareStats ? 85 : null}
+        compareValue={compareStats ? scoreData.score : null}
       />
     </div>
   );

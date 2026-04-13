@@ -60,7 +60,7 @@ export default async function ExecutiveDashboardPage({
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 max-w-screen-2xl">
+    <div className="container mx-auto ax-w-screen-2xl">
       <ExecutiveDashboardView
         stats={stats}
         monthlyData={monthlyData}

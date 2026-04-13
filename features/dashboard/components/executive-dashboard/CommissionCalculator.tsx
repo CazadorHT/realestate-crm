@@ -50,7 +50,7 @@ export function CommissionCalculator() {
       trigger={
         <Button
           variant="outline"
-          className="gap-2 border-slate-200 bg-white/50 hover:bg-white shadow-sm font-bold transition-all active:scale-95"
+          className="gap-2 border-slate-200 hover:text-blue-700 hover:border-blue-200 text-blue-700 bg-white/50 hover:bg-white shadow-sm font-semibold transition-all active:scale-95"
         >
           <Calculator className="h-4 w-4 text-blue-500" />
           เครื่องคำนวณเบื้องต้น
@@ -59,14 +59,14 @@ export function CommissionCalculator() {
     >
       <div className="space-y-6 p-4 sm:p-6 text-left">
         <div className="space-y-2">
-          <Label className="text-slate-700 font-bold">
+          <Label className="text-slate-700 font-semibold">
             ราคาอสังหาริมทรัพย์ (฿)
           </Label>
           <PriceInput
             value={price}
             onChange={(val) => setPrice(val)}
             placeholder="ระบุราคา..."
-            className="text-lg font-bold rounded-xl h-12 border-slate-200"
+            className="text-lg font-semibold rounded-xl h-12 border-slate-200"
             showSuffix={false}
           />
         </div>
@@ -74,17 +74,17 @@ export function CommissionCalculator() {
         <Button
           onClick={performCalc}
           disabled={!price || price <= 0}
-          className="w-full bg-blue-600 hover:bg-blue-700 h-12 rounded-xl font-bold text-white shadow-lg shadow-blue-100 transition-all active:scale-95"
+          className="w-full bg-blue-600 hover:bg-blue-700 h-12 rounded-xl font-semibold text-white shadow-lg shadow-blue-100 transition-all active:scale-95"
         >
           เริ่มคำนวณ
         </Button>
 
         {result !== null && (
           <div className="p-6 bg-slate-50/80 backdrop-blur-sm rounded-2xl border border-blue-100 space-y-2 animate-in fade-in zoom-in-95 duration-500">
-            <p className="text-[10px] text-blue-500 uppercase font-black tracking-widest">
+            <p className="text-[10px] text-blue-500 uppercase font-semibold tracking-widest">
               ประมาณการค่าคอมมิชชั่น
             </p>
-            <h3 className="text-3xl font-black text-slate-900">
+            <h3 className="text-3xl font-semibold text-slate-900">
               {formatThaiCurrency(result)}
             </h3>
             <p className="text-[10px] text-slate-400 font-medium">

@@ -11,89 +11,192 @@ import {
 import { formatThaiCurrency } from "@/lib/excel-export";
 import { ExecutiveStats } from "../../executive-queries";
 
+import { PieChart as PieChartIcon, TrendingUp, Handshake, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
+
 interface TransactionTableProps {
   stats: ExecutiveStats;
+  className?: string;
 }
 
-export function TransactionTable({ stats }: TransactionTableProps) {
+export function TransactionTable({ stats, className }: TransactionTableProps) {
   return (
-    <Card className="lg:col-span-4 border-slate-100 shadow-sm border-0">
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle className="text-lg font-bold">
-            Transaction Overview
-          </CardTitle>
-          <CardDescription>
-            ตารางสรุปจำนวนดีลและมูลค่าตามประเภทธุรกรรม
-          </CardDescription>
-        </div>
+    <Card className={cn("border-slate-100 shadow-sm border-0 bg-white/50 backdrop-blur-sm", className)}>
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <Zap className="h-5 w-5 text-amber-500" />
+          Transaction Overview
+        </CardTitle>
+        <CardDescription className="text-xs">
+          สรุปจำนวนดีลและมูลค่าแยกตามประเภทธุรกรรม
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="relative overflow-x-auto rounded-xl border border-slate-100">
+      <CardContent className="px-4 sm:px-6">
+        {/* Desktop View */}
+        <div className="hidden lg:block relative overflow-x-auto rounded-xl border border-slate-100 bg-white/50">
           <table className="w-full text-sm text-left">
-            <thead className="text-xs text-slate-500 uppercase bg-slate-50">
+            <thead className="text-[10px] text-slate-500 uppercase bg-slate-50/80 tracking-widest font-semibold">
               <tr>
-                <th className="px-6 py-4 font-semibold">
-                  ประเภทธุรกรรม
-                </th>
-                <th className="px-6 py-4 font-semibold text-center">
-                  จำนวนดีล
-                </th>
-                <th className="px-6 py-4 font-semibold text-right">
-                  ยอดรวม (Gross Value)
-                </th>
-                <th className="px-6 py-4 font-semibold text-right">
-                  ค่าคอมมิชชั่น
-                </th>
+                <th className="px-6 py-4 font-semibold">ประเภทธุรกรรม</th>
+                <th className="px-6 py-4 font-semibold text-center">จำนวนดีล</th>
+                <th className="px-6 py-4 font-semibold text-right">ยอดรวม (Gross)</th>
+                <th className="px-6 py-4 font-semibold text-right">คอมมิชชั่น</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              <tr>
-                <td className="px-6 py-4 font-medium text-slate-900">
-                  การขาย (Sales)
-                </td>
-                <td className="px-6 py-4 text-center">
-                  {stats.salesCount}
-                </td>
-                <td className="px-6 py-4 text-right font-semibold">
-                  {formatThaiCurrency(stats.salesRevenue)}
-                </td>
-                <td className="px-6 py-4 text-right text-blue-600 font-bold">
-                  {formatThaiCurrency(stats.salesCommission)}
-                </td>
-              </tr>
-              <tr>
-                <td className="px-6 py-4 font-medium text-slate-900">
-                  การเช่า (Rentals)
-                </td>
-                <td className="px-6 py-4 text-center">
-                  {stats.rentalCount}
-                </td>
-                <td className="px-6 py-4 text-right font-semibold">
-                  {formatThaiCurrency(stats.rentalRevenue)}
-                </td>
-                <td className="px-6 py-4 text-right text-emerald-600 font-bold">
-                  {formatThaiCurrency(stats.rentalCommission)}
-                </td>
-              </tr>
+              <TransactionRow
+                label="การขาย (Sales)"
+                count={stats.salesCount}
+                revenue={stats.salesRevenue}
+                commission={stats.salesCommission}
+                color="blue"
+              />
+              <TransactionRow
+                label="การเช่า (Rentals)"
+                count={stats.rentalCount}
+                revenue={stats.rentalRevenue}
+                commission={stats.rentalCommission}
+                color="emerald"
+              />
             </tbody>
-            <tfoot className="bg-slate-50/50 font-bold border-t border-slate-200">
+            <tfoot className="bg-slate-50/80 font-semibold border-t border-slate-200">
               <tr>
-                <td className="px-6 py-4">Total</td>
-                <td className="px-6 py-4 text-center">
-                  {stats.totalDeals}
-                </td>
-                <td className="px-6 py-4 text-right">
+                <td className="px-6 py-4 text-[10px] uppercase tracking-wider">Total Overall</td>
+                <td className="px-6 py-4 text-center text-lg">{stats.totalDeals}</td>
+                <td className="px-6 py-4 text-right text-slate-900">
                   {formatThaiCurrency(stats.totalRevenue)}
                 </td>
-                <td className="px-6 py-4 text-right text-slate-900 bg-slate-100/50">
+                <td className="px-6 py-4 text-right text-blue-600 bg-blue-50/30">
                   {formatThaiCurrency(stats.totalCommission)}
                 </td>
               </tr>
             </tfoot>
           </table>
         </div>
+
+        {/* Mobile View (S, M, L) */}
+        <div className="lg:hidden space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <TransactionMobileCard
+              label="Sales"
+              count={stats.salesCount}
+              revenue={stats.salesRevenue}
+              commission={stats.salesCommission}
+              icon={<TrendingUp className="h-4 w-4" />}
+              color="blue"
+            />
+            <TransactionMobileCard
+              label="Rentals"
+              count={stats.rentalCount}
+              revenue={stats.rentalRevenue}
+              commission={stats.rentalCommission}
+              icon={<Handshake className="h-4 w-4" />}
+              color="emerald"
+            />
+          </div>
+
+          {/* Mobile Total Bar */}
+          <div className="bg-slate-900 rounded-2xl p-4 text-white shadow-lg overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-4 opacity-10">
+              <TrendingUp className="h-16 w-16" />
+            </div>
+            <div className="relative z-10 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+                  Total Summary
+                </p>
+                <p className="text-2xl font-semibold mt-1">
+                  {stats.totalDeals} <span className="text-xs font-normal text-slate-400">Deals</span>
+                </p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
+                  Total Commission
+                </p>
+                <p className="text-xl font-semibold text-blue-400 mt-1">
+                  {formatThaiCurrency(stats.totalCommission)}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
+  );
+}
+
+function TransactionRow({
+  label,
+  count,
+  revenue,
+  commission,
+  color,
+}: {
+  label: string;
+  count: number;
+  revenue: number;
+  commission: number;
+  color: "blue" | "emerald";
+}) {
+  return (
+    <tr className="hover:bg-slate-50/50 transition-colors">
+      <td className="px-6 py-4 font-semibold text-slate-700">{label}</td>
+      <td className="px-6 py-4 text-center font-semibold text-slate-900 text-base">{count}</td>
+      <td className="px-6 py-4 text-right font-semibold text-slate-600">
+        {formatThaiCurrency(revenue)}
+      </td>
+      <td className={cn(
+        "px-6 py-4 text-right font-semibold",
+        color === "blue" ? "text-blue-600" : "text-emerald-600"
+      )}>
+        {formatThaiCurrency(commission)}
+      </td>
+    </tr>
+  );
+}
+
+function TransactionMobileCard({
+  label,
+  count,
+  revenue,
+  commission,
+  icon,
+  color,
+}: {
+  label: string;
+  count: number;
+  revenue: number;
+  commission: number;
+  icon: React.ReactNode;
+  color: "blue" | "emerald";
+}) {
+  return (
+    <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm space-y-4">
+      <div className="flex items-center justify-between">
+        <div className={cn(
+          "p-2 rounded-xl",
+          color === "blue" ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
+        )}>
+          {icon}
+        </div>
+        <span className="text-2xl font-semibold text-slate-900">{count}</span>
+      </div>
+      <div>
+        <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">{label} Volume</p>
+        <p className="text-lg font-semibold text-slate-800">{formatThaiCurrency(revenue)}</p>
+      </div>
+      <div className={cn(
+        "p-2 rounded-lg flex items-center justify-between",
+        color === "blue" ? "bg-blue-50/50" : "bg-emerald-50/50"
+      )}>
+        <span className="text-[10px] font-semibold text-slate-500 uppercase">Comm.</span>
+        <span className={cn(
+          "text-sm font-semibold",
+          color === "blue" ? "text-blue-600" : "text-emerald-600"
+        )}>
+          {formatThaiCurrency(commission)}
+        </span>
+      </div>
+    </div>
   );
 }

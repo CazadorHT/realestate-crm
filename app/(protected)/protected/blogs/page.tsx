@@ -41,7 +41,7 @@ export default async function BlogsPage(props: {
         gradient="blue"
         
         actionSlot={
-          <Button asChild className="flex flex-1 bg-white hover:bg-blue-700 text-blue-600">
+          <Button asChild className="flex flex-1 bg-white hover:bg-blue-700  hover:text-white text-blue-600 duration-300 transition-all">
             <Link href="/protected/blogs/new">
               <Plus className="mr-2 h-4 w-4" />
               สร้างบทความใหม่
