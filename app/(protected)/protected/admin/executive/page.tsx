@@ -15,11 +15,16 @@ import { ExecutiveBranchList } from "./components/ExecutiveBranchList";
 
 // ⚡ Performance Optimized Dynamic Import
 const ExecutiveChartsContainer = dynamic(
-  () => import("./components/ExecutiveChartsContainer").then(mod => mod.ExecutiveChartsContainer),
+  () =>
+    import("./components/ExecutiveChartsContainer").then(
+      (mod) => mod.ExecutiveChartsContainer,
+    ),
   {
     ssr: false,
-    loading: () => <div className="h-[400px] w-full bg-slate-50/50 animate-pulse rounded-2xl border border-slate-100" />
-  }
+    loading: () => (
+      <div className="h-[400px] w-full bg-slate-50/50 animate-pulse rounded-2xl border border-slate-100" />
+    ),
+  },
 );
 
 export default function ExecutiveDashboard() {
@@ -45,8 +50,14 @@ export default function ExecutiveDashboard() {
     }
   };
 
-  const totalLeads = data.reduce((acc: number, curr: ExecutiveData) => acc + curr.leadCount, 0);
-  const totalDeals = data.reduce((acc: number, curr: ExecutiveData) => acc + curr.dealCount, 0);
+  const totalLeads = data.reduce(
+    (acc: number, curr: ExecutiveData) => acc + curr.leadCount,
+    0,
+  );
+  const totalDeals = data.reduce(
+    (acc: number, curr: ExecutiveData) => acc + curr.dealCount,
+    0,
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-10">
@@ -55,6 +66,11 @@ export default function ExecutiveDashboard() {
         subtitle="ภาพรวมผลการดำเนินงานแบบ Real-time ของทุกสาขาทั่วประเทศ"
         icon="trendingUp"
         gradient="blue"
+        breadcrumbs={[
+          { label: "หน้าแรก", href: "/protected" },
+          { label: "ผู้ดูแลระบบ", href: "/protected/admin/analytics" },
+          { label: "แดชบอร์ดผู้บริหาร" },
+        ]}
         actionSlot={
           <div className="flex flex-col md:flex-row items-center gap-2">
             <Button
@@ -62,7 +78,7 @@ export default function ExecutiveDashboard() {
               size="sm"
               onClick={fetchData}
               disabled={loading}
-              className="rounded-lg font-medium"
+              className="rounded-xl font-semibold h-11 border-slate-200"
             >
               <RefreshCcw
                 className={`mr-2 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
@@ -71,7 +87,7 @@ export default function ExecutiveDashboard() {
             </Button>
             <Button
               size="sm"
-              className="rounded-lg font-medium"
+              className="rounded-xl font-semibold h-11 bg-slate-900 hover:bg-black text-white shadow-lg"
             >
               <Download className="mr-2 h-3.5 w-3.5" />
               ส่งออกรายงาน
@@ -81,19 +97,19 @@ export default function ExecutiveDashboard() {
       />
 
       {/* 🚀 Layer 1: Executive Summary (Unified Loading) */}
-      <ExecutiveStats 
-        totalLeads={totalLeads} 
-        totalDeals={totalDeals} 
-        branchCount={data.length} 
+      <ExecutiveStats
+        totalLeads={totalLeads}
+        totalDeals={totalDeals}
+        branchCount={data.length}
         isLoading={loading}
       />
 
       {/* 📊 Layer 2: Visual Intelligence & AI Briefing */}
       {mounted && (
-        <ExecutiveChartsContainer 
-          data={data} 
-          totalLeads={totalLeads} 
-          totalDeals={totalDeals} 
+        <ExecutiveChartsContainer
+          data={data}
+          totalLeads={totalLeads}
+          totalDeals={totalDeals}
           isLoading={loading}
         />
       )}

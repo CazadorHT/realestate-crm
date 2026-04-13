@@ -17,6 +17,8 @@ import {
   TrendingUp,
   PieChart,
   Sparkles,
+  Layers,
+  ChevronRight,
   type LucideIcon,
 } from "lucide-react";
 import { ReactNode } from "react";
@@ -37,6 +39,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   trendingUp: TrendingUp,
   pieChart: PieChart,
   sparkles: Sparkles,
+  layers: Layers,
 };
 
 interface PageHeaderProps {
@@ -49,6 +52,7 @@ interface PageHeaderProps {
   actionIcon?: keyof typeof ICON_MAP;
   actionSlot?: ReactNode; // For custom action components like dialogs
   gradient?: "blue" | "emerald" | "purple" | "amber" | "rose";
+  breadcrumbs?: { label: string; href?: string }[];
   children?: ReactNode;
 }
 
@@ -70,6 +74,7 @@ export function PageHeader({
   actionIcon,
   actionSlot,
   gradient = "blue",
+  breadcrumbs,
   children,
 }: PageHeaderProps) {
   const Icon = icon ? ICON_MAP[icon] : null;
@@ -83,50 +88,71 @@ export function PageHeader({
       <div className="absolute top-0 right-0 -mt-8 -mr-8 w-40 h-40 bg-white/10 rounded-full blur-2xl" />
       <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-white/5 rounded-full blur-xl" />
 
-      <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            {Icon && (
-              <div className="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl shrink-0">
-                <Icon className="h-6 w-6 text-white" />
+      <div className="relative">
+        {/* 🧭 Elite Breadcrumbs Nav */}
+        {breadcrumbs && breadcrumbs.length > 0 && (
+          <nav className="flex items-center gap-2 text-white/60 text-[10px] font-semibold uppercase tracking-widest mb-4 overflow-x-auto no-scrollbar">
+            {breadcrumbs.map((crumb, i) => (
+              <div key={i} className="flex items-center gap-2 shrink-0">
+                {crumb.href ? (
+                  <Link href={crumb.href} className="hover:text-white transition-colors">
+                    {crumb.label}
+                  </Link>
+                ) : (
+                  <span className="text-white/90">{crumb.label}</span>
+                )}
+                {i < breadcrumbs.length - 1 && (
+                  <ChevronRight className="h-2.5 w-2.5 opacity-40 shrink-0" />
+                )}
               </div>
-            )}
-            <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-              {title}
-            </h1>
-          </div>
-          {(subtitle || count !== undefined) && (
-            <p className="text-white/80 text-sm md:text-base max-w-md ml-1">
-              {subtitle}
-              {count !== undefined && (
-                <>
-                  {subtitle && " • "}
-                  มีทั้งหมด{" "}
-                  <span className="font-bold text-white">{count}</span> รายการ
-                </>
-              )}
-            </p>
-          )}
-        </div>
+            ))}
+          </nav>
+        )}
 
-        {/* Action Slot - for custom components like dialogs */}
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          {actionSlot ? (
-            <div className="w-full sm:w-auto [&_button]:w-full [&_button]:sm:w-auto [&_button]:bg-white [&_button]:text-slate-800 [&_button]:hover:bg-white/90 [&_button]:shadow-lg [&_button]:font-semibold [&_button]:rounded-xl">
-              {actionSlot}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+          <div className="space-y-2">
+            <div className="flex items-center gap-3">
+              {Icon && (
+                <div className="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl shrink-0">
+                  <Icon className="h-6 w-6 text-white" />
+                </div>
+              )}
+              <h1 className="text-2xl md:text-3xl font-semibold text-white tracking-tight">
+                {title}
+              </h1>
             </div>
-          ) : actionLabel && actionHref ? (
-            <Button
-              asChild
-              size="lg"
-              className="w-full sm:w-auto bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold rounded-xl"
-            >
-              <Link href={actionHref}>
-                {ActionIcon && <ActionIcon className="h-5 w-5 mr-2" />}
-                {actionLabel}
-              </Link>
-            </Button>
-          ) : null}
+            {(subtitle || count !== undefined) && (
+              <p className="text-white/80 text-sm md:text-base max-w-md ml-1">
+                {subtitle}
+                {count !== undefined && (
+                  <>
+                    {subtitle && " • "}
+                    มีทั้งหมด{" "}
+                    <span className="font-semibold text-white">{count}</span> รายการ
+                  </>
+                )}
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {actionSlot ? (
+              <div className="w-full sm:w-auto [&_button]:w-full [&_button]:sm:w-auto [&_button]:bg-white [&_button]:text-slate-800 [&_button]:hover:bg-white/90 [&_button]:shadow-lg [&_button]:font-semibold [&_button]:rounded-xl">
+                {actionSlot}
+              </div>
+            ) : actionLabel && actionHref ? (
+              <Button
+                asChild
+                size="lg"
+                className="w-full sm:w-auto bg-white text-slate-800 hover:bg-white/90 shadow-lg hover:shadow-xl transition-all duration-300 font-semibold rounded-xl"
+              >
+                <Link href={actionHref}>
+                  {ActionIcon && <ActionIcon className="h-5 w-5 mr-2" />}
+                  {actionLabel}
+                </Link>
+              </Button>
+            ) : null}
+          </div>
         </div>
       </div>
 

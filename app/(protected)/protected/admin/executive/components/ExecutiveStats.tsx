@@ -42,7 +42,7 @@ export function ExecutiveStats({
             <StatSkeleton />
           ) : (
             <>
-              <div className="text-2xl font-bold text-slate-900">
+              <div className="text-2xl font-semibold text-slate-900">
                 {totalLeads.toLocaleString()}
               </div>
               <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium">
@@ -68,7 +68,7 @@ export function ExecutiveStats({
             <StatSkeleton />
           ) : (
             <>
-              <div className="text-2xl font-bold text-slate-900">
+              <div className="text-2xl font-semibold text-slate-900">
                 {totalDeals.toLocaleString()}
               </div>
               <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium">
@@ -94,7 +94,7 @@ export function ExecutiveStats({
             <StatSkeleton />
           ) : (
             <>
-              <div className="text-2xl font-bold text-slate-900">{branchCount}</div>
+              <div className="text-2xl font-semibold text-slate-900">{branchCount}</div>
               <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium">
                 สาขาที่เปิดดำเนินการจริง
               </p>

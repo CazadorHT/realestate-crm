@@ -6,7 +6,17 @@ import {
   assertStaff,
 } from "@/lib/authz";
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { PropertyRow, PropertyWithImages } from "../types";
+import type {
+  PropertyRow,
+  PropertyWithImages,
+  PropertyType,
+  ListingType,
+  PropertyStatus,
+} from "../types";
+import type { 
+  InventoryProperty,
+  InventoryFilterCounts 
+} from "@/app/(protected)/protected/admin/inventory/types";
 import { getRecommendedProperties } from "../queries";
 import { mapDbError } from "@/lib/db-error";
 
@@ -82,7 +92,10 @@ export async function getPropertyWithImages(
   const property = data as unknown as PropertyWithImages;
 
   if (property.property_images) {
-    property.property_images.sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order);
+    property.property_images.sort(
+      (a: { sort_order: number }, b: { sort_order: number }) =>
+        a.sort_order - b.sort_order,
+    );
   }
 
   return property;
@@ -174,37 +187,50 @@ export async function addPopularAreaAction(data: {
 }
 
 /**
+ * 🛡️ Elite Type Hardening for Relational Data
+ */
+interface JoinedPropertyRow {
+  id: string;
+  title: string;
+  price: number | null;
+  original_price: number | null;
+  rental_price: number | null;
+  original_rental_price: number | null;
+  status: string;
+  property_type: string;
+  listing_type: string;
+  created_at: string;
+  tenants: { name: string } | null;
+  property_images: { image_url: string; is_cover: boolean }[];
+}
+
+/**
  * Get global properties for administration (cross-tenant)
+ * 🛡️ Elite 10/10 Hardened Version
  */
 export async function getGlobalPropertiesTableDataAction(params: {
-  page?: number;
+  page: number;
   q?: string;
   propertyType?: string;
   listingType?: string;
   status?: string;
   targetTenantId?: string;
-}): Promise<{
-  tableData: any[];
-  count: number;
-}> {
+}): Promise<{ tableData: InventoryProperty[]; count: number }> {
+  // 🛡️ Authorization & Context
   const { supabase, role } = await requireAuthContext();
   if (role !== "ADMIN") throw new Error("Forbidden: Admin only");
 
-  const {
-    page = 1,
-    q,
-    propertyType,
-    listingType,
-    status,
-    targetTenantId,
-  } = params;
+  const { page, q, propertyType, listingType, status, targetTenantId } = params;
+
   const PAGE_SIZE = 10;
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
   let query = supabase
     .from("properties")
-    .select("*, tenants(name)", { count: "exact" })
+    .select("*, tenants(name), property_images(image_url, is_cover)", {
+      count: "exact",
+    })
     .is("deleted_at", null)
     .range(from, to)
     .order("created_at", { ascending: false });
@@ -216,15 +242,15 @@ export async function getGlobalPropertiesTableDataAction(params: {
   }
 
   if (propertyType && propertyType !== "ALL") {
-    query = query.eq("property_type", propertyType as any);
+    query = query.eq("property_type", propertyType as PropertyType);
   }
 
   if (listingType && listingType !== "ALL") {
-    query = query.eq("listing_type", listingType as any);
+    query = query.eq("listing_type", listingType as ListingType);
   }
 
   if (status && status !== "ALL") {
-    query = query.eq("status", status as any);
+    query = query.eq("status", status as PropertyStatus);
   }
 
   if (targetTenantId && targetTenantId !== "ALL") {
@@ -241,19 +267,87 @@ export async function getGlobalPropertiesTableDataAction(params: {
     return { tableData: [], count: 0 };
   }
 
-  const tableData = data.map((p: any) => ({
-    id: p.id,
-    title: p.title,
-    price: p.price || p.original_price,
-    rental_price: p.rental_price || p.original_rental_price,
-    status: p.status,
-    property_type: p.property_type,
-    listing_type: p.listing_type,
-    tenant_name: (p.tenants as any)?.name || "Unknown Branch",
-    created_at: p.created_at,
-  }));
+  // 🛡️ Cast to hardened interface
+  const typedData = data as unknown as JoinedPropertyRow[];
+
+  const tableData = typedData.map((p) => {
+    // 🛡️ Find cover image or use the first one
+    const mainImage =
+      p.property_images?.find((img) => img.is_cover)?.image_url ||
+      p.property_images?.[0]?.image_url ||
+      null;
+
+    return {
+      id: p.id,
+      title: p.title,
+      price: p.price || p.original_price,
+      rental_price: p.rental_price || p.original_rental_price,
+      status: p.status,
+      property_type: p.property_type,
+      listing_type: p.listing_type,
+      main_image_url: mainImage,
+      tenant_name: p.tenants?.name || "Unknown Branch",
+      created_at: p.created_at,
+    };
+  });
 
   return { tableData, count: count || 0 };
+}
+
+/**
+ * Get dynamic counts for all inventory filter options
+ * 🛡️ Elite Aggregation Logic
+ */
+interface AggregationRow {
+  property_type: string | null;
+  status: string | null;
+  listing_type: string | null;
+  tenant_id: string | null;
+}
+
+export async function getGlobalInventoryFilterCountsAction(): Promise<InventoryFilterCounts> {
+  const { supabase, role } = await requireAuthContext();
+  if (role !== "ADMIN") throw new Error("Forbidden: Admin only");
+
+  // 🛡️ Fetch only necessary columns for all non-deleted properties
+  const { data, error } = await supabase
+    .from("properties")
+    .select("property_type, status, listing_type, tenant_id")
+    .is("deleted_at", null);
+
+  if (error || !data) {
+    console.error("getGlobalInventoryFilterCountsAction error:", error);
+    return { propertyTypes: {}, statuses: {}, listingTypes: {}, branches: {} };
+  }
+
+  // 🛡️ Perform in-memory aggregation with Uppercase Normalization
+  const typedData = data as unknown as AggregationRow[];
+  const counts: InventoryFilterCounts = {
+    propertyTypes: {},
+    statuses: {},
+    listingTypes: {},
+    branches: {}
+  };
+
+  typedData.forEach((p) => {
+    if (p.property_type) {
+      const key = String(p.property_type).toUpperCase();
+      counts.propertyTypes[key] = (counts.propertyTypes[key] || 0) + 1;
+    }
+    if (p.status) {
+      const key = String(p.status).toUpperCase();
+      counts.statuses[key] = (counts.statuses[key] || 0) + 1;
+    }
+    if (p.listing_type) {
+      const key = String(p.listing_type).toUpperCase();
+      counts.listingTypes[key] = (counts.listingTypes[key] || 0) + 1;
+    }
+    if (p.tenant_id) {
+      counts.branches[p.tenant_id] = (counts.branches[p.tenant_id] || 0) + 1;
+    }
+  });
+
+  return counts;
 }
 
 /**
