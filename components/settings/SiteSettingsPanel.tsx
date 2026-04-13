@@ -169,17 +169,17 @@ export function SiteSettingsPanel() {
               <Icon className={cn("h-5 w-5", iconColor)} />
             </div>
             <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-col xl:flex-row items-center gap-2">
                 <Label
                   htmlFor={id}
-                  className="text-sm font-semibold text-slate-900 cursor-pointer"
+                  className="text-sm font-semibold text-slate-900 cursor-pointer line-clamp-2!"
                 >
                   {title}
                 </Label>
                 <Badge
                   variant={isEnabled ? "default" : "secondary"}
                   className={cn(
-                    "text-[10px] uppercase font-medium px-2 py-1 leading-none",
+                    "text-[10px] w-full xl:w-auto justify-center uppercase font-medium px-2 py-1 leading-none",
                     isEnabled
                       ? "bg-emerald-500 hover:bg-emerald-600"
                       : "bg-slate-200",
@@ -211,7 +211,7 @@ export function SiteSettingsPanel() {
       {/* Save Action Bar (Sticky or Floating) */}
       <div
         className={cn(
-          "flex items-center justify-between p-4 rounded-2xl border bg-white/80 backdrop-blur-md shadow-lg sticky top-6 z-50 transition-all duration-500",
+          "flex items-center justify-between p-4 rounded-2xl border bg-white/80 backdrop-blur-md shadow-lg sticky top-20 z-50 transition-all duration-500",
           hasChanges
             ? "border-blue-200 translate-y-0 opacity-100"
             : "border-slate-100 translate-y-0 opacity-100",
@@ -226,7 +226,7 @@ export function SiteSettingsPanel() {
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex  items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-emerald-500" />
               <span className="text-sm font-medium text-slate-500">
                 การตั้งค่าเป็นปัจจุบันแล้ว

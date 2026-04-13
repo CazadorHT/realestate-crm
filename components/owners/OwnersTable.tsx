@@ -12,7 +12,11 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { User } from "lucide-react";
+import { User, ChevronRight, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
+import { FaPhone, FaLine, FaFacebook, FaChevronRight } from "react-icons/fa6";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { OwnerRowActions } from "@/components/owners/OwnerRowActions";
@@ -27,7 +31,6 @@ import {
 } from "@/features/owners/bulk-actions";
 import { exportOwnersAction } from "@/features/owners/export-action";
 import { toast } from "sonner";
-import { AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 
@@ -386,100 +389,159 @@ export function OwnersTable({
           </Table>
         </div>
 
-        {/* Mobile/Tablet Card View */}
-        <div className="lg:hidden divide-y divide-slate-100">
-          {owners.map((owner) => (
-            <div
-              key={owner.id}
-              className={`p-4 transition-colors ${
-                isSelected(owner.id) ? "bg-blue-50/50" : "hover:bg-slate-50"
-              }`}
+        {/* Mobile/Tablet Card View - Premium Adaptive Grid */}
+        <div className="lg:hidden p-4 bg-slate-50/30">
+          <AnimatePresence mode="popLayout">
+            <motion.div 
+              layout
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             >
-              <div className="flex gap-4">
-                <div className="flex flex-col gap-3 shrink-0 py-1">
-                  <Checkbox
-                    checked={isSelected(owner.id)}
-                    onCheckedChange={() => toggleSelect(owner.id)}
-                  />
-                  <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center">
-                    <User className="h-5 w-5 text-slate-400" />
-                  </div>
-                </div>
+              {owners.map((owner, idx) => {
+                const isItemNew = owner.created_at && 
+                  differenceInHours(new Date(), new Date(owner.created_at)) < 24;
+                const initials = owner.full_name
+                  ? owner.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+                  : "??";
+                const selected = isSelected(owner.id);
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="flex flex-col">
-                      <div className="flex items-center gap-2">
-                        <Link
-                          href={`/protected/owners/${owner.id}`}
-                          className="font-bold text-slate-900 text-sm hover:underline"
-                        >
-                          {owner.full_name}
-                        </Link>
-                        {owner.created_at &&
-                          differenceInHours(
-                            new Date(),
-                            new Date(owner.created_at),
-                          ) < 24 && (
-                            <Badge className="h-4 px-1.5 text-[11px] bg-amber-500 hover:bg-amber-600 border-0">
+                return (
+                  <motion.div
+                    key={owner.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 300, 
+                      damping: 30,
+                      delay: idx * 0.03 
+                    }}
+                    className={cn(
+                      "group relative flex flex-col h-full bg-white rounded-[32px] border transition-all duration-300",
+                      selected 
+                        ? "border-blue-500 shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)] ring-2 ring-blue-500/20" 
+                        : "border-slate-200/60 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50"
+                    )}
+                  >
+                    {/* Card Header: Selection & Avatar & Actions */}
+                    <div className="p-5 pb-3">
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="relative flex items-center justify-center h-5 w-5 shrink-0 pointer-events-auto z-10">
+                            <Checkbox
+                              checked={selected}
+                              onCheckedChange={() => toggleSelect(owner.id)}
+                              className="rounded-full h-5 w-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                            />
+                          </div>
+                          
+                          <Avatar className="h-10 w-10 border-2 border-slate-50 shadow-sm shrink-0">
+                            <AvatarFallback className="bg-blue-50 text-blue-600 font-semibold text-xs">
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+                        </div>
+                        
+                        <div className="shrink-0">
+                          <OwnerRowActions
+                            owner={owner}
+                            isAdmin={isAdmin}
+                            isMultiTenant={isMultiTenant}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Name and Basic Info */}
+                      <div className="mt-4">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Link
+                            href={`/protected/owners/${owner.id}`}
+                            className="text-base font-semibold text-slate-900 hover:text-blue-700 hover:underline transition-colors line-clamp-1"
+                          >
+                            {owner.full_name}
+                          </Link>
+                          {isItemNew && (
+                            <Badge className="h-4.5 px-2 text-[10px] bg-amber-500 hover:bg-amber-600 border-0 font-semibold tracking-tighter shrink-0 animate-pulse">
                               NEW
                             </Badge>
                           )}
-                      </div>
-                      <div className="bg-slate-100 text-[11px] font-bold text-slate-500 px-2 py-0.5 rounded-full w-fit mt-1">
-                        {owner.property_count || 0} ทรัพย์
-                      </div>
-                      {showBranch && owner.tenants?.name && (
-                        <div className="bg-blue-100 text-[11px] font-bold text-blue-600 px-2 py-0.5 rounded-full w-fit mt-1">
-                          สาขา: {owner.tenants.name}
                         </div>
-                      )}
+                        
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          <div className="bg-blue-50 text-[10px] font-semibold text-blue-700 px-2.5 py-1 rounded-full uppercase tracking-tighter border border-blue-100/50 flex items-center gap-1">
+                            <User className="h-2.5 w-2.5" />
+                            {owner.property_count || 0} ทรัพย์สิน
+                          </div>
+                          {showBranch && owner.tenants?.name && (
+                            <div className="bg-slate-100 text-[10px] font-semibold text-slate-600 px-2.5 py-1 rounded-full uppercase tracking-tighter border border-slate-200/50">
+                              สาขา: {owner.tenants.name}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <OwnerRowActions
-                      owner={owner}
-                      isAdmin={isAdmin}
-                      isMultiTenant={isMultiTenant}
-                    />
-                  </div>
 
-                  <div className="mt-3 space-y-2">
-                    {owner.phone && (
-                      <div className="flex items-center gap-2 text-[11px] text-slate-600">
-                        <span className="text-slate-400 w-16">เบอร์โทร:</span>
+                    {/* Divider */}
+                    <div className="h-px bg-slate-100/80 mx-5" />
+
+                    {/* Card Body: Contact Action Pills (Hardened Layout) */}
+                    <div className="p-5 pt-4 flex-1">
+                      <div className="grid grid-cols-1 gap-2">
+                        {/* Phone Pill */}
                         <a
-                          href={`tel:${owner.phone}`}
-                          className="hover:underline font-medium"
+                          href={owner.phone ? `tel:${owner.phone}` : "#"}
+                          className={cn(
+                            "flex items-center justify-between min-h-[46px] w-full px-4 rounded-2xl transition-all font-semibold text-sm",
+                            owner.phone 
+                              ? "bg-blue-50/50 text-blue-700 hover:bg-blue-600 hover:text-white shadow-xs" 
+                              : "bg-slate-50 text-slate-300 pointer-events-none cursor-not-allowed"
+                          )}
                         >
-                          {owner.phone}
+                          <div className="flex items-center gap-3">
+                            <FaPhone className="h-3.5 w-3.5 mb-0.5" />
+                            <span>{owner.phone || "ไม่มีเบอร์โทร"}</span>
+                          </div>
+                          {owner.phone && <FaChevronRight className="h-3 w-3 opacity-50" />}
                         </a>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* LINE Pill */}
+                          <div
+                            className={cn(
+                              "flex items-center justify-center gap-2 min-h-[46px] rounded-2xl transition-all font-semibold text-sm px-2",
+                              owner.line_id 
+                                ? "bg-emerald-50/50 text-emerald-700 border border-emerald-100/50 hover:bg-emerald-600 hover:text-white" 
+                                : "bg-slate-50 text-slate-300 border border-slate-100"
+                            )}
+                          >
+                            <FaLine className="h-4 w-4 shrink-0 mb-0.5" />
+                            <span className="truncate">{owner.line_id || "LINE"}</span>
+                          </div>
+
+                          {/* Facebook Action */}
+                          <a
+                            href={owner.facebook_url || "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(
+                              "flex items-center justify-center gap-2 min-h-[46px] rounded-2xl transition-all font-semibold text-sm px-2",
+                              owner.facebook_url 
+                                ? "bg-indigo-50/50 text-indigo-700 border border-indigo-100/50 hover:bg-indigo-600 hover:text-white shadow-xs" 
+                                : "bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed"
+                            )}
+                          >
+                            <FaFacebook className="h-4 w-4 shrink-0 mb-0.5" />
+                            <span>Facebook</span>
+                          </a>
+                        </div>
                       </div>
-                    )}
-                    {owner.line_id && (
-                      <div className="flex items-center gap-2 text-[11px] text-slate-600">
-                        <span className="text-slate-400 w-16">LINE ID:</span>
-                        <span className="font-medium text-emerald-600">
-                          {owner.line_id}
-                        </span>
-                      </div>
-                    )}
-                    {owner.facebook_url && (
-                      <div className="flex items-center gap-2 text-[11px] text-slate-600">
-                        <span className="text-slate-400 w-16">Facebook:</span>
-                        <a
-                          href={owner.facebook_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="hover:underline text-blue-600 font-medium"
-                        >
-                          ดูโปรไฟล์
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </div>
 

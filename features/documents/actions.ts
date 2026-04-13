@@ -115,7 +115,13 @@ export async function getAllDocuments(
   );
 
   if (statsError) {
-    console.error("Fetch Document Stats Error (RPC failed, falling back):", statsError);
+    // Hardening: Provide detailed diagnostic info instead of empty object
+    console.error("Fetch Document Stats Error (RPC failed, falling back):", {
+      message: statsError.message,
+      code: statsError.code,
+      details: statsError.details,
+      hint: statsError.hint
+    });
     // Silent fallback to avoid crashing display if RPC isn't deployed yet
   }
 

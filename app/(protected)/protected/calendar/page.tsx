@@ -18,6 +18,7 @@ import {
 import { CalendarDays, Building2 } from "lucide-react";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { Badge } from "@/components/ui/badge";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export const metadata = {
   title: "Calendar | CRM",
@@ -74,30 +75,25 @@ export default async function CalendarPage({
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-100 rounded-lg">
-            <CalendarDays className="h-6 w-6 text-indigo-600" />
+      <PageHeader
+        title={
+          <div className="flex items-center gap-2">
+            <span>Calendar</span>
+            {isMultiTenant && (
+              <Badge variant="outline" className="gap-1.5 py-1 px-3 border-indigo-200 bg-indigo-50/50 text-indigo-700">
+                <Building2 className="h-3.5 w-3.5" />
+                {currentTenantName || "ทุกสาขา"}
+              </Badge>
+            )}
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold tracking-tight">Calendar</h1>
-              {isMultiTenant && (
-                <Badge variant="outline" className="gap-1.5 py-1 px-3 border-indigo-200 bg-indigo-50/50 text-indigo-700">
-                  <Building2 className="h-3.5 w-3.5" />
-                  {currentTenantName || "ทุกสาขา"}
-                </Badge>
-              )}
-            </div>
-            <p className="text-muted-foreground text-sm">
-              ตารางนัดหมาย สัญญาเช่า และดีลสำคัญ
-            </p>
-          </div>
-        </div>
-
-        {/* Add Appointment Button */}
-        <CreateEventDialog leads={leads} properties={properties} events={events} />
-      </div>
+        }
+        subtitle="ตารางนัดหมาย สัญญาเช่า และดีลสำคัญ"
+        icon="calendarDays"
+        gradient="purple"
+        actionSlot={
+          <CreateEventDialog leads={leads} properties={properties} events={events} />
+        }
+      />
 
       <CalendarView
         initialDate={currentMonth}

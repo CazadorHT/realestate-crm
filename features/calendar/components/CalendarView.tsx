@@ -10,21 +10,29 @@ import {
 } from "date-fns";
 import { th } from "date-fns/locale";
 import {
-  ChevronLeft,
-  ChevronRight,
   Loader2,
-  Calendar as CalendarIcon,
-  LayoutList,
-  Columns as ColumnsIcon,
-  ChevronDown,
+  Check,
+  X,
 } from "lucide-react";
+import { 
+  FaChevronLeft, 
+  FaChevronRight, 
+  FaChevronDown, 
+  FaCalendarDays, 
+  FaCalendarWeek, 
+  FaListUl, 
+  FaBuilding, 
+  FaUser, 
+  FaUsers,
+  FaCalendar
+} from "react-icons/fa6";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CalendarEvent } from "../queries";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Search, User, Building2, Check, X, Users } from "lucide-react";
+import { Search } from "lucide-react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 
@@ -165,50 +173,51 @@ export function CalendarView({
 
   return (
     <div className="space-y-4 animate-in fade-in duration-700">
-      {/* Header controls */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-        {/* Left: Navigation & Title */}
-        <div className="flex items-center justify-between w-full lg:w-auto lg:gap-4">
-          <div className="flex items-center gap-2">
+      {/* Header controls - Elite Grid Overhaul */}
+      <div className="grid grid-cols-1 xl:grid-cols-[auto_1fr_auto] items-center gap-4 p-5 bg-white/80 backdrop-blur-md rounded-[32px] border border-slate-200/60 shadow-sm sticky top-0 z-20">
+        
+        {/* Section 1: Navigation & Title Group */}
+        <div className="flex items-center justify-between xl:justify-start gap-4 w-full">
+          <div className="flex items-center gap-3">
             <Popover>
               <PopoverTrigger asChild>
                 <Button 
                   variant="ghost" 
-                  className="h-auto p-0 hover:bg-transparent flex items-center gap-2 group/btn"
+                  className="h-11 px-4 hover:bg-slate-50 rounded-2xl flex items-center gap-3 group/btn transition-all border border-transparent hover:border-slate-100"
                 >
                   <h2 className="text-xl font-semibold text-slate-800 group-hover/btn:text-indigo-600 transition-colors">
                     {format(currentDate, "MMMM yyyy", { locale: th })}
                   </h2>
-                  <ChevronDown className="h-4 w-4 text-slate-400 group-hover/btn:text-indigo-600 transition-colors" />
+                  <FaChevronDown className="h-3.5 w-3.5 text-slate-400 group-hover/btn:text-indigo-600 transition-all group-data-[state=open]/btn:rotate-180" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[300px] p-3 rounded-2xl shadow-xl border-slate-100" align="start">
+              <PopoverContent className="w-[320px] p-4 rounded-[28px] shadow-2xl border-slate-100/60 mt-2" align="start">
                 {/* Year Navigation */}
-                <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-100">
+                <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-50">
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 rounded-lg text-slate-400 hover:text-indigo-600"
+                    className="h-9 w-9 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
                     onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
                       handleYearChange(-1);
                     }}
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <FaChevronLeft className="h-4 w-4" />
                   </Button>
-                  <div className="text-sm font-semibold text-slate-900">
+                  <div className="text-sm font-semibold text-slate-900 bg-slate-50 px-4 py-1.5 rounded-full border border-slate-100">
                     ปี {format(currentDate, "yyyy", { locale: th })}
                   </div>
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 rounded-lg text-slate-400 hover:text-indigo-600"
+                    className="h-9 w-9 rounded-xl text-slate-400 hover:text-indigo-600 hover:bg-indigo-50"
                     onClick={(e: React.MouseEvent) => {
                       e.stopPropagation();
                       handleYearChange(1);
                     }}
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <FaChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
 
@@ -226,16 +235,21 @@ export function CalendarView({
                         size="sm"
                         onClick={() => handleMonthSelect(i)}
                         className={cn(
-                          "text-xs font-semibold h-11 rounded-xl relative",
-                          currentDate.getMonth() === i ? "bg-indigo-600 shadow-lg shadow-indigo-100" : "text-slate-600"
+                          "text-xs font-semibold h-12 rounded-2xl relative transition-all active:scale-95",
+                          currentDate.getMonth() === i 
+                            ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200" 
+                            : "text-slate-600 hover:bg-indigo-50 hover:text-indigo-600"
                         )}
                       >
                         <div className="flex flex-col items-center gap-0.5">
-                          <span>{format(new Date(2000, i, 1), "MMM", { locale: th })}</span>
+                          <span className="uppercase tracking-wider">{format(new Date(2000, i, 1), "MMM", { locale: th })}</span>
                           {count > 0 && (
                             <div className="flex items-center gap-1">
-                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                               <span className={cn("text-[9px]", currentDate.getMonth() === i ? "text-indigo-100" : "text-slate-400")}>
+                               <span className={cn(
+                                 "w-1 h-1 rounded-full",
+                                 currentDate.getMonth() === i ? "bg-white" : "bg-emerald-500"
+                               )} />
+                               <span className={cn("text-[9px] font-bold", currentDate.getMonth() === i ? "text-indigo-100" : "text-slate-400")}>
                                  {count}
                                </span>
                             </div>
@@ -249,52 +263,59 @@ export function CalendarView({
             </Popover>
             
             {isLoading && (
-              <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
+              <div className="bg-indigo-50 p-2 rounded-full">
+                <Loader2 className="h-4 w-4 animate-spin text-indigo-500" />
+              </div>
             )}
           </div>
 
-          <div className="flex gap-1">
+          {/* Quick Nav arrows */}
+          <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200/50">
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => navigate("prev")}
-              className="rounded-xl border-slate-200 h-9 w-9"
+              className="rounded-xl h-9 w-10 text-slate-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <FaChevronLeft className="h-4 w-4" />
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => navigate("next")}
-              className="rounded-xl border-slate-200 h-9 w-9"
+              className="rounded-xl h-9 w-10 text-slate-500 hover:text-indigo-600 hover:bg-white hover:shadow-sm transition-all"
             >
-              <ChevronRight className="h-5 w-5" />
+              <FaChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
 
-        {/* Right: Filters & View Toggle */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-          {/* Property Filter (Responsive Dialog) */}
+        {/* Section 2: Loading Spacer / Center (Hidden on XL) */}
+        <div className="hidden xl:block" />
+
+        {/* Section 3: High-Fidelity Filters & View Toggle - Tablet Optimized */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:items-center gap-4 w-full xl:w-auto">
+          {/* Property Filter */}
           <FilterDialog
             title="เลือกทรัพย์สิน"
             placeholder="ค้นหาทรัพย์สิน..."
+            
             items={properties.map(p => ({ id: p.id, title: p.title }))}
             value={selectedProperty}
             onSelect={handlePropertyChange}
-            icon={<Building2 className="h-4 w-4" />}
+            icon={<FaBuilding className="h-4 w-4 mb-0.5" />}
             allLabel="ทรัพย์สินทั้งหมด"
             indicator={(id) => events.some(e => e.meta?.propertyId === id)}
           />
 
-          {/* Lead Filter (Responsive Dialog) */}
+          {/* Lead Filter */}
           <FilterDialog
             title="เลือกลูกค้า"
             placeholder="ค้นหาชื่อลูกค้า..."
             items={leads.map(l => ({ id: l.id, title: l.full_name }))}
             value={selectedLead}
             onSelect={handleLeadChange}
-            icon={<User className="h-4 w-4" />}
+            icon={<FaUser className="h-4 w-4 mb-0.5" />}
             allLabel="ลูกค้าทั้งหมด"
             indicator={(id) => events.some(e => e.meta?.leadId === id)}
           />
@@ -307,86 +328,88 @@ export function CalendarView({
               items={agents}
               value={selectedAgent}
               onSelect={handleAgentChange}
-              icon={<Users className="h-4 w-4" />}
+              icon={<FaUsers className="h-4 w-4 mb-0.5" />}
               allLabel="พนักงานทั้งหมด"
               indicator={(id) => events.some(e => e.meta?.agentId === id)}
             />
           )}
 
-          {/* View Mode Toggle */}
-          <div className="flex bg-slate-100/50 gap-4 rounded-xl h-10">
+          {/* View Mode Toggle - Elite Design Standardized Height */}
+          <div className="flex bg-slate-100/60 p-1.5 gap-1.5 rounded-2xl border border-slate-200/50 w-full lg:w-auto h-11 items-center">
             <button
               onClick={() => handleViewChange("dayGridMonth")}
               className={cn(
-                "flex-1 px-3 py-1.5  text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2",
+                "flex-1 lg:px-4 h-full  text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-2",
                 viewMode === "dayGridMonth"
-                  ? "bg-white text-indigo-600 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700",
+                  ? "bg-white text-indigo-600 shadow-lg shadow-slate-200/80 scale-[1.03]"
+                  : "text-slate-500 hover:text-indigo-600 hover:bg-white/40",
               )}
               title="ตารางรายเดือน"
             >
-              <CalendarIcon className="h-4 w-4" />
-              <span className=" ">เดือน</span>
+              <FaCalendar className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">เดือน</span>
             </button>
             <button
               onClick={() => handleViewChange("timeGridWeek")}
               className={cn(
-                "flex-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2",
+                "flex-1 lg:px-4 h-full  text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-2",
                 viewMode === "timeGridWeek"
-                  ? "bg-white text-indigo-600 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700",
+                  ? "bg-white text-indigo-600 shadow-lg shadow-slate-200/80 scale-[1.03]"
+                  : "text-slate-500 hover:text-indigo-600 hover:bg-white/40",
               )}
               title="ตารางรายสัปดาห์"
             >
-              <ColumnsIcon className="h-4 w-4" />
-              <span className=" ">สัปดาห์</span>
+              <FaCalendarWeek className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">สัปดาห์</span>
             </button>
             <button
               onClick={() => handleViewChange("listMonth")}
               className={cn(
-                "flex-1 px-3 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center justify-center gap-2",
+                "flex-1 lg:px-4 h-full  text-[11px] font-bold rounded-xl transition-all flex items-center justify-center gap-2",
                 viewMode === "listMonth"
-                  ? "bg-white text-indigo-600 shadow-sm"
-                  : "text-slate-500 hover:text-slate-700",
+                  ? "bg-white text-indigo-600 shadow-lg shadow-slate-200/80 scale-[1.03]"
+                  : "text-slate-500 hover:text-indigo-600 hover:bg-white/40",
               )}
               title="มุมมองแบบรายการ"
             >
-              <LayoutList className="h-4 w-4" />
-              <span className="">รายการ</span>
+              <FaListUl className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">รายการ</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* Main Calendar Content */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden p-2 min-h-[700px]">
-        {/* Event Legend - More subtle */}
-        <div className="px-4 py-3 flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
-            <span>นัดชม</span>
+      <div className="bg-white rounded-[32px] border border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden p-3 min-h-[700px] transition-all">
+        {/* Event Legend - More Premium */}
+        <div className="px-6 py-4 flex flex-wrap gap-5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400 border-b border-slate-50 mb-2">
+          <div className="flex items-center gap-2 group cursor-default">
+            <span className="w-3 h-3 rounded-full bg-blue-500 shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform" />
+            <span className="group-hover:text-blue-600 transition-colors">นัดชม</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-            <span>สัญญาเริ่ม</span>
+          <div className="flex items-center gap-2 group cursor-default">
+            <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-lg shadow-emerald-200 group-hover:scale-110 transition-transform" />
+            <span className="group-hover:text-emerald-600 transition-colors">สัญญาเริ่ม</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-            <span>สัญญาหมด</span>
+          <div className="flex items-center gap-2 group cursor-default">
+            <span className="w-3 h-3 rounded-full bg-red-500 shadow-lg shadow-red-200 group-hover:scale-110 transition-transform" />
+            <span className="group-hover:text-red-600 transition-colors">สัญญาหมด</span>
           </div>
-          <div className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
-            <span>ปิดดีล</span>
+          <div className="flex items-center gap-2 group cursor-default">
+            <span className="w-3 h-3 rounded-full bg-purple-500 shadow-lg shadow-purple-200 group-hover:scale-110 transition-transform" />
+            <span className="group-hover:text-purple-600 transition-colors">ปิดดีล</span>
           </div>
         </div>
 
-        <CalendarGrid
-          events={events}
-          initialDate={currentDate}
-          onEventClick={setSelectedEvent}
-          viewMode={viewMode}
-          editable={true}
-        />
+        <div className="p-1">
+          <CalendarGrid
+            events={events}
+            initialDate={currentDate}
+            onEventClick={setSelectedEvent}
+            viewMode={viewMode}
+            editable={true}
+          />
+        </div>
       </div>
 
       {/* Details Dialog */}
@@ -451,7 +474,7 @@ function FilterDialog({
       trigger={
         <Button 
           variant="outline" 
-          className="w-full sm:w-[180px] rounded-xl border-slate-200 h-10 justify-between px-3 font-semibold text-slate-700"
+          className="w-full lg:w-[150px] xl:w-[180px] rounded-xl border-slate-200 h-11 justify-between px-3 font-semibold text-slate-700 bg-white/50 hover:bg-white hover:shadow-sm transition-all"
         >
           <div className="flex items-center gap-2 truncate text-inherit">
             {icon}
@@ -459,7 +482,7 @@ function FilterDialog({
               {value === "ALL" ? allLabel : selectedItem?.title || "ไม่ทราบข้อมูล"}
             </span>
           </div>
-          <ChevronDown className="h-4 w-4 opacity-50 shrink-0 ml-2" />
+          <FaChevronDown className="h-3 w-3 opacity-50 shrink-0 ml-2" />
         </Button>
       }
     >
@@ -554,7 +577,7 @@ function FilterDialog({
                         isSelected ? "bg-indigo-100 text-indigo-600" : "bg-slate-100 text-slate-500 group-hover:bg-slate-200",
                         !active && !isSelected && "grayscale" // ทำให้ไอคอนเป็นสีเทาหากไม่มีกิจกรรม
                       )}>
-                        {title.includes("ทรัพย์สิน") ? <Building2 className="h-4 w-4" /> : <User className="h-4 w-4" />}
+                        {title.includes("ทรัพย์สิน") ? <FaBuilding className="h-4 w-4" /> : <FaUser className="h-4 w-4" />}
                       </div>
                     </div>
                     <span className={cn(

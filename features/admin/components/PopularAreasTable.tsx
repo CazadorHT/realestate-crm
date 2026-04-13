@@ -491,7 +491,7 @@ export function PopularAreasTable({
       </div>
 
       {/* Mobile Card View */}
-      <div className="lg:hidden space-y-4 animate-in fade-in duration-500">
+      <div className="lg:hidden grid grid-cols-1 md:grid-cols-2  gap-4 animate-in fade-in duration-500">
         {data.map((item, index) => (
           <div key={item.id} className={cn("p-5 bg-white rounded-[24px] border transition-all shadow-sm italic", isSelected(item.id) ? "border-indigo-200 bg-indigo-50/30" : "border-slate-200/60")} onClick={() => toggleSelect(item.id)}>
             <div className="flex items-start justify-between gap-4">

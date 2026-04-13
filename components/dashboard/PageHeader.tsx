@@ -13,7 +13,9 @@ import {
   Plus,
   PlusCircle,
   Bell,
+  CalendarDays,
   type LucideIcon,
+  TrendingUp,
 } from "lucide-react";
 import { ReactNode } from "react";
 
@@ -29,10 +31,12 @@ const ICON_MAP: Record<string, LucideIcon> = {
   plus: Plus,
   plusCircle: PlusCircle,
   bell: Bell,
+  calendarDays: CalendarDays,
+  TrendingUp,
 };
 
 interface PageHeaderProps {
-  title: string;
+  title: ReactNode;
   subtitle?: string;
   count?: number;
   icon?: keyof typeof ICON_MAP;

@@ -58,7 +58,7 @@ export function SettingsTabs({ activeTab }: SettingsTabsProps) {
   return (
     <div className="relative w-full group">
       {/* 🖥️ Desktop View (Scrollable Tabs) */}
-      <div className="hidden md:block">
+      <div className="hidden xl:block">
         <div className="absolute left-0 top-0 bottom-4 w-12 bg-linear-to-r from-slate-50 to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
         <div className="absolute right-0 top-0 bottom-4 w-12 bg-linear-to-l from-slate-50 to-transparent z-10 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity" />
         
@@ -72,8 +72,8 @@ export function SettingsTabs({ activeTab }: SettingsTabsProps) {
       </div>
 
       {/* 📱 Mobile View (Card List) */}
-      <div className="md:hidden space-y-3">
-        <TabsList className="flex flex-col w-full h-auto bg-transparent gap-3 border-none p-0 shadow-none">
+      <div className="xl:hidden space-y-3">
+        <TabsList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 w-full h-auto bg-transparent gap-3 border-none p-0 shadow-none">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.value;
             const Icon = tab.icon;

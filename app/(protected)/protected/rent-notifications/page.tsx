@@ -20,6 +20,7 @@ import {
   Settings2,
   CalendarDays
 } from "lucide-react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export default async function RentNotificationsPage(props: {
   searchParams: Promise<{ page?: string; search?: string; tab?: string }>;
@@ -44,27 +45,19 @@ export default async function RentNotificationsPage(props: {
 
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
-            <div className="p-2 bg-blue-600 rounded-xl">
-              <Bell className="w-6 h-6 text-white" />
-            </div>
-            การแจ้งเตือนค่าเช่า
-          </h1>
-          <p className="text-slate-500 mt-2 font-medium">
-            ตั้งค่าบอทเพื่อส่งแจ้งเตือนชำระค่าเช่าอัตโนมัติไปยังกลุ่ม LINE
-          </p>
-        </div>
-        <div className="shrink-0 flex items-center gap-3">
+      <PageHeader
+        title="การแจ้งเตือนค่าเช่า"
+        subtitle="ตั้งค่าบอทเพื่อส่งแจ้งเตือนชำระค่าเช่าอัตโนมัติไปยังกลุ่ม LINE"
+        icon="bell"
+        gradient="blue"
+        actionSlot={
           <AddRuleDialog
             groups={groups}
             properties={properties}
             tenantId={tenantId}
           />
-        </div>
-      </div>
-
+        }
+      />
       <Tabs defaultValue={currentTab} className="w-full">
         <TabsList className="grid w-full max-w-md grid-cols-2 bg-slate-100 p-1 rounded-xl h-11">
           <TabsTrigger value="rules" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm gap-2 font-bold transition-all text-xs">
@@ -100,6 +93,7 @@ export default async function RentNotificationsPage(props: {
           </TabsContent>
         </div>
       </Tabs>
+
     </div>
   );
 }

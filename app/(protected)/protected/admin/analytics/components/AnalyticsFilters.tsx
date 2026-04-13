@@ -51,11 +51,11 @@ export function AnalyticsFilters() {
         trigger={
           <Button
             variant="outline"
-            className="w-full lg:w-[180px] h-9 bg-white border-slate-200 justify-between font-medium hover:bg-slate-50 hover:text-blue-600 transition-all rounded-xl shadow-sm"
+            className="w-full lg:w-[180px] h-12 bg-white border-slate-200 justify-between font-medium hover:bg-slate-50 hover:text-blue-600 transition-all rounded-xl shadow-sm"
           >
             <div className="flex items-center gap-2 truncate">
               <Calendar className="h-3.5 w-3.5 text-blue-500" />
-              <span className="truncate">{activeRange.label}</span>
+              <span className="truncate hidden md:block">{activeRange.label}</span>
             </div>
             <ChevronDown className="h-4 w-4 opacity-50 ml-2" />
           </Button>
@@ -79,7 +79,7 @@ export function AnalyticsFilters() {
                     )}
                     onClick={() => updateFilters("range", range.value)}
                   >
-                    <span>{range.label}</span>
+                    <span className="">{range.label}</span>
                     {isActive && <CheckCircle2 className="h-4 w-4 text-blue-500" />}
                   </Button>
                 );

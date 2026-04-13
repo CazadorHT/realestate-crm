@@ -25,14 +25,14 @@ export function PrintReportButton() {
       size="sm"
       onClick={handlePrint}
       disabled={isPrinting}
-      className="flex items-center justify-center gap-2 w-full md:w-auto bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all font-medium py-1.5 h-9 rounded-xl shadow-sm"
+      className="flex items-center justify-center gap-2 w-full md:w-auto bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-blue-600 transition-all font-medium py-1.5 h-12 rounded-xl shadow-sm"
     >
       {isPrinting ? (
         <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
       ) : (
         <Printer className="h-4 w-4 text-blue-500" />
       )}
-      <span>ส่งรายงาน (PDF)</span>
+      <span className="hidden md:block">ส่งรายงาน (PDF)</span>
     </Button>
   );
 }

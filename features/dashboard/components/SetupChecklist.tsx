@@ -66,7 +66,7 @@ export function SetupChecklist({ progress }: SetupChecklistProps) {
       <CardHeader className="pb-4 relative">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-black bg-linear-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+            <CardTitle className="text-2xl font-bold bg-linear-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
               เริ่มต้นใช้งาน (Setup Checklist)
             </CardTitle>
             <CardDescription className="text-slate-500 font-medium">

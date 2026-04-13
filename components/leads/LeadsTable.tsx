@@ -35,7 +35,20 @@ import {
   Building2,
   Loader2,
   CheckCircle2,
+  ChevronRight,
 } from "lucide-react";
+import { 
+  FaPhone, 
+  FaLine, 
+  FaEnvelope, 
+  FaChevronRight, 
+  FaCalendar, 
+  FaBuilding, 
+  FaNoteSticky
+} from "react-icons/fa6";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
@@ -338,121 +351,193 @@ export function LeadsTable({
           </Table>
         </div>
 
-        {/* Mobile/Tablet Card View */}
-        <div className="lg:hidden divide-y divide-slate-100 bg-white">
-          {leads.map((l) => (
-            <div
-              key={l.id}
-              className={`p-3 min-[400px]:p-4 min-[500px]:p-5 transition-colors ${
-                isSelected(l.id)
-                  ? "bg-blue-50/50"
-                  : "hover:bg-slate-50"
-              }`}
+        {/* Mobile/Tablet Card View - Premium Adaptive Grid */}
+        <div className="lg:hidden p-4 bg-slate-50/30">
+          <AnimatePresence mode="popLayout">
+            <motion.div 
+              layout
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             >
-              <div className="flex gap-3 min-[400px]:gap-4">
-                <div 
-                  className="flex flex-col gap-3 shrink-0 py-1 px-0.5 cursor-pointer group/check"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleSelect(l.id);
-                  }}
-                >
-                  <div className="p-2 -m-2">
-                    <Checkbox
-                      checked={isSelected(l.id)}
-                      onCheckedChange={() => toggleSelect(l.id)}
-                      className="h-5 w-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 transition-all group-hover/check:scale-110"
-                    />
-                  </div>
-                  <div className="h-8 w-8 min-[400px]:h-10 min-[400px]:w-10 rounded-xl bg-slate-100 flex items-center justify-center border border-slate-200 shadow-xs">
-                    <User className="h-4 w-4 min-[400px]:h-5 min-[400px]:w-5 text-slate-400" />
-                  </div>
-                </div>
- 
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="flex flex-col min-w-0">
-                      <div className="flex items-center gap-1.5 min-[400px]:gap-2 overflow-hidden">
-                        <Link
-                          href={`/protected/leads/${l.id}`}
-                          className="font-bold text-slate-900 text-sm min-[400px]:text-base hover:underline truncate"
-                        >
-                          {l.full_name}
-                        </Link>
-                        {l.created_at &&
-                          differenceInHours(
-                            new Date(),
-                            new Date(l.created_at),
-                          ) < 24 && (
-                            <Badge className="h-4 min-[400px]:h-5 px-1 min-[400px]:px-1.5 text-[9px] min-[400px]:text-[11px] bg-amber-500 hover:bg-amber-600 border-0 shrink-0">
-                              NEW
-                            </Badge>
-                          )}
+              {leads.map((l, idx) => {
+                const isNew = l.created_at && 
+                  differenceInHours(new Date(), new Date(l.created_at)) < 24;
+                const initials = l.full_name
+                  ? l.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+                  : "??";
+                const selected = isSelected(l.id);
+                const aiScore = (l as any).ai_score ?? 0;
+
+                return (
+                  <motion.div
+                    key={l.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ 
+                      type: "spring", 
+                      stiffness: 300, 
+                      damping: 30,
+                      delay: idx * 0.02 
+                    }}
+                    className={cn(
+                      "group relative flex flex-col h-full bg-white rounded-[32px] border transition-all duration-300",
+                      selected 
+                        ? "border-blue-500 shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)] ring-2 ring-blue-500/20" 
+                        : "border-slate-200/60 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50"
+                    )}
+                  >
+                    {/* Card Header: Selection & Identity */}
+                    <div className="p-5 pb-3">
+                      <div className="flex justify-between items-start gap-3">
+                        <div className="flex items-center gap-3">
+                          <div className="relative flex items-center justify-center h-5 w-5 shrink-0 z-10">
+                            <Checkbox
+                              checked={selected}
+                              onCheckedChange={() => toggleSelect(l.id)}
+                              className="rounded-full h-5 w-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                            />
+                          </div>
+                          
+                          <Avatar className="h-10 w-10 border-2 border-slate-50 shadow-sm shrink-0">
+                            <AvatarFallback className="bg-blue-50 text-blue-600 font-semibold text-xs">
+                              {initials}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Link
+                                href={`/protected/leads/${l.id}`}
+                                className="text-base font-semibold text-slate-900 hover:text-blue-700 hover:underline transition-colors line-clamp-1"
+                              >
+                                {l.full_name}
+                              </Link>
+                              {isNew && (
+                                <Badge className="h-4 px-1.5 text-[9px] bg-amber-500 hover:bg-amber-600 border-0 font-semibold uppercase tracking-tighter animate-pulse">
+                                  NEW
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+                              <FaCalendar className="h-2.5 w-2.5" />
+                              {l.created_at ? format(new Date(l.created_at), "d MMM yy", { locale: th }) : "-"}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="shrink-0">
+                          <LeadRowActions id={l.id} fullName={l.full_name} phone={l.phone} email={l.email} />
+                        </div>
                       </div>
-                      <div className="flex flex-wrap items-center gap-1.5 min-[400px]:gap-3 mt-1">
+
+                      {/* Status & Badges */}
+                      <div className="mt-4 flex flex-wrap gap-1.5">
                         <Badge
                           variant="outline"
-                          className="h-4 min-[400px]:h-5 text-[9px] min-[400px]:text-[11px] px-1 min-[400px]:px-1.5 font-bold border-slate-200 text-slate-600 bg-white"
+                          className="h-5 text-[10px] px-2 font-semibold border-blue-100 text-blue-600 bg-blue-50/50 uppercase tracking-tighter"
                         >
                           {safeEnumLabel(LEAD_STAGE_LABELS as any, l.stage)}
                         </Badge>
-                        <span className="text-[10px] min-[400px]:text-[11px] text-slate-400 flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {l.created_at
-                            ? format(new Date(l.created_at), "d MMM yy", {
-                                locale: th,
-                              })
-                            : "-"}
-                        </span>
+                        <Badge 
+                          variant="outline" 
+                          className={cn(
+                            "h-5 text-[10px] px-2 font-semibold border-0 uppercase tracking-tighter",
+                            aiScore >= 50 
+                              ? "bg-orange-100 text-orange-700" 
+                              : "bg-blue-50 text-blue-700"
+                          )}
+                        >
+                          Score: {aiScore}
+                        </Badge>
                         {isMultiTenant && (l as any).tenants?.name && (
-                          <Badge variant="secondary" className="h-4 min-[400px]:h-5 text-[9px] min-[400px]:text-[11px] px-1 min-[400px]:px-1.5 bg-slate-100 text-slate-600 border-0">
+                          <Badge className="h-5 text-[10px] px-2 bg-slate-100 text-slate-500 hover:bg-slate-100 border-0 font-semibold uppercase tracking-tighter">
                             {(l as any).tenants.name}
                           </Badge>
                         )}
                       </div>
                     </div>
-                    <LeadRowActions id={l.id} fullName={l.full_name} phone={l.phone} email={l.email} />
-                  </div>
- 
-                  <div className="mt-3 grid grid-cols-1 min-[500px]:grid-cols-2 gap-x-4 gap-y-1.5">
-                    <div className="flex items-center gap-2 text-[11px] min-[400px]:text-xs text-slate-600">
-                      <Phone className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 text-slate-400 shrink-0" />
-                      <span className="truncate">{l.phone || "-"}</span>
-                    </div>
-                    {l.email && (
-                      <div className="flex items-center gap-2 text-[11px] min-[400px]:text-xs text-slate-600 truncate">
-                        <Mail className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 text-slate-400 shrink-0" />
-                        <span className="truncate">{l.email}</span>
-                      </div>
-                    )}
-                    {(l as any).property && (
-                      <div className="flex items-center gap-2 text-[11px] min-[400px]:text-xs text-blue-600 min-[500px]:col-span-2 mt-0.5">
-                        <Building2 className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 text-slate-400 shrink-0" />
-                        <Link
-                          href={`/properties/${(l as any).property.id}`}
-                          target="_blank"
-                          className="hover:underline truncate"
+
+                    {/* Divider */}
+                    <div className="h-px bg-slate-100/80 mx-5" />
+
+                    {/* Card Body: Contact Pills */}
+                    <div className="p-5 pt-4 flex-1">
+                      <div className="grid grid-cols-1 gap-2">
+                        {/* Phone Pill */}
+                        <a
+                          href={l.phone ? `tel:${l.phone}` : "#"}
+                          className={cn(
+                            "flex items-center justify-between min-h-[46px] w-full px-4 rounded-2xl transition-all font-semibold text-sm",
+                            l.phone 
+                              ? "bg-blue-50/50 text-blue-700 hover:bg-blue-600 hover:text-white shadow-xs" 
+                              : "bg-slate-50 text-slate-300 pointer-events-none cursor-not-allowed"
+                          )}
                         >
-                          {(l as any).property.title}
-                        </Link>
+                          <div className="flex items-center gap-3">
+                            <FaPhone className="h-3.5 w-3.5 mb-0.5" />
+                            <span>{l.phone || "ไม่มีเบอร์โทร"}</span>
+                          </div>
+                          {l.phone && <FaChevronRight className="h-3 w-3 opacity-50" />}
+                        </a>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          {/* LINE / Email Pills - Hardened Layout */}
+                          <div
+                            className={cn(
+                              "flex items-center justify-center gap-2 min-h-[46px] rounded-2xl transition-all font-semibold text-sm px-2",
+                              (l as any).line_id 
+                                ? "bg-emerald-50/50 text-emerald-700 border border-emerald-100/50" 
+                                : "bg-slate-50 text-slate-300 border border-slate-100"
+                            )}
+                          >
+                            <FaLine className="h-4 w-4 shrink-0 mb-0.5" />
+                            <span className="truncate">{(l as any).line_id || "LINE"}</span>
+                          </div>
+
+                          <a
+                            href={l.email ? `mailto:${l.email}` : "#"}
+                            className={cn(
+                              "flex items-center justify-center gap-2 min-h-[46px] rounded-2xl transition-all font-semibold text-sm px-2",
+                              l.email 
+                                ? "bg-indigo-50/50 text-indigo-700 border border-indigo-100/50 hover:bg-indigo-600 hover:text-white" 
+                                : "bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed"
+                            )}
+                          >
+                            <FaEnvelope className="h-4 w-4 shrink-0 mb-0.5" />
+                            <span className="truncate">Email</span>
+                          </a>
+                        </div>
+
+                        {/* Property Link */}
+                        {(l as any).property && (
+                          <Link
+                            href={`/properties/${(l as any).property.id}`}
+                            target="_blank"
+                            className="flex items-center gap-3 min-h-[46px] w-full px-4 rounded-2xl bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-semibold text-xs border border-slate-100 hover:border-blue-100"
+                          >
+                            <FaBuilding className="h-3.5 w-3.5 shrink-0 opacity-40" />
+                            <span className="truncate">{(l as any).property.title}</span>
+                          </Link>
+                        )}
                       </div>
-                    )}
-                  </div>
- 
-                  {l.note && (
-                    <div className="mt-2.5 p-2 bg-slate-50/80 rounded-lg text-[11px] min-[400px]:text-xs text-slate-500 italic flex gap-2">
-                      <MessageSquare className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 text-slate-300 shrink-0 mt-0.5" />
-                      <span className="line-clamp-2">{l.note}</span>
+
+                      {/* Notes Section */}
+                      {l.note && (
+                        <div className="mt-3 p-3 bg-slate-50/50 border border-slate-100/50 rounded-2xl text-[11px] text-slate-500 italic flex gap-2">
+                          <FaNoteSticky className="h-3 w-3 text-slate-300 shrink-0 mt-0.5" />
+                          <span className="line-clamp-2 leading-relaxed">{l.note}</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+                  </motion.div>
+                );
+              })}
+            </motion.div>
+          </AnimatePresence>
           {leads.length === 0 && (
-            <div className="p-10 text-center text-sm text-slate-400">
-              ไม่พบ ลีด
+            <div className="p-10 text-center text-sm text-slate-400 bg-white rounded-[32px] border border-dashed border-slate-200 mt-4">
+              ไม่พบข้อมูลลูกค้ามุ่งหวัง
             </div>
           )}
         </div>

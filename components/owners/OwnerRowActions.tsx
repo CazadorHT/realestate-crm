@@ -56,7 +56,7 @@ export function OwnerRowActions({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const actions = (
-    <div className={isMobile ? "grid gap-2" : "flex justify-end gap-2"}>
+    <div className={isMobile ? "grid gap-2 px-4" : "flex justify-end gap-2"}>
       <Button
         variant="ghost"
         className={isMobile ? "w-full justify-start h-12 px-4 text-[15px] font-bold rounded-xl" : "h-9 w-9"}

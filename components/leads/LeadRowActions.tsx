@@ -64,7 +64,7 @@ export function LeadRowActions({ id, fullName, phone, email }: LeadRowActionsPro
           </Button>
         }
       >
-        <div className="flex flex-col gap-1.5 p-2 pb-6 ">
+        <div className="flex flex-col gap-1.5 p-6 ">
           <div className="px-3 mb-2">
             <p className="text-[11px] font-black uppercase tracking-[0.15em] text-slate-400">
               ตัวเลือกการจัดการ

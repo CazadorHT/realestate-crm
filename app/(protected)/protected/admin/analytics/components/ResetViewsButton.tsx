@@ -45,13 +45,13 @@ export function ResetViewsButton() {
         <Button
           variant="outline"
           size="sm"
-          className="flex items-center justify-center gap-2 w-full md:w-auto bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-600 transition-all font-medium py-1.5 h-9 rounded-xl shadow-sm"
+          className="flex items-center justify-center gap-2 w-full md:w-auto bg-white border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-600 transition-all font-medium py-1.5 h-12 rounded-xl shadow-sm"
           disabled={isLoading}
         >
           <RefreshCcw
             className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
           />
-          รีเซท Views
+          <span className="hidden md:block">รีเซท Views</span>
         </Button>
       </AlertDialogTrigger>
       <AlertDialogContent>

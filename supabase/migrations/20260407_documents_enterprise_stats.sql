@@ -21,13 +21,13 @@ BEGIN
     AND (
       p_search IS NULL OR p_search = '' OR
       file_name ILIKE '%' || p_search || '%' OR 
-      document_type ILIKE '%' || p_search || '%' OR
+      document_type::text ILIKE '%' || p_search || '%' OR
       (p_owner_ids IS NOT NULL AND owner_id = ANY(p_owner_ids))
     )
     AND (
       p_type_filter IS NULL OR p_type_filter = 'ALL' OR
-      (p_type_filter = 'SLIP' AND document_type = 'SLIP') OR
-      (p_type_filter = 'DOCUMENT' AND document_type != 'SLIP')
+      (p_type_filter = 'SLIP' AND document_type::text = 'SLIP') OR
+      (p_type_filter = 'DOCUMENT' AND document_type::text != 'SLIP')
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
