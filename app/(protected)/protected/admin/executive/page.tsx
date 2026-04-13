@@ -2,52 +2,25 @@
 
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
-import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
-
-const ExecutiveLeadsChart = dynamic(() => import("./components/ExecutiveCharts").then(mod => mod.ExecutiveLeadsChart), {
-  ssr: false,
-  loading: () => <div className="h-[350px] w-full bg-slate-50/50 animate-pulse rounded-xl" />
-});
-
-const ExecutiveDealsChart = dynamic(() => import("./components/ExecutiveCharts").then(mod => mod.ExecutiveDealsChart), {
-  ssr: false,
-  loading: () => <div className="h-[350px] w-full bg-slate-50/50 animate-pulse rounded-xl" />
-});
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Button } from "@/components/ui/button";
-import {
-  Download,
-  TrendingUp,
-  Users,
-  Briefcase,
-  RefreshCcw,
-  Building2,
-  ArrowUpRight,
-} from "lucide-react";
+import { Download, RefreshCcw } from "lucide-react";
 import { getExecutiveStatsAction } from "@/lib/actions/executive-stats";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
+import { ExecutiveData } from "./types";
 
-interface ExecutiveData {
-  tenantId: string;
-  tenantName: string;
-  leadCount: number;
-  dealCount: number;
-}
+// 🛡️ Elite Modular Components
+import { ExecutiveStats } from "./components/ExecutiveStats";
+import { ExecutiveBranchList } from "./components/ExecutiveBranchList";
+
+// ⚡ Performance Optimized Dynamic Import
+const ExecutiveChartsContainer = dynamic(
+  () => import("./components/ExecutiveChartsContainer").then(mod => mod.ExecutiveChartsContainer),
+  {
+    ssr: false,
+    loading: () => <div className="h-[400px] w-full bg-slate-50/50 animate-pulse rounded-2xl border border-slate-100" />
+  }
+);
 
 export default function ExecutiveDashboard() {
   const [data, setData] = useState<ExecutiveData[]>([]);
@@ -56,6 +29,7 @@ export default function ExecutiveDashboard() {
 
   useEffect(() => {
     setMounted(true);
+    fetchData();
   }, []);
 
   const fetchData = async () => {
@@ -66,226 +40,66 @@ export default function ExecutiveDashboard() {
     } catch (error) {
       toast.error("ไม่สามารถดึงข้อมูลสถิติได้");
     } finally {
-      setLoading(false);
+      // 🛡️ Deliberate slight delay for smooth transition (UX Polish)
+      setTimeout(() => setLoading(false), 300);
     }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const totalLeads = data.reduce((acc: number, curr: ExecutiveData) => acc + curr.leadCount, 0);
   const totalDeals = data.reduce((acc: number, curr: ExecutiveData) => acc + curr.dealCount, 0);
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-            แผงควบคุมระดับบริหาร (Executive Dashboard)
-          </h1>
-          <p className="text-slate-500 text-sm">
-            ภาพรวมผลการดำเนินงานของทุกสาขาในองค์กร
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={fetchData}
-            disabled={loading}
-            className="rounded-lg font-medium"
-          >
-            <RefreshCcw
-              className={`mr-2 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
-            />
-            รีเฟรชข้อมูล
-          </Button>
-          <Button
-            size="sm"
-            className="bg-slate-900 text-white rounded-lg font-medium"
-          >
-            <Download className="mr-2 h-3.5 w-3.5" />
-            ส่งออกรายงาน
-          </Button>
-        </div>
-      </div>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-10">
+      <PageHeader
+        title="แผงควบคุมระดับบริหาร (Executive Dashboard)"
+        subtitle="ภาพรวมผลการดำเนินงานแบบ Real-time ของทุกสาขาทั่วประเทศ"
+        icon="trendingUp"
+        gradient="blue"
+        actionSlot={
+          <div className="flex flex-col md:flex-row items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchData}
+              disabled={loading}
+              className="rounded-lg font-medium"
+            >
+              <RefreshCcw
+                className={`mr-2 h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+              />
+              รีเฟรชข้อมูล
+            </Button>
+            <Button
+              size="sm"
+              className="rounded-lg font-medium"
+            >
+              <Download className="mr-2 h-3.5 w-3.5" />
+              ส่งออกรายงาน
+            </Button>
+          </div>
+        }
+      />
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-slate-100 shadow-sm rounded-xl">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              ลีดทั้งหมด (Global Leads)
-            </CardTitle>
-            <div className="p-1.5 bg-blue-50 rounded-lg">
-              <Users className="h-4 w-4 text-blue-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {totalLeads.toLocaleString()}
-            </div>
-            <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium">
-              จาก {data.length} สาขา
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-100 shadow-sm rounded-xl">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              ดีลที่ปิดได้ (Won Deals)
-            </CardTitle>
-            <div className="p-1.5 bg-emerald-50 rounded-lg">
-              <Briefcase className="h-4 w-4 text-emerald-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {totalDeals.toLocaleString()}
-            </div>
-            <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium">
-              ยอดรวมความสำเร็จ
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-slate-100 shadow-sm rounded-xl">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              จำนวนสาขา (Active Branches)
-            </CardTitle>
-            <div className="p-1.5 bg-amber-50 rounded-lg">
-              <Building2 className="h-4 w-4 text-amber-600" />
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{data.length}</div>
-            <p className="text-[10px] text-slate-400 mt-1 uppercase font-medium">
-              สาขาที่เปิดดำเนินการ
-            </p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* 🚀 Layer 1: Executive Summary (Unified Loading) */}
+      <ExecutiveStats 
+        totalLeads={totalLeads} 
+        totalDeals={totalDeals} 
+        branchCount={data.length} 
+        isLoading={loading}
+      />
 
-      {/* Charts Section */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="border-slate-100 shadow-sm overflow-hidden rounded-2xl">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-500" />
-              การเปรียบเทียบจำนวนลีดรายสาขา
-            </CardTitle>
-            <CardDescription className="text-xs">
-              เปรียบเทียบศักยภาพในการหาลูกค้าของแต่ละสาขา
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="h-[350px] w-full">
-              {mounted && (
-                <ErrorBoundary>
-                  <ExecutiveLeadsChart data={data} />
-                </ErrorBoundary>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      {/* 📊 Layer 2: Visual Intelligence & AI Briefing */}
+      {mounted && (
+        <ExecutiveChartsContainer 
+          data={data} 
+          totalLeads={totalLeads} 
+          totalDeals={totalDeals} 
+          isLoading={loading}
+        />
+      )}
 
-        <Card className="border-slate-100 shadow-sm overflow-hidden rounded-2xl">
-          <CardHeader className="bg-slate-50/50 border-b border-slate-100 py-4">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-emerald-500" />
-              การเปรียบเทียบจำนวนดีลรายสาขา
-            </CardTitle>
-            <CardDescription className="text-xs">
-              แสดงจำนวนดีลที่ปิดการขายสำเร็จ (Status: WON)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="h-[350px] w-full">
-              {mounted && (
-                <ErrorBoundary>
-                  <ExecutiveDealsChart data={data} />
-                </ErrorBoundary>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Table Section */}
-      <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold">
-            รายละเอียดรายสาขา
-          </CardTitle>
-          <CardDescription className="text-xs">
-            ข้อมูลตัวเลขเชิงลึกแยกตามสาขา
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-100">
-                <TableHead className="px-6 py-4 font-semibold text-slate-600 text-[11px] uppercase tracking-wider">
-                  ชื่อสาขา
-                </TableHead>
-                <TableHead className="text-right font-semibold text-slate-600 text-[11px] uppercase tracking-wider">
-                  จำนวนลีด
-                </TableHead>
-                <TableHead className="text-right font-semibold text-slate-600 text-[11px] uppercase tracking-wider">
-                  ดีลที่ชนะ
-                </TableHead>
-                <TableHead className="text-right font-semibold text-slate-600 text-[11px] uppercase tracking-wider px-6">
-                  อัตราการปิดดีล (%)
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((row) => {
-                const conversionRate =
-                  row.leadCount > 0
-                    ? ((row.dealCount / row.leadCount) * 100).toFixed(1)
-                    : "0.0";
-
-                return (
-                  <TableRow
-                    key={row.tenantId}
-                    className="hover:bg-blue-50/20 transition-colors border-b border-slate-50 last:border-0"
-                  >
-                    <TableCell className="px-6 py-4 font-medium text-slate-700 text-sm">
-                      {row.tenantName}
-                    </TableCell>
-                    <TableCell className="text-right text-sm">
-                      {row.leadCount.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold text-emerald-600 text-sm">
-                      {row.dealCount.toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right px-6">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <TrendingUp className="h-3 w-3 text-emerald-500" />
-                        <span className="text-sm font-medium text-slate-600">
-                          {conversionRate}%
-                        </span>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {data.length === 0 && !loading && (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="h-24 text-center text-slate-400 text-sm"
-                  >
-                    ไม่พบข้อมูลสาขา
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {/* 🏛️ Layer 3: Branch Performance Matrix (Adaptive Dual-View) */}
+      <ExecutiveBranchList data={data} isLoading={loading} />
     </div>
   );
 }
