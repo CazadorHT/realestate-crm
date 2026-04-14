@@ -32,28 +32,26 @@ import { MarketingROISummary } from "@/components/dashboard/MarketingROISummary"
 import { ExecutiveAISummary } from "@/components/dashboard/ExecutiveAISummary";
 
 // Queries
-import {
-  getDashboardStats,
-  getRevenueChartData,
-  getFunnelStats,
-  getPipelineStats,
-  getTopAgents,
-  getRecentNotifications,
-  getTodayAgenda,
-  getFollowUpLeads,
-  getRiskDeals,
-  getMarketingPerformanceData,
-  type DashboardStats,
-  type RevenueChartData,
-  type FunnelData,
-  type PipelineData,
-  type TopAgent,
-  type Notification,
-  type AgendaEvent,
-  type FollowUpLead,
-  type RiskDeal,
-  getSetupProgress,
-} from "@/features/dashboard/queries";
+import { 
+  getDashboardStats, 
+  getRevenueChartData, 
+  getFunnelStats, 
+  getPipelineStats 
+} from "@/features/dashboard/queries/stats";
+import { getTopAgents, getMarketingPerformanceData } from "@/features/dashboard/queries/performance";
+import { getRecentNotifications, getTodayAgenda } from "@/features/dashboard/queries/notifications";
+import { getFollowUpLeads, getRiskDeals, getSetupProgress } from "@/features/dashboard/queries/maintenance";
+import type { 
+  DashboardStats, 
+  RevenueChartData, 
+  FunnelData, 
+  PipelineData, 
+  TopAgent, 
+  Notification, 
+  AgendaEvent, 
+  FollowUpLead, 
+  RiskDeal 
+} from "@/features/dashboard/queries/types";
 import { TopAgents } from "@/components/dashboard/TopAgents";
 import { SetupChecklist } from "@/components/dashboard/SetupChecklist";
 import { ProactiveSetupTrigger } from "@/components/dashboard/ProactiveSetupTrigger";

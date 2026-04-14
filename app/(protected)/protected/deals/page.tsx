@@ -1,5 +1,5 @@
 import { getDeals } from "@/features/deals/queries.getDeals";
-import { getPropertiesForSelect } from "@/features/properties/queries";
+import { getPropertiesForSelect } from "@/features/properties/queries/search";
 import { getDealsPageStats } from "@/features/deals/queries";
 import { DealsTable } from "@/features/deals/DealsTable";
 import { CreateDealButton } from "./_components/CreateDealButton";

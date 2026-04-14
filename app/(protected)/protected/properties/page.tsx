@@ -1,10 +1,8 @@
 import { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
-import {
-  getPropertiesDashboardStatsQuery,
-  getPropertiesTableData,
-} from "@/features/properties/queries";
+import { getPropertiesDashboardStatsQuery } from "@/features/properties/queries/stats";
+import { getPropertiesTableData } from "@/features/properties/queries/table";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { PropertiesHeader } from "./_components/PropertiesHeader";
 import { PropertiesEmptyState } from "./_components/PropertiesEmptyState";

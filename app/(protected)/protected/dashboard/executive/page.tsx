@@ -4,7 +4,7 @@ import {
   getQuarterlyRevenueData,
   getSetupProgress,
 } from "@/features/dashboard/executive-queries";
-import { getAdvancedTopAgents } from "@/features/dashboard/queries";
+import { getAdvancedTopAgents } from "@/features/dashboard/queries/performance";
 import { getAgentKpiStats } from "@/features/analytics/agent-kpis";
 import { ExecutiveDashboardView } from "@/features/dashboard/components/ExecutiveDashboardView";
 import { requireAuthContext, assertAdminOrManager } from "@/lib/authz";

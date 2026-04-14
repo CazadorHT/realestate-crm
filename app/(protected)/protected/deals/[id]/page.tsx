@@ -10,7 +10,7 @@ import {
   RiHistoryLine,
 } from "react-icons/ri";
 
-import { getPropertiesForSelect } from "@/features/properties/queries";
+import { getPropertiesForSelect } from "@/features/properties/queries/search";
 import { getDealById, getDealCommissions } from "@/features/deals/queries";
 import { Button } from "@/components/ui/button";
 import { DealFormDialog } from "@/features/deals/components/DealFormDialog";

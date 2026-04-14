@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getDashboardStats } from "@/features/dashboard/queries";
+import { getDashboardStats } from "@/features/dashboard/queries/stats";
 import { StatsOverview } from "@/components/dashboard/StatsOverview";
 import { StatsSkeleton } from "./skeletons/StatsSkeleton";
 

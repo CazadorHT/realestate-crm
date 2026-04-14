@@ -25,7 +25,7 @@ const PropertyDistributionCharts = dynamic(
     ),
   },
 );
-import type { PropertyStats } from "@/features/properties/queries";
+import type { PropertyStats } from "@/features/properties/queries/types";
 import { useRouter } from "next/navigation";
 
 // --- Configuration Maps ---
