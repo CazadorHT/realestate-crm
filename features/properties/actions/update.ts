@@ -11,6 +11,7 @@ import {
 import { logAudit } from "@/lib/audit";
 import { getPublicImageUrl } from "../image-utils";
 import { FormSchema, type PropertyFormValues } from "../schema";
+import { inngest } from "@/lib/inngest/client";
 import { PROPERTY_STATUS_ENUM } from "../labels";
 import {
   PropertyStatus,
@@ -404,6 +405,19 @@ export async function updatePropertyAction(
     // Public pages (to ensure OG and detail are fresh)
     revalidatePath("/(public)/properties/[slug]", "page");
 
+    // 🚀 Step 6: Background Job (Non-blocking)
+    // Trigger AI if explicitly requested via the checkbox
+    if (safeValues.requires_ai_review) {
+      await inngest.send({
+        name: "property.created",
+        data: { 
+          propertyId: id,
+          userId: user.id,
+          tenantId: tenantId
+        },
+      });
+    }
+
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err: unknown) {
     console.error("updatePropertyAction → error:", err);
@@ -504,6 +518,48 @@ export async function updatePropertyStatusAction(input: {
 
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (e: unknown) {
+    return { success: false, message: mapDbError(e) };
+  }
+}
+
+/**
+ * 🚀 Elite Tool: Manual AI Review Trigger
+ * Allows admins to manually request an AI re-analysis for any property.
+ */
+export async function triggerPropertyAiReviewAction(propertyId: string) {
+  try {
+    const { supabase, user, role, tenantId } = await requireAuthContext();
+    assertStaff(role);
+    if (!tenantId) throw new Error("Tenant context required");
+
+    // 1. Mark as requiring review in DB
+    const { error } = await supabase
+      .from("properties")
+      .update({ requires_ai_review: true, status: "DRAFT" })
+      .eq("id", propertyId)
+      .eq("tenant_id", tenantId);
+
+    if (error) throw error;
+
+    // 2. Send to Inngest
+    await inngest.send({
+      name: "property.created",
+      data: { propertyId, userId: user.id, tenantId }
+    });
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "property.ai_refresh",
+        entity: "properties",
+        entityId: propertyId,
+      }
+    );
+
+    revalidatePath("/protected/properties");
+    return { success: true, message: "กำลังเริ่มการประมวลผล AI หลังบ้าน..." };
+  } catch (e: unknown) {
+    console.error("triggerPropertyAiReviewAction error:", e);
     return { success: false, message: mapDbError(e) };
   }
 }

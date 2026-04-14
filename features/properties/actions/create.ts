@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { type Database } from "@/lib/database.types";
 import { randomUUID } from "crypto";
+import { inngest } from "@/lib/inngest/client";
 import { requireAuthContext, assertStaff, authzFail } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { getPublicImageUrl } from "../image-utils";
@@ -204,6 +205,17 @@ export async function createPropertyAction(
       },
     );
     revalidatePath("/protected/properties");
+
+    // 🚀 Step 6: Background Job (Non-blocking)
+    await inngest.send({
+      name: "property.created",
+      data: { 
+        propertyId: property.id,
+        userId: user.id,
+        tenantId: tenantId
+      },
+    });
+
     return { 
       success: true, 
       message: "สร้างทรัพย์ใหม่สำเร็จ",
@@ -383,6 +395,17 @@ export async function duplicatePropertyAction(
     );
 
     revalidatePath("/protected/properties");
+
+    // 🚀 Step 4.5: Background Job (Non-blocking)
+    await inngest.send({
+      name: "property.created",
+      data: { 
+        propertyId: newPropertyId,
+        userId: user.id,
+        tenantId: tenantId
+      },
+    });
+
     return { success: true, message: "คัดลอกทรัพย์สำเร็จ", propertyId: newPropertyId };
   } catch (err: unknown) {
     console.error("duplicatePropertyAction → error:", err);

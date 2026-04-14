@@ -52,9 +52,9 @@ export function ConfirmDialog({
       ? t("common.are_you_sure")
       : description;
   const finalConfirmText =
-    confirmText === "ยืนยัน" ? t("common.confirm") : confirmText;
+    confirmText === "ยืนยัน" ? confirmText : confirmText;
   const finalCancelText =
-    cancelText === "ยกเลิก" ? t("common.cancel") : cancelText;
+    cancelText === "ยกเลิก" ? cancelText : cancelText;
 
   const handleConfirm = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,11 +84,11 @@ export function ConfirmDialog({
       description={finalDescription}
       trigger={trigger}
       className={cn(
-        "sm:max-w-md",
+        "sm:max-w-md!",
         variant === "destructive" && "border-red-100"
       )}
       footer={
-        <div className="flex flex-col sm:flex-row gap-2 w-full">
+        <div className="flex flex-col sm:flex-row gap-2 w-full xl:w-auto">
           <Button
             variant="outline"
             disabled={isConfirming || isSuccess}

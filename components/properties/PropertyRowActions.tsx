@@ -138,13 +138,13 @@ export function PropertyRowActions({
           {/* Management Section */}
           <div className="grid grid-cols-2 gap-2 p-1">
             <p className="col-span-2 text-xs font-medium text-slate-400 uppercase tracking-wider px-1 mb-1">
-              General Management
+              การจัดการทั่วไป
             </p>
 
             {/* Action: View */}
             <Button
               variant="outline"
-              className="justify-start h-12 text-blue-600 border-blue-100 hover:bg-blue-50 transition-all font-medium"
+              className="justify-start h-12 text-blue-600! border-blue-100 hover:bg-blue-50 transition-all font-medium"
               asChild
               onClick={() => setIsMenuOpen(false)}
             >
@@ -157,7 +157,7 @@ export function PropertyRowActions({
             {/* Action: Edit */}
             <Button
               variant="outline"
-              className="justify-start h-12 text-slate-700 border-slate-200 hover:bg-slate-50 transition-all font-medium"
+              className="justify-start h-12 text-slate-700! border-slate-200 hover:bg-slate-50 transition-all font-medium"
               asChild
               onClick={() => setIsMenuOpen(false)}
             >
@@ -170,7 +170,7 @@ export function PropertyRowActions({
             {/* Action: Copy Link */}
             <Button
               variant="outline"
-              className="justify-start h-12 text-slate-700 border-slate-200 hover:bg-slate-50 transition-all font-medium"
+              className="justify-start h-12 text-slate-700! border-slate-200 hover:bg-slate-50 transition-all font-medium"
               onClick={() => {
                 setIsMenuOpen(false);
                 copyPublicLink();
@@ -183,7 +183,7 @@ export function PropertyRowActions({
             {/* Action: Renew */}
             <Button
               variant="outline"
-              className="justify-start h-12 text-blue-600 border-blue-100 hover:bg-blue-50 transition-all font-medium"
+              className="justify-start h-12 text-blue-600! border-blue-100 hover:bg-blue-50 transition-all font-medium"
               onClick={() => {
                 setIsMenuOpen(false);
                 handleRenew();
@@ -211,11 +211,11 @@ export function PropertyRowActions({
           {/* Social Actions Group */}
           <div className="grid grid-cols-2 gap-2 p-1">
             <p className="col-span-2 text-xs font-medium text-slate-400 uppercase tracking-wider px-1 mb-1">
-              Social Sharing & Marketing
+              การแชร์และโปรโมท
             </p>
             <Button
               variant="outline"
-              className="justify-start h-12 text-blue-600 border-blue-100 hover:bg-blue-50"
+              className="justify-start h-12 text-blue-600! border-blue-100 hover:bg-blue-50"
               disabled={postStatus["FACEBOOK"] === "loading"}
               onClick={() => {
                 if (isMobile) {
@@ -236,7 +236,7 @@ export function PropertyRowActions({
 
             <Button
               variant="outline"
-              className="justify-start h-12 text-pink-600 border-pink-100 hover:bg-pink-50"
+              className="justify-start h-12 text-pink-600! border-pink-100 hover:bg-pink-50"
               disabled={postStatus["INSTAGRAM"] === "loading"}
               onClick={() => {
                 if (isMobile) {
@@ -257,7 +257,7 @@ export function PropertyRowActions({
 
             <Button
               variant="outline"
-              className="justify-start h-12 text-green-600 border-green-100 hover:bg-green-50"
+              className="justify-start h-12 text-green-600! border-green-100 hover:bg-green-50"
               disabled={postStatus["LINE"] === "loading"}
               onClick={() => {
                 if (isMobile) {
@@ -278,7 +278,7 @@ export function PropertyRowActions({
 
             <Button
               variant="outline"
-              className="justify-start h-12 text-slate-900 border-slate-200 hover:bg-slate-50"
+              className="justify-start h-12 text-slate-900! border-slate-200 hover:bg-slate-50"
               disabled={postStatus["TIKTOK"] === "loading"}
               onClick={() => {
                 if (isMobile) {
@@ -304,7 +304,7 @@ export function PropertyRowActions({
               {showTransferButton && (
                 <Button
                   variant="ghost"
-                  className="w-full justify-start h-11 px-4 text-[15px] font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+                  className="w-full justify-start h-11 px-4 text-[15px] font-medium text-blue-600! hover:bg-blue-50 transition-colors"
                   onClick={() => {
                     setIsMenuOpen(false);
                     setNextAction(() => () => setShowTransferDialog(true));

@@ -67,6 +67,7 @@
     "flag-icons": "^7.5.0",
     "framer-motion": "^12.34.1",
     "fuzzball": "^2.2.3",
+    "inngest": "^4.2.1",
     "isomorphic-dompurify": "^2.35.0",
     "lucide-react": "^0.563.0",
     "next": "^16.1.6",

@@ -13,6 +13,7 @@ export {
 export {
   updatePropertyAction,
   updatePropertyStatusAction,
+  triggerPropertyAiReviewAction,
 } from "./actions/update";
 export { deletePropertyAction } from "./actions/delete";
 export {

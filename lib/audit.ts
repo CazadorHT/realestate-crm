@@ -78,6 +78,7 @@ export type AuditAction =
   | "member.transfer"
   | "property.transfer_branch"
   | "owner.transfer_branch"
+  | "property.ai_refresh"
   | "commission.export_pdf"
   | "commission.send_line";
 

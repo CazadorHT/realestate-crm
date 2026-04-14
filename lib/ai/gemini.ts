@@ -79,7 +79,7 @@ export type AiGenerationResult = {
 };
 
 export async function generateText(
-  prompt: string,
+  prompt: string | any[],
   modelName: string = DEFAULT_MODEL,
   retryCount: number = 0,
   options?: {
@@ -101,7 +101,9 @@ export async function generateText(
   const model = genAI.getGenerativeModel(modelOptions);
 
   try {
-    const result = await model.generateContent(prompt);
+    // 👁️ Support for Multimodal: Handle both simple strings and arrays of parts
+    const contentParts = Array.isArray(prompt) ? prompt : [prompt];
+    const result = await model.generateContent(contentParts);
     const response = await result.response;
     const text = response.text();
 
