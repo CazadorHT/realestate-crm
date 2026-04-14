@@ -47,6 +47,11 @@ export async function GET(req: NextRequest) {
     // ═══════════════════════════════════════════════
     results.rentNotifications = await runRentNotifications(startTime);
 
+    // ═══════════════════════════════════════════════
+    // TASK 4: Market Alerts (AVM analysis)
+    // ═══════════════════════════════════════════════
+    results.marketAlerts = await runMarketAlerts();
+
     const duration = performance.now() - startTime;
     return NextResponse.json({
       success: true,
@@ -540,6 +545,130 @@ async function runRentNotifications(startTime: number) {
     };
   } catch (error) {
     console.error("Rent notifications error:", error);
+    return { error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+// ─────────────────────────────────────────────────────
+// TASK 4: Market Alerts (Analysis of High Prices)
+// ─────────────────────────────────────────────────────
+async function runMarketAlerts() {
+  try {
+    const supabase = createAdminClient();
+
+    // 1. Fetch currently active properties
+    const { data: activeProperties, error: propertiesError } = await supabase
+      .from("properties")
+      .select(
+        "id, title, listing_type, original_price, size_sqm, popular_area, district, property_type, created_by",
+      )
+      .eq("status", "ACTIVE")
+      .not("size_sqm", "is", null)
+      .not("original_price", "is", null);
+
+    if (propertiesError) throw propertiesError;
+    if (!activeProperties || activeProperties.length === 0) {
+      return { message: "No active properties to analyze" };
+    }
+
+    // 2. Fetch recent closed deals
+    const { data: closedDeals, error: dealsError } = await supabase
+      .from("deals")
+      .select(
+        "property_id, status, properties(size_sqm, popular_area, district, property_type, original_price)",
+      )
+      .eq("status", "CLOSED_WIN")
+      .order("created_at", { ascending: false })
+      .limit(100);
+
+    if (dealsError) throw dealsError;
+
+    // 3. Group closed deals by Area + PropertyType
+    const marketAverages: Record<
+      string,
+      { totalValue: number; totalSqm: number; count: number }
+    > = {};
+
+    closedDeals?.forEach((deal) => {
+      const prop = (
+        Array.isArray(deal.properties) ? deal.properties[0] : deal.properties
+      ) as any;
+      if (!prop || !prop.size_sqm || !prop.original_price) return;
+
+      const area = prop.popular_area || prop.district;
+      if (!area) return;
+
+      const key = `${area}-${prop.property_type}`;
+      const dealValue = Number(prop.original_price) || 0;
+
+      if (dealValue <= 0) return;
+
+      if (!marketAverages[key]) {
+        marketAverages[key] = { totalValue: 0, totalSqm: 0, count: 0 };
+      }
+
+      marketAverages[key].totalValue += dealValue;
+      marketAverages[key].totalSqm += prop.size_sqm;
+      marketAverages[key].count += 1;
+    });
+
+    const alertsGenerated = [];
+
+    // 4. Compare vs Market Average
+    for (const property of activeProperties) {
+      const area = property.popular_area || property.district;
+      if (!area || !property.size_sqm || !property.original_price) continue;
+
+      const key = `${area}-${property.property_type}`;
+      const marketData = marketAverages[key];
+
+      if (marketData && marketData.count >= 2) {
+        const avgMarketPricePerSqm =
+          marketData.totalValue / marketData.totalSqm;
+        const originalPrice = Number(property.original_price);
+        const sizeSqm = Number(property.size_sqm);
+
+        if (originalPrice <= 0 || sizeSqm <= 0 || avgMarketPricePerSqm <= 0)
+          continue;
+
+        const currentPropertyPricePerSqm = originalPrice / sizeSqm;
+        const diffPercent =
+          ((currentPropertyPricePerSqm - avgMarketPricePerSqm) /
+            avgMarketPricePerSqm) *
+          100;
+
+        if (diffPercent > 15) {
+          alertsGenerated.push({
+            property_id: property.id,
+            title: property.title,
+            diff_percent: Math.round(diffPercent),
+          });
+
+          // Log to audit_logs
+          await supabase.from("audit_logs").insert({
+            action: "MARKET_DROP_ALERT",
+            entity: "properties",
+            entity_id: property.id,
+            user_id: property.created_by || "system",
+            metadata: {
+              diff_percent: diffPercent,
+              current_price: property.original_price,
+              market_avg_sqm: avgMarketPricePerSqm,
+              prop_avg_sqm: currentPropertyPricePerSqm,
+              message: `ราคาตั้งขายสูงกว่าค่าเฉลี่ยตลาด ${Math.round(diffPercent)}%`,
+            },
+          });
+        }
+      }
+    }
+
+    return {
+      success: true,
+      alerts_count: alertsGenerated.length,
+      alerts: alertsGenerated,
+    };
+  } catch (error) {
+    console.error("Market alerts error:", error);
     return { error: error instanceof Error ? error.message : "Unknown error" };
   }
 }

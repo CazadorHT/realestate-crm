@@ -49,10 +49,7 @@
     - เปิด Products: Login Kit, Content Posting API
 6.  **Vercel Cron Jobs:**
     - ตรวจสอบว่า `vercel.json` มีการตั้งค่า Cron Schedule สำหรับ 4 Jobs หลัก:
-      - `/api/cron/contract-expiry`
-      - `/api/cron/rent-notifications`
-      - `/api/cron/trash-cleanup`
-      - `/api/cron/market-alerts` (ระบบแจ้งเตือนราคา AVM ตก)
+      - `/api/cron/unified` (ระบบรวมศูนย์สำหรับ: เช็คสัญญาหมดอายุ, แจ้งเตือนค่าเช่า, ล้างถังขยะ และ Market Alerts)
 
 ---
 

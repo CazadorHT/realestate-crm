@@ -94,9 +94,8 @@
 | `/api/webhook/line`                 | รับแชทและ Events จาก LINE                |
 | `/api/webhook/meta`                 | รับ Lead Ads และ Comment จาก FB/IG       |
 | `/api/webhook/tiktok`               | รับ Webhook จาก TikTok                   |
-| `/api/cron/trash-cleanup`           | ลบ Audit Logs ที่เก่าเกิน 1 ปี (pg_cron) |
+| `/api/cron/unified`                 | ระบบรวมศูนย์รันงานอัตโนมัติรายวัน (สัญญา, ค่าเช่า, ถังขยะ, Market Alerts) |
 | `/api/cron/notifications-retention` | ล้างแจ้งเตือนเก่าอัตโนมัติ               |
-| `/api/cron/market-alerts`           | ตรวจสอบราคาตลาดตก และพ่นแจ้งเตือน Agent  |
 
 ---
 
