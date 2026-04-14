@@ -1,16 +1,5 @@
 {
   "crons": [
-    {
-      "path": "/api/cron/contract-expiry",
-      "schedule": "0 9 * * *"
-    },
-    {
-      "path": "/api/cron/trash-cleanup",
-      "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/cron/rent-notifications",
-      "schedule": "0 * * * *"
-    }
+    { "path": "/api/cron/unified", "schedule": "0 9 * * *" }
   ]
 }
