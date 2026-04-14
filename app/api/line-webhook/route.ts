@@ -13,6 +13,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getLineProfile, saveOmniMessage, sendLineNotification } from "@/lib/line";
 import { siteConfig } from "@/lib/site-config";
 import { chatWithAI } from "@/features/chatbot/actions";
+import { redis } from "@/lib/redis";
 import {
   buildWelcomeFlex,
   buildPropertyTypeQuickReply,
@@ -51,10 +52,8 @@ function setUserLang(userId: string, lang: BotLang): void {
 }
 
 // ============================
-// Event Deduplication Cache
+// Event Deduplication (REMOVED: Moved to Redis)
 // ============================
-const eventCache = new Set<string>();
-const CACHE_LIMIT = 500;
 
 // ============================
 // Types
@@ -137,18 +136,26 @@ export async function POST(req: NextRequest) {
 
     for (const event of events) {
       const eventId = (event as any).webhookEventId;
-
-      // 1. Deduplication Check
+      
+      // 🛡️ 1. Deduplication Check (Hardened Redis Implementation)
       if (eventId) {
-        if (eventCache.has(eventId)) {
-          console.log(`[BOT] Duplicate event skipped: ${eventId}`);
-          continue;
-        }
-        eventCache.add(eventId);
-        // Keep cache size manageable
-        if (eventCache.size > CACHE_LIMIT) {
-          const first = eventCache.values().next().value;
-          if (first) eventCache.delete(first);
+        try {
+          if (redis) {
+            const lockKey = `webhook:line:${eventId}`;
+            // Atomic Set if Not Exists (NX) with 24h Expiry (EX)
+            const isNew = await redis.set(lockKey, Date.now().toString(), { 
+              nx: true, 
+              ex: 86400 
+            });
+
+            if (!isNew) {
+              console.log(`[BOT] Duplicate event skipped: ${eventId} at ${new Date().toISOString()}`);
+              continue; // Skip processing for duplicate
+            }
+          }
+        } catch (redisError) {
+          // Fail-Open: Log error but continue processing to avoid bot outage (Enterprise Resiliency)
+          console.error("[BOT] Redis Idempotency Error (Fail-Open):", redisError);
         }
       }
 
