@@ -1,6 +1,3 @@
-
-"use server";
-
 import { createClient } from "@/lib/supabase/server";
 import { DashboardStats, RevenueChartData, FunnelData, PipelineData } from "./types";
 import { formatPercent } from "@/lib/utils";

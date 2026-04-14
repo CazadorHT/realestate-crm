@@ -1,5 +1,3 @@
-"use server";
-
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { PropertyStats } from "./types";

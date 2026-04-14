@@ -1,5 +1,3 @@
-"use server";
-
 import { createClient } from "@/lib/supabase/server";
 import { Notification, AgendaEvent } from "./types";
 import { formatTimeAgo } from "@/lib/utils";

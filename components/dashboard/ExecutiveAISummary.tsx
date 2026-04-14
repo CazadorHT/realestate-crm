@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2, Award, Flame, Trophy, Bot, Target } from "lucide-react";
-import { getExecutiveWeeklyAISummaryAction } from "@/features/dashboard/queries";
+import { getExecutiveWeeklyAISummaryAction } from "@/features/dashboard/queries/executive-ai-summary-action";
 import { toast } from "sonner";
 
 export function ExecutiveAISummary({ tenantId }: { tenantId?: string | null }) {

@@ -1,5 +1,3 @@
-"use server";
-
 import { createClient } from "@/lib/supabase/server";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { PublicPropertyWithImages } from "./types";

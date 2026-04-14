@@ -1,5 +1,3 @@
-"use server";
-
 import { createClient } from "@/lib/supabase/server";
 import { AnalyticsResult, ViewsTrendData, DistributionData, AreaAnalytics, AgentPerformanceData } from "./types";
 
