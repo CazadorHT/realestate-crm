@@ -7,6 +7,9 @@ export type AuditAction =
   | "property.update"
   | "property.status.update"
   | "property.delete"
+  | "property.trash"
+  | "property.restore"
+  | "property.permanent_delete"
   | "property.bulk_delete"
   | "property.bulk_trash"
   | "property.bulk_restore"
@@ -110,5 +113,70 @@ export async function logAudit(
       entity: input.entity,
       entityId: input.entityId,
     });
+  }
+}
+
+/**
+ * Audit Metadata Type for summary generation
+ */
+export interface AuditLogMetadata {
+  email?: string;
+  fullName?: string;
+  full_name?: string;
+  name?: string;
+  title?: string;
+  role?: string;
+}
+
+/**
+ * Generates a human-readable summary for an audit log entry.
+ * Hardened to provide fallbacks for missing metadata.
+ */
+export function getReadableSummary(log: {
+  action: string;
+  entity: string;
+  metadata: any;
+}): string {
+  const meta = (log.metadata || {}) as AuditLogMetadata;
+  const action = log.action;
+
+  switch (action) {
+    case "member.transfer":
+      return `ย้ายพนักงาน ${meta.email || ""} ไปยังสาขาใหม่`;
+    case "lead.transfer":
+      return `ส่งต่อลูกค้าคุณ ${meta.fullName || "N/A"} ให้สาขาอื่นดูแล`;
+    case "member.add":
+      return `เพิ่มพนักงาน ${meta.email || ""} เข้าสู่สาขา (Role: ${meta.role || "N/A"})`;
+    case "member.remove":
+      return `ลบพนักงานออกจากสาขา`;
+    case "tenant.create":
+      return `สร้างสาขาใหม่: ${meta.name || "N/A"}`;
+    case "tenant.update":
+      return `แก้ไขข้อมูลสาขา: ${meta.name || "N/A"}`;
+    case "tenant.delete":
+      return `ลบสาขาออกจากระบบ`;
+    case "property.create":
+      return `เพิ่มทรัพย์สินใหม่: ${meta.title || "N/A"}`;
+    case "property.update":
+      return `อัปเดตข้อมูลทรัพย์สิน`;
+    case "property.trash":
+      return `ย้ายทรัพย์สินลงถังขยะ`;
+    case "property.restore":
+      return `กู้คืนทรัพย์สินจากถังขยะ`;
+    case "property.permanent_delete":
+      return `ลบทรัพย์สินอย่างถาวร`;
+    case "lead.create":
+      return `เพิ่มลีดใหม่: ${meta.full_name || "N/A"}`;
+    case "lead.update":
+      return `อัปเดตข้อมูลลีด`;
+    case "deal.create":
+      return `สร้างดีลใหม่`;
+    case "auth.login":
+      return `เข้าสู่ระบบ`;
+    default:
+      if (action.includes("delete")) return `ลบข้อมูล (${log.entity})`;
+      if (action.includes("create")) return `สร้างข้อมูลใหม่ (${log.entity})`;
+      if (action.includes("status.update")) return `อัปเดตสถานะ (${log.entity})`;
+      return action;
   }
 }

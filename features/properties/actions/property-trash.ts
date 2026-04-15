@@ -2,14 +2,20 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAuthContext } from "@/lib/authz";
+import { logAudit } from "@/lib/audit";
 
 /**
  * Soft delete a property by setting deleted_at to now
  */
 export async function softDeleteProperty(id: string) {
-  const supabase = await createClient();
-
   try {
+    const ctx = await requireAuthContext();
+    const { supabase, tenantId, role } = ctx;
+    
+    // 🛡️ Admin can delete any, Staff can only delete from their branch
+    if (role !== "ADMIN" && !tenantId) throw new Error("Unauthorized");
+
     const { error } = await supabase
       .from("properties")
       .update({ deleted_at: new Date().toISOString() })
@@ -20,9 +26,17 @@ export async function softDeleteProperty(id: string) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/properties"); // สำหรับหน้า Public หรือหน้ารายการทั่วไป
-    revalidatePath("/protected"); // รีเฟรชหน้าแดชบอร์ด
-    revalidatePath("/protected/properties"); // เส้นทางที่ถูกต้องสำหรับรายการ protected
+    // 📝 Log Audit
+    await logAudit(ctx, {
+      action: "property.trash",
+      entity: "properties",
+      entityId: id,
+      metadata: { timestamp: new Date().toISOString() }
+    });
+
+    revalidatePath("/properties"); 
+    revalidatePath("/protected"); 
+    revalidatePath("/protected/properties"); 
     revalidatePath("/protected/properties/trash");
     return { success: true };
   } catch (err) {
@@ -35,9 +49,10 @@ export async function softDeleteProperty(id: string) {
  * Restore a property from trash by setting deleted_at to null
  */
 export async function restoreProperty(id: string) {
-  const supabase = await createClient();
-
   try {
+    const ctx = await requireAuthContext();
+    const { supabase, tenantId } = ctx;
+
     const { error } = await supabase
       .from("properties")
       .update({ deleted_at: null })
@@ -47,6 +62,13 @@ export async function restoreProperty(id: string) {
       console.error("Error restoring property:", error);
       return { success: false, error: error.message };
     }
+
+    // 📝 Log Audit
+    await logAudit(ctx, {
+      action: "property.restore",
+      entity: "properties",
+      entityId: id
+    });
 
     revalidatePath("/properties");
     revalidatePath("/protected");
@@ -63,15 +85,23 @@ export async function restoreProperty(id: string) {
  * Permanently delete a property from the database
  */
 export async function permanentDeleteProperty(id: string) {
-  const supabase = await createClient();
-
   try {
+    const ctx = await requireAuthContext();
+    const { supabase } = ctx;
+
     const { error } = await supabase.from("properties").delete().eq("id", id);
 
     if (error) {
       console.error("Error permanently deleting property:", error);
       return { success: false, error: error.message };
     }
+
+    // 📝 Log Audit
+    await logAudit(ctx, {
+      action: "property.permanent_delete",
+      entity: "properties",
+      entityId: id
+    });
 
     revalidatePath("/properties");
     revalidatePath("/protected");

@@ -31,42 +31,52 @@
   },
   {
     "schemaname": "public",
-    "tablename": "audit_logs",
-    "rls_enabled": true,
-    "policyname": "Audit logs are visible to branch admins",
-    "permissive": "PERMISSIVE",
-    "cmd": "SELECT",
-    "qual": "(is_admin() OR ((tenant_id = (( SELECT ((auth.jwt() -> 'user_metadata'::text) ->> 'tenant_id'::text)))::uuid) AND is_tenant_admin(tenant_id)))",
+    "tablename": "audit_logs_2026_03",
+    "rls_enabled": false,
+    "policyname": null,
+    "permissive": null,
+    "cmd": null,
+    "qual": null,
     "with_check": null
   },
   {
     "schemaname": "public",
-    "tablename": "audit_logs",
-    "rls_enabled": true,
-    "policyname": "Audit logs creation is handled by system",
-    "permissive": "PERMISSIVE",
-    "cmd": "INSERT",
+    "tablename": "audit_logs_2026_04",
+    "rls_enabled": false,
+    "policyname": null,
+    "permissive": null,
+    "cmd": null,
     "qual": null,
-    "with_check": "true"
+    "with_check": null
   },
   {
     "schemaname": "public",
-    "tablename": "audit_logs",
-    "rls_enabled": true,
-    "policyname": "audit_logs_insert_own",
-    "permissive": "PERMISSIVE",
-    "cmd": "INSERT",
+    "tablename": "audit_logs_2026_05",
+    "rls_enabled": false,
+    "policyname": null,
+    "permissive": null,
+    "cmd": null,
     "qual": null,
-    "with_check": "(auth.uid() = user_id)"
+    "with_check": null
   },
   {
     "schemaname": "public",
-    "tablename": "audit_logs",
-    "rls_enabled": true,
-    "policyname": "audit_logs_select_hardened",
-    "permissive": "PERMISSIVE",
-    "cmd": "SELECT",
-    "qual": "(is_system_admin() OR (auth.uid() = user_id) OR is_manager_of(user_id))",
+    "tablename": "audit_logs_2026_06",
+    "rls_enabled": false,
+    "policyname": null,
+    "permissive": null,
+    "cmd": null,
+    "qual": null,
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "audit_logs_history",
+    "rls_enabled": false,
+    "policyname": null,
+    "permissive": null,
+    "cmd": null,
+    "qual": null,
     "with_check": null
   },
   {
@@ -1329,4 +1339,4 @@
     "qual": null,
     "with_check": null
   }
-]
+] 

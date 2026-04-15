@@ -58,10 +58,10 @@ export default async function AuditLogsPage({
     getAllUsers(),
   ]);
 
-  const { data, count } = logsResult;
+  const { data, count } = logsResult; 
 
   return (
-    <div className="p-6 space-y-10 max-w-7xl mx-auto py-8">
+    <div className="p-6 space-y-10 max-w-screen-2xl mx-auto py-8">
       <SettingsHeader 
       
         title={<>บันทึกประวัติ <span className="text-blue-600">Audit Logs</span></>}
@@ -83,7 +83,7 @@ export default async function AuditLogsPage({
       />
 
       {/* Filter Component */}
-      <AuditLogFilters users={users} />
+      <AuditLogFilters users={users} totalCount={count} />
 
       <AuditLogTable data={data} />
 

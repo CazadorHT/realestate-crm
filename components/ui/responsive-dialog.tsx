@@ -258,7 +258,7 @@ export function ResponsiveDialog({
         onOpenAutoFocus={onOpenAutoFocus}
         onCloseAutoFocus={onCloseAutoFocus}
       >
-        <DialogHeader className="shrink-0 px-6 pt-6 pb-5 pr-14 border-b border-slate-100">
+        <DialogHeader className="shrink-0 px-6 pt-6 pb-5 pr-6 border-b border-slate-100">
           {title ? (
             <>
               <DialogTitle className="text-xl font-bold tracking-tight text-slate-900 leading-snug">

@@ -101,6 +101,219 @@ export type Database = {
           },
         ]
       }
+      audit_logs_2026_03: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          metadata: Json
+          tenant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_logs_2026_04: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          metadata: Json
+          tenant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_logs_2026_05: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          metadata: Json
+          tenant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_logs_2026_06: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          metadata: Json
+          tenant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_logs_history: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          metadata: Json
+          tenant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_logs_old: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          metadata: Json
+          tenant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "audit_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_categories: {
         Row: {
           created_at: string
@@ -2985,6 +3198,8 @@ export type Database = {
           masked_name: string
         }[]
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       transfer_tenant_member: {
         Args: {
           p_admin_id: string

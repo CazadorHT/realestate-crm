@@ -670,7 +670,7 @@ export function PropertiesTable({
                         </Link>
                       </Button>
                       <DuplicatePropertyButton id={property.id} className="h-7 w-7 text-slate-400 hover:text-purple-600 hover:bg-purple-50" />
-                      <PropertyRowActions id={property.id} title={property.title} tenantId={property.tenant_id} isAdmin={isAdmin} isMultiTenant={isMultiTenant} className="h-7 w-7" />
+                      <PropertyRowActions id={property.id} title={property.title} status={property.status} tenantId={property.tenant_id} isAdmin={isAdmin} isMultiTenant={isMultiTenant} className="h-7 w-7" />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -713,6 +713,7 @@ export function PropertiesTable({
                     <PropertyRowActions
                       id={property.id}
                       title={property.title}
+                      status={property.status}
                       tenantId={property.tenant_id}
                       isAdmin={isAdmin}
                       isMultiTenant={isMultiTenant}

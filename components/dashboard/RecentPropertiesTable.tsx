@@ -271,6 +271,7 @@ export function RecentPropertiesTable({
                       <PropertyRowActions 
                         id={property.id} 
                         title={property.title} 
+                        status={property.status}
                         className="h-7 w-7 text-slate-400 hover:bg-slate-100 rounded-lg"
                       />
                     </div>
@@ -295,6 +296,7 @@ export function RecentPropertiesTable({
                     <PropertyRowActions
                       id={property.id}
                       title={property.title}
+                      status={property.status}
                     />
                   </div>
                 </div>

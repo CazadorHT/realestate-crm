@@ -85,13 +85,6 @@
   },
   {
     "table_name": "audit_logs",
-    "column_name": "user_id",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "audit_logs",
     "column_name": "action",
     "data_type": "text",
     "is_nullable": "NO",
@@ -107,7 +100,7 @@
   {
     "table_name": "audit_logs",
     "column_name": "entity_id",
-    "data_type": "uuid",
+    "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
   },
@@ -121,6 +114,293 @@
   {
     "table_name": "audit_logs",
     "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_03",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "audit_logs_2026_03",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "audit_logs_2026_03",
+    "column_name": "action",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_03",
+    "column_name": "entity",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_03",
+    "column_name": "entity_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_03",
+    "column_name": "metadata",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": "'{}'::jsonb"
+  },
+  {
+    "table_name": "audit_logs_2026_03",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_03",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_04",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "audit_logs_2026_04",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "audit_logs_2026_04",
+    "column_name": "action",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_04",
+    "column_name": "entity",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_04",
+    "column_name": "entity_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_04",
+    "column_name": "metadata",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": "'{}'::jsonb"
+  },
+  {
+    "table_name": "audit_logs_2026_04",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_04",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_05",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "audit_logs_2026_05",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "audit_logs_2026_05",
+    "column_name": "action",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_05",
+    "column_name": "entity",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_05",
+    "column_name": "entity_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_05",
+    "column_name": "metadata",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": "'{}'::jsonb"
+  },
+  {
+    "table_name": "audit_logs_2026_05",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_05",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_06",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "audit_logs_2026_06",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "audit_logs_2026_06",
+    "column_name": "action",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_06",
+    "column_name": "entity",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_06",
+    "column_name": "entity_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_06",
+    "column_name": "metadata",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": "'{}'::jsonb"
+  },
+  {
+    "table_name": "audit_logs_2026_06",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_2026_06",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_history",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "audit_logs_history",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "audit_logs_history",
+    "column_name": "action",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_history",
+    "column_name": "entity",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_history",
+    "column_name": "entity_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_history",
+    "column_name": "metadata",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": "'{}'::jsonb"
+  },
+  {
+    "table_name": "audit_logs_history",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "audit_logs_history",
+    "column_name": "user_id",
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
@@ -1867,6 +2147,90 @@
     "data_type": "boolean",
     "is_nullable": "YES",
     "column_default": "false"
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "name_en",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "name_cn",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "province",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "slug",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "image_url",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "sort_order",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "featured",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "property_count",
+    "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "profiles",

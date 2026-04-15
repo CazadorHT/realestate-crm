@@ -125,7 +125,7 @@ export function InventoryFilters({
           />
         </div>
 
-        <div className="flex flex-col items-center gap-2 w-full lg:w-auto">
+        <div className="flex flex-col lg:flex-row items-center gap-2 w-full lg:w-auto">
           {/* 🛡️ Advanced Filter with ResponsiveDialog */}
           <ResponsiveDialog
             open={isOpen}
@@ -139,7 +139,7 @@ export function InventoryFilters({
             trigger={
               <Button
                 variant="outline"
-                className="h-11 px-5 border-slate-200 hover:bg-slate-50 rounded-xl relative text-sm font-semibold transition-all w-full lg:w-auto"
+                className="h-11 px-5 border-slate-200 hover:bg-slate-100 rounded-xl relative text-sm font-semibold transition-all w-full lg:w-auto text-blue-500!"
               >
                 <Filter className="mr-2 h-4 w-4 text-slate-400" />
                 ตัวกรองขั้นสูง

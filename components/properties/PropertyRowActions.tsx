@@ -32,6 +32,11 @@ import { FaFacebook, FaInstagram, FaLine, FaTiktok } from "react-icons/fa";
 import { cn } from "@/lib/utils";
 import { useRef } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { softDeleteProperty } from "@/features/properties/actions/property-trash";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 
 interface SocialActionResult {
   success: boolean;
@@ -41,6 +46,7 @@ interface SocialActionResult {
 export function PropertyRowActions({
   id,
   title,
+  status,
   tenantId,
   isAdmin,
   isMultiTenant,
@@ -48,6 +54,7 @@ export function PropertyRowActions({
 }: {
   id: string;
   title?: string;
+  status?: string;
   tenantId?: string | null;
   isAdmin?: boolean;
   isMultiTenant?: boolean;
@@ -56,11 +63,16 @@ export function PropertyRowActions({
   const isMobile = useIsMobile();
   const [showTransferDialog, setShowTransferDialog] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleteConfirmed, setIsDeleteConfirmed] = useState(false);
   const [isSocialDialogOpen, setIsSocialDialogOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState<
     "FACEBOOK" | "INSTAGRAM" | "LINE" | "TIKTOK"
   >("FACEBOOK");
   const [nextAction, setNextAction] = useState<(() => void) | null>(null);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   
   const [postStatus, setPostStatus] = useState<
     Record<string, "idle" | "loading" | "success" | "error">
@@ -114,6 +126,24 @@ export function PropertyRowActions({
       },
       error: (err) => err.message || "เกิดข้อผิดพลาดในการดันประกาศ",
     });
+  };
+
+  const handleSuccessFeedback = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("success", "true");
+    router.push(`${pathname}?${params.toString()}`);
+    router.refresh();
+  };
+
+  const onConfirmDelete = async () => {
+    const res = await softDeleteProperty(id);
+    if (res.success) {
+      toast.success("ย้ายทรัพย์ลงถังขยะเรียบร้อยแล้ว");
+      handleSuccessFeedback();
+    } else {
+      toast.error(res.error || "เกิดข้อผิดพลาดในการลบ");
+      throw new Error(res.error || "เกิดข้อผิดพลาดในการลบ");
+    }
   };
 
   return (
@@ -316,9 +346,13 @@ export function PropertyRowActions({
               )}
 
               <DeletePropertyMenuItem
-                id={id}
-                onDeleteStart={() => {
+                status={status}
+                onClick={() => {
                   setIsMenuOpen(false);
+                  setNextAction(() => () => {
+                    setShowDeleteDialog(true);
+                    setIsDeleteConfirmed(false);
+                  });
                 }}
               />
             </>
@@ -346,6 +380,43 @@ export function PropertyRowActions({
         onSuccess={() => {
           setPostStatus((prev) => ({ ...prev, [selectedPlatform]: "success" }));
         }}
+      />
+
+      <ConfirmDialog
+        open={showDeleteDialog}
+        onOpenChange={(val) => {
+          setShowDeleteDialog(val);
+          if (!val) setIsDeleteConfirmed(false);
+        }}
+        title="ยืนยันการลบ"
+        description={
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <p>คุณต้องการย้ายทรัพย์นี้ลงถังขยะใช่หรือไม่? คุณสามารถกู้คืนได้ภายหลังในหน้าถังขยะ (Trash)</p>
+              <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 font-medium leading-relaxed">
+                ⚠️ หมายเหตุ: รายการที่มีสถานะ ขายแล้ว/เช่าแล้ว หรือมีดีลที่ปิดแล้ว ไม่สามารถลบได้
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-2 pt-2 border-t border-slate-100">
+              <Checkbox 
+                id={`confirm-delete-${id}`}
+                checked={isDeleteConfirmed}
+                onCheckedChange={(checked) => setIsDeleteConfirmed(checked === true)}
+              />
+              <Label 
+                htmlFor={`confirm-delete-${id}`}
+                className="text-sm font-medium text-slate-700 cursor-pointer select-none"
+              >
+                ยืนยันความต้องการที่จะลบรายการนี้จริงๆ
+              </Label>
+            </div>
+          </div>
+        }
+        confirmText="ย้ายลงถังขยะ"
+        confirmDisabled={!isDeleteConfirmed}
+        variant="destructive"
+        onConfirm={onConfirmDelete}
       />
     </>
   );

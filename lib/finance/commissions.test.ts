@@ -120,5 +120,22 @@ describe('Commission Calculation Engine (Hardened)', () => {
       expect(listing?.percentage).toBe(27);
       expect(listing?.amount).toBe(27000);
     });
+
+    it('should calculate WHT only when agentId is present', () => {
+      const total = 10000;
+      const agents = { listingAgentId: 'agent-1' }; // No closing agent
+      const results = calculateAdvancedSplit(total, validConfig, agents);
+
+      const listing = results.find(r => r.role === 'LISTING');
+      const closing = results.find(r => r.role === 'CLOSING');
+
+      expect(listing?.whtAmount).toBeGreaterThan(0);
+      expect(closing?.whtAmount).toBe(0); // No agentId, no WHT (stays in company pool)
+    });
+
+    it('should handle zero commission gracefully', () => {
+      const results = calculateAdvancedSplit(0, validConfig, {});
+      expect(results.every(r => r.amount === 0)).toBe(true);
+    });
   });
 });

@@ -25,12 +25,40 @@ export const PROPERTY_TYPE_TH: Record<string, string> = {
   OTHER: "อื่นๆ",
 };
 
+export const PROPERTY_STATUS_TH: Record<string, string> = {
+  ACTIVE: "พร้อมขาย/เช่า",
+  RESERVED: "จองแล้ว",
+  SOLD: "ขายแล้ว",
+  RENTED: "เช่าแล้ว",
+  INACTIVE: "ปิดประกาศ",
+  DELETED: "ย้ายลงถังขยะ",
+};
+
 /**
  * Get display label for property type
  */
 export function getTypeLabel(propertyType: string | null): string {
   if (!propertyType) return "อื่นๆ";
   return PROPERTY_TYPE_LABELS[propertyType] ?? "อื่นๆ";
+}
+
+/**
+ * Get display label for property status
+ */
+export function getStatusLabel(status: string | null): string {
+  if (!status) return "N/A";
+  return PROPERTY_STATUS_TH[status] ?? status;
+}
+
+/**
+ * Business Rule: Can a property be deleted?
+ * Sold or Rented properties should be ARCHIVED/LOGGED, but not deleted from inventory
+ * to maintain transaction history.
+ */
+export function canDeleteProperty(status: string | null): boolean {
+  if (!status) return true;
+  const restricted = ["SOLD", "RENTED"];
+  return !restricted.includes(status.toUpperCase());
 }
 
 /**

@@ -48,6 +48,14 @@ const STATUS_TH = {
   WITHDRAWN: "ปิดประกาศ"
 };
 
+const STATUS_COLORS = {
+  ACTIVE: "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white! hover:border-emerald-600",
+  UNDER_OFFER: "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-600 hover:text-white! hover:border-amber-600",
+  SOLD: "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-600 hover:text-white! hover:border-rose-600",
+  RENTED: "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white! hover:border-blue-600",
+  WITHDRAWN: "bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-500 hover:text-white! hover:border-slate-500"
+};
+
 // 🛡️ Performance Polish: Memoized to prevent re-renders during search typing
 export const InventoryTable = React.memo(({ data, isLoading, onReset }: InventoryTableProps) => {
   
@@ -81,11 +89,11 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
   return (
     <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden transition-all duration-500">
       {/* 🖥️ Desktop View (md+) */}
-      <div className="hidden md:block overflow-x-auto">
+      <div className="hidden xl:block overflow-x-auto">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-100 text-nowrap">
-              <TableHead className="font-semibold text-slate-500 text-[11px] uppercase tracking-widest px-6 py-5">ข้อมูลทรัพย์สิน</TableHead>
+            <TableRow className="bg-slate-50/50 hover:bg-slate-50/50 border-b border-slate-100">
+              <TableHead className="font-semibold text-slate-500 text-[11px] uppercase tracking-widest px-6 py-5 min-w-[300px]">ข้อมูลทรัพย์สิน</TableHead>
               <TableHead className="font-semibold text-slate-500 text-[11px] uppercase tracking-widest">สาขา</TableHead>
               <TableHead className="font-semibold text-slate-500 text-[11px] uppercase tracking-widest">ประเภท</TableHead>
               <TableHead className="font-semibold text-slate-500 text-[11px] uppercase tracking-widest">การดีล</TableHead>
@@ -99,8 +107,8 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
               <TableSkeleton />
             ) : (
               data.map((item) => (
-                <TableRow key={item.id} className="group hover:bg-blue-50/30 transition-all border-b border-slate-50 last:border-0 h-20 text-nowrap">
-                  <TableCell className="px-6">
+                <TableRow key={item.id} className="group hover:bg-blue-50/30 transition-all border-b border-slate-50 last:border-0 min-h-20">
+                  <TableCell className="px-6 whitespace-normal!">
                     <div className="flex items-center gap-4">
                       {/* Thumbnail with Overlays */}
                       <div className="relative h-12 w-20 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-100">
@@ -123,8 +131,8 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
                           ID: {item.id.split("-")[0]}
                         </div>
                       </div>
-                      <div className="max-w-[200px]">
-                        <div className="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors text-sm line-clamp-1 leading-tight">
+                      <div className="max-w-[500px] ">
+                        <div className="font-semibold text-slate-800 line-clamp-1 group-hover:text-blue-600 transition-colors text-sm  leading-tight">
                           {item.title}
                         </div>
                         <div className="text-[10px] text-slate-400 mt-1 flex items-center gap-1 font-medium italic">
@@ -163,10 +171,8 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
                   </TableCell>
                   <TableCell>
                     <Badge className={cn(
-                      "font-semibold px-3 py-1 rounded-full text-[9px] uppercase border shadow-2xs transition-all",
-                      item.status === "ACTIVE" 
-                        ? "bg-emerald-50 text-emerald-600 border-emerald-200" 
-                        : "bg-slate-50 text-slate-400 border-slate-200"
+                      "font-semibold px-3 py-1 rounded-full text-[9px] uppercase border shadow-2xs transition-all cursor-default",
+                      STATUS_COLORS[item.status as keyof typeof STATUS_COLORS] || STATUS_COLORS.WITHDRAWN
                     )}>
                       {STATUS_TH[item.status as keyof typeof STATUS_TH] || item.status}
                     </Badge>
@@ -186,7 +192,7 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
       </div>
 
       {/* 📱 Mobile Card View (<md) */}
-      <div className="md:hidden divide-y divide-slate-100">
+      <div className="xl:hidden divide-y grid grid-cols-1 md:grid-cols-2 gap-4 divide-slate-100">
         {isLoading ? (
           <CardSkeleton />
         ) : (
@@ -224,7 +230,7 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
                 </div>
 
                 <div className="space-y-1">
-                  <div className="font-semibold text-slate-800 text-lg leading-tight group-hover:text-blue-600 transition-colors">
+                  <div className="font-semibold text-slate-800 text-lg line-clamp-2 leading-tight group-hover:text-blue-600 transition-colors">
                     {item.title}
                   </div>
                   <div className="flex items-center justify-between">
@@ -233,8 +239,8 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
                       {item.tenant_name}
                     </div>
                     <Badge variant="outline" className={cn(
-                      "text-[9px] font-semibold uppercase border",
-                      item.status === "ACTIVE" ? "text-emerald-600 border-emerald-100" : "text-slate-400"
+                      "text-[9px] font-semibold uppercase border transition-all",
+                      STATUS_COLORS[item.status as keyof typeof STATUS_COLORS] || STATUS_COLORS.WITHDRAWN
                     )}>
                       {STATUS_TH[item.status as keyof typeof STATUS_TH] || item.status}
                     </Badge>

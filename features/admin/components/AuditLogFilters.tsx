@@ -66,9 +66,10 @@ const LOG_ENTITIES = [
 
 interface AuditLogFiltersProps {
   users: { id: string; full_name: string | null; email: string | null }[];
+  totalCount?: number;
 }
 
-export function AuditLogFilters({ users }: AuditLogFiltersProps) {
+export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -176,7 +177,9 @@ export function AuditLogFilters({ users }: AuditLogFiltersProps) {
     <div className="flex flex-col xl:flex-row xl:items-center gap-4 xl:gap-3 italic">
       <div className="flex items-center gap-2 mb-1 xl:hidden">
         <Layers className="h-4 w-4 text-blue-500" />
-        <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">ตัวเลือกการกรอง (Filter Options)</span>
+        <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
+          ตัวเลือกการกรอง (Filters) {totalCount !== undefined && `(${totalCount.toLocaleString()})`}
+        </span>
       </div>
 
       {/* Action Filter */}
@@ -321,9 +324,14 @@ export function AuditLogFilters({ users }: AuditLogFiltersProps) {
            )}>
              <Filter className="h-4 w-4" />
            </div>
-           <span className="text-xs font-semibold text-slate-500 uppercase tracking-widest italic">
+           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] italic">
             Search
            </span>
+           {totalCount !== undefined && (
+             <Badge variant="outline" className="h-5 px-1.5 text-[10px] font-bold text-blue-600 bg-blue-50 border-blue-100 rounded-lg">
+                {totalCount.toLocaleString()}
+             </Badge>
+           )}
         </div>
         {filterContent}
       </div>
