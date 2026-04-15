@@ -12,7 +12,16 @@ import { PropertyBadgesSection } from "@/components/public/property-detail/Prope
 import { PropertyDescription } from "@/components/public/property-detail/PropertyDescription";
 import { PropertyAmenities } from "@/components/public/property-detail/PropertyAmenities";
 import { PropertyMapSection } from "@/components/public/property-detail/PropertyMapSection";
-import { SmartEditor } from "../components/SmartEditor";
+import dynamic from "next/dynamic";
+const SmartEditor = dynamic(
+  () => import("../components/SmartEditor").then((m) => m.SmartEditor),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="h-[600px] w-full bg-slate-50 animate-pulse rounded-xl border border-slate-200" />
+    ),
+  }
+);
 import { Button } from "@/components/ui/button";
 import { generatePropertyDescription } from "../utils/description-generator";
 import { toast } from "sonner";

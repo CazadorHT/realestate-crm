@@ -40,14 +40,67 @@ import { TikTokPostButton } from "./components/TikTokPostButton";
 import { FaTiktok } from "react-icons/fa";
 import { TopLoader } from "@/components/ui/top-loader";
 
-// Step components (Memoized for performance)
+// Step components (Dynamically imported for chunk-splitting)
 import { Step1BasicInfo } from "./property-form/steps/Step1BasicInfo";
-import { Step2Details } from "./property-form/steps/Step2Details";
-import { Step3Location } from "./property-form/steps/Step3Location";
-import { Step4Media } from "./property-form/steps/Step4Media";
-import { Step5Features } from "./property-form/steps/Step5Features";
-import { Step6Review } from "./property-form/steps/Step6Review";
-import { Step7Syndication } from "./property-form/steps/Step7Syndication";
+import dynamic from "next/dynamic";
+
+// --- Skeleton Fallbacks (height-matched to prevent Layout Shift) ---
+const StepSkeleton = ({ lines = 3, cards = 2 }: { lines?: number; cards?: number }) => (
+  <div className="space-y-6 animate-in fade-in duration-300">
+    {Array.from({ length: cards }).map((_, i) => (
+      <div key={i} className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+        <div className="h-5 w-40 bg-slate-100 rounded-lg animate-pulse" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {Array.from({ length: lines }).map((_, j) => (
+            <div key={j} className="space-y-2">
+              <div className="h-3 w-20 bg-slate-100 rounded animate-pulse" />
+              <div className="h-11 bg-slate-50 rounded-lg border border-slate-200 animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+const ReviewSkeleton = () => (
+  <div className="space-y-8 animate-in fade-in duration-300">
+    <div className="bg-blue-50 border border-blue-100 p-5 rounded-2xl h-28 animate-pulse" />
+    <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+      <div className="h-64 bg-slate-100 animate-pulse" />
+      <div className="p-6 space-y-4">
+        <div className="h-6 w-60 bg-slate-100 rounded-lg animate-pulse" />
+        <div className="h-4 w-full bg-slate-50 rounded animate-pulse" />
+        <div className="h-4 w-3/4 bg-slate-50 rounded animate-pulse" />
+      </div>
+    </div>
+  </div>
+);
+
+// --- Dynamic Step Imports (with prefetch references) ---
+const step2Import = () => import("./property-form/steps/Step2Details").then((m) => m.Step2Details);
+const step3Import = () => import("./property-form/steps/Step3Location").then((m) => m.Step3Location);
+const step4Import = () => import("./property-form/steps/Step4Media").then((m) => m.Step4Media);
+const step5Import = () => import("./property-form/steps/Step5Features").then((m) => m.Step5Features);
+const step6Import = () => import("./property-form/steps/Step6Review").then((m) => m.Step6Review);
+const step7Import = () => import("./property-form/steps/Step7Syndication").then((m) => m.Step7Syndication);
+
+const Step2Details = dynamic(step2Import, { loading: () => <StepSkeleton lines={4} cards={3} /> });
+const Step3Location = dynamic(step3Import, { loading: () => <StepSkeleton lines={4} cards={2} /> });
+const Step4Media = dynamic(step4Import, { loading: () => <StepSkeleton lines={2} cards={2} /> });
+const Step5Features = dynamic(step5Import, { loading: () => <StepSkeleton lines={6} cards={1} /> });
+const Step6Review = dynamic(step6Import, { loading: () => <ReviewSkeleton /> });
+const Step7Syndication = dynamic(step7Import, { loading: () => <StepSkeleton lines={2} cards={1} /> });
+
+// Prefetch map: step N → loader for step N+1
+const PREFETCH_MAP: Record<number, (() => Promise<any>) | undefined> = {
+  1: step2Import,
+  2: step3Import,
+  3: step4Import,
+  4: step5Import,
+  5: step6Import,
+  6: step7Import,
+};
 
 // Hooks
 import { usePropertyFormDraft } from "./hooks/usePropertyFormDraft";
@@ -256,8 +309,15 @@ export function PropertyForm({
   const handleNext = async () => {
     const isStepValid = await validateStep(currentStep);
     if (isStepValid) {
-      setCurrentStep((prev) => Math.min(prev + 1, 7));
+      const nextStep = Math.min(currentStep + 1, 7);
+      setCurrentStep(nextStep);
       window.scrollTo({ top: 0, behavior: "smooth" });
+
+      // Smart Prefetch: preload step N+2 so it's ready when user clicks Next again
+      const prefetchAfterNext = PREFETCH_MAP[nextStep];
+      if (prefetchAfterNext) {
+        prefetchAfterNext().catch(() => {}); // fire-and-forget, ignore errors
+      }
     }
   };
 
