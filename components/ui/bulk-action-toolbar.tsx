@@ -6,6 +6,7 @@ import { Trash2, X, Loader2, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { downloadBase64File, MIME_TYPES } from "@/lib/download-utils";
 
 interface BulkActionToolbarProps {
   selectedCount: number;
@@ -59,27 +60,17 @@ export function BulkActionToolbar({
     try {
       const result = await onExport();
       if (result.success && result.data && result.filename) {
-        // Convert base64 to blob and download
-        const byteCharacters = atob(result.data);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        const downloaded = downloadBase64File(
+          result.data,
+          result.filename,
+          MIME_TYPES.EXCEL,
+        );
+
+        if (downloaded) {
+          toast.success(`Export สำเร็จ ${selectedCount} ${entityName}`);
+        } else {
+          toast.error("ดาวน์โหลดไฟล์ไม่สำเร็จ");
         }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], {
-          type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        });
-
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = result.filename;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-
-        toast.success(`Export สำเร็จ ${selectedCount} ${entityName}`);
       } else {
         toast.error(result.message || "Export ไม่สำเร็จ");
       }

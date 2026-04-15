@@ -52,13 +52,22 @@
   body {
     @apply bg-background text-foreground overflow-x-hidden;
     scrollbar-gutter: stable;
+    /* Prevent overscroll bounce on mobile to make it feel more like an app */
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
   }
   button {
-    @apply cursor-pointer;
+    @apply cursor-pointer select-none active:scale-95 transition-transform;
   }
   input,
   textarea {
-    scroll-margin-top: 100px;
+    scroll-margin-top: 120px;
+    font-size: 16px !important; /* Prevent iOS auto-zoom on focus */
+  }
+
+  /* Support for modern mobile notches */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 

@@ -72,3 +72,32 @@ export function formatBoolean(value: boolean | null | undefined): string {
   if (value == null) return "-";
   return value ? "ใช่" : "ไม่";
 }
+
+/**
+ * Format Listing Type to Thai
+ */
+export function formatListingType(value: string | null | undefined): string {
+  if (!value) return "-";
+  const map: Record<string, string> = {
+    SALE: "ขาย",
+    RENT: "เช่า",
+    SALE_AND_RENT: "ขาย/เช่า",
+  };
+  return map[value] || value;
+}
+
+/**
+ * Format Property Status to Thai
+ */
+export function formatPropertyStatus(value: string | null | undefined): string {
+  if (!value) return "-";
+  const map: Record<string, string> = {
+    AVAILABLE: "ว่าง (พร้อมขาย/เช่า)",
+    SOLD: "ขายแล้ว",
+    RENTED: "เช่าแล้ว",
+    RESERVED: "จองแล้ว",
+    OFF_MARKET: "ปิดประกาศ",
+    TRASH: "ถังขยะ",
+  };
+  return map[value] || value;
+}

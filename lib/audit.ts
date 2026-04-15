@@ -82,6 +82,7 @@ export type AuditAction =
   | "property.transfer_branch"
   | "owner.transfer_branch"
   | "property.ai_refresh"
+  | "property.export"
   | "commission.export_pdf"
   | "commission.send_line";
 
@@ -126,6 +127,7 @@ export interface AuditLogMetadata {
   name?: string;
   title?: string;
   role?: string;
+  count?: number;
 }
 
 /**
@@ -173,6 +175,8 @@ export function getReadableSummary(log: {
       return `สร้างดีลใหม่`;
     case "auth.login":
       return `เข้าสู่ระบบ`;
+    case "property.export":
+      return `ส่งออกรายงานทรัพย์สิน (${meta.count || 0} รายการ)`;
     default:
       if (action.includes("delete")) return `ลบข้อมูล (${log.entity})`;
       if (action.includes("create")) return `สร้างข้อมูลใหม่ (${log.entity})`;

@@ -13,6 +13,7 @@ export type ActionResponse<T = any> = {
   data?: T;
   error?: string;
   messages?: OmniMessage[]; // Backward compatibility for existing UI
+  hasMore?: boolean;
 };
 
 export async function sendDirectReplyAction(
@@ -125,6 +126,8 @@ export async function replyToCommentAction(
 
 export async function getLeadMessagesAction(
   leadId: string,
+  offset: number = 0,
+  limit: number = 20,
 ): Promise<ActionResponse<OmniMessage[]>> {
   try {
     const { supabase, tenantId } = await requireAuthContext();
@@ -138,24 +141,79 @@ export async function getLeadMessagesAction(
 
     if (!lead) throw new Error("ไม่พบข้อมูลลูกค้า");
 
-    // 2. Fetch both specific and global messages
+    // 2. Fetch messages ordered by newest first for better performance & visibility
     const adminSupabase = createAdminClient();
     const { data, error } = await adminSupabase
       .from("omni_messages")
       .select("*")
       .or(`lead_id.eq.${leadId},and(lead_id.is.null,source.eq.${lead.source},created_at.gte.${lead.created_at})`)
-      .order("created_at", { ascending: true });
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit);
 
     if (error) throw error;
 
+    const messages = (data as OmniMessage[]) || [];
+    const hasMore = messages.length > limit;
+    
+    // If we fetched one extra to check hasMore, remove it
+    const finalMessages = hasMore ? messages.slice(0, limit) : messages;
+
     return { 
       success: true, 
-      messages: data as OmniMessage[],
-      data: data as OmniMessage[] 
+      messages: finalMessages,
+      data: finalMessages,
+      hasMore
     };
   } catch (err: any) {
     console.error("[getLeadMessagesAction] Error:", err);
     return { success: false, error: err.message };
+  }
+}
+
+import { z } from "zod";
+
+const CategorySchema = z.enum(["CUSTOMER", "AGENT", "OWNER"]);
+
+export async function updateLeadCategoryAction(
+  leadId: string,
+  category: string,
+): Promise<ActionResponse> {
+  try {
+    const { supabase, tenantId } = await requireAuthContext();
+
+    // 1. Validate category
+    const validatedCategory = CategorySchema.parse(category);
+
+    // 2. Get current preferences to merge
+    const { data: lead } = await supabase
+      .from("leads")
+      .select("preferences")
+      .eq("id", leadId)
+      .eq("tenant_id", tenantId!)
+      .single();
+
+    if (!lead) throw new Error("ไม่พบข้อมูลผู้ติดต่อ");
+
+    const newPreferences = {
+      ...(lead.preferences as any || {}),
+      category: validatedCategory,
+      category_updated_at: new Date().toISOString(),
+    };
+
+    // 3. Update
+    const { error } = await supabase
+      .from("leads")
+      .update({ preferences: newPreferences })
+      .eq("id", leadId)
+      .eq("tenant_id", tenantId!);
+
+    if (error) throw error;
+
+    revalidatePath("/protected/inbox");
+    return { success: true };
+  } catch (err: any) {
+    console.error("[updateLeadCategoryAction] Error:", err);
+    return { success: false, error: err instanceof z.ZodError ? "Invalid category" : err.message };
   }
 }
 

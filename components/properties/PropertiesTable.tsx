@@ -79,8 +79,9 @@ import type {
   PropertyTableData,
 } from "@/features/properties/types";
 import { cn } from "@/lib/utils";
-import { FaLine, FaTiktok , FaFacebook} from "react-icons/fa";
-import {RiInstagramFill} from "react-icons/ri"
+import { FaLine, FaTiktok, FaFacebook } from "react-icons/fa";
+import { RiInstagramFill } from "react-icons/ri";
+import { downloadBase64File, MIME_TYPES } from "@/lib/download-utils";
 interface PropertiesTableProps {
   data: PropertyTableData[];
   isAdmin?: boolean;
@@ -186,6 +187,7 @@ export function PropertiesTable({
   } = useTableSelection(allIds);
 
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [isTransitionPending, startTransition] = useTransition();
 
   const handleSelectAllGlobal = async () => {
@@ -333,6 +335,32 @@ export function PropertiesTable({
     }
   };
 
+  const handleExportAllWithFilters = async () => {
+    setIsExporting(true);
+    toast.info("กำลังเตรียมข้อมูลไฟล์ Excel...");
+    try {
+      const result = await exportPropertiesAction(undefined, filters);
+      if (result.success && result.data && result.filename) {
+        const downloaded = downloadBase64File(
+          result.data,
+          result.filename,
+          MIME_TYPES.EXCEL,
+        );
+        if (downloaded) {
+          toast.success(`Export ทั้งหมด ${result.count} รายการสำเร็จ`);
+        } else {
+          toast.error("ดาวน์โหลดไฟล์ไม่สำเร็จ");
+        }
+      } else {
+        toast.error(result.message || "Export ไม่สำเร็จ");
+      }
+    } catch (err) {
+      toast.error("เกิดข้อผิดพลาดในการ Export");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Bulk Action Toolbar */}
@@ -356,6 +384,30 @@ export function PropertiesTable({
         actionableCount={selectedCount - blockedCount}
         className={isTransitionPending ? "opacity-50 pointer-events-none" : ""}
       />
+
+      {/* Primary Toolbar Actions */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          {selectedCount === 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportAllWithFilters}
+              disabled={isExporting}
+              className="h-9 px-4 text-xs font-bold border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 transition-all rounded-xl shadow-xs"
+            >
+              {isExporting ? (
+                <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
+              ) : (
+                <Download className="h-3.5 w-3.5 mr-2" />
+              )}
+              Export รายการที่เลือกตามฟิลเตอร์ (Excel/CSV)
+            </Button>
+          )}
+        </div>
+        
+        {/* Pagination placeholder if needed, or other tools */}
+      </div>
 
       {/* Global Selection Indicator */}
       {isAllSelected && selectedCount < totalCount && (

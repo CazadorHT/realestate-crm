@@ -22,6 +22,7 @@ export async function getInboxConversationsQuery(): Promise<Conversation[]> {
       line_id,
       tenant_id,
       note,
+      preferences,
       tenants(id, name),
       omni_messages (
         id,
@@ -54,6 +55,6 @@ export async function getInboxConversationsQuery(): Promise<Conversation[]> {
     throw new Error(error.message);
   }
 
-  return data || [];
+  return (data as unknown as Conversation[]) || [];
 }
     

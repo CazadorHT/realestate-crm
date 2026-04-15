@@ -9,22 +9,47 @@ export function InboxContainer({
 }: {
   initialConversations: any[];
 }) {
+  const [filterCategory, setFilterCategory] = useState<string | null>(null);
   const [selectedLeadId, setSelectedLeadId] = useState<string | null>(
     initialConversations.length > 0 ? initialConversations[0].id : null,
   );
 
+  const filteredConversations = initialConversations.filter((conv) => {
+    if (!filterCategory) return true;
+    const cat = conv.preferences?.category || "CUSTOMER";
+    return cat === filterCategory;
+  });
+
   const selectedConversation = initialConversations.find(
     (c) => c.id === selectedLeadId,
   );
+
+  // Auto-select first in filtered list when filter changes
+  const handleFilterChange = (category: string | null) => {
+    setFilterCategory(category);
+    const newFiltered = initialConversations.filter((conv) => {
+      if (!category) return true;
+      const cat = conv.preferences?.category || "CUSTOMER";
+      return cat === category;
+    });
+    if (newFiltered.length > 0) {
+      setSelectedLeadId(newFiltered[0].id);
+    } else {
+      setSelectedLeadId(null);
+    }
+  };
 
   return (
     <div className="flex flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
       {/* Sidebar: Conversation List */}
       <div className="w-80 border-r border-slate-200">
         <ConversationList
-          conversations={initialConversations}
+          conversations={filteredConversations}
+          allConversations={initialConversations}
           selectedLeadId={selectedLeadId}
           onSelect={setSelectedLeadId}
+          filterCategory={filterCategory}
+          onFilterChange={handleFilterChange}
         />
       </div>
 

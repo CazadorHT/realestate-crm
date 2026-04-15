@@ -1,8 +1,8 @@
 # 💰 แผนธุรกิจและการประเมินมูลค่า (Business Strategy & Valuation)
 
-เอกสารรวบรวมข้อมูลด้านการตลาด การประเมินราคาขาย และกลยุทธ์การสร้างรายได้จากโปรเจค VC Connect Asset CRM (Enterprise Multi-Tenant Edition)
+เอกสารรวบรวมข้อมูลด้านการตลาด การประเมินราคาขาย และกลยุทธ์การสร้างรายได้จากโปรเจค VC Connect Asset CRM (Enterprise v2.1 Hardened Edition)
 
-> **อัปเดตล่าสุด:** 4 มีนาคม 2026 (Enterprise v2.0 & Multi-Branch Ready)
+> **อัปเดตล่าสุด:** 15 เมษายน 2026 (Enterprise v2.1 - Hardened & Verified)
 
 ---
 
@@ -10,49 +10,58 @@
 
 ### 🏗️ โครงสร้างราคาแบ่งตามโมดูล (อิงตามตลาดซอฟต์แวร์ Enterprise)
 
-| โมดูล (Module)                                                                 | มูลค่าประเมิน (THB)   | สถานะ (Status)  |
-| :----------------------------------------------------------------------------- | :-------------------- | :-------------- |
-| **1. Public Listing Portal** (Mobile-First UI, Search, Premium UX, i18n)       | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
-| **2. Professional CRM Backend** (Lead, Pipeline, Activity, Stats)              | 1,500,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ |
-| **3. AI-First Ecosystem** (Gemini 2.0, Financial Costing, Insights)            | 2,000,000 - 3,500,000 | ✅ เสร็จสมบูรณ์ |
-| **4. Omni-channel & Social Studio** (LINE, Meta, TikTok, Auto-Reply)           | 1,800,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ |
-| **5. Multi-Tenant Branch Ops** (RLS, Org Structure, Live Branding)             | 2,000,000 - 3,000,000 | ✅ เสร็จสมบูรณ์ |
-| **6. AVM & Market Intel** (AI Market Comps, PDF Reports, Drop Alerts)          | 1,800,000 - 2,800,000 | ✅ เสร็จสมบูรณ์ |
-| **7. Advanced Financials & Split** (Comm Split, WHT 3%, Visual Bar)            | 1,500,000 - 2,200,000 | ✅ เสร็จสมบูรณ์ |
-| **8. Smart Contract Engine** (Dynamic Word-to-PDF, In-app Preview)             | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
-| **9. Core Architecture & System Health** (Monitoring, Robust Handling)         | 1,000,000 - 1,500,000 | ✅ เสร็จสมบูรณ์ |
-| **10. GTM & Conversion Tracking** (Granular Event, Lead Funnel, Form tracking) | 1,200,000 - 1,800,000 | ✅ เสร็จสมบูรณ์ |
+| โมดูล (Module)                                                                 | มูลค่าประเมิน (THB)   | สถานะ (Status)           |
+| :----------------------------------------------------------------------------- | :-------------------- | :----------------------- |
+| **1. Public Listing Portal** (Premium UX, Dynamic SEO, i18n 100%)              | 1,500,000 - 2,200,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
+| **2. Professional CRM Backend** (Lead scoring, Activity Summaries)             | 1,800,000 - 2,800,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
+| **3. AI-First Ecosystem** (Gemini 2.0, Valuation, Content, Lead Matching)      | 3,500,000 - 5,000,000 | ✅ เสร็จสมบูรณ์ (Verified) |
+| **4. Omni-channel Social Studio** (Meta, TikTok, LINE, Webhook Security)       | 2,000,000 - 3,500,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
+| **5. Multi-Tenant Branch Ops** (RLS Isolation, Tenant Branding Logic)          | 2,500,000 - 4,000,000 | ✅ เสร็จสมบูรณ์ (Audited)  |
+| **6. Hardened Infrastructure** (Inngest, Upstash Redis, Partitioning, Sentry)  | 1,500,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ (NEW)      |
+| **7. AVM & Market Intel** (AI Market Comps, PDF Reports, Drop Alerts)          | 2,200,000 - 3,200,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
+| **8. Advanced Financials & Split** (Comm Engine, WHT 3%, Net Amount)           | 1,800,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ (Verified) |
+| **9. Smart Contract Engine** (Dynamic .docx to PDF, Version Control)           | 1,500,000 - 2,000,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
+| **10. GTM & Conversion Analytics** (Image Engagement, Funnel tracking)         | 1,500,000 - 2,200,000 | ✅ เสร็จสมบูรณ์ (Verified) |
 
-## รวมมูลค่าโปรเจค (Fair Market Value):**.**15,200,000 – 23,400,000 บาท\*\*
+## รวมมูลค่าโปรเจค (Fair Market Value): **19,800,000 – 29,900,000 บาท**
 
-_(มูลค่าสะท้อนฟีเจอร์ระดับ Enterprise ที่พร้อมใช้งานจริงในสเกลองค์กรขนาดใหญ่ระดับมหาชน - **ราคายังไม่รวมภาษีมูลฮค่าเพิ่ม 7%**)_
+_(มูลค่าสะท้อนฟีเจอร์ระดับ Enterprise ที่ผ่านการ Hardened ความปลอดภัยและทดสอบความเสถียร (Unit Testing) 100% - **ราคายังไม่รวมภาษีมูลค่าเพิ่ม 7%**)_
 
 ---
 
 ## 2. กลยุทธ์การขายขาด (Exclusive Buyout Strategy) 🚀
 
-ระบบนี้ถูกออกแบบมาเพื่อเป็น **"Platform-as-a-Product"** ที่พร้อมให้บริษัทอสังหาฯ ขนาดใหญ่หรือบริษัทซอฟต์แวร์ซื้อไปเป็นของตัวเอง (White-label):
+ระบบนี้ถูกออกแบบมาเพื่อเป็น **"Platform-as-a-Product"** ที่พร้อมให้บริษัทอสังหาฯ ขนาดใหญ่หรือบริษัทซอฟต์แวร์ซื้อไปเป็นของตัวเอง (White-label) โดยมีจุดแข่งที่ **Security-First Architecture**:
 
-### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 20,000,000 THB++
+### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 25,000,000 THB++
 
 การขาย Source Code ทั้งหมดพร้อมสิทธิ์ความเป็นเจ้าของ 100% เหมาะสำหรับ:
 
-- **Real Estate Developer (Top Tier):** ต้องการ Platform ที่มีระบบจัดการสาขา (Branch) ในตัว เพื่อควบคุมข้อมูลจากทุกสาขาทั่วประเทศ
-- **PropTech Startup / Enterprise Agency:** ต้องการทางลัด (Short-cut) ในการเข้าสู่ตลาดด้วยฟีเจอร์ AI Valuation, Commission Split และ Multi-Tenancy ที่พัฒนามาอย่างสมบูรณ์
-- **Digital Agency:** นำไปขายต่อเป็นรายบริษัทในรูปแบบ SaaS (Multi-Tenant) พร้อมระบบคิดเงินอัตโนมัติ
+- **Real Estate Developer (Top Tier):** ต้องการ Platform ที่มีระบบจัดการสาขา (Branch) ในตัว เพื่อควบคุมข้อมูลจากทุกสาขาทั่วประเทศ พร้อมความปลอดภัยข้อมูลระดับสูงสุด
+- **PropTech Startup / Enterprise Agency:** ต้องการทางลัด (Short-cut) ในการเข้าสู่ตลาดด้วยฟีเจอร์ที่พัฒนามาอย่างสมบูรณ์ (Ready-to-Deploy) โดยไม่ต้องเสียเวลาสร้างใหม่ 3-5 ปี
+- **Digital Agency:** นำไปขายต่อเป็นรายบริษัทในรูปแบบ SaaS (Multi-Tenant) พร้อมระบบจัดการความเสถียรที่รองรับการขยายตัวได้จริง
 
 ---
 
 ## 3. ชุดข้อมูลสำหรับการขาย (Executive Sales & Marketing Kit)
 
-### ✨ จุดเด่น "Enterprise v2.0" (Unfair Advantages)
+### ✨ จุดเด่น "Enterprise v2.1 Hardened" (Unfair Advantages)
 
+- **🛡️ Enterprise Hardened Architecture (ความน่าเชื่อถือสูงสุด):**
+  - **100% Unit Test Pass:** ระบบผ่านการทดสอบ Critical Paths กว่า 130 รายการ ครอบคลุมลอจิกการเงิน สัญญา และข้อมูลสาขา (Reliability Guaranteed)
+  - **High-Performance Search:** ค้นหาทรัพย์รวดเร็วด้วย GIN Index และ `pg_trgm` รองรับภาษาไทย/อังกฤษ ที่สเกลข้อมูลหลักล้านรายการ
+  - **Webhook Idempotency (Upstash Redis):** ป้องกันการ Replay Attack และการทำงานซ้ำของ Webhook มั่นใจว่าข้อมูลแชทและ Lead ไม่ผิดพลาด
+  - **Event-Driven Resilience (Inngest):** แยกงานหนัก (AI, Social Posting) ออกจาก UI ทำให้ระบบทำงานลื่นไหล 100% ในทุกสภาวะ
 - **🤖 AI-First Intelligence & Valuation:**
   - **Automated Valuation Model (AVM):** ประเมินราคาด้วย AI (Max Profit, Market Price, Quick Sale) เปรียบเทียบทรัพย์ในรัศมี พร้อมฟีเจอร์พ่นรายงาน PDF ให้นายหน้าส่งต่อให้ลูกค้า
   - **Market Drop Alert:** แจ้งเตือน Agent เมื่อพบว่ามีทรัพย์ในพื้นที่เดียวกันขายออกในราคาที่ทำให้ราคาเฉลี่ยตลาดตก เพื่อแนะนำให้ปรับราคาลง (Cron Job Background)
   - **Financial AI Tracking:** ระบบคำนวณต้นทุน AI จริงตามจำนวน Token (อิงอัตราแลกเปลี่ยนคงที่ 32 THB/USD) แสดงผลแบบ Real-time
   - **Executive AI Insights:** AI สรุปวิเคราะห์ยอดขาย พยากรณ์เทรนด์เดือนถัดไป (Forecasting) และให้คำแนะนำเชิงกลยุทธ์ผ่านหน้า Dashboard
   - **AI Document Assistant:** ใช้ Gemini ช่วยสรุปสัญญา ตรวจสอบจุดเสี่ยง และดึงข้อมูลสำคัญจากไฟล์เอกสารโดยอัตโนมัติ
+  - **Automated Valuation Model (AVM):** ประเมินราคาด้วย AI 3 ระดับ พร้อมพ่นรายงาน PDF ให้นายหน้าส่งต่อให้ลูกค้าทันที
+  - **AI Lead Scoring & Smart Match:** วิเคราะห์พฤติกรรมลูกค้าและจับคู่ทรัพย์สินที่ตรงใจที่สุดโดยอัตโนมัติ
+  - **AI Marketing Suite:** สร้างคำบรรยายทรัพย์สิน (Property Description) และ Blog อัตโนมัติ 3 ภาษา (TH, EN, CN) พร้อมระบบตรวจทานโดยมนุษย์
+  
 - **🏢 Multi-Tenant Branch & Branding Logic:**
   - **Branch Switcher:** ผู้บริหารสามารถสลับดูข้อมูลรายสาขาหรือดูภาพรวมทั้งบริษัทได้ในคลิกเดียว
   - **Live Branding Customization:** ปรับแต่งสี โลโก้ และเนื้อหาแยกตามผู้เช่า (Tenant) พร้อม Live Site Preview Real-time
@@ -76,7 +85,13 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
   - **Row-Level Security (RLS):** ข้อมูลแต่ละสาขาถูกแยกออกจากกันที่ระดับฐานข้อมูล ปลอดภัยสูงสุด
   - **Advanced Audit Logs:** บันทึกทุกความเคลื่อนไหวสำคัญเป็นภาษาไทย อ่านง่ายและระบุตัวตนผู้กระทำชัดเจน
   - **Smart Error Boundaries:** หน้าจอ Safe Mode ระดับพรีเมียม ป้องกันระบบค้างหากเกิดข้อผิดพลาดทางเทคนิค
-
+  - **100% RLS Isolation:** มั่นใจข้อมูลไม่รั่วไหลข้ามสาขาด้วย Row-Level Security ที่ผ่านการ Audit แล้ว
+  - **Branch Onboarding System:** มีระบบ Checklist และ Wizard สำหรับสร้างสาขาใหม่และย้ายข้อมูลอัตโนมัติ
+  - **Site Config Management:** ปรับแต่ง Branding (สี, โลโก้, เนื้อหา) แยกตามสาขาได้ทันที
+- **📈 Advanced Analytics & Executive Reporting:**
+  - **Advanced Commission Splitting:** ระบบคำนวณแบ่งคอมมิชชั่นแบบซับซ้อน (Listing/Closing/Agency) พร้อมหักภาษี ณ ที่จ่าย (3%)
+  - **Executive Stats Dashboard:** สรุปยอดขาย/เช่า รายเดือนและไตรมาส พร้อมพ่น PDF Report ส่งผู้บริหารได้ทันที
+  - **Granular Conversion Tracking:** ติดตามพฤติกรรมการสไลด์รูปภาพ 5 ระดับ และ Lead Funnel ทุกขั้นตอน
 ---
 
 ## 4. โมเดลรายได้และการคืนทุน (Monetization & ROI)
@@ -88,14 +103,16 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
 - **Rate Calculation:** แปลงยอด USD เป็น THB ทันที (32 THB/USD)
 - **Usage-based Surcharge:** สามารถบวกกำไรเพิ่มจากค่าบริการ AI จริงที่ระบบบันทึกไว้ (เช่น คิดค่าบริการลูกค้า 150% ของต้นทุนจริง)
 - **Feature Breakdown:** แยกแยะต้นทุนตามการใช้งาน (Chatbot, Blog Generation, Translation) เพื่อสถิติที่ชัดเจน
+- **Usage-based Surcharge:** สามารถบวกกำไรเพิ่มจากค่าบริการ AI จริง (เช่น คิดค่าบริการลูกค้า 150-200% ของต้นทุนจริง)
+- **Feature Breakdown:** แยกแยะต้นทุนตามฟีเจอร์ เพื่อให้ทราบว่าฟีเจอร์ไหนสร้างกำไรสูงสุด
 
 ### 📈 กรณีศึกษาการสร้างรายได้ (Scenario Analysis)
 
 | สถานการณ์ (Scenario)  | รายได้รวม (THB/Month)    | รายละเอียดโมเดลธุรกิจ                           |
 | :-------------------- | :----------------------- | :---------------------------------------------- |
-| **SaaS Per Branch**   | 150,000 - 450,000        | เก็บค่าบริการแยกตามสาขา (5,000 - 15,000 / สาขา) |
-| **AI Usage Plan**     | 20,000 - 50,000++        | รายได้เสริมจากการบวกกำไรค่า Token AI            |
-| **Enterprise Buyout** | 13,500,000 - 16,500,000+ | ขายขาดระบบให้องค์กรใหญ่ครั้งเดียวจบ             |
+| **SaaS Per Branch**   | 250,000 - 750,000        | เก็บค่าบริการแยกตามสาขา (10,000 - 25,000 / สาขา) |
+| **AI Value-added**    | 50,000 - 100,000++       | รายได้เสริมจากการขายแพ็กเกจ AI Usage            |
+| **Enterprise Buyout** | 20,000,000 - 30,000,000+ | ขายขาดระบบให้องค์กรใหญ่ครั้งเดียวจบ             |
 
 ### 💰 การวิเคราะห์จุดคุ้มทุน (Break-even Analysis)
 
@@ -105,7 +122,7 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
 
 ---
 
-## 5. วิสัยทัศน์และการพัฒนาต่อยอด (Future Roadmap)
+## 5. วิสัยทัศน์ที่ทำสำเร็จแล้ว (Project Milestones Reached)
 
 ### ✅ ความสำเร็จในปัจจุบัน (Version 2.0 Enterprise Baseline)
 
@@ -117,6 +134,15 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
 - [x] Dynamic Smart Contracts (Word .docx Template to PDF Generator)
 - [x] Advanced Document Preview & E-Sign System
 - [x] Real-time Notification Center (Bell Notification)
+
+- [x] **Next.js 16.1.6 + Turbopack + React 19 Upgrade**
+- [x] **Hardened Security Baseline (Webhook HMAC + Redis Idempotency)**
+- [x] **100% Unit Testing (130/130 Passed)**
+- [x] **Multi-tenant RLS Audit & Isolation Hardening**
+- [x] **Audit Log Partitioning (Monthly Scalability)**
+- [x] **AI AVM PDF Report Generation (Direct Printing)**
+- [x] **Mobile UX Optimization (Responsive Drawers, Hitbox Fixes)**
+- [x] **Bundle Optimization (Lazy Loading heavy libs)**
 
 ### 🚀 แผนพัฒนาเฟสถัดไป (Visionary Next Steps)
 

@@ -100,45 +100,45 @@ export function ExecutiveDashboardView({
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8 px-2">
           <div className="flex flex-col xl:flex-row md:items-center justify-between gap-6 mb-2">
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+            <div className="grid grid-cols-3 sm:flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
               <Button
                 variant={activeTab === "overview" ? "default" : "outline"}
                 onClick={() => setActiveTab("overview")}
                 className={cn(
-                  "gap-2 px-6 py-2.5 h-11 rounded-xl transition-all font-bold w-full md:w-auto",
+                  "gap-2 px-3 sm:px-6 py-2.5 h-11 rounded-xl transition-all font-bold text-xs sm:text-sm",
                   activeTab === "overview"
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-200 border-blue-600 "
                     : "bg-white/50 text-slate-500 border-slate-200 hover:bg-white hover:text-blue-600",
                 )}
               >
-                <TrendingUp className="h-4 w-4" />
-                ภาพรวม (Overview)
+                <TrendingUp className="h-4 w-4 shrink-0" />
+                <span className="truncate">ภาพรวม</span>
               </Button>
               <Button
                 variant={activeTab === "agents" ? "default" : "outline"}
                 onClick={() => setActiveTab("agents")}
                 className={cn(
-                  "gap-2 px-6 py-2.5 h-11 rounded-xl transition-all font-bold w-full md:w-auto",
+                  "gap-2 px-3 sm:px-6 py-2.5 h-11 rounded-xl transition-all font-bold text-xs sm:text-sm",
                   activeTab === "agents"
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-200 border-blue-600 "
                     : "bg-white/50 text-slate-500 border-slate-200 hover:bg-white hover:text-blue-600",
                 )}
               >
-                <Users className="h-4 w-4" />
-                ผลงานตัวแทน (Agents)
+                <Users className="h-4 w-4 shrink-0" />
+                <span className="truncate">ตัวแทน</span>
               </Button>
               <Button
                 variant={activeTab === "settings" ? "default" : "outline"}
                 onClick={() => setActiveTab("settings")}
                 className={cn(
-                  "gap-2 px-6 py-2.5 h-11 rounded-xl transition-all font-bold w-full md:w-auto",
+                  "gap-2 px-3 sm:px-6 py-2.5 h-11 rounded-xl transition-all font-bold text-xs sm:text-sm",
                   activeTab === "settings"
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-200 border-blue-600 "
                     : "bg-white/50 text-slate-500 border-slate-200 hover:bg-white hover:text-blue-600",
                 )}
               >
-                <SettingsIcon className="h-4 w-4" />
-                ตั้งค่าคอมมิชชั่น
+                <SettingsIcon className="h-4 w-4 shrink-0" />
+                <span className="truncate">ตั้งค่า</span>
               </Button>
             </div>
 

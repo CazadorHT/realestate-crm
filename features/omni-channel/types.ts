@@ -1,3 +1,16 @@
+export interface OmniMessagePayload {
+  field?: "comments" | string;
+  type?: "comment" | string;
+  comment_reply?: boolean;
+  parent_id?: string | null;
+  pictureUrl?: string | null;
+  profile?: {
+    pictureUrl?: string | null;
+    name?: string | null;
+  };
+  [key: string]: any;
+}
+
 export interface OmniMessage {
   id: string;
   lead_id?: string | null;
@@ -7,7 +20,7 @@ export interface OmniMessage {
   source?: string | null;
   external_message_id?: string | null;
   is_read: boolean | null;
-  payload: any;
+  payload: OmniMessagePayload | null;
   created_at: string | null;
   updated_at?: string;
 }
@@ -19,6 +32,9 @@ export interface Conversation {
   tenant_id: string | null;
   note: string | null;
   omni_messages: OmniMessage[];
+  preferences: {
+    category?: "CUSTOMER" | "AGENT" | "OWNER";
+  } | any;
   tenants?: {
     id: string;
     name: string;

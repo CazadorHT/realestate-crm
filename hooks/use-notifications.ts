@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   getNotificationsAction,
@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Database } from "@/lib/database.types";
 import { differenceInMinutes } from "date-fns";
 import { useTenant } from "@/components/providers/TenantProvider";
+import { useRealtime } from "@/components/providers/RealtimeProvider";
 
 export type DBNotification =
   Database["public"]["Tables"]["notifications"]["Row"];
@@ -27,9 +28,12 @@ export interface GroupedNotification extends DBNotification {
 export function useNotifications() {
   const [notifications, setNotifications] = useState<DBNotification[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
   const supabase = createClient();
+  const { subscribe, status } = useRealtime();
   const { activeTenant } = useTenant();
   const tenantId = activeTenant?.id === "ALL" ? undefined : activeTenant?.id;
+  const lastStatusRef = useRef(status);
 
   const fetchNotifications = async () => {
     try {
@@ -37,56 +41,71 @@ export function useNotifications() {
       setNotifications(data as DBNotification[]);
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
+      toast.error("ไม่สามารถโหลดการแจ้งเตือนได้");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id || null);
+    });
+  }, [supabase]);
+
+  // Status monitoring is now handled globally by RealtimeProvider
+
+  useEffect(() => {
+    if (!userId) return;
+
     fetchNotifications();
 
-    const channel = supabase
-      .channel("realtime-notifications")
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-        },
-        (payload) => {
-          const newNotification = payload.new as DBNotification;
-          
-          // Client-side filtering for branch scoping if in a specific branch
-          if (tenantId && newNotification.tenant_id && newNotification.tenant_id !== tenantId) {
-            return; // Skip if from another branch
+    const unsubscribe = subscribe(
+      {
+        table: "notifications",
+        filter: `user_id=eq.${userId}`,
+      },
+      {
+        onData: (payload) => {
+          try {
+            if (payload.eventType === "INSERT") {
+              const newNotification = payload.new as DBNotification;
+              
+              if (tenantId && newNotification.tenant_id && newNotification.tenant_id !== tenantId) {
+                return; 
+              }
+
+              setNotifications((prev) => {
+                if (prev.some(n => n.id === newNotification.id)) return prev;
+                return [newNotification, ...prev];
+              });
+
+              toast.info(newNotification.title, {
+                description: newNotification.message,
+                duration: 5000,
+              });
+            } else if (payload.eventType === "UPDATE") {
+              const updated = payload.new as DBNotification;
+              setNotifications((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+            } else if (payload.eventType === "DELETE") {
+              const deletedId = (payload.old as { id: string }).id;
+              setNotifications((prev) => prev.filter((n) => n.id !== deletedId));
+            }
+          } catch (err) {
+            console.error("[useNotifications] Payload processing error:", err);
           }
-
-          setNotifications((prev) => {
-            if (prev.some(n => n.id === newNotification.id)) return prev;
-            return [newNotification, ...prev];
-          });
-
-          toast.info(newNotification.title, {
-            description: newNotification.message,
-            duration: 5000,
-          });
         },
-      )
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "notifications" }, (payload) => {
-        const updated = payload.new as DBNotification;
-        setNotifications((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
-      })
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "notifications" }, (payload) => {
-        const deletedId = (payload.old as { id: string }).id;
-        setNotifications((prev) => prev.filter((n) => n.id !== deletedId));
-      })
-      .subscribe();
+        onRefresh: () => {
+          console.log("[useNotifications] Re-fetching gaps due to reconnect...");
+          fetchNotifications();
+        }
+      }
+    );
 
     return () => {
-      supabase.removeChannel(channel);
+      unsubscribe();
     };
-  }, [supabase, tenantId]);
+  }, [userId, tenantId, subscribe]);
 
   // --- Intelligent Stacking (Grouping) ---
   const stackedNotifications = useMemo(() => {
