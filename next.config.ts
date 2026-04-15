@@ -65,4 +65,29 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+import { withSentryConfig } from "@sentry/nextjs";
+
+export default withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+  org: "vc-connect-asset",
+  project: "vc-connect-portal",
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  tunnelRoute: "/monitoring",
+
+  // For modern Sentry SDK options
+  sourcemaps: {
+    disable: false,
+  },
+
+  // Automatically annotate React components to show their full name in breadcrumbs and session replay
+  reactComponentAnnotation: {
+    enabled: true,
+  },
+
+  // Enables automatic instrumentation of Vercel Cron Monitors.
+  automaticVercelMonitors: true,
+});

@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 
 export default function GlobalError({
@@ -10,20 +11,20 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Optionally log to an error reporting service
-    console.error(error);
+    // Log to Sentry
+    Sentry.captureException(error);
   }, [error]);
 
   return (
-    <html>
+    <html lang="th">
       <body>
         <div className="flex min-h-screen flex-col items-center justify-center p-4 bg-slate-50 text-slate-900">
           <div className="max-w-md text-center space-y-4">
             <h1 className="text-4xl font-bold tracking-tight">
-              Something went wrong
+              เกิดข้อผิดพลาดรุนแรง
             </h1>
-            <p className="text-muted-foreground">
-              We apologize for the inconvenience. A critical error occurred.
+            <p className="text-slate-600">
+              ขออภัยในความไม่สะดวก ระบบเกิดข้อผิดพลาดร้ายแรงและได้แจ้งเตือนทีมพัฒนาเรียบร้อยแล้ว กรุณาลองใหม่อีกครั้ง
             </p>
             <button
               onClick={() => {
@@ -33,9 +34,9 @@ export default function GlobalError({
                   window.location.reload();
                 }
               }}
-              className="px-4 py-2 bg-slate-900 text-white rounded-md hover:bg-slate-800 transition-colors"
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition"
             >
-              Try again
+              ลองใหม่อีกครั้ง
             </button>
           </div>
         </div>
