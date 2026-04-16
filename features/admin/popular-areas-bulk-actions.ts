@@ -67,7 +67,7 @@ export async function bulkDeletePopularAreasAction(
       deletedCount: finalCount,
       message: `ลบทำเลยอดนิยมสำเร็จ ${finalCount} รายการ`,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("bulkDeletePopularAreasAction error:", error);
     return {
       success: false,

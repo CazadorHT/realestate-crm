@@ -1,7 +1,9 @@
-import { formatISO } from "date-fns";
-import { requireAuthContext } from "@/lib/authz";
+import { requireAuthContext, AuthContext, UserRole } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { cache } from "react";
+import { SupabaseClient, User } from "@supabase/supabase-js";
+import { Database } from "@/lib/database.types";
+import { formatISO } from "date-fns";
 
 export type EventType =
   | "viewing"
@@ -97,7 +99,7 @@ export const getCalendarEvents = cache(async (
   const { data: viewings } = await viewingsQuery;
 
   if (viewings) {
-    viewings.forEach((v: any) => {
+    viewings.forEach((v) => {
       let type: EventType = "viewing";
       let titlePrefix = "นัดชม";
       let color = "bg-blue-500";
@@ -123,14 +125,14 @@ export const getCalendarEvents = cache(async (
         type: type,
         color: color,
         meta: {
-          leadId: v.lead_id,
-          leadName: v.leads?.full_name,
-          note: v.note,
-          propertyTitle: v.properties?.title,
-          propertyId: v.property_id,
-          propertyImage: v.properties?.images?.[0]?.image_url || null,
+          leadId: v.lead_id ?? undefined,
+          leadName: v.leads?.full_name ?? undefined,
+          note: v.note ?? undefined,
+          propertyTitle: v.properties?.title ?? undefined,
+          propertyId: v.property_id ?? undefined,
+          propertyImage: v.properties?.images?.[0]?.image_url ?? undefined,
           start: v.created_at,
-          agentId: v.created_by,
+          agentId: v.created_by ?? undefined,
         },
       });
     });
@@ -181,7 +183,7 @@ export const getCalendarEvents = cache(async (
   const { data: contractStarts } = await contractStartQuery;
 
   if (contractStarts) {
-    contractStarts.forEach((c: any) => {
+    contractStarts.forEach((c) => {
       const propertyTitle = c.deals?.property?.title || "Unknown Property";
       const propertyImage = c.deals?.property?.images?.[0]?.image_url || null;
 
@@ -192,14 +194,14 @@ export const getCalendarEvents = cache(async (
         type: "contract_start",
         color: "bg-emerald-500",
         meta: {
-          contractNumber: c.contract_number,
-          propertyTitle,
-          propertyImage,
-          leaseTermMonths: c.lease_term_months,
-          rentPrice: c.rent_price,
-          startDate: c.start_date,
-          endDate: c.end_date,
-          agentId: c.deals?.created_by,
+          contractNumber: c.contract_number ?? undefined,
+          propertyTitle: propertyTitle ?? undefined,
+          propertyImage: propertyImage ?? undefined,
+          leaseTermMonths: c.lease_term_months ?? undefined,
+          rentPrice: c.rent_price ?? undefined,
+          startDate: c.start_date ?? undefined,
+          endDate: c.end_date ?? undefined,
+          agentId: c.deals?.created_by ?? undefined,
         },
       });
     });
@@ -250,7 +252,7 @@ export const getCalendarEvents = cache(async (
   const { data: contracts } = await contractsQuery;
 
   if (contracts) {
-    contracts.forEach((c: any) => {
+    contracts.forEach((c) => {
       const propertyTitle = c.deals?.property?.title || "Unknown Property";
       const propertyImage = c.deals?.property?.images?.[0]?.image_url || null;
 
@@ -261,14 +263,14 @@ export const getCalendarEvents = cache(async (
         type: "contract_end",
         color: "bg-red-500",
         meta: {
-          contractNumber: c.contract_number,
-          propertyTitle,
-          propertyImage,
-          leaseTermMonths: c.lease_term_months,
-          rentPrice: c.rent_price,
-          startDate: c.start_date,
-          endDate: c.end_date,
-          agentId: c.deals?.created_by,
+          contractNumber: c.contract_number ?? undefined,
+          propertyTitle: propertyTitle ?? undefined,
+          propertyImage: propertyImage ?? undefined,
+          leaseTermMonths: c.lease_term_months ?? undefined,
+          rentPrice: c.rent_price ?? undefined,
+          startDate: c.start_date ?? undefined,
+          endDate: c.end_date ?? undefined,
+          agentId: c.deals?.created_by ?? undefined,
         },
       });
     });
@@ -321,25 +323,25 @@ export const getCalendarEvents = cache(async (
   const { data: terminated } = await terminatedQuery;
 
   if (terminated) {
-    terminated.forEach((c: any) => {
+    terminated.forEach((c) => {
       const propertyTitle = c.deals?.property?.title || "Unknown Property";
       const propertyImage = c.deals?.property?.images?.[0]?.image_url || null;
 
       events.push({
         id: `${c.id}-terminated`,
         title: `ยุติสัญญา: ${propertyTitle}`,
-        start: c.check_out_date,
+        start: c.check_out_date!,
         type: "early_termination",
         color: "bg-orange-500",
         meta: {
-          contractNumber: c.contract_number,
-          propertyTitle,
-          propertyImage,
-          leaseTermMonths: c.lease_term_months,
-          rentPrice: c.rent_price,
-          startDate: c.start_date,
-          endDate: c.end_date,
-          agentId: c.deals?.created_by,
+          contractNumber: c.contract_number ?? undefined,
+          propertyTitle: propertyTitle ?? undefined,
+          propertyImage: propertyImage ?? undefined,
+          leaseTermMonths: c.lease_term_months ?? undefined,
+          rentPrice: c.rent_price ?? undefined,
+          startDate: c.start_date ?? undefined,
+          endDate: c.end_date ?? undefined,
+          agentId: c.deals?.created_by ?? undefined,
         },
       });
     });
@@ -384,7 +386,7 @@ export const getCalendarEvents = cache(async (
   const { data: deals } = await dealsQuery;
 
   if (deals) {
-    deals.forEach((d: any) => {
+    deals.forEach((d) => {
       if (!d.transaction_date) return;
       events.push({
         id: d.id,
@@ -393,10 +395,10 @@ export const getCalendarEvents = cache(async (
         type: "deal_closing",
         color: "bg-purple-500",
         meta: {
-          type: d.deal_type,
-          propertyTitle: d.property?.title,
-          propertyImage: d.property?.images?.[0]?.image_url || null,
-          agentId: d.created_by,
+          type: d.deal_type ?? undefined,
+          propertyTitle: d.property?.title ?? undefined,
+          propertyImage: d.property?.images?.[0]?.image_url ?? undefined,
+          agentId: d.created_by ?? undefined,
         },
       });
     });

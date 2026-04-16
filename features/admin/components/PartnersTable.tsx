@@ -53,9 +53,13 @@ interface Partner {
 
 interface PartnersTableProps {
   partners: Partner[];
+  isSuperAdmin?: boolean;
 }
 
-export function PartnersTable({ partners: initialPartners }: PartnersTableProps) {
+export function PartnersTable({ 
+  partners: initialPartners,
+  isSuperAdmin = false 
+}: PartnersTableProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -187,13 +191,15 @@ export function PartnersTable({ partners: initialPartners }: PartnersTableProps)
 
   return (
     <div className="space-y-4">
-      <BulkActionToolbar
-        selectedCount={selectedCount}
-        onClear={clearSelection}
-        onDelete={handleBulkDelete}
-        entityName="พาร์ทเนอร์"
-        className={isPending ? "opacity-50 pointer-events-none" : ""}
-      />
+      {isSuperAdmin && (
+        <BulkActionToolbar
+          selectedCount={selectedCount}
+          onClear={clearSelection}
+          onDelete={handleBulkDelete}
+          entityName="พาร์ทเนอร์"
+          className={isPending ? "opacity-50 pointer-events-none" : ""}
+        />
+      )}
 
       {/* Desktop Table View */}
       <div className="hidden lg:block bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in duration-500">
@@ -235,9 +241,11 @@ export function PartnersTable({ partners: initialPartners }: PartnersTableProps)
                 <TableHead className="font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
                   สถานะ
                 </TableHead>
-                <TableHead className="text-right font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
-                  จัดการ
-                </TableHead>
+                {isSuperAdmin && (
+                  <TableHead className="text-right font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
+                    จัดการ
+                  </TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -277,6 +285,7 @@ export function PartnersTable({ partners: initialPartners }: PartnersTableProps)
                       onEdit={() => setEditingPartner(partner)}
                       onDelete={() => setDeleteConfirmPartner(partner)}
                       isSearchActive={isSearchActive}
+                      isSuperAdmin={isSuperAdmin}
                     />
                   ))}
                 </SortableContext>
@@ -370,29 +379,33 @@ export function PartnersTable({ partners: initialPartners }: PartnersTableProps)
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-10 px-4 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-100 rounded-xl font-medium transition-all active:scale-95"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingPartner(partner);
-                      }}
-                    >
-                      <Edit className="h-4 w-4 mr-2" />
-                      แก้ไข
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-10 w-10 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-100 rounded-xl transition-all active:scale-95"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteConfirmPartner(partner);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                    {isSuperAdmin && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-10 px-4 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-100 rounded-xl font-medium transition-all active:scale-95"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setEditingPartner(partner);
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          แก้ไข
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-100 rounded-xl transition-all active:scale-95"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirmPartner(partner);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -466,6 +479,7 @@ interface SortableRowProps {
   onEdit: () => void;
   onDelete: () => void;
   isSearchActive: boolean;
+  isSuperAdmin: boolean;
 }
 
 function SortablePartnerRow({ 
@@ -474,7 +488,8 @@ function SortablePartnerRow({
   toggleSelect, 
   onEdit, 
   onDelete, 
-  isSearchActive 
+  isSearchActive,
+  isSuperAdmin
 }: SortableRowProps) {
   const {
     attributes,
@@ -483,7 +498,10 @@ function SortablePartnerRow({
     transform,
     transition,
     isDragging
-  } = useSortable({ id: partner.id });
+  } = useSortable({ 
+    id: partner.id,
+    disabled: !isSuperAdmin
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -503,7 +521,7 @@ function SortablePartnerRow({
       )}
     >
       <TableCell className="w-[40px] px-6 text-center">
-        {!isSearchActive && (
+        {!isSearchActive && isSuperAdmin && (
           <div
             {...attributes}
             {...listeners}
@@ -561,32 +579,34 @@ function SortablePartnerRow({
           </Badge>
         )}
       </TableCell>
-      <TableCell className="text-right px-6">
-        <div className="flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer transition-all active:scale-90"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-          >
-            <Edit className="w-4.5 h-4.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-all active:scale-90"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-          >
-            <Trash2 className="w-4.5 h-4.5" />
-          </Button>
-        </div>
-      </TableCell>
+      {isSuperAdmin && (
+        <TableCell className="text-right px-6">
+          <div className="flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-blue-600 hover:bg-blue-50 rounded-lg cursor-pointer transition-all active:scale-90"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+            >
+              <Edit className="w-4.5 h-4.5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer transition-all active:scale-90"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
+            >
+              <Trash2 className="w-4.5 h-4.5" />
+            </Button>
+          </div>
+        </TableCell>
+      )}
     </TableRow>
   );
 }

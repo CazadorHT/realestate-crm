@@ -10,6 +10,8 @@ import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { getScopedRevenueClient } from "./logic/scoped-client";
 import { DealCommission } from "./types";
+import { Database } from "@/lib/database.types";
+
 
 export type LineSendResult = {
   success: boolean;
@@ -26,13 +28,11 @@ export async function exportCommissionPdfAction(commissionId: string) {
 
   const { data: comm, error } = await scoped
     .commissions()
-    .select(
-      `
+    .select(`
       *,
-      deal:deals(title),
+      deal:deals(property:properties(title)),
       agent:profiles(full_name)
-    `,
-    )
+    `)
     .eq("id", commissionId)
     .single();
 
@@ -42,8 +42,8 @@ export async function exportCommissionPdfAction(commissionId: string) {
 
   const pdfData: CommissionStatementData = {
     dealId: comm.deal_id,
-    dealTitle: (comm.deal as any)?.title || "Untitled Deal",
-    agentName: (comm.agent as any)?.full_name || "Agent",
+    dealTitle: comm.deal?.property?.title || "Untitled Deal",
+    agentName: comm.agent?.full_name || "Agent",
     role: comm.role,
     percentage: comm.percentage,
     grossAmount: comm.amount,
@@ -56,7 +56,7 @@ export async function exportCommissionPdfAction(commissionId: string) {
     const pdfBytes = await generateCommissionPdf(pdfData);
     
     // Audit log
-    const agentName = (comm as any).agent?.full_name || "Agent";
+    const agentName = comm.agent?.full_name || "Agent";
     const amountStr = new Intl.NumberFormat('th-TH').format(comm.net_amount) + " บาท";
 
     await logAudit(ctx, {
@@ -91,13 +91,11 @@ export async function sendCommissionToLineAction(commissionId: string) {
 
   const { data: comm, error } = await scoped
     .commissions()
-    .select(
-      `
+    .select(`
       *,
-      deal:deals(title),
+      deal:deals(property:properties(title)),
       agent:profiles(full_name, line_user_id, line_id)
-    `,
-    )
+    `)
     .eq("id", commissionId)
     .single();
 
@@ -105,7 +103,7 @@ export async function sendCommissionToLineAction(commissionId: string) {
     return { success: false, message: "Commission record not found" };
   }
 
-  const agent = comm.agent as any;
+  const agent = comm.agent;
   const lineId = agent?.line_user_id || agent?.line_id;
 
   if (!lineId) {
@@ -113,7 +111,7 @@ export async function sendCommissionToLineAction(commissionId: string) {
   }
 
   const flexMessage = buildCommissionStatementFlex({
-    dealTitle: (comm.deal as any)?.title || "Untitled Deal",
+    dealTitle: comm.deal?.property?.title || "Untitled Deal",
     agentName: agent?.full_name || "Agent",
     role: comm.role,
     grossAmount: comm.amount,
@@ -126,7 +124,7 @@ export async function sendCommissionToLineAction(commissionId: string) {
     const result = await sendToSpecificLineUser(lineId, flexMessage);
     
     if (result.success) {
-      const agentName = (comm as any).agent?.full_name || "Agent";
+      const agentName = comm.agent?.full_name || "Agent";
       const amountStr = new Intl.NumberFormat('th-TH').format(comm.net_amount) + " บาท";
       
       await logAudit(ctx, {
@@ -145,7 +143,7 @@ export async function sendCommissionToLineAction(commissionId: string) {
   }
 }
 
-async function sendToSpecificLineUser(to: string, message: any) {
+async function sendToSpecificLineUser(to: string, message: object) {
   const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
   if (!token) return { success: false, message: "LINE token not configured" };
 

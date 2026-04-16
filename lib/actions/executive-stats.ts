@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { assertAdmin } from "@/lib/authz";
+import { assertSystemAdmin } from "@/lib/authz";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { roundToTwo } from "@/lib/finance/commissions";
 
@@ -14,8 +14,8 @@ export async function getExecutiveStatsAction(params: ExecutiveStatsParams = {})
   const profile = await getCurrentProfile();
   if (!profile) throw new Error("Unauthorized");
 
-  // Ensure only ADMIN can access cross-branch stats
-  assertAdmin(profile.role);
+  // Ensure only SuperAdmin can access cross-branch stats
+  assertSystemAdmin(profile.role);
 
   const supabase = await createClient();
 

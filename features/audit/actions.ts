@@ -48,7 +48,7 @@ export async function logActivityAction(
     if (action === "LOGIN") {
       const email =
         metadata && typeof metadata === "object" && "email" in metadata
-          ? (metadata as Record<string, any>).email
+          ? (metadata as Record<string, unknown>).email
           : user?.email || "anonymous";
 
       // Fetch Profile for Role and Avatar (Only if user exists)
@@ -61,7 +61,7 @@ export async function logActivityAction(
       const templateConfig = await getTemplateConfig("LOGIN");
       const headerIcon = "🔐";
 
-      const flexContents: any = {
+      const flexContents: Record<string, unknown> = {
         type: "bubble",
         header: {
           type: "box",
@@ -281,13 +281,57 @@ export async function notifySignupAction(email: string) {
 import { requireAuthContext } from "@/lib/authz";
 import { AuditActionResult, AuditLogEntry } from "./types";
 
+/**
+ * 🛡️ PDPA Helper: Scrub sensitive keys from object recursively
+ */
+const SENSITIVE_LOG_KEYS = [
+  "commission_sale_percentage",
+  "commission_rent_months",
+  "co_agent_phone",
+  "co_agent_contact_id",
+  "co_agent_contact_channel",
+  "co_agent_sale_commission_percent",
+  "co_agent_rent_commission_months",
+  "owner_name",
+  "owner_phone",
+  "owner_line",
+  "owner_email"
+];
+
+function scrubMetadata(obj: unknown): unknown {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== "object") return obj;
+  
+  if (Array.isArray(obj)) {
+    return obj.map(scrubMetadata);
+  }
+
+  const scrubbed: Record<string, unknown> = {};
+  const entries = Object.entries(obj as Record<string, unknown>);
+  
+  for (const [key, value] of entries) {
+    const isSensitive = SENSITIVE_LOG_KEYS.some(
+      (k) => key.toLowerCase() === k.toLowerCase()
+    );
+
+    if (isSensitive) {
+      scrubbed[key] = "[MASKED]";
+    } else if (value !== null && typeof value === "object") {
+      scrubbed[key] = scrubMetadata(value);
+    } else {
+      scrubbed[key] = value;
+    }
+  }
+  return scrubbed;
+}
+
 export async function getPropertyAuditLogsAction(
   propertyId: string,
   page: number = 1,
   pageSize: number = 10,
 ): Promise<AuditActionResult<{ logs: AuditLogEntry[]; totalCount: number; hasMore: boolean }>> {
   try {
-    const { supabase, tenantId } = await requireAuthContext();
+    const { supabase, tenantId, role } = await requireAuthContext();
 
     const offset = (page - 1) * pageSize;
 
@@ -316,19 +360,29 @@ export async function getPropertyAuditLogsAction(
 
     if (error) throw error;
 
+    // 🛡️ [SECURITY] Deep Scrub sensitive metadata for non-admins
+    const scrubbedData = (data as Record<string, unknown>[]).map(log => {
+      if (role === "ADMIN") return log;
+      return {
+        ...log,
+        metadata: scrubMetadata(log.metadata)
+      };
+    });
+
     return {
       success: true,
       data: {
-        logs: (data as unknown) as AuditLogEntry[],
+        logs: (scrubbedData as unknown) as AuditLogEntry[],
         totalCount: count || 0,
         hasMore: (count || 0) > offset + pageSize,
       }
     };
-  } catch (error: any) {
-    console.error("Failed to fetch audit logs:", error);
+  } catch (error: unknown) {
+    const err = error as { message?: string };
+    console.error("Failed to fetch audit logs:", err);
     return { 
       success: false, 
-      message: error.message || "ไม่สามารถโหลดประวัติข้อมูลได้",
+      message: err.message || "ไม่สามารถโหลดประวัติข้อมูลได้",
       errorType: "SYSTEM_ERROR"
     };
   }

@@ -233,7 +233,7 @@
     "schemaname": "public",
     "tablename": "faqs",
     "rls_enabled": true,
-    "policyname": "Public: FAQ Read",
+    "policyname": "Public/Tenants: Read Access on faqs",
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",
     "qual": "((is_active = true) AND (deleted_at IS NULL))",
@@ -243,11 +243,11 @@
     "schemaname": "public",
     "tablename": "faqs",
     "rls_enabled": true,
-    "policyname": "Staff Manage Global FAQs",
+    "policyname": "SuperAdmin: Full Access on faqs",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
-    "qual": "(is_system_admin() OR (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role])))",
-    "with_check": "(is_system_admin() OR (( SELECT profiles.role\n   FROM profiles\n  WHERE (profiles.id = auth.uid())) = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role])))"
+    "qual": "is_system_admin()",
+    "with_check": "is_system_admin()"
   },
   {
     "schemaname": "public",
@@ -523,11 +523,21 @@
     "schemaname": "public",
     "tablename": "partners",
     "rls_enabled": true,
-    "policyname": "System Admin Manage partners",
+    "policyname": "Public/Tenants: Read Access on partners",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(is_active = true)",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "partners",
+    "rls_enabled": true,
+    "policyname": "SuperAdmin: Full Access on partners",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
     "qual": "is_system_admin()",
-    "with_check": null
+    "with_check": "is_system_admin()"
   },
   {
     "schemaname": "public",

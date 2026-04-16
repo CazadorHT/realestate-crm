@@ -25,7 +25,7 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
     const tenantId = "tenant-123";
     const scoped = getScopedRevenueClient(mockSupabase as any, tenantId);
     
-    scoped.from("deals").select("*");
+    scoped.deals().select("*");
     
     const dealsBuilder = mockSupabase.from("deals");
     expect(mockSupabase.from).toHaveBeenCalledWith("deals");
@@ -35,13 +35,18 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
   it("should inject tenant_id into INSERT payload", () => {
     const tenantId = "tenant-123";
     const scoped = getScopedRevenueClient(mockSupabase as any, tenantId);
-    const data = { title: "New Deal" };
+    const data = { 
+      deal_type: "SALE" as const, 
+      lead_id: "l-1", 
+      property_id: "p-1", 
+      status: "NEGOTIATING" as const 
+    };
     
-    scoped.from("deals").insert(data);
+    scoped.deals().insert(data);
     
     const dealsBuilder = mockSupabase.from("deals");
     expect(dealsBuilder.insert).toHaveBeenCalledWith({
-      title: "New Deal",
+      ...data,
       tenant_id: tenantId,
     });
   });
@@ -49,14 +54,17 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
   it("should inject tenant_id into array INSERT payload", () => {
     const tenantId = "tenant-123";
     const scoped = getScopedRevenueClient(mockSupabase as any, tenantId);
-    const data = [{ title: "D1" }, { title: "D2" }];
+    const data = [
+      { deal_type: "SALE" as const, lead_id: "l-1", property_id: "p-1", status: "NEGOTIATING" as const },
+      { deal_type: "RENT" as const, lead_id: "l-2", property_id: "p-2", status: "NEGOTIATING" as const }
+    ];
     
-    scoped.from("deals").insert(data);
+    scoped.deals().insert(data);
     
     const dealsBuilder = mockSupabase.from("deals");
     expect(dealsBuilder.insert).toHaveBeenCalledWith([
-      { title: "D1", tenant_id: tenantId },
-      { title: "D2", tenant_id: tenantId },
+      { ...data[0], tenant_id: tenantId },
+      { ...data[1], tenant_id: tenantId },
     ]);
   });
 
@@ -64,7 +72,7 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
     const tenantId = "tenant-456";
     const scoped = getScopedRevenueClient(mockSupabase as any, tenantId);
     
-    scoped.from("deal_commissions").delete();
+    scoped.commissions().delete();
     
     const commsBuilder = mockSupabase.from("deal_commissions");
     expect(mockSupabase.from).toHaveBeenCalledWith("deal_commissions");
@@ -75,10 +83,17 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
     const tenantId = "tenant-789";
     const scoped = getScopedRevenueClient(mockSupabase as any, tenantId);
     
-    scoped.rpc("sync_property_inventory_atomic", { p_property_id: "prop-1" });
+    scoped.rpc("sync_property_inventory_atomic", { 
+      p_property_id: "prop-1",
+      p_adjustment: 1,
+      p_deal_type: "SALE",
+      p_tenant_id: tenantId
+    });
     
     expect(mockSupabase.rpc).toHaveBeenCalledWith("sync_property_inventory_atomic", {
       p_property_id: "prop-1",
+      p_adjustment: 1,
+      p_deal_type: "SALE",
       p_tenant_id: tenantId,
     });
   });
@@ -86,7 +101,7 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
   it("should NOT inject tenant_id if tenantId is 'ALL' (System Admin mode)", () => {
     const scoped = getScopedRevenueClient(mockSupabase as any, "ALL");
     
-    scoped.from("deals").select("*");
+    scoped.deals().select("*");
     
     const dealsBuilder = mockSupabase.from("deals");
     expect(dealsBuilder.eq).not.toHaveBeenCalled();

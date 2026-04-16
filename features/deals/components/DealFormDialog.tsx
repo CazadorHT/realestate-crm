@@ -59,7 +59,11 @@ export function DealFormDialog({
       ] as const;
       
       cleanupKeys.forEach((k) => {
-        if ((sanitized as any)[k] === null) (sanitized as any)[k] = undefined;
+        const key = k as keyof typeof sanitized;
+        if (sanitized[key] === null) {
+          // @ts-ignore - dynamic cleanup for Zod compatibility
+          sanitized[key] = undefined;
+        }
       });
 
       if (sanitized.transaction_date)
@@ -109,7 +113,7 @@ export function DealFormDialog({
   };
 
   const form = useForm<CreateDealInput>({
-    resolver: zodResolver(createDealSchema) as unknown as Resolver<CreateDealInput>,
+    resolver: zodResolver(createDealSchema) as Resolver<CreateDealInput>,
     mode: "onChange",
     defaultValues: getInitialValues(),
   });
@@ -169,8 +173,9 @@ export function DealFormDialog({
         toast.error(result.message || "เกิดข้อผิดพลาด");
         setIsConfirmOpen(false);
       }
-    } catch (err: any) {
-      toast.error(err.message || "เกิดข้อผิดพลาดในการบันทึก");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการบันทึก";
+      toast.error(message);
       setIsConfirmOpen(false);
     } finally {
       setIsSubmitting(false);

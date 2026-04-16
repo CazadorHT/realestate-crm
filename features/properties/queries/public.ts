@@ -17,11 +17,23 @@ export async function getPublicPropertyWithImagesBySlug(
     .from("properties")
     .select(
       `
-      *,
+      id, title, title_en, title_cn, description, description_en, description_cn, 
+      price, rental_price, 
+      property_type, listing_type, bedrooms, bathrooms, size_sqm, land_size_sqwah, 
+      floor, parking_slots, facing_north, facing_south, facing_east, facing_west, 
+      allow_smoking, is_central_air, is_bare_shell, has_city_view, has_pool_view, 
+      has_garden_view, has_river_view, has_private_pool, has_private_elevator, 
+      has_unblocked_view, has_247_access, has_multi_parking, has_raised_floor, 
+      has_fiber_optic, is_cbd, province, district, subdistrict, 
+      address_line1, address_line1_en, address_line1_cn, postal_code, 
+      popular_area, google_maps_link, nearby_transits, nearby_places, slug, 
+      meta_title, meta_description, meta_keywords, structured_data, 
+      verified, status, created_at,
       property_images (
         id,
         property_id,
         image_url,
+        storage_path,
         is_cover,
         sort_order,
         created_at
@@ -63,7 +75,7 @@ export async function getRecommendedProperties(
     .from("properties")
     .select(
       `
-      id, title, price, original_price, rental_price, original_rental_price, 
+      id, title, price, rental_price, 
       popular_area, province, property_type, listing_type, slug, 
       property_images(image_url, is_cover)
     `,

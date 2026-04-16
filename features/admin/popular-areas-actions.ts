@@ -64,7 +64,7 @@ export async function getPopularAreas({
       data: areas || [],
       totalCount: count || 0,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("getPopularAreas error:", error);
     return { success: false, message: mapDbError(error), data: [], totalCount: 0 };
   }
@@ -109,7 +109,7 @@ export async function createPopularArea(values: z.infer<typeof popularAreaSchema
 
     revalidatePath("/protected/admin/popular-areas");
     return { success: true, message: "สร้างทำเลยอดนิยมสำเร็จ" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("createPopularArea error:", error);
     return { success: false, message: mapDbError(error) };
   }
@@ -147,7 +147,7 @@ export async function updatePopularArea(id: string, values: z.infer<typeof popul
 
     revalidatePath("/protected/admin/popular-areas");
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("updatePopularArea error:", error);
     return { success: false, message: mapDbError(error) };
   }
@@ -178,7 +178,7 @@ export async function deletePopularArea(id: string) {
 
     revalidatePath("/protected/admin/popular-areas");
     return { success: true, message: "ลบทำเลสำเร็จ" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("deletePopularArea error:", error);
     return { success: false, message: mapDbError(error) };
   }
@@ -208,7 +208,7 @@ export async function resequencePopularAreas() {
       .upsert(updates as any);
 
     if (error) throw error;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("resequencePopularAreas error:", error);
   }
 }
@@ -245,7 +245,7 @@ export async function reorderPopularAreasAction(ids: string[], offset: number = 
 
     revalidatePath("/protected/admin/popular-areas");
     return { success: true, message: "ปรับลำดับทำเลสำเร็จ" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("reorderPopularAreasAction error:", error);
     return { success: false, message: mapDbError(error) };
   }
@@ -277,7 +277,7 @@ export async function uploadPopularAreaImageAction(formData: FormData) {
     }
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("uploadPopularAreaImageAction error:", error);
     return { success: false, message: mapDbError(error) };
   }
@@ -337,7 +337,7 @@ export async function bulkTranslatePopularAreasAction(
     const result = await generateText(prompt, modelName);
     
     // Robust JSON Guarding
-    let translatedData: any[] = [];
+    let translatedData: Record<string, unknown>[] = [];
     try {
       const jsonStr = result.text.replace(/```json|```/g, "").trim();
       translatedData = JSON.parse(jsonStr);
@@ -352,11 +352,11 @@ export async function bulkTranslatePopularAreasAction(
 
     // Filter out items that are missing essential fields
     const validUpdates: PopularAreaUpdate[] = translatedData
-      .filter(item => item.id && (item.name_en || item.name_cn))
-      .map(item => ({
-        id: item.id,
-        name_en: (item.name_en || "").trim() || null,
-        name_cn: (item.name_cn || "").trim() || null
+      .filter((item) => item.id && (item.name_en || item.name_cn))
+      .map((item) => ({
+        id: (item.id as string),
+        name_en: (item.name_en as string || "").trim() || null,
+        name_cn: (item.name_cn as string || "").trim() || null
       }));
 
     if (validUpdates.length === 0) {
@@ -380,7 +380,7 @@ export async function bulkTranslatePopularAreasAction(
 
     revalidatePath("/protected/admin/popular-areas");
     return { success: true, message: `แปลภาษาสำเร็จ ${validUpdates.length} รายการ` };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Bulk Translate Error:", error);
     return { success: false, message: mapDbError(error) };
   }

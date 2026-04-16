@@ -54,7 +54,11 @@ export const processPropertyCreated = inngest.createFunction(
     const { property, coverImage } = await step.run("fetch-property-data", async () => {
       const { data: prop, error: propErr } = await supabase
         .from("properties")
-        .select("*")
+        .select(`
+          id, title, property_type, listing_type, price, rental_price, 
+          district, province, size_sqm, land_size_sqwah, bedrooms, 
+          bathrooms, is_pet_friendly, is_fully_furnished, is_new, popular_area
+        `)
         .eq("id", propertyId)
         .single();
       

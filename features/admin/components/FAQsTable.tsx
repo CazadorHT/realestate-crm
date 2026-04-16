@@ -40,6 +40,7 @@ interface FAQsTableProps {
   activeTab: string;
   activeCount: number;
   trashCount: number;
+  isSuperAdmin?: boolean;
 }
 
 export function FAQsTable({ 
@@ -48,7 +49,8 @@ export function FAQsTable({
   currentPage, 
   activeTab,
   activeCount,
-  trashCount
+  trashCount,
+  isSuperAdmin = false
 }: FAQsTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -225,7 +227,7 @@ export function FAQsTable({
             )}
           </div>
 
-          {isTrash && trashCount > 0 && (
+          {isTrash && isSuperAdmin && trashCount > 0 && (
             <Button
               variant="outline"
               size="sm"
@@ -240,13 +242,15 @@ export function FAQsTable({
       </div>
 
       <div className="relative">
-        <BulkActionToolbar
-          selectedCount={selectedCount}
-          onClear={clearSelection}
-          onDelete={isTrash ? async () => {} : handleBulkTrash}
-          entityName="คำถาม"
-          onDeleteLabel={isTrash ? "กู้คืนข้อมูล" : "ย้ายลงถังขยะ"}
-        />
+        {isSuperAdmin && (
+          <BulkActionToolbar
+            selectedCount={selectedCount}
+            onClear={clearSelection}
+            onDelete={isTrash ? async () => {} : handleBulkTrash}
+            entityName="คำถาม"
+            onDeleteLabel={isTrash ? "กู้คืนข้อมูล" : "ย้ายลงถังขยะ"}
+          />
+        )}
 
         {/* Desktop Table View */}
         <div className="hidden lg:block rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden animate-in fade-in duration-500">
@@ -273,9 +277,11 @@ export function FAQsTable({
                 <TableHead className="font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
                   {isTrash ? "ลบเมื่อ" : "สถานะ"}
                 </TableHead>
-                <TableHead className="text-right font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
-                  จัดการข้อมูล
-                </TableHead>
+                {isSuperAdmin && (
+                  <TableHead className="text-right font-bold text-[11px] uppercase tracking-wider text-slate-500 px-6">
+                    จัดการข้อมูล
+                  </TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -361,47 +367,49 @@ export function FAQsTable({
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="px-6 text-right">
-                      {!isTrash ? (
-                        <div className="flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-200">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 text-blue-600 hover:bg-blue-100/50 rounded-xl"
-                            onClick={() => setEditingFaq(faq)}
-                          >
-                            <Edit className="w-4.5 h-4.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 text-rose-600 hover:bg-rose-100/50 rounded-xl"
-                            onClick={() => setDeleteConfirmFaq(faq)}
-                          >
-                            <Trash2 className="w-4.5 h-4.5" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <div className="flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-200">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 text-emerald-600 hover:bg-emerald-100/50 rounded-xl"
-                            onClick={() => setRestoreConfirmFaq(faq)}
-                          >
-                            <RotateCcw className="w-4.5 h-4.5" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-9 w-9 text-rose-600 hover:bg-rose-100/50 rounded-xl"
-                            onClick={() => setPermanentDeleteFaq(faq)}
-                          >
-                            <Trash className="w-4.5 h-4.5" />
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
+                    {isSuperAdmin && (
+                      <TableCell className="px-6 text-right">
+                        {!isTrash ? (
+                          <div className="flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-200">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-blue-600 hover:bg-blue-100/50 rounded-xl"
+                              onClick={() => setEditingFaq(faq)}
+                            >
+                              <Edit className="w-4.5 h-4.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-rose-600 hover:bg-rose-100/50 rounded-xl"
+                              onClick={() => setDeleteConfirmFaq(faq)}
+                            >
+                              <Trash2 className="w-4.5 h-4.5" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-200">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-emerald-600 hover:bg-emerald-100/50 rounded-xl"
+                              onClick={() => setRestoreConfirmFaq(faq)}
+                            >
+                              <RotateCcw className="w-4.5 h-4.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 text-rose-600 hover:bg-rose-100/50 rounded-xl"
+                              onClick={() => setPermanentDeleteFaq(faq)}
+                            >
+                              <Trash className="w-4.5 h-4.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))
               )}
@@ -488,58 +496,60 @@ export function FAQsTable({
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      {!isTrash ? (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-10 px-4 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50 rounded-2xl font-bold transition-all"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingFaq(faq);
-                            }}
-                          >
-                            <Edit className="h-4 w-4 mr-2" />
-                            แก้ไข
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-10 w-10 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50 rounded-2xl transition-all"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setDeleteConfirmFaq(faq);
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-10 px-4 text-emerald-600 border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 rounded-2xl font-bold transition-all"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setRestoreConfirmFaq(faq);
-                            }}
-                          >
-                            <RotateCcw className="h-4 w-4 mr-2" />
-                            กู้คืน
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-10 w-10 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50 rounded-2xl transition-all"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPermanentDeleteFaq(faq);
-                            }}
-                          >
-                            <Trash className="h-4 w-4" />
-                          </Button>
-                        </>
+                      {isSuperAdmin && (
+                        !isTrash ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-10 px-4 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-50 rounded-2xl font-bold transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingFaq(faq);
+                              }}
+                            >
+                              <Edit className="h-4 w-4 mr-2" />
+                              แก้ไข
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-10 w-10 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50 rounded-2xl transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirmFaq(faq);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-10 px-4 text-emerald-600 border-emerald-100 bg-emerald-50/50 hover:bg-emerald-50 rounded-2xl font-bold transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setRestoreConfirmFaq(faq);
+                              }}
+                            >
+                              <RotateCcw className="h-4 w-4 mr-2" />
+                              กู้คืน
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-10 w-10 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-50 rounded-2xl transition-all"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPermanentDeleteFaq(faq);
+                              }}
+                            >
+                              <Trash className="h-4 w-4" />
+                            </Button>
+                          </>
+                        )
                       )}
                     </div>
                   </div>

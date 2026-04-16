@@ -141,8 +141,8 @@ export async function createOwnerAction(input: CreateOwnerInput) {
 
     revalidatePath("/protected/owners");
     return { success: true, message: "เพิ่มเจ้าของสำเร็จ", id: owner.id };
-  } catch (err: any) {
-    if (err.code === "AUTHZ_ERROR") return authzFail(err);
+  } catch (err: unknown) {
+    if ((err as { code?: string })?.code === "AUTHZ_ERROR") return authzFail(err);
     console.error("createOwnerAction error:", err);
     return { 
       success: false, 
@@ -197,8 +197,8 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
     revalidatePath("/protected/owners");
     revalidatePath("/protected/properties");
     return { success: true, message: "บันทึกข้อมูลสำเร็จ" };
-  } catch (err: any) {
-    if (err.code === "AUTHZ_ERROR") return authzFail(err);
+  } catch (err: unknown) {
+    if ((err as { code?: string })?.code === "AUTHZ_ERROR") return authzFail(err);
     console.error("updateOwnerAction error:", err);
     return { 
       success: false, 
@@ -231,6 +231,20 @@ export async function deleteOwnerAction(id: string) {
       return { success: false, message: "คุณไม่มีสิทธิ์ลบข้อมูลของสาขาอื่น" };
     }
 
+    // 🔗 DATA INTEGRITY: Check for linked properties
+    const { count, error: countErr } = await ctx.supabase
+      .from("properties")
+      .select("*", { count: "exact", head: true })
+      .eq("owner_id", id);
+
+    if (countErr) throw countErr;
+    if (count && count > 0) {
+      return { 
+        success: false, 
+        message: `ไม่สามารถลบเจ้าของท่านนี้ได้ เนื่องจากยังมีทรัพย์สินอีก ${count} รายการที่ผูกพันอยู่ กรุณาลบหรือย้ายเจ้าของทรัพย์สินก่อนดำเนินการ` 
+      };
+    }
+
     const { error } = await ctx.supabase
       .from("owners")
       .delete()
@@ -249,8 +263,8 @@ export async function deleteOwnerAction(id: string) {
     revalidatePath("/protected/owners");
     revalidatePath("/protected/properties");
     return { success: true, message: "ลบเจ้าของสำเร็จ" };
-  } catch (err) {
-    if ((err as any).code === "AUTHZ_ERROR") return authzFail(err);
+  } catch (err: unknown) {
+    if ((err as { code?: string })?.code === "AUTHZ_ERROR") return authzFail(err);
     return { success: false, message: mapDbError(err) };
   }
 }

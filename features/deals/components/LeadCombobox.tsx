@@ -70,8 +70,8 @@ export function LeadCombobox({
       const res = await fetch(`/api/leads?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch leads");
 
-      const payload = await res.json();
-      const pageItems: LeadItem[] = (payload.data ?? []).map((x: any) => ({
+      const payload = await res.json() as { data: LeadItem[]; count: number };
+      const pageItems: LeadItem[] = (payload.data ?? []).map((x) => ({
         id: x.id,
         full_name: x.full_name,
         email: x.email ?? null,

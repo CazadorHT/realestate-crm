@@ -3,9 +3,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
-import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { requireAuthContext, assertSystemAdmin } from "@/lib/authz";
 import { calculateNewSortOrders } from "./partners-utils";
+import { redis } from "@/lib/redis";
 import { z } from "zod";
+import { Database } from "@/lib/database.types";
 
 const partnerSchema = z.object({
   name: z.string().min(1, "กรุณาระบุชื่อพาร์ทเนอร์"),
@@ -28,6 +30,18 @@ export async function getPartners(params?: {
   search?: string;
 }) {
   const { page = 1, pageSize = 10, search = "" } = params || {};
+  const cacheKey = `partners:list:${page}:${pageSize}:${search || "none"}`;
+
+  // 1. Try Cache
+  if (redis) {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) return cached as { success: boolean; data: Database["public"]["Tables"]["partners"]["Row"][]; totalCount: number };
+    } catch (e: unknown) {
+      console.warn("[Redis] Partners Cache read error:", e);
+    }
+  }
+
   const supabase = await createClient();
 
   try {
@@ -48,12 +62,23 @@ export async function getPartners(params?: {
 
     if (error) throw error;
 
-    return {
+    const result = {
       success: true,
       data: data || [],
       totalCount: count || 0,
     };
-  } catch (error: any) {
+
+    // 2. Write to Cache (TTL 1 hour)
+    if (redis && result.data.length > 0) {
+      try {
+        await redis.set(cacheKey, result, { ex: 3600 });
+      } catch (e) {
+        console.warn("[Redis] Partners Cache write error:", e);
+      }
+    }
+
+    return result;
+  } catch (error: unknown) {
     console.error("getPartners error:", error);
     return {
       success: false,
@@ -61,6 +86,21 @@ export async function getPartners(params?: {
       data: [],
       totalCount: 0,
     };
+  }
+}
+
+/**
+ * 🧹 Helper to clear Partners cache on mutations
+ */
+async function clearPartnerCache() {
+  if (!redis) return;
+  try {
+    const keys = await redis.keys("partners:list:*");
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+  } catch (e) {
+    console.warn("[Redis] Partners Cache clear error:", e);
   }
 }
 
@@ -72,7 +112,7 @@ export async function getPartner(id: string) {
     .eq("id", id)
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(mapDbError(error));
   return data;
 }
 
@@ -104,7 +144,7 @@ export async function createPartner(input: CreatePartnerInput) {
     const validated = partnerSchema.parse(input);
 
     const { role } = await requireAuthContext();
-    assertStaff(role);
+    assertSystemAdmin(role);
 
     const supabase = await createClient();
 
@@ -133,8 +173,9 @@ export async function createPartner(input: CreatePartnerInput) {
 
     revalidatePath("/admin/partners");
     revalidatePath("/");
+    await clearPartnerCache();
     return { success: true, message: "สร้างพาร์ทเนอร์สำเร็จ" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("createPartner error:", error);
     return { 
       success: false, 
@@ -150,7 +191,7 @@ export async function updatePartner(input: UpdatePartnerInput) {
     const validated = updatePartnerSchema.parse(input);
 
     const { role } = await requireAuthContext();
-    assertStaff(role);
+    assertSystemAdmin(role);
 
     const supabase = await createClient();
     const { id, ...updates } = validated;
@@ -167,8 +208,9 @@ export async function updatePartner(input: UpdatePartnerInput) {
 
     revalidatePath("/admin/partners");
     revalidatePath("/");
+    await clearPartnerCache();
     return { success: true, message: "แก้ไขพาร์ทเนอร์สำเร็จ" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("updatePartner error:", error);
     return { 
       success: false, 
@@ -182,7 +224,7 @@ export async function updatePartner(input: UpdatePartnerInput) {
 export async function deletePartner(id: string) {
   try {
     const { role } = await requireAuthContext();
-    assertStaff(role);
+    assertSystemAdmin(role);
 
     const supabase = await createClient();
     const { error } = await supabase.from("partners").delete().eq("id", id);
@@ -194,8 +236,9 @@ export async function deletePartner(id: string) {
 
     revalidatePath("/admin/partners");
     revalidatePath("/");
+    await clearPartnerCache();
     return { success: true, message: "ลบพาร์ทเนอร์สำเร็จ" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("deletePartner error:", error);
     return { success: false, message: mapDbError(error) };
   }
@@ -228,7 +271,7 @@ export async function getPartnersDashboardStats() {
 export async function reorderPartnersAction(ids: string[], offset: number = 0) {
   try {
     const { role } = await requireAuthContext();
-    assertStaff(role);
+    assertSystemAdmin(role);
 
     const supabase = await createClient();
 
@@ -250,9 +293,10 @@ export async function reorderPartnersAction(ids: string[], offset: number = 0) {
 
     revalidatePath("/admin/partners");
     revalidatePath("/");
+    await clearPartnerCache();
     
     return { success: true, message: "ปรับลำดับพาร์ทเนอร์สำเร็จ" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("reorderPartnersAction error:", error);
     return { success: false, message: mapDbError(error) };
   }
@@ -267,7 +311,7 @@ export async function uploadPartnerLogoAction(
 }> {
   try {
     const { role } = await requireAuthContext();
-    assertStaff(role);
+    assertSystemAdmin(role);
 
     const file = formData.get("file") as File | null;
     if (!file) return { success: false, message: "ไม่พบไฟล์ที่อัปโหลด" };
@@ -276,7 +320,7 @@ export async function uploadPartnerLogoAction(
     const result = await uploadSiteAsset(file, file.name, file.type, "partners");
 
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("uploadPartnerLogoAction error:", error);
     return { success: false, message: mapDbError(error) };
   }

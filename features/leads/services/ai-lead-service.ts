@@ -62,14 +62,15 @@ export async function generateLeadSummary(leadId: string): Promise<string> {
     });
 
     return result.text;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "สรุปข้อมูลด้วย AI ผิดพลาด";
     console.error("AI Lead Summary Error:", error);
 
     await logAiUsage({
       model: modelName || "unknown",
       feature: "lead_summary",
       status: "error",
-      errorMessage: error.message,
+      errorMessage: message,
     });
     throw new Error("ไม่สามารถสรุปข้อมูลด้วย AI ได้ในขณะนี้");
   }

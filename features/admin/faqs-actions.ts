@@ -2,11 +2,13 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { requireAuthContext, assertSystemAdmin } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
+import { redis } from "@/lib/redis";
 
 import { z } from "zod";
+import { Database } from "@/lib/database.types";
 
 const faqSchema = z.object({
   question: z.string().min(1, "กรุณาระบุคำถาม"),
@@ -28,6 +30,18 @@ export type CreateFaqInput = z.infer<typeof faqSchema>;
 export type UpdateFaqInput = z.infer<typeof updateFaqSchema>;
 
 export async function getFaqs(page = 1, pageSize = 10, isTrash = false, search = "") {
+  const cacheKey = `faqs:list:${page}:${pageSize}:${isTrash}:${search || "none"}`;
+  
+  // 1. Try Cache
+  if (redis) {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) return cached as { faqs: Database["public"]["Tables"]["faqs"]["Row"][]; count: number };
+    } catch (e: unknown) {
+      console.warn("[Redis] Cache read error:", e);
+    }
+  }
+
   const supabase = await createClient();
   const offset = (page - 1) * pageSize;
 
@@ -42,8 +56,6 @@ export async function getFaqs(page = 1, pageSize = 10, isTrash = false, search =
   }
 
   if (search) {
-    // Use Full-Text Search against the fts_vector column
-    // 'plain' config handles multiple words naturally
     query = query.textSearch("fts_vector", search, {
       config: "simple",
       type: "plain",
@@ -60,7 +72,33 @@ export async function getFaqs(page = 1, pageSize = 10, isTrash = false, search =
     throw new Error(mapDbError(error));
   }
 
-  return { faqs: data || [], count: count || 0 };
+  const result = { faqs: data || [], count: count || 0 };
+
+  // 2. Write to Cache (TTL 1 hour)
+  if (redis && result.faqs.length > 0) {
+    try {
+      await redis.set(cacheKey, result, { ex: 3600 });
+    } catch (e) {
+      console.warn("[Redis] Cache write error:", e);
+    }
+  }
+
+  return result;
+}
+
+/**
+ * 🧹 Helper to clear FAQ cache on mutations
+ */
+async function clearFaqCache() {
+  if (!redis) return;
+  try {
+    const keys = await redis.keys("faqs:list:*");
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+  } catch (e) {
+    console.warn("[Redis] Cache clear error:", e);
+  }
 }
 
 export async function getFaq(id: string) {
@@ -71,7 +109,7 @@ export async function getFaq(id: string) {
     .eq("id", id)
     .single();
 
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(mapDbError(error));
   return data;
 }
 
@@ -79,7 +117,7 @@ export async function createFaq(input: CreateFaqInput) {
   try {
     const validated = faqSchema.parse(input);
     const { role, user, supabase } = await requireAuthContext();
-    assertStaff(role);
+    assertSystemAdmin(role);
 
     const { data: faq, error } = await supabase
       .from("faqs")
@@ -102,6 +140,7 @@ export async function createFaq(input: CreateFaqInput) {
     revalidatePath("/admin/faqs");
     revalidatePath("/protected/faqs");
     revalidatePath("/");
+    await clearFaqCache();
     return { success: true, message: "สร้างคำถามสำเร็จ" };
   } catch (error: unknown) {
     console.error("createFaq error:", error);
@@ -119,7 +158,7 @@ export async function updateFaq(input: UpdateFaqInput) {
   try {
     const validated = updateFaqSchema.parse(input);
     const { role, user, supabase } = await requireAuthContext();
-    assertStaff(role);
+    assertSystemAdmin(role);
 
     const { id, ...updates } = validated;
     const { error } = await supabase
@@ -142,6 +181,7 @@ export async function updateFaq(input: UpdateFaqInput) {
     revalidatePath("/admin/faqs");
     revalidatePath("/protected/faqs");
     revalidatePath("/");
+    await clearFaqCache();
     return { success: true, message: "แก้ไขคำถามสำเร็จ" };
   } catch (error: unknown) {
     console.error("updateFaq error:", error);
@@ -158,7 +198,7 @@ export async function updateFaq(input: UpdateFaqInput) {
 export async function moveToTrashAction(id: string) {
   try {
     const { role, user, supabase } = await requireAuthContext();
-    assertStaff(role);
+    assertSystemAdmin(role);
 
     const { error } = await supabase
       .from("faqs")
@@ -177,6 +217,7 @@ export async function moveToTrashAction(id: string) {
     );
 
     revalidatePath("/protected/faqs");
+    await clearFaqCache();
     return { success: true, message: "ย้ายลงถังขยะเรียบร้อย" };
   } catch (error: unknown) {
     console.error("moveToTrash error:", error);
@@ -187,7 +228,7 @@ export async function moveToTrashAction(id: string) {
 export async function restoreFaqAction(id: string) {
   try {
     const { role, user, supabase } = await requireAuthContext();
-    assertStaff(role);
+    assertSystemAdmin(role);
 
     const { error } = await supabase
       .from("faqs")
@@ -206,6 +247,7 @@ export async function restoreFaqAction(id: string) {
     );
 
     revalidatePath("/protected/faqs");
+    await clearFaqCache();
     return { success: true, message: "กู้คืนข้อมูลสำเร็จ" };
   } catch (error: unknown) {
     console.error("restoreFaq error:", error);
@@ -216,7 +258,7 @@ export async function restoreFaqAction(id: string) {
 export async function permanentDeleteFaqAction(id: string) {
   try {
     const { role, user, supabase } = await requireAuthContext();
-    assertStaff(role);
+    assertSystemAdmin(role);
 
     const { error } = await supabase
       .from("faqs")
@@ -235,6 +277,7 @@ export async function permanentDeleteFaqAction(id: string) {
     );
 
     revalidatePath("/protected/faqs");
+    await clearFaqCache();
     return { success: true, message: "ลบข้อมูลถาวรเรียบร้อย" };
   } catch (error: unknown) {
     console.error("permanentDelete error:", error);
@@ -254,7 +297,7 @@ export async function incrementFaqViewAction(id: string) {
     }
     
     return { success: true };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("incrementFaqView error:", error);
     return { success: false };
   }

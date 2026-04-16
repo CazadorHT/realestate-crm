@@ -24,7 +24,7 @@ export async function bulkDeletePropertiesAction(
   ids: string[]
 ): Promise<BulkActionResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     if (!ids || ids.length === 0) {
@@ -32,17 +32,27 @@ export async function bulkDeletePropertiesAction(
     }
 
     // กรองทรัพย์ที่ติดดีลสำคัญ (Signed/Closed) หรือสถานะห้ามลบ
-    const { data: propertiesStatus } = await supabase
+    let statusQuery = supabase
       .from("properties")
       .select("id, status")
       .in("id", ids);
+      
+    if (role !== "ADMIN" && tenantId) {
+      statusQuery = statusQuery.eq("tenant_id", tenantId);
+    }
+    const { data: propertiesStatus } = await statusQuery;
 
-    // ตรวจสอบดีลที่ค้างอยู่ (ถ้ามี)
-    const { data: activeDeals } = await supabase
+    // ตรวจสอบดีลที่ค้างอยู่
+    let dealsQuery = supabase
       .from("deals")
       .select("property_id")
       .in("property_id", ids)
       .in("status", ["SIGNED", "CLOSED_WIN"]);
+      
+    if (role !== "ADMIN" && tenantId) {
+      dealsQuery = dealsQuery.eq("tenant_id", tenantId);
+    }
+    const { data: activeDeals } = await dealsQuery;
 
     const blockedIds = new Set<string>();
     propertiesStatus?.forEach((p) => {
@@ -63,13 +73,19 @@ export async function bulkDeletePropertiesAction(
     }
 
     // Soft Delete: อัปเดต deleted_at
-    const { error, count } = await supabase
+    let updateQuery = supabase
       .from("properties")
       .update({ 
         deleted_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       })
       .in("id", safeIds);
+
+    if (role !== "ADMIN" && tenantId) {
+      updateQuery = updateQuery.eq("tenant_id", tenantId);
+    }
+    
+    const { error, count } = await updateQuery;
 
     if (error) throw error;
 
@@ -105,20 +121,26 @@ export async function bulkRestorePropertiesAction(
   ids: string[]
 ): Promise<BulkActionResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     if (!ids || ids.length === 0) {
       return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
     }
 
-    const { error, count } = await supabase
+    let query = supabase
       .from("properties")
       .update({ 
         deleted_at: null,
         updated_at: new Date().toISOString()
       })
       .in("id", ids);
+      
+    if (role !== "ADMIN" && tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { error, count } = await query;
 
     if (error) throw error;
 
@@ -149,28 +171,41 @@ export async function bulkPermanentDeletePropertiesAction(
   ids: string[]
 ): Promise<BulkActionResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     if (!ids || ids.length === 0) {
       return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
     }
 
-    // หมายเหตุ: หากฐานข้อมูลมี ON DELETE CASCADE จะลบข้อมูลเกี่ยวเนื่องโดยอัตโนมัติ
-    // หากไม่มี เราควรไล่ลบแมนนวลเพื่อความสะอาดของข้อมูล (รูปภาพ/ฟีเจอร์)
+    // 🛡️ Security: Filter only properties belonging to this tenant before cascading
+    let verifyQuery = supabase
+      .from("properties")
+      .select("id")
+      .in("id", ids);
+      
+    if (role !== "ADMIN" && tenantId) {
+      verifyQuery = verifyQuery.eq("tenant_id", tenantId);
+    }
+    const { data: verifiedProps } = await verifyQuery;
+    const safeIds = verifiedProps?.map(p => p.id) || [];
     
+    if (safeIds.length === 0) {
+      return { success: true, count: 0, message: "ไม่มีรายการที่สามารถลบได้" };
+    }
+
     // ลบรูปภาพที่ผูกไว้ (ถ้ามี)
-    await supabase.from("property_images").delete().in("property_id", ids);
+    await supabase.from("property_images").delete().in("property_id", safeIds);
     // ลบฟีเจอร์ที่ผูกไว้
-    await supabase.from("property_features").delete().in("property_id", ids);
+    await supabase.from("property_features").delete().in("property_id", safeIds);
     // ลบผู้ดูแล
-    await supabase.from("property_agents").delete().in("property_id", ids);
+    await supabase.from("property_agents").delete().in("property_id", safeIds);
 
     // ลบตัวหลัก
     const { error, count } = await supabase
       .from("properties")
       .delete()
-      .in("id", ids);
+      .in("id", safeIds);
 
     if (error) throw error;
 
@@ -276,14 +311,14 @@ export async function bulkApproveAiReviewAction(
   ids: string[]
 ): Promise<BulkActionResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     if (!ids || ids.length === 0) {
       return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
     }
 
-    const { error, count } = await supabase
+    let query = supabase
       .from("properties")
       .update({ 
         requires_ai_review: false,
@@ -292,6 +327,12 @@ export async function bulkApproveAiReviewAction(
         updated_at: new Date().toISOString()
       })
       .in("id", ids);
+      
+    if (role !== "ADMIN" && tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { error, count } = await query;
 
     if (error) throw error;
 

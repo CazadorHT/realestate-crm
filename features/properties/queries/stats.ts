@@ -20,11 +20,16 @@ export async function getPropertiesDashboardStatsQuery(
     .is("deleted_at", null);
 
   if (isMultiTenant) {
-    if (allBranches === "true" || tenantId === "ALL" || !tenantId) {
-      // ALL Branches: include all
+    const isSuperAdmin = role === "ADMIN";
+    const wantsAllBranches = allBranches === "true" || tenantId === "ALL" || !tenantId;
+
+    if (wantsAllBranches && isSuperAdmin) {
+      // ALL Branches: allowed for SuperAdmin
     } else {
-      // Specific branch
-      query = query.eq("tenant_id", tenantId);
+      // Force specific branch for non-admins (Defensive Depth)
+      if (tenantId && tenantId !== "ALL") {
+        query = query.eq("tenant_id", tenantId);
+      }
     }
   }
 

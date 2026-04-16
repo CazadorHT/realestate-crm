@@ -148,10 +148,10 @@ export async function getDealsPageStats(timeRange: string = "all") {
     }
 
     if (startDate) {
-      query = query.gte("created_at", startDate) as any;
+      query = query.gte("created_at", startDate);
     }
     if (endDate) {
-      query = query.lte("created_at", endDate) as any;
+      query = query.lte("created_at", endDate);
     }
   }
 
@@ -171,14 +171,15 @@ export async function getDealsPageStats(timeRange: string = "all") {
   const stats = {
     totalDeals: data.length,
     activeDeals: data.filter(
-      (d: any) => d.status === "NEGOTIATING" || d.status === "SIGNED",
+      (d) => d.status === "NEGOTIATING" || d.status === "SIGNED",
     ).length,
-    wonDeals: data.filter((d: any) => d.status === "CLOSED_WIN").length,
-    lostDeals: data.filter((d: any) => d.status === "CLOSED_LOSS").length,
+    wonDeals: data.filter((d) => d.status === "CLOSED_WIN").length,
+    lostDeals: data.filter((d) => d.status === "CLOSED_LOSS").length,
     totalCommission: data
-      .filter((d: any) => d.status === "CLOSED_WIN" && d.commission_amount)
-      .reduce((sum: number, d: any) => sum + (d.commission_amount || 0), 0),
+      .filter((d) => d.status === "CLOSED_WIN" && d.commission_amount)
+      .reduce((sum, d) => sum + (d.commission_amount || 0), 0),
   };
+
 
   return stats;
 }

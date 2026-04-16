@@ -154,7 +154,8 @@ export const updateLeadActivityAction = createSafeAction(
         note: values.note.trim(),
         property_id: values.property_id ?? null,
       })
-      .eq("id", activityId);
+      .eq("id", activityId)
+      .eq("lead_id", leadId);
 
     if (error) throw new Error(mapDbError(error));
 
@@ -183,7 +184,8 @@ export const deleteLeadActivityAction = createSafeAction(
     const { error } = await supabase
       .from("lead_activities")
       .delete()
-      .eq("id", activityId);
+      .eq("id", activityId)
+      .eq("lead_id", leadId);
 
     if (error) throw new Error(mapDbError(error));
 
@@ -252,25 +254,22 @@ export const searchPropertiesAction = createSafeAction(
 
     if (facetError) {
       console.error("Facet Error:", facetError);
-      // We still return empty counts instead of throwing to keep the UI functional
     } else if (facetData) {
       facetData.forEach((x: { listing_type: string | null; property_type: string | null; status: string | null }) => {
         if (x.listing_type)
-          counts.listing_type[x.listing_type] =
-            (counts.listing_type[x.listing_type] || 0) + 1;
+          counts.listing_type[x.listing_type] = (counts.listing_type[x.listing_type] || 0) + 1;
         if (x.property_type)
-          counts.property_type[x.property_type] =
-            (counts.property_type[x.property_type] || 0) + 1;
+          counts.property_type[x.property_type] = (counts.property_type[x.property_type] || 0) + 1;
         if (x.status)
           counts.status[x.status] = (counts.status[x.status] || 0) + 1;
       });
     }
 
-    // 2. Fetch actually filtered property results
+    // 2. Fetch actually filtered property results (Explicit Select Only - Price Shield Enforced)
     let sb = supabase
       .from("properties")
       .select(
-        "id, title, price, original_price, rental_price, original_rental_price, listing_type, property_type, province, district, popular_area, status, property_images(image_url, is_cover)",
+        "id, title, price, rental_price, listing_type, property_type, province, district, popular_area, status, property_images(image_url, is_cover)",
       )
       .is("deleted_at", null);
 
@@ -309,7 +308,7 @@ export const searchPropertiesAction = createSafeAction(
     const { data, error } = await sb;
     if (error) throw new Error(mapDbError(error));
 
-    interface PropertyWithImages {
+    const properties = (data as unknown as {
       id: string;
       title: string;
       price: number | null;
@@ -323,12 +322,10 @@ export const searchPropertiesAction = createSafeAction(
       popular_area: string | null;
       status: string | null;
       property_images: { image_url: string; is_cover: boolean }[];
-    }
-
-    const properties = (data as unknown as PropertyWithImages[]) ?? [];
+    }[]) || [];
 
     return {
-      properties: properties.map((x: PropertyWithImages) => ({
+      properties: properties.map((x) => ({
         id: x.id,
         title: x.title,
         price: x.price,
@@ -419,14 +416,7 @@ export const transferLeadAction = createSafeAction(
     await logAudit(
       {
         supabase,
-        user: {
-          id: userId,
-          email: "",
-          app_metadata: {},
-          user_metadata: {},
-          aud: "",
-          created_at: "",
-        },
+        user: { id: userId } as any, // ID carries sufficient entropy for audit logs
         role: role as UserRole,
       },
       {
@@ -472,7 +462,7 @@ export const transferLeadAction = createSafeAction(
           ),
         );
       }
-    } catch (notifyErr) {
+    } catch (notifyErr: unknown) {
       console.error("Failed to send transfer notifications:", notifyErr);
       // Non-blocking error for notification
     }
@@ -493,26 +483,28 @@ export const searchLeadsAction = createSafeAction(
     const queryTerm = (q ?? "").trim();
     const effectiveTenantId = inputTenantId || contextTenantId;
 
-    let sb = supabase
-      .from("leads")
-      .select("id, full_name, phone, email")
+    try {
+      let sb = supabase
+        .from("leads")
+        .select("id, full_name, phone, email")
 
-    if (effectiveTenantId) {
-      sb = sb.eq("tenant_id", effectiveTenantId);
+      if (effectiveTenantId) {
+        sb = sb.eq("tenant_id", effectiveTenantId);
+      }
+
+      if (queryTerm) {
+        sb = sb.or(`full_name.ilike.%${queryTerm}%,phone.ilike.%${queryTerm}%`);
+      }
+
+      sb = sb.order("updated_at", { ascending: false }).limit(20);
+
+      const { data, error } = await sb;
+      if (error) throw error;
+      return data || [];
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      console.error("Search lead error:", err);
+      throw new Error(mapDbError(err));
     }
-
-    if (queryTerm) {
-      sb = sb.or(`full_name.ilike.%${queryTerm}%,phone.ilike.%${queryTerm}%`);
-    }
-
-    sb = sb.order("updated_at", { ascending: false }).limit(20);
-
-    const { data, error } = await sb;
-    if (error) {
-      console.error("Search lead error:", error);
-      throw new Error(mapDbError(error));
-    }
-
-    return { leads: data ?? [] };
   }
 );

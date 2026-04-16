@@ -165,8 +165,8 @@ export async function submitContactFormAction(
     const cleanLineId = lineId?.replace(/^@/, "").trim();
 
     // Build Footer Rows (2 Columns)
-    const footerRows: any[] = [];
-    const topButtons: any[] = [];
+    const footerRows: Record<string, unknown>[] = [];
+    const topButtons: Record<string, unknown>[] = [];
 
     // Call Button
     if (phone) {

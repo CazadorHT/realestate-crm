@@ -7,7 +7,10 @@ import {
   assertAuthenticated,
   assertStaff,
   authzFail,
+  AuthContext,
 } from "@/lib/authz";
+import { type PostgrestSingleResponse } from "@supabase/supabase-js";
+import { Database } from "@/lib/database.types";
 import { mapDbError } from "@/lib/db-error";
 import {
   createDealSchema,
@@ -16,8 +19,7 @@ import {
   UpdateDealInput,
 } from "./schema";
 import { z } from "zod";
-import { DealCommission } from "./types";
-import { Database } from "@/lib/database.types";
+import { Deal, DealStatus, DealType, DealCommission } from "./types";
 import { logAudit } from "@/lib/audit";
 import { getCommissionRulesAction } from "../dashboard/actions/commission-actions";
 import {
@@ -30,7 +32,7 @@ import { getDealDiff } from "./logic/diff";
 
 // Helper: Adjust property stock and auto-update status using Atomic RPC
 async function adjustPropertyStock(
-  ctx: { supabase: any; tenantId: string },
+  ctx: { supabase: AuthContext["supabase"]; tenantId: string },
   propertyId: string,
   adjustment: number, // +1 or -1
   dealType: "SALE" | "RENT",
@@ -42,6 +44,7 @@ async function adjustPropertyStock(
     p_property_id: propertyId,
     p_adjustment: adjustment,
     p_deal_type: dealType,
+    p_tenant_id: ctx.tenantId,
   });
 
   if (error) {
@@ -52,18 +55,18 @@ async function adjustPropertyStock(
 
 // Helper: Swap property stocks atomically
 async function swapPropertyStock(
-  ctx: { supabase: any; tenantId: string },
+  ctx: { supabase: AuthContext["supabase"]; tenantId: string },
   oldPropertyId: string | null,
   newPropertyId: string | null,
   oldDealType: string,
   newDealType: string,
 ) {
-  const scoped = getScopedRevenueClient(ctx.supabase, ctx.tenantId);
-  const { error } = await scoped.rpc("swap_property_stock_atomic", {
-    p_old_property_id: oldPropertyId,
-    p_new_property_id: newPropertyId,
+  const { error } = await ctx.supabase.rpc("swap_property_stock_atomic", {
+    p_old_property_id: (oldPropertyId as string) || "",
+    p_new_property_id: (newPropertyId as string) || "",
     p_old_deal_type: oldDealType,
     p_new_deal_type: newDealType,
+    p_tenant_id: ctx.tenantId,
   });
 
   if (error) {
@@ -129,7 +132,7 @@ export async function createDealAction(input: CreateDealInput) {
     const scoped = getScopedRevenueClient(supabase, tenantId);
 
     const { data, error } = await scoped
-      .from("deals")
+      .deals()
       .insert({
         ...insertData,
         created_by: user.id,
@@ -164,8 +167,8 @@ export async function createDealAction(input: CreateDealInput) {
     revalidatePath("/protected/deals");
     return { success: true, message: "สร้างดีลสำเร็จ", data };
   } catch (error: unknown) {
-    if (error && typeof error === "object" && "code" in error && error.code === "AUTHZ_ERROR") {
-      return authzFail(error as any);
+    if (error && typeof error === "object" && "code" in error && (error as { code: string }).code === "AUTHZ_ERROR") {
+      return authzFail(error);
     }
     console.error("Create Deal Error:", error);
     const message = error instanceof z.ZodError 
@@ -189,7 +192,7 @@ export async function updateDealAction(input: UpdateDealInput) {
     const scoped = getScopedRevenueClient(supabase, tenantId);
 
     const { data: currentDeal, error: currentErr } = await scoped
-      .from("deals")
+      .deals()
       .select("id, status, property_id, deal_type, tenant_id")
       .eq("id", validated.id)
       .single();
@@ -244,14 +247,14 @@ export async function updateDealAction(input: UpdateDealInput) {
     });
 
     const { error } = await scoped
-      .from("deals")
+      .deals()
       .update(updateData)
       .eq("id", validated.id)
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) throw new Error(mapDbError(error));
 
-    const diff = getDealDiff(currentDeal as any, validated as any);
+    const diff = getDealDiff(currentDeal as any, validated);
     const summary = diff.length > 0 ? `แก้ไขดีล: ${diff.join(", ")}` : "อัปเดตข้อมูลดีลทั่วไป";
 
     await logAudit(
@@ -302,8 +305,8 @@ export async function updateDealAction(input: UpdateDealInput) {
     revalidatePath("/protected/deals");
     return { success: true, message: "อัปเดตดีลสำเร็จ" };
   } catch (error: unknown) {
-    if (error && typeof error === "object" && "code" in error && error.code === "AUTHZ_ERROR") {
-      return authzFail(error as any);
+    if (error && typeof error === "object" && "code" in error && (error as { code: string }).code === "AUTHZ_ERROR") {
+      return authzFail(error);
     }
     console.error("Update Deal Error:", error);
     const message = error instanceof z.ZodError 
@@ -332,7 +335,7 @@ export async function deleteDealAction(dealId: string, leadId: string) {
       },
     );
 
-    if (deleteErr) throw new Error(deleteErr.message);
+    if (deleteErr) throw new Error(mapDbError(deleteErr));
 
     await logAudit(
       { supabase, user, role },
@@ -367,18 +370,16 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     const scoped = getScopedRevenueClient(supabase, tenantId);
 
-    // 1. Fetch Deal and Property
+    // 1. Get Deal with Property Details
     const { data: deal, error: dealErr } = await scoped
-      .from("deals")
-      .select(
-        `
+      .deals()
+      .select(`
         *,
         property:properties (
           id,
           assigned_to
         )
-      `,
-      )
+      `)
       .eq("id", dealId)
       .single();
 
@@ -427,7 +428,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
     // 4. Save to deal_commissions
     // First clear existing
     await scoped
-      .from("deal_commissions")
+      .commissions()
       .delete()
       .eq("deal_id", dealId);
 
@@ -444,10 +445,10 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
     }));
 
     const { error: insertErr } = await scoped
-      .from("deal_commissions")
+      .commissions()
       .insert(insertData);
 
-    if (insertErr) throw new Error(insertErr.message);
+    if (insertErr) throw new Error(mapDbError(insertErr));
 
     revalidatePath("/protected/deals/[id]"); // Update specifically if in detail view
     return { success: true, message: "คำนวณและบันทึกค่าคอมมิชชั่นสำเร็จ" };

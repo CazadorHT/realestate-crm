@@ -1,5 +1,4 @@
-// lib/authz.ts
-import type { User } from "@supabase/supabase-js";
+import type { User, SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -9,7 +8,7 @@ import { mapDbError } from "./db-error";
 export { type UserRole, isAdmin, isStaff };
 
 export type AuthContext = {
-  supabase: Awaited<ReturnType<typeof createClient>>;
+  supabase: SupabaseClient<Database>;
   user: User;
   role: UserRole;
   tenantId?: string;
@@ -32,22 +31,27 @@ export class AuthzError extends Error {
 async function getRole(
   supabase: AuthContext["supabase"],
   userId: string,
-): Promise<UserRole> {
+): Promise<UserRole | null> {
   const { data } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", userId)
     .maybeSingle();
 
-  return (data?.role ?? "USER") as UserRole;
+  if (!data?.role) return null;
+  return data.role as UserRole;
 }
 
 export async function getAuthContextOrNull(): Promise<AuthContext | null> {
   const supabase = await createClient();
   const { data, error } = await supabase.auth.getUser();
+  
+  // 🛡️ Zombie Session Protection: Verify user exists and JWT is still valid
   if (error || !data?.user) return null;
 
   const role = await getRole(supabase, data.user.id);
+  if (!role) return null; // 🛡️ Mission Critical: No profile = No access
+
   return { supabase, user: data.user, role };
 }
 
@@ -134,9 +138,23 @@ export function assertStaff(role: UserRole) {
   }
 }
 
+/**
+ * 🛡️ Branch Admin: ตรวจสอบสิทธิ์ผู้จัดการสาขา
+ * สามารถเห็นและจัดการข้อมูลภายในสาขาที่ตนเองสังกัดเท่านั้น
+ */
 export function assertAdmin(role: UserRole) {
   if (!isAdmin(role)) {
     throw new AuthzError("FORBIDDEN", "Forbidden: Admin access only");
+  }
+}
+
+/**
+ * 👑 Platform SuperAdmin: ตรวจสอบสิทธิ์ผู้ดูแลระบบสูงสุด
+ * มีสิทธิ์เข้าถึงข้อมูลข้ามสาขา และจัดการค่า Global ของทั้งระบบ (FAQ, Partners)
+ */
+export function assertSystemAdmin(role: UserRole) {
+  if (role !== "ADMIN") {
+    throw new AuthzError("FORBIDDEN", "สิทธิ์เฉพาะผู้ดูแลระบบส่วนกลางเท่านั้น");
   }
 }
 

@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireAuthContext, assertStaff, authzFail } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
+import { Json } from "@/lib/database.types";
 
 import { AuditActionResult, AuditMetadata } from "@/features/audit/types";
 
@@ -45,7 +46,7 @@ export async function restorePropertyVersionAction(
     }
 
     const metadata = log.metadata as unknown as AuditMetadata;
-    const oldState = metadata?.old_state as any;
+    const oldState = metadata?.old_state as Record<string, unknown>;
 
     if (!oldState) {
       return { 
@@ -56,14 +57,15 @@ export async function restorePropertyVersionAction(
     }
 
     // -- SENTINEL: Dry Run Validation --
-    // We import FormSchema dynamically or assume it's available 
-    // to check if the old data still makes sense in the current context.
     const { PropertySchema } = await import("@/features/properties/schema");
     const dryRun = PropertySchema.partial().safeParse(oldState);
     if (!dryRun.success) {
-      console.warn("Restore Dry Run Validation Warnings:", dryRun.error.format());
-      // For restoration, we might allow non-critical validation errors 
-      // but we log them for audit purposes.
+      console.error("Restore Validation Failed:", dryRun.error.format());
+      return { 
+        success: false, 
+        message: "ข้อมูลประวัติไม่ถูกต้องตามมาตรฐานปัจจุบัน ไม่สามารถคืนค่าได้",
+        errorType: "VALIDATION_ERROR"
+      };
     }
 
     // 2. Fetch current property to check version (Optimistic Locking)
@@ -78,12 +80,14 @@ export async function restorePropertyVersionAction(
       .select("version, title, slug")
       .eq("id", propertyId)
       .eq("tenant_id", tenantId)
-      .single() as { data: PropertyOwnershipResult | null, error: any };
+      .single();
 
-    if (currentErr || !current) {
+    const typedCurrent = current as PropertyOwnershipResult | null;
+
+    if (!typedCurrent) {
       return { 
         success: false, 
-        message: "ไม่พบข้อมูลทรัพย์สินปัจจุบัน",
+        message: "ไม่พบข้อมูลทรัพย์สินปัจจุบัน " + (currentErr?.message || ""),
         errorType: "NOT_FOUND"
       };
     }
@@ -96,12 +100,12 @@ export async function restorePropertyVersionAction(
       slug: string;
     }
 
-    const { data: updatedRow, error: rpcError } = await (supabase as any).rpc("update_property_elite", {
+    const { data: updatedRow, error: rpcError } = await supabase.rpc("update_property_elite", {
       p_id: propertyId,
       p_tenant_id: tenantId,
       p_user_id: user.id,
       p_is_admin: canBypassOwnership,
-      p_version: current.version,
+      p_version: typedCurrent.version,
       p_data: {
         ...oldState,
         id: undefined,
@@ -110,8 +114,10 @@ export async function restorePropertyVersionAction(
         tenant_id: undefined,
         created_by: undefined,
         version: undefined,
-      }
-    }) as { data: EliteRpcResult | null, error: any };
+      } as Json
+    });
+
+    const typedUpdatedRow = updatedRow as EliteRpcResult | null;
 
     if (rpcError) {
       console.error("RPC restore failed:", rpcError);
@@ -149,25 +155,26 @@ export async function restorePropertyVersionAction(
         metadata: {
           is_restore: true,
           restored_from_log_id: logId,
-          diff: [`คืนค่าข้อมูลจากประวัติเวอร์ชันเดิม (${current.title})`],
+          diff: [`คืนค่าข้อมูลจากประวัติเวอร์ชันเดิม (${typedCurrent.title})`],
         },
       }
     );
 
     revalidatePath("/protected/properties");
-    if (updatedRow?.slug) {
-      revalidatePath(`/properties/${updatedRow.slug}`);
+    if (typedUpdatedRow?.slug) {
+      revalidatePath(`/properties/${typedUpdatedRow.slug}`);
     }
 
     return { 
       success: true, 
       message: "คืนค่าข้อมูลสำเร็จ",
-      data: { slug: updatedRow?.slug || "" }
+      data: { slug: typedUpdatedRow?.slug || "" }
     };
 
-  } catch (err: any) {
-    console.error("restorePropertyVersionAction error:", err);
-    if (err?.code === "AUTHZ_ERROR") {
+  } catch (err: unknown) {
+    const error = err as { code?: string; message?: string };
+    console.error("restorePropertyVersionAction error:", error);
+    if (error?.code === "AUTHZ_ERROR") {
       return { 
         success: false, 
         message: "คุณไม่มีสิทธิ์เข้าถึงฟังก์ชันนี้",

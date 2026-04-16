@@ -2,6 +2,7 @@ import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { differenceInMonths } from "date-fns";
 import { Deal, DealStatus, DealType, DealStats, DealWithProperty } from "./types";
 import { getScopedRevenueClient } from "./logic/scoped-client";
+import { Database } from "@/lib/database.types";
 
 type ListArgs = {
   q?: string;
@@ -18,38 +19,7 @@ type ListArgs = {
   timeRange?: string;
 };
 
-// Helper interface for the joined result structure
-// Helper interface for the joined result structure
-
-type RawDealWithJoin = Deal & {
-  property: {
-    id: string;
-    title: string;
-    price: number | null;
-    original_price: number | null;
-    rental_price: number | null;
-    original_rental_price: number | null;
-    province?: string | null;
-    popular_area?: string | null;
-    deleted_at: string | null;
-    property_images: {
-      id: string;
-      property_id: string;
-      image_url: string;
-      is_cover: boolean;
-      sort_order: number;
-    }[];
-  } | null;
-  lead: {
-    id: string;
-    full_name: string;
-    phone: string | null;
-  } | null;
-  tenants: {
-    id: string;
-    name: string;
-  } | null;
-};
+// The joined result structure is now strictly inferred via Proxy architecture.
 
 export async function getDeals({
   q = "",
@@ -176,8 +146,8 @@ export async function getDeals({
         leadIds.length > 0 ||
         /^[0-9a-fA-F-]{36}$/.test(trimmed)
       ) {
-      let q2 = supabase
-          .from("deals")
+        let q2 = scoped
+          .deals()
           .select(
             `
       *,
@@ -190,7 +160,6 @@ export async function getDeals({
           .is("property.deleted_at", null)
           .order(order, { ascending });
 
-        if (tenantId) q2 = q2.eq("tenant_id", tenantId);
         if (propIds.length > 0) q2 = q2.in("property_id", propIds);
         if (leadIds.length > 0) q2 = q2.in("lead_id", leadIds);
         if (/^[0-9a-fA-F-]{36}$/.test(trimmed)) q2 = q2.eq("id", trimmed);
@@ -206,15 +175,14 @@ export async function getDeals({
   }
 
   // normalize property to include `images` for the DealWithProperty view model
-  const rawData = (finalData ?? []) as RawDealWithJoin[];
-
-  const normalized: DealWithProperty[] = rawData.map((d) => {
+  const normalized: DealWithProperty[] = finalData.map((d) => {
     // Transform property structure if it exists
     const property = d.property
       ? {
           id: d.property.id,
           title: d.property.title,
           price: d.property.price,
+
           original_price: d.property.original_price,
           rental_price: d.property.rental_price,
           original_rental_price: d.property.original_rental_price,
@@ -278,12 +246,8 @@ export async function getAllDealIdsQuery({
 } = {}) {
   const { supabase, tenantId } = await requireAuthContext();
 
-  let query = supabase.from("deals").select("id");
-
-  // Branch isolation
-  if (tenantId && tenantId !== "ALL") {
-    query = query.eq("tenant_id", tenantId);
-  }
+  const scoped = getScopedRevenueClient(supabase, tenantId);
+  let query = scoped.deals().select("id");
 
   // Time Range filtering (same logic as getDeals)
   if (timeRange && timeRange !== "all") {
@@ -352,7 +316,7 @@ export async function getAllDealIdsQuery({
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return (data || []).map((d) => d.id);
+  return (data || []).map((d) => d.id || "");
 }
 
 /**
@@ -361,15 +325,13 @@ export async function getAllDealIdsQuery({
 export async function getDealStats(): Promise<DealStats | null> {
   const { supabase, tenantId } = await requireAuthContext();
 
-  let query = supabase.from("deals").select(`
+  const scoped = getScopedRevenueClient(supabase, tenantId);
+  let query = scoped.deals().select(`
     deal_type, 
     status, 
+    commission_amount,
     property:properties!inner(listing_type, property_type)
   `);
-
-  if (tenantId && tenantId !== "ALL") {
-    query = query.eq("tenant_id", tenantId);
-  }
 
   const { data, error } = await query;
   if (error) {
@@ -377,32 +339,23 @@ export async function getDealStats(): Promise<DealStats | null> {
     return null;
   }
 
+  const records = data || [];
+
   const stats: DealStats = {
     deal_type: {},
     status: {},
     property_type: {},
     listing_type: {},
-    total: data.length,
-    totalCommission: data
-      .filter((d) => d.status === "CLOSED_WIN" && (d as any).commission_amount)
-      .reduce((sum, d) => sum + ((d as any).commission_amount || 0), 0),
-    wonDeals: data.filter((d) => d.status === "CLOSED_WIN").length,
-    activeDeals: data.filter(
+    total: records.length,
+    totalCommission: records
+      .filter((d) => d.status === "CLOSED_WIN" && d.commission_amount)
+      .reduce((sum, d) => sum + (d.commission_amount || 0), 0),
+    wonDeals: records.filter((d) => d.status === "CLOSED_WIN").length,
+    activeDeals: records.filter(
       (d) => d.status === "NEGOTIATING" || d.status === "SIGNED",
     ).length,
-    lostDeals: data.filter((d) => d.status === "CLOSED_LOSS").length,
+    lostDeals: records.filter((d) => d.status === "CLOSED_LOSS").length,
   };
-
-  type StatsRecord = {
-    deal_type: string | null;
-    status: string | null;
-    property: {
-      listing_type: string | null;
-      property_type: string | null;
-    } | null;
-  };
-
-  const records = data as unknown as StatsRecord[];
 
   records.forEach((d) => {
     // Deal Type

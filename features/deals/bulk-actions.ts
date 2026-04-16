@@ -62,15 +62,15 @@ export async function bulkDeleteDealsAction(
       deletedCount: count ?? ids.length,
       message: `ลบดีลสำเร็จ ${count ?? ids.length} รายการ และปรับปรุงสต็อก/สถานะคืนสำเร็จแบบ Atomic`,
     };
-  } catch (error: any) {
-    if (error.code === "AUTHZ_ERROR") {
+  } catch (err: unknown) {
+    if (err && typeof err === 'object' && 'code' in err && err.code === "AUTHZ_ERROR") {
       return { success: false, deletedCount: 0, message: "ไม่ได้รับอนุญาต" };
     }
-    console.error("bulkDeleteDealsAction error:", error);
+    console.error("bulkDeleteDealsAction error:", err);
     return {
       success: false,
       deletedCount: 0,
-      message: mapDbError(error),
+      message: mapDbError(err),
     };
   }
 }

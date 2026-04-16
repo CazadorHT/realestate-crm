@@ -165,7 +165,9 @@ export async function addPopularAreaAction(data: {
   province?: string;
 }) {
   const { supabase, role } = await requireAuthContext();
-  assertStaff(role);
+  
+  // 🛡️ Elite Hardening: Popular Areas are GLOBAL. Only SuperAdmins can add them.
+  if (role !== "ADMIN") throw new Error("Forbidden: SuperAdmin only");
 
   if (!data.name || data.name.trim() === "") {
     return { success: false, message: "กรุณาระบุชื่อย่าน" };

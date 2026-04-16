@@ -6,11 +6,11 @@ import { PropertyFormValues } from "@/features/properties/schema";
  */
 export interface AuditMetadata {
   diff?: string[]; // Human-readable summary
-  changes?: Record<string, { old: any; new: any }>; // Machine-parsable deep diff
+  changes?: Record<string, { old: unknown; new: unknown }>; // Machine-parsable deep diff
   old_state?: Partial<PropertyFormValues>; // Snapshot BEFORE change
   new_state?: Partial<PropertyFormValues>; // Snapshot AFTER change
   ip?: string;
-  userAgent?: string | any;
+  userAgent?: string | Record<string, unknown>;
   is_restore?: boolean;
   image_changes?: { added: string[]; removed: string[] };
   word_counts?: Record<string, { old: number; new: number; delta: number }>;
@@ -19,7 +19,7 @@ export interface AuditMetadata {
 /**
  * Standardized Server Action Response
  */
-export interface AuditActionResult<T = any> {
+export interface AuditActionResult<T = unknown> {
   success: boolean;
   message?: string;
   data?: T;

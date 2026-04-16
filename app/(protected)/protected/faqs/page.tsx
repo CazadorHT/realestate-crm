@@ -5,6 +5,7 @@ import { FAQStats } from "@/features/admin/components/FAQStats";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { CreateFAQDialog } from "@/features/admin/components/CreateFAQDialog";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
+import { requireAuthContext } from "@/lib/authz";
 
 interface FAQsPageProps {
   searchParams: Promise<{ page?: string; success?: string; view?: string; q?: string }>;
@@ -17,6 +18,9 @@ export default async function FAQsPage(props: FAQsPageProps) {
   const search = searchParams.q || "";
   const isTrash = currentView === "trash";
   const pageSize = 10;
+
+  const { role } = await requireAuthContext();
+  const isSuperAdmin = role === "ADMIN";
 
   // Parallel fetching for counts and data
   const [activeData, trashData] = await Promise.all([
@@ -39,7 +43,7 @@ export default async function FAQsPage(props: FAQsPageProps) {
         subtitle={isTrash ? "จัดการข้อมูลคำถามที่ถูกลบชั่วคราว คุณสามารถกู้คืนหรือลบทิ้งถาวรได้" : "จัดการคำถามและคำตอบสำหรับลูกค้า"}
         count={isTrash ? trashCount : activeCount}
         icon={isTrash ? "history" : "helpCircle"}
-        actionSlot={!isTrash && <CreateFAQDialog />}
+        actionSlot={!isTrash && isSuperAdmin && <CreateFAQDialog />}
         gradient={isTrash ? "rose" : "blue"}
       />
 
@@ -57,6 +61,7 @@ export default async function FAQsPage(props: FAQsPageProps) {
         activeTab={currentView}
         activeCount={activeCount}
         trashCount={trashCount}
+        isSuperAdmin={isSuperAdmin}
       />
 
       {currentCount > 0 && (

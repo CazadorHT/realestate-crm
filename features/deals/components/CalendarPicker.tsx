@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import Calendar from "react-calendar";
+type CalendarValue = Date | null | [Date | null, Date | null];
 import { format, addMonths, differenceInMonths, isValid, parseISO } from "date-fns";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Check, X, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -42,25 +43,30 @@ export function CalendarPicker({ type }: CalendarPickerProps) {
     return startDate || new Date();
   }, [type, startDate, endDate]);
 
-  const handleDateChange = (val: any) => {
+  const handleDateChange = (val: CalendarValue) => {
+    // Note: react-calendar types are complex, but we narrow them here for safety
+    if (!val) return;
+    
     // If a date is manually selected, uncheck "Undetermined"
-    form.setValue("undetermined_date", false, { shouldDirty: true });
+    form.setValue("undetermined_date", false);
 
     if (type === "SALE" && val instanceof Date) {
-      form.setValue("transaction_date", format(val, "yyyy-MM-dd"), { shouldDirty: true });
+      form.setValue("transaction_date", format(val, "yyyy-MM-dd"), { shouldDirty: true, shouldValidate: true });
       setOpen(false);
     } else if (type === "RENT") {
       if (Array.isArray(val)) {
-        const [start, end] = val as [Date, Date];
-        form.setValue("transaction_date", format(start, "yyyy-MM-dd"), { shouldDirty: true });
-        form.setValue("transaction_end_date", format(end, "yyyy-MM-dd"), { shouldDirty: true });
-        
-        // Auto-calculate duration months
-        const months = differenceInMonths(end, start);
-        form.setValue("duration_months", months, { shouldDirty: true });
+        const [start, end] = val;
+        if (start && end) {
+          form.setValue("transaction_date", format(start, "yyyy-MM-dd"));
+          form.setValue("transaction_end_date", format(end, "yyyy-MM-dd"));
+          
+          // Auto-calculate duration months
+          const months = differenceInMonths(end, start);
+          form.setValue("duration_months", months, { shouldDirty: true, shouldValidate: true });
+        }
       } else if (val instanceof Date) {
         // Single date picked in RENT mode (start date)
-        form.setValue("transaction_date", format(val, "yyyy-MM-dd"), { shouldDirty: true });
+        form.setValue("transaction_date", format(val, "yyyy-MM-dd"), { shouldDirty: true, shouldValidate: true });
       }
     }
   };
