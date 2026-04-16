@@ -337,6 +337,7 @@ export type Database = {
           is_published: boolean | null
           published_at: string | null
           reading_time: string | null
+          requires_ai_review: boolean
           slug: string
           structured_data: Json | null
           tags: string[] | null
@@ -363,6 +364,7 @@ export type Database = {
           is_published?: boolean | null
           published_at?: string | null
           reading_time?: string | null
+          requires_ai_review?: boolean
           slug: string
           structured_data?: Json | null
           tags?: string[] | null
@@ -389,6 +391,7 @@ export type Database = {
           is_published?: boolean | null
           published_at?: string | null
           reading_time?: string | null
+          requires_ai_review?: boolean
           slug?: string
           structured_data?: Json | null
           tags?: string[] | null

@@ -637,6 +637,13 @@
     "column_default": "0"
   },
   {
+    "table_name": "blog_posts",
+    "column_name": "requires_ai_review",
+    "data_type": "boolean",
+    "is_nullable": "NO",
+    "column_default": "false"
+  },
+  {
     "table_name": "contract_templates",
     "column_name": "id",
     "data_type": "uuid",

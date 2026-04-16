@@ -24,6 +24,7 @@ import {
   List,
   Languages,
 } from "lucide-react";
+import { AiReviewBanner } from "@/components/shared/AiReviewBanner";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -134,6 +135,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         excerpt_cn: initialData.excerpt_cn || "",
         content_en: initialData.content_en || "",
         content_cn: initialData.content_cn || "",
+        requires_ai_review: initialData.requires_ai_review || false,
       }
     : {
         title: "",
@@ -151,6 +153,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         tags: "",
         is_published: false,
         structured_data: "",
+        requires_ai_review: false,
       };
 
   const form = useForm<BlogPostInput>({
@@ -215,6 +218,8 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const handleAiGenerated = (data: any) => {
     if (!data) return;
 
+    setValue("requires_ai_review", true, { shouldDirty: true });
+
     if (data.title) setValue("title", data.title);
     if (data.slug) setValue("slug", data.slug);
     if (data.excerpt) setValue("excerpt", data.excerpt);
@@ -270,6 +275,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
       }
 
       toast.success("แปลเนื้อหาบทความเรียบร้อยแล้ว ✨", { id: toastId });
+      form.setValue("requires_ai_review", true, { shouldDirty: true });
     } catch (error: any) {
       toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
     } finally {
@@ -310,6 +316,13 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="pb-20">
+        {form.watch("requires_ai_review") && (
+          <AiReviewBanner
+            type="blog"
+            onConfirm={() => form.setValue("requires_ai_review", false, { shouldDirty: true })}
+            isVerifying={isSubmitting}
+          />
+        )}
         <BlogHeader
           form={form}
           isNew={!initialData}

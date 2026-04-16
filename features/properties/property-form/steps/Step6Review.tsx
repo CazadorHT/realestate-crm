@@ -3,16 +3,19 @@
 import React, { useCallback, useState, useMemo } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { type PropertyFormValues } from "@/features/properties/schema";
-import { PropertyGallery } from "@/components/public/PropertyGallery";
-import { PropertySpecs } from "@/components/public/PropertySpecs";
-import { NearbyPlaces } from "@/components/public/NearbyPlaces";
-import { PropertySuitability } from "@/components/public/PropertySuitability";
-import { PropertyHeader } from "@/components/public/property-detail/PropertyHeader";
-import { PropertyBadgesSection } from "@/components/public/property-detail/PropertyBadgesSection";
-import { PropertyDescription } from "@/components/public/property-detail/PropertyDescription";
-import { PropertyAmenities } from "@/components/public/property-detail/PropertyAmenities";
-import { PropertyMapSection } from "@/components/public/property-detail/PropertyMapSection";
 import dynamic from "next/dynamic";
+
+// --- Dynamic Preview Components (Bundle Optimization) ---
+const PropertyGallery = dynamic(() => import("@/components/public/PropertyGallery").then(m => m.PropertyGallery), { ssr: false });
+const PropertySpecs = dynamic(() => import("@/components/public/PropertySpecs").then(m => m.PropertySpecs), { ssr: false });
+const NearbyPlaces = dynamic(() => import("@/components/public/NearbyPlaces").then(m => m.NearbyPlaces), { ssr: false });
+const PropertySuitability = dynamic(() => import("@/components/public/PropertySuitability").then(m => m.PropertySuitability), { ssr: false });
+const PropertyHeader = dynamic(() => import("@/components/public/property-detail/PropertyHeader").then(m => m.PropertyHeader), { ssr: false });
+const PropertyBadgesSection = dynamic(() => import("@/components/public/property-detail/PropertyBadgesSection").then(m => m.PropertyBadgesSection), { ssr: false });
+const PropertyDescription = dynamic(() => import("@/components/public/property-detail/PropertyDescription").then(m => m.PropertyDescription), { ssr: false });
+const PropertyAmenities = dynamic(() => import("@/components/public/property-detail/PropertyAmenities").then(m => m.PropertyAmenities), { ssr: false });
+const PropertyMapSection = dynamic(() => import("@/components/public/property-detail/PropertyMapSection").then(m => m.PropertyMapSection), { ssr: false });
+const AgentSidebar = dynamic(() => import("@/components/public/AgentSidebar").then(m => m.AgentSidebar), { ssr: false });
 const SmartEditor = dynamic(
   () => import("../components/SmartEditor").then((m) => m.SmartEditor),
   {
@@ -40,9 +43,7 @@ import {
 import { useAITranslation } from "../hooks/use-ai-translation";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ICON_MAP, DEFAULT_ICON } from "@/features/amenities/icons";
 import { createClient } from "@/lib/supabase/client";
-import { AgentSidebar } from "@/components/public/AgentSidebar";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { cn } from "@/lib/utils";
 

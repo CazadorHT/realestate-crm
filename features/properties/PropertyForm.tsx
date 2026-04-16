@@ -39,14 +39,18 @@ import { ErrorSummary } from "./property-form/components/ErrorSummary";
 import { TikTokPostButton } from "./components/TikTokPostButton";
 import { FaTiktok } from "react-icons/fa";
 import { TopLoader } from "@/components/ui/top-loader";
+import { AiReviewBanner } from "@/components/shared/AiReviewBanner";
 
 // Step components (Dynamically imported for chunk-splitting)
-import { Step1BasicInfo } from "./property-form/steps/Step1BasicInfo";
+const step1Import = () => import("./property-form/steps/Step1BasicInfo").then((m) => m.Step1BasicInfo);
 import dynamic from "next/dynamic";
 
 // --- Skeleton Fallbacks (height-matched to prevent Layout Shift) ---
-const StepSkeleton = ({ lines = 3, cards = 2 }: { lines?: number; cards?: number }) => (
-  <div className="space-y-6 animate-in fade-in duration-300">
+const StepSkeleton = ({ lines = 3, cards = 2, minHeight }: { lines?: number; cards?: number; minHeight?: string }) => (
+  <div 
+    className="space-y-6 animate-in fade-in duration-300"
+    style={minHeight ? { minHeight } : undefined}
+  >
     {Array.from({ length: cards }).map((_, i) => (
       <div key={i} className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
         <div className="h-5 w-40 bg-slate-100 rounded-lg animate-pulse" />
@@ -85,6 +89,7 @@ const step5Import = () => import("./property-form/steps/Step5Features").then((m)
 const step6Import = () => import("./property-form/steps/Step6Review").then((m) => m.Step6Review);
 const step7Import = () => import("./property-form/steps/Step7Syndication").then((m) => m.Step7Syndication);
 
+const Step1BasicInfo = dynamic(step1Import, { loading: () => <StepSkeleton lines={4} cards={3} minHeight="600px" /> });
 const Step2Details = dynamic(step2Import, { loading: () => <StepSkeleton lines={4} cards={3} /> });
 const Step3Location = dynamic(step3Import, { loading: () => <StepSkeleton lines={4} cards={2} /> });
 const Step4Media = dynamic(step4Import, { loading: () => <StepSkeleton lines={2} cards={2} /> });
@@ -558,30 +563,11 @@ export function PropertyForm({
           }}
         >
           {form.watch("requires_ai_review") && (
-            <div className="mb-6 p-4 rounded-xl border border-amber-200 bg-amber-50 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between animate-in fade-in zoom-in duration-300">
-              <div className="flex items-start gap-3">
-                <div className="p-2 bg-amber-100 rounded-lg text-amber-600 mt-1 sm:mt-0">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-amber-800">⚠️ ทรัพย์สินนี้ใช้ข้อมูลจาก AI และรอการตรวจสอบ</h4>
-                  <p className="text-sm text-amber-700/80 mt-0.5">
-                    ระบบจะบังคับบันทึกเป็นแบบร่าง (Draft) จนกว่าแอดมินจะกดยืนยันความถูกต้อง
-                  </p>
-                </div>
-              </div>
-              {userRole === "ADMIN" && (
-                <Button
-                  type="button"
-                  size="sm"
-                  className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white border-0 shadow-sm"
-                  onClick={() => form.setValue("requires_ai_review", false, { shouldDirty: true })}
-                >
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  ตรวจสอบและยืนยันข้อมูลแล้ว
-                </Button>
-              )}
-            </div>
+            <AiReviewBanner
+              type="property"
+              onConfirm={userRole === "ADMIN" ? () => form.setValue("requires_ai_review", false, { shouldDirty: true }) : undefined}
+              isVerifying={isActuallySubmitting}
+            />
           )}
 
           <ErrorSummary

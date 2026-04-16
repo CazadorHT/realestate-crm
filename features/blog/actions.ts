@@ -78,6 +78,9 @@ export async function createBlogPostAction(
           .slice(0, 10) // Limit to 10 tags
       : [];
 
+    // 🛡️ HARDENING: AI Draft Enforcement
+    const isPublishedFinal = validated.requires_ai_review ? false : validated.is_published;
+
     const { error, data } = await supabase.from("blog_posts").insert({
       title: validated.title,
       title_en: validated.title_en || null,
@@ -91,13 +94,14 @@ export async function createBlogPostAction(
       excerpt_cn: validated.excerpt_cn || null,
       category: validated.category,
       cover_image: validated.cover_image || null,
-      is_published: validated.is_published,
+      is_published: isPublishedFinal,
       published_at:
         validated.published_at ||
-        (validated.is_published ? new Date().toISOString() : null),
+        (isPublishedFinal ? new Date().toISOString() : null),
       tags: tagsArray,
       author_id, // 🏗️ RELATIONAL
       structured_data: structuredData, // ⚡ AUTOMATED
+      requires_ai_review: validated.requires_ai_review,
     }).select().single();
 
     if (error) throw error;
@@ -179,6 +183,9 @@ export async function updateBlogPostAction(
           .slice(0, 10)
       : [];
 
+    // 🛡️ HARDENING: AI Draft Enforcement
+    const isPublishedFinal = validated.requires_ai_review ? false : validated.is_published;
+
     const { error } = await supabase
       .from("blog_posts")
       .update({
@@ -194,12 +201,13 @@ export async function updateBlogPostAction(
         excerpt_cn: validated.excerpt_cn,
         category: validated.category,
         cover_image: validated.cover_image,
-        is_published: validated.is_published,
+        is_published: isPublishedFinal,
         published_at:
           validated.published_at ||
-          (validated.is_published ? new Date().toISOString() : validated.published_at),
+          (isPublishedFinal ? new Date().toISOString() : validated.published_at),
         tags: tagsArray,
         structured_data: structuredData,
+        requires_ai_review: validated.requires_ai_review,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);

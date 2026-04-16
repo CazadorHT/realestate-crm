@@ -27,6 +27,7 @@ export const blogPostSchema = z.object({
   is_published: z.boolean().default(false),
   published_at: z.string().optional(),
   structured_data: z.string().optional(),
+  requires_ai_review: z.boolean().default(false),
 });
 
 export const blogCategorySchema = z.object({

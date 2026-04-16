@@ -135,21 +135,23 @@ function Step5FeaturesComponent() {
     );
   }
 
-  // Group by category
-  const groupedFeatures = features.reduce(
-    (acc, feature) => {
-      // Normalize category key
-      const rawCat = feature.category || "General";
-      const upperCat = rawCat.toUpperCase();
-      // Try to find a mapped Thai Name, otherwise use raw
-      const cat = CATEGORY_MAPPING[upperCat] || rawCat;
+  // Group by category (Memoized for performance)
+  const groupedFeatures = React.useMemo(() => {
+    return features.reduce(
+      (acc, feature) => {
+        // Normalize category key
+        const rawCat = feature.category || "General";
+        const upperCat = rawCat.toUpperCase();
+        // Try to find a mapped Thai Name, otherwise use raw
+        const cat = CATEGORY_MAPPING[upperCat] || rawCat;
 
-      if (!acc[cat]) acc[cat] = [];
-      acc[cat].push(feature);
-      return acc;
-    },
-    {} as Record<string, Feature[]>,
-  );
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(feature);
+        return acc;
+      },
+      {} as Record<string, Feature[]>,
+    );
+  }, [features]);
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">

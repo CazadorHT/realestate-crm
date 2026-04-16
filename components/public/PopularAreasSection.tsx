@@ -266,20 +266,23 @@ export function PopularAreasSection() {
                       }}
                       className="flex items-center w-full"
                     >
-                      {/* Superscript Label */}
+                      {/* Elite Superscript Label (Next Province) */}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button
                               onClick={() => setActiveProvIndex(nextProvIndex)}
-                              className="absolute -top-3 md:-top-5 left-0 text-[9px] xs:text-[11px] font-bold tracking-[0.2em] text-blue-500 hover:text-blue-500 transition-all! duration-300 group/sup max-w-[100px] xs:max-w-[150px] truncate"
+                              className="absolute -top-4 md:-top-7 left-0 flex items-center gap-2 group/sup cursor-pointer"
                             >
-                              <span className="opacity-80 group-hover/sup:opacity-100 uppercase">
-                                {nextDisplay}
+                              <span className="text-[10px] md:text-xs font-black tracking-[0.3em] text-blue-400/40 uppercase transition-all duration-500 group-hover/sup:text-blue-500 group-hover/sup:tracking-[0.5em] group-hover/sup:scale-110 origin-left italic">
+                                NEXT: {nextDisplay}
                               </span>
+                              <div className="h-px w-0 bg-blue-400/20 group-hover/sup:w-12 transition-all duration-700" />
                             </button>
                           </TooltipTrigger>
-                          <TooltipContent>{nextDisplay}</TooltipContent>
+                          <TooltipContent className="bg-slate-900 text-white border-none shadow-xl">
+                            <p className="text-xs font-bold font-heading">Switch to {nextDisplay}</p>
+                          </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
 
