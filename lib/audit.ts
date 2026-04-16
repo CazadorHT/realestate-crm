@@ -95,6 +95,7 @@ export async function logAudit(
     action: AuditAction;
     entity: string;
     entityId?: string | null;
+    summary?: string;
     metadata?: Record<string, unknown>;
   },
 ) {
@@ -103,7 +104,10 @@ export async function logAudit(
     action: input.action,
     entity: input.entity,
     entity_id: input.entityId ?? null,
-    metadata: (input.metadata ?? {}) as any,
+    metadata: {
+      ...(input.metadata ?? {}),
+      ...(input.summary ? { summary: input.summary } : {}),
+    } as any,
     tenant_id: ctx.tenantId && ctx.tenantId !== "ALL" ? ctx.tenantId : null,
   };
 
@@ -129,6 +133,7 @@ export interface AuditLogMetadata {
   title?: string;
   role?: string;
   count?: number;
+  summary?: string;
 }
 
 /**
@@ -142,6 +147,9 @@ export function getReadableSummary(log: {
 }): string {
   const meta = (log.metadata || {}) as AuditLogMetadata;
   const action = log.action;
+
+  // 0. Explicit Summary (Priority)
+  if (meta.summary) return meta.summary;
 
   switch (action) {
     case "member.transfer":

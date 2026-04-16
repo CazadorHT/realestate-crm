@@ -25,67 +25,58 @@ import {
   CommissionRole,
   CommissionSplitResult,
 } from "@/lib/finance/commissions";
+import { getScopedRevenueClient } from "./logic/scoped-client";
+import { getDealDiff } from "./logic/diff";
 
-// Helper: Adjust property stock and auto-update status
+// Helper: Adjust property stock and auto-update status using Atomic RPC
 async function adjustPropertyStock(
-  supabase: Awaited<ReturnType<typeof requireAuthContext>>["supabase"],
-  tenantId: string,
+  ctx: { supabase: any; tenantId: string },
   propertyId: string,
   adjustment: number, // +1 or -1
-  dealType?: "SALE" | "RENT",
+  dealType: "SALE" | "RENT",
 ) {
   if (!propertyId) return;
 
-  // 1. Get current stock
-  const { data: prop, error } = await supabase
-    .from("properties")
-    .select("id, total_units, sold_units, status, tenant_id")
-    .eq("id", propertyId)
-    .eq("tenant_id", tenantId)
-    .single();
+  const scoped = getScopedRevenueClient(ctx.supabase, ctx.tenantId);
+  const { error } = await scoped.rpc("sync_property_inventory_atomic", {
+    p_property_id: propertyId,
+    p_adjustment: adjustment,
+    p_deal_type: dealType,
+  });
 
-  if (error || !prop) {
-    console.error("adjustPropertyStock error:", error);
-    return;
+  if (error) {
+    console.error("Atomic Stock Update Error:", error);
+    throw new Error("Failed to update property stock atomically");
   }
+}
 
-  // 2. Calculate new sold units
-  const currentSold = prop.sold_units || 0;
-  const total = prop.total_units || 1;
-  let newSold = currentSold + adjustment;
+// Helper: Swap property stocks atomically
+async function swapPropertyStock(
+  ctx: { supabase: any; tenantId: string },
+  oldPropertyId: string | null,
+  newPropertyId: string | null,
+  oldDealType: string,
+  newDealType: string,
+) {
+  const scoped = getScopedRevenueClient(ctx.supabase, ctx.tenantId);
+  const { error } = await scoped.rpc("swap_property_stock_atomic", {
+    p_old_property_id: oldPropertyId,
+    p_new_property_id: newPropertyId,
+    p_old_deal_type: oldDealType,
+    p_new_deal_type: newDealType,
+  });
 
-  // Safety bounds
-  if (newSold < 0) newSold = 0;
-
-  // 3. Determine new status
-  let newStatus = prop.status;
-  if (newSold >= total) {
-    // Determine status based on deal type
-    if (dealType === "RENT") {
-      newStatus = "RENTED";
-    } else {
-      newStatus = "SOLD";
-    }
-  } else {
-    // If stock is available, it's ACTIVE
-    newStatus = "ACTIVE";
+  if (error) {
+    console.error("Atomic Property Swap Error:", error);
+    throw new Error("Failed to swap property stocks atomically");
   }
-
-  // 4. Update DB
-  await supabase
-    .from("properties")
-    .update({
-      sold_units: newSold,
-      status: newStatus,
-    })
-    .eq("id", propertyId)
-    .eq("tenant_id", tenantId);
 }
 
 export async function createDealAction(input: CreateDealInput) {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     if (!tenantId) throw new Error("Tenant ID is required but missing");
+// ... (rest of the code unchanged until updateDealAction)
 
     // Validate Input
     const validated = createDealSchema.parse(input);
@@ -135,11 +126,12 @@ export async function createDealAction(input: CreateDealInput) {
       }
     });
 
-    const { data, error } = await supabase
+    const scoped = getScopedRevenueClient(supabase, tenantId);
+
+    const { data, error } = await scoped
       .from("deals")
       .insert({
         ...insertData,
-        tenant_id: tenantId,
         created_by: user.id,
       })
       .select()
@@ -153,6 +145,7 @@ export async function createDealAction(input: CreateDealInput) {
         action: "deal.create",
         entity: "deals",
         entityId: data.id,
+        summary: `สร้างดีลใหม่ประเภท "${validated.deal_type === "SALE" ? "ขาย" : "เช่า"}" สำหรับทรัพย์สิน ID: ${validated.property_id}`,
         metadata: validated,
       },
     );
@@ -160,8 +153,7 @@ export async function createDealAction(input: CreateDealInput) {
     // Auto-update stock if deal is WON
     if (validated.status === "CLOSED_WIN" && validated.property_id) {
       await adjustPropertyStock(
-        supabase,
-        tenantId,
+        { supabase, tenantId },
         validated.property_id,
         1,
         validated.deal_type,
@@ -194,11 +186,12 @@ export async function updateDealAction(input: UpdateDealInput) {
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
 
-    const { data: currentDeal, error: currentErr } = await supabase
+    const scoped = getScopedRevenueClient(supabase, tenantId);
+
+    const { data: currentDeal, error: currentErr } = await scoped
       .from("deals")
       .select("id, status, property_id, deal_type, tenant_id")
       .eq("id", validated.id)
-      .eq("tenant_id", tenantId)
       .single();
 
     if (currentErr || !currentDeal) {
@@ -250,14 +243,16 @@ export async function updateDealAction(input: UpdateDealInput) {
       }
     });
 
-    const { error } = await supabase
+    const { error } = await scoped
       .from("deals")
       .update(updateData)
       .eq("id", validated.id)
-      .eq("tenant_id", tenantId)
       .single();
 
     if (error) throw new Error(error.message);
+
+    const diff = getDealDiff(currentDeal as any, validated as any);
+    const summary = diff.length > 0 ? `แก้ไขดีล: ${diff.join(", ")}` : "อัปเดตข้อมูลดีลทั่วไป";
 
     await logAudit(
       { supabase, user, role },
@@ -265,62 +260,42 @@ export async function updateDealAction(input: UpdateDealInput) {
         action: "deal.update",
         entity: "deals",
         entityId: validated.id,
-        metadata: validated,
+        summary,
+        metadata: { ...validated, diff },
       },
     );
 
-    // --- Stock Management Logic ---
-    // 1. If ID Changed:
-    //    - If Prev was WON: Decrement Prev Prop
-    //    - If Next is WON: Increment Next Prop
-    // 2. If ID Same:
-    //    - If Prev != WON && Next == WON: Increment (+1)
-    //    - If Prev == WON && Next != WON: Decrement (-1)
+    // --- 💎 10/10 Atomic Stock Management Logic ---
+    const isPropertySwapped = prevPropertyId !== nextPropertyId;
+    const isBecameWon = prevStatus !== "CLOSED_WIN" && nextStatus === "CLOSED_WIN";
+    const isNoLongerWon = prevStatus === "CLOSED_WIN" && nextStatus !== "CLOSED_WIN";
 
-    // Handle Property Change first (Complex case)
-    if (prevPropertyId !== nextPropertyId) {
-      // Revert old property if it was maintained by this deal
-      if (prevStatus === "CLOSED_WIN" && prevPropertyId) {
+    if (isPropertySwapped) {
+      // Logic: If we are swapping, we only care if either the OLD was won or the NEW is won
+      // We call the Atomic Swap RPC which handles the transition safely.
+      await swapPropertyStock(
+        { supabase, tenantId },
+        prevStatus === "CLOSED_WIN" ? prevPropertyId : null,
+        nextStatus === "CLOSED_WIN" ? nextPropertyId : null,
+        currentDeal.deal_type,
+        validated.deal_type || currentDeal.deal_type,
+      );
+    } else if (nextPropertyId) {
+      // Same Property, just Status Change
+      if (isBecameWon) {
         await adjustPropertyStock(
-          supabase,
-          tenantId,
-          prevPropertyId,
-          -1,
-          currentDeal.deal_type,
-        );
-      }
-      // Apply to new property if this deal is winning
-      if (nextStatus === "CLOSED_WIN" && nextPropertyId) {
-        await adjustPropertyStock(
-          supabase,
-          tenantId,
+          { supabase, tenantId },
           nextPropertyId,
           1,
           validated.deal_type || currentDeal.deal_type,
         );
-      }
-    } else {
-      // Same Property, just Status Change
-      if (nextPropertyId) {
-        if (prevStatus !== "CLOSED_WIN" && nextStatus === "CLOSED_WIN") {
-          // Won!
-          await adjustPropertyStock(
-            supabase,
-            tenantId,
-            nextPropertyId,
-            1,
-            validated.deal_type || currentDeal.deal_type,
-          );
-        } else if (prevStatus === "CLOSED_WIN" && nextStatus !== "CLOSED_WIN") {
-          // Lost/Cancelled!
-          await adjustPropertyStock(
-            supabase,
-            tenantId,
-            nextPropertyId,
-            -1,
-            currentDeal.deal_type,
-          );
-        }
+      } else if (isNoLongerWon) {
+        await adjustPropertyStock(
+          { supabase, tenantId },
+          nextPropertyId,
+          -1,
+          currentDeal.deal_type,
+        );
       }
     }
 
@@ -346,24 +321,18 @@ export async function deleteDealAction(dealId: string, leadId: string) {
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
 
-    const { data: existingDeal, error: fetchErr } = await supabase
-      .from("deals")
-      .select("id, status, property_id, deal_type, tenant_id")
-      .eq("id", dealId)
-      .eq("tenant_id", tenantId)
-      .single();
+    const scoped = getScopedRevenueClient(supabase, tenantId);
 
-    if (fetchErr || !existingDeal) {
-      return { success: false, message: "Deal not found" };
-    }
+    // 💎 10/10 HARDENING: Use the Atomic RPC even for single deletes to guarantee integrity
+    const { data: count, error: deleteErr } = await scoped.rpc(
+      "bulk_delete_deals_atomic",
+      {
+        p_deal_ids: [dealId],
+        p_tenant_id: tenantId,
+      },
+    );
 
-    const { error } = await supabase
-      .from("deals")
-      .delete()
-      .eq("id", dealId)
-      .eq("tenant_id", tenantId);
-
-    if (error) throw new Error(error.message);
+    if (deleteErr) throw new Error(deleteErr.message);
 
     await logAudit(
       { supabase, user, role },
@@ -371,25 +340,15 @@ export async function deleteDealAction(dealId: string, leadId: string) {
         action: "deal.delete",
         entity: "deals",
         entityId: dealId,
-        metadata: { leadId },
+        summary: `ลบดีลสำเร็จ (พร้อมประมวลผลสต็อกและสถานะอสังหาฯ คืนอัตโนมัติแบบ Atomic)`,
+        metadata: { leadId, deletedCount: count },
       },
     );
 
     revalidatePath(`/protected/leads/${leadId}`);
+    revalidatePath("/protected/deals");
 
-    // If deleting a WON deal, release the stock
-    if (existingDeal.status === "CLOSED_WIN" && existingDeal.property_id) {
-      // Release stock using the deal_type from the deleted deal
-      await adjustPropertyStock(
-        supabase,
-        tenantId,
-        existingDeal.property_id,
-        -1,
-        existingDeal.deal_type as "RENT" | "SALE",
-      );
-    }
-
-    return { success: true, message: "ลบดีลสำเร็จ" };
+    return { success: true, message: "ลบดีลสำเร็จและปรับปรุงสต็อกคืนเรียบร้อย" };
   } catch (error: unknown) {
     console.error("Delete Deal Error:", error);
     const message = error instanceof z.ZodError 
@@ -406,8 +365,10 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     assertStaff(role);
 
+    const scoped = getScopedRevenueClient(supabase, tenantId);
+
     // 1. Fetch Deal and Property
-    const { data: deal, error: dealErr } = await supabase
+    const { data: deal, error: dealErr } = await scoped
       .from("deals")
       .select(
         `
@@ -419,7 +380,6 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
       `,
       )
       .eq("id", dealId)
-      .eq("tenant_id", tenantId)
       .single();
 
     if (dealErr || !deal) throw new Error("ไม่พบข้อมูลดีล");
@@ -466,11 +426,10 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     // 4. Save to deal_commissions
     // First clear existing
-    await supabase
+    await scoped
       .from("deal_commissions")
       .delete()
-      .eq("deal_id", dealId)
-      .eq("tenant_id", tenantId);
+      .eq("deal_id", dealId);
 
     const insertData = splits.map((s) => ({
       deal_id: dealId,
@@ -484,7 +443,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
       status: "PENDING" as Database["public"]["Enums"]["commission_status"],
     }));
 
-    const { error: insertErr } = await supabase
+    const { error: insertErr } = await scoped
       .from("deal_commissions")
       .insert(insertData);
 

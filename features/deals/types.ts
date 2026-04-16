@@ -55,22 +55,14 @@ export type DealPropertyOption = {
   listing_type?: string | null;
 };
 
-export type DealCommission = {
-  id: string;
-  deal_id: string;
-  agent_id: string | null;
-  role: CommissionRole;
-  percentage: number;
-  amount: number;
-  wht_amount: number;
-  net_amount: number;
-  status: "PENDING" | "PAID" | "CANCELLED";
-  tenant_id: string;
-  created_at: string;
+export type DealCommission = Database["public"]["Tables"]["deal_commissions"]["Row"] & {
   agent?: {
     id: string;
     full_name: string | null;
     avatar_url: string | null;
+  } | null;
+  deal?: {
+    title: string;
   } | null;
 };
 
@@ -82,4 +74,8 @@ export interface DealStats {
   property_type: Record<string, number>;
   listing_type: Record<string, number>;
   total: number;
+  totalCommission: number;
+  wonDeals: number;
+  activeDeals: number;
+  lostDeals: number;
 }

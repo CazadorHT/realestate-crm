@@ -4,6 +4,7 @@ import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
+import { getScopedRevenueClient } from "./logic/scoped-client";
 
 import { DealStatus, DealType } from "./types";
 
@@ -32,13 +33,13 @@ export async function bulkDeleteDealsAction(
       };
     }
 
-    // Delete deals (cascade will handle related records)
-    // CRITICAL: Must check tenant_id for security
-    const { error, count } = await supabase
-      .from("deals")
-      .delete({ count: "exact" })
-      .eq("tenant_id", tenantId)
-      .in("id", ids);
+    const scoped = getScopedRevenueClient(supabase, tenantId);
+
+    // Atomic Bulk Delete with Stock Rollback via RPC
+    const { data: count, error } = await scoped.rpc("bulk_delete_deals_atomic", {
+      p_deal_ids: ids,
+      p_tenant_id: tenantId,
+    });
 
     if (error) throw error;
 
@@ -49,6 +50,7 @@ export async function bulkDeleteDealsAction(
         action: "deal.bulk_delete",
         entity: "deals",
         entityId: ids.join(","),
+        summary: `ดำเนินการลบดีลแบบกลุ่มสำเร็จ จำนวน ${count ?? ids.length} รายการ พร้อมคืนสต็อกและสถานะอสังหาฯ อัตโนมัติ (Atomic Transaction)`,
         metadata: { deletedCount: count },
       },
     );
@@ -58,7 +60,7 @@ export async function bulkDeleteDealsAction(
     return {
       success: true,
       deletedCount: count ?? ids.length,
-      message: `ลบดีลสำเร็จ ${count ?? ids.length} รายการ`,
+      message: `ลบดีลสำเร็จ ${count ?? ids.length} รายการ และปรับปรุงสต็อก/สถานะคืนสำเร็จแบบ Atomic`,
     };
   } catch (error: any) {
     if (error.code === "AUTHZ_ERROR") {

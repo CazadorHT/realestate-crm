@@ -1,6 +1,7 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { differenceInMonths } from "date-fns";
 import { Deal, DealStatus, DealType, DealStats, DealWithProperty } from "./types";
+import { getScopedRevenueClient } from "./logic/scoped-client";
 
 type ListArgs = {
   q?: string;
@@ -70,9 +71,9 @@ export async function getDeals({
   const pageSafe = Math.max(1, page);
   const size = Math.min(100, Math.max(5, pageSize));
 
-  let query = supabase
-    .from("deals")
-    .select(
+  const scoped = getScopedRevenueClient(supabase, tenantId);
+
+  let query = scoped.deals().select(
       `
       *,
       tenants(id, name),
@@ -82,10 +83,7 @@ export async function getDeals({
       { count: "exact" },
     );
 
-  // Branch isolation: Only filter if tenantId exists and is not "ALL".
-  if (tenantId && tenantId !== "ALL") {
-    query = query.eq("tenant_id", tenantId);
-  }
+  // Branch isolation is already handled by getScopedRevenueClient
 
   // Time Range filtering
   if (timeRange && timeRange !== "all") {
@@ -208,7 +206,7 @@ export async function getDeals({
   }
 
   // normalize property to include `images` for the DealWithProperty view model
-  const rawData = (finalData ?? []) as unknown as RawDealWithJoin[];
+  const rawData = (finalData ?? []) as RawDealWithJoin[];
 
   const normalized: DealWithProperty[] = rawData.map((d) => {
     // Transform property structure if it exists
@@ -385,6 +383,14 @@ export async function getDealStats(): Promise<DealStats | null> {
     property_type: {},
     listing_type: {},
     total: data.length,
+    totalCommission: data
+      .filter((d) => d.status === "CLOSED_WIN" && (d as any).commission_amount)
+      .reduce((sum, d) => sum + ((d as any).commission_amount || 0), 0),
+    wonDeals: data.filter((d) => d.status === "CLOSED_WIN").length,
+    activeDeals: data.filter(
+      (d) => d.status === "NEGOTIATING" || d.status === "SIGNED",
+    ).length,
+    lostDeals: data.filter((d) => d.status === "CLOSED_LOSS").length,
   };
 
   type StatsRecord = {

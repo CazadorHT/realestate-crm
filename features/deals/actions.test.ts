@@ -30,6 +30,7 @@ describe('Deal Actions - Branch Isolation & Stock', () => {
       insert: vi.fn().mockImplementation(() => query),
       update: vi.fn().mockImplementation(() => query),
       single: vi.fn().mockImplementation(() => query),
+      rpc: vi.fn().mockImplementation(() => query),
       then: vi.fn().mockImplementation((onFulfilled) => 
         Promise.resolve({ data: query.data, error: query.error }).then(onFulfilled)
       ),
@@ -40,6 +41,7 @@ describe('Deal Actions - Branch Isolation & Stock', () => {
   let mockQuery: any;
   const mockSupabase = {
     from: vi.fn().mockImplementation(() => mockQuery),
+    rpc: vi.fn().mockImplementation(() => mockQuery),
   };
 
   beforeEach(() => {
@@ -111,8 +113,13 @@ describe('Deal Actions - Branch Isolation & Stock', () => {
 
     expect(result.success).toBe(true);
     
-    // Verify stock adjustment calls
-    expect(mockQuery.eq).toHaveBeenCalledWith('id', oldPropId);
-    expect(mockQuery.eq).toHaveBeenCalledWith('id', newPropId);
+    // 💎 10/10 HARDENING: Verify that property swap now uses the unified Atomic RPC
+    expect(mockSupabase.rpc).toHaveBeenCalledWith('swap_property_stock_atomic', expect.objectContaining({
+      p_old_property_id: oldPropId,
+      p_new_property_id: newPropId,
+      p_old_deal_type: 'SALE',
+      p_new_deal_type: 'SALE',
+      p_tenant_id: tenantId
+    }));
   });
 });

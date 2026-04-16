@@ -8,6 +8,8 @@ import { buildCommissionStatementFlex } from "@/lib/line-flex-builders";
 import { format } from "date-fns";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
+import { getScopedRevenueClient } from "./logic/scoped-client";
+import { DealCommission } from "./types";
 
 export type LineSendResult = {
   success: boolean;
@@ -20,8 +22,10 @@ export async function exportCommissionPdfAction(commissionId: string) {
   if (!tenantId) return { success: false, message: "Unauthorized branch" };
   assertStaff(role);
 
-  const { data: comm, error } = await (supabase as any)
-    .from("deal_commissions")
+  const scoped = getScopedRevenueClient(supabase, tenantId);
+
+  const { data: comm, error } = await scoped
+    .commissions()
     .select(
       `
       *,
@@ -30,7 +34,6 @@ export async function exportCommissionPdfAction(commissionId: string) {
     `,
     )
     .eq("id", commissionId)
-    .eq("tenant_id", tenantId) // HARD LOCK
     .single();
 
   if (error || !comm) {
@@ -53,11 +56,15 @@ export async function exportCommissionPdfAction(commissionId: string) {
     const pdfBytes = await generateCommissionPdf(pdfData);
     
     // Audit log
+    const agentName = (comm as any).agent?.full_name || "Agent";
+    const amountStr = new Intl.NumberFormat('th-TH').format(comm.net_amount) + " บาท";
+
     await logAudit(ctx, {
       action: "commission.export_pdf",
       entity: "deal_commissions",
       entityId: commissionId,
-      metadata: { dealId: comm.deal_id },
+      summary: `ส่งออกใบสำคัญรับเงิน PDF สำหรับคุณ ${agentName} (ยอดสุทธิ ${amountStr})`,
+      metadata: { dealId: comm.deal_id, amount: comm.net_amount },
     });
 
     // Convert to base64 for transmission
@@ -80,8 +87,10 @@ export async function sendCommissionToLineAction(commissionId: string) {
   if (!tenantId) return { success: false, message: "Unauthorized branch" };
   assertStaff(role);
 
-  const { data: comm, error } = await (supabase as any)
-    .from("deal_commissions")
+  const scoped = getScopedRevenueClient(supabase, tenantId);
+
+  const { data: comm, error } = await scoped
+    .commissions()
     .select(
       `
       *,
@@ -90,7 +99,6 @@ export async function sendCommissionToLineAction(commissionId: string) {
     `,
     )
     .eq("id", commissionId)
-    .eq("tenant_id", tenantId)
     .single();
 
   if (error || !comm) {
@@ -118,11 +126,15 @@ export async function sendCommissionToLineAction(commissionId: string) {
     const result = await sendToSpecificLineUser(lineId, flexMessage);
     
     if (result.success) {
+      const agentName = (comm as any).agent?.full_name || "Agent";
+      const amountStr = new Intl.NumberFormat('th-TH').format(comm.net_amount) + " บาท";
+      
       await logAudit(ctx, {
         action: "commission.send_line",
         entity: "deal_commissions",
         entityId: commissionId,
-        metadata: { dealId: comm.deal_id, userId: lineId },
+        summary: `ส่งการแจ้งเตือนคอมมิชชั่นผ่าน LINE ให้คุณ ${agentName} (ยอดสุทธิ ${amountStr})`,
+        metadata: { dealId: comm.deal_id, userId: lineId, amount: comm.net_amount },
       });
     }
 

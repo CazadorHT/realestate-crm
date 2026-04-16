@@ -14,6 +14,18 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
+// 3. Mock AI Engine
+vi.mock('@/lib/ai/gemini', () => ({
+  generateText: vi.fn().mockResolvedValue({ 
+    text: JSON.stringify({ 
+      summary: 'Mocked AI summary content', 
+      risks: ['Risk A'], 
+      key_dates: [], 
+      document_type_suggestion: 'OTHER' 
+    }) 
+  }),
+}));
+
 describe('AI Hallucination Mitigation Logic', () => {
   const mockDocumentId = 'doc-123';
   const mockUser = { id: 'user-admin' };
@@ -28,7 +40,17 @@ describe('AI Hallucination Mitigation Logic', () => {
       // Setup Mock Supabase
       const mockUpdate = vi.fn().mockReturnValue({ eq: vi.fn().mockResolvedValue({ error: null }) });
       const mockSupabase = {
-        from: vi.fn().mockReturnValue({ update: mockUpdate }),
+        from: vi.fn().mockReturnValue({ 
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({ data: { id: mockDocumentId, file_name: 'test.pdf', storage_path: 's1' }, error: null }),
+          update: mockUpdate 
+        }),
+        storage: {
+          from: vi.fn().mockReturnValue({
+            createSignedUrl: vi.fn().mockResolvedValue({ data: { signedUrl: 'http://signed.url' }, error: null })
+          })
+        }
       };
 
       (requireAuthContext as any).mockResolvedValue({

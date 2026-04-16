@@ -38,11 +38,13 @@ describe('Bulk Deals Actions', () => {
   let mockQuery: any;
   const mockSupabase = {
     from: vi.fn().mockImplementation(() => mockQuery),
+    rpc: vi.fn(),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockQuery = createMockQuery();
+    mockSupabase.rpc.mockImplementation(() => Promise.resolve({ data: 2, error: null }));
     (requireAuthContext as any).mockResolvedValue({
       supabase: mockSupabase as any,
       user: { id: 'user-1' },
@@ -52,16 +54,16 @@ describe('Bulk Deals Actions', () => {
   });
 
   describe('bulkDeleteDealsAction', () => {
-    it('should delete multiple deals within tenant boundary', async () => {
+    it('should delete multiple deals within tenant boundary using atomic RPC', async () => {
       const ids = ['deal-1', 'deal-2'];
-      mockQuery.data = { count: 2 };
 
       const result = await bulkDeleteDealsAction(ids);
 
       expect(result.success).toBe(true);
-      expect(mockSupabase.from).toHaveBeenCalledWith('deals');
-      expect(mockQuery.eq).toHaveBeenCalledWith('tenant_id', tenantId);
-      expect(mockQuery.in).toHaveBeenCalledWith('id', ids);
+      expect(mockSupabase.rpc).toHaveBeenCalledWith('bulk_delete_deals_atomic', {
+        p_deal_ids: ids,
+        p_tenant_id: tenantId,
+      });
     });
 
     it('should return error if no IDs provided', async () => {

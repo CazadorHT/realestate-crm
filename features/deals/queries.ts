@@ -1,5 +1,6 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
-import { DealWithProperty } from "./types";
+import { DealWithProperty, DealCommission } from "./types";
+import { getScopedRevenueClient } from "./logic/scoped-client";
 
 export async function getDealsByLeadId(
   leadId: string,
@@ -7,9 +8,11 @@ export async function getDealsByLeadId(
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
+  const scoped = getScopedRevenueClient(supabase, tenantId);
+
   // Fetch deals and join with properties (select title, price, etc.)
-  let query = supabase
-    .from("deals")
+  const { data, error } = await scoped
+    .deals()
     .select(
       `
       *,
@@ -27,18 +30,12 @@ export async function getDealsByLeadId(
     .eq("lead_id", leadId)
     .order("created_at", { ascending: false });
 
-  if (tenantId && tenantId !== "ALL") {
-    query = query.eq("tenant_id", tenantId);
-  }
-
-  const { data, error } = await query;
-
   if (error) {
     console.error("Error fetching deals:", error);
     return [];
   }
 
-  return (data || []) as unknown as DealWithProperty[];
+  return (data || []) as DealWithProperty[];
 }
 
 export async function getDealById(
@@ -47,8 +44,10 @@ export async function getDealById(
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
-  let query = supabase
-    .from("deals")
+  const scoped = getScopedRevenueClient(supabase, tenantId);
+
+  const { data, error } = await scoped
+    .deals()
     .select(
       `
       *,
@@ -70,13 +69,8 @@ export async function getDealById(
       )
     `,
     )
-    .eq("id", dealId);
-
-  if (tenantId && tenantId !== "ALL") {
-    query = query.eq("tenant_id", tenantId);
-  }
-
-  const { data, error } = await query.single();
+    .eq("id", dealId)
+    .single();
 
   if (error || !data) {
     return null;
@@ -85,12 +79,14 @@ export async function getDealById(
   return data as unknown as DealWithProperty;
 }
 
-export async function getDealCommissions(dealId: string) {
+export async function getDealCommissions(dealId: string): Promise<DealCommission[]> {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
-  let query = (supabase as any)
-    .from("deal_commissions")
+  const scoped = getScopedRevenueClient(supabase, tenantId);
+
+  const { data, error } = await scoped
+    .commissions()
     .select(
       `
       *,
@@ -104,31 +100,20 @@ export async function getDealCommissions(dealId: string) {
     .eq("deal_id", dealId)
     .order("created_at", { ascending: true });
 
-  if (tenantId && tenantId !== "ALL") {
-    query = query.eq("tenant_id", tenantId);
-  }
-
-  const { data, error } = await query;
-
   if (error) {
     console.error("Error fetching deal commissions:", error);
     return [];
   }
 
-  return (data || []) as any;
+  return (data || []) as DealCommission[];
 }
 
 export async function getDealsPageStats(timeRange: string = "all") {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
-  let query = supabase
-    .from("deals")
-    .select("status, commission_amount, deal_type, created_at");
-
-  if (tenantId && tenantId !== "ALL") {
-    query = query.eq("tenant_id", tenantId);
-  }
+  const scoped = getScopedRevenueClient(supabase, tenantId);
+  let query = scoped.deals().select("status, commission_amount, deal_type, created_at");
 
   // Handle Time Range
   const now = new Date();
@@ -137,7 +122,7 @@ export async function getDealsPageStats(timeRange: string = "all") {
   if (timeRange !== "all") {
     let startDate: string | null = null;
     let endDate: string | null = null;
-
+    // ... logic remains same ...
     if (timeRange === "this-month") {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     } else if (timeRange === "6-months") {
@@ -163,10 +148,10 @@ export async function getDealsPageStats(timeRange: string = "all") {
     }
 
     if (startDate) {
-      query = query.gte("created_at", startDate);
+      query = query.gte("created_at", startDate) as any;
     }
     if (endDate) {
-      query = query.lte("created_at", endDate);
+      query = query.lte("created_at", endDate) as any;
     }
   }
 
@@ -186,13 +171,13 @@ export async function getDealsPageStats(timeRange: string = "all") {
   const stats = {
     totalDeals: data.length,
     activeDeals: data.filter(
-      (d) => d.status === "NEGOTIATING" || d.status === "SIGNED",
+      (d: any) => d.status === "NEGOTIATING" || d.status === "SIGNED",
     ).length,
-    wonDeals: data.filter((d) => d.status === "CLOSED_WIN").length,
-    lostDeals: data.filter((d) => d.status === "CLOSED_LOSS").length,
+    wonDeals: data.filter((d: any) => d.status === "CLOSED_WIN").length,
+    lostDeals: data.filter((d: any) => d.status === "CLOSED_LOSS").length,
     totalCommission: data
-      .filter((d) => d.status === "CLOSED_WIN" && d.commission_amount)
-      .reduce((sum, d) => sum + (d.commission_amount || 0), 0),
+      .filter((d: any) => d.status === "CLOSED_WIN" && d.commission_amount)
+      .reduce((sum: number, d: any) => sum + (d.commission_amount || 0), 0),
   };
 
   return stats;
