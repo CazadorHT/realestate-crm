@@ -566,7 +566,7 @@
     "policyname": "Admins can view all profiles for audit",
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",
-    "qual": "(auth.uid() IN ( SELECT profiles_1.id\n   FROM profiles profiles_1\n  WHERE (profiles_1.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))",
+    "qual": "check_is_staff_for_audit()",
     "with_check": null
   },
   {
