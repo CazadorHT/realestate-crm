@@ -80,6 +80,9 @@ export async function getPropertyWithImages(
       ),
       property_features (
         feature_id
+      ),
+      reviewer:profiles!properties_ai_reviewed_by_fkey (
+        full_name
       )
     `,
     )

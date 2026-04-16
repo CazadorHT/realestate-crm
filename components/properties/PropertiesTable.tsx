@@ -66,6 +66,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import {
   bulkDeletePropertiesAction,
   bulkMovePropertiesToTenantAction,
+  bulkApproveAiReviewAction,
   getAllPropertyIdsAction,
 } from "@/features/properties/bulk-actions";
 import { exportPropertiesAction } from "@/features/properties/export-action";
@@ -322,6 +323,19 @@ export function PropertiesTable({
     }
   };
 
+  const handleBulkApproveAiReview = async () => {
+    const ids = Array.from(selectedIds);
+    const result = await bulkApproveAiReviewAction(ids);
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+      handleSuccessFeedback();
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+      throw new Error(result.message || "เกิดข้อผิดพลาด");
+    }
+  };
+
   const handleBulkMove = async () => {
     const ids = Array.from(selectedIds);
     const result = await bulkMovePropertiesToTenantAction(ids);
@@ -361,6 +375,13 @@ export function PropertiesTable({
     }
   };
 
+  const hasAiReviewItems = useMemo(() => {
+    return Array.from(selectedIds).some((id) => {
+      const p = data.find((item) => item.id === id);
+      return p?.requires_ai_review;
+    });
+  }, [selectedIds, data]);
+
   return (
     <div className="space-y-4">
       {/* Bulk Action Toolbar */}
@@ -380,6 +401,8 @@ export function PropertiesTable({
         }
         onPullLabel="ดึงมาสาขาตัวเอง"
         onPullConfirmMessage={pullConfirmMessage}
+        onAiApprove={hasAiReviewItems ? handleBulkApproveAiReview : undefined}
+        onAiApproveLabel="ยืนยันข้อมูล AI"
         entityName="ทรัพย์"
         actionableCount={selectedCount - blockedCount}
         className={isTransitionPending ? "opacity-50 pointer-events-none" : ""}
@@ -555,12 +578,21 @@ export function PropertiesTable({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <div className="absolute top-1 right-1 h-5 w-5 bg-white shadow-md rounded-full flex items-center justify-center border border-amber-200">
-                                  <Sparkles className="h-3 w-3 text-amber-500" />
+                                <div className="absolute top-1 right-1 h-6 w-6 bg-white/95 backdrop-blur-sm shadow-lg rounded-full flex items-center justify-center border border-amber-200 cursor-help group-hover/image:scale-110 transition-transform duration-300">
+                                  <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
                                 </div>
                               </TooltipTrigger>
-                              <TooltipContent>
-                                <p className="text-[11px] font-medium text-amber-600">รอยืนยันข้อมูล AI</p>
+                              <TooltipContent side="right" className="p-3 max-w-[200px] bg-slate-900 text-white border-slate-800 shadow-2xl rounded-xl">
+                                <div className="space-y-1.5 text-[11px]">
+                                  <p className="font-bold text-amber-400 flex items-center gap-1.5 uppercase tracking-wider">
+                                    <Sparkles className="h-3 w-3" /> Sentinel Verification Needed
+                                  </p>
+                                  <p className="text-slate-300 leading-relaxed font-medium">คำบรรยายหรือข้อมูลสำคัญถูกสร้างโดย AI และยังไม่ผ่านการตรวจสอบโดยแอดมิน</p>
+                                  <div className="pt-1.5 border-t border-white/10 mt-1.5 flex items-center justify-between opacity-80 italic">
+                                    <span>Status: Pending Audit</span>
+                                    <span>V1.0</span>
+                                  </div>
+                                </div>
                               </TooltipContent>
                             </Tooltip>
                           </TooltipProvider>

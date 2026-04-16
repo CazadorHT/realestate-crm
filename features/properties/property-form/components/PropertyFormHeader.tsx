@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { CancelButton } from "@/features/properties/btn-cancel";
 import { Loader2 } from "lucide-react";
+import { SentinelAuditBanner } from "./SentinelAuditBanner";
 
 interface PropertyFormHeaderProps {
   mode: "create" | "edit";
@@ -9,6 +10,8 @@ interface PropertyFormHeaderProps {
   isDirty: boolean;
   isSubmitting?: boolean;
   onSubmit: () => void;
+  aiReviewedAt?: string | null;
+  reviewerName?: string | null;
 }
 
 export function PropertyFormHeader({
@@ -18,6 +21,8 @@ export function PropertyFormHeader({
   isDirty,
   isSubmitting,
   onSubmit,
+  aiReviewedAt,
+  reviewerName,
 }: PropertyFormHeaderProps) {
   return (
     <div className="sticky top-14 sm:top-16 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm py-3 sm:py-4 mb-4 sm:mb-6 px-4 sm:px-6 transition-all duration-200 sm:rounded-xl max-w-screen">
@@ -31,6 +36,15 @@ export function PropertyFormHeader({
               ? `โครงการ : ${title || "-"}`
               : "กรอกข้อมูลให้ครบถ้วนเพื่อสร้างประกาศ"}
           </p>
+          
+          {/* ✨ Sentinel Audit Banner Integration */}
+          {mode === "edit" && aiReviewedAt && (
+            <SentinelAuditBanner 
+              reviewedAt={aiReviewedAt}
+              reviewerName={reviewerName}
+              className="mt-3 mb-0"
+            />
+          )}
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">

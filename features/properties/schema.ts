@@ -12,8 +12,8 @@ import {
   TRANSIT_TYPE_ENUM,
 } from "./labels";
 
-/** Shared Zod schema for property forms */
-export const FormSchema = z
+/** Base Zod schema for property properties (without refinements) */
+export const PropertySchema = z
   .object({
     id: z.string().uuid().optional(),
     title: z.string().trim().min(1, "คุณยังไม่ได้กรอกชื่อทรัพย์"),
@@ -186,7 +186,10 @@ export const FormSchema = z
       )
       .optional()
       .default([]),
-  })
+  });
+
+/** Shared Zod schema for property forms (with full refinements) */
+export const FormSchema = PropertySchema
   .superRefine((data, ctx) => {
     const priceMissing =
       data.original_price === undefined || Number.isNaN(data.original_price);

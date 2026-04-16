@@ -53,10 +53,12 @@ import { isFeatureEnabled } from "@/lib/features";
 
 export function SidebarNav({ 
   role, 
-  initialCollapsed = false 
+  initialCollapsed = false,
+  aiReviewCount = 0
 }: { 
   role: UserRole;
   initialCollapsed?: boolean;
+  aiReviewCount?: number;
 }) {
   const pathname = usePathname();
   const [openGroups, setOpenGroups] = useState<string[]>(["crm"]);
@@ -95,6 +97,7 @@ export function SidebarNav({
     icon: any;
     active: boolean;
     roles?: UserRole[];
+    badge?: number;
   }
 
   interface NavGroup {
@@ -112,6 +115,7 @@ export function SidebarNav({
       href: "/protected/properties",
       icon: Building2,
       active: pathname?.startsWith("/protected/properties") ?? false,
+      badge: aiReviewCount > 0 ? aiReviewCount : undefined,
     },
     {
       title: "เจ้าของทรัพย์",
@@ -390,7 +394,18 @@ export function SidebarNav({
             : "text-slate-400 group-hover:text-slate-600",
         )}
       />
+      {isCollapsed && item.badge !== undefined && (
+        <div className="absolute top-1 right-1 h-2 w-2 rounded-full bg-blue-500 border border-white" />
+      )}
       {!isCollapsed && <span>{item.title}</span>}
+      {item.badge !== undefined && (
+        <span className={cn(
+          "ml-auto flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold shadow-sm animate-pulse",
+          item.active ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
+        )}>
+          {item.badge}
+        </span>
+      )}
     </Link>
   );
 

@@ -278,3 +278,58 @@ export async function notifySignupAction(email: string) {
     console.error("[NOTIFY] Error in notifySignupAction:", error);
   }
 }
+import { requireAuthContext } from "@/lib/authz";
+import { AuditActionResult, AuditLogEntry } from "./types";
+
+export async function getPropertyAuditLogsAction(
+  propertyId: string,
+  page: number = 1,
+  pageSize: number = 10,
+): Promise<AuditActionResult<{ logs: AuditLogEntry[]; totalCount: number; hasMore: boolean }>> {
+  try {
+    const { supabase, tenantId } = await requireAuthContext();
+
+    const offset = (page - 1) * pageSize;
+
+    let query = supabase
+      .from("audit_logs")
+      .select(`
+        *,
+        profiles:user_id (
+          id,
+          full_name,
+          avatar_url,
+          role
+        )
+      `, { count: "exact" })
+      .eq("entity_id", propertyId)
+      .eq("entity", "properties");
+
+    // 🛡️ [BRANCH ISOLATION] Apply tenant filter if not in "ALL" mode
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data, error, count } = await query
+      .order("created_at", { ascending: false })
+      .range(offset, offset + pageSize - 1);
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      data: {
+        logs: (data as unknown) as AuditLogEntry[],
+        totalCount: count || 0,
+        hasMore: (count || 0) > offset + pageSize,
+      }
+    };
+  } catch (error: any) {
+    console.error("Failed to fetch audit logs:", error);
+    return { 
+      success: false, 
+      message: error.message || "ไม่สามารถโหลดประวัติข้อมูลได้",
+      errorType: "SYSTEM_ERROR"
+    };
+  }
+}

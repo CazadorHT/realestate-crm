@@ -22,6 +22,7 @@ export async function getPropertiesTableData(params: {
   petFriendly?: string;
   fullyFurnished?: string;
   allBranches?: string;
+  needsAiReview?: string;
   page?: string;
 }): Promise<{
   tableData: PropertyTableData[];
@@ -134,6 +135,9 @@ export async function getPropertiesTableData(params: {
   }
   if (fullyFurnished === "true") {
     query = query.eq("is_fully_furnished", true);
+  }
+  if (params.needsAiReview === "true") {
+    query = query.eq("requires_ai_review", true);
   }
 
   // Price Range with fallback

@@ -8,6 +8,7 @@ import { UserNav } from "@/components/dashboard/UserNav";
 import { MobileNav } from "@/components/dashboard/MobileNav";
 import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { siteConfig } from "@/lib/site-config";
+import { getPropertiesDashboardStatsQuery } from "@/features/properties/queries/stats";
 
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
@@ -49,11 +50,18 @@ export default async function ProtectedLayout({
   const cookieStore = await cookies();
   const initialCollapsed = cookieStore.get("sidebar-collapsed")?.value === "true";
 
+  // Fetch AI Review count for Sidebar notification
+  const propertyStats = await getPropertiesDashboardStatsQuery();
+
   return (
     <TenantProvider>
       <RealtimeProvider>
         <div className="flex min-h-screen w-full bg-slate-50/50">
-          <SidebarNav role={profile.role} initialCollapsed={initialCollapsed} />
+          <SidebarNav 
+            role={profile.role} 
+            initialCollapsed={initialCollapsed} 
+            aiReviewCount={propertyStats.aiReviewCount}
+          />
 
           <div className="flex flex-1 flex-col min-w-0">
             <header className="sticky top-0 z-50 flex h-16 items-center gap-1 sm:gap-4 bg-white px-4 md:px-6 backdrop-blur-md border-b border-slate-100 shadow-sm">

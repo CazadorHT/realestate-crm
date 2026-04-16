@@ -44,6 +44,7 @@ interface Filters {
   nearTransit: string;
   petFriendly: string;
   fullyFurnished: string;
+  needsAiReview: string;
 }
 
 interface AdvancedFiltersProps {
@@ -121,9 +122,9 @@ export function AdvancedFilters({
       "4": 0,
     };
     const amenityCounts = {
-      nearTransit: 0,
       petFriendly: 0,
       fullyFurnished: 0,
+      needsAiReview: 0,
     };
 
     filterMetadata.forEach((p) => {
@@ -176,9 +177,8 @@ export function AdvancedFilters({
       }
 
       // Amenities Counts
-      if (p.near_transit) amenityCounts.nearTransit++;
-      if (p.is_pet_friendly) amenityCounts.petFriendly++;
       if (p.is_fully_furnished) amenityCounts.fullyFurnished++;
+      if (p.requires_ai_review) amenityCounts.needsAiReview++;
 
       // Location Counts
       if (p.province) {
@@ -273,8 +273,9 @@ export function AdvancedFilters({
 
       // Amenities
       if (filters.nearTransit === "true" && !p.near_transit) return false;
-      if (filters.petFriendly === "true" && !p.is_pet_friendly) return false;
       if (filters.fullyFurnished === "true" && !p.is_fully_furnished)
+        return false;
+      if (filters.needsAiReview === "true" && !p.requires_ai_review)
         return false;
 
       return true;
@@ -1175,6 +1176,47 @@ export function AdvancedFilters({
               </AccordionContent>
             </AccordionItem>
           </Accordion>
+
+          {/* ✨ Sentinel AI Verification Section */}
+          <div className="pt-2 px-1">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block px-1">
+              Sentinel AI Status
+            </label>
+            <button
+              onClick={() => setFilters((prev: any) => ({ 
+                ...prev, 
+                needsAiReview: prev.needsAiReview === "true" ? "" : "true" 
+              }))}
+              className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all group ${
+                filters.needsAiReview === "true"
+                  ? "bg-indigo-50 border-indigo-200 shadow-sm"
+                  : "bg-white border-slate-100 hover:border-slate-200 shadow-xs"
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-xl transition-all duration-300 ${
+                  filters.needsAiReview === "true" ? "bg-indigo-600 text-white rotate-12 scale-110 shadow-lg shadow-indigo-200" : "bg-slate-100 text-slate-400"
+                }`}>
+                  <SlidersHorizontal className="h-4 w-4" />
+                </div>
+                <div className="text-left">
+                  <p className={`text-sm font-bold ${
+                    filters.needsAiReview === "true" ? "text-indigo-900" : "text-slate-700"
+                  }`}>
+                    ✨ รอนรีวิว AI
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-medium leading-tight">กรองเฉพาะรายการที่ใช้ AI ช่วยประเมินข้อมูล</p>
+                </div>
+              </div>
+              {amenityCounts.needsAiReview > 0 && (
+                <span className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                  filters.needsAiReview === "true" ? "bg-indigo-600 text-white ring-2 ring-indigo-200" : "bg-slate-100 text-slate-600"
+                }`}>
+                  {amenityCounts.needsAiReview}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
     </ResponsiveDialog>

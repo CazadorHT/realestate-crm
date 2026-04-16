@@ -109,20 +109,20 @@ export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
                 <ChevronRight className="h-4 w-4 text-slate-300 mt-1" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
+              <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 bg-slate-50/50 p-2.5 sm:p-3 rounded-2xl border border-slate-100">
                 <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+                  <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
                     สะสมยอดขาย (Revenue)
                   </span>
-                  <span className="text-sm font-semibold text-slate-900">
+                  <span className="text-xs sm:text-sm font-bold text-slate-900">
                     {formatThaiCurrency(agent.totalRevenue)}
                   </span>
                 </div>
                 <div className="flex flex-col text-right">
-                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-1">
+                  <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
                     Commission
                   </span>
-                  <span className="text-sm font-semibold text-emerald-600">
+                  <span className="text-xs sm:text-sm font-bold text-emerald-600">
                     {formatThaiCurrency(agent.totalCommission)}
                   </span>
                 </div>

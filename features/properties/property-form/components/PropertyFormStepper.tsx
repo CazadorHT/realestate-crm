@@ -151,9 +151,9 @@ export function PropertyFormStepper({
                   }}
                 >
                   <div
-                    className={`relative z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-medium transition-all duration-500 ${
+                    className={`relative z-10 w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold transition-all duration-500 ${
                       isCurrent
-                        ? "bg-blue-600 text-white shadow-md shadow-blue-200 scale-105 sm:scale-110 ring-4 ring-blue-50"
+                        ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-105 sm:scale-110 ring-4 ring-blue-50/50"
                         : showGreen
                           ? "bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-100"
                           : "bg-white text-slate-400 border-2 border-slate-100 group-hover:border-blue-200"
@@ -166,7 +166,7 @@ export function PropertyFormStepper({
                     )}
                   </div>
                   <span
-                    className={`text-[9px] sm:text-[10px] md:text-xs font-medium uppercase tracking-wider text-center transition-colors duration-300 px-1 line-clamp-1 sm:line-clamp-none ${
+                    className={`hidden xs:block text-[9px] sm:text-[10px] md:text-xs font-bold uppercase tracking-wider text-center transition-colors duration-300 px-1 line-clamp-1 sm:line-clamp-none ${
                       isCurrent
                         ? "text-blue-600"
                         : showGreen

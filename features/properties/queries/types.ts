@@ -22,4 +22,5 @@ export type PropertyStats = {
   totalRealizedCommission: number;
   byType: { name: string; value: number }[];
   byStatus: { name: string; value: number }[];
+  aiReviewCount: number;
 };

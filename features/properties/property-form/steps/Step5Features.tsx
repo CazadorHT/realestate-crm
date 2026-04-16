@@ -127,16 +127,9 @@ function Step5FeaturesComponent() {
     });
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-      </div>
-    );
-  }
-
   // Group by category (Memoized for performance)
   const groupedFeatures = React.useMemo(() => {
+    if (!features || features.length === 0) return {};
     return features.reduce(
       (acc, feature) => {
         // Normalize category key
@@ -152,6 +145,14 @@ function Step5FeaturesComponent() {
       {} as Record<string, Feature[]>,
     );
   }, [features]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">

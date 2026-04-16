@@ -15,6 +15,7 @@ import { PropertySpecs } from "@/components/public/PropertySpecs";
 import { AgentSidebar } from "@/components/public/AgentSidebar";
 import { ShareButtons } from "@/components/public/ShareButtons";
 import { MobilePropertyActions } from "@/components/public/MobilePropertyActions";
+import { BackToTop } from "@/components/public/BackToTop";
 import { PropertySuitability } from "@/components/public/PropertySuitability";
 import { NearbyPlaces } from "@/components/public/NearbyPlaces";
 import { Database } from "@/lib/database.types";
@@ -568,6 +569,7 @@ export default async function PublicPropertyDetailPage(props: {
           title_cn: data.title_cn,
         }}
       />
+      <BackToTop />
     </main>
   );
 }

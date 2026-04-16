@@ -9,11 +9,11 @@ import { toast } from "sonner";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 
 import { Button } from "@/components/ui/button";
-import { ExternalLink, List, Facebook, Instagram, Loader2, CheckCircle2, Sparkles } from "lucide-react";
+import { ExternalLink, List, Facebook, Instagram, Loader2, CheckCircle2, Sparkles, Clock, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
-import type { PropertyRow } from "@/features/properties/types";
+import type { PropertyRow, PropertyWithImages } from "@/features/properties/types";
 import type { FieldErrors } from "react-hook-form";
 import {
   createPropertyAction,
@@ -31,7 +31,8 @@ import {
   STEP_FIELDS,
 } from "./property-form/utils/form-utils";
 
-// Components
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AuditTimeline } from "./property-form/components/AuditTimeline";
 import { PropertyFormHeader } from "./property-form/components/PropertyFormHeader";
 import { PropertyFormStepper } from "./property-form/components/PropertyFormStepper";
 import { PropertyFormNavigation } from "./property-form/components/PropertyFormNavigation";
@@ -110,10 +111,11 @@ const PREFETCH_MAP: Record<number, (() => Promise<any>) | undefined> = {
 // Hooks
 import { usePropertyFormDraft } from "./hooks/usePropertyFormDraft";
 import { usePropertyFormData } from "./hooks/usePropertyFormData";
+import { Card } from "@/components/ui/card";
 
 type Props = {
   mode: "create" | "edit";
-  defaultValues?: PropertyRow | null;
+  defaultValues?: PropertyWithImages | null;
   initialImages?: {
     image_url: string;
     storage_path: string;
@@ -154,12 +156,12 @@ export function PropertyForm({
   const [newAreaEn, setNewAreaEn] = React.useState("");
   const [newAreaCn, setNewAreaCn] = React.useState("");
   const [isAddingArea, setIsAddingArea] = React.useState(false);
-  const [isQuickInfoOpen, setIsQuickInfoOpen] = React.useState(false);
+  const [isQuickInfoOpen, setIsQuickInfoOpen] = React.useState(mode === "edit");
   const [isActuallySubmitting, setIsActuallySubmitting] = React.useState(false);
 
-  const uploadSessionId = useRef<string>(
+  const [uploadSessionId] = React.useState(() =>
     typeof crypto !== "undefined" ? crypto.randomUUID() : "fallback",
-  ).current;
+  );
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(FormSchema) as unknown as Resolver<any>,
@@ -531,6 +533,59 @@ export function PropertyForm({
     e.preventDefault();
   };
 
+  // Helper to render step content (to avoid duplication in Tabs)
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <Step1BasicInfo
+            form={form}
+            mode={mode}
+            popularAreas={popularAreas}
+            isAddingArea={isAddingArea}
+            newArea={newArea}
+            setNewArea={setNewArea}
+            newAreaEn={newAreaEn}
+            setNewAreaEn={setNewAreaEn}
+            newAreaCn={newAreaCn}
+            setNewAreaCn={setNewAreaCn}
+            onAddArea={handleAddArea}
+            isQuickInfoOpen={isQuickInfoOpen}
+            setIsQuickInfoOpen={setIsQuickInfoOpen}
+          />
+        );
+      case 2:
+        return <Step2Details form={form} mode={mode} />;
+      case 3:
+        return <Step3Location form={form} mode={mode} />;
+      case 4:
+        return (
+          <Step4Media
+            form={form}
+            mode={mode}
+            owners={owners}
+            agents={agents}
+            initialImages={initialImages}
+            uploadSessionId={uploadSessionId}
+            persistImages={persistImages}
+            refreshOwners={refreshOwners}
+            allBranches={allBranches}
+            setAllBranches={setAllBranches}
+            isMultiTenant={isMultiTenant}
+            userRole={userRole}
+          />
+        );
+      case 5:
+        return <Step5Features />;
+      case 6:
+        return <Step6Review form={form} mode={mode} />;
+      case 7:
+        return <Step7Syndication form={form} mode={mode} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="relative pb-32 sm:pb-0 lg:px-8 max-w-screen-2xl mx-auto">
       <TopLoader isLoading={isActuallySubmitting} />
@@ -542,98 +597,149 @@ export function PropertyForm({
         isDirty={form.formState.isDirty}
         isSubmitting={isActuallySubmitting}
         onSubmit={submitNow}
+        aiReviewedAt={defaultValues?.ai_reviewed_at}
+        reviewerName={defaultValues?.reviewer?.full_name}
       />
 
-      {/* 2. Stepper / ขั้นตอน */}
-      <PropertyFormStepper
-        currentStep={currentStep}
-        setCurrentStep={setCurrentStep}
-        mode={mode}
-        handleNext={handleNext}
-        form={form}
-      />
+      {/* Step Rendering & History Tabs - Elite Segmented Control */}
+      {mode === "edit" ? (
+        <Tabs defaultValue="info" className="w-full">
+          <div className="sticky top-[108px] sm:top-[150px] z-40 py-4 bg-white/80 backdrop-blur-md -mx-4 px-4 sm:mx-0 sm:px-0">
+            <TabsList className="grid w-full grid-cols-2 max-w-[440px] mx-auto h-12 rounded-full bg-slate-200/50 p-1 border border-slate-200/60 shadow-inner">
+              <TabsTrigger 
+                value="info" 
+                className="rounded-full text-sm font-semibold text-slate-600 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <div className="p-1 rounded-md bg-slate-100 group-data-[state=active]:bg-blue-50 transition-colors">
+                  <List className="w-3.5 h-3.5" />
+                </div>
+                ข้อมูลทรัพย์สิน
+              </TabsTrigger>
+              <TabsTrigger 
+                value="history" 
+                className="rounded-full text-sm font-semibold text-slate-600 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-300 flex items-center justify-center gap-2"
+              >
+                <div className="p-1 rounded-md bg-slate-100 group-data-[state=active]:bg-blue-50 transition-colors">
+                  <History className="w-3.5 h-3.5" />
+                </div>
+                ประวัติการแก้ไข
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-      {/* Form */}
-      <Form {...form}>
-        <form
-          onKeyDown={handleFormKeyDown}
-          onSubmit={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-          }}
-        >
-          {form.watch("requires_ai_review") && (
-            <AiReviewBanner
-              type="property"
-              onConfirm={userRole === "ADMIN" ? () => form.setValue("requires_ai_review", false, { shouldDirty: true }) : undefined}
-              isVerifying={isActuallySubmitting}
-            />
-          )}
-
-          <ErrorSummary
-            errors={form.formState.errors}
-            currentStep={currentStep}
-          />
-
-          {/* Step rendering */}
-          {currentStep === 1 && (
-            <Step1BasicInfo
-              form={form}
+          <div className="mt-2">
+            <TabsContent value="info" className="mt-0 focus-visible:ring-0 outline-none">
+            <PropertyFormStepper
+              currentStep={currentStep}
+              setCurrentStep={setCurrentStep}
               mode={mode}
-              popularAreas={popularAreas}
-              isAddingArea={isAddingArea}
-              newArea={newArea}
-              setNewArea={setNewArea}
-              newAreaEn={newAreaEn}
-              setNewAreaEn={setNewAreaEn}
-              newAreaCn={newAreaCn}
-              setNewAreaCn={setNewAreaCn}
-              onAddArea={handleAddArea}
-              isQuickInfoOpen={isQuickInfoOpen}
-              setIsQuickInfoOpen={setIsQuickInfoOpen}
-            />
-          )}
-
-          {currentStep === 2 && <Step2Details form={form} mode={mode} />}
-
-          {currentStep === 3 && <Step3Location form={form} mode={mode} />}
-
-          {currentStep === 4 && (
-            <Step4Media
+              handleNext={handleNext}
               form={form}
-              mode={mode}
-              owners={owners}
-              agents={agents}
-              initialImages={initialImages}
-              uploadSessionId={uploadSessionId}
-              persistImages={persistImages}
-              refreshOwners={refreshOwners}
-              allBranches={allBranches}
-              setAllBranches={setAllBranches}
-              isMultiTenant={isMultiTenant}
-              userRole={userRole}
             />
-          )}
 
-          {currentStep === 5 && <Step5Features />}
+            <Form {...form}>
+              <form
+                onKeyDown={handleFormKeyDown}
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                {form.watch("requires_ai_review") && (
+                  <AiReviewBanner
+                    type="property"
+                    onConfirm={userRole === "ADMIN" ? () => form.setValue("requires_ai_review", false, { shouldDirty: true }) : undefined}
+                    isVerifying={isActuallySubmitting}
+                  />
+                )}
 
-          {currentStep === 6 && <Step6Review form={form} mode={mode} />}
+                <ErrorSummary
+                  errors={form.formState.errors}
+                  currentStep={currentStep}
+                />
 
-          {currentStep === 7 && <Step7Syndication form={form} mode={mode} />}
+                {/* Step contents */}
+                {renderStepContent()}
 
-          {/* Navigation Buttons: Fixed Layout */}
-          <PropertyFormNavigation
+                <PropertyFormNavigation
+                  currentStep={currentStep}
+                  totalSteps={7}
+                  mode={mode}
+                  uploadSessionId={uploadSessionId}
+                  isDirty={form.formState.isDirty}
+                  isSubmitting={isActuallySubmitting}
+                  onBack={handleBack}
+                  onNext={handleNext}
+                  onSubmit={submitNow}
+                />
+              </form>
+            </Form>
+          </TabsContent>
+
+          <TabsContent value="history" className="mt-0 focus-visible:ring-0">
+            <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden">
+              <div className="bg-slate-50/50 border-b border-slate-100 p-4">
+                <h3 className="text-sm font-bold flex items-center gap-2 text-slate-700">
+                  <Clock className="w-4 h-4 text-blue-500" /> บันทึกประวัติการเปลี่ยนแปลงทั้งหมด
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  ระบบบันทึกเฉพาะการเปลี่ยนแปลงสำคัญเพื่อความโปร่งใสในการจัดการทรัพย์สิน
+                </p>
+              </div>
+              <div className="p-2 sm:p-6 bg-white min-h-[400px]">
+                {defaultValues?.id && <AuditTimeline propertyId={defaultValues.id} />}
+              </div>
+            </Card>
+          </TabsContent>
+        </div>
+      </Tabs>
+      ) : (
+        <>
+          <PropertyFormStepper
             currentStep={currentStep}
-            totalSteps={7}
+            setCurrentStep={setCurrentStep}
             mode={mode}
-            uploadSessionId={uploadSessionId}
-            isDirty={form.formState.isDirty}
-            isSubmitting={isActuallySubmitting}
-            onBack={handleBack}
-            onNext={handleNext}
-            onSubmit={submitNow}
+            handleNext={handleNext}
+            form={form}
           />
-        </form>
+          <Form {...form}>
+            <form
+              onKeyDown={handleFormKeyDown}
+              onSubmit={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+            >
+              {form.watch("requires_ai_review") && (
+                <AiReviewBanner
+                  type="property"
+                  onConfirm={userRole === "ADMIN" ? () => form.setValue("requires_ai_review", false, { shouldDirty: true }) : undefined}
+                  isVerifying={isActuallySubmitting}
+                />
+              )}
+
+              <ErrorSummary
+                errors={form.formState.errors}
+                currentStep={currentStep}
+              />
+
+              {renderStepContent()}
+
+              <PropertyFormNavigation
+                currentStep={currentStep}
+                totalSteps={7}
+                mode={mode}
+                uploadSessionId={uploadSessionId}
+                isDirty={form.formState.isDirty}
+                isSubmitting={isActuallySubmitting}
+                onBack={handleBack}
+                onNext={handleNext}
+                onSubmit={submitNow}
+              />
+            </form>
+          </Form>
+        </>
+      )}
 
         {/* Duplicate Warning Dialog */}
         <DuplicateWarningDialog
@@ -680,10 +786,10 @@ export function PropertyForm({
                 }
               }}
             >
-              <div className="bg-slate-100 p-2 rounded-xl group-hover:bg-emerald-100 group-hover:text-emerald-600 transition-colors">
+              <div className="bg-slate-100 p-2 rounded-xl group-hover:bg-emerald-100 group-hover:text-emerald-600! transition-colors">
                 <ExternalLink className="w-5 h-5" />
               </div>
-              <div className="flex flex-col items-start leading-tight">
+              <div className="flex flex-col items-start leading-tight group-hover:text-emerald-600!">
                 <span>ดูหน้าเว็บไซต์</span>
                 <span className="text-[11px] font-normal text-slate-500">เปิดแท็บใหม่เพื่อดูตัวอย่าง</span>
               </div>
@@ -711,8 +817,8 @@ export function PropertyForm({
                   className={cn(
                     "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
                     shareStatus["FACEBOOK"]?.success 
-                      ? "text-emerald-700 border-emerald-100 bg-emerald-50/50" 
-                      : "text-blue-600 border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/50"
+                      ? "text-emerald-700! border-emerald-100 bg-emerald-50/50" 
+                      : "text-blue-600! border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/50"
                   )}
                   disabled={shareStatus["FACEBOOK"]?.loading}
                   onClick={async () => {
@@ -763,8 +869,8 @@ export function PropertyForm({
                     className={cn(
                       "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
                       shareStatus["TIKTOK"]?.success 
-                        ? "text-emerald-700 border-emerald-100 bg-emerald-50/50" 
-                        : "text-slate-900 border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                        ? "text-emerald-700! border-emerald-100 bg-emerald-50/50" 
+                        : "text-slate-900! border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                     )}
                     disabled={shareStatus["TIKTOK"]?.loading}
                   >
@@ -796,8 +902,8 @@ export function PropertyForm({
                   className={cn(
                     "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
                     shareStatus["INSTAGRAM"]?.success 
-                      ? "text-emerald-700 border-emerald-100 bg-emerald-50/50" 
-                      : "text-pink-600 border-slate-200 bg-white hover:border-pink-200 hover:bg-pink-50/50"
+                      ? "text-emerald-700! border-emerald-100 bg-emerald-50/50" 
+                      : "text-pink-600! border-slate-200 bg-white hover:border-pink-200 hover:bg-pink-50/50"
                   )}
                   disabled={shareStatus["INSTAGRAM"]?.loading}
                   onClick={async () => {
@@ -830,7 +936,7 @@ export function PropertyForm({
           </div>
         </ResponsiveDialog>
 
-      </Form>
+
     </div>
   );
 }

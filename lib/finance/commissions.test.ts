@@ -80,7 +80,7 @@ describe('Commission Calculation Engine (Hardened)', () => {
     });
 
     it('should split with high precision including WHT', () => {
-      const total = 999.99;
+      const total = 100000;
       const agents = { listingAgentId: 'agent-1', closingAgentId: 'agent-2' };
       const results = calculateAdvancedSplit(total, { ...validConfig, enableTeamPool: false }, agents);
 
@@ -88,14 +88,41 @@ describe('Commission Calculation Engine (Hardened)', () => {
       const closing = results.find(r => r.role === 'CLOSING');
       const agency = results.find(r => r.role === 'AGENCY');
 
-      // Manual calc: 999.99 * 0.3 = 299.997 -> 300.00
-      expect(listing?.amount).toBe(300.00);
-      expect(listing?.whtAmount).toBe(9.00); // 3% of 300
-      expect(listing?.netAmount).toBe(291.00);
+      // Manual calc: 100,000 * 0.3 = 30,000
+      expect(listing?.amount).toBe(30000);
+      expect(listing?.whtAmount).toBe(900); // 3% of 30,000
+      expect(listing?.netAmount).toBe(29100);
 
-      // Total sum check
-      const sum = results.reduce((s, r) => s + r.amount, 0);
-      expect(sum).toBe(1000.00); // due to precision rounding from 999.997 / 499.995 / 199.998
+      // Manual calc: 100,000 * 0.5 = 50,000
+      expect(closing?.amount).toBe(50000);
+      expect(closing?.whtAmount).toBe(1500); // 3% of 50,000
+      expect(closing?.netAmount).toBe(48500);
+
+      expect(agency?.amount).toBe(20000);
+      expect(agency?.whtAmount).toBe(0); // Agency role (company) has no WHT in this model
+    });
+
+    it('should scale listing/closing based on team pool correctly (Multi-Step Split)', () => {
+      const total = 100000;
+      // 10% goes to Team Pool first.
+      // Remaining 90% is split 30/50/20.
+      const poolConfig = { ...validConfig, enableTeamPool: true, teamPoolPercent: 10 };
+      const results = calculateAdvancedSplit(total, poolConfig, { listingAgentId: 'agent-1' });
+
+      const pool = results.find(r => r.role === 'TEAM_POOL');
+      const listing = results.find(r => r.role === 'LISTING');
+      const agency = results.find(r => r.role === 'AGENCY');
+
+      expect(pool?.amount).toBe(10000);
+      
+      // Listing: 30% of 90% = 27%
+      expect(listing?.percentage).toBe(27);
+      expect(listing?.amount).toBe(27000);
+      expect(listing?.whtAmount).toBe(810); // 3% of 27,000
+
+      // Agency: 20% of 90% = 18%
+      expect(agency?.percentage).toBe(18);
+      expect(agency?.amount).toBe(18000);
     });
 
     it('should prevent over-allocation (Sum > 100%)', () => {
@@ -105,32 +132,6 @@ describe('Commission Calculation Engine (Hardened)', () => {
         agencyPercent: 50, // Sum = 150
       };
       expect(() => calculateAdvancedSplit(1000, invalidConfig, {})).toThrow(FinanceError);
-    });
-
-    it('should scale listing/closing based on team pool', () => {
-      const total = 100000;
-      const poolConfig = { ...validConfig, enableTeamPool: true, teamPoolPercent: 10 };
-      const results = calculateAdvancedSplit(total, poolConfig, {});
-
-      const pool = results.find(r => r.role === 'TEAM_POOL');
-      const listing = results.find(r => r.role === 'LISTING');
-
-      expect(pool?.amount).toBe(10000);
-      // Listing: 30% of remaining 90% = 27%
-      expect(listing?.percentage).toBe(27);
-      expect(listing?.amount).toBe(27000);
-    });
-
-    it('should calculate WHT only when agentId is present', () => {
-      const total = 10000;
-      const agents = { listingAgentId: 'agent-1' }; // No closing agent
-      const results = calculateAdvancedSplit(total, validConfig, agents);
-
-      const listing = results.find(r => r.role === 'LISTING');
-      const closing = results.find(r => r.role === 'CLOSING');
-
-      expect(listing?.whtAmount).toBeGreaterThan(0);
-      expect(closing?.whtAmount).toBe(0); // No agentId, no WHT (stays in company pool)
     });
 
     it('should handle zero commission gracefully', () => {

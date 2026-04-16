@@ -27,21 +27,21 @@ export function PropertyFormNavigation({
 }: PropertyFormNavigationProps) {
   return (
     <div className="mt-6 sm:mt-12 bg-white sm:bg-transparent">
-      <div className="fixed bottom-0 pb-[calc(1rem+env(safe-area-inset-bottom))] left-0 right-0 z-60 sm:relative sm:z-0 bg-white/95 backdrop-blur-xl sm:bg-white p-4 sm:p-6 md:p-8 sm:rounded-3xl shadow-[0_-10px_30px_-20px_rgba(0,0,0,0.1)] sm:shadow-lg border-t sm:border border-slate-100 flex flex-row justify-between items-center gap-3 sm:gap-6 px-4 sm:px-8">
+      <div className="fixed bottom-0 pb-safe-offset-4 sm:pb-0 left-0 right-0 z-60 sm:relative sm:z-0 bg-white/90 backdrop-blur-2xl sm:bg-white p-3 sm:p-6 md:p-8 sm:rounded-3xl shadow-[0_-12px_40px_-15px_rgba(0,0,0,0.12)] sm:shadow-lg border-t sm:border border-slate-200/50 flex flex-row justify-between items-center gap-3 sm:gap-6 px-4 sm:px-8">
         {/* Left: Tertiary Action (Cancel) - Hidden on mobile to save space, or moved if needed */}
         <div className="hidden sm:block">
           <CancelButton sessionId={uploadSessionId} />
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
+        <div className="flex items-center gap-2.5 sm:gap-4 w-full sm:w-auto justify-between sm:justify-end">
           {currentStep > 1 ? (
             <Button
               type="button"
               variant="outline"
               onClick={onBack}
               aria-label="ย้อนกลับไปขั้นตอนก่อนหน้า"
-              className="h-12 sm:h-14 px-5 sm:px-10 rounded-xl border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-medium transition-all active:scale-95 flex-1 sm:flex-none"
+              className="h-11 sm:h-14 px-4 sm:px-10 rounded-xl border-slate-200 bg-white/50 hover:bg-slate-50 text-slate-600 font-bold transition-all active:scale-95 flex-1 sm:flex-none text-sm"
             >
               ย้อนกลับ
             </Button>
@@ -56,7 +56,7 @@ export function PropertyFormNavigation({
               type="button"
               onClick={onNext}
               aria-label="ไปขั้นตอนถัดไป"
-              className="h-14 sm:h-14 px-8 sm:px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-100 font-bold text-base sm:text-lg transition-all active:scale-95 flex-[1.5] sm:flex-none"
+              className="h-12 sm:h-14 px-8 sm:px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 font-bold text-base sm:text-lg transition-all active:scale-95 flex-[1.5] sm:flex-none"
             >
               ถัดไป
             </Button>
@@ -68,7 +68,7 @@ export function PropertyFormNavigation({
                 mode === "create" ? "ยืนยันสร้างประกาศ" : "บันทึกการแก้ไข"
               }
               disabled={(mode === "edit" && !isDirty) || isSubmitting}
-              className="h-12 sm:h-14 px-8 sm:px-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 hover:-translate-y-1 text-white shadow-lg shadow-emerald-100 font-bold text-base sm:text-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex-[1.5] sm:flex-none"
+              className="h-12 sm:h-14 px-8 sm:px-10 rounded-xl bg-emerald-600 hover:bg-emerald-500 hover:-translate-y-1 text-white shadow-lg shadow-emerald-200 font-bold text-base sm:text-lg transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none flex-[1.5] sm:flex-none"
             >
               {isSubmitting ? (
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
@@ -82,7 +82,7 @@ export function PropertyFormNavigation({
         </div>
       </div>
       {/* Spacer for fixed bottom on mobile to prevent content hide */}
-      <div className="h-[calc(5rem+env(safe-area-inset-bottom))] sm:hidden" />
+      <div className="h-[calc(4.5rem+env(safe-area-inset-bottom))] sm:hidden" />
     </div>
   );
 }

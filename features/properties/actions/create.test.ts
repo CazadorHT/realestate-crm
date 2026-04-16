@@ -37,6 +37,20 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
     vi.clearAllMocks();
   });
 
+  const getValidFormData = (overrides = {}) => ({
+    title: 'Test Property',
+    property_type: 'CONDO',
+    listing_type: 'SALE',
+    original_price: 5000000,
+    commission_sale_percentage: 3,
+    address_line1: '123 Test St',
+    province: 'Bangkok',
+    district: 'Watthana',
+    subdistrict: 'Khlong Toei Nuea',
+    google_maps_link: 'https://maps.google.com',
+    ...overrides,
+  });
+
   it('should rollback property creation within tenant boundary if images fail', async () => {
     const tenantId = 'tenant-123';
     (requireAuthContext as any).mockResolvedValue({
@@ -81,5 +95,53 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
     expect(mockSupabase.delete).toHaveBeenCalled();
     expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'prop-1');
     expect(mockSupabase.eq).toHaveBeenCalledWith('tenant_id', tenantId);
+  });
+
+  describe('Sentinel AI Bypass', () => {
+    it('should automatically set requires_ai_review to false for ADMIN', async () => {
+      (requireAuthContext as any).mockResolvedValue({
+        supabase: mockSupabase,
+        user: { id: 'admin-1' },
+        role: 'ADMIN',
+        tenantId: 'tenant-123',
+      });
+
+      mockSupabase.single.mockResolvedValueOnce({ data: { id: 'prop-1' }, error: null });
+      mockSupabase.insert.mockClear();
+      mockSupabase.insert.mockReturnValue(mockSupabase);
+
+      const values = getValidFormData({
+        title: 'Admin Property',
+        requires_ai_review: true, // Should be bypassed
+      });
+
+      await createPropertyAction(values as any, 'session-123');
+
+      const insertCall = mockSupabase.insert.mock.calls[0][0];
+      expect(insertCall.requires_ai_review).toBe(false);
+    });
+
+    it('should preserve requires_ai_review as true for AGENT', async () => {
+      (requireAuthContext as any).mockResolvedValue({
+        supabase: mockSupabase,
+        user: { id: 'agent-1' },
+        role: 'AGENT',
+        tenantId: 'tenant-123',
+      });
+
+      mockSupabase.single.mockResolvedValueOnce({ data: { id: 'prop-1' }, error: null });
+      mockSupabase.insert.mockClear();
+      mockSupabase.insert.mockReturnValue(mockSupabase);
+
+      const values = getValidFormData({
+        title: 'Agent Property',
+        requires_ai_review: true,
+      });
+
+      await createPropertyAction(values as any, 'session-123');
+
+      const insertCall = mockSupabase.insert.mock.calls[0][0];
+      expect(insertCall.requires_ai_review).toBe(true);
+    });
   });
 });

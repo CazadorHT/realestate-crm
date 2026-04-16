@@ -15,6 +15,7 @@ import { inngest } from "@/lib/inngest/client";
 import { PROPERTY_STATUS_ENUM } from "../labels";
 import {
   PropertyStatus,
+  PropertyUpdate,
   CreatePropertyResult,
   UpdatePropertyStatusResult,
 } from "../types";
@@ -33,6 +34,12 @@ import { mapDbError } from "@/lib/db-error";
 /**
  * Update property with images
  */
+import { getPropertyDiff } from "../logic/diff";
+
+/**
+ * Update property with images (Elite Orchestrator Pattern)
+ * Uses atomic RPC for data integrity and semantic diffing for audit transparency.
+ */
 export async function updatePropertyAction(
   id: string,
   values: PropertyFormValues,
@@ -46,304 +53,173 @@ export async function updatePropertyAction(
     // 1) Validate form data
     const parsed = FormSchema.safeParse(values);
     if (!parsed.success) {
-      return {
-        success: false,
-        message: parsed.error.issues[0].message,
-      };
+      return { success: false, message: parsed.error.issues[0].message };
     }
     const safeValues = parsed.data;
     const { images, agent_ids, feature_ids, ...propertyData } = safeValues;
 
-    // 2) โหลดเจ้าของก่อน แล้วเช็คสิทธิ
-    const res = await supabase
+    // 2) Fetch current state (for security check and Diff)
+    const { data: existing, error: findErr } = await supabase
       .from("properties")
-      .select(
-        "id, tenant_id, created_by, meta_keywords, price, rental_price, original_price, original_rental_price, status, title, listing_type, version, property_images(image_url, is_cover, sort_order)",
-      )
+      .select(`
+        id, tenant_id, created_by, meta_keywords, price, rental_price, 
+        original_price, original_rental_price, status, title, description,
+        listing_type, version, images, property_type, is_exclusive, requires_ai_review,
+        address_line1, district, province, subdistrict, bedrooms, bathrooms, 
+        size_sqm, land_size_sqwah,
+        property_agents(agent_id), property_features(feature_id)
+      `)
       .eq("id", id)
       .eq("tenant_id", tenantId)
       .single();
       
-    const { data: existing, error: findErr } = res;
     if (findErr || !existing) {
       return { success: false, message: "Property not found" };
     }
 
-    // 🧠 Auto-Status Logic: AI Draft Enforcement
-    const listingType = safeValues.listing_type || existing.listing_type;
-    if (propertyData.requires_ai_review) {
-      propertyData.status = "DRAFT";
-    } else if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
-      if (listingType === "RENT") {
-        propertyData.status = "RENTED";
-      } else {
-        propertyData.status = "SOLD";
-      }
-    } else if (
-      propertyData.status === "SOLD" ||
-      propertyData.status === "RENTED"
-    ) {
-      // If stock remains, force ACTIVE (prevent premature SOLD/RENTED status)
-      propertyData.status = "ACTIVE";
-    }
-
-    // ✅ Strict Ownership Check: Only Owner or Admin can update
-    if (existing.created_by !== user.id && !isAdmin(role)) {
-      throw new Error("Forbidden: You can only update your own properties");
+    // ✅ Strict Ownership Check (Accepts Owner, Admin, or Manager)
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    if (existing.created_by !== user.id && !canBypassOwnership) {
+      return { success: false, message: "Forbidden: You can only update your own properties" };
     }
 
     assertAuthenticated({ userId: user.id, role });
 
-    // 3) กันยัด path รูปปลอม
-    if (images?.length) {
-      const mustStartWith = "properties/";
-      const invalid = images.find((p) => !p.startsWith(mustStartWith));
-      if (invalid) {
-        return {
-          success: false,
-          message: "Invalid image path (ownership mismatch)",
+    // 3) Auto-Status & SEO Logic
+    const listingType = (safeValues.listing_type || existing.listing_type) as "SALE" | "RENT";
+    
+    // Auto-Clear logic: if Admin/Manager edits manually, we assume they reviewed it.
+    let auditUpdates: Partial<PropertyUpdate> = {};
+    if (canBypassOwnership) {
+      // Check if any significant field in propertyData has changed
+      const significantFields = [
+        "title", "description", "price", "rental_price", "original_price", "original_rental_price",
+        "status", "listing_type", "property_type", "address_line1", "district", "province",
+        "subdistrict", "bedrooms", "bathrooms", "size_sqm", "land_size_sqwah"
+      ] as const;
+      const hasChanged = significantFields.some(key => {
+        const newVal = propertyData[key as keyof typeof propertyData];
+        const oldVal = (existing as any)[key];
+        
+        if (newVal === undefined) return false;
+
+        // Normalize null and undefined for comparison
+        const normalizedNew = newVal === null ? undefined : newVal;
+        const normalizedOld = oldVal === null ? undefined : oldVal;
+
+        return normalizedNew !== normalizedOld;
+      });
+
+      if (hasChanged) {
+        auditUpdates = {
+          requires_ai_review: false,
+          ai_reviewed_at: new Date().toISOString(),
+          ai_reviewed_by: user.id
         };
       }
     }
 
-    // 4) SEO metadata
-    // Determine the main cover image URL for OG tags
-    const newCoverPath = images?.[0];
-    const existingCover = (existing.property_images as unknown as { is_cover: boolean; image_url: string }[])?.find(
-      (img) => img.is_cover,
-    )?.image_url;
-    const mainImageUrl = newCoverPath
-      ? getPublicImageUrl(newCoverPath)
-      : existingCover;
+    const currentRequiresAiReview = auditUpdates.requires_ai_review !== undefined 
+      ? auditUpdates.requires_ai_review 
+      : propertyData.requires_ai_review;
 
-    // We reuse existing keywords logic by passing existing ones
-    const finalKeywords = generateKeywords(
-      safeValues,
-      existing.meta_keywords || [],
-    );
-
-    const seoData = prepareSEOData(
-      {
-        ...propertyData,
-        main_image: mainImageUrl,
-      },
-      safeValues,
-    );
-
-    const mergedKeywords = Array.from(
-      new Set([...(seoData.metaKeywords || []), ...finalKeywords]),
-    );
-
-    // 5) Update property data + SEO
-    const { error: updateErr } = await supabase
-      .from("properties")
-      .update({
-        ...propertyData,
-        is_bare_shell: safeValues.is_bare_shell,
-        is_exclusive: safeValues.is_exclusive,
-        has_raised_floor: safeValues.has_raised_floor,
-        price: propertyData.price, // Force include (allow null)
-        rental_price: propertyData.rental_price, // Force include (allow null)
-        original_price: propertyData.original_price, // Force include
-        original_rental_price: propertyData.original_rental_price,
-        slug: seoData.slug,
-        meta_title: seoData.metaTitle,
-        meta_description: seoData.metaDescription,
-        meta_keywords: mergedKeywords,
-        structured_data: seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
-      .eq("version", safeValues.version ?? existing.version ?? 1)
-      .select();
-
-    if (updateErr) {
-      return { success: false, message: mapDbError(updateErr) };
+    if (currentRequiresAiReview) {
+      propertyData.status = "DRAFT";
+    } else if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
+      propertyData.status = listingType === "RENT" ? "RENTED" : "SOLD";
     }
 
-    if (!updateErr && false) {} // dummy for type checks
+    const finalKeywords = generateKeywords(safeValues, (existing.meta_keywords || []) as string[]);
     
-    // We get 'data' from the update which behaves like updatedRows
-    // but the builder above didn't destructure `data`. Let's re-run cleanly:
-    const { data: updatedRows, error: actualUpdateErr } = await supabase
-      .from("properties")
-      .update({
+    // SEO Data needs a main image
+    const existingImages = (existing.images as any[]) || [];
+    const mainImageUrl = images?.[0] ? getPublicImageUrl(images[0]) : (existingImages[0]?.url || "");
+    
+    const seoData = prepareSEOData({ ...propertyData, main_image: mainImageUrl }, safeValues);
+    const mergedKeywords = Array.from(new Set([...(seoData.metaKeywords || []), ...finalKeywords]));
+
+    // 4) ATOMIC EXECUTION (RPC)
+    interface EliteRpcResult {
+      id: string;
+      slug: string;
+    }
+
+    const { data: updatedRow, error: rpcError } = await (supabase as any).rpc("update_property_elite", {
+      p_id: id,
+      p_tenant_id: tenantId,
+      p_user_id: user.id,
+      p_is_admin: canBypassOwnership,
+      p_version: safeValues.version ?? existing.version ?? 1,
+      p_data: {
         ...propertyData,
-        is_bare_shell: safeValues.is_bare_shell,
-        is_exclusive: safeValues.is_exclusive,
-        has_raised_floor: safeValues.has_raised_floor,
-        price: propertyData.price,
-        rental_price: propertyData.rental_price,
-        original_price: propertyData.original_price,
-        original_rental_price: propertyData.original_rental_price,
+        ...auditUpdates,
         slug: seoData.slug,
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,
         meta_keywords: mergedKeywords,
-        structured_data: seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
-      .eq("version", safeValues.version ?? 1)
-      .select();
+        structured_data: seoData.structuredData,
+        images: images !== undefined ? images.map((path, idx) => ({
+          image_url: getPublicImageUrl(path),
+          storage_path: path,
+          is_cover: idx === 0,
+          sort_order: idx
+        })) : undefined,
+        agent_ids: agent_ids ?? undefined,
+        feature_ids: feature_ids ?? undefined
+      }
+    }) as { data: EliteRpcResult | null, error: any };
 
-    if (actualUpdateErr) {
-      return { success: false, message: mapDbError(actualUpdateErr) };
+    if (rpcError) {
+      console.error("RPC update_property_elite failed:", rpcError);
+      if (rpcError.message?.includes("VC409") || rpcError.code === "P4090") {
+        return { success: false, message: "ข้อมูลถูกแก้ไขไปแล้วโดยเอเจนต์ท่านอื่น กรุณารีเฟรชข้อมูลล่าสุด" };
+      }
+      return { success: false, message: mapDbError(rpcError) };
     }
 
-    if (!updatedRows || updatedRows.length === 0) {
-      return { 
-        success: false, 
-        message: "ข้อมูลถูกแก้ไขไปแล้วโดยเอเจนต์ท่านอื่น กรุณารีเฟรชข้อมูลล่าสุด",
-        errors: { errorType: "VERSION_CONFLICT" } // Generic mapping for legacy interface
-      };
+    // 5) GRANULAR AUDIT (Diffing)
+    // Safely extract junction table IDs ensuring they are arrays of strings
+    const oldAgents = Array.isArray(existing.property_agents) 
+      ? (existing.property_agents as any[]).map((a) => String(a.agent_id))
+      : [];
+      
+    const oldFeatures = Array.isArray(existing.property_features)
+      ? (existing.property_features as any[]).map((f) => String(f.feature_id))
+      : [];
+    
+    // Fetch labels for semantic diff
+    interface ProfileLabel { id: string; full_name: string | null }
+    interface FeatureLabel { id: string; label: string }
+    
+    let agentLabels: { id: string; full_name: string }[] = [];
+    let featureLabels: FeatureLabel[] = [];
+    
+    // Check if we actually need to fetch labels (any changes in junction tables?)
+    const normalizedAgentIds = (agent_ids || []).map(id => String(id));
+    const normalizedFeatureIds = (feature_ids || []).map(id => String(id));
+
+    const needsLabels = JSON.stringify(oldAgents.sort()) !== JSON.stringify(normalizedAgentIds.sort()) || 
+                        JSON.stringify(oldFeatures.sort()) !== JSON.stringify(normalizedFeatureIds.sort());
+
+    if (needsLabels) {
+      const [{ data: agents }, { data: features }] = await Promise.all([
+        supabase.from("profiles").select("id, full_name").in("id", [...new Set([...oldAgents, ...(agent_ids || [])])]),
+        supabase.from("features").select("id, name").in("id", [...new Set([...oldFeatures, ...(feature_ids || [])])])
+      ]);
+      // Explicitly map null full_names to empty strings for Type Safety
+      agentLabels = (agents || []).map((a: any) => ({ 
+        id: a.id, 
+        full_name: a.full_name || "Unknown Agent" 
+      }));
+      // Map 'name' to 'label' for compatibility with getPropertyDiff
+      featureLabels = (features || []).map(f => ({ id: f.id, label: f.name }));
     }
 
-    // --- Step 3: Images update with rollback ---
-    // Only process images if the field was included in the request
-    if (images !== undefined) {
-      // A) โหลดรูปเดิมไว้ก่อน เผื่อ rollback
-      const { data: oldImages, error: oldImagesErr } = await supabase
-        .from("property_images")
-        .select("storage_path, image_url, is_cover, sort_order")
-        .eq("property_id", id);
-
-      if (oldImagesErr) {
-        console.error("Fetch old images error:", oldImagesErr);
-        return { success: false, message: "Failed to read existing images" };
-      }
-
-      // B) ถ้ามีรูปใหม่: validate + existence check ก่อนทำลายของเดิม
-      if (images && images.length > 0) {
-        const valid = validatePropertyImagePaths(images);
-        if (!valid.ok) return { success: false, message: valid.message };
-
-        // Skip verification for images that already exist in property_images
-        // (they were already verified when first uploaded)
-        const existingPaths = new Set(
-          (oldImages || []).map((img) => img.storage_path),
-        );
-      }
-
-      // C) ลบรูปเดิม (ถ้าผู้ใช้ตั้งใจลบทั้งหมด images อาจว่าง → ก็ลบให้หมดได้)
-      const { error: deleteError } = await supabase
-        .from("property_images")
-        .delete()
-        .eq("property_id", id);
-
-      if (deleteError) {
-        console.error("Delete old images error:", deleteError);
-        return { success: false, message: "Failed to replace images" };
-      }
-
-      // D) insert รูปใหม่ (ถ้ามี)
-      if (images && images.length > 0) {
-        const imageRows = images.map((storagePath, index) => ({
-          property_id: id,
-          storage_path: storagePath,
-          image_url: getPublicImageUrl(storagePath),
-          is_cover: index === 0,
-          sort_order: index,
-        }));
-
-        const { error: imagesError } = await supabase
-          .from("property_images")
-          .insert(imageRows);
-
-        if (imagesError) {
-          console.error("Images insertion error:", imagesError);
-
-          // ✅ rollback: เอารูปเดิมกลับเข้าไป
-          if (oldImages && oldImages.length > 0) {
-            await supabase.from("property_images").insert(
-              oldImages.map((img) => ({
-                property_id: id,
-                storage_path: img.storage_path,
-                image_url: img.image_url,
-                is_cover: img.is_cover,
-                sort_order: img.sort_order,
-              })),
-            );
-          }
-
-          return { success: false, message: "Failed to attach images" };
-        }
-      }
-      await finalizeUploadSession({
-        supabase,
-        userId: user.id,
-        sessionId,
-        propertyId: id,
-        usedPaths: images ?? [],
-      });
-
-      // E) ลบไฟล์จริงออกจาก Storage (เฉพาะไฟล์ที่ถูกถอดออก)
-      if (oldImages && oldImages.length > 0) {
-        const oldPaths = new Set(
-          oldImages.map((x) => x.storage_path).filter(Boolean),
-        );
-        const newPaths = new Set((images ?? []).filter(Boolean));
-
-        const removed = [...oldPaths].filter(
-          (p): p is string => typeof p === "string" && !newPaths.has(p),
-        );
-
-        if (removed.length > 0) {
-          const { error: removeErr } = await supabase.storage
-            .from(PROPERTY_IMAGES_BUCKET)
-            .remove(removed);
-
-          if (removeErr) {
-            console.error("Failed to remove orphaned images:", removeErr);
-          }
-        }
-      }
-    } // End of if (images !== undefined)
-
-    // --- Step 4: Agents update ---
-    if (agent_ids !== undefined) {
-      // Delete existing
-      await supabase.from("property_agents").delete().eq("property_id", id);
-
-      // Insert new
-      if (agent_ids.length > 0) {
-        const agentRows = agent_ids.map((agentId) => ({
-          property_id: id,
-          agent_id: agentId,
-        }));
-        const { error: agentsError } = await supabase
-          .from("property_agents")
-          .insert(agentRows);
-
-        if (agentsError) {
-          console.error("Agents update error:", agentsError);
-        }
-      }
-    }
-
-    // --- Step 5: Features/Amenities update ---
-    if (feature_ids !== undefined) {
-      // Delete all existing features
-      await supabase.from("property_features").delete().eq("property_id", id);
-
-      // Insert new selections
-      if (feature_ids.length > 0) {
-        const featureRows = feature_ids.map((featureId) => ({
-          property_id: id,
-          feature_id: featureId,
-        }));
-        const { error: featuresError } = await supabase
-          .from("property_features")
-          .insert(featureRows);
-
-        if (featuresError) {
-          console.error("Features update error:", featuresError);
-          // Non-blocking: continue even if features fail to save
-        }
-      }
-    }
+    const diff = getPropertyDiff(
+      { ...existing, agent_ids: oldAgents, feature_ids: oldFeatures } as unknown as PropertyFormValues,
+      { ...safeValues, agent_ids, feature_ids },
+      { allAgents: agentLabels, allFeatures: featureLabels }
+    );
 
     await logAudit(
       { supabase, user, role },
@@ -352,75 +228,56 @@ export async function updatePropertyAction(
         entity: "properties",
         entityId: id,
         metadata: {
-          imagesCount: images?.length ?? 0,
+          diff: diff.summary,
+          changes: diff.details,
+          old_state: diff.oldState,
+          new_state: diff.newState,
           sessionId,
         },
       },
     );
-    // --- Workflow Notifications ---
-    if (existing) {
-      const newStatus = safeValues.status;
-      const isDealClosure =
-        (newStatus === "SOLD" || newStatus === "RENTED") &&
-        existing.status !== newStatus;
-      const currentSalePrice =
-        safeValues.price || safeValues.original_price || 0;
-      const oldSalePrice = existing.price || existing.original_price || 0;
-      const currentRentPrice =
-        safeValues.rental_price || safeValues.original_rental_price || 0;
-      const oldRentPrice =
-        existing.rental_price || existing.original_rental_price || 0;
 
-      const priceDropped =
-        currentSalePrice > 0 &&
-        oldSalePrice > 0 &&
-        currentSalePrice < oldSalePrice;
-      const rentDropped =
-        currentRentPrice > 0 &&
-        oldRentPrice > 0 &&
-        currentRentPrice < oldRentPrice;
-      const isPriceDrop = priceDropped || rentDropped;
-
-      // 1. Deal Closure Notification
-      if (isDealClosure) {
-        await sendStatusUpdateNotification(
-          { id: existing.id, title: existing.title },
-          newStatus,
-        );
-      }
-
-      // 2. Price Drop Notification
-      if (isPriceDrop && !isDealClosure) {
-        await sendPriceDropNotification(
-          existing,
-          priceDropped ? oldSalePrice : oldRentPrice,
-          priceDropped ? currentSalePrice : currentRentPrice,
-          priceDropped ? "SALE" : "RENT",
-        );
-      }
+    // 6) POST-UPDATE SIDE EFFECTS
+    if (images !== undefined) {
+      await finalizeUploadSession({ supabase, userId: user.id, sessionId, propertyId: id, usedPaths: images });
     }
 
-    // protected pages
+    // Notifications
+    const newStatus = safeValues.status;
+    if ((newStatus === "SOLD" || newStatus === "RENTED") && existing.status !== newStatus) {
+      await sendStatusUpdateNotification({ id, title: existing.title }, newStatus);
+    }
+    
+    // Price Drop Logic (Sale & Rent)
+    const currentSalePrice = safeValues.price || safeValues.original_price || 0;
+    const oldSalePrice = existing.price || existing.original_price || 0;
+    const currentRentPrice = safeValues.rental_price || safeValues.original_rental_price || 0;
+    const oldRentPrice = existing.rental_price || existing.original_rental_price || 0;
+
+    if (currentSalePrice > 0 && oldSalePrice > 0 && currentSalePrice < oldSalePrice) {
+      await sendPriceDropNotification(existing as any, oldSalePrice, currentSalePrice, "SALE");
+    } else if (currentRentPrice > 0 && oldRentPrice > 0 && currentRentPrice < oldRentPrice) {
+      await sendPriceDropNotification(existing as any, oldRentPrice, currentRentPrice, "RENT");
+    }
+
+    // Cache clearing
     revalidatePath("/protected/properties");
-    // Public pages (to ensure OG and detail are fresh)
+    revalidatePath("/properties");
+    revalidatePath("/(public)/properties", "page");
     revalidatePath("/(public)/properties/[slug]", "page");
 
-    // 🚀 Step 6: Background Job (Non-blocking)
-    // Trigger AI if explicitly requested via the checkbox
     if (safeValues.requires_ai_review) {
-      await inngest.send({
-        name: "property.created",
-        data: { 
-          propertyId: id,
-          userId: user.id,
-          tenantId: tenantId
-        },
-      });
+      await inngest.send({ name: "property.created", data: { propertyId: id, userId: user.id, tenantId } });
     }
 
-    return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
+    return { 
+      success: true, 
+      message: "อัปเดตข้อมูลสำเร็จ", 
+      propertyId: id, 
+      slug: updatedRow?.slug || "" 
+    };
   } catch (err: unknown) {
-    console.error("updatePropertyAction → error:", err);
+    console.error("updatePropertyAction error:", err);
     if (err && typeof err === "object" && "code" in err && (err as any).code === "AUTHZ_ERROR") {
       return authzFail(err as any);
     }

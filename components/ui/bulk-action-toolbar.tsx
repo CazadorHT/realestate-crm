@@ -27,6 +27,8 @@ interface BulkActionToolbarProps {
   confirmMessage?: React.ReactNode;
   actionableCount?: number;
   onDeleteLabel?: string;
+  onAiApprove?: () => Promise<void>;
+  onAiApproveLabel?: string;
   extraActions?: React.ReactNode;
 }
 
@@ -44,6 +46,8 @@ export function BulkActionToolbar({
   confirmMessage,
   actionableCount,
   onDeleteLabel,
+  onAiApprove,
+  onAiApproveLabel = "ยืนยันผล AI",
   extraActions,
 }: BulkActionToolbarProps) {
   const [isExporting, setIsExporting] = useState(false);
@@ -137,6 +141,30 @@ export function BulkActionToolbar({
                 >
                   <Download className="h-3.5 w-3.5 mr-1 rotate-180" />
                   {onPullLabel}
+                </Button>
+              }
+            />
+          )}
+          
+          {onAiApprove && (
+            <ConfirmDialog
+              title="Sentinel Verification"
+              description={
+                <div className="space-y-3">
+                  <p>คุณกำลังจะยืนยันข้อมูลที่สร้างโดย AI ทั้งหมด <strong className="text-indigo-600">{selectedCount} รายการ</strong></p>
+                  <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100 italic">การดำเนินการนี้จะล้าง Flag "รอนรีวิว" และบันทึกข้อมูล Audit ของคุณลงในระบบ Sentinel</p>
+                </div>
+              }
+              confirmText={onAiApproveLabel}
+              onConfirm={onAiApprove}
+              trigger={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs bg-indigo-50 hover:bg-indigo-100! border-indigo-200! text-indigo-700! font-bold shadow-sm"
+                >
+                  <span className="mr-1.5 flex h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
+                  {onAiApproveLabel}
                 </Button>
               }
             />

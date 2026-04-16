@@ -72,8 +72,8 @@ export function DashboardToolbar({
   };
 
   return (
-    <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-4 w-full bg-white/50 backdrop-blur-md border border-slate-200/60 p-3 rounded-2xl shadow-sm">
-      <div className="flex flex-col sm:flex-row items-center gap-3">
+    <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 sm:gap-4 w-full bg-white/50 backdrop-blur-md border border-slate-200/60 p-2 sm:p-3 rounded-2xl shadow-sm">
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
         {allBranches.length > 0 && (
           <>
             {/* Branch Selector */}
@@ -88,9 +88,9 @@ export function DashboardToolbar({
                 trigger={
                   <Button
                     variant="outline"
-                    className="w-full h-11 justify-start gap-3 bg-white border-slate-200 shadow-xs rounded-xl px-4 font-semibold hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50/30 transition-all"
+                    className="w-full h-10 sm:h-11 justify-start gap-2 sm:gap-3 bg-white border-slate-200 shadow-xs rounded-xl px-3 sm:px-4 font-semibold hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50/30 transition-all text-xs sm:text-sm"
                   >
-                    <Building2 className="h-4 w-4 text-slate-400" />
+                    <Building2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
                     <span className="truncate">
                       {allBranches.find((b) => b.id === selectedTenantId)
                         ?.name || "ทุกสาขา (Overall)"}
@@ -120,9 +120,9 @@ export function DashboardToolbar({
                 trigger={
                   <Button
                     variant="outline"
-                    className="w-full h-11 justify-start gap-3 bg-white border-indigo-100 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 shadow-xs rounded-xl px-4 font-semibold hover:bg-indigo-50/50 transition-all"
+                    className="w-full h-10 sm:h-11 justify-start gap-2 sm:gap-3 bg-white border-indigo-100 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 shadow-xs rounded-xl px-3 sm:px-4 font-semibold hover:bg-indigo-50/50 transition-all text-xs sm:text-sm"
                   >
-                    <PieChartIcon className="h-4 w-4 text-indigo-400" />
+                    <PieChartIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-400" />
                     <span className="truncate">
                       {compareTenantId === "ALL"
                         ? "ทุกสาขา (Overall)"
@@ -138,7 +138,7 @@ export function DashboardToolbar({
         )}
       </div>
 
-      <div className="grid grid-cols-2 sm:flex items-center gap-3">
+      <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-3">
         {/* Year Selector */}
         <div className="w-full sm:w-auto">
           <ResponsiveSelect
@@ -151,9 +151,9 @@ export function DashboardToolbar({
             trigger={
               <Button
                 variant="outline"
-                className="w-full sm:w-auto h-11 gap-3 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 border-slate-200 rounded-xl bg-white font-semibold hover:bg-slate-50 transition-all"
+                className="w-full sm:w-auto h-10 sm:h-11 gap-2 sm:gap-3 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 border-slate-200 rounded-xl bg-white font-semibold hover:bg-slate-50 transition-all text-xs sm:text-sm"
               >
-                <Calendar className="h-4 w-4 text-slate-500" />
+                <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-500" />
                 ปี {parseInt(selectedYear) + 543}
               </Button>
             }
@@ -165,35 +165,34 @@ export function DashboardToolbar({
           onClick={onGenerateAi}
           disabled={isGeneratingAi}
           variant="outline"
-          className="h-11 gap-3 border-indigo-100 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-xs rounded-xl bg-indigo-50/30 font-semibold transition-all"
+          className="h-10 sm:h-11 gap-2 sm:gap-3 border-indigo-100 hover:text-indigo-700 hover:border-indigo-200 text-indigo-700 hover:bg-indigo-50 shadow-xs rounded-xl bg-indigo-50/30 font-semibold transition-all text-xs sm:text-sm"
         >
           <Sparkles
-            className={cn("h-4 w-4", isGeneratingAi && "animate-pulse")}
+            className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isGeneratingAi && "animate-pulse")}
           />
-          <span className="hidden sm:inline">
-            {aiInsights ? "Re-analyze" : "AI Analysis"}
+          <span className="hidden xs:inline">
+            {aiInsights ? "Analyze" : "AI Analysis"}
           </span>
-          <span className="sm:hidden">AI</span>
+          <span className="xs:hidden">AI</span>
         </Button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button className="h-11 col-span-2 sm:col-auto gap-3 bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-100 transition-all rounded-xl font-semibold">
-              <Download className="h-4 w-4" />
+            <Button className="h-10 sm:h-11 col-span-2 sm:col-auto gap-2 sm:gap-3 bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-100 transition-all rounded-xl font-semibold text-xs sm:text-sm">
+              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Export <span className="hidden md:inline">Report</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="rounded-xl p-1 shadow-xl border-slate-200/60">
             <DropdownMenuItem
               onClick={() => onExport("excel")}
-              className="gap-3 focus:bg-slate-50 rounded-lg py-2.5 font-semibold cursor-pointer"
+              className="gap-3 focus:bg-slate-50 rounded-lg py-2.5 font-semibold cursor-pointer text-sm"
             >
-              <FileText className="h-4 w-4 text-emerald-600" /> Excel Report
-              (Full)
+              <FileText className="h-4 w-4 text-emerald-600" /> Excel Report (Full)
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={() => onExport("pdf")}
-              className="gap-3 focus:bg-slate-50 rounded-lg py-2.5 font-semibold cursor-pointer"
+              className="gap-3 focus:bg-slate-50 rounded-lg py-2.5 font-semibold cursor-pointer text-sm"
             >
               <FileText className="h-4 w-4 text-rose-600" /> PDF Summary
             </DropdownMenuItem>

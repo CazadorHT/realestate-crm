@@ -269,3 +269,51 @@ export async function getAllPropertyIdsAction(args: {
     return { success: false, ids: [], message: "ไม่สามารถดึงข้อมูลรายการทั้งหมดได้" };
   }
 }
+/**
+ * 6. Bulk Approve AI Review - ยืนยันข้อมูล AI ทั้งหมด
+ */
+export async function bulkApproveAiReviewAction(
+  ids: string[]
+): Promise<BulkActionResult> {
+  try {
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
+    if (!ids || ids.length === 0) {
+      return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
+    }
+
+    const { error, count } = await supabase
+      .from("properties")
+      .update({ 
+        requires_ai_review: false,
+        ai_reviewed_at: new Date().toISOString(),
+        ai_reviewed_by: user.id,
+        updated_at: new Date().toISOString()
+      })
+      .in("id", ids);
+
+    if (error) throw error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "property.bulk_ai_approve",
+        entity: "properties",
+        entityId: ids.join(","),
+        metadata: { count },
+      }
+    );
+
+    revalidatePath("/protected/properties");
+
+    return { 
+      success: true, 
+      count: count ?? ids.length, 
+      message: `ยืนยันข้อมูล AI สำเร็จ ${count} รายการ` 
+    };
+  } catch (error) {
+    console.error("bulkApproveAiReview error:", error);
+    return { success: false, count: 0, message: mapDbError(error) };
+  }
+}

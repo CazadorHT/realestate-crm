@@ -15,7 +15,7 @@ export async function getPropertiesDashboardStatsQuery(
   let query = supabase
     .from("properties")
     .select(
-      "id, status, price, rental_price, original_price, original_rental_price, property_type, listing_type, commission_sale_percentage, commission_rent_months",
+      "id, status, price, rental_price, original_price, original_rental_price, property_type, listing_type, commission_sale_percentage, commission_rent_months, requires_ai_review",
     )
     .is("deleted_at", null);
 
@@ -41,6 +41,7 @@ export async function getPropertiesDashboardStatsQuery(
       totalRealizedCommission: 0,
       byType: [],
       byStatus: [],
+      aiReviewCount: 0,
     };
   }
 
@@ -49,6 +50,7 @@ export async function getPropertiesDashboardStatsQuery(
   const soldOrRented = data.filter((p) =>
     ["SOLD", "RENTED"].includes(p.status),
   ).length;
+  const aiReviewCount = data.filter((p) => (p as any).requires_ai_review).length;
 
   const totalValue = data
     .filter((p) => p.status === "ACTIVE")
@@ -130,5 +132,6 @@ export async function getPropertiesDashboardStatsQuery(
     totalRealizedCommission,
     byType,
     byStatus,
+    aiReviewCount,
   };
 }

@@ -563,6 +563,16 @@
     "schemaname": "public",
     "tablename": "profiles",
     "rls_enabled": true,
+    "policyname": "Admins can view all profiles for audit",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(auth.uid() IN ( SELECT profiles_1.id\n   FROM profiles profiles_1\n  WHERE (profiles_1.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "rls_enabled": true,
     "policyname": "Public View Agent Profiles",
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",

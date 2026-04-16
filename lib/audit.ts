@@ -82,6 +82,7 @@ export type AuditAction =
   | "property.transfer_branch"
   | "owner.transfer_branch"
   | "property.ai_refresh"
+  | "property.bulk_ai_approve"
   | "property.export"
   | "commission.export_pdf"
   | "commission.send_line";
@@ -161,6 +162,8 @@ export function getReadableSummary(log: {
       return `เพิ่มทรัพย์สินใหม่: ${meta.title || "N/A"}`;
     case "property.update":
       return `อัปเดตข้อมูลทรัพย์สิน`;
+    case "property.bulk_ai_approve":
+      return `ยืนยันข้อมูล AI ทั้งหมด (${meta.count || 0} รายการ)`;
     case "property.trash":
       return `ย้ายทรัพย์สินลงถังขยะ`;
     case "property.restore":

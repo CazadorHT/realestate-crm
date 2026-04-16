@@ -3241,6 +3241,20 @@
     "column_default": "1"
   },
   {
+    "table_name": "properties",
+    "column_name": "ai_reviewed_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "ai_reviewed_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "property_agents",
     "column_name": "property_id",
     "data_type": "uuid",

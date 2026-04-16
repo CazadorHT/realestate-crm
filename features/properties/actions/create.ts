@@ -49,6 +49,11 @@ export async function createPropertyAction(
     const { images, agent_ids, feature_ids, ...propertyData } = safeValues;
 
     // 🧠 Auto-Status Logic: AI Draft Enforcement
+    // Skip review for staff manual creation
+    if (role === "ADMIN" || role === "MANAGER") {
+      propertyData.requires_ai_review = false;
+    }
+
     if (propertyData.requires_ai_review) {
       propertyData.status = "DRAFT";
     } else if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {

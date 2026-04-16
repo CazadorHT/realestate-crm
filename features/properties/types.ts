@@ -21,6 +21,7 @@ export type PropertyWithImages = PropertyRow & {
   property_images: PropertyImage[];
   property_agents?: { agent_id: string }[];
   property_features?: { feature_id: string }[];
+  reviewer?: { full_name: string | null } | null;
 };
 
 // Helper type for image upload data
@@ -90,4 +91,6 @@ export interface PropertyTableData {
   tenant_id?: string | null;
   tenant_name?: string | null;
   version?: number;
+  ai_reviewed_at?: string | null;
+  ai_reviewed_by?: string | null;
 }
