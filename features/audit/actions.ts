@@ -329,23 +329,21 @@ export async function getPropertyAuditLogsAction(
   propertyId: string,
   page: number = 1,
   pageSize: number = 10,
+  filters: {
+    action?: string;
+    userId?: string;
+    search?: string;
+  } = {}
 ): Promise<AuditActionResult<{ logs: AuditLogEntry[]; totalCount: number; hasMore: boolean }>> {
   try {
     const { supabase, tenantId, role } = await requireAuthContext();
 
     const offset = (page - 1) * pageSize;
 
+    // 🛡️ [HARDENING] Fetch audit logs without direct join to avoid schema cache issues with partitioned tables
     let query = supabase
       .from("audit_logs")
-      .select(`
-        *,
-        profiles:user_id (
-          id,
-          full_name,
-          avatar_url,
-          role
-        )
-      `, { count: "exact" })
+      .select("*", { count: "exact" })
       .eq("entity_id", propertyId)
       .eq("entity", "properties");
 
@@ -354,17 +352,50 @@ export async function getPropertyAuditLogsAction(
       query = query.eq("tenant_id", tenantId);
     }
 
+    // 🛡️ [FILTERS] Apply Action and User filters
+    if (filters.action && filters.action !== "ALL") {
+      query = query.eq("action", filters.action);
+    }
+    if (filters.userId && filters.userId !== "ALL") {
+      query = query.eq("user_id", filters.userId);
+    }
+
+    // 🛡️ [SEARCH] Client-side search logic moved to server for performance
+    if (filters.search) {
+      // Search in actions or metadata summary (diff)
+      // Note: Full-text search on JSONB might be slow, but for single property id is acceptable
+      query = query.or(`action.ilike.%${filters.search}%,metadata->>diff.ilike.%${filters.search}%`);
+    }
+
     const { data, error, count } = await query
       .order("created_at", { ascending: false })
       .range(offset, offset + pageSize - 1);
 
     if (error) throw error;
 
-    // 🛡️ [SECURITY] Deep Scrub sensitive metadata for non-admins
-    const scrubbedData = (data as Record<string, unknown>[]).map(log => {
-      if (role === "ADMIN") return log;
-      return {
+    // 🛡️ [MANUAL JOIN] Fetch profiles for the found user_ids
+    const userIds = Array.from(new Set(data?.map((log) => log.user_id).filter(Boolean))) as string[];
+    
+    const { data: profiles } = userIds.length > 0 
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url, role")
+          .in("id", userIds)
+      : { data: [] };
+
+    const profileMap = new Map(profiles?.map((p) => [p.id, p]));
+
+    // 🛡️ [SECURITY] Deep Scrub sensitive metadata & Map profiles
+    const enrichedData = (data as Record<string, unknown>[]).map(log => {
+      const logWithUser = {
         ...log,
+        user: log.user_id ? (profileMap.get(log.user_id as string) || null) : null
+      };
+
+      if (role === "ADMIN") return logWithUser;
+      
+      return {
+        ...logWithUser,
         metadata: scrubMetadata(log.metadata)
       };
     });
@@ -372,7 +403,7 @@ export async function getPropertyAuditLogsAction(
     return {
       success: true,
       data: {
-        logs: (scrubbedData as unknown) as AuditLogEntry[],
+        logs: (enrichedData as unknown) as AuditLogEntry[],
         totalCount: count || 0,
         hasMore: (count || 0) > offset + pageSize,
       }
@@ -385,5 +416,79 @@ export async function getPropertyAuditLogsAction(
       message: err.message || "ไม่สามารถโหลดประวัติข้อมูลได้",
       errorType: "SYSTEM_ERROR"
     };
+  }
+}
+
+/**
+ * 📊 Sentinel Summary: Fetch total counts for actions and modifiers 
+ * for a specific property to populate filter UI badges accurately.
+ */
+export async function getAuditStatsAction(
+  propertyId: string
+): Promise<AuditActionResult<{ 
+  totalCount: number;
+  actionCounts: Record<string, number>;
+  modifierCounts: Record<string, number>;
+  modifierProfiles: Record<string, { name: string; avatar?: string }>;
+}>> {
+  try {
+    const { supabase, tenantId } = await requireAuthContext();
+
+    let query = supabase
+      .from("audit_logs")
+      .select("action, user_id", { count: "exact" })
+      .eq("entity_id", propertyId)
+      .eq("entity", "properties");
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data, error, count } = await query;
+
+    if (error) throw error;
+
+    const actionCounts: Record<string, number> = {};
+    const modifierCounts: Record<string, number> = {};
+
+    data?.forEach(log => {
+      // Action stats
+      actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
+      
+      // Modifier (User) stats
+      if (log.user_id) {
+        modifierCounts[log.user_id] = (modifierCounts[log.user_id] || 0) + 1;
+      }
+    });
+
+    // 🛡️ Fetch profiles for all involved modifiers to ensure filter UI has names
+    const userIds = Object.keys(modifierCounts);
+    const { data: profiles } = userIds.length > 0 
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", userIds)
+      : { data: [] };
+
+    const modifierProfiles: Record<string, { name: string; avatar?: string }> = {};
+    profiles?.forEach(p => {
+      modifierProfiles[p.id] = {
+        name: p.full_name || "Unknown Agent",
+        avatar: p.avatar_url || undefined
+      };
+    });
+
+    return {
+      success: true,
+      data: {
+        totalCount: count || 0,
+        actionCounts,
+        modifierCounts,
+        modifierProfiles,
+      }
+    };
+  } catch (error) {
+    console.error("Failed to fetch audit stats:", error);
+    return { success: false, message: "ไม่สามารถโหลดข้อมูลสรุปประวัติได้" };
   }
 }

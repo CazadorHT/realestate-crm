@@ -688,7 +688,7 @@ export function PropertyForm({
                   ระบบบันทึกเฉพาะการเปลี่ยนแปลงสำคัญเพื่อความโปร่งใสในการจัดการทรัพย์สิน
                 </p>
               </div>
-              <div className="p-2 sm:p-6 bg-white min-h-[400px]">
+              <div className=" bg-white min-h-[400px]">
                 {defaultValues?.id && <AuditTimeline propertyId={defaultValues.id} />}
               </div>
             </Card>

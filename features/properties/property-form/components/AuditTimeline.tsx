@@ -21,7 +21,12 @@ import {
   Maximize2,
   RotateCcw,
   TrendingDown,
-  X
+  X,
+  Plus,
+  Edit3,
+  Copy,
+  LayoutGrid,
+  Activity
 } from "lucide-react";
 import { toast } from "sonner";
 import { PriceHistoryChart } from "./PriceHistoryChart";
@@ -51,9 +56,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { getPropertyAuditLogsAction } from "@/features/audit/actions";
+import { getPropertyAuditLogsAction, getAuditStatsAction } from "@/features/audit/actions";
 import { AuditLogEntry } from "@/features/audit/types";
 import { cn } from "@/lib/utils";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { Label } from "@/components/ui/label";
 
 interface AuditTimelineProps {
   propertyId: string;
@@ -66,18 +73,28 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // -- Sentinel Global Stats (Server-side) --
+  const [stats, setStats] = useState<{
+    actionCounts: Record<string, number>;
+    modifierCounts: Record<string, number>;
+    totalCount: number;
+  } | null>(null);
+  const [allModifiers, setAllModifiers] = useState<Record<string, { name: string; avatar?: string }>>({});
   
   // -- Sentinel Search States --
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch] = useDebounce(searchTerm, 300);
   const [filterAction, setFilterAction] = useState<string>("ALL");
   const [filterModifier, setFilterModifier] = useState<string>("ALL");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  const fetchLogs = useCallback(async (pageNum: number) => {
+  const fetchLogs = useCallback(async (pageNum: number, currentFilters: { action?: string; userId?: string; search?: string } = {}) => {
     if (pageNum === 1) setLoading(true);
     else setLoadingMore(true);
 
-    const result = await getPropertyAuditLogsAction(propertyId, pageNum);
+    const result = await getPropertyAuditLogsAction(propertyId, pageNum, 10, currentFilters);
 
     if (result.success && result.data) {
       if (pageNum === 1) {
@@ -86,7 +103,22 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
         setLogs((prev) => [...prev, ...result.data!.logs]);
       }
       setHasMore(result.data.hasMore);
+      setTotalCount(result.data.totalCount || 0);
       setError(null);
+
+      // 🛡️ Map modifier profiles for the Filter UI names
+      setAllModifiers((prev) => {
+        const next = { ...prev };
+        result.data!.logs.forEach(log => {
+          if (log.user_id && log.profiles) {
+            next[log.user_id] = {
+              name: log.profiles.full_name || "Unknown",
+              avatar: log.profiles.avatar_url || undefined
+            };
+          }
+        });
+        return next;
+      });
     } else {
       setError(result.message || "ไม่สามารถโหลดประวัติได้");
       toast.error(result.message || "เกิดข้อผิดพลาดในการโหลดประวัติ");
@@ -96,46 +128,47 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
     setLoadingMore(false);
   }, [propertyId]);
 
-  useEffect(() => {
-    fetchLogs(1);
-  }, [fetchLogs]);
-
-  const filteredLogs = useMemo(() => {
-    let result = [...logs];
-
-    // 1. Modifier Filter
-    if (filterModifier !== "ALL") {
-      result = result.filter(l => (l.profiles?.full_name || "Unknown") === filterModifier);
-    }
-
-    // 2. Action Filter
-    if (filterAction !== "ALL") {
-      result = result.filter(l => l.action === filterAction);
-    }
-
-    // 3. Search (Filter by Agent Name or Change Summary)
-    if (debouncedSearch) {
-      const q = debouncedSearch.toLowerCase();
-      result = result.filter(log => {
-        const agentName = (log.profiles?.full_name || "").toLowerCase();
-        const diffText = (log.metadata?.diff || []).join(" ").toLowerCase();
-        return agentName.includes(q) || diffText.includes(q);
+  const fetchStats = useCallback(async () => {
+    const res = await getAuditStatsAction(propertyId);
+    if (res.success && res.data) {
+      setStats({
+        actionCounts: res.data.actionCounts,
+        modifierCounts: res.data.modifierCounts,
+        totalCount: res.data.totalCount
       });
+      // 🛡️ Pre-populate all available modifiers from stats
+      setAllModifiers(prev => ({
+        ...prev,
+        ...res.data!.modifierProfiles
+      }));
     }
+  }, [propertyId]);
 
-    return result;
-  }, [logs, debouncedSearch, filterAction, filterModifier]);
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
-  const modifiers = useMemo(() => {
-    const names = logs.map(l => l.profiles?.full_name).filter(Boolean);
-    return Array.from(new Set(names)) as string[];
-  }, [logs]);
+  // -- 🛰️ Sentinel Effect: Handle Filter Changes (Server-side) --
+  useEffect(() => {
+    setPage(1);
+    fetchLogs(1, {
+      search: debouncedSearch,
+      action: filterAction,
+      userId: filterModifier
+    });
+  }, [debouncedSearch, filterAction, filterModifier]);
+
+  const filteredLogs = logs; // Server-side does the filtering now
 
   const handleLoadMore = () => {
     if (hasMore && !loadingMore) {
       const nextPage = page + 1;
       setPage(nextPage);
-      fetchLogs(nextPage);
+      fetchLogs(nextPage, {
+        search: debouncedSearch,
+        action: filterAction,
+        userId: filterModifier
+      });
     }
   };
 
@@ -158,7 +191,7 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
   return (
     <div className="flex flex-col h-full bg-slate-50/30">
       {/* --- Sentinel Search Header --- */}
-      <div className="sticky top-0 z-10 space-y-3 bg-white/80 p-4 backdrop-blur-md border-b shadow-sm">
+      <div className="sticky top-0 z-10 space-y-3 bg-white/80 p-4 backdrop-blur-md border-b border-slate-200 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -170,48 +203,145 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" size="icon" className="rounded-xl shrink-0">
-            <Filter className="h-4 w-4" />
-          </Button>
+          <ResponsiveDialog
+            open={isFilterOpen}
+            onOpenChange={setIsFilterOpen}
+            title="ตัวกรองประวัติ (Sentinel Filter)"
+            description="กรองข้อมูลตามพนักงานหรือประเภทการกระทำเพื่อความรวดเร็ว"
+            trigger={
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className={cn(
+                  "rounded-xl shrink-0 transition-all",
+                  (filterAction !== "ALL" || filterModifier !== "ALL") && "bg-blue-50 border-blue-200 text-blue-600 shadow-sm"
+                )}
+              >
+                <Filter className="h-4 w-4" />
+                {(filterAction !== "ALL" || filterModifier !== "ALL") && (
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-blue-600 text-[8px] text-white">
+                    !
+                  </span>
+                )}
+              </Button>
+            }
+            footer={
+              <div className="flex w-full gap-2">
+                <Button 
+                  variant="outline" 
+                  className="flex-1 h-11 rounded-xl" 
+                  onClick={() => {
+                    setFilterModifier("ALL");
+                    setFilterAction("ALL");
+                  }}
+                >
+                  ล้างทั้งหมด
+                </Button>
+                <Button 
+                  className="flex-2 h-11 rounded-xl bg-blue-600 hover:bg-blue-700"
+                  onClick={() => setIsFilterOpen(false)}
+                >
+                  ดูผลลัพธ์
+                </Button>
+              </div>
+            }
+          >
+            <div className="space-y-6 p-6">
+              <div className="space-y-3">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">พนักงาน (Modifier)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => setFilterModifier("ALL")}
+                      className={cn(
+                        "flex flex-col items-center justify-center rounded-xl border py-3 text-sm transition-all relative",
+                        filterModifier === "ALL" 
+                          ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm" 
+                          : "bg-white border-slate-100 text-slate-600 hover:border-slate-300"
+                      )}
+                    >
+                      ทุกคน
+                      <span className="mt-1 text-[10px] opacity-60 font-medium">({stats?.totalCount || logs.length})</span>
+                    </button>
+                    {Object.entries(allModifiers).map(([id, info]) => (
+                      <button
+                        key={id}
+                        onClick={() => setFilterModifier(id)}
+                        className={cn(
+                          "flex flex-col items-center justify-center rounded-xl border py-3 text-sm transition-all truncate px-2 relative",
+                          filterModifier === id 
+                            ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm" 
+                            : "bg-white border-slate-100 text-slate-600 hover:border-slate-300"
+                        )}
+                      >
+                        <span className="w-full truncate text-center">{info.name}</span>
+                        <span className="mt-1 text-[10px] opacity-60 font-medium">({stats?.modifierCounts[id] || 0})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+              <div className="space-y-3">
+                <Label className="text-xs font-bold uppercase tracking-wider text-slate-400">ปรเภทการกระทำ (Action)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "ALL", label: "ทุกการกระทำ", icon: LayoutGrid, color: "bg-slate-50 text-slate-700 border-slate-200" },
+                    { id: "property.create", label: "สร้างทรัพย์ใหม่", icon: Plus, color: "bg-emerald-50 text-emerald-700 border-emerald-100" },
+                    { id: "property.update", label: "แก้ไขข้อมูล", icon: Edit3, color: "bg-blue-50 text-blue-700 border-blue-100" },
+                    { id: "property.status.update", label: "เปลี่ยนสถานะ", icon: Activity, color: "bg-indigo-50 text-indigo-700 border-indigo-100" },
+                    { id: "property.duplicate", label: "คัดลอกทรัพย์", icon: Copy, color: "bg-sky-50 text-sky-700 border-sky-100" },
+                    { id: "property.restore", label: "คืนค่าเดิม", icon: RotateCcw, color: "bg-orange-50 text-orange-700 border-orange-100" },
+                  ].map(act => (
+                    <button
+                      key={act.id}
+                      onClick={() => setFilterAction(act.id)}
+                      className={cn(
+                        "flex flex-col items-center justify-center gap-1.5 rounded-xl border p-3 text-[11px] transition-all relative",
+                        filterAction === act.id 
+                          ? cn(act.color, "font-bold shadow-md") 
+                          : "bg-white border-slate-100 text-slate-500 hover:border-slate-300"
+                      )}
+                    >
+                      <act.icon className={cn("h-4 w-4", filterAction === act.id ? "opacity-100" : "opacity-40")} />
+                      <div className="flex flex-col items-center">
+                        <span>{act.label}</span>
+                        <span className="text-[9px] opacity-60 font-medium">
+                          ({act.id === "ALL" ? (stats?.totalCount || logs.length) : (stats?.actionCounts[act.id] || 0)})
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </ResponsiveDialog>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {/* Modifier Filter */}
-          <select 
-            value={filterModifier} 
-            onChange={(e) => setFilterModifier(e.target.value)}
-            className="rounded-lg border-slate-200 bg-white py-1 px-3 text-xs focus:ring-1 focus:ring-blue-500 cursor-pointer outline-none"
-          >
-            <option value="ALL">ทุกคน</option>
-            {modifiers.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-
-          {/* Action Filter */}
-          <select 
-            value={filterAction} 
-            onChange={(e) => setFilterAction(e.target.value)}
-            className="rounded-lg border-slate-200 bg-white py-1 px-3 text-xs focus:ring-1 focus:ring-blue-500 cursor-pointer outline-none"
-          >
-            <option value="ALL">ทุกการกระทำ</option>
-            <option value="property.update">แก้ไขข้อมูล</option>
-            <option value="property.status.update">เปลี่ยนสถานะ</option>
-            <option value="property.restore">คืนค่าเวอร์ชัน</option>
-          </select>
-
-          {/* Quick Clear */}
-          {(searchTerm || filterModifier !== "ALL" || filterAction !== "ALL") && (
+        {/* Active Filters Display */}
+        {(searchTerm || filterModifier !== "ALL" || filterAction !== "ALL") && (
+          <div className="flex items-center gap-2 mt-1">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Active:</span>
+            {filterModifier !== "ALL" && (
+              <Badge variant="secondary" className="bg-blue-50 text-blue-600 text-[10px] rounded-full border-blue-100">
+                👤 {allModifiers[filterModifier]?.name || "Loading..."}
+              </Badge>
+            )}
+            {filterAction !== "ALL" && (
+              <Badge variant="secondary" className="bg-indigo-50 text-indigo-600 text-[10px] rounded-full border-indigo-100">
+                ⚙️ {filterAction.split('.').pop()}
+              </Badge>
+            )}
             <button 
               onClick={() => {
                 setSearchTerm("");
                 setFilterModifier("ALL");
                 setFilterAction("ALL");
               }}
-              className="text-[10px] text-blue-500 hover:underline flex items-center gap-1"
+              className="ml-auto text-[10px] text-rose-500 hover:text-rose-600 font-bold flex items-center gap-1 bg-rose-50 px-2 py-0.5 rounded-full"
             >
-              <X className="h-2 w-2" /> ล้างตัวกรอง
+              <X className="h-2.5 w-2.5" /> ล้างตัวกรอง
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
@@ -236,7 +366,18 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
               >
-                <LogItem log={log} propertyId={propertyId} />
+                <LogItem 
+                  log={log} 
+                  propertyId={propertyId} 
+                  onRestoreSuccess={() => {
+                    fetchLogs(1, {
+                      search: debouncedSearch,
+                      action: filterAction,
+                      userId: filterModifier
+                    });
+                    fetchStats();
+                  }}
+                />
               </motion.div>
             ))}
           </AnimatePresence>
@@ -259,7 +400,15 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
   );
 }
 
-function LogItem({ log, propertyId }: { log: AuditLogEntry; propertyId: string }) {
+function LogItem({ 
+  log, 
+  propertyId,
+  onRestoreSuccess 
+}: { 
+  log: AuditLogEntry; 
+  propertyId: string;
+  onRestoreSuccess: () => void;
+}) {
   const meta = log.metadata || {};
   const diffCount = meta.diff?.length || 0;
   const isRestore = meta.is_restore === true;
@@ -387,7 +536,11 @@ function LogItem({ log, propertyId }: { log: AuditLogEntry; propertyId: string }
           )}
 
           <div className="flex justify-between items-center pt-2">
-            <RestoreButton propertyId={propertyId} logId={log.id} />
+            <RestoreButton 
+              propertyId={propertyId} 
+              logId={log.id} 
+              onSuccess={onRestoreSuccess}
+            />
             <div className="text-[10px] text-slate-400 italic">
               ID: {log.id}
             </div>
@@ -547,7 +700,15 @@ function DiffModal({ isOpen, onClose, label, oldVal, newVal }: {
   );
 }
 
-function RestoreButton({ propertyId, logId }: { propertyId: string; logId: string }) {
+function RestoreButton({ 
+  propertyId, 
+  logId,
+  onSuccess
+}: { 
+  propertyId: string; 
+  logId: string;
+  onSuccess: () => void;
+}) {
   const [isRestoring, setIsRestoring] = useState(false);
 
   const handleRestore = async () => {
@@ -555,10 +716,8 @@ function RestoreButton({ propertyId, logId }: { propertyId: string; logId: strin
     try {
       const res = await restorePropertyVersionAction(propertyId, logId);
       if (res.success) {
-        toast.success("คืนค่าข้อมูลสำเร็จ! กำลังรีเฟรชหน้าจอ...");
-        setTimeout(() => {
-          window.location.reload(); 
-        }, 1500);
+        toast.success("คืนค่าข้อมูลสำเร็จ! กำลังอัปเดตข้อมูล...");
+        onSuccess();
       } else {
         toast.error(res.message);
       }
