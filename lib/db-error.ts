@@ -120,6 +120,13 @@ function translateGenericMessage(message: string): string {
   if (lower.includes("relation") && lower.includes("does not exist"))
     return "ไม่พบตารางข้อมูลที่ต้องการในระบบ กรุณาติดต่อผู้ดูแลระบบ";
 
+  // --- Sentinel Elite Custom Codes ---
+  if (message.includes("VC403")) return "คุณไม่มีสิทธิ์แก้ไขข้อมูลนี้ (Forbidden - Not Owner)";
+  if (message.includes("VC404")) return "ไม่พบข้อมูลทรัพย์สินที่ต้องการแก้ไข (Not Found)";
+  if (message.includes("VC409")) return "ข้อมูลถูกแก้ไขไปแล้วโดยท่านอื่น กรุณารีเฟรชเพื่อรับค่าล่าสุด (Version Conflict)";
+
   // Generic fallback
-  return "เกิดข้อผิดพลาดในการดำเนินการ กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ";
+  return message.length < 100 
+    ? `เกิดข้อผิดพลาด: ${message}` 
+    : "เกิดข้อผิดพลาดในการดำเนินการ กรุณาลองใหม่หรือติดต่อผู้ดูแลระบบ";
 }

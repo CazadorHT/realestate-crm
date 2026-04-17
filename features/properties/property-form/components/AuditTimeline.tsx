@@ -61,6 +61,12 @@ import { AuditLogEntry } from "@/features/audit/types";
 import { cn } from "@/lib/utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Label } from "@/components/ui/label";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface AuditTimelineProps {
   propertyId: string;
@@ -209,21 +215,33 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
             title="ตัวกรองประวัติ (Sentinel Filter)"
             description="กรองข้อมูลตามพนักงานหรือประเภทการกระทำเพื่อความรวดเร็ว"
             trigger={
-              <Button 
-                variant="outline" 
-                size="icon" 
-                className={cn(
-                  "rounded-xl shrink-0 transition-all",
-                  (filterAction !== "ALL" || filterModifier !== "ALL") && "bg-blue-50 border-blue-200 text-blue-600 shadow-sm"
-                )}
-              >
-                <Filter className="h-4 w-4" />
-                {(filterAction !== "ALL" || filterModifier !== "ALL") && (
-                  <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-blue-600 text-[8px] text-white">
-                    !
-                  </span>
-                )}
-              </Button>
+              <div className="flex items-center">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="outline" 
+                        size="default" 
+                        className={cn(
+                          "rounded-xl shrink-0 transition-all gap-2 px-3 sm:px-4",
+                          (filterAction !== "ALL" || filterModifier !== "ALL") && "bg-blue-50 border-blue-200 text-blue-600 shadow-sm"
+                        )}
+                      >
+                        <Filter className="h-4 w-4" />
+                        <span className="text-xs font-bold hidden xs:inline">ตัวกรอง</span>
+                        {(filterAction !== "ALL" || filterModifier !== "ALL") && (
+                          <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-blue-600 text-[8px] text-white">
+                            !
+                          </span>
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-slate-900 text-white border-none rounded-lg text-[10px]">
+                      คลิกเพื่อกรองข้อมูลประวัติ
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             }
             footer={
               <div className="flex w-full gap-2">

@@ -324,27 +324,27 @@ export async function updatePropertyStatusAction(input: {
       return { success: false, message: "กรุณาตรวจสอบข้อมูล AI ในหน้าแก้ไขก่อนเปลี่ยนสถานะ" };
     }
 
-    const { data: updatedRows, error } = await supabase
-      .from("properties")
-      .update({
-        status: input.status,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", input.id)
-      .eq("tenant_id", tenantId)
-      .eq("version", input.version ?? existing?.version ?? 1)
-      .select();
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
 
-    if (error) {
-      return { success: false, message: mapDbError(error) };
-    }
+    const { data: updatedRow, error: rpcError } = await (supabase as any).rpc("update_property_status_elite", {
+      p_id: input.id,
+      p_tenant_id: tenantId,
+      p_user_id: user.id,
+      p_is_admin: canBypassOwnership,
+      p_status: input.status,
+      p_version: input.version ?? existing?.version ?? 1,
+    });
 
-    if (!updatedRows || updatedRows.length === 0) {
-      return { 
-        success: false, 
-        errorType: "VERSION_CONFLICT", 
-        message: "ข้อมูลถูกแก้ไขไปแล้วโดยเอเจนต์ท่านอื่น กรุณาดึงข้อมูลล่าสุด" 
-      };
+    if (rpcError) {
+      console.error("RPC update_property_status_elite failed:", rpcError);
+      if (rpcError.message?.includes("VC409") || rpcError.code === "P4090") {
+        return { 
+          success: false, 
+          errorType: "VERSION_CONFLICT", 
+          message: "ข้อมูลถูกแก้ไขไปแล้วโดยเอเจนต์ท่านอื่น กรุณาดึงข้อมูลล่าสุด" 
+        };
+      }
+      return { success: false, message: mapDbError(rpcError) };
     }
 
     await logAudit(
