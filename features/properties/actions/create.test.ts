@@ -17,6 +17,12 @@ vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
+vi.mock('@/lib/inngest/client', () => ({
+  inngest: {
+    send: vi.fn(),
+  },
+}));
+
 vi.mock('../logic/seo', () => ({
   generateKeywords: vi.fn(() => []),
   prepareSEOData: vi.fn(() => ({ slug: 'test-slug' })),

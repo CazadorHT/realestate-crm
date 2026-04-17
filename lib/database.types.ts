@@ -3213,6 +3213,152 @@ export type Database = {
         }
         Returns: Json
       }
+      update_property_status_elite: {
+        Args: {
+          p_id: string
+          p_is_admin: boolean
+          p_status: Database["public"]["Enums"]["property_status"]
+          p_tenant_id: string
+          p_user_id: string
+          p_version: number
+        }
+        Returns: {
+          address_line1: string | null
+          address_line1_cn: string | null
+          address_line1_en: string | null
+          ai_reviewed_at: string | null
+          ai_reviewed_by: string | null
+          allow_smoking: boolean | null
+          assigned_to: string | null
+          bathrooms: number | null
+          bedrooms: number | null
+          ceiling_height: number | null
+          co_agent_contact_channel: string | null
+          co_agent_contact_id: string | null
+          co_agent_name: string | null
+          co_agent_phone: string | null
+          co_agent_rent_commission_months: number | null
+          co_agent_sale_commission_percent: number | null
+          commission_rent_months: number | null
+          commission_sale_percentage: number | null
+          created_at: string
+          created_by: string | null
+          currency: string | null
+          deleted_at: string | null
+          description: string | null
+          description_cn: string | null
+          description_en: string | null
+          district: string | null
+          electricity_charge: string | null
+          facing_east: boolean | null
+          facing_north: boolean | null
+          facing_south: boolean | null
+          facing_west: boolean | null
+          floor: number | null
+          google_maps_link: string | null
+          has_247_access: boolean | null
+          has_city_view: boolean | null
+          has_fiber_optic: boolean | null
+          has_garden_view: boolean | null
+          has_multi_parking: boolean | null
+          has_pool_view: boolean | null
+          has_private_elevator: boolean | null
+          has_private_pool: boolean | null
+          has_raised_floor: boolean | null
+          has_river_view: boolean | null
+          has_unblocked_view: boolean | null
+          id: string
+          images: Json | null
+          is_bare_shell: boolean | null
+          is_cbd: boolean | null
+          is_central_air: boolean | null
+          is_co_agent: boolean | null
+          is_column_free: boolean | null
+          is_corner_unit: boolean | null
+          is_exclusive: boolean | null
+          is_foreigner_quota: boolean | null
+          is_fully_furnished: boolean | null
+          is_grade_a: boolean | null
+          is_grade_b: boolean | null
+          is_grade_c: boolean | null
+          is_handicapped_friendly: boolean | null
+          is_high_ceiling: boolean | null
+          is_high_floor: boolean | null
+          is_never_lived_in: boolean | null
+          is_pet_friendly: boolean | null
+          is_renovated: boolean | null
+          is_selling_with_tenant: boolean | null
+          is_smart_home: boolean | null
+          is_split_air: boolean | null
+          is_tax_registered: boolean | null
+          land_size_sqwah: number | null
+          listing_type: Database["public"]["Enums"]["listing_type"]
+          maintenance_fee: number | null
+          meta_description: string | null
+          meta_description_cn: string | null
+          meta_description_en: string | null
+          meta_keywords: string[] | null
+          meta_title: string | null
+          meta_title_cn: string | null
+          meta_title_en: string | null
+          min_contract_months: number | null
+          near_transit: boolean | null
+          nearby_places: Json | null
+          nearby_transits: Json | null
+          orientation: string | null
+          original_price: number | null
+          original_rental_price: number | null
+          owner_id: string | null
+          parking_fee_additional: number | null
+          parking_slots: number | null
+          parking_type: string | null
+          popular_area: string | null
+          popular_area_cn: string | null
+          popular_area_en: string | null
+          postal_code: string | null
+          posted_to_facebook_at: string | null
+          posted_to_instagram_at: string | null
+          posted_to_line_at: string | null
+          posted_to_tiktok_at: string | null
+          price: number | null
+          price_per_sqm: number | null
+          property_source: string | null
+          property_type: Database["public"]["Enums"]["property_type"]
+          province: string | null
+          rent_free_period_days: number | null
+          rent_price_per_sqm: number | null
+          rental_price: number | null
+          requires_ai_review: boolean
+          size_sqm: number | null
+          slug: string | null
+          sold_units: number
+          status: Database["public"]["Enums"]["property_status"]
+          structured_data: Json | null
+          subdistrict: string | null
+          tenant_id: string | null
+          title: string
+          title_cn: string | null
+          title_en: string | null
+          total_units: number
+          transit_distance_meters: number | null
+          transit_station_name: string | null
+          transit_station_name_cn: string | null
+          transit_station_name_en: string | null
+          transit_type: string | null
+          updated_at: string
+          verified: boolean | null
+          version: number
+          view_count: number | null
+          water_charge: string | null
+          zoning: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "properties"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       commission_role:

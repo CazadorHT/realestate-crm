@@ -1,9 +1,11 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { requireAuthContext, assertStaff, isAdmin } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { PROPERTY_IMAGES_BUCKET } from "./logic/images";
 import { mapDbError } from "@/lib/db-error";
 
 /**
@@ -188,20 +190,56 @@ export async function bulkPermanentDeletePropertiesAction(
       verifyQuery = verifyQuery.eq("tenant_id", tenantId);
     }
     const { data: verifiedProps } = await verifyQuery;
-    const safeIds = verifiedProps?.map(p => p.id) || [];
     
-    if (safeIds.length === 0) {
+    if (!verifiedProps || verifiedProps.length === 0) {
       return { success: true, count: 0, message: "ไม่มีรายการที่สามารถลบได้" };
     }
 
-    // ลบรูปภาพที่ผูกไว้ (ถ้ามี)
-    await supabase.from("property_images").delete().in("property_id", safeIds);
-    // ลบฟีเจอร์ที่ผูกไว้
-    await supabase.from("property_features").delete().in("property_id", safeIds);
-    // ลบผู้ดูแล
-    await supabase.from("property_agents").delete().in("property_id", safeIds);
+    const targetIds = verifiedProps.map(p => p.id);
 
-    // ลบตัวหลัก
+    // 🛡️ Guard: Check for blocking dependencies (Deals or Restricted Status)
+    const { data: statusCheck } = await supabase
+      .from("properties")
+      .select("id, status")
+      .in("id", targetIds);
+
+    const { data: dealsCheck } = await supabase
+      .from("deals")
+      .select("property_id")
+      .in("property_id", targetIds)
+      .in("status", ["SIGNED", "CLOSED_WIN"]);
+
+    const blockedIds = new Set<string>();
+    statusCheck?.forEach(p => {
+      if (p.status === "SOLD" || p.status === "RENTED") blockedIds.add(p.id);
+    });
+    dealsCheck?.forEach(d => {
+      if (d.property_id) blockedIds.add(d.property_id);
+    });
+
+    const safeIds = targetIds.filter(id => !blockedIds.has(id));
+
+    if (safeIds.length === 0) {
+      return { success: false, count: 0, message: "รายการที่เลือกทั้งหมดไม่สามารถลบถาวรได้เนื่องจากมีดีลสำคัญหรือสถานะห้ามลบ" };
+    }
+
+    // 📦 3.1 Fetch storage paths before deleting IDs
+    const { data: imageRows } = await supabase
+      .from("property_images")
+      .select("storage_path")
+      .in("property_id", safeIds);
+
+    const storagePaths = (imageRows || [])
+      .map(img => img.storage_path)
+      .filter((p): p is string => !!p);
+
+    // 3.2 Delete Junctions
+    await supabase.from("property_images").delete().in("property_id", safeIds);
+    await supabase.from("property_features").delete().in("property_id", safeIds);
+    await supabase.from("property_agents").delete().in("property_id", safeIds);
+    await supabase.from("property_matches").delete().in("property_id", safeIds);
+
+    // 3.3 Delete Main Records
     const { error, count } = await supabase
       .from("properties")
       .delete()
@@ -209,13 +247,25 @@ export async function bulkPermanentDeletePropertiesAction(
 
     if (error) throw error;
 
+    // 3.4 Cleanup Storage after successful DB deletion
+    if (storagePaths.length > 0) {
+      const adminSupabase = createAdminClient();
+      const { error: storageError } = await adminSupabase.storage
+        .from(PROPERTY_IMAGES_BUCKET)
+        .remove(storagePaths);
+      
+      if (storageError) {
+        console.error("Bulk storage cleanup failed:", storageError);
+      }
+    }
+
     await logAudit(
       { supabase, user, role },
       {
         action: "property.bulk_hard_delete",
         entity: "properties",
-        entityId: ids.join(","),
-        metadata: { count },
+        entityId: safeIds.join(","),
+        metadata: { count, skipped: blockedIds.size },
       }
     );
 

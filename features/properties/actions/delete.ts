@@ -55,42 +55,21 @@ export async function deletePropertyAction(formData: FormData) {
       );
     }
 
-    // 1) Get all images to delete from storage
+    // 1) Get image paths first (to use for cleanup later)
     const { data: images } = await supabase
       .from("property_images")
       .select("storage_path")
       .eq("property_id", id);
 
-    // 2) Delete from storage
-    if (images && images.length > 0) {
-      const pathsToRemove = images
-        .map((img) => img.storage_path)
-        .filter((path): path is string => !!path);
-
-      if (pathsToRemove.length > 0) {
-        // Use Admin Client to bypass RLS for storage deletion
-        const adminSupabase = createAdminClient();
-        const { error: storageError } = await adminSupabase.storage
-          .from(PROPERTY_IMAGES_BUCKET)
-          .remove(pathsToRemove);
-
-        if (storageError) {
-          console.error("Failed to cleanup images from storage", storageError);
-        }
-      }
-    }
-
-    // 3) Manual Cleanup of Dependencies (Fix for Foreign Key Constraint 23503)
-    // Even if DB has ON DELETE CASCADE, doing it here explicitly is safer if migration key is missing.
-
-    // 3.1 Unlink Leads (don't delete leads, just remove association)
+    // 2) Manual Cleanup of Dependencies (Fix for Foreign Key Constraint 23503)
+    // 2.1 Unlink Leads (don't delete leads, just remove association)
     await supabase
       .from("leads")
       .update({ property_id: null })
       .eq("property_id", id)
       .eq("tenant_id", tenantId);
 
-    // 3.2 Delete Sub-tables
+    // 2.2 Delete Sub-tables
     await supabase.from("property_features").delete().eq("property_id", id);
     await supabase.from("property_agents").delete().eq("property_id", id);
     await supabase.from("property_matches").delete().eq("property_id", id);
@@ -99,10 +78,10 @@ export async function deletePropertyAction(formData: FormData) {
       .delete()
       .eq("property_id", id);
 
-    // Explicitly delete property_images rows (DB) to be sure
+    // Explicitly delete property_images rows (DB)
     await supabase.from("property_images").delete().eq("property_id", id);
 
-    // 4) Delete property
+    // 3) Delete main property record
     const { error } = await supabase
       .from("properties")
       .delete()
@@ -110,13 +89,30 @@ export async function deletePropertyAction(formData: FormData) {
       .eq("tenant_id", tenantId);
 
     if (error) {
-      // Catch specific FK error to give better message
       if (error.code === "23503") {
         throw new Error(
           "ลบไม่สำเร็จ: ข้อมูลมีการใช้งานอยู่ในส่วนอื่น (กรุณาแจ้ง Admin หรือลอง Archive แทน)",
         );
       }
       throw error;
+    }
+
+    // 4) ATOMIC CLEANUP: Delete from storage ONLY after successful DB deletion
+    if (images && images.length > 0) {
+      const pathsToRemove = images
+        .map((img) => img.storage_path)
+        .filter((path): path is string => !!path);
+
+      if (pathsToRemove.length > 0) {
+        const adminSupabase = createAdminClient();
+        const { error: storageError } = await adminSupabase.storage
+          .from(PROPERTY_IMAGES_BUCKET)
+          .remove(pathsToRemove);
+
+        if (storageError) {
+          console.error("Failed to cleanup images during post-delete cleanup", storageError);
+        }
+      }
     }
 
     // 5) Audit log delete

@@ -44,6 +44,7 @@ export type DuplicatePropertyResult = {
   success: boolean;
   propertyId?: string;
   message?: string;
+  errors?: unknown;
 };
 
 export type UpdatePropertyStatusResult = {

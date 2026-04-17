@@ -62,6 +62,44 @@ export function canDeleteProperty(status: string | null): boolean {
 }
 
 /**
+ * Business Rule: Can status be changed based on AI review state?
+ * If the property requires an AI review (typically newly created drafts), 
+ * it must stay in DRAFT until the review is completed.
+ */
+export function isStatusChangeAllowed(
+  currentStatus: string | null,
+  targetStatus: string | null,
+  requiresAiReview: boolean
+): { allowed: boolean; message?: string } {
+  if (requiresAiReview && currentStatus === "DRAFT" && targetStatus !== "DRAFT") {
+    return { 
+      allowed: false, 
+      message: "กรุณาตรวจสอบข้อมูล AI ในหน้าแก้ไขก่อนเปลี่ยนสถานะ" 
+    };
+  }
+  return { allowed: true };
+}
+
+/**
+ * Business Rule: Does the user have permission to manage this property?
+ * Admins/Managers bypass ownership. Agents must be the creator.
+ */
+export function isUserAuthorized(
+  user: { id: string; role: string },
+  property: { created_by?: string | null; tenant_id?: string | null },
+  targetTenantId: string
+): boolean {
+  // 1. Tenant Isolation
+  if (property.tenant_id && property.tenant_id !== targetTenantId) return false;
+
+  // 2. Role bypass
+  if (["ADMIN", "MANAGER"].includes(user.role)) return true;
+
+  // 3. Ownership
+  return property.created_by === user.id;
+}
+
+/**
  * Get color scheme for property type (matching PropertyTypeGrid)
  */
 export function getTypeColor(propertyType: string | null): {

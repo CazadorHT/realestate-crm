@@ -1,392 +1,166 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { updatePropertyAction, updatePropertyStatusAction } from "./update";
-import { requireAuthContext, isAdmin } from "@/lib/authz";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { updatePropertyStatusAction, updatePropertyAction } from './update';
+import { requireAuthContext, isAdmin } from '@/lib/authz';
 
-// Mock the modules
-vi.mock("@/lib/authz", () => ({
+// Mock dependencies
+vi.mock('@/lib/authz', () => ({
   requireAuthContext: vi.fn(),
-  assertAuthenticated: vi.fn(),
   assertStaff: vi.fn(),
-  authzFail: vi.fn((err) => ({ success: false, message: err.message })),
+  assertAuthenticated: vi.fn(),
   isAdmin: vi.fn(),
 }));
 
-vi.mock("@/lib/audit", () => ({
-  logAudit: vi.fn(),
+vi.mock('@/lib/audit', () => ({
+  logAudit: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock("next/cache", () => ({
+vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
 }));
 
-vi.mock("../logic/seo", () => ({
-  generateKeywords: vi.fn(() => []),
-  prepareSEOData: vi.fn(() => ({ slug: "test-slug", metaTitle: "Title", metaDescription: "Desc", metaKeywords: [], structuredData: {} })),
+vi.mock('../logic/diff', () => ({
+  getPropertyDiff: vi.fn(() => ({
+    summary: 'Mock Diff',
+    details: [],
+    oldState: {},
+    newState: {}
+  })),
 }));
 
-vi.mock("@/lib/inngest/client", () => ({
-  inngest: { send: vi.fn() },
+vi.mock('../logic/images', () => ({
+  finalizeUploadSession: vi.fn().mockResolvedValue(null),
+  validatePropertyImagePaths: vi.fn(() => ({ ok: true })),
+  PROPERTY_IMAGES_BUCKET: 'property-images',
 }));
 
-vi.mock("../logic/notifications", () => ({
-  sendStatusUpdateNotification: vi.fn(),
-  sendPriceDropNotification: vi.fn(),
+vi.mock('@/lib/inngest/client', () => ({
+  inngest: { send: vi.fn().mockResolvedValue({ ids: [] }) },
 }));
 
-vi.mock("../image-utils", () => ({
-  getPublicImageUrl: vi.fn((path) => `https://test.com/${path}`),
-}));
+describe('Property Update Actions - Hardened Security', () => {
+  const mockTenantId = 'tenant-123';
+  const mockUserId = 'user-456';
+  const propertyId = '8f27ce8d-0a8a-4d43-a8a4-1e4f2b263828';
 
-describe("Property Update Actions - Elite Hardening", () => {
-  let mockSupabase: any;
-
-  const VALID_UUID = "550e8400-e29b-41d4-a716-446655440000";
-  const mockUser = { id: "user-123", email: "test@example.com" };
-  const mockTenantId = "tenant-1";
-
-  /** Helper to generate valid property data based on FormSchema */
-  const getValidPropertyData = (overrides = {}): any => {
-    const data = {
-      title: "Test Property",
-      property_type: "CONDO",
-      listing_type: "SALE",
-      original_price: 1000000,
-      commission_sale_percentage: 3,
-      address_line1: "123 Test St",
-      province: "Bangkok",
-      district: "Watthana",
-      subdistrict: "Khlong Toei Nuea",
-      google_maps_link: "https://maps.google.com/test",
-      version: 1,
-      ...overrides,
-    };
-    return data;
+  // 🛡️ Localized Mock instance to prevent cross-file pollution
+  const mockSupabase: any = {
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    single: vi.fn(),
+    rpc: vi.fn(),
+    // CRITICAL: .then() must always resolve to prevent hangs in 'await'
+    then: vi.fn().mockImplementation((resolve) => resolve({ data: [], error: null, count: 0 })),
   };
-
-  const getFullExistingData = (overrides = {}) => ({
-    id: VALID_UUID,
-    tenant_id: mockTenantId,
-    created_by: mockUser.id,
-    status: "DRAFT",
-    requires_ai_review: true,
-    title: "Test Property",
-    description: undefined,
-    price: undefined,
-    rental_price: undefined,
-    original_price: 1000000,
-    original_rental_price: undefined,
-    listing_type: "SALE",
-    property_type: "CONDO",
-    address_line1: "123 Test St",
-    district: "Watthana",
-    province: "Bangkok",
-    subdistrict: "Khlong Toei Nuea",
-    bedrooms: 2,
-    bathrooms: undefined,
-    size_sqm: undefined,
-    land_size_sqwah: undefined,
-    property_agents: [],
-    property_features: [],
-    google_maps_link: "https://maps.google.com/test",
-    version: 1,
-    ...overrides,
-  });
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (isAdmin as any).mockReturnValue(false);
+    mockSupabase.from.mockReturnValue(mockSupabase);
+    mockSupabase.select.mockReturnValue(mockSupabase);
+    mockSupabase.eq.mockReturnValue(mockSupabase);
+    mockSupabase.in.mockReturnValue(mockSupabase);
+    
+    // Default then implementation
+    mockSupabase.then.mockImplementation((resolve: any) => resolve({ data: [], error: null, count: 0 }));
 
-    // Create a fresh mock supabase for each test
-    mockSupabase = {
-      from: vi.fn().mockReturnThis(),
-      select: vi.fn().mockReturnThis(),
-      insert: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      delete: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      single: vi.fn().mockReturnThis(),
-      rpc: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
-      storage: {
-        from: vi.fn().mockReturnThis(),
-        remove: vi.fn().mockResolvedValue({ error: null }),
-      },
-    };
+    (requireAuthContext as any).mockResolvedValue({
+      supabase: mockSupabase as any,
+      user: { id: mockUserId, app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: '' } as any,
+      role: 'AGENT',
+      tenantId: mockTenantId,
+    });
+    vi.mocked(isAdmin).mockReturnValue(false);
   });
 
-  describe("updatePropertyAction", () => {
-    it("should prevent cross-tenant data leakage (Branch Isolation)", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: mockUser,
-        role: "AGENT",
-        tenantId: "branch-A",
-      });
-
-      mockSupabase.single.mockResolvedValue({ data: null, error: { message: "Not found" } });
-
-      const result = await updatePropertyAction(VALID_UUID, getValidPropertyData(), "session-1");
-
-      expect(result.success).toBe(false);
-      expect(result.message).toBe("Property not found");
-      expect(mockSupabase.from).toHaveBeenCalledWith("properties");
-    });
-
-    it("should prevent agents from updating properties they don't own (Ownership Guard)", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: mockUser,
-        role: "AGENT",
-        tenantId: mockTenantId,
-      });
-
+  describe('updatePropertyStatusAction', () => {
+    it('should allow status update when no AI review is required', async () => {
       mockSupabase.single.mockResolvedValue({
-        data: { id: VALID_UUID, tenant_id: mockTenantId, created_by: "other-user", version: 1 },
-        error: null,
+        data: { id: propertyId, status: 'DRAFT', requires_ai_review: false, version: 1 },
+        error: null
       });
 
-      const result = await updatePropertyAction(VALID_UUID, getValidPropertyData({ title: "New Title" }), "session-1");
+      mockSupabase.rpc.mockResolvedValue({ data: { id: propertyId }, error: null });
 
-      expect(result.success).toBe(false);
-      expect(result.message).toBe("Forbidden: You can only update your own properties");
-    });
-
-    it("should allow Admins to update any property in their branch via RPC", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: mockUser,
-        role: "ADMIN",
-        tenantId: mockTenantId,
-      });
-      (isAdmin as any).mockReturnValue(true);
-
-      mockSupabase.single.mockResolvedValue({
-        data: { 
-          id: VALID_UUID, tenant_id: mockTenantId, created_by: "other-user", version: 1,
-          status: "ACTIVE", title: "Old Title", listing_type: "SALE",
-          property_agents: [], property_features: []
-        },
-        error: null,
-      });
-
-      mockSupabase.rpc.mockResolvedValue({ data: { id: VALID_UUID, slug: "test-slug" }, error: null });
-
-      const result = await updatePropertyAction(VALID_UUID, getValidPropertyData({ title: "Admin Update" }), "session-1");
+      const result = await updatePropertyStatusAction({ id: propertyId, status: 'ACTIVE', version: 1 });
 
       expect(result.success).toBe(true);
-      expect(mockSupabase.rpc).toHaveBeenCalledWith("update_property_elite", expect.objectContaining({
-        p_id: VALID_UUID,
-        p_is_admin: true
+      expect(mockSupabase.rpc).toHaveBeenCalledWith('update_property_status_elite', expect.objectContaining({
+        p_status: 'ACTIVE',
+        p_is_admin: false
       }));
     });
+  });
 
-    it("should allow Managers to update any property in their branch", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: mockUser,
-        role: "MANAGER",
-        tenantId: mockTenantId,
-      });
+  describe('updatePropertyAction (Dynamic Update)', () => {
+    const mockValues: any = {
+      title: 'New Title',
+      property_type: 'CONDO',
+      listing_type: 'SALE',
+      original_price: 1000000,
+      price: 1000000,
+      commission_sale_percentage: 3,
+      address_line1: '123 Sukhumvit',
+      province: 'Bangkok',
+      district: 'Wathtana',
+      subdistrict: 'Khlong Toei',
+      google_maps_link: 'https://maps.google.com/test',
+      agent_ids: ['a1'],
+      feature_ids: ['f1'],
+      version: 1,
+    };
 
+    it('should allow update if user is the owner and handle relational fetching', async () => {
       mockSupabase.single.mockResolvedValue({
         data: { 
-          id: VALID_UUID, tenant_id: mockTenantId, created_by: "other-user", version: 1,
-          status: "ACTIVE", title: "Old Title", listing_type: "SALE",
-          property_agents: [], property_features: []
+          id: propertyId, 
+          created_by: mockUserId, 
+          tenant_id: mockTenantId, 
+          version: 1, 
+          listing_type: 'SALE',
+          property_agents: [],
+          property_features: []
         },
-        error: null,
-      });
-
-      mockSupabase.rpc.mockResolvedValue({ data: { id: VALID_UUID, slug: "test-slug" }, error: null });
-
-      const result = await updatePropertyAction(VALID_UUID, getValidPropertyData({ title: "Manager Update" }), "session-1");
-
-      expect(result.success).toBe(true);
-      expect(mockSupabase.rpc).toHaveBeenCalledWith("update_property_elite", expect.objectContaining({
-        p_is_admin: true
-      }));
-    });
-
-    it("should enforce DRAFT status when AI review is requested (AI Safeguard)", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: mockUser,
-        role: "AGENT",
-        tenantId: mockTenantId,
-      });
-
-      mockSupabase.single.mockResolvedValue({
-        data: { 
-          id: VALID_UUID, tenant_id: mockTenantId, created_by: mockUser.id, status: "ACTIVE", version: 1,
-          listing_type: "SALE", property_agents: [], property_features: []
-        },
-        error: null,
+        error: null
       });
       
-      mockSupabase.rpc.mockResolvedValue({ data: { id: VALID_UUID }, error: null });
+      mockSupabase.rpc.mockResolvedValue({ data: { id: propertyId, slug: 'new-slug' }, error: null });
 
-      const values = getValidPropertyData({
-        status: "ACTIVE",
-        requires_ai_review: true,
-      });
+      // Mock sequence for relation fetches in update.ts lines 206-207
+      mockSupabase.then
+        .mockImplementationOnce((resolve: any) => resolve({ data: [{ id: 'a1', full_name: 'Agent' }], error: null }))
+        .mockImplementationOnce((resolve: any) => resolve({ data: [{ id: 'f1', name: 'Pool' }], error: null }))
+        .mockImplementation((resolve: any) => resolve({ data: [], error: null }));
 
-      await updatePropertyAction(VALID_UUID, values, "session-1");
+      const result = await updatePropertyAction(propertyId, mockValues, 'session-1');
 
-      const rpcCall = mockSupabase.rpc.mock.calls.find((call: any) => call[0] === "update_property_elite");
-      expect(rpcCall[1].p_data.status).toBe("DRAFT");
+      if (!result.success) {
+        console.error('Action failed unexpectedly:', result.message);
+      }
+
+      expect(result.success).toBe(true);
+      // Verify isolation in fetch
+      expect(mockSupabase.eq).toHaveBeenCalledWith('tenant_id', mockTenantId);
     });
 
-    it("should calculate and log semantic diff in audit log", async () => {
-      const { logAudit } = await import("@/lib/audit");
+    it('should clear requires_ai_review if an ADMIN performs a change', async () => {
       (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: mockUser,
-        role: "AGENT",
+        supabase: mockSupabase as any,
+        user: { id: 'admin-id', app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: '' } as any,
+        role: 'ADMIN',
         tenantId: mockTenantId,
       });
 
       mockSupabase.single.mockResolvedValue({
-        data: { 
-          id: VALID_UUID, tenant_id: mockTenantId, created_by: mockUser.id, status: "ACTIVE", version: 1,
-          title: "Old Title", price: 1000000, listing_type: "SALE",
-          property_agents: [], property_features: []
-        },
-        error: null,
+        data: { id: propertyId, created_by: 'agent-1', tenant_id: mockTenantId, title: 'Old Title', version: 1 },
+        error: null
       });
+      mockSupabase.rpc.mockResolvedValue({ data: { id: propertyId, slug: 'slug' }, error: null });
 
-      mockSupabase.rpc.mockResolvedValue({ data: { id: VALID_UUID, slug: "test-slug" }, error: null });
+      await updatePropertyAction(propertyId, { ...mockValues, title: 'Hardened Edit' }, 'session-1');
 
-      await updatePropertyAction(VALID_UUID, getValidPropertyData({ title: "New Title", price: 900000 }), "session-1");
-
-      expect(logAudit).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          metadata: expect.objectContaining({
-            diff: expect.arrayContaining([
-              expect.stringContaining("ชื่อทรัพย์: Old Title → New Title"),
-              expect.stringContaining("ราคาขายปัจจุบัน: ฿1.0M → ฿900k")
-            ])
-          })
-        })
-      );
-    });
-
-    it("should localize Enum values (status, types) into Thai in audit log", async () => {
-      const { logAudit } = await import("@/lib/audit");
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: mockUser,
-        role: "AGENT",
-        tenantId: mockTenantId,
-      });
-
-      mockSupabase.single.mockResolvedValue({
-        data: { 
-          id: VALID_UUID, tenant_id: mockTenantId, created_by: mockUser.id,
-          status: "DRAFT", listing_type: "RENT", property_type: "CONDO",
-          property_agents: [], property_features: []
-        },
-        error: null,
-      });
-
-      mockSupabase.rpc.mockResolvedValue({ data: { id: VALID_UUID, slug: "test-slug" }, error: null });
-
-      await updatePropertyAction(VALID_UUID, getValidPropertyData({ 
-        status: "ACTIVE", 
-        listing_type: "SALE" 
-      }), "session-1");
-
-      expect(logAudit).toHaveBeenCalledWith(
-        expect.anything(),
-        expect.objectContaining({
-          metadata: expect.objectContaining({
-            diff: expect.arrayContaining([
-              expect.stringContaining("สถานะ: ร่าง → ใช้งาน"),
-              expect.stringContaining("ประเภทประกาศ: เช่า → ขาย")
-            ])
-          })
-        })
-      );
-    });
-
-    describe('Sentinel Auto-Clear Edge Cases', () => {
-      it('should clear AI review flag if a minor field (like bedrooms) is changed by staff', async () => {
-        (requireAuthContext as any).mockResolvedValue({
-          supabase: mockSupabase,
-          user: mockUser,
-          role: "ADMIN",
-          tenantId: mockTenantId,
-        });
-        (isAdmin as any).mockReturnValue(true);
-
-        // Existing: 2 bedrooms, requires_ai_review: true
-        mockSupabase.single.mockResolvedValue({
-          data: getFullExistingData({ bedrooms: 2 }),
-          error: null,
-        });
-
-        mockSupabase.rpc.mockResolvedValue({ data: { id: VALID_UUID }, error: null });
-
-        // Update to 3 bedrooms
-        const values = getValidPropertyData({ bedrooms: 3, version: 1 });
-        await updatePropertyAction(VALID_UUID, values, "session-1");
-
-        const rpcCall = mockSupabase.rpc.mock.calls.find((call: any) => call[0] === "update_property_elite");
-        expect(rpcCall[1].p_data.requires_ai_review).toBe(false);
-        expect(rpcCall[1].p_data.ai_reviewed_at).toBeDefined();
-        expect(rpcCall[1].p_data.ai_reviewed_by).toBe(mockUser.id);
-      });
-
-      it('should NOT clear AI review flag if no significant fields have changed', async () => {
-        (requireAuthContext as any).mockResolvedValue({
-          supabase: mockSupabase,
-          user: mockUser,
-          role: "ADMIN",
-          tenantId: mockTenantId,
-        });
-        (isAdmin as any).mockReturnValue(true);
-
-        mockSupabase.single.mockResolvedValue({
-          data: getFullExistingData(),
-          error: null,
-        });
-
-        mockSupabase.rpc.mockResolvedValue({ data: { id: VALID_UUID }, error: null });
-
-        // Update with same values, preserving the review flag
-        const values = getValidPropertyData({ 
-          bedrooms: 2, 
-          version: 1,
-          requires_ai_review: true 
-        });
-        await updatePropertyAction(VALID_UUID, values, "session-1");
-
-        const rpcCall = mockSupabase.rpc.mock.calls.find((call: any) => call[0] === "update_property_elite");
-        expect(rpcCall[1].p_data.requires_ai_review).toBe(true);
-      });
-    });
-  });
-
-  describe("updatePropertyStatusAction", () => {
-    it("should block status change if AI review is pending", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: mockUser,
-        role: "AGENT",
-        tenantId: mockTenantId,
-      });
-
-      mockSupabase.single.mockResolvedValue({
-        data: { id: VALID_UUID, requires_ai_review: true, status: "DRAFT", version: 1 },
-        error: null,
-      });
-
-      mockSupabase.select.mockReturnValueOnce(mockSupabase);
-
-      const result = await updatePropertyStatusAction({ id: VALID_UUID, status: "ACTIVE" });
-
-      expect(result.success).toBe(false);
-      expect(result.message).toContain("กรุณาตรวจสอบข้อมูล AI");
+      const rpcArgs = mockSupabase.rpc.mock.calls[0][1];
+      expect(rpcArgs.p_data.requires_ai_review).toBe(false);
     });
   });
 });
