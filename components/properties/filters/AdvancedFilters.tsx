@@ -1203,9 +1203,9 @@ export function AdvancedFilters({
                   <p className={`text-sm font-bold ${
                     filters.needsAiReview === "true" ? "text-indigo-900" : "text-slate-700"
                   }`}>
-                    ✨ รอนรีวิว AI
+                    ✨ ตรวจร่าง AI
                   </p>
-                  <p className="text-[10px] text-slate-400 font-medium leading-tight">กรองเฉพาะรายการที่ใช้ AI ช่วยประเมินข้อมูล</p>
+                  <p className="text-[10px] text-slate-400 font-medium leading-tight">แสดงเฉพาะรายการที่ AI ช่วยสรุปเนื้อหาให้ (รอคุณตรวจสอบ)</p>
                 </div>
               </div>
               {amenityCounts.needsAiReview > 0 && (

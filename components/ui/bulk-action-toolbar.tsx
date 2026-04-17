@@ -152,7 +152,7 @@ export function BulkActionToolbar({
               description={
                 <div className="space-y-3">
                   <p>คุณกำลังจะยืนยันข้อมูลที่สร้างโดย AI ทั้งหมด <strong className="text-indigo-600">{selectedCount} รายการ</strong></p>
-                  <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100 italic">การดำเนินการนี้จะล้าง Flag "รอนรีวิว" และบันทึกข้อมูล Audit ของคุณลงในระบบ Sentinel</p>
+                  <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-100 italic">การดำเนินการนี้จะล้างสถานะ "ตรวจร่าง AI" และบันทึกข้อมูลย้อนหลัง (Audit) ว่าคุณเป็นผู้ตรวจสอบ</p>
                 </div>
               }
               confirmText={onAiApproveLabel}

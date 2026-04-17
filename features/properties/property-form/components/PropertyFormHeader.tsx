@@ -3,6 +3,9 @@ import { CancelButton } from "@/features/properties/btn-cancel";
 import { Loader2 } from "lucide-react";
 import { SentinelAuditBanner } from "./SentinelAuditBanner";
 
+import { UseFormReturn } from "react-hook-form";
+import { PropertyFormValues } from "../../schema";
+
 interface PropertyFormHeaderProps {
   mode: "create" | "edit";
   title?: string;
@@ -12,6 +15,7 @@ interface PropertyFormHeaderProps {
   onSubmit: () => void;
   aiReviewedAt?: string | null;
   reviewerName?: string | null;
+  form: UseFormReturn<PropertyFormValues>;
 }
 
 export function PropertyFormHeader({
@@ -23,6 +27,7 @@ export function PropertyFormHeader({
   onSubmit,
   aiReviewedAt,
   reviewerName,
+  form,
 }: PropertyFormHeaderProps) {
   return (
     <div className="sticky top-14 sm:top-16 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm py-3 sm:py-4 mb-4 sm:mb-6 px-4 sm:px-6 transition-all duration-200 sm:rounded-xl max-w-screen">
@@ -49,7 +54,11 @@ export function PropertyFormHeader({
 
         <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <div className="hidden xs:block">
-            <CancelButton sessionId={uploadSessionId} />
+            <CancelButton
+              sessionId={uploadSessionId}
+              isDirty={isDirty}
+              form={form}
+            />
           </div>
 
           {/* ปุ่มบันทึกด่วน แสดงตลอดเวลาในโหมด Edit */}

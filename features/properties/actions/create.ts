@@ -293,7 +293,16 @@ export async function duplicatePropertyAction(
       meta_description: _meta_description,
       meta_keywords: _meta_keywords,
       structured_data: _structured_data,
-      property_images: _property_images, 
+      property_images: _property_images,
+      // ✨ Hardening: รีเซ็ตข้อมูลส่วนตัวของทรัพย์ต้นฉบับ
+      view_count: _view_count,
+      posted_to_facebook_at: _posted_to_facebook_at,
+      posted_to_line_at: _posted_to_line_at,
+      posted_to_instagram_at: _posted_to_instagram_at,
+      posted_to_tiktok_at: _posted_to_tiktok_at,
+      ai_reviewed_at: _ai_reviewed_at,
+      ai_reviewed_by: _ai_reviewed_by,
+      verified: _verified,
       ...rest
     } = src as any;
 
@@ -310,6 +319,15 @@ export async function duplicatePropertyAction(
         meta_description: seoData.metaDescription,
         meta_keywords: seoData.metaKeywords,
         structured_data: seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
+        // ✨ Reset metrics & shares
+        view_count: 0,
+        verified: false,
+        posted_to_facebook_at: null,
+        posted_to_line_at: null,
+        posted_to_instagram_at: null,
+        posted_to_tiktok_at: null,
+        ai_reviewed_at: null,
+        ai_reviewed_by: null,
       })
       .select("id")
       .single();

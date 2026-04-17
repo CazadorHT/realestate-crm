@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type Filters = {
   q: string;
@@ -192,33 +193,40 @@ export function PropertyFilters({
         
         {/* ✨ Sentinel Quick Filter Chip */}
         <div className="flex items-center gap-2 ml-auto lg:ml-0">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              const nextVal = filters.needsAiReview === "true" ? "" : "true";
-              setFilters({ ...filters, needsAiReview: nextVal });
-              const params = new URLSearchParams(searchParams.toString());
-              if (nextVal === "true") params.set("needsAiReview", "true");
-              else params.delete("needsAiReview");
-              params.delete("page");
-              startTransition(() => {
-                router.push(`/protected/properties?${params.toString()}#table`, { scroll: false });
-              });
-            }}
-            className={cn(
-              "h-9 rounded-full px-4 border-dashed transition-all duration-300",
-              filters.needsAiReview === "true" 
-                ? "bg-indigo-50 border-indigo-400 text-indigo-700 shadow-sm ring-1 ring-indigo-200" 
-                : "bg-white text-slate-500 hover:border-indigo-300 hover:bg-slate-50"
-            )}
-          >
-            <span className={cn(
-              "mr-1.5 flex h-2 w-2 rounded-full",
-              filters.needsAiReview === "true" ? "bg-indigo-600 animate-pulse" : "bg-slate-300"
-            )} />
-            ✨ รอนรีวิว AI
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const nextVal = filters.needsAiReview === "true" ? "" : "true";
+                  setFilters({ ...filters, needsAiReview: nextVal });
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (nextVal === "true") params.set("needsAiReview", "true");
+                  else params.delete("needsAiReview");
+                  params.delete("page");
+                  startTransition(() => {
+                    router.push(`/protected/properties?${params.toString()}#table`, { scroll: false });
+                  });
+                }}
+                className={cn(
+                  "h-9 rounded-full px-4 border-dashed transition-all duration-300",
+                  filters.needsAiReview === "true" 
+                    ? "bg-indigo-50! border-indigo-400 text-indigo-700! shadow-sm ring-1 ring-indigo-200" 
+                    : "bg-white! text-slate-500! hover:border-indigo-300 hover:bg-slate-50"
+                )}
+              >
+                <span className={cn(
+                  "mr-1.5 flex h-2 w-2 rounded-full",
+                  filters.needsAiReview === "true" ? "bg-indigo-600 animate-pulse" : "bg-slate-300"
+                )} />
+                ✨ ตรวจร่าง AI
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="bg-slate-900 border-slate-800 text-white font-medium">
+              แสดงเฉพาะรายการที่ AI ร่างข้อมูลให้ (รอคุณตรวจสอบ)
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 

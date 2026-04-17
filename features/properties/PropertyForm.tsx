@@ -599,6 +599,7 @@ export function PropertyForm({
         onSubmit={submitNow}
         aiReviewedAt={defaultValues?.ai_reviewed_at}
         reviewerName={defaultValues?.reviewer?.full_name}
+        form={form}
       />
 
       {/* Step Rendering & History Tabs - Elite Segmented Control */}
@@ -671,6 +672,7 @@ export function PropertyForm({
                   onBack={handleBack}
                   onNext={handleNext}
                   onSubmit={submitNow}
+                  form={form}
                 />
               </form>
             </Form>
@@ -735,6 +737,7 @@ export function PropertyForm({
                 onBack={handleBack}
                 onNext={handleNext}
                 onSubmit={submitNow}
+                form={form}
               />
             </form>
           </Form>
