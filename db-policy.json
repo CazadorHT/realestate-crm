@@ -161,6 +161,26 @@
   },
   {
     "schemaname": "public",
+    "tablename": "commission_adjustments",
+    "rls_enabled": true,
+    "policyname": "Adjustments: Admins manage all",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "(auth.uid() IN ( SELECT profiles.id\n   FROM profiles\n  WHERE ((profiles.role = 'ADMIN'::user_role) AND (commission_adjustments.tenant_id = commission_adjustments.tenant_id))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "commission_adjustments",
+    "rls_enabled": true,
+    "policyname": "Adjustments: Agents view their own",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM deal_commissions dc\n  WHERE ((dc.id = commission_adjustments.commission_id) AND (dc.agent_id = auth.uid()))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
     "tablename": "contract_templates",
     "rls_enabled": true,
     "policyname": "Allow admins to manage templates",

@@ -50,18 +50,24 @@ export async function updateProfileAction(
       updateData.phone = phone.trim();
     }
 
-    // Social Media Fields
+    // Social Media & Tax Fields
     const line_id = formData.get("line_id") as string | null;
     const line_user_id = formData.get("line_user_id") as string | null;
     const facebook_url = formData.get("facebook_url") as string | null;
     const whatsapp_id = formData.get("whatsapp_id") as string | null;
     const wechat_id = formData.get("wechat_id") as string | null;
+    const tax_id = formData.get("tax_id") as string | null;
+    const tax_address = formData.get("tax_address") as string | null;
 
     if (line_id !== null) updateData.line_id = line_id.trim();
     if (line_user_id !== null) updateData.line_user_id = line_user_id.trim();
     if (facebook_url !== null) updateData.facebook_url = facebook_url.trim();
     if (whatsapp_id !== null) updateData.whatsapp_id = whatsapp_id.trim();
     if (wechat_id !== null) updateData.wechat_id = wechat_id.trim();
+    
+    // 🛡️ Sensitive Tax Information
+    if (tax_id !== null) (updateData as any).tax_id = tax_id.trim();
+    if (tax_address !== null) (updateData as any).tax_address = tax_address.trim();
 
     const { error } = await ctx.supabase
       .from("profiles")

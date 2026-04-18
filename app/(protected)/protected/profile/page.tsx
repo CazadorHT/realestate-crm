@@ -178,6 +178,8 @@ export default async function ProfilePage() {
                   wechat_id={profile.wechat_id}
                   email={profile.email}
                   role={profile.role}
+                  tax_id={profile.tax_id}
+                  tax_address={profile.tax_address}
                 />
               </div>
             </div>

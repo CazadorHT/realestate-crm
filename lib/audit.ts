@@ -85,7 +85,10 @@ export type AuditAction =
   | "property.bulk_ai_approve"
   | "property.export"
   | "commission.export_pdf"
-  | "commission.send_line";
+  | "commission.send_line"
+  | "finance.commission_ready"
+  | "finance.adjustment_create"
+  | "finance.commission_paid";
 
 type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
 

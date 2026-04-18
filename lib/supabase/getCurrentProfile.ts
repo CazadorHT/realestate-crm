@@ -51,6 +51,8 @@ export async function getCurrentProfile(): Promise<Profile | null> {
       notification_preferences: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      tax_id: null,
+      tax_address: null,
     };
   }
 

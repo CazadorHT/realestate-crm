@@ -42,6 +42,8 @@ interface ProfileInfoFormProps {
   wechat_id: string | null;
   email: string | null;
   role: string | null;
+  tax_id: string | null;
+  tax_address: string | null;
 }
 
 export function ProfileInfoForm({
@@ -54,6 +56,8 @@ export function ProfileInfoForm({
   wechat_id,
   email,
   role,
+  tax_id,
+  tax_address,
 }: ProfileInfoFormProps) {
   const router = useRouter();
   const { t } = useLanguage();
@@ -70,6 +74,8 @@ export function ProfileInfoForm({
       facebook_url: facebook_url || "",
       whatsapp_id: whatsapp_id || "",
       wechat_id: wechat_id || "",
+      tax_id: tax_id || "",
+      tax_address: tax_address || "",
     },
   });
 
@@ -89,6 +95,8 @@ export function ProfileInfoForm({
       if (values.whatsapp_id)
         formData.append("whatsapp_id", values.whatsapp_id);
       if (values.wechat_id) formData.append("wechat_id", values.wechat_id);
+      if (values.tax_id) formData.append("tax_id", values.tax_id);
+      if (values.tax_address) formData.append("tax_address", values.tax_address);
 
       const result = await updateProfileAction(formData);
 
@@ -279,6 +287,61 @@ export function ProfileInfoForm({
         />
         </div>
       </div>
+
+        {/* Section 3: Accounting & Tax (High Sensitivity) */}
+        <div className="space-y-6 pt-4">
+          <div className="flex items-center gap-2.5 pb-2 border-b border-slate-100/60">
+            <ShieldCheck className="h-4 w-4 text-emerald-600" />
+            <h3 className="text-[13px] font-semibold text-slate-400 uppercase tracking-widest">ข้อมูลบัญชีและภาษี <span className="text-slate-300 font-normal">(Accounting & Tax)</span></h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField
+              control={form.control}
+              name="tax_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-semibold text-slate-700">เลขบัตรประชาชน/เลขผู้เสียภาษี <span className="text-slate-400 font-normal">(Tax ID / National ID)</span></FormLabel>
+                  <FormControl>
+                    <div className="relative group">
+                      <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600 group-focus-within:scale-110 transition-transform" />
+                      <Input
+                        placeholder="เลข 13 หลัก หรือ เลขนิติบุคคล..."
+                        className="pl-10 h-11 rounded-2xl border-emerald-50 focus-visible:ring-emerald-500/20 font-semibold shadow-xs"
+                        {...field}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormDescription className="text-[10px] text-amber-600 font-medium italic">
+                    ⚠️ ข้อมูลนี้มีความสำคัญ และจะถูกบันทึกประวัติการแก้ไข (Audit Log)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="tax_address"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="font-semibold text-slate-700">ที่อยู่ออกเอกสารภาษี <span className="text-slate-400 font-normal">(Official Billing Address)</span></FormLabel>
+                <FormControl>
+                  <div className="relative group">
+                    <Globe className="absolute left-3 top-4 h-4 w-4 text-slate-400" />
+                    <Input
+                      placeholder="ระบุที่อยู่ตามบัตรประชาชน หรือที่อยู่จดทะเบียน..."
+                      className="pl-10 h-11 rounded-2xl border-slate-200 focus-visible:ring-indigo-500/20 font-semibold shadow-xs"
+                      {...field}
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-slate-100/60">
           <div className="space-y-3 group">

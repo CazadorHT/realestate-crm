@@ -37,6 +37,8 @@ import {
   Headset,
   Phone,
   ShieldCheck,
+  Wallet,
+  BadgeDollarSign
 } from "lucide-react";
 import { FaLine } from "react-icons/fa";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
@@ -215,6 +217,17 @@ export function SidebarNav({
     },
   ];
 
+  // Finance Group (Agent Payouts & Commission Management)
+  const financeItems: NavItem[] = [
+    {
+      title: "เบิกจ่ายเอเยนต์",
+      href: "/finance/payouts",
+      icon: Wallet,
+      active: pathname?.startsWith("/finance/payouts") ?? false,
+      roles: ["ADMIN", "MANAGER"],
+    },
+  ];
+
   // Settings Group
   const settingsItems: NavItem[] = [
     {
@@ -260,6 +273,13 @@ export function SidebarNav({
       title: "ระบบ CRM",
       icon: Briefcase,
       items: crmItems,
+    },
+    {
+      id: "finance",
+      title: "การเงิน",
+      icon: BadgeDollarSign,
+      items: financeItems,
+      roles: ["ADMIN", "MANAGER"],
     },
     {
       id: "documents",

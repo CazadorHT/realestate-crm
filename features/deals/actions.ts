@@ -441,7 +441,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
       wht_amount: s.whtAmount,
       net_amount: s.netAmount,
       tenant_id: tenantId,
-      status: "PENDING" as Database["public"]["Enums"]["commission_status"],
+      status: "UNPAID" as any, // Hardened Status Mapping
     }));
 
     const { error: insertErr } = await scoped

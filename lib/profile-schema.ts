@@ -8,6 +8,8 @@ export const profileSchema = z.object({
   facebook_url: z.string().optional(),
   whatsapp_id: z.string().optional(),
   wechat_id: z.string().optional(),
+  tax_id: z.string().optional(),
+  tax_address: z.string().optional(),
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;

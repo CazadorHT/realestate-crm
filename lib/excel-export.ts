@@ -5,6 +5,12 @@ export interface ExcelColumn {
   format?: (value: any) => string | number;
 }
 
+export interface ExcelSheet {
+  name: string;
+  data: Record<string, any>[];
+  columns: ExcelColumn[];
+}
+
 /**
  * Generate an Excel file buffer from data array
  */
@@ -38,6 +44,36 @@ export async function generateExcelBuffer(
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
 
   // Generate buffer
+  return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+}
+
+/**
+ * Generate a Multi-Sheet Excel file buffer
+ */
+export async function generateMultiSheetExcelBuffer(
+  sheets: ExcelSheet[]
+): Promise<Buffer> {
+  const XLSX = await import("xlsx");
+  const workbook = XLSX.utils.book_new();
+
+  for (const sheet of sheets) {
+    const rows = sheet.data.map((item) => {
+      const row: Record<string, any> = {};
+      for (const col of sheet.columns) {
+        const value = item[col.key];
+        row[col.header] = col.format ? col.format(value) : (value ?? "");
+      }
+      return row;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    worksheet["!cols"] = sheet.columns.map((col) => ({
+      wch: col.width || 15,
+    }));
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, sheet.name);
+  }
+
   return XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
 }
 

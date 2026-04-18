@@ -175,10 +175,10 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
             <div className="space-y-0.5">
               <FormLabel className="text-blue-900 font-bold text-xs sm:text-sm flex items-center gap-2">
                 <Users className="w-4 h-4 text-blue-600" />
-                Co-Agent
+                Co-Agent (เขามีทรัพย์ในมือ)
               </FormLabel>
               <p className="text-[10px] font-medium text-blue-600/70">
-                เปิดเพื่อทำงานร่วมกับ Agent ท่านอื่น
+                เลือกหากทรัพย์ชิ้นนี้มาจาก Co-broker (Listing Side)
               </p>
             </div>
             <FormControl>
@@ -186,9 +186,11 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                 checked={field.value}
                 onCheckedChange={(checked) => {
                   field.onChange(checked);
-                  toast.success(
-                    checked ? "เปิด Co-Agent สำเร็จ" : "ปิด Co-Agent สำเร็จ",
-                  );
+                  if (checked) {
+                    toast.success("เปิด Co-Agent (คุณสามารถระบุข้อมูลเจ้าของควบคู่กันได้)");
+                  } else {
+                    toast.success("ปิด Co-Agent สำเร็จ");
+                  }
                 }}
                 className="data-[state=checked]:bg-blue-600"
               />
