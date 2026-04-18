@@ -2,6 +2,11 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types"; // 👈 import type
 export async function createClient() {
+  // 🛡️ Test Infrastructure Bridge
+  if ((globalThis as any).__MOCK_SUPABASE__) {
+    return (globalThis as any).__MOCK_SUPABASE__;
+  }
+
   try {
     const cookieStore = await cookies();
 

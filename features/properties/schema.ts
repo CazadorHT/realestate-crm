@@ -118,7 +118,7 @@ export const PropertySchema = z
 
     // Co-Agent Logic
     is_co_agent: z.boolean().default(false),
-    external_agent_id: z.string().uuid().optional().nullable(),
+    co_broker_id: z.string().uuid().optional().nullable(),
     co_agent_name: z.string().trim().optional().nullable(),
     co_agent_phone: z.string().trim().optional().nullable(),
     co_agent_contact_channel: z.string().trim().optional().nullable(),

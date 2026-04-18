@@ -18,6 +18,7 @@ import {
   MoreHorizontal,
   Trash2,
   Copy,
+  Handshake,
 } from "lucide-react";
 import { DealFormDialog } from "./DealFormDialog";
 import { DeleteDealButton } from "./DeleteDealButton";
@@ -31,21 +32,35 @@ import { toast } from "sonner";
 interface DealListProps {
   deals: DealWithProperty[];
   properties?: DealPropertyOption[];
+  hasActiveFilters?: boolean;
 }
 
-export function DealList({ deals, properties = [] }: DealListProps) {
+export function DealList({ deals, properties = [], hasActiveFilters = false }: DealListProps) {
   const router = useRouter();
 
   if (deals.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-6 border-2 border-dashed border-slate-100 rounded-[32px] bg-slate-50/30">
-        <div className="h-16 w-16 bg-white rounded-2xl shadow-sm border border-slate-100 flex items-center justify-center mb-4">
-          <LayoutDashboard className="h-8 w-8 text-slate-300" />
+      <div className="relative overflow-hidden rounded-4xl border-2 border-dashed border-slate-200 bg-linear-to-br from-slate-50 to-white p-12 my-4 animate-in zoom-in-95 duration-500">
+        <div className="relative flex flex-col items-center justify-center text-center space-y-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-xl scale-150" />
+            <div className="relative p-6 bg-linear-to-br from-amber-500 to-orange-600 rounded-2xl shadow-xl shadow-amber-500/30">
+              <Handshake className="h-12 w-12 text-white" />
+            </div>
+          </div>
+          <div className="space-y-2 max-w-md mx-auto">
+            <h3 className="text-2xl font-semibold text-slate-800">
+              {hasActiveFilters
+                ? "ไม่พบดีลที่ค้นหา"
+                : "ยังไม่มีดีลในระบบ"}
+            </h3>
+            <p className="text-slate-500 font-medium leading-relaxed">
+              {hasActiveFilters
+                ? "ลองปรับตัวกรองใหม่หรือค้นหาด้วยคำอื่น"
+                : "เริ่มต้นสร้างดีลแรกของคุณเพื่อติดตามการขายและการเช่าทรัพย์"}
+            </p>
+          </div>
         </div>
-        <h3 className="text-sm font-semibold text-slate-900">ยังไม่มีข้อมูลดีล</h3>
-        <p className="text-[11px] text-slate-400 font-medium max-w-[200px] text-center mt-1">
-          เริ่มบันทึกดีลของคุณโดยเลือกทรัพย์ที่ลูกค้าสนใจ
-        </p>
       </div>
     );
   }

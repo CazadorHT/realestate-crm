@@ -106,7 +106,7 @@ export function BulkActionToolbar({
               size="sm"
               onClick={handleExport}
               disabled={isExporting}
-              className="h-8 text-xs bg-white hover:bg-green-50! border-green-200! text-green-700!"
+              className="h-11 text-xs bg-white hover:bg-green-50! border-green-200! text-green-700!"
             >
               {isExporting ? (
                 <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />
@@ -137,7 +137,7 @@ export function BulkActionToolbar({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium"
+                  className="h-11 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium"
                 >
                   <Download className="h-3.5 w-3.5 mr-1 rotate-180" />
                   {onPullLabel}
@@ -161,7 +161,7 @@ export function BulkActionToolbar({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs bg-indigo-50 hover:bg-indigo-100! border-indigo-200! text-indigo-700! font-bold shadow-sm"
+                  className="h-11 text-xs bg-indigo-50 hover:bg-indigo-100! border-indigo-200! text-indigo-700! font-bold shadow-sm"
                 >
                   <span className="mr-1.5 flex h-2 w-2 rounded-full bg-indigo-600 animate-pulse" />
                   {onAiApproveLabel}
@@ -175,7 +175,7 @@ export function BulkActionToolbar({
               variant="outline"
               size="sm"
               onClick={onTransfer}
-              className="h-8 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium"
+              className="h-11 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium"
             >
               <Download className="h-3.5 w-3.5 mr-1 rotate-180" />
               โอนย้าย {entityName}
@@ -188,7 +188,7 @@ export function BulkActionToolbar({
             variant="outline"
             size="sm"
             onClick={onClear}
-            className="h-8 text-xs"
+            className="h-11 text-xs"
           >
             <X className="h-3.5 w-3.5 mr-1" />
             ยกเลิก
@@ -217,7 +217,7 @@ export function BulkActionToolbar({
             variant="destructive"
             onConfirm={onDelete}
             trigger={
-              <Button variant="destructive" size="sm" className="h-8 text-xs">
+              <Button variant="destructive" size="sm" className="h-11 text-xs">
                 <Trash2 className="h-3.5 w-3.5 mr-1" />
                 {onDeleteLabel || "ลบทั้งหมด"}
               </Button>

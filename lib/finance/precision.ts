@@ -19,6 +19,13 @@ export const FinanceMath = {
   },
 
   /**
+   * Force 2-decimal half-up rounding (Banking Standard)
+   */
+  round: (val: any): Decimal => {
+    return FinanceMath.toDecimal(val).toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
+  },
+
+  /**
    * Adds multiple amounts with high precision
    */
   add: (amounts: (number | string | Decimal | null | undefined)[]): Decimal => {
@@ -43,11 +50,11 @@ export const FinanceMath = {
   },
 
   /**
-   * Calculates WHT (3%) for Thailand tax standards
+   * Calculates WHT (Standard 3% or Dynamic) for Thailand tax standards
    */
-  calculateWht: (grossAmount: number | string | Decimal): Decimal => {
+  calculateWht: (grossAmount: number | string | Decimal, taxRate: number = 0.03): Decimal => {
     return FinanceMath.toDecimal(grossAmount)
-      .mul(0.03)
+      .mul(taxRate)
       .toDecimalPlaces(2, Decimal.ROUND_HALF_UP);
   },
 

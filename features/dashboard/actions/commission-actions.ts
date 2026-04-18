@@ -55,6 +55,7 @@ export async function getCommissionRulesAction(): Promise<CommissionActionRespon
       success: true,
       data: {
         ...ruleSet,
+        defaultWhtRate: ruleSet.defaultWhtRate ?? 3,
         defaultListingPercent: ruleSet.defaultListingPercent ?? 30,
         defaultClosingPercent: ruleSet.defaultClosingPercent ?? 50,
         defaultAgencyPercent: ruleSet.defaultAgencyPercent ?? 20,

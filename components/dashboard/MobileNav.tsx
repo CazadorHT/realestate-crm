@@ -32,6 +32,8 @@ import {
   Sparkles,
   Handshake,
   Bell,
+  Wallet,
+  BadgeDollarSign,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -54,6 +56,7 @@ import { useRouter } from "next/navigation";
 import type { Profile } from "@/lib/supabase/getCurrentProfile";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
+import { RiTeamLine } from "react-icons/ri";
 
 export function MobileNav({ role, profile }: { role: UserRole, profile: Profile | null }) {
   const pathname = usePathname();
@@ -122,6 +125,18 @@ export function MobileNav({ role, profile }: { role: UserRole, profile: Profile 
       active: pathname?.startsWith("/protected/leads") ?? false,
     },
     {
+      title: "เครือข่ายคู่ค้า",
+      href: "/protected/co-brokers",
+      icon: RiTeamLine,
+      active: pathname?.startsWith("/protected/co-brokers") ?? false,
+    },
+    {
+      title: "กล่องข้อความ",
+      href: "/protected/inbox",
+      icon: MessageSquare,
+      active: pathname === "/protected/inbox",
+    },
+    {
       title: "ดีล",
       href: "/protected/deals",
       icon: Handshake,
@@ -145,6 +160,23 @@ export function MobileNav({ role, profile }: { role: UserRole, profile: Profile 
       href: "/protected/rent-notifications",
       icon: Bell,
       active: pathname?.startsWith("/protected/rent-notifications") ?? false,
+    },
+  ];
+
+  // Finance Group (Agent Payouts & Commission Management)
+  const financeItems: NavItem[] = [
+    {
+      title: "กระเป๋าเงินของฉัน",
+      href: "/protected/wallet",
+      icon: Wallet,
+      active: pathname?.startsWith("/protected/wallet") ?? false,
+    },
+    {
+      title: "เบิกจ่ายเอเยนต์",
+      href: "/protected/finance/payouts",
+      icon: BadgeDollarSign,
+      active: pathname?.startsWith("/protected/finance/payouts") ?? false,
+      roles: ["ADMIN", "MANAGER"],
     },
   ];
 
@@ -221,6 +253,12 @@ export function MobileNav({ role, profile }: { role: UserRole, profile: Profile 
       title: "ระบบ CRM",
       icon: Briefcase,
       items: crmItems,
+    },
+    {
+      id: "finance",
+      title: "การเงิน",
+      icon: BadgeDollarSign,
+      items: financeItems,
     },
     {
       id: "documents",

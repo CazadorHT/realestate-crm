@@ -202,7 +202,7 @@ export default async function LeadDetailPage({
             />
           </div>
           <div className="flex-1 overflow-auto p-5 scrollbar-thin">
-            <DealList deals={deals} properties={properties} />
+            <DealList deals={deals} properties={properties} hasActiveFilters={false} />
           </div>
         </div>
 

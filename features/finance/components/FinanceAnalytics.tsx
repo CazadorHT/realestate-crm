@@ -12,9 +12,11 @@ import { Button } from "@/components/ui/button";
 import { 
   getFinancialAnalyticsAction, 
   exportYearlyFinanceAction, 
+  getAvailableFinancialYearsAction,
   FinancialAnalyticsData 
 } from "../analytics-actions";
 import { FinanceMath } from "@/lib/finance/precision";
+import { YearSelectorModal } from "./YearSelectorModal";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +29,8 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
   const [data, setData] = useState<FinancialAnalyticsData | null>(null);
   const [year, setYear] = useState(new Date().getFullYear());
   const [isExporting, setIsExporting] = useState(false);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
+  const [isYearModalOpen, setIsYearModalOpen] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -39,9 +43,20 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
     setLoading(false);
   };
 
+  const fetchAvailableYears = async () => {
+    const res = await getAvailableFinancialYearsAction();
+    if (res.success && res.data) {
+      setAvailableYears(res.data);
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, [year]);
+
+  useEffect(() => {
+    fetchAvailableYears();
+  }, []);
 
   const handleExport = async () => {
     setIsExporting(true);
@@ -62,7 +77,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
     return (
       <div className="flex flex-col items-center justify-center h-64 space-y-4">
         <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
-        <p className="text-slate-400 text-sm font-medium animate-pulse">กำลังสกัดข้อมูลบัญชี...</p>
+        <p className="text-slate-400 text-sm font-semibold animate-pulse">กำลังสกัดข้อมูลบัญชี...</p>
       </div>
     );
   }
@@ -76,71 +91,93 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h2 className="text-2xl font-black text-slate-900 tracking-tight">Finance P&L Analytics</h2>
-            <p className="text-slate-500 text-sm">วิเคราะห์กำไร-ขาดทุน และกระแสเงินสดข้ามสาขา</p>
+            <h2 className="text-2xl font-semibold text-slate-900 tracking-tight">วิเคราะห์ผลกำไรและขาดทุน (P&L)</h2>
+            <p className="text-slate-500 text-sm font-medium">วิเคราะห์กำไร-ขาดทุน และกระแสเงินสดข้ามสาขา</p>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
           <div className="flex bg-slate-100 p-1 rounded-xl ring-1 ring-slate-200">
-            {[year - 1, year].map((y) => (
-              <Button 
-                key={y}
-                variant={year === y ? "outline" : "ghost"}
-                size="sm"
-                onClick={() => setYear(y)}
-                className={cn(
-                  "px-4 h-8 text-xs font-bold rounded-lg transition-all",
-                  year === y ? "shadow-sm bg-white" : "text-slate-500"
-                )}
-              >
-                {y}
-              </Button>
-            ))}
+            {(() => {
+              const currentYear = new Date().getFullYear();
+              return [currentYear - 2, currentYear - 1, currentYear].map((y) => (
+                <Button 
+                  key={y}
+                  variant={year === y ? "outline" : "ghost"}
+                  size="sm"
+                  onClick={() => setYear(y)}
+                  className={cn(
+                    "px-4 h-8 text-xs font-semibold rounded-lg transition-all",
+                    year === y ? "shadow-sm bg-white" : "text-slate-500"
+                  )}
+                >
+                  {y}
+                </Button>
+              ));
+            })()}
+            
+            <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsYearModalOpen(true)}
+                className="px-2 h-8 hover:bg-white hover:shadow-sm rounded-lg text-slate-400 hover:text-indigo-600 transition-all ml-1"
+                title="เลือกปีงบประมาณอื่น"
+            >
+                <Calendar className="w-4 h-4" />
+            </Button>
           </div>
+          
           <Button 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 px-6 rounded-xl shadow-lg shadow-emerald-200"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold h-10 px-6 rounded-xl shadow-lg shadow-emerald-200"
             onClick={handleExport}
             disabled={isExporting}
           >
             {isExporting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <FileSpreadsheet className="w-4 h-4 mr-2" />}
-            Accounting Export
+            ส่งออกรายงานบัญชี
           </Button>
+
+          <YearSelectorModal 
+            isOpen={isYearModalOpen}
+            onOpenChange={setIsYearModalOpen}
+            selectedYear={year}
+            onYearChange={setYear}
+            availableYears={availableYears}
+          />
         </div>
       </div>
 
       {/* 💰 Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <SummaryCard 
-          title="Revenue (Gross)" 
+          title="รายรับทั้งหมด (Gross)" 
           value={data?.summary.totalRevenue || 0} 
           icon={<DollarSign className="w-5 h-5" />}
           color="bg-indigo-600"
           description="คอมมิชชันรวมก่อนหักเอเยนต์"
         />
         <SummaryCard 
-          title="Agent Payouts" 
+          title="ยอดจ่ายเอเยนต์" 
           value={data?.summary.totalPayouts || 0} 
           icon={<TrendingDown className="w-5 h-5" />}
           color="bg-slate-800"
           description="ส่วนแบ่งที่จ่ายให้เอเยนต์"
         />
         <SummaryCard 
-          title="Adjustments" 
+          title="รายการปรับปรุง" 
           value={data?.summary.totalAdjustments || 0} 
           icon={<PieChart className="w-5 h-5" />}
           color="bg-indigo-400"
           description="ยอดปรับปรุง (±)"
         />
         <SummaryCard 
-          title="Accrued Profit" 
+          title="กำไรค้างรับ" 
           value={data?.summary.accruedProfit || 0} 
           icon={<Clock className="w-5 h-5" />}
           color="bg-amber-500"
           description="กำไรค้างรับ (ดีลจบแต่ยังไม่จ่าย)"
         />
         <SummaryCard 
-          title="Realized Profit" 
+          title="กำไรที่ได้รับจริง" 
           value={data?.summary.realizedProfit || 0} 
           icon={<ShieldCheck className="w-5 h-5" />}
           color="bg-emerald-600"
@@ -155,13 +192,13 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
           <CardHeader className="border-b border-slate-50 bg-slate-50/50">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-bold text-slate-800">Monthly Performance Trend</CardTitle>
-                <CardDescription>แนวโน้มรายได้เปรียบเทียบกับกำไรสุทธิ (จริง vs ค้างรับ)</CardDescription>
+                <CardTitle className="text-lg font-semibold text-slate-800">แนวโน้มผลประกอบการรายเดือน</CardTitle>
+                <CardDescription className="font-medium">แนวโน้มรายได้เปรียบเทียบกับกำไรสุทธิ (จริง vs ค้างรับ)</CardDescription>
               </div>
-              <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-tighter">
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-indigo-500"/> Revenue</div>
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"/> Realized</div>
-                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-amber-500"/> Accrued</div>
+              <div className="flex items-center gap-4 text-[10px] font-semibold uppercase tracking-tighter">
+                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-indigo-500"/> รายรับ</div>
+                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-emerald-500"/> รับจริง</div>
+                <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-amber-500"/> ค้างรับ</div>
               </div>
             </div>
           </CardHeader>
@@ -188,7 +225,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
                     dataKey="month" 
                     axisLine={false} 
                     tickLine={false} 
-                    tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 600 }}
+                    tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 500 }}
                     tickFormatter={(str) => new Date(str).toLocaleDateString("th-TH", { month: 'short' })}
                   />
                   <YAxis 
@@ -199,11 +236,11 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
                   />
                   <Tooltip 
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                    formatter={(v: any, name: string | undefined) => [FinanceMath.format(Number(v) || 0), name || ""]}
+                    formatter={(v: any, name: string | undefined) => [FinanceMath.format(Number(v) || 0), name === "revenue" ? "รายรับ" : name === "realizedProfit" ? "รับจริง" : "ค้างรับ"]}
                   />
-                  <Bar dataKey="revenue" name="Revenue" fill="url(#revGradient)" radius={[4, 4, 0, 0]} barSize={20} />
-                  <Bar dataKey="realizedProfit" name="Realized" stackId="a" fill="url(#realizedGradient)" barSize={20} />
-                  <Bar dataKey="accruedProfit" name="Accrued" stackId="a" fill="url(#accruedGradient)" barSize={20} />
+                  <Bar dataKey="revenue" name="revenue" fill="url(#revGradient)" radius={[4, 4, 0, 0]} barSize={20} />
+                  <Bar dataKey="realizedProfit" name="realizedProfit" stackId="a" fill="url(#realizedGradient)" barSize={20} />
+                  <Bar dataKey="accruedProfit" name="accruedProfit" stackId="a" fill="url(#accruedGradient)" barSize={20} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -224,14 +261,12 @@ const SummaryCard = ({ title, value, icon, color, description, highlight }: any)
         <div className={cn("p-2 rounded-xl text-white shadow-lg", color)}>
           {icon}
         </div>
-        {value > 0 && <span className="text-[10px] font-black text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">+ ACTIVE</span>}
+        {value > 0 && <span className="text-[10px] font-semibold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full">+ มีรายการ</span>}
       </div>
-      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">{title}</h3>
-      <p className="text-2xl font-black text-slate-900 mb-1">฿ {FinanceMath.format(value)}</p>
+      <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">{title}</h3>
+      <p className="text-2xl font-semibold text-slate-900 mb-1">฿ {FinanceMath.format(value)}</p>
       <p className="text-[10px] text-slate-400 font-medium leading-relaxed">{description}</p>
       
-      {/* Decorative Gradient Overlay */}
-      <div className={cn("absolute bottom-0 right-0 w-24 h-24 opacity-[0.03] rounded-tl-[100px] transition-opacity group-hover:opacity-[0.08]", color)} />
     </CardContent>
   </Card>
 );

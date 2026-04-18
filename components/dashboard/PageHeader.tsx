@@ -60,7 +60,7 @@ const GRADIENT_MAP = {
   blue: "from-blue-600 via-indigo-600 to-purple-600",
   emerald: "from-emerald-600 via-teal-600 to-cyan-600",
   purple: "from-purple-600 via-violet-600 to-indigo-600",
-  amber: "from-amber-500 via-orange-500 to-red-500",
+  amber: "from-amber-600 via-orange-500 to-red-500",
   rose: "from-rose-600 via-pink-600 to-fuchsia-600",
 };
 

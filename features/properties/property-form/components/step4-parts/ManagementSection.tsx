@@ -29,7 +29,7 @@ import {
 import { AgentMultiSelect } from "../../sections/AgentMultiSelect";
 import { Button } from "@/components/ui/button";
 import { FaUserPlus } from "react-icons/fa";
-import { ExternalAgentSelect } from "@/features/external-agents/components/ExternalAgentSelect";
+import { CoBrokerSelect } from "@/features/co-brokers/components/CoBrokerSelect";
 
 interface ManagementSectionProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -397,7 +397,7 @@ export const ManagementSection = ({
 
             {/* 🔍 Centralized Directory Selection */}
             <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
-              <ExternalAgentSelect form={form} />
+              <CoBrokerSelect form={form} />
               <p className="text-[10px] text-slate-400 mt-2 flex items-center gap-1.5">
                 <Info className="w-3 h-3" />
                 เคล็ดลับ: การเลือกจากฐานข้อมูลกลางจะช่วยบันทึกสถิติและลดเวลาการกรอกข้อมูล

@@ -22,6 +22,7 @@ import { PropertyCombobox } from "@/components/PropertyCombobox";
 import { DealStatusPicker } from "./DealStatusPicker";
 import { CoAgentPicker } from "./CoAgentPicker";
 import { CalendarPicker } from "./CalendarPicker";
+import { CoBrokerSelect } from "@/features/co-brokers/components/CoBrokerSelect";
 
 interface DealFormProps {
   leadId: string;
@@ -406,6 +407,13 @@ export function DealForm({
         <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
           Co-Agent Information (Optional)
         </h4>
+
+        <div className="mb-6 p-4 rounded-xl border border-blue-100 bg-white shadow-sm">
+           <CoBrokerSelect form={form} fieldName="partner_co_broker_id" />
+           <p className="text-[10px] text-slate-400 mt-2 italic">
+             * การเลือกจากฐานข้อมูลช่วยให้ระบบบัญชี (Phase 6) จ่ายเงินคอมมิชชันและคำนวณภาษีได้แม่นยำขึ้น
+           </p>
+        </div>
 
         <CoAgentPicker />
       </div>

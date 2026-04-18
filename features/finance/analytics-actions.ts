@@ -258,3 +258,46 @@ export async function exportYearlyFinanceAction(year?: number): Promise<ExportAc
     return { success: false, message: fail.message };
   }
 }
+
+/**
+ * Fetches all unique years that have financial data (deals and commissions).
+ */
+export async function getAvailableFinancialYearsAction(): Promise<{ success: boolean; data?: number[]; error?: string }> {
+  try {
+    const { supabase, role } = await requireAuthContext();
+    assertAdminOrManager(role);
+
+    // Using "any" cast for RPC as it might not be in the generated types yet
+    const { data: dealYears, error: dealErr } = await (supabase.rpc as any)("get_distinct_finance_years");
+
+    if (dealErr) {
+       // 🛡️ Silent Fallback: Only log if it's NOT a "Function not found" error
+       if (dealErr.code !== "PGRST202") {
+          console.error("RPC Error:", dealErr);
+       }
+       
+       console.log("Switching to high-reliability manual query fallback...");
+       
+       const { data: dData } = await supabase.from("deals").select("closed_at").not("closed_at", "is", null);
+       const { data: cData } = await supabase.from("deal_commissions").select("created_at").not("created_at", "is", null);
+
+       const years = new Set<number>();
+       dData?.forEach(d => {
+         if (d.closed_at) years.add(new Date(d.closed_at).getFullYear());
+       });
+       cData?.forEach(c => {
+         if (c.created_at) years.add(new Date(c.created_at).getFullYear());
+       });
+       return { 
+         success: true, 
+         data: Array.from(years).sort((a, b) => b - a) 
+       };
+    }
+
+    return { success: true, data: (dealYears as any) as number[] };
+
+  } catch (error: any) {
+    console.error("[getAvailableFinancialYearsAction] Error:", error);
+    return { success: false, error: error.message };
+  }
+}

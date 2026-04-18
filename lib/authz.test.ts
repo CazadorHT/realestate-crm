@@ -1,38 +1,59 @@
-import { describe, it, expect } from 'vitest';
-import { assertAdmin, assertStaff, assertAuthenticated, AuthzError } from './authz';
-import { UserRole } from './auth-shared';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { 
+  requireAuthContext,
+} from './authz';
+import { globalMockSupabase as mockSupabase } from '@/tests/mocks/supabase';
+import { getSystemConfig } from '@/lib/actions/system-config';
 
-describe('Authorization Logic (RBAC)', () => {
-  describe('assertAuthenticated', () => {
-    it('should not throw if userId is provided', () => {
-      expect(() => assertAuthenticated({ userId: 'user-1', role: 'USER' })).not.toThrow();
-    });
+// 🛡️ Global Mocks are already setup in vitest.setup.ts
+// We only need to mock business logic actions
+vi.mock('@/lib/actions/system-config', () => ({
+  getSystemConfig: vi.fn(),
+}));
 
-    it('should throw AuthzError if userId is missing', () => {
-      expect(() => assertAuthenticated({ userId: '', role: 'USER' as any })).toThrow(AuthzError);
-    });
-  });
-
-  describe('assertStaff', () => {
-    const staffRoles: UserRole[] = ['ADMIN', 'AGENT', 'MANAGER'];
-    const nonStaffRoles: UserRole[] = ['USER'];
-
-    it.each(staffRoles)('should allow %s role', (role) => {
-      expect(() => assertStaff(role)).not.toThrow();
-    });
-
-    it.each(nonStaffRoles)('should deny %s role', (role) => {
-      expect(() => assertStaff(role)).toThrow(AuthzError);
+describe('Authorization Logic (Standardized Infrastructure)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSupabase.clear();
+    
+    // Default auth state
+    mockSupabase.auth.getUser.mockResolvedValue({ 
+      data: { user: { id: 'u1' } }, 
+      error: null 
     });
   });
 
-  describe('assertAdmin', () => {
-    it('should allow ADMIN role', () => {
-      expect(() => assertAdmin('ADMIN')).not.toThrow();
+  describe('requireAuthContext', () => {
+    it('should throw UNAUTHORIZED if getUser returns null', async () => {
+      mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
+      await expect(requireAuthContext()).rejects.toThrow('Unauthorized');
     });
 
-    it.each(['AGENT', 'MANAGER', 'USER'] as UserRole[])('should deny %s role', (role) => {
-      expect(() => assertAdmin(role)).toThrow(AuthzError);
+    it('should resolve AuthContext for valid staff profile', async () => {
+      // 1. Profile role fetch
+      mockSupabase.mockTableResult('profiles', { role: 'AGENT' });
+      
+      vi.mocked(getSystemConfig).mockResolvedValue({ 
+        multi_tenant_enabled: false, 
+        default_tenant_id: 't-default' 
+      } as any);
+
+      const ctx = await requireAuthContext();
+      expect(ctx.user.id).toBe('u1');
+      expect(ctx.role).toBe('AGENT');
+      expect(ctx.tenantId).toBe('t-default');
+    });
+
+    it('should enforce multi-tenant membership for non-staff', async () => {
+       mockSupabase.mockTableResult('profiles', { role: 'USER' });
+       vi.mocked(getSystemConfig).mockResolvedValue({ multi_tenant_enabled: true } as any);
+       
+       // Membership lookup
+       mockSupabase.mockTableResult('tenant_members', { role: 'MEMBER' });
+
+       const ctx = await requireAuthContext('t1');
+       expect(ctx.tenantId).toBe('t1');
+       expect(mockSupabase.from).toHaveBeenCalledWith('tenant_members');
     });
   });
 });

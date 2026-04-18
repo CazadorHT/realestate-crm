@@ -34,6 +34,9 @@ export interface CommissionRuleSet {
   defaultTeamPoolPercent?: number;
   enableTeamPoolByDefault?: boolean;
   enableAdvancedSplit?: boolean;
+  
+  // Tax Settings
+  defaultWhtRate?: number; // Example: 3 for 3%
 }
 
 /**
@@ -150,9 +153,10 @@ export function calculateAdvancedSplit(
     closingAgentId?: string;
     coAgentId?: string;
   },
+  taxRate: number = 3,
 ): CommissionSplitResult[] {
   const results: CommissionSplitResult[] = [];
-  const WHT_RATE = 3;
+  const WHT_RATE = taxRate;
 
   // 1. Input Validation (Hardening)
   if (config.enableTeamPool && (config.teamPoolPercent === undefined || config.teamPoolPercent < 0 || config.teamPoolPercent > 100)) {

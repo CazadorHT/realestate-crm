@@ -88,7 +88,8 @@ export type AuditAction =
   | "commission.send_line"
   | "finance.commission_ready"
   | "finance.adjustment_create"
-  | "finance.commission_paid";
+  | "finance.commission_paid"
+  | "finance.wht_generate";
 
 type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
 
@@ -191,6 +192,12 @@ export function getReadableSummary(log: {
       return `เข้าสู่ระบบ`;
     case "property.export":
       return `ส่งออกรายงานทรัพย์สิน (${meta.count || 0} รายการ)`;
+    case "co_broker.create":
+      return `เพิ่มคู่ค้าใหม่: ${meta.name || "N/A"}`;
+    case "co_broker.update":
+      return `อัปเดตข้อมูลคู่ค้า: ${meta.name || "N/A"}`;
+    case "co_broker.delete":
+      return `ลบคู่ค้าออกจากระบบ`;
     default:
       if (action.includes("delete")) return `ลบข้อมูล (${log.entity})`;
       if (action.includes("create")) return `สร้างข้อมูลใหม่ (${log.entity})`;

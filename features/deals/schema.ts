@@ -25,6 +25,7 @@ export const createDealSchema = z.object({
   transaction_end_date: z.string().optional().nullable(),
   duration_months: z.coerce.number().min(1, "ระยะเวลาอย่างน้อย 1 เดือน").optional(),
   undetermined_date: z.boolean().optional(),
+  partner_co_broker_id: z.string().uuid().optional().nullable(),
 });
 
 export type CreateDealInput = z.infer<typeof createDealSchema>;
@@ -34,6 +35,7 @@ export const updateDealSchema = createDealSchema.partial().extend({
   co_agent_name: z.string().nullable().optional(),
   co_agent_contact: z.string().nullable().optional(),
   co_agent_online: z.string().nullable().optional(),
+  partner_co_broker_id: z.string().uuid().nullable().optional(),
 });
 
 export type UpdateDealInput = z.infer<typeof updateDealSchema>;

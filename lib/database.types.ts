@@ -411,6 +411,154 @@ export type Database = {
           },
         ]
       }
+      co_broker_documents: {
+        Row: {
+          co_broker_id: string
+          created_at: string | null
+          created_by: string | null
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          id: string
+          tenant_id: string
+        }
+        Insert: {
+          co_broker_id: string
+          created_at?: string | null
+          created_by?: string | null
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          id?: string
+          tenant_id: string
+        }
+        Update: {
+          co_broker_id?: string
+          created_at?: string | null
+          created_by?: string | null
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "co_broker_documents_co_broker_id_fkey"
+            columns: ["co_broker_id"]
+            isOneToOne: false
+            referencedRelation: "co_brokers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "co_broker_documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "co_broker_documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      co_brokers: {
+        Row: {
+          broker_group: string | null
+          company_name: string | null
+          created_at: string | null
+          created_by: string | null
+          deleted_at: string | null
+          email: string | null
+          id: string
+          internal_notes: string | null
+          is_active: boolean | null
+          line_id: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          property_types: string[] | null
+          rating: number | null
+          specialized_areas: string[] | null
+          standard_commission_rate: number | null
+          tax_address: string | null
+          tax_id: string | null
+          tenant_id: string
+          updated_at: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          broker_group?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          internal_notes?: string | null
+          is_active?: boolean | null
+          line_id?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          property_types?: string[] | null
+          rating?: number | null
+          specialized_areas?: string[] | null
+          standard_commission_rate?: number | null
+          tax_address?: string | null
+          tax_id?: string | null
+          tenant_id: string
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          broker_group?: string | null
+          company_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          deleted_at?: string | null
+          email?: string | null
+          id?: string
+          internal_notes?: string | null
+          is_active?: boolean | null
+          line_id?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          property_types?: string[] | null
+          rating?: number | null
+          specialized_areas?: string[] | null
+          standard_commission_rate?: number | null
+          tax_address?: string | null
+          tax_id?: string | null
+          tenant_id?: string
+          updated_at?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_agents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_agents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       commission_adjustments: {
         Row: {
           adjustment_type: string
@@ -526,6 +674,7 @@ export type Database = {
         Row: {
           agent_id: string | null
           amount: number
+          co_broker_id: string | null
           created_at: string
           deal_id: string
           id: string
@@ -539,6 +688,7 @@ export type Database = {
           role: Database["public"]["Enums"]["commission_role"]
           slip_url: string | null
           status: Database["public"]["Enums"]["commission_status"]
+          tax_rate: number | null
           tenant_id: string | null
           updated_at: string
           wht_amount: number
@@ -546,6 +696,7 @@ export type Database = {
         Insert: {
           agent_id?: string | null
           amount?: number
+          co_broker_id?: string | null
           created_at?: string
           deal_id: string
           id?: string
@@ -559,6 +710,7 @@ export type Database = {
           role: Database["public"]["Enums"]["commission_role"]
           slip_url?: string | null
           status?: Database["public"]["Enums"]["commission_status"]
+          tax_rate?: number | null
           tenant_id?: string | null
           updated_at?: string
           wht_amount?: number
@@ -566,6 +718,7 @@ export type Database = {
         Update: {
           agent_id?: string | null
           amount?: number
+          co_broker_id?: string | null
           created_at?: string
           deal_id?: string
           id?: string
@@ -579,6 +732,7 @@ export type Database = {
           role?: Database["public"]["Enums"]["commission_role"]
           slip_url?: string | null
           status?: Database["public"]["Enums"]["commission_status"]
+          tax_rate?: number | null
           tenant_id?: string | null
           updated_at?: string
           wht_amount?: number
@@ -589,6 +743,13 @@ export type Database = {
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_commissions_co_broker_id_fkey"
+            columns: ["co_broker_id"]
+            isOneToOne: false
+            referencedRelation: "co_brokers"
             referencedColumns: ["id"]
           },
           {
@@ -627,6 +788,7 @@ export type Database = {
           deal_type: Database["public"]["Enums"]["deal_type"]
           id: string
           lead_id: string
+          partner_co_broker_id: string | null
           property_id: string
           source: string | null
           status: Database["public"]["Enums"]["deal_status"]
@@ -648,6 +810,7 @@ export type Database = {
           deal_type: Database["public"]["Enums"]["deal_type"]
           id?: string
           lead_id: string
+          partner_co_broker_id?: string | null
           property_id: string
           source?: string | null
           status?: Database["public"]["Enums"]["deal_status"]
@@ -669,6 +832,7 @@ export type Database = {
           deal_type?: Database["public"]["Enums"]["deal_type"]
           id?: string
           lead_id?: string
+          partner_co_broker_id?: string | null
           property_id?: string
           source?: string | null
           status?: Database["public"]["Enums"]["deal_status"]
@@ -691,6 +855,13 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_partner_co_broker_id_fkey"
+            columns: ["partner_co_broker_id"]
+            isOneToOne: false
+            referencedRelation: "co_brokers"
             referencedColumns: ["id"]
           },
           {
@@ -830,66 +1001,6 @@ export type Database = {
           },
           {
             foreignKeyName: "documents_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      external_agents: {
-        Row: {
-          company: string | null
-          created_at: string | null
-          created_by: string | null
-          email: string | null
-          id: string
-          line_id: string | null
-          name: string
-          notes: string | null
-          phone: string | null
-          tenant_id: string
-          updated_at: string | null
-          whatsapp: string | null
-        }
-        Insert: {
-          company?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          email?: string | null
-          id?: string
-          line_id?: string | null
-          name: string
-          notes?: string | null
-          phone?: string | null
-          tenant_id: string
-          updated_at?: string | null
-          whatsapp?: string | null
-        }
-        Update: {
-          company?: string | null
-          created_at?: string | null
-          created_by?: string | null
-          email?: string | null
-          id?: string
-          line_id?: string | null
-          name?: string
-          notes?: string | null
-          phone?: string | null
-          tenant_id?: string
-          updated_at?: string | null
-          whatsapp?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "external_agents_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenant_branding"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "external_agents_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1719,6 +1830,7 @@ export type Database = {
           co_agent_phone: string | null
           co_agent_rent_commission_months: number | null
           co_agent_sale_commission_percent: number | null
+          co_broker_id: string | null
           commission_rent_months: number | null
           commission_sale_percentage: number | null
           created_at: string
@@ -1730,7 +1842,6 @@ export type Database = {
           description_en: string | null
           district: string | null
           electricity_charge: string | null
-          external_agent_id: string | null
           facing_east: boolean | null
           facing_north: boolean | null
           facing_south: boolean | null
@@ -1850,6 +1961,7 @@ export type Database = {
           co_agent_phone?: string | null
           co_agent_rent_commission_months?: number | null
           co_agent_sale_commission_percent?: number | null
+          co_broker_id?: string | null
           commission_rent_months?: number | null
           commission_sale_percentage?: number | null
           created_at?: string
@@ -1861,7 +1973,6 @@ export type Database = {
           description_en?: string | null
           district?: string | null
           electricity_charge?: string | null
-          external_agent_id?: string | null
           facing_east?: boolean | null
           facing_north?: boolean | null
           facing_south?: boolean | null
@@ -1981,6 +2092,7 @@ export type Database = {
           co_agent_phone?: string | null
           co_agent_rent_commission_months?: number | null
           co_agent_sale_commission_percent?: number | null
+          co_broker_id?: string | null
           commission_rent_months?: number | null
           commission_sale_percentage?: number | null
           created_at?: string
@@ -1992,7 +2104,6 @@ export type Database = {
           description_en?: string | null
           district?: string | null
           electricity_charge?: string | null
-          external_agent_id?: string | null
           facing_east?: boolean | null
           facing_north?: boolean | null
           facing_south?: boolean | null
@@ -2112,9 +2223,9 @@ export type Database = {
           },
           {
             foreignKeyName: "properties_external_agent_id_fkey"
-            columns: ["external_agent_id"]
+            columns: ["co_broker_id"]
             isOneToOne: false
-            referencedRelation: "external_agents"
+            referencedRelation: "co_brokers"
             referencedColumns: ["id"]
           },
           {
@@ -3443,6 +3554,7 @@ export type Database = {
           co_agent_phone: string | null
           co_agent_rent_commission_months: number | null
           co_agent_sale_commission_percent: number | null
+          co_broker_id: string | null
           commission_rent_months: number | null
           commission_sale_percentage: number | null
           created_at: string
@@ -3454,7 +3566,6 @@ export type Database = {
           description_en: string | null
           district: string | null
           electricity_charge: string | null
-          external_agent_id: string | null
           facing_east: boolean | null
           facing_north: boolean | null
           facing_south: boolean | null
@@ -3590,6 +3701,7 @@ export type Database = {
           co_agent_phone: string | null
           co_agent_rent_commission_months: number | null
           co_agent_sale_commission_percent: number | null
+          co_broker_id: string | null
           commission_rent_months: number | null
           commission_sale_percentage: number | null
           created_at: string
@@ -3601,7 +3713,6 @@ export type Database = {
           description_en: string | null
           district: string | null
           electricity_charge: string | null
-          external_agent_id: string | null
           facing_east: boolean | null
           facing_north: boolean | null
           facing_south: boolean | null

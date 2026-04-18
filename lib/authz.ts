@@ -42,8 +42,11 @@ async function getRole(
   return data.role as UserRole;
 }
 
-export async function getAuthContextOrNull(): Promise<AuthContext | null> {
-  const supabase = await createClient();
+export async function getAuthContextOrNull(
+  injectedSupabase?: SupabaseClient<Database>,
+): Promise<AuthContext | null> {
+  // 🛡️ Test Infrastructure Bridge
+  const supabase = injectedSupabase ?? (globalThis as any).__MOCK_SUPABASE__ ?? (await createClient());
   const { data, error } = await supabase.auth.getUser();
   
   // 🛡️ Zombie Session Protection: Verify user exists and JWT is still valid
@@ -59,8 +62,9 @@ import { getSystemConfig } from "@/lib/actions/system-config";
 
 export async function requireAuthContext(
   requestedTenantId?: string,
+  injectedSupabase?: SupabaseClient<Database>,
 ): Promise<AuthContext> {
-  const ctx = await getAuthContextOrNull();
+  const ctx = await getAuthContextOrNull(injectedSupabase);
   if (!ctx) throw new AuthzError("UNAUTHORIZED", "Unauthorized");
 
   // Get global system config
