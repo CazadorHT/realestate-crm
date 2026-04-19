@@ -21,6 +21,7 @@ import {
   getPayoutQueueAction,
   recalculatePayoutTotalsAction
 } from "@/features/finance/actions";
+import { CommissionPayoutRecord, RecalculatePreview } from "@/features/finance/types";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
@@ -47,9 +48,9 @@ import { RecalculateConfirmDialog } from "@/features/finance/components/Recalcul
 export default function PayoutDashboardPage() {
   const [loading, setLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [payouts, setPayouts] = useState<any[]>([]);
+  const [payouts, setPayouts] = useState<CommissionPayoutRecord[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState<"ALL" | "UNPAID" | "READY_TO_PAY" | "PAID">("ALL");
   
   // 📑 Pagination State
   const [page, setPage] = useState(1);
@@ -63,7 +64,7 @@ export default function PayoutDashboardPage() {
   const getTotalSelectedAmount = usePayoutStore(state => state.getTotalSelectedAmount);
   
   // Modals / Sheets State
-  const [selectedPayout, setSelectedPayout] = useState<any>(null);
+  const [selectedPayout, setSelectedPayout] = useState<CommissionPayoutRecord | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isAdjustmentOpen, setIsAdjustmentOpen] = useState(false);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
@@ -81,7 +82,7 @@ export default function PayoutDashboardPage() {
 
   // Recalculate Preview State
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [previewData, setPreviewData] = useState<any>(null);
+  const [previewData, setPreviewData] = useState<RecalculatePreview | null>(null);
   const [targetId, setTargetId] = useState<string | null>(null);
 
   const fetchPayouts = async (targetPage: number = page, isFilterChange: boolean = false) => {
@@ -94,7 +95,7 @@ export default function PayoutDashboardPage() {
     const res = await getPayoutQueueAction({ 
       page: targetPage, 
       pageSize,
-      status: statusFilter === "ALL" ? undefined : statusFilter,
+      status: statusFilter === "ALL" ? undefined : statusFilter as "UNPAID" | "READY_TO_PAY" | "PAID",
     });
     if (res.success) {
       setPayouts(res.data || []);
@@ -148,7 +149,7 @@ export default function PayoutDashboardPage() {
     p.deal?.property?.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const visibleIds = payouts.map((p: any) => p.id);
+  const visibleIds = payouts.map((p: CommissionPayoutRecord) => p.id);
   const currentTotal = getTotalSelectedAmount(payouts);
 
   const handlePageChange = (newPage: number) => {
@@ -259,7 +260,7 @@ export default function PayoutDashboardPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 bg-slate-100/50 p-1.5 rounded-2xl border border-slate-200/50">
-                {['ALL', 'UNPAID', 'READY_TO_PAY', 'PAID'].map((status) => (
+                {(['ALL', 'UNPAID', 'READY_TO_PAY', 'PAID'] as const).map((status) => (
                   <Button
                     key={status}
                     onClick={() => {
@@ -290,7 +291,7 @@ export default function PayoutDashboardPage() {
               currentPage={page}
               totalPages={Math.ceil(totalCount / pageSize) || 1}
               onPageChange={handlePageChange}
-              onViewHistory={(payout: any) => {
+              onViewHistory={(payout: CommissionPayoutRecord) => {
                 setSelectedPayout(payout);
                 setIsHistoryOpen(true);
               }}

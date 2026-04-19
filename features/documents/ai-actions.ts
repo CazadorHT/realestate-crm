@@ -101,11 +101,11 @@ export async function analyzeDocumentAction(
     // 5. Return results for human verification (DO NOT save to DB yet)
     revalidatePath("/protected/documents");
     return { success: true, data: validatedAnalysis };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("AI Analysis Error:", error);
     return {
       success: false,
-      message: mapDbError(error) || "เกิดข้อผิดพลาดในการวิเคราะห์ AI",
+      message: (error as Error).message || "เกิดข้อผิดพลาดในการวิเคราะห์ AI",
     };
   }
 }

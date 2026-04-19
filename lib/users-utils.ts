@@ -15,9 +15,9 @@ export interface EliteUser {
 
 export function calculateUsersStats(users: EliteUser[]) {
   const totalUsers = users.length;
-  const totalAdmins = users.filter((u) => u.role === "ADMIN").length;
-  const totalAgents = users.filter((u) => u.role === "AGENT").length;
-  const totalUsersWaiting = users.filter((u) => u.role === "USER" || !u.role).length;
+  const totalAdmins = users.filter((u: any) => u.role === "ADMIN").length;
+  const totalAgents = users.filter((u: any) => u.role === "AGENT").length;
+  const totalUsersWaiting = users.filter((u: any) => u.role === "USER" || !u.role).length;
 
   return {
     totalUsers,

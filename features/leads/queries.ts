@@ -58,7 +58,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     );
   }
   if (stage && stage !== "ALL") {
-    query = query.eq("stage", stage as any);
+    query = query.eq("stage", stage as Database["public"]["Enums"]["lead_stage"]);
   }
 
   const from = (page - 1) * pageSize;
@@ -68,10 +68,10 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   if (error) throw new Error(mapDbError(error));
 
-  const leads = data as LeadRow[];
+  const leads = (data || []) as LeadRow[];
   const leadIds = leads.map((l) => l.id);
 
-  // fetch deals for these leads and compute counts client-side (avoid unsupported .group in types)
+  // fetch deals for these leads and compute counts client-side
   let dealsCountMap: Record<string, number> = {};
   if (leadIds.length > 0) {
     const { data: dealsForLeads, error: dealsErr } = await supabase
@@ -80,7 +80,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
       .in("lead_id", leadIds);
 
     if (!dealsErr && dealsForLeads) {
-      (dealsForLeads as any[]).forEach((d) => {
+      (dealsForLeads as { lead_id: string }[]).forEach((d) => {
         dealsCountMap[d.lead_id] = (dealsCountMap[d.lead_id] || 0) + 1;
       });
     }
@@ -125,7 +125,7 @@ export async function getAllLeadIdsQuery(args: { q?: string; stage?: string } = 
     );
   }
   if (stage && stage !== "ALL") {
-    query = query.eq("stage", stage as any);
+    query = query.eq("stage", stage as Database["public"]["Enums"]["lead_stage"]);
   }
 
   const { data, error } = await query;
@@ -266,13 +266,13 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
   const coverMap = new Map<string, PropertyImageRow>();
   (covers ?? []).forEach((c) => {
     // ถ้ามีหลาย cover ให้เลือกตัวแรก (ปกติควรมี 1)
-    if (!coverMap.has(c.property_id)) coverMap.set(c.property_id, c as any);
+    if (!coverMap.has(c.property_id)) coverMap.set(c.property_id, c as PropertyImageRow);
   });
 
   const out: Record<string, PropertySummary> = {};
   (props ?? []).forEach((p) => {
     out[p.id] = {
-      ...(p as any),
+      ...(p as PropertySummary),
       cover_url: coverMap.get(p.id)?.image_url ?? null,
     };
   });

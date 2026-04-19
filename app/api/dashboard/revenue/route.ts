@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import type { RevenueData } from "@/lib/supabase/types-helper";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
       grouped.set(`${day}`, 0);
     }
 
-    data?.forEach((p) => {
+    data?.forEach((p: RevenueData) => {
       const date = new Date(p.updated_at);
       const dayKey = date.getDate().toString();
       const val = p.status === "SOLD" ? p.price || 0 : p.rental_price || 0;
@@ -80,7 +81,7 @@ export async function GET(request: Request) {
       grouped.set(key, 0);
     }
 
-    data?.forEach((p) => {
+    data?.forEach((p: RevenueData) => {
       const date = new Date(p.updated_at);
       const monthKey = months[date.getMonth()];
       const val = p.status === "SOLD" ? p.price || 0 : p.rental_price || 0;
@@ -127,7 +128,7 @@ export async function GET(request: Request) {
     const grouped = new Map<string, number>();
     months.forEach((month) => grouped.set(month, 0));
 
-    data?.forEach((p) => {
+    data?.forEach((p: RevenueData) => {
       const date = new Date(p.updated_at);
       const monthIndex = date.getMonth();
       const monthKey = months[monthIndex];
@@ -153,7 +154,7 @@ export async function GET(request: Request) {
     // Group by Year
     const grouped = new Map<string, number>();
 
-    data?.forEach((p) => {
+    data?.forEach((p: RevenueData) => {
       const date = new Date(p.updated_at);
       const yearKey = date.getFullYear().toString();
       const val = p.status === "SOLD" ? p.price || 0 : p.rental_price || 0;
@@ -202,7 +203,7 @@ export async function GET(request: Request) {
 
   months.forEach((month) => grouped.set(month, 0));
 
-  data?.forEach((p) => {
+  data?.forEach((p: RevenueData) => {
     const date = new Date(p.updated_at);
     const monthIndex = date.getMonth();
     const monthKey = months[monthIndex];

@@ -93,7 +93,7 @@ export default async function UsersManagementPage() {
   }
 
   // Transform to EliteUser type
-  const eliteUsers: EliteUser[] = (users || []).map((u) => ({
+  const eliteUsers: EliteUser[] = (users || []).map((u: { id: string; }) => ({
     ...u,
     auth_provider: providerMap.get(u.id) ?? "email",
     tenants: membershipMap.get(u.id) || [],

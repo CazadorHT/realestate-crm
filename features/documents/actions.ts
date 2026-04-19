@@ -104,31 +104,29 @@ export async function getAllDocuments(
   }
 
   // --- Optimization: Calculate Global Total Size (Enterprise Scalability via RPC) ---
-  const { data: statsData, error: statsError } = await supabase.rpc(
-    "get_documents_stats" as any,
-    {
-      p_tenant_id: tenantId && tenantId !== "ALL" ? tenantId : null,
-      p_search: search || null,
-      p_type_filter: typeFilter || "ALL",
-      p_owner_ids: searchOwnerIds.length > 0 ? searchOwnerIds : null,
-    },
-  );
+  const { data: statsData, error: statsError } = await (supabase.rpc as unknown as (name: string, args: Record<string, unknown>) => Promise<{ data: { total_size_bytes: number; total_count: number }[] | null; error: unknown }>)("get_documents_stats", {
+    p_tenant_id: tenantId && tenantId !== "ALL" ? tenantId : null,
+    p_search: search || null,
+    p_type_filter: typeFilter || "ALL",
+    p_owner_ids: searchOwnerIds.length > 0 ? searchOwnerIds : null,
+  });
 
   if (statsError) {
+    const err = statsError as { message?: string; code?: string; details?: string; hint?: string };
     // Hardening: Provide detailed diagnostic info instead of empty object
     console.error("Fetch Document Stats Error (RPC failed, falling back):", {
-      message: statsError.message,
-      code: statsError.code,
-      details: statsError.details,
-      hint: statsError.hint
+      message: err.message,
+      code: err.code,
+      details: err.details,
+      hint: err.hint
     });
     // Silent fallback to avoid crashing display if RPC isn't deployed yet
   }
 
   // Type safe extraction from RPC table result
-  const stats = (statsData as any)?.[0] || {};
-  const globalTotalSize = stats.total_size_bytes || 0;
-  const globalTotalCount = stats.total_count ?? count ?? 0;
+  const stats = (statsData || [])[0] || {};
+  const globalTotalSize = (stats as { total_size_bytes?: number }).total_size_bytes || 0;
+  const globalTotalCount = (stats as { total_count?: number }).total_count ?? count ?? 0;
 
   // Use RPC count if available, otherwise fallback to standard count
   const finalTotalCount = Number(globalTotalCount);
@@ -435,9 +433,9 @@ export async function downloadDocumentAction(storagePath: string) {
     // Convert Blob to text
     const text = await data.text();
     return { success: true, data: text };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Download Document Error:", error);
-    return { success: false, message: mapDbError(error) };
+    return { success: false, message: (error as Error).message };
   }
 }
 // 6. Search Owner records
@@ -514,9 +512,9 @@ export async function searchOwnerAction(
         .order("created_at", { ascending: false })
         .limit(10);
       if (error) throw error;
-      return (data || []).map((d: any) => ({
+      return (data || []).map((d) => ({
         id: d.id,
-        label: `${d.leads?.full_name || "Unknown Lead"} - ${d.properties?.title || "Unknown Property"}`,
+        label: `${(d.leads as unknown as { full_name: string } | null)?.full_name || "Unknown Lead"} - ${(d.properties as unknown as { title: string } | null)?.title || "Unknown Property"}`,
       }));
     } else if (type === "RENTAL_CONTRACT") {
       // For rental contracts, we usually search by lead name or property in the associated deal
@@ -535,10 +533,13 @@ export async function searchOwnerAction(
 
       const { data, error } = await qry.limit(10);
       if (error) throw error;
-      return (data || []).map((c: any) => ({
-        id: c.id,
-        label: `Contract: ${c.deals?.leads?.full_name || "N/A"} - ${c.deals?.properties?.title || "N/A"}`,
-      }));
+      return (data || []).map((c) => {
+        const deal = (c.deals as unknown as { leads: { full_name: string } | null; properties: { title: string } | null } | null);
+        return {
+          id: c.id,
+          label: `Contract: ${deal?.leads?.full_name || "N/A"} - ${deal?.properties?.title || "N/A"}`,
+        };
+      });
     }
 
     return [];
@@ -589,11 +590,11 @@ export async function verifyAiAnalysisAction(
 
     revalidatePath("/protected/documents");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Verify AI Analysis Error:", error);
     return {
       success: false,
-      message: mapDbError(error) || "เกิดข้อผิดพลาดในการยืนยันข้อมูล AI",
+      message: (error as Error).message || "เกิดข้อผิดพลาดในการยืนยันข้อมูล AI",
     };
   }
 }

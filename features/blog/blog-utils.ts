@@ -1,5 +1,5 @@
 import slugify from "slugify";
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Transliteration mapping for Thai characters to English/ASCII

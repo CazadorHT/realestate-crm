@@ -30,7 +30,7 @@ export async function createRentNotificationRule(
     if (error) throw error;
     revalidatePath("/protected/rent-notifications");
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("createRentNotificationRule error:", err);
     return { success: false, message: mapDbError(err) };
   }
@@ -57,7 +57,7 @@ export async function updateRentNotificationRule(
     if (error) throw error;
     revalidatePath("/protected/rent-notifications");
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("updateRentNotificationRule error:", err);
     return { success: false, message: mapDbError(err) };
   }
@@ -80,7 +80,7 @@ export async function deleteRentNotificationRule(id: string, tenantId?: string |
     if (error) throw error;
     revalidatePath("/protected/rent-notifications");
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("deleteRentNotificationRule error:", err);
     return { success: false, message: mapDbError(err) };
   }
@@ -111,7 +111,7 @@ export async function deleteRentNotificationRules(ids: string[], tenantId?: stri
     if (error) throw error;
     revalidatePath("/protected/rent-notifications");
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("deleteRentNotificationRules error:", err);
     return { success: false, message: mapDbError(err) };
   }
@@ -134,7 +134,7 @@ export async function toggleRentNotificationRules(ids: string[], isActive: boole
     if (error) throw error;
     revalidatePath("/protected/rent-notifications");
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("toggleRentNotificationRules error:", err);
     return { success: false, message: mapDbError(err) };
   }
@@ -242,7 +242,7 @@ export async function testSendRentNotification(ruleId: string, tenantId?: string
     });
 
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Test send error:", err);
     return { success: false, message: mapDbError(err) };
   }

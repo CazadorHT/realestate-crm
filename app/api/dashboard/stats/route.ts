@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import type { StatsData } from "@/lib/supabase/types-helper";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -37,7 +38,7 @@ export async function GET(request: Request) {
     .lte("updated_at", endDate.toISOString());
 
   const revenueThisMonth =
-    revenueData?.reduce((sum, p) => {
+    revenueData?.reduce((sum: number, p: StatsData) => {
       return sum + (p.status === "SOLD" ? p.price || 0 : p.rental_price || 0);
     }, 0) || 0;
 

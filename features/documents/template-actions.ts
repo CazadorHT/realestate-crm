@@ -8,6 +8,7 @@ import {
   UpdateTemplateInput,
 } from "./schema";
 import { revalidatePath } from "next/cache";
+import { Database } from "@/lib/database.types";
 
 // 1. Get All Templates
 export async function getTemplatesAction() {
@@ -41,7 +42,7 @@ export async function createTemplateAction(input: CreateTemplateInput) {
       .insert({
         ...validated,
         created_by: user.id,
-      } as any)
+      } as Database["public"]["Tables"]["contract_templates"]["Insert"])
       .select()
       .single();
 

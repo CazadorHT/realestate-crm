@@ -13,11 +13,12 @@ import { generateBlogPost, refineBlogContent } from "./services/ai-service";
 import { uploadBlogImage } from "./services/storage-service";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { generateBlogSlug, ensureUniqueSlug, generateBlogJsonLd } from "./blog-utils";
+import { Database } from "@/lib/database.types";
 
 /**
  * Standardized Action Response Interface
  */
-export type ActionResponse<T = any> = {
+export type ActionResponse<T = unknown> = {
   success: boolean;
   message: string;
   data?: T;
@@ -55,7 +56,7 @@ export async function createBlogPostAction(
     if (validated.structured_data) {
       try {
         structuredData = JSON.parse(validated.structured_data);
-      } catch (e) {
+      } catch (e: unknown) {
         console.warn("Invalid manual structured data, will fallback to auto-gen", e);
       }
     }
@@ -115,7 +116,7 @@ export async function createBlogPostAction(
       message: t("blog.action_success_create") || "สร้างบทความสำเร็จ",
       data
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Create blog error:", error);
     
     if (error instanceof z.ZodError) {
@@ -223,7 +224,7 @@ export async function updateBlogPostAction(
       success: true,
       message: t("blog.action_success_update") || "อัปเดตบทความสำเร็จ",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Update blog error:", error);
     
     if (error instanceof z.ZodError) {
@@ -270,7 +271,7 @@ export async function deleteBlogPostAction(id: string): Promise<ActionResponse> 
       success: true,
       message: "ย้ายบทความลงถังขยะเรียบร้อยแล้ว",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Delete blog error:", error);
     return {
       success: false,
@@ -279,10 +280,12 @@ export async function deleteBlogPostAction(id: string): Promise<ActionResponse> 
   }
 }
 
+import { BlogPost } from "@/lib/services/blog";
+
 /**
  * Fetches deleted blog posts (Trash).
  */
-export async function getDeletedBlogPostsAction(): Promise<ActionResponse> {
+export async function getDeletedBlogPostsAction(): Promise<ActionResponse<BlogPost[]>> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -298,7 +301,7 @@ export async function getDeletedBlogPostsAction(): Promise<ActionResponse> {
       message: "ดึงข้อมูลถังขยะสำเร็จ",
       data
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       message: mapDbError(error)
@@ -333,7 +336,7 @@ export async function restoreBlogPostAction(id: string): Promise<ActionResponse>
       success: true,
       message: "กู้คืนบทความเรียบร้อยแล้ว",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Restore blog error:", error);
     return {
       success: false,
@@ -365,7 +368,7 @@ export async function permanentDeleteBlogPostAction(id: string): Promise<ActionR
       success: true,
       message: "ลบบทความถาวรเรียบร้อยแล้ว",
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Permanent delete blog error:", error);
     return {
       success: false,
@@ -393,7 +396,7 @@ export async function bulkUpdateBlogStatusAction(
       return { success: false, message: "Unauthorized" };
     }
 
-    const updateData: any = {
+    const updateData: { is_published: boolean; updated_at: string; published_at?: string } = {
       is_published: isPublished,
       updated_at: new Date().toISOString(),
     };
@@ -417,7 +420,7 @@ export async function bulkUpdateBlogStatusAction(
       success: true,
       message: `อัปเดตสถานะ ${ids.length} บทความเป็น ${isPublished ? "เผยแพร่แล้ว" : "ฉบับร่าง"} เรียบร้อยแล้ว`,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Bulk status update error:", error);
     return {
       success: false,
@@ -435,7 +438,7 @@ export async function incrementBlogViewCount(id: string): Promise<void> {
     const supabase = await createClient();
     // We use the database-level RPC to handle atomic increment and logging
     await supabase.rpc('increment_blog_post_view', { post_id: id });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error incrementing view count via RPC:", error);
   }
 }
@@ -459,7 +462,7 @@ export async function getBlogAnalyticsAction(postId: string) {
     if (error) throw error;
 
     // Grouping by date for chart (simple logic for now)
-    const stats = (views || []).reduce((acc: any, view: any) => {
+    const stats = (views || []).reduce((acc: Record<string, number>, view: { created_at: string }) => {
       const date = view.created_at.split('T')[0];
       acc[date] = (acc[date] || 0) + 1;
       return acc;
@@ -469,9 +472,9 @@ export async function getBlogAnalyticsAction(postId: string) {
       success: true, 
       data: Object.entries(stats).map(([date, count]) => ({ date, count }))
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching blog analytics:", error);
-    return { success: false, message: error.message };
+    return { success: false, message: (error as Error).message || "Unknown error" };
   }
 }
 
@@ -480,7 +483,7 @@ export async function getBlogAnalyticsAction(postId: string) {
  */
 export async function uploadBlogImageAction(
   formData: FormData,
-): Promise<ActionResponse> {
+): Promise<ActionResponse<{ publicUrl: string }>> {
   try {
     const user = await getCurrentProfile();
     if (!user || !["ADMIN", "AGENT", "MANAGER"].includes(user.role)) {
@@ -496,7 +499,7 @@ export async function uploadBlogImageAction(
       message: result.message,
       data: result.data
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Upload image error:", error);
     return {
       success: false,
@@ -508,7 +511,7 @@ export async function uploadBlogImageAction(
 /**
  * Fetches all blog categories.
  */
-export async function getCategoriesAction(): Promise<ActionResponse> {
+export async function getCategoriesAction(): Promise<ActionResponse<Database["public"]["Tables"]["blog_categories"]["Row"][]>> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -523,7 +526,7 @@ export async function getCategoriesAction(): Promise<ActionResponse> {
       message: "ดึงข้อมูลหมวดหมู่สำเร็จ",
       data: data 
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Get categories error:", error);
     return { 
       success: false, 
@@ -576,7 +579,7 @@ export async function createCategoryAction(
       message: "สร้างหมวดหมู่สำเร็จ",
       data: data 
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Create category error:", error);
     
     if (error instanceof z.ZodError) {
@@ -619,7 +622,7 @@ export async function deleteCategoryAction(id: string): Promise<ActionResponse> 
       success: true, 
       message: "ลบหมวดหมู่สำเร็จ" 
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Delete category error:", error);
     return { 
       success: false, 
@@ -651,7 +654,7 @@ export async function generateBlogPostAction(
     );
     
     return result;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("AI Generate blog error:", error);
     return {
       success: false,
@@ -674,11 +677,11 @@ export async function refineBlogPostAction(
 
     const refinedContent = await refineBlogContent(content, instruction, type);
     return { success: true, refinedContent };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("AI Refine error:", error);
     return { 
       success: false, 
-      message: error.message || "AI ประมวลผลล้มเหลว" 
+      message: error instanceof Error ? error.message : "AI ประมวลผลล้มเหลว" 
     };
   }
 }

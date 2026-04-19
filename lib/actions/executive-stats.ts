@@ -29,7 +29,7 @@ export async function getExecutiveStatsAction(params: ExecutiveStatsParams = {})
 
   // 2. Aggregate stats per tenant
   const stats = await Promise.all(
-    tenants.map(async (tenant) => {
+    tenants.map(async (tenant: { id: string; name: string }) => {
       // Base query for leads
       let leadQuery = supabase
         .from("leads")
@@ -59,7 +59,7 @@ export async function getExecutiveStatsAction(params: ExecutiveStatsParams = {})
       ]);
 
       const totalRevenue = (deals || []).reduce(
-        (sum, deal) => sum + (Number(deal.commission_amount) || 0),
+        (sum: number, deal: { commission_amount: any }) => sum + (Number(deal.commission_amount) || 0),
         0
       );
 

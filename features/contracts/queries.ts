@@ -80,15 +80,16 @@ export async function getContracts({
   }
 
   const { data, error, count } = await query
-    .order("start_date", { ascending: false })
-    .returns<RentalContractWithRelations[]>();
+    .order("start_date", { ascending: false });
+
+  const typedData = data as unknown as RentalContractWithRelations[];
 
   if (error) {
     console.error("getContracts Error:", error);
     return { data: [], count: 0, error };
   }
 
-  return { data: data || [], count: count || 0, error: null };
+  return { data: typedData || [], count: count || 0, error: null };
 }
 
 /**
@@ -140,5 +141,5 @@ export async function getAllContractIdsQuery({
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-  return (data || []).map((c: any) => c.id);
+  return (data || []).map((c) => c.id);
 }

@@ -26,19 +26,19 @@ const MONTH_COLUMNS: ExcelColumn[] = [
     key: "sales",
     header: "ยอดขาย (Sale)",
     width: 20,
-    format: (v) => v.toLocaleString(),
+    format: (v: unknown) => (typeof v === "number" ? v.toLocaleString() : "-"),
   },
   {
     key: "rent",
     header: "ยอดเช่า (Rent)",
     width: 20,
-    format: (v) => v.toLocaleString(),
+    format: (v: unknown) => (typeof v === "number" ? v.toLocaleString() : "-"),
   },
   {
     key: "total",
     header: "ยอดรวม",
     width: 20,
-    format: (v) => v.toLocaleString(),
+    format: (v: unknown) => (typeof v === "number" ? v.toLocaleString() : "-"),
   },
 ];
 

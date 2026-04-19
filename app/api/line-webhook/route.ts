@@ -25,6 +25,7 @@ import {
   buildLanguageSelection,
   buildSearchResultText,
   type AreaTranslations,
+  type PropertyForFlex,
   t,
 } from "@/lib/line-flex-builders";
 import {
@@ -85,6 +86,7 @@ type LineEvent = {
     data: string;
     params?: Record<string, string>;
   };
+  webhookEventId?: string;
 };
 
 // ============================
@@ -135,7 +137,7 @@ export async function POST(req: NextRequest) {
     const areaTranslations = await prepareAreaTranslations();
 
     for (const event of events) {
-      const eventId = (event as any).webhookEventId;
+      const eventId = event.webhookEventId;
       
       // 🛡️ 1. Deduplication Check (Hardened Redis Implementation)
       if (eventId) {
@@ -154,7 +156,6 @@ export async function POST(req: NextRequest) {
             }
           }
         } catch (redisError) {
-          // Fail-Open: Log error but continue processing to avoid bot outage (Enterprise Resiliency)
           console.error("[BOT] Redis Idempotency Error (Fail-Open):", redisError);
         }
       }
@@ -185,9 +186,10 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ status: "ok" });
-  } catch (error: any) {
-    console.error("[BOT] Webhook Global Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 200 }); // Always 200 for LINE
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("[BOT] Webhook Global Error:", err);
+    return NextResponse.json({ error: err.message }, { status: 200 });
   }
 }
 
@@ -227,7 +229,6 @@ async function handleJoinEvent(event: LineEvent) {
     picture_url: pictureUrl,
     is_active: true,
     updated_at: new Date().toISOString(),
-    // tenant_id: null, // Initially null, can be assigned later
   });
 
   if (error) {
@@ -259,7 +260,6 @@ async function handleFollowEvent(event: LineEvent) {
 
   const supabase = createAdminClient();
 
-  // Create or update Lead on follow (Don't touch ADMIN profiles)
   try {
     const profile = await getLineProfile(userId);
     const { data: lead } = await supabase
@@ -281,7 +281,6 @@ async function handleFollowEvent(event: LineEvent) {
     console.error("Error in follow logic:", err);
   }
 
-  // Send Language Selection first
   try {
     const langMsg = buildLanguageSelection();
     await replyMessage(event.replyToken, [langMsg]);
@@ -312,9 +311,6 @@ async function handlePostbackEvent(
   const params = new URLSearchParams(data);
   const action = params.get("action");
 
-  console.log(`[BOT] Postback action: ${action}, data: ${data}`);
-
-  // 1. Language Change
   if (action === "lang") {
     const selectedLang = params.get("value") as BotLang;
     if (["th", "en", "cn"].includes(selectedLang)) {
@@ -333,7 +329,6 @@ async function handlePostbackEvent(
     return;
   }
 
-  // 2. Commands mapping
   const lang = getUserLang(userId);
 
   if (action === "search") {
@@ -361,7 +356,6 @@ async function handlePostbackEvent(
     return;
   }
 
-  // 3. Selection Flow
   if (action === "select_type") {
     const type = params.get("type") || "";
     const areas = await getDistinctAreasForType(type);
@@ -393,7 +387,7 @@ async function handlePostbackEvent(
     };
 
     const flex = buildPropertyCarousel(
-      properties,
+      properties as PropertyForFlex[],
       headerTexts[lang],
       lang,
       areaTranslations,
@@ -410,17 +404,15 @@ async function handlePostbackEvent(
 
     const res = await replyMessage(event.replyToken, [flex]);
     if (!res.success) {
-      // If reply failed, try push
       await pushText(
         userId,
         `ขออภัยค่ะ ไม่สามารถแสดงผลรูปภาพได้ในขณะนี้ (${res.error || "Unknown Error"})\n\nทำเล: ${area}`,
       );
-      // And send a text one
       await pushText(
         userId,
         properties
           .slice(0, 5)
-          .map((p) => `- ${p.title}`)
+          .map((p) => `- ${(p as PropertyForFlex).title}`)
           .join("\n"),
       );
     }
@@ -438,7 +430,6 @@ async function handleIncomingChannelMessage(
 
   if (!text) return;
 
-  // === SPECIAL COMMANDS ===
   const cleanText = text.toLowerCase().trim();
   if (cleanText === "/id" || cleanText === "/groupid") {
     if (groupId) {
@@ -494,7 +485,7 @@ async function handleIncomingChannelMessage(
     }
 
     const list = data
-      .map((p) => `[${p.property_type}] ${p.title} (ID: ${p.id})`)
+      .map((p) => `[${(p as any).property_type}] ${(p as any).title} (ID: ${(p as any).id})`)
       .join("\n");
     await replyText(
       event.replyToken,
@@ -507,7 +498,6 @@ async function handleIncomingChannelMessage(
 
   const supabase = createAdminClient();
 
-  // Find or Create Lead
   const { data: lead } = await supabase
     .from("leads")
     .select("id, note, tenant_id")
@@ -719,7 +709,7 @@ async function handleInteractiveCommand(
     };
 
     const flex = buildPropertyCarousel(
-      properties,
+      properties as unknown as PropertyForFlex[],
       headerTexts[lang],
       lang,
       areaTranslations,
@@ -805,7 +795,7 @@ async function handleTextMessage(
   };
 
   const flex = buildPropertyCarousel(
-    properties,
+    properties as unknown as PropertyForFlex[],
     headerTexts[lang],
     lang,
     areaTranslations,
@@ -867,7 +857,7 @@ async function handleAIResponse(
       };
 
       const flex = buildPropertyCarousel(
-        aiResult.properties as any,
+        aiResult.properties as unknown as PropertyForFlex[],
         headerTexts[lang],
         lang,
         areaTranslations,
@@ -881,12 +871,12 @@ async function handleAIResponse(
     } else {
       await replyText(replyToken, "ขออภัยค่ะ ไม่พบข้อมูลที่ต้องการ");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[BOT] AI Response Error:", error);
     await replyText(
       replyToken,
       "ขออภัยค่ะ เกิดข้อผิดพลาดในการประมวลผล AI: " +
-        (error.message || "Unknown Error"),
+        ((error as Error).message || "Unknown Error"),
     );
   }
 }
@@ -900,7 +890,7 @@ async function replyText(replyToken: string, text: string) {
 
 async function replyMessage(
   replyToken: string,
-  messages: any[],
+  messages: (FlexMessage | { type: "text"; text: string })[],
 ): Promise<{ success: boolean; error?: string }> {
   try {
     const body = JSON.stringify({ replyToken, messages });
@@ -927,8 +917,8 @@ async function replyMessage(
       return { success: false, error: errorText };
     }
     return { success: true };
-  } catch (error: any) {
-    console.error("Reply functionality failed:", error);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    console.error("Reply failed:", error);
+    return { success: false, error: (error as Error).message };
   }
 }

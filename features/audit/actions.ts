@@ -303,7 +303,7 @@ function scrubMetadata(obj: unknown): unknown {
   if (typeof obj !== "object") return obj;
   
   if (Array.isArray(obj)) {
-    return obj.map(scrubMetadata);
+    return obj.map((x: unknown) => scrubMetadata(x));
   }
 
   const scrubbed: Record<string, unknown> = {};
@@ -386,10 +386,10 @@ export async function getPropertyAuditLogsAction(
     const profileMap = new Map(profiles?.map((p) => [p.id, p]));
 
     // 🛡️ [SECURITY] Deep Scrub sensitive metadata & Map profiles
-    const enrichedData = (data as Record<string, unknown>[]).map(log => {
+    const enrichedData = (data || []).map((log) => {
       const logWithUser = {
         ...log,
-        user: log.user_id ? (profileMap.get(log.user_id as string) || null) : null
+        user: log.user_id ? (profileMap.get(log.user_id) || null) : null
       };
 
       if (role === "ADMIN") return logWithUser;
@@ -403,7 +403,7 @@ export async function getPropertyAuditLogsAction(
     return {
       success: true,
       data: {
-        logs: (enrichedData as unknown) as AuditLogEntry[],
+        logs: enrichedData as AuditLogEntry[],
         totalCount: count || 0,
         hasMore: (count || 0) > offset + pageSize,
       }
@@ -451,7 +451,7 @@ export async function getAuditStatsAction(
     const actionCounts: Record<string, number> = {};
     const modifierCounts: Record<string, number> = {};
 
-    data?.forEach(log => {
+    data?.forEach((log) => {
       // Action stats
       actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
       
@@ -471,7 +471,7 @@ export async function getAuditStatsAction(
       : { data: [] };
 
     const modifierProfiles: Record<string, { name: string; avatar?: string }> = {};
-    profiles?.forEach(p => {
+    profiles?.forEach((p) => {
       modifierProfiles[p.id] = {
         name: p.full_name || "Unknown Agent",
         avatar: p.avatar_url || undefined

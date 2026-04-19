@@ -35,9 +35,23 @@ export async function checkDuplicateProperties(
     return [];
   }
 
+  type PropertyForCheck = {
+    id: string;
+    title: string | null;
+    address_line1: string | null;
+    district: string | null;
+    province: string | null;
+    postal_code: string | null;
+    price: number | null;
+    bedrooms: number | null;
+    bathrooms: number | null;
+    size_sqm: number | null;
+  };
+
   // Use duplicate detection utility
-  const propertiesForCheck = properties.map((p) => ({
+  const propertiesForCheck = (properties as PropertyForCheck[]).map((p) => ({
     ...p,
+    title: p.title || "Untitled",
     address_line1: p.address_line1 ?? undefined,
     district: p.district ?? undefined,
     province: p.province ?? undefined,

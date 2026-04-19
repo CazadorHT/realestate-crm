@@ -42,11 +42,11 @@ export async function getCoBrokersAction(query?: string, area?: string) {
 
     if (error) throw error;
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching co-brokers:", error);
     return {
       success: false,
-      error: error.message || "ล้มเหลวในการดึงข้อมูลคู่ค้า",
+      error: (error as Error).message || "ล้มเหลวในการดึงข้อมูลคู่ค้า",
     };
   }
 }
@@ -76,11 +76,11 @@ export async function createCoBrokerAction(values: CoBrokerFormValues) {
     });
     revalidatePath("/protected/co-brokers");
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating co-broker:", error);
     return {
       success: false,
-      error: error.message || "ไม่สามารถเพิ่มข้อมูลคู่ค้าได้",
+      error: (error as Error).message || "ไม่สามารถเพิ่มข้อมูลคู่ค้าได้",
     };
   }
 }
@@ -110,11 +110,11 @@ export async function updateCoBrokerAction(
     });
     revalidatePath("/protected/co-brokers");
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error updating co-broker:", error);
     return {
       success: false,
-      error: error.message || "ไม่สามารถอัปเดตข้อมูลได้",
+      error: (error as Error).message || "ไม่สามารถอัปเดตข้อมูลได้",
     };
   }
 }
@@ -140,9 +140,9 @@ export async function deleteCoBrokerAction(id: string) {
     await logActivityAction("SOFT_DELETE", "CO_BROKER", id, { broker_id: id });
     revalidatePath("/protected/co-brokers");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error deleting co-broker:", error);
-    return { success: false, error: error.message || "ไม่สามารถลบข้อมูลได้" };
+    return { success: false, error: (error as Error).message || "ไม่สามารถลบข้อมูลได้" };
   }
 }
 
@@ -164,11 +164,11 @@ export async function restoreCoBrokerAction(id: string) {
     await logActivityAction("RESTORE", "CO_BROKER", id, { broker_id: id });
     revalidatePath("/protected/co-brokers");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error restoring co-broker:", error);
     return {
       success: false,
-      error: error.message || "ไม่สามารถกู้คืนข้อมูลได้",
+      error: (error as Error).message || "ไม่สามารถกู้คืนข้อมูลได้",
     };
   }
 }
@@ -194,11 +194,11 @@ export async function permanentlyDeleteCoBrokerAction(id: string) {
     });
     revalidatePath("/protected/co-brokers");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error permanent deleting co-broker:", error);
     return {
       success: false,
-      error: error.message || "ไม่สามารถลบข้อมูลถาวรได้",
+      error: (error as Error).message || "ไม่สามารถลบข้อมูลถาวรได้",
     };
   }
 }
@@ -253,13 +253,13 @@ export async function getCoBrokerPerformanceAction(id: string) {
     const soldListings = soldRes.count || 0;
     const commissions = commRes.data || [];
 
-    const realizedEarnings = commissions
+    const realizedEarnings = (commissions as { status: string; net_amount: number | string | null }[])
       .filter((c) => c.status === "PAID")
-      .reduce((sum, c) => sum + (Number(c.net_amount) || 0), 0);
+      .reduce((sum: number, c) => sum + (Number(c.net_amount) || 0), 0);
 
-    const accruedEarnings = commissions
+    const accruedEarnings = (commissions as { status: string; net_amount: number | string | null }[])
       .filter((c) => c.status !== "PAID" && c.status !== "VOID")
-      .reduce((sum, c) => sum + (Number(c.net_amount) || 0), 0);
+      .reduce((sum: number, c) => sum + (Number(c.net_amount) || 0), 0);
 
     return {
       success: true,
@@ -275,9 +275,9 @@ export async function getCoBrokerPerformanceAction(id: string) {
             : 0,
       },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching co-broker performance:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }
 
@@ -306,11 +306,11 @@ export async function addCoBrokerDocumentAction(input: CoBrokerDocumentInput) {
     });
 
     return { success: true, data: doc };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error adding document:", error);
     return {
       success: false,
-      error: error.message || "ล้มเหลวในการบันทึกเอกสาร",
+      error: (error as Error).message || "ล้มเหลวในการบันทึกเอกสาร",
     };
   }
 }
@@ -328,9 +328,9 @@ export async function getCoBrokerDocumentsAction(id: string) {
 
     if (error) throw error;
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching documents:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }
 
@@ -356,9 +356,9 @@ export async function deleteCoBrokerDocumentAction(
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error deleting document:", error);
-    return { success: false, error: error.message || "ไม่สามารถลบเอกสารได้" };
+    return { success: false, error: (error as Error).message || "ไม่สามารถลบเอกสารได้" };
   }
 }
 
@@ -395,11 +395,11 @@ export async function bulkDeleteCoBrokersAction(ids: string[]) {
     });
     revalidatePath("/protected/co-brokers");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Bulk delete error:", error);
     return {
       success: false,
-      error: error.message || "ไม่สามารถลบข้อมูลแบบกลุ่มได้",
+      error: (error as Error).message || "ไม่สามารถลบข้อมูลแบบกลุ่มได้",
     };
   }
 }
@@ -430,11 +430,11 @@ export async function bulkRestoreCoBrokersAction(ids: string[]) {
     });
     revalidatePath("/protected/co-brokers");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Bulk restore error:", error);
     return {
       success: false,
-      error: error.message || "ไม่สามารถกู้คืนข้อมูลแบบกลุ่มได้",
+      error: (error as Error).message || "ไม่สามารถกู้คืนข้อมูลแบบกลุ่มได้",
     };
   }
 }
@@ -469,11 +469,11 @@ export async function bulkUpdateCoBrokerGroupAction(
     });
     revalidatePath("/protected/co-brokers");
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Bulk update group error:", error);
     return {
       success: false,
-      error: error.message || "ไม่สามารถเปลี่ยนกลุ่มข้อมูลแบบกลุ่มได้",
+      error: (error as Error).message || "ไม่สามารถเปลี่ยนกลุ่มข้อมูลแบบกลุ่มได้",
     };
   }
 }
@@ -494,9 +494,9 @@ export async function getTrashCoBrokersAction() {
 
     if (error) throw error;
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching trash co-brokers:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }
 
@@ -524,8 +524,8 @@ export async function getCoBrokerDealsAction(id: string) {
 
     if (error) throw error;
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error fetching co-broker deals:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }

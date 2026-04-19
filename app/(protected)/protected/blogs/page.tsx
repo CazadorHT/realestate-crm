@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { getAllBlogPosts } from "@/lib/services/blog";
+import { getAllBlogPosts, BlogPost } from "@/lib/services/blog";
 import { getDeletedBlogPostsAction } from "@/features/blog/actions";
 import { Button } from "@/components/ui/button";
 import { BlogsTable } from "@/features/blogs/components/BlogsTable";
@@ -17,7 +17,7 @@ export default async function BlogsPage(props: {
   const tab = searchParams.tab || "active";
   const pageSize = 10;
   
-  let posts = [];
+  let posts: BlogPost[] = [];
   let totalPosts = 0;
 
   if (tab === "trash") {

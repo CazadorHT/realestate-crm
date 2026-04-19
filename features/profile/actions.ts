@@ -6,6 +6,7 @@ import { randomUUID } from "crypto";
 import { requireAuthContext } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
+import { Database } from "@/lib/database.types";
 
 export type UpdateProfileResult = {
   success: boolean;
@@ -34,15 +35,7 @@ export async function updateProfileAction(
       return { success: false, message: "กรุณากรอกชื่อ" };
     }
 
-    const updateData: {
-      full_name: string;
-      phone?: string | null;
-      line_id?: string | null;
-      line_user_id?: string | null;
-      facebook_url?: string | null;
-      whatsapp_id?: string | null;
-      wechat_id?: string | null;
-    } = {
+    const updateData: Database["public"]["Tables"]["profiles"]["Update"] = {
       full_name: full_name.trim(),
     };
 
@@ -66,8 +59,8 @@ export async function updateProfileAction(
     if (wechat_id !== null) updateData.wechat_id = wechat_id.trim();
     
     // 🛡️ Sensitive Tax Information
-    if (tax_id !== null) (updateData as any).tax_id = tax_id.trim();
-    if (tax_address !== null) (updateData as any).tax_address = tax_address.trim();
+    if (tax_id !== null) updateData.tax_id = tax_id.trim();
+    if (tax_address !== null) updateData.tax_address = tax_address.trim();
 
     const { error } = await ctx.supabase
       .from("profiles")
@@ -226,8 +219,8 @@ export async function updateNotificationSettings(
 
     revalidatePath("/protected/profile");
     return { success: true, message: "บันทึกการตั้งค่าสำเร็จ" };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("updateNotificationSettings error:", error);
-    return { success: false, message: mapDbError(error) || "Unauthorized or Error" };
+    return { success: false, message: (error as Error).message || "Unauthorized or Error" };
   }
 }

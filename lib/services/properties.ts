@@ -330,7 +330,7 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
   }
 
   // Transform Data
-  let items = (data ?? []).map((row) => {
+  let items = (data ?? []).map((row: any) => {
     const typedRow = row as unknown as PropertyRow; // Cast because supabase types might be loose or strict
     const trans = areaTranslationsMap.get(typedRow.popular_area || "");
 

@@ -61,7 +61,7 @@ export async function getServerTranslations() {
 
   const t = (key: string, params?: Record<string, string | number>) => {
     let value =
-      key.split(".").reduce((prev, curr) => prev?.[curr], dict as any) || key;
+      key.split(".").reduce((prev: any, curr: string) => prev?.[curr], dict as any) || key;
 
     if (params && typeof value === "string") {
       Object.entries(params).forEach(([k, v]) => {

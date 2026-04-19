@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export async function getRentNotificationRules() {
   const supabase = createClient();
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("rent_notification_rules")
     .select(
       `
@@ -23,7 +23,7 @@ export async function getRentNotificationRules() {
 export async function getLineGroups() {
   const supabase = createClient();
   // Fetch only active groups or all? Let's fetch all for now or active.
-  const { data, error } = await (supabase as any)
+  const { data, error } = await supabase
     .from("line_groups")
     .select("*")
     .eq("is_active", true)

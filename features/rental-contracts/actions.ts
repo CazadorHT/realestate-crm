@@ -1,6 +1,6 @@
 "use server";
 
-import { PostgrestError } from "@supabase/supabase-js";
+import type { PostgrestError } from "@supabase/supabase-js";
 import {
   requireAuthContext,
   assertAuthenticated,

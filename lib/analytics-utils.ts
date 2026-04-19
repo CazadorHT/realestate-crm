@@ -150,7 +150,7 @@ export const getPreferredCategory = (): string | null => {
   const categories = prefs.categories || {};
 
   return (
-    Object.keys(categories).reduce((a, b) =>
+    Object.keys(categories).reduce((a: string, b: string) =>
       categories[a] > categories[b] ? a : b,
     ) || null
   );

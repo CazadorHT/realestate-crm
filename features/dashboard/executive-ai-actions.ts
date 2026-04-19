@@ -82,11 +82,11 @@ export async function generateExecutiveAiInsightsAction(year?: number) {
         message: "AI ส่งข้อมูลกลับมาในรูปแบบที่ไม่ถูกต้อง",
       };
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("[generateExecutiveAiInsightsAction] Failed:", error);
     return {
       success: false,
-      message: error.message || "เกิดข้อผิดพลาดในการขอข้อมูล AI",
+      message: (error as Error).message || "เกิดข้อผิดพลาดในการขอข้อมูล AI",
     };
   }
 }

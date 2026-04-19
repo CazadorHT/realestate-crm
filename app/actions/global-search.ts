@@ -11,6 +11,14 @@ export type SearchResult = {
   url: string;
 };
 
+import { 
+  PropertyMinimal, 
+  LeadMinimal, 
+  DealMinimal, 
+  ProfileMinimal, 
+  OwnerMinimal 
+} from "@/lib/supabase/types-helper";
+
 export async function globalSearchAction(query: string): Promise<SearchResult[]> {
   if (!query || query.length < 2) return [];
 
@@ -130,7 +138,7 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
 
   // Map Results with type safety
   if (propertiesRes.data) {
-    (propertiesRes.data as any[]).forEach((p) => {
+    (propertiesRes.data as unknown as PropertyMinimal[]).forEach((p: PropertyMinimal) => {
       results.push({
         id: p.id,
         type: "property",
@@ -142,7 +150,7 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
   }
 
   if (leadsRes.data) {
-    (leadsRes.data as any[]).forEach((l) => {
+    (leadsRes.data as unknown as LeadMinimal[]).forEach((l: LeadMinimal) => {
       results.push({
         id: l.id,
         type: "lead",
@@ -154,19 +162,28 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
   }
 
   if (dealsRes.data) {
-    (dealsRes.data as any[]).forEach((d) => {
+    type JoinedDeal = {
+      id: string;
+      property: { title: string | null } | { title: string | null }[] | null;
+      lead: { full_name: string | null } | { full_name: string | null }[] | null;
+    };
+
+    (dealsRes.data as unknown as JoinedDeal[]).forEach((d) => {
+      const propTitle = Array.isArray(d.property) ? d.property[0]?.title : d.property?.title;
+      const leadName = Array.isArray(d.lead) ? d.lead[0]?.full_name : d.lead?.full_name;
+      
       results.push({
         id: d.id,
         type: "deal",
         title: `ดีล #${d.id.slice(0, 8)}`,
-        subtitle: `${d.property?.title || "ไม่ระบุทรัพย์"} | ${d.lead?.full_name || "ไม่ระบุลูกค้า"}`,
+        subtitle: `${propTitle || "ไม่ระบุทรัพย์"} | ${leadName || "ไม่ระบุลูกค้า"}`,
         url: `/protected/deals/${d.id}`,
       });
     });
   }
 
   if (agentsRes.data) {
-    (agentsRes.data as any[]).forEach((a) => {
+    (agentsRes.data as unknown as ProfileMinimal[]).forEach((a: ProfileMinimal) => {
       results.push({
         id: a.id,
         type: "agent",
@@ -178,7 +195,7 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
   }
 
   if (ownersRes.data) {
-    (ownersRes.data as any[]).forEach((o) => {
+    (ownersRes.data as unknown as OwnerMinimal[]).forEach((o: OwnerMinimal) => {
       results.push({
         id: o.id,
         type: "owner",

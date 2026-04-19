@@ -2,12 +2,12 @@ export interface ExcelColumn {
   key: string;
   header: string;
   width?: number;
-  format?: (value: any) => string | number;
+  format?: (value: unknown) => string | number;
 }
 
 export interface ExcelSheet {
   name: string;
-  data: Record<string, any>[];
+  data: Record<string, unknown>[];
   columns: ExcelColumn[];
 }
 
@@ -15,7 +15,7 @@ export interface ExcelSheet {
  * Generate an Excel file buffer from data array
  */
 export async function generateExcelBuffer(
-  data: Record<string, any>[],
+  data: Record<string, unknown>[],
   columns: ExcelColumn[],
   sheetName: string = "Sheet1",
 ): Promise<Buffer> {
@@ -23,7 +23,7 @@ export async function generateExcelBuffer(
 
   // Transform data according to columns
   const rows = data.map((item) => {
-    const row: Record<string, any> = {};
+    const row: Record<string, unknown> = {};
     for (const col of columns) {
       const value = item[col.key];
       row[col.header] = col.format ? col.format(value) : (value ?? "");
@@ -58,7 +58,7 @@ export async function generateMultiSheetExcelBuffer(
 
   for (const sheet of sheets) {
     const rows = sheet.data.map((item) => {
-      const row: Record<string, any> = {};
+      const row: Record<string, unknown> = {};
       for (const col of sheet.columns) {
         const value = item[col.key];
         row[col.header] = col.format ? col.format(value) : (value ?? "");
@@ -80,21 +80,33 @@ export async function generateMultiSheetExcelBuffer(
 /**
  * Format currency for Thai Baht
  */
-export function formatThaiCurrency(value: number | null | undefined): string {
+/**
+ * Format currency for Thai Baht
+ */
+export function formatThaiCurrency(value: unknown): string {
   if (value == null) return "-";
+  const num = typeof value === "number" ? value : Number(value);
+  if (isNaN(num)) return "-";
+  
   return new Intl.NumberFormat("th-TH", {
     style: "currency",
     currency: "THB",
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(num);
 }
 
 /**
  * Format date for Thai locale
  */
-export function formatThaiDate(date: string | Date | null | undefined): string {
+/**
+ * Format date for Thai locale
+ */
+export function formatThaiDate(date: unknown): string {
   if (!date) return "-";
-  return new Date(date).toLocaleDateString("th-TH", {
+  const d = date instanceof Date ? date : new Date(date as string);
+  if (isNaN(d.getTime())) return "-";
+
+  return d.toLocaleDateString("th-TH", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -104,29 +116,41 @@ export function formatThaiDate(date: string | Date | null | undefined): string {
 /**
  * Format boolean as Yes/No in Thai
  */
-export function formatBoolean(value: boolean | null | undefined): string {
+/**
+ * Format boolean as Yes/No in Thai
+ */
+export function formatBoolean(value: unknown): string {
   if (value == null) return "-";
-  return value ? "ใช่" : "ไม่";
+  const bool = value === true || value === "true" || value === 1;
+  return bool ? "ใช่" : "ไม่";
 }
 
 /**
  * Format Listing Type to Thai
  */
-export function formatListingType(value: string | null | undefined): string {
+/**
+ * Format Listing Type to Thai
+ */
+export function formatListingType(value: unknown): string {
   if (!value) return "-";
+  const str = String(value);
   const map: Record<string, string> = {
     SALE: "ขาย",
     RENT: "เช่า",
     SALE_AND_RENT: "ขาย/เช่า",
   };
-  return map[value] || value;
+  return map[str] || str;
 }
 
 /**
  * Format Property Status to Thai
  */
-export function formatPropertyStatus(value: string | null | undefined): string {
+/**
+ * Format Property Status to Thai
+ */
+export function formatPropertyStatus(value: unknown): string {
   if (!value) return "-";
+  const str = String(value);
   const map: Record<string, string> = {
     AVAILABLE: "ว่าง (พร้อมขาย/เช่า)",
     SOLD: "ขายแล้ว",
@@ -135,5 +159,5 @@ export function formatPropertyStatus(value: string | null | undefined): string {
     OFF_MARKET: "ปิดประกาศ",
     TRASH: "ถังขยะ",
   };
-  return map[value] || value;
+  return map[str] || str;
 }

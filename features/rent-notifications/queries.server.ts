@@ -1,3 +1,6 @@
+import { Database } from "@/lib/database.types";
+type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+
 export async function getRentNotificationRules(
   page = 1,
   pageSize = 20,
@@ -79,20 +82,25 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
 
   // Optimized query using NOT EXISTS to filter out properties that already have rules
   // This is much faster than application-level filtering as the property count grows.
-  let query = (supabase as any).rpc("get_properties_without_notification_rules", {
-    p_tenant_id: tenantId === "ALL" ? null : tenantId
-  });
-
-  const { data, error } = await query;
+  const { data, error } = await supabase.rpc(
+    "get_properties_without_notification_rules",
+    {
+      p_tenant_id: tenantId === "ALL" ? null : tenantId || null,
+    },
+  );
 
   if (error) {
     // Fallback to manual filtering if RPC is not yet available, though we should prefer the RPC/SQL
-    console.warn("RPC get_properties_without_notification_rules failed, falling back to manual filtering:", error);
-    
+    console.warn(
+      "RPC get_properties_without_notification_rules failed, falling back to manual filtering:",
+      error,
+    );
+
     // 1. Fetch properties with active contracts
     let query = supabase
       .from("properties")
-      .select(`
+      .select(
+        `
         id, 
         title,
         property_images(image_url),
@@ -104,7 +112,8 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
             status
           )
         )
-      `)
+      `,
+      )
       .eq("deals.status", "CLOSED_WIN")
       .eq("deals.rental_contracts.status", "ACTIVE")
       .neq("status", "ARCHIVED");
@@ -113,26 +122,39 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
       query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
     }
 
-    const { data: properties, error: propError } = await query.order("created_at", { ascending: false });
-
+    const { data: properties, error: propError } = await query.order(
+      "created_at",
+      { ascending: false },
+    );
     if (propError || !properties) return [];
 
-    const { data: rules } = await supabase.from("rent_notification_rules").select("property_id");
-    const existingIds = new Set((rules || []).map(r => r.property_id));
+    const { data: rules } = await supabase
+      .from("rent_notification_rules")
+      .select("property_id");
+    const existingIds = new Set((rules || []).map((r: { property_id: string }) => r.property_id));
 
-    return properties
-      .filter(p => !existingIds.has(p.id))
-      .map((p: any) => ({
+    type PropertyWithImages = {
+      id: string;
+      title: string | null;
+      property_images: { image_url: string }[];
+    };
+
+    return (properties as unknown as PropertyWithImages[])
+      .filter((p: PropertyWithImages) => !existingIds.has(p.id))
+      .map((p: PropertyWithImages) => ({
         id: p.id,
-        title: p.title,
-        image: p.property_images && p.property_images.length > 0 ? p.property_images[0].image_url : null,
+        title: p.title || "Unknown Property",
+        image:
+          p.property_images && p.property_images.length > 0
+            ? p.property_images[0].image_url
+            : null,
       }));
   }
 
-  return (data as any[] || []).map(p => ({
+  return (data as any[] || []).map((p: { id: string; title: string; image_url: string | null }) => ({
     id: p.id,
     title: p.title,
-    image: p.image_url
+    image: p.image_url,
   }));
 }
 
@@ -145,13 +167,14 @@ export async function getRentNotificationHistory(
   const supabase = await createClient();
   const offset = (page - 1) * pageSize;
 
-  let query = supabase
-    .from("rent_notification_history")
-    .select(`
+  let query = supabase.from("rent_notification_history").select(
+    `
       *,
       properties (title),
       line_groups (group_name)
-    `, { count: "exact" });
+    `,
+    { count: "exact" },
+  );
 
   if (tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);

@@ -206,7 +206,9 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
     // Manual Join: Fetch unique profiles for these logs
     const userIds = Array.from(
       new Set(
-        data.map((d: any) => d.user_id).filter((id: any): id is string => !!id),
+        (data as { user_id: string | null }[])
+          .map((d) => d.user_id)
+          .filter((id): id is string => !!id),
       ),
     );
     const { data: profiles, error: profilesError } = await client
@@ -218,12 +220,15 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
       console.error("[getAiLogs] Profiles Fetch Error:", profilesError);
     }
 
-    const profileMap = new Map(profiles?.map((p) => [p.id, p]) || []);
+    const profileMap = new Map(
+      (profiles as { id: string; full_name: string | null; email: string | null }[] | null)
+        ?.map((p) => [p.id, p]) || []
+    );
 
-    return data.map((d: any) => ({
+    return (data as { user_id: string | null }[]).map((d) => ({
       ...d,
       user: d.user_id ? profileMap.get(d.user_id) : null,
-    }));
+    })) as unknown as AiLogRecord[];
   } catch (error) {
     console.error("[getAiLogs] Exception:", error);
     return [];
@@ -287,10 +292,11 @@ export async function getAiDashboardStats(): Promise<AiDashboardStats> {
     }
 
     const total = data.length;
-    const successCount = data.filter((d) => d.status === "success").length;
-    const chatbotCount = data.filter((d) => d.feature === "chatbot").length;
-    const totalCost = data.reduce(
-      (sum, d) => sum + (Number(d.cost_thb) || 0),
+    const logs = data as { status: string; feature: string; cost_thb: number | string | null }[];
+    const successCount = logs.filter((d) => d.status === "success").length;
+    const chatbotCount = logs.filter((d) => d.feature === "chatbot").length;
+    const totalCost = logs.reduce(
+      (sum: number, d) => sum + (Number(d.cost_thb) || 0),
       0,
     );
     const contentUsage = total - chatbotCount;

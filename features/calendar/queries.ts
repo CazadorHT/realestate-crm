@@ -1,7 +1,7 @@
 import { requireAuthContext, AuthContext, UserRole } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { cache } from "react";
-import { SupabaseClient, User } from "@supabase/supabase-js";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { Database } from "@/lib/database.types";
 import { formatISO } from "date-fns";
 
@@ -460,5 +460,5 @@ export async function getCalendarAgents() {
     console.error("Error fetching agents:", error);
     return [];
   }
-  return data.map(p => ({ id: p.id, title: p.full_name || "Unknown" }));
+  return (data || []).map((p) => ({ id: p.id, title: p.full_name || "Unknown" }));
 }

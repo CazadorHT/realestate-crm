@@ -27,6 +27,10 @@ export const createPropertySafe = createSafeAction(
         price: data.price,
         tenant_id: tenantId, // Explicitly tagging the data with the tenant
         created_by: userId,
+        // TODO: Use dynamic values or specific Enums in production. 
+        // Hardcoded for demo tenant functionality.
+        listing_type: "SALE",
+        property_type: "CONDO",
       })
       .select()
       .single();

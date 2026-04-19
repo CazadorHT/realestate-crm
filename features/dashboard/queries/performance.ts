@@ -5,7 +5,8 @@ export async function getTopAgents(tenantId?: string | null): Promise<TopAgent[]
   try {
     const supabase = await createClient();
 
-    const applyTenantFilter = (query: any) => {
+    // Refined tenant filter helper
+    const applyTenantFilter = <T extends { eq: (col: string, val: string) => T }>(query: T): T => {
       if (tenantId && tenantId !== "ALL") {
         return query.eq("tenant_id", tenantId);
       }
@@ -32,12 +33,12 @@ export async function getTopAgents(tenantId?: string | null): Promise<TopAgent[]
       }
     >();
 
-    deals.forEach((d: any) => {
+    deals.forEach((d: { created_by: string | null; commission_amount: number | null }) => {
       if (!d.created_by) return;
       const current = agentStats.get(d.created_by) || {
         count: 0,
         commission: 0,
-        profile: profiles.find((p) => p.id === d.created_by) || {
+        profile: profiles.find((p: { id: string }) => p.id === d.created_by) || {
           full_name: "Unknown",
           avatar_url: null,
         },
@@ -74,7 +75,7 @@ export async function getAdvancedTopAgents(
   try {
     const supabase = await createClient();
 
-    const applyTenantFilter = (query: any) => {
+    const applyTenantFilter = <T extends { eq: (col: string, val: string) => T }>(query: T): T => {
       if (tenantId && tenantId !== "ALL") {
         return query.eq("tenant_id", tenantId);
       }
@@ -88,8 +89,18 @@ export async function getAdvancedTopAgents(
       1,
     ).toISOString();
 
-    const { data: commissions, error } = await (applyTenantFilter(
-      supabase.from("deal_commissions" as any).select(
+    type JoinedCommission = {
+      net_amount: number | null;
+      agent_id: string | null;
+      agent: {
+        id: string;
+        full_name: string | null;
+        avatar_url: string | null;
+      } | null;
+    };
+
+    const { data: commissions, error } = await applyTenantFilter(
+      supabase.from("deal_commissions").select(
         `
         net_amount,
         agent_id,
@@ -103,7 +114,7 @@ export async function getAdvancedTopAgents(
     )
       .eq("status", "PAID")
       .neq("status", "CANCELLED")
-      .gte("created_at", startOfMonth) as any);
+      .gte("created_at", startOfMonth) as unknown as { data: JoinedCommission[] | null; error: any };
 
     if (error || !commissions) {
       if (error) console.error("Error fetching advanced top agents:", error);
@@ -119,7 +130,7 @@ export async function getAdvancedTopAgents(
       }
     >();
 
-    commissions.forEach((c: any) => {
+    commissions?.forEach((c) => {
       if (!c.agent_id || !c.agent) return;
       const current = agentMap.get(c.agent_id) || {
         count: 0,
@@ -178,7 +189,7 @@ export async function getMarketingPerformanceData(tenantId?: string | null): Pro
       { count: number; totalScore: number; hotLeads: number }
     >();
 
-    leads.forEach((l: any) => {
+    leads.forEach((l: { utm_source: string | null; ai_score: number | null }) => {
       const source = l.utm_source || "Direct / Unknown";
       const score = l.ai_score || 0;
       const isHot = score >= 80;

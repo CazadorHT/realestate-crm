@@ -11,6 +11,7 @@ import {
   getPublicImageUrl,
   getCoverImageUrl,
 } from "@/features/properties/image-utils";
+import { FlexBubble, FlexComponent, FlexBox, FlexText, FlexImage } from "@line/bot-sdk";
 
 export async function createDepositLeadAction(data: DepositLeadInput) {
   // Server-side validation
@@ -74,8 +75,8 @@ Details: ${data.details || "-"}`,
   const headerIcon = "🏠 ";
 
   // Build Footer Rows (2 Columns)
-  const footerRows: any[] = [];
-  const topButtons: any[] = [];
+  const footerRows: Record<string, unknown>[] = [];
+  const topButtons: Record<string, unknown>[] = [];
 
   if (data.phone) {
     topButtons.push({
@@ -365,7 +366,7 @@ export async function submitInquiryAction(
   if (!validatedFields.success) {
     return {
       error: "ข้อมูลไม่ถูกต้อง",
-      errors: validatedFields.error.flatten().fieldErrors as any,
+      errors: validatedFields.error.flatten().fieldErrors as Record<string, string[]>,
     };
   }
 
@@ -421,7 +422,10 @@ export async function submitInquiryAction(
           Array.isArray(property.property_images)
         ) {
           // Map to match the interface expected by getCoverImageUrl
-          const formattedImages = property.property_images.map((img: any) => ({
+          type SimpleImage = { image_url: string; is_cover: boolean | null; sort_order: number | null };
+          const formattedImages = (property.property_images as SimpleImage[])
+            .sort((a: SimpleImage, b: SimpleImage) => (a.sort_order ?? 0) - (b.sort_order ?? 0))
+            .map((img) => ({
             image_url: img.image_url,
             is_cover: img.is_cover || false,
             sort_order: img.sort_order || 0,
@@ -460,7 +464,7 @@ export async function submitInquiryAction(
 
     // Construct Flex Message
     const headerIcon = "💬"; // Icon for Inquiry
-    const flexContents: any = {
+    const flexContents: FlexBubble = {
       type: "bubble",
       header: {
         type: "box",
@@ -497,7 +501,7 @@ export async function submitInquiryAction(
     };
 
     // Add Image if available
-    if (imageUrl) {
+    if (imageUrl && flexContents.body) {
       flexContents.body.contents.push({
         type: "image",
         url: imageUrl,
@@ -513,11 +517,11 @@ export async function submitInquiryAction(
       });
     }
 
-    const bodyContentBox = {
+    const bodyContentBox: FlexBox = {
       type: "box",
       layout: "vertical",
       paddingAll: "md",
-      contents: [] as any[],
+      contents: [],
     };
 
     if (propertyData) {
@@ -575,14 +579,14 @@ export async function submitInquiryAction(
       });
 
       // Price & Discount Logic
-      let priceSectionContents: any[] = [];
+      let priceSectionContents: FlexComponent[] = [];
 
       const createPriceBlock = (
         current: number | null | undefined,
         original: number | null | undefined,
         unit: string = "",
       ) => {
-        const blocks: any[] = [];
+        const blocks: FlexComponent[] = [];
         const priceToDisplay = current || original;
 
         if (!priceToDisplay) return [];
@@ -810,12 +814,13 @@ export async function submitInquiryAction(
       ],
     });
 
-    flexContents.body.contents.push(bodyContentBox);
+    if (flexContents.body) {
+      flexContents.body.contents.push(bodyContentBox as FlexBox);
+    }
 
-    // Build Footer Rows (2 Columns)
-    const footerRows: any[] = [];
-    const firstRow: any[] = [];
-    const secondRow: any[] = [];
+    const footerRows: FlexComponent[] = [];
+    const firstRow: FlexComponent[] = [];
+    const secondRow: FlexComponent[] = [];
 
     // View Property Button
     if (data.propertyId) {
@@ -943,7 +948,7 @@ export async function submitInquiryAction(
         contents: footerRows,
         spacing: "sm",
         paddingAll: "lg",
-      };
+      } as FlexBox;
     }
 
     // Notify Admin (Flex Message)

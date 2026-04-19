@@ -38,7 +38,7 @@ export async function GET(
       .from("deal_commissions")
       .select(`
         *,
-        agent:profiles!deal_commissions_agent_id_fkey (full_name),
+        agent:profiles!deal_commissions_agent_id_fkey (full_name, tax_address),
         tenant:tenants (name),
         adjustments:commission_adjustments(*)
       `)
@@ -56,8 +56,8 @@ export async function GET(
     }
 
     // 3. Precision Calculation
-    // มั่นใจว่า adjustments เป็น array เสมอ
-    const adjustments = (commission as any).adjustments || [];
+    // Ensure adjustments match FinanceMath expectations
+    const adjustments = (commission.adjustments as { amount: number | string | null | undefined }[]) || [];
     const netPayout = FinanceMath.calculateNetPayout(
       commission.amount,
       commission.wht_amount,
@@ -65,19 +65,21 @@ export async function GET(
     );
 
     // 4. Render to PDF Buffer
-    // 🛡️ แก้ไขตัวแดง renderToBuffer โดยใช้ as any เพื่อข้ามข้อจำกัด Type ของ Library
+    // Define exact structure for the template to avoid 'any'
+    const templateData = {
+      agentName: (commission.agent as { full_name: string | null } | null)?.full_name || "ไม่ทราบชื่อ",
+      address: (commission.agent as { tax_address: string | null } | null)?.tax_address || "-", 
+      taxAmount: FinanceMath.format(commission.wht_amount),
+      grossAmount: FinanceMath.format(commission.amount),
+      netAmount: FinanceMath.format(netPayout),
+      date: format(new Date(), "d MMMM yyyy", { locale: th }),
+      tenantName: (commission.tenant as { name: string | null } | null)?.name || "Cazador CRM",
+      referenceCode: commission.payment_reference || commission.id.slice(0, 8).toUpperCase(),
+    };
+
     const pdfBuffer = await renderToBuffer(
       React.createElement(WhtCertificateTemplate, {
-        data: {
-          agentName: (commission as any).agent?.full_name || "ไม่ทราบชื่อ",
-          address: "-", 
-          taxAmount: FinanceMath.format(commission.wht_amount),
-          grossAmount: FinanceMath.format(commission.amount),
-          netAmount: FinanceMath.format(netPayout),
-          date: format(new Date(), "d MMMM yyyy", { locale: th }),
-          tenantName: (commission as any).tenant?.name || "Cazador CRM",
-          referenceCode: commission.payment_reference || commission.id.slice(0, 8).toUpperCase(),
-        }
+        data: templateData
       }) as any
     );
 
@@ -94,10 +96,11 @@ export async function GET(
         "Cache-Control": "no-store, max-age=0",
       },
     });
-  } catch (error: any) {
-    console.error("WHT API Error:", error);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error("WHT API Error:", err);
     return NextResponse.json(
-      { error: "Internal Server Error", message: error.message }, 
+      { error: "Internal Server Error", message: err.message }, 
       { status: 500 }
     );
   }

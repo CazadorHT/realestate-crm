@@ -67,7 +67,7 @@ export function LeadCombobox({
           tenantId: tenantId ?? undefined,
         });
         if (res.success) {
-          setItems(res.data.leads || []);
+          setItems(res.data || []);
         }
       } finally {
         setIsLoading(false);
@@ -88,7 +88,7 @@ export function LeadCombobox({
           tenantId: tenantId ?? undefined 
         });
         if (res.success) {
-          setItems(res.data.leads || []);
+          setItems(res.data || []);
         }
       } finally {
         setIsLoading(false);

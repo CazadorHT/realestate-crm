@@ -54,7 +54,7 @@ export async function updateAiModelConfig(
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData?.user?.id;
 
-    const updates = Object.entries(config).map(([key, value]) => ({
+    const updates = Object.entries(config).map(([key, value]: [string, any]) => ({
       key,
       value,
       updated_at: new Date().toISOString(),

@@ -40,7 +40,7 @@ export async function getDashboardStats(tenantId?: string | null): Promise<Dashb
         .gte("updated_at", startOfMonth),
     );
 
-    const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, p: any) => {
+    const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, p: { status: string; price: number | null; rental_price: number | null }) => {
       return sum + (p.status === "SOLD" ? (p.price || 0) : (p.rental_price || 0));
     }, 0);
 
@@ -54,7 +54,7 @@ export async function getDashboardStats(tenantId?: string | null): Promise<Dashb
         .lte("updated_at", endOfLastMonth),
     );
 
-    const totalRevenueLast = (revenueLast || []).reduce((sum: number, p: any) => {
+    const totalRevenueLast = (revenueLast || []).reduce((sum: number, p: { status: string; price: number | null; rental_price: number | null }) => {
       return sum + (p.status === "SOLD" ? (p.price || 0) : (p.rental_price || 0));
     }, 0);
 
@@ -122,7 +122,7 @@ export async function getDashboardStats(tenantId?: string | null): Promise<Dashb
     const dealsChange = dealsWon - (dealsWonLast || 0);
 
     const totalCommission = (commissionDeals || []).reduce(
-      (sum: number, d: any) => sum + (d.commission_amount || 0),
+      (sum: number, d: { commission_amount: number | null }) => sum + (d.commission_amount || 0),
       0,
     );
 
@@ -192,7 +192,7 @@ export async function getRevenueChartData(tenantId?: string | null): Promise<Rev
       grouped.set(key, 0);
     }
 
-    data?.forEach((p: any) => {
+    data?.forEach((p: { updated_at: string; status: string; price: number | null; rental_price: number | null }) => {
       const date = new Date(p.updated_at);
       const key = date.toLocaleDateString("th-TH", { month: "short" });
       const val = p.status === "SOLD" ? (p.price || 0) : (p.rental_price || 0);
@@ -232,7 +232,7 @@ export async function getFunnelStats(tenantId?: string | null): Promise<FunnelDa
       CLOSED: 0,
     };
 
-    leads?.forEach((l: any) => {
+    leads?.forEach((l: { stage: string | null }) => {
       if (l.stage === "NEW") counts.NEW++;
       else if (l.stage === "CONTACTED") counts.CONTACTED++;
       else if (l.stage === "VIEWED") counts.VIEWED++;
@@ -326,7 +326,7 @@ export async function getPipelineStats(tenantId?: string | null): Promise<Pipeli
       SOLD: 0,
     };
 
-    properties?.forEach((p: any) => {
+    properties?.forEach((p: { status: string | null }) => {
       if (p.status === "ACTIVE") counts.ACTIVE++;
       if (p.status === "UNDER_OFFER") counts.UNDER_OFFER++;
       if (p.status === "RESERVED") counts.RESERVED++;

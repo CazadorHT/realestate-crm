@@ -21,9 +21,9 @@ export interface PropertySEOData {
   metaDescription: string;
   metaKeywords: string[];
   ogImage: string;
-  structuredData: Record<string, any>; // Schema.org JSON-LD
-  faqSchema?: Record<string, any>;
-  breadcrumbSchema?: Record<string, any>; // Schema.org BreadcrumbList
+  structuredData: Record<string, unknown>; // Schema.org JSON-LD
+  faqSchema?: Record<string, unknown>;
+  breadcrumbSchema?: Record<string, unknown>; // Schema.org BreadcrumbList
   ogPriceAmount?: number;
   ogPriceCurrency?: string;
 }
@@ -243,10 +243,8 @@ const TRANSLIT_MAP: Record<string, string> = {
 };
 
 // Initialize mapping from SEO_LABELS to avoid duplication
-// This handles Categories, Flags, and Types
-Object.entries(SEO_LABELS).forEach(([key, labels]) => {
+Object.entries(SEO_LABELS).forEach(([th, labels]) => {
   if (labels.th && labels.en) {
-    // Standardize the EN label for URL (e.g. "Office Building" -> "office-building")
     const enValue = labels.en.toLowerCase().replace(/[\s/]+/g, "-");
     TRANSLIT_MAP[labels.th] = enValue;
   }
@@ -260,7 +258,7 @@ function transliterate(text: string): string {
   const sortedKeys = Object.keys(TRANSLIT_MAP).sort(
     (a, b) => b.length - a.length,
   );
-  sortedKeys.forEach((th) => {
+  sortedKeys.forEach((th: string) => {
     result = result.replace(new RegExp(th, "g"), ` ${TRANSLIT_MAP[th]} `);
   });
 
@@ -285,7 +283,7 @@ export function generatePropertySlug(
   const uniqueWords = new Set<string>();
   const addWords = (s: string | undefined | null) => {
     if (!s) return;
-    getWords(s).forEach((w) => uniqueWords.add(w));
+    getWords(s).forEach((w: string) => uniqueWords.add(w));
   };
 
   // 1. Action (e.g. "for-sale", "for-rent")
@@ -338,7 +336,7 @@ export function generatePropertySlug(
   const addedTransitTypes = new Set<string>();
   let transitCount = 0;
   if (data.nearby_transits && data.nearby_transits.length > 0) {
-    data.nearby_transits.forEach((transit) => {
+    data.nearby_transits.forEach((transit: any) => {
       if (transitCount < 2 && !addedTransitTypes.has(transit.type)) {
         const station =
           transit.station_name_en || transliterate(transit.station_name || "");
@@ -581,7 +579,7 @@ export function generateMetaKeywords(
 export function generateFAQSchema(
   data: PropertyDataForSEO,
   language: string = "th",
-): Record<string, any> {
+): Record<string, unknown> {
   const faqs = [];
   const title = getLocalizedField<string>(data, "title", language);
   // Important: Use popular_area for context if available

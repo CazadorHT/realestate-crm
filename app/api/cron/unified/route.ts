@@ -7,6 +7,14 @@ import {
   getLocaleDateFormat,
   getPropertyDisplayInfo,
 } from "@/features/rent-notifications/utils";
+import type { CronContract, CronRule } from "@/lib/supabase/types-helper";
+
+import { FlexMessage, FlexBubble } from "@line/bot-sdk";
+
+// EXTENDED TYPES FOR LINE SDK
+interface ExtendedFlexMessage extends FlexMessage {
+  contents: FlexBubble;
+}
 
 // PERFORMANCE CONFIG
 const BATCH_SIZE = 5;
@@ -58,7 +66,7 @@ export async function GET(req: NextRequest) {
       duration_ms: Math.round(duration),
       results,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Unified Cron Job Error:", error);
     return NextResponse.json(
       {
@@ -113,13 +121,13 @@ async function runContractExpiryCheck() {
       );
 
       if (shouldNotify) {
-        const property = (contract.deals as any)?.properties;
+        const property = (contract.deals as unknown as { properties: { id: string; title: string | null; property_images: { image_url: string; is_cover: boolean }[] } | null })?.properties;
         const propertyTitle = property?.title || "ทรัพย์สิน";
         const propertyId = property?.id;
 
         const images = property?.property_images || [];
         const coverImageUrl =
-          images.find((img: any) => img.is_cover)?.image_url ||
+          images.find((img) => img.is_cover)?.image_url ||
           images[0]?.image_url;
 
         let color = "#1E88E5";
@@ -135,11 +143,11 @@ async function runContractExpiryCheck() {
           urgencyText = "แจ้งเตือน";
         }
 
-        const flexMessage: any = {
-          type: "flex",
+        const flexMessage: ExtendedFlexMessage = {
+          type: "flex" as const,
           altText: `🚨 สัญญาใกล้หมดอายุ: ${propertyTitle}`,
           contents: {
-            type: "bubble",
+            type: "bubble" as const,
             header: {
               type: "box",
               layout: "vertical",
@@ -276,6 +284,7 @@ async function runContractExpiryCheck() {
             aspectMode: "cover",
             action: {
               type: "uri",
+              label: "ดูประกาศ",
               uri: propertyId
                 ? `${siteConfig.url}/protected/properties/${propertyId}`
                 : `${siteConfig.url}/protected/dashboard`,
@@ -308,7 +317,7 @@ async function runContractExpiryCheck() {
         .length,
       notifications,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Contract expiry error:", error);
     return { error: error instanceof Error ? error.message : "Unknown error" };
   }
@@ -336,7 +345,7 @@ async function runTrashCleanup() {
       return { message: "No trash to clean", count: 0 };
     }
 
-    const idsToDelete = toDelete.map((p) => p.id);
+    const idsToDelete = (toDelete || []).map((p) => p.id);
 
     const { error: deleteError } = await supabase
       .from("properties")
@@ -346,7 +355,7 @@ async function runTrashCleanup() {
     if (deleteError) throw deleteError;
 
     return { deleted_count: idsToDelete.length, deleted_ids: idsToDelete };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Trash cleanup error:", error);
     return { error: error instanceof Error ? error.message : "Unknown error" };
   }
@@ -393,17 +402,17 @@ async function runRentNotifications(startTime: number) {
     }
 
     // Filter rules: no SUCCESS today, retry < 3
-    const pendingRules = rules.filter((rule) => {
-      const todayHistory = rule.rent_notification_history?.filter((h: any) =>
+    const pendingRules = (rules as CronRule[] || []).filter((rule: CronRule) => {
+      const todayHistory = rule.rent_notification_history?.filter((h) =>
         h.created_at.startsWith(todayStr),
       );
-      const hasSuccess = todayHistory?.some((h: any) => h.status === "SUCCESS");
+      const hasSuccess = todayHistory?.some((h) => h.status === "SUCCESS");
       if (hasSuccess) return false;
 
       const latestError = todayHistory
-        ?.filter((h: any) => h.status === "ERROR")
+        ?.filter((h) => h.status === "ERROR")
         .sort(
-          (a: any, b: any) =>
+          (a, b) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
         )[0];
 
@@ -431,6 +440,10 @@ async function runRentNotifications(startTime: number) {
 
       const chunkPromises = chunk.map(async (rule) => {
         try {
+          if (!rule.property_id) {
+            return { ruleId: rule.id, status: "skipped_no_property_id" };
+          }
+
           const { data: activeContract } = await supabase
             .from("rental_contracts")
             .select("*, deal:deals!inner(property_id)")
@@ -507,15 +520,16 @@ async function runRentNotifications(startTime: number) {
             .update({ last_sent_at: new Date().toISOString() })
             .eq("id", rule.id);
           return { ruleId: rule.id, status: "sent" };
-        } catch (err: any) {
-          console.error(`[Cron] Rule ${rule.id} failed:`, err.message);
+        } catch (err: unknown) {
+          const errorMessage = (err as Error).message;
+          console.error(`[Cron] Rule ${rule.id} failed:`, errorMessage);
 
           const todayHistory = rule.rent_notification_history?.filter(
-            (h: any) => h.created_at.startsWith(todayStr),
+            (h) => h.created_at.startsWith(todayStr),
           );
           const latestCount =
             todayHistory?.reduce(
-              (max: number, h: any) => Math.max(max, h.retry_count || 0),
+              (max: number, h) => Math.max(max, h.retry_count || 0),
               0,
             ) || 0;
 
@@ -525,11 +539,11 @@ async function runRentNotifications(startTime: number) {
             property_id: rule.property_id,
             line_group_id: rule.line_group_id,
             status: "ERROR",
-            error_message: err.message,
+            error_message: (err as Error).message || "Unknown error",
             retry_count: latestCount + 1,
           });
 
-          return { ruleId: rule.id, status: "error", error: err.message };
+          return { ruleId: rule.id, status: "error", error: errorMessage };
         }
       });
 
@@ -543,7 +557,7 @@ async function runRentNotifications(startTime: number) {
       error: results.filter((r) => r.status === "error").length,
       skipped: results.filter((r) => r.status?.startsWith("skipped")).length,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Rent notifications error:", error);
     return { error: error instanceof Error ? error.message : "Unknown error" };
   }
@@ -592,7 +606,7 @@ async function runMarketAlerts() {
     closedDeals?.forEach((deal) => {
       const prop = (
         Array.isArray(deal.properties) ? deal.properties[0] : deal.properties
-      ) as any;
+      ) as { size_sqm: number | null; original_price: number | null; popular_area: string | null; district: string | null; property_type: string | null };
       if (!prop || !prop.size_sqm || !prop.original_price) return;
 
       const area = prop.popular_area || prop.district;
@@ -667,7 +681,7 @@ async function runMarketAlerts() {
       alerts_count: alertsGenerated.length,
       alerts: alertsGenerated,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Market alerts error:", error);
     return { error: error instanceof Error ? error.message : "Unknown error" };
   }

@@ -351,7 +351,7 @@ export function usePropertyFiltering(
   }, [properties, matchesFilters]);
 
   const filtered = useMemo(() => {
-    let result = properties.filter((p) => matchesFilters(p));
+    let result = properties.filter((p: ApiProperty) => matchesFilters(p));
 
     // Sort
     result.sort((a, b) => {

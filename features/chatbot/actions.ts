@@ -22,8 +22,9 @@ export type PropertyFilter = {
 };
 
 // Define the tool for Gemini
-// Define the tool for Gemini
-const propertySearchTool = {
+import { Tool, Schema } from "@google/generative-ai";
+
+const propertySearchTool: Tool = {
   functionDeclarations: [
     {
       name: "search_properties",
@@ -49,6 +50,7 @@ const propertySearchTool = {
           },
           type: {
             type: SchemaType.STRING,
+            format: "enum",
             enum: [
               "HOUSE",
               "CONDO",
@@ -63,6 +65,7 @@ const propertySearchTool = {
           },
           transaction: {
             type: SchemaType.STRING,
+            format: "enum",
             enum: ["buy", "rent"],
             description:
               "รูปแบบธุรกรรม: 'buy' (ซื้อ/ขาย) หรือ 'rent' (เช่า/เซ้ง)",
@@ -88,9 +91,9 @@ const propertySearchTool = {
             type: SchemaType.NUMBER,
             description: "ขนาดพื้นที่ใช้สอยสูงสุด (ตร.ม.)",
           },
-        },
-        required: [],
-      } as any,
+        } as Record<string, Schema>,
+        required: [] as string[],
+      },
     },
   ],
 };
@@ -257,14 +260,14 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
               content: {
                 found: results.length > 0,
                 count: results.length,
-                properties: results.map((p) => ({
+                properties: results.map((p: any) => ({
                   id: p.id,
                   title: p.title,
                   price: p.price,
                   rental_price: p.rental_price,
                   location: p.location,
                   url: `/properties/${p.slug}`,
-                  top_features: p.features.slice(0, 3).map((f) => f.name),
+                  top_features: p.features.slice(0, 3).map((f: { name: string }) => f.name),
                 })),
                 suggestion:
                   results.length === 0
@@ -291,7 +294,7 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
         return {
           text: finalText,
           searchCriteria: propertyQuery,
-          properties: results.map((p) => ({
+          properties: results.map((p: any) => ({
             id: p.id,
             title: p.title,
             image: p.image_url,

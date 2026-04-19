@@ -60,7 +60,7 @@ export async function getDeletedProperties(
     const properties = data || [];
     if (properties.length === 0) return { data: [], count: totalCount || 0 };
 
-    const propertyIds = properties.map((p) => p.id);
+    const propertyIds = properties.map((p: any) => p.id);
 
     // Fetch only cover images (or first image if no cover) similar to PropertiesPage
     const { data: images, error: imgError } = await supabase
@@ -74,11 +74,11 @@ export async function getDeletedProperties(
     }
 
     // Create a map for O(1) lookup
-    const coverMap = new Map(
-      images?.map((img) => [img.property_id, img.image_url]),
+    const coverMap = new Map<string, string>(
+      images?.map((img: { property_id: string; image_url: string }) => [img.property_id, img.image_url]) as Iterable<[string, string]>,
     );
 
-    const propertiesWithImages = properties.map((p) => {
+    const propertiesWithImages = properties.map((p: any) => {
       // Logic: Use cover image if available, else empty array (component handles fallback)
       // Note: PropertiesPage actually fetches ALL images if no cover is found, but let's start with cover
       // to match the main table's primary visual.

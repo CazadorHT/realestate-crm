@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "edge";
 
@@ -21,11 +21,8 @@ export async function GET(req: NextRequest) {
     // 1. Fetch Property Image from Supabase if ID is provided
     let imageUrl = null;
     if (id) {
-      // Use Service Role Key to bypass RLS on the server (safe for Edge Runtime)
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
-      );
+      // Use centralized Admin Client to bypass RLS securely
+      const supabase = createAdminClient();
 
       // Get the cover image or the first image
       const { data: images } = await supabase
@@ -41,7 +38,7 @@ export async function GET(req: NextRequest) {
         
         // Ensure absolute URL + Optimization (Resize for OG 1200x630)
         // This prevents the Edge Runtime from crashing on 10MB images
-        if (imageUrl && !imageUrl.startsWith("http")) {
+        if (imageUrl && !imageUrl.startsWith("http") && images[0].storage_path) {
           const { data: { publicUrl } } = supabase.storage
             .from("property-images")
             .getPublicUrl(images[0].storage_path, {

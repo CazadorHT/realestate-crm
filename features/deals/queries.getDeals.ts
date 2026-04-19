@@ -1,6 +1,6 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { differenceInMonths } from "date-fns";
-import { Deal, DealStatus, DealType, DealStats, DealWithProperty } from "./types";
+import { Deal, DealStatus, DealType, DealStats, DealWithProperty, JoinedDealRow } from "./types";
 import { getScopedRevenueClient } from "./logic/scoped-client";
 import { Database } from "@/lib/database.types";
 
@@ -114,9 +114,8 @@ export async function getDeals({
     return { data: [], count: 0, page: pageSafe, pageSize: size };
   }
 
-  // If we had a search q but zero results, try a safer fallback:
-  // search directly in properties and leads and match by ids.
-  let finalData = data ?? [];
+  // Use the strictly typed JoinedDealRow
+  let finalData = (data as unknown as JoinedDealRow[]) ?? [];
   let finalCount = count ?? 0;
 
   if (trimmed && (finalData.length === 0 || finalCount === 0)) {
@@ -165,7 +164,7 @@ export async function getDeals({
         if (/^[0-9a-fA-F-]{36}$/.test(trimmed)) q2 = q2.eq("id", trimmed);
 
         const { data: d2, count: c2 } = await q2.range(from, to);
-        finalData = d2 ?? [];
+        finalData = (d2 as unknown as JoinedDealRow[]) ?? [];
         finalCount = c2 ?? 0;
       }
     } catch (e) {
@@ -310,7 +309,7 @@ export async function getAllDealIdsQuery({
       .eq("tenant_id", tenantId || "");
     
     if (filteredIds) {
-      query = query.in("id", filteredIds.map(f => f.id));
+      query = query.in("id", filteredIds.map((f) => f.id));
     }
   }
 
@@ -348,16 +347,16 @@ export async function getDealStats(): Promise<DealStats | null> {
     listing_type: {},
     total: records.length,
     totalCommission: records
-      .filter((d) => d.status === "CLOSED_WIN" && d.commission_amount)
-      .reduce((sum, d) => sum + (d.commission_amount || 0), 0),
-    wonDeals: records.filter((d) => d.status === "CLOSED_WIN").length,
+      .filter((d: { status: string; commission_amount: number | null }) => d.status === "CLOSED_WIN" && d.commission_amount)
+      .reduce((sum: number, d: { commission_amount: number | null }) => sum + (d.commission_amount || 0), 0),
+    wonDeals: records.filter((d: { status: string }) => d.status === "CLOSED_WIN").length,
     activeDeals: records.filter(
-      (d) => d.status === "NEGOTIATING" || d.status === "SIGNED",
+      (d: { status: string }) => d.status === "NEGOTIATING" || d.status === "SIGNED",
     ).length,
-    lostDeals: records.filter((d) => d.status === "CLOSED_LOSS").length,
+    lostDeals: records.filter((d: { status: string }) => d.status === "CLOSED_LOSS").length,
   };
 
-  records.forEach((d) => {
+  records.forEach((d: { deal_type: string | null; status: string | null; property: { listing_type: string | null; property_type: string | null } | null }) => {
     // Deal Type
     if (d.deal_type) {
       stats.deal_type[d.deal_type] = (stats.deal_type[d.deal_type] || 0) + 1;

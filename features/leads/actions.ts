@@ -246,10 +246,14 @@ export const searchPropertiesAction = createSafeAction(
 
     const { data: facetData, error: facetError } = await facetSb;
 
-    const counts = {
-      listing_type: {} as Record<string, number>,
-      property_type: {} as Record<string, number>,
-      status: {} as Record<string, number>,
+    const counts: {
+      listing_type: Record<string, number>;
+      property_type: Record<string, number>;
+      status: Record<string, number>;
+    } = {
+      listing_type: {},
+      property_type: {},
+      status: {},
     };
 
     if (facetError) {
@@ -282,15 +286,15 @@ export const searchPropertiesAction = createSafeAction(
     if (queryTerm) sb = sb.ilike("title", `%${queryTerm}%`);
 
     if (listing_type) {
-      if (listing_type === "SALE") {
-        sb = sb.in("listing_type", ["SALE", "SALE_RENT", "SALE_AND_RENT"]);
-      } else if (listing_type === "RENT") {
-        sb = sb.in("listing_type", ["RENT", "SALE_RENT", "SALE_AND_RENT"]);
+      if (listing_type === "SALE" || listing_type === "SALE_AND_RENT") {
+        sb = sb.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+      } else if (listing_type === "RENT" || listing_type === "SALE_AND_RENT") {
+        sb = sb.in("listing_type", ["RENT", "SALE_AND_RENT"]);
       }
     }
 
     if (property_type) {
-      sb = sb.eq("property_type", property_type);
+      sb = sb.eq("property_type", property_type as Database["public"]["Enums"]["property_type"]);
     }
 
     if (popular_area) {
@@ -299,16 +303,16 @@ export const searchPropertiesAction = createSafeAction(
 
     if (status) {
       if (Array.isArray(status)) {
-        sb = sb.in("status", status);
+        sb = sb.in("status", status as Database["public"]["Enums"]["property_status"][]);
       } else {
-        sb = sb.eq("status", status);
+        sb = sb.eq("status", status as Database["public"]["Enums"]["property_status"]);
       }
     }
 
     const { data, error } = await sb;
     if (error) throw new Error(mapDbError(error));
 
-    const properties = (data as unknown as {
+    interface PropertyResult {
       id: string;
       title: string;
       price: number | null;
@@ -322,7 +326,9 @@ export const searchPropertiesAction = createSafeAction(
       popular_area: string | null;
       status: string | null;
       property_images: { image_url: string; is_cover: boolean }[];
-    }[]) || [];
+    }
+
+    const properties = (data as unknown as PropertyResult[]) || [];
 
     return {
       properties: properties.map((x) => ({
@@ -416,7 +422,7 @@ export const transferLeadAction = createSafeAction(
     await logAudit(
       {
         supabase,
-        user: { id: userId } as any, // ID carries sufficient entropy for audit logs
+        user: { id: userId } as any, 
         role: role as UserRole,
       },
       {

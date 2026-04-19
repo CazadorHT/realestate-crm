@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { Database } from "@/lib/database.types";
 
 export type InventoryCheckResult = {
   available: string[]; // List of IDs or Values that have inventory
@@ -41,7 +42,7 @@ export async function checkOfficeSizeAvailability(
     XL: 0,
   };
 
-  data.forEach((p) => {
+  data.forEach((p: { size_sqm: number | null }) => {
     const area = p.size_sqm || 0;
     if (area < 40) counts.S++;
     else if (area <= 70) counts.M++;
@@ -86,7 +87,7 @@ export async function checkBudgetAvailability(
 
   // Filter by property type
   if (options.propertyType) {
-    query = query.eq("property_type", options.propertyType as any);
+    query = query.eq("property_type", options.propertyType as Database["public"]["Enums"]["property_type"]);
   }
 
   // Filter by area (if office size selected)
@@ -105,27 +106,26 @@ export async function checkBudgetAvailability(
 
   const availableRangeIds: string[] = [];
 
-  // Check each range against the fetched prices
-  options.budgetRanges.forEach((range) => {
-    const hasMatch = data.some((p: any) => {
-      let price =
-        purpose === "RENT"
-          ? p.rental_price || p.original_rental_price
-          : p.price || p.original_price;
+    options.budgetRanges.forEach((range) => {
+      const hasMatch = (data as Record<string, any>[]).some((p) => {
+        const p_price = (p.rental_price as number | null) || (p.original_rental_price as number | null);
+        const p_price_buy = (p.price as number | null) || (p.original_price as number | null);
+        
+        let price = purpose === "RENT" ? p_price : p_price_buy;
 
-      // Office fallback: estimate total price if missing
-      if (!price && p.property_type === "OFFICE_BUILDING") {
-        const sqmPrice =
-          purpose === "RENT" ? p.rent_price_per_sqm : p.price_per_sqm;
-        if (sqmPrice && p.size_sqm) {
-          price = sqmPrice * p.size_sqm;
+        // Office fallback: estimate total price if missing
+        if (!price && p.property_type === "OFFICE_BUILDING") {
+          const sqmPrice = purpose === "RENT" ? (p.rent_price_per_sqm as number | null) : (p.price_per_sqm as number | null);
+          const size = p.size_sqm as number | null;
+          if (sqmPrice && size) {
+            price = sqmPrice * size;
+          }
         }
-      }
 
-      // "Call for Price" (null or 0) acts as a wildcard
-      if (price === null || price === 0) return true;
-      return price >= range.min && price <= range.max;
-    });
+        // "Call for Price" (null or 0) acts as a wildcard
+        if (price === null || price === 0) return true;
+        return price >= range.min && price <= range.max;
+      });
 
     if (hasMatch && range.id) {
       availableRangeIds.push(range.id);
@@ -160,7 +160,7 @@ export async function checkPropertyTypeAvailability(
   }
 
   // Return unique property types
-  const types = new Set(data.map((p) => p.property_type).filter(Boolean));
+  const types = new Set(data.map((p: { property_type: string | null }) => p.property_type).filter(Boolean));
   return Array.from(types) as string[];
 }
 
@@ -190,7 +190,7 @@ export async function checkLocationAvailability(
   }
 
   if (options.propertyType) {
-    query = query.eq("property_type", options.propertyType as any);
+    query = query.eq("property_type", options.propertyType as Database["public"]["Enums"]["property_type"]);
   }
 
   if (options.officeSize) {
@@ -211,20 +211,20 @@ export async function checkLocationAvailability(
   }
 
   // Filter by budget locally
-  let filteredData = data;
+  let filteredData = (data || []) as Record<string, any>[];
   if (options.budget) {
-    filteredData = data.filter((p: any) => {
-      let price =
-        purpose === "RENT"
-          ? p.rental_price || p.original_rental_price
-          : p.price || p.original_price;
+    filteredData = filteredData.filter((p) => {
+      const p_price_rent = (p.rental_price as number | null) || (p.original_rental_price as number | null);
+      const p_price_sale = (p.price as number | null) || (p.original_price as number | null);
+      
+      let price = purpose === "RENT" ? p_price_rent : p_price_sale;
 
       // Office fallback
       if (!price && p.property_type === "OFFICE_BUILDING") {
-        const sqmPrice =
-          purpose === "RENT" ? p.rent_price_per_sqm : p.price_per_sqm;
-        if (sqmPrice && p.size_sqm) {
-          price = sqmPrice * p.size_sqm;
+        const sqmPrice = purpose === "RENT" ? (p.rent_price_per_sqm as number | null) : (p.price_per_sqm as number | null);
+        const size = p.size_sqm as number | null;
+        if (sqmPrice && size) {
+          price = sqmPrice * size;
         }
       }
 
@@ -261,7 +261,7 @@ export async function checkPurposeAvailability(): Promise<string[]> {
   }
 
   const available = new Set<string>();
-  data.forEach((p) => {
+  data.forEach((p: { listing_type: string | null; property_type: string | null }) => {
     if (p.listing_type === "RENT" || p.listing_type === "SALE_AND_RENT") {
       available.add("RENT");
     }
@@ -270,7 +270,7 @@ export async function checkPurposeAvailability(): Promise<string[]> {
       available.add("INVEST");
     }
     // Explicitly add OFFICE if any Office Building is found
-    if ((p as any).property_type === "OFFICE_BUILDING") {
+    if (p.property_type === "OFFICE_BUILDING") {
       available.add("OFFICE");
     }
   });
@@ -303,7 +303,7 @@ export async function checkTransitAvailability(
   }
 
   if (options.propertyType) {
-    query = query.eq("property_type", options.propertyType as any);
+    query = query.eq("property_type", options.propertyType as Database["public"]["Enums"]["property_type"]);
   }
 
   if (options.officeSize) {
@@ -320,20 +320,20 @@ export async function checkTransitAvailability(
   }
 
   // Filter by budget locally if requested
-  let filteredData = data;
+  let filteredData = (data || []) as Record<string, any>[];
   if (options.budget) {
-    filteredData = data.filter((p: any) => {
-      let price =
-        purpose === "RENT"
-          ? p.rental_price || p.original_rental_price
-          : p.price || p.original_price;
+    filteredData = filteredData.filter((p) => {
+      const p_price_rent = (p.rental_price as number | null) || (p.original_rental_price as number | null);
+      const p_price_sale = (p.price as number | null) || (p.original_price as number | null);
+      
+      let price = purpose === "RENT" ? p_price_rent : p_price_sale;
 
       // Office fallback
       if (!price && p.property_type === "OFFICE_BUILDING") {
-        const sqmPrice =
-          purpose === "RENT" ? p.rent_price_per_sqm : p.price_per_sqm;
-        if (sqmPrice && p.size_sqm) {
-          price = sqmPrice * p.size_sqm;
+        const sqmPrice = purpose === "RENT" ? (p.rent_price_per_sqm as number | null) : (p.price_per_sqm as number | null);
+        const size = p.size_sqm as number | null;
+        if (sqmPrice && size) {
+          price = sqmPrice * size;
         }
       }
 

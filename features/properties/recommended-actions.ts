@@ -67,8 +67,8 @@ export async function getRecommendedProperties(
   const popularAreaNames = Array.from(
     new Set(
       properties
-        .map((p) => p.popular_area)
-        .filter((area): area is string => !!area),
+        .map((p: { popular_area: string | null }) => p.popular_area)
+        .filter((area: string | null): area is string => !!area),
     ),
   );
 
@@ -83,7 +83,7 @@ export async function getRecommendedProperties(
       .select("name, name_en, name_cn")
       .in("name", popularAreaNames);
 
-    (areaData || []).forEach((a) => {
+    (areaData || []).forEach((a: { name: string; name_en: string | null; name_cn: string | null }) => {
       areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn });
     });
   }
@@ -91,9 +91,10 @@ export async function getRecommendedProperties(
   // Transform to match RecommendedProperty type
   return properties.map((prop: any) => {
     // Find cover image or use first image
+    const images = prop.property_images as { image_url: string; is_cover: boolean }[];
     const coverImage =
-      prop.property_images?.find((img: any) => img.is_cover) ||
-      prop.property_images?.[0];
+      images?.find((img) => img.is_cover) ||
+      images?.[0];
 
     const trans = areaTranslationsMap.get(prop.popular_area || "");
 

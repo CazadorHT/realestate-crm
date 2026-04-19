@@ -30,7 +30,7 @@ export async function getAdminUsersAction() {
       .select("profile_id")
       .eq("tenant_id", tenantId);
     
-    const ids = (memberIds || []).map(m => m.profile_id);
+    const ids = (memberIds || []).map((m) => m.profile_id);
     query = query.in("id", ids);
   }
 
@@ -40,7 +40,7 @@ export async function getAdminUsersAction() {
     throw new Error(error.message);
   }
 
-  return data as AdminUserRow[];
+  return (data || []) as AdminUserRow[];
 }
 
 export async function updateUserRoleAction(

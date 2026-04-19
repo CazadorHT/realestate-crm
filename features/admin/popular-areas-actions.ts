@@ -47,7 +47,7 @@ export async function getPopularAreas({
     const actualSortBy = validColumns.includes(sortBy) ? sortBy : "sort_order";
 
     // Default primary sort
-    query = query.order(actualSortBy as any, { ascending: sortOrder === "asc" });
+    query = query.order(actualSortBy as keyof Database["public"]["Tables"]["popular_areas"]["Row"], { ascending: sortOrder === "asc" });
     
     // Fallback secondary sort for consistency
     if (actualSortBy !== "sort_order") {
@@ -198,7 +198,7 @@ export async function resequencePopularAreas() {
 
     if (!areas) return;
 
-    const updates: PopularAreaUpdate[] = areas.map((area, index) => ({
+    const updates: PopularAreaUpdate[] = (areas || []).map((area: { id: string }, index: number) => ({
       id: area.id,
       sort_order: index + 1,
     }));
@@ -223,7 +223,7 @@ export async function reorderPopularAreasAction(ids: string[], offset: number = 
 
     const supabase = await createClient();
 
-    const updates: PopularAreaUpdate[] = ids.map((id, index) => ({
+    const updates: PopularAreaUpdate[] = ids.map((id: string, index: number) => ({
       id,
       sort_order: offset + index + 1,
     }));
@@ -351,12 +351,12 @@ export async function bulkTranslatePopularAreasAction(
     }
 
     // Filter out items that are missing essential fields
-    const validUpdates: PopularAreaUpdate[] = translatedData
-      .filter((item) => item.id && (item.name_en || item.name_cn))
-      .map((item) => ({
-        id: (item.id as string),
-        name_en: (item.name_en as string || "").trim() || null,
-        name_cn: (item.name_cn as string || "").trim() || null
+    const validUpdates: PopularAreaUpdate[] = (translatedData as { id: string; name_en?: string; name_cn?: string }[])
+      .filter((item: { id: string; name_en?: string; name_cn?: string }) => item.id && (item.name_en || item.name_cn))
+      .map((item: { id: string; name_en?: string; name_cn?: string }) => ({
+        id: item.id,
+        name_en: (item.name_en || "").trim() || null,
+        name_cn: (item.name_cn || "").trim() || null
       }));
 
     if (validUpdates.length === 0) {

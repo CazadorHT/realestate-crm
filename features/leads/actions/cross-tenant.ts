@@ -18,8 +18,8 @@ export const searchGlobalLeadAction = createSafeAction(
     const { data: result, error } = await supabase.rpc(
       "search_leads_globally",
       {
-        search_phone: data.phone || null,
-        search_email: data.email || null,
+        search_phone: data.phone || "",
+        search_email: data.email || "",
       },
     );
 

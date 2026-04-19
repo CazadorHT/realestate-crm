@@ -338,7 +338,7 @@ export async function searchPropertiesForChatbot(
     return [];
   }
 
-  return (data ?? []).map((row) => {
+  return (data ?? []).map((row: any) => {
     const r = row as unknown as PropertyRow;
     return {
       id: r.id,

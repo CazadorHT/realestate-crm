@@ -1,6 +1,6 @@
 import { Database } from "@/lib/database.types";
 import { type PropertyImage } from "@/features/properties/types";
-import { CommissionRole } from "@/lib/finance/commissions";
+import { CommissionRole, CommissionSplitResult } from "@/lib/finance/commissions";
 
 export type DealStatus = Database["public"]["Enums"]["deal_status"];
 export type DealType = Database["public"]["Enums"]["deal_type"];
@@ -79,3 +79,38 @@ export interface DealStats {
   activeDeals: number;
   lostDeals: number;
 }
+
+// Result of joined query from scoped proxy
+export type JoinedDealRow = Deal & {
+  tenants: { id: string; name: string } | null;
+  property: {
+    id: string;
+    title: string;
+    listing_type: string | null;
+    property_type: string | null;
+    price: number | null;
+    original_price: number | null;
+    rental_price: number | null;
+    original_rental_price: number | null;
+    deleted_at: string | null;
+    province: string | null;
+    district: string | null;
+    popular_area: string | null;
+    property_images: {
+      id: string;
+      property_id: string;
+      image_url: string;
+      is_cover: boolean;
+      sort_order: number;
+    }[];
+  } | null;
+  lead: {
+    id: string;
+    full_name: string | null;
+    phone: string | null;
+  } | null;
+};
+
+export type SplitWithTax = CommissionSplitResult & {
+  taxRate?: number;
+};

@@ -21,7 +21,7 @@ export type {
   FlexBubble,
   FlexMessage,
   QuickReplyItem,
-  QuickReply,
+  QuickReply, PropertyForFlex,
 };
 
 
@@ -1497,7 +1497,11 @@ export function buildSocialPostFlex(
 
   // Localized Title
   const title =
-    (lang === "th" ? prop.title : (prop as any)[`title_${lang}`]) ||
+    (lang === "th"
+      ? prop.title
+      : lang === "en"
+        ? prop.title_en
+        : prop.title_cn) ||
     prop.title ||
     "—";
 
@@ -1529,7 +1533,9 @@ export function buildSocialPostFlex(
     PROPERTY_TYPE_LABELS_I18N[prop.property_type || ""]?.[lang] ||
     (lang === "th"
       ? PROPERTY_TYPE_LABELS[prop.property_type as PropertyType]
-      : (prop as any)[`property_type_${lang}`]) ||
+      : lang === "en"
+        ? prop.property_type_en
+        : prop.property_type_cn) ||
     PROPERTY_TYPE_LABELS[prop.property_type as PropertyType] ||
     prop.property_type ||
     "—";
@@ -1546,18 +1552,23 @@ export function buildSocialPostFlex(
   };
 
   // 1. Enhanced Location Logic (Flexible Localized Fields)
-  const getLoc = (field: string, l: BotLang) => {
-    const p = prop as any;
+  const getLoc = (field: "popular_area" | "district" | "province", l: BotLang) => {
     // Try literal fields first (field_th, field_en, etc.)
-    const localizedField = p[`${field}_${l}`];
-    if (localizedField) return localizedField;
+    const localizedField =
+      l === "en"
+        ? prop[`${field}_en` as keyof PropertyForFlex]
+        : l === "cn"
+          ? prop[`${field}_cn` as keyof PropertyForFlex]
+          : prop[field as keyof PropertyForFlex];
+
+    if (typeof localizedField === "string" && localizedField) return localizedField;
 
     // If TH, use base field
-    if (l === "th") return p[field] || "";
+    if (l === "th") return (prop[field as keyof PropertyForFlex] as string) || "";
 
     // If not found in DB, use utilities
-    if (field === "province") return getProvinceName(p[field] || "", l);
-    return translateLocation(p[field] || "", l);
+    if (field === "province") return getProvinceName((prop[field] as string) || "", l);
+    return translateLocation((prop[field] as string) || "", l);
   };
 
   const tPopularArea = getLoc("popular_area", lang);
@@ -1588,9 +1599,8 @@ export function buildSocialPostFlex(
   const tBaht = lang === "th" ? "บาท" : lang === "en" ? "THB" : "泰铢";
   const tPerMonth = lang === "th" ? "/เดือน" : lang === "en" ? "/mo" : "/月";
 
-  const saleVal = prop.price || prop.original_price || (prop as any).price_sale;
-  const rentVal =
-    prop.rental_price || prop.original_rental_price || (prop as any).price_rent;
+  const saleVal = prop.price || prop.original_price;
+  const rentVal = prop.rental_price || prop.original_rental_price;
 
   const lt = (prop.listing_type || "").toString().toUpperCase();
 

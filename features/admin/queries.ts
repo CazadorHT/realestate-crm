@@ -6,7 +6,7 @@ export type AuditLogWithUser = {
   action: string;
   entity: string;
   entity_id: string | null;
-  metadata: any;
+  metadata: import("@/lib/database.types").Json;
   created_at: string;
   user_id: string | null;
   user: {

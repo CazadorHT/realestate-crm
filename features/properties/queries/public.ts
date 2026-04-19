@@ -50,7 +50,7 @@ export async function getPublicPropertyWithImagesBySlug(
 
   if (data.property_images) {
     data.property_images.sort(
-      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+      (a: { sort_order?: number | null }, b: { sort_order?: number | null }) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
     );
   }
 
@@ -90,10 +90,10 @@ export async function getRecommendedProperties(
 
   if (error) return [];
 
-  return (data || []).map((p) => ({
+  return (data || []).map((p: any) => ({
     ...p,
     cover_image:
-      p.property_images?.find((img) => img.is_cover)?.image_url ||
+      p.property_images?.find((img: any) => img.is_cover)?.image_url ||
       p.property_images?.[0]?.image_url ||
       null,
   }));

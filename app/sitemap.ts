@@ -55,7 +55,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .not("slug", "is", null);
 
   const propertyRoutes: MetadataRoute.Sitemap = (properties || []).map(
-    (prop) => ({
+    (prop: any) => ({
       url: `${baseUrl}/properties/${prop.slug}`,
       lastModified: new Date(prop.updated_at),
       changeFrequency: "weekly",
@@ -70,7 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .eq("is_published", true)
     .not("slug", "is", null);
 
-  const blogRoutes: MetadataRoute.Sitemap = (blogs || []).map((blog) => ({
+  const blogRoutes: MetadataRoute.Sitemap = (blogs || []).map((blog: any) => ({
     url: `${baseUrl}/blog/${blog.slug}`,
     lastModified: blog.updated_at ? new Date(blog.updated_at) : new Date(),
     changeFrequency: "monthly",
@@ -85,7 +85,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .not("slug", "is", null);
 
   const serviceRoutes: MetadataRoute.Sitemap = (services || []).map(
-    (service) => ({
+    (service: any) => ({
       url: `${baseUrl}/services/${service.slug}`,
       lastModified: service.updated_at
         ? new Date(service.updated_at)

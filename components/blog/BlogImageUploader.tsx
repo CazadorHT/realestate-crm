@@ -96,9 +96,10 @@ export function BlogImageUploader({
 
       const result = await uploadBlogImageAction(formData);
 
-      if (result.success && result.data?.publicUrl) {
-        onChange(result.data.publicUrl);
-        setPreview(result.data.publicUrl);
+      if (result.success && result.data) {
+        const resultData = result.data as { publicUrl: string };
+        onChange(resultData.publicUrl);
+        setPreview(resultData.publicUrl);
         toast.success("Image uploaded successfully");
       } else {
         throw new Error(result.message || "Upload failed");

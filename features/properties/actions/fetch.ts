@@ -133,7 +133,7 @@ export async function getPopularAreasAction(
 
   // If we want ALL areas (for Admin/Form), return everything
   if (params.onlyActive === false) {
-    return allAreas.map((item) => item.name);
+    return allAreas.map((item: { name: string }) => item.name);
   }
 
   // Check which areas actually have active properties
@@ -143,12 +143,12 @@ export async function getPopularAreasAction(
     .eq("status", "ACTIVE")
     .not("popular_area", "is", null);
 
-  const activeSet = new Set((activeProps || []).map((p) => p.popular_area));
+  const activeSet = new Set((activeProps || []).map((p: { popular_area: string | null }) => p.popular_area));
 
   // Return intersection
   return allAreas
-    .filter((area) => activeSet.has(area.name))
-    .map((item) => ({
+    .filter((area: { name: string }) => activeSet.has(area.name))
+    .map((item: { name: string; name_en: string | null; name_cn: string | null }) => ({
       name: item.name,
       name_en: item.name_en,
       name_cn: item.name_cn,
@@ -275,7 +275,7 @@ export async function getGlobalPropertiesTableDataAction(params: {
   // 🛡️ Cast to hardened interface
   const typedData = data as unknown as JoinedPropertyRow[];
 
-  const tableData = typedData.map((p) => {
+  const tableData = typedData.map((p: JoinedPropertyRow) => {
     // 🛡️ Find cover image or use the first one
     const mainImage =
       p.property_images?.find((img) => img.is_cover)?.image_url ||

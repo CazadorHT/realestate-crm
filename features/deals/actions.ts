@@ -19,7 +19,7 @@ import {
   UpdateDealInput,
 } from "./schema";
 import { z } from "zod";
-import { Deal, DealStatus, DealType, DealCommission } from "./types";
+import { Deal, DealStatus, DealType, DealCommission, SplitWithTax } from "./types";
 import { logAudit } from "@/lib/audit";
 import { getCommissionRulesAction } from "../dashboard/actions/commission-actions";
 import {
@@ -257,7 +257,7 @@ export async function updateDealAction(input: UpdateDealInput) {
 
     if (error) throw new Error(mapDbError(error));
 
-    const diff = getDealDiff(currentDeal as any, validated);
+    const diff = getDealDiff(currentDeal as Deal, validated);
     const summary = diff.length > 0 ? `แก้ไขดีล: ${diff.join(", ")}` : "อัปเดตข้อมูลดีลทั่วไป";
 
     await logAudit(
@@ -404,6 +404,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     // 3. Fetch Agent/Co-broker Specific Tax Rates (Fallback Logic)
     const agentIds = [deal.property?.assigned_to, deal.created_by].filter(Boolean) as string[];
+    // Use Record<string, any> to bypass missing column in types while it's being reconciled in DB
     let agentProfiles: any[] = [];
     
     if (agentIds.length > 0) {
@@ -426,13 +427,13 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     const getTaxRateForAgent = (id?: string) => {
       const p = agentProfiles.find((ap: any) => ap.id === id);
-      return (p as any)?.default_tax_rate ?? globalDefaultWht;
+      return (p?.default_tax_rate as number | undefined) ?? globalDefaultWht;
     };
 
-    const coBrokerTaxRate = (coBrokerProfile as any)?.default_tax_rate ?? globalDefaultWht;
+    const coBrokerTaxRate = (coBrokerProfile?.default_tax_rate as number | undefined) ?? globalDefaultWht;
 
     // 4. Simple or Advanced Split
-    let splits: CommissionSplitResult[] = [];
+    let splits: SplitWithTax[] = [];
 
     if (rules.enableAdvancedSplit) {
       splits = calculateAdvancedSplit(
@@ -452,7 +453,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
       );
 
       // 🛡️ Post-process splits to apply individual tax rates
-      splits = splits.map(s => {
+      splits = (splits as CommissionSplitResult[]).map((s) => {
         let actualTaxRate = globalDefaultWht;
         if (s.role === "LISTING" || s.role === "CLOSING") {
           actualTaxRate = getTaxRateForAgent(s.agentId);
@@ -469,7 +470,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
           whtAmount: whtAmount.toNumber(),
           netAmount: FinanceMath.toDecimal(s.amount).minus(whtAmount).toNumber(),
           taxRate: actualTaxRate // Attach it for the insert data
-        };
+        } as SplitWithTax;
       });
     } else {
       // Simple Split: 100% to AGENCY
@@ -494,15 +495,15 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
     const insertData = splits.map((s) => ({
       deal_id: dealId,
       agent_id: s.agentId ?? null,
-      co_broker_id: (s.role === "CO_AGENT" ? deal.partner_co_broker_id : null) as any,
+      co_broker_id: s.role === "CO_AGENT" ? deal.partner_co_broker_id : null,
       role: s.role as Database["public"]["Enums"]["commission_role"],
       percentage: s.percentage,
       amount: s.amount,
       wht_amount: s.whtAmount,
       net_amount: s.netAmount,
-      tax_rate: (s as any).taxRate ? ((s as any).taxRate / 100) : (globalDefaultWht / 100),
+      tax_rate: (s.taxRate || globalDefaultWht) / 100,
       tenant_id: tenantId,
-      status: "UNPAID" as any,
+      status: "UNPAID" as Database["public"]["Enums"]["commission_status"],
     }));
 
     const { error: insertErr } = await scoped

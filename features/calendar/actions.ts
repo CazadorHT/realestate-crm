@@ -3,6 +3,7 @@
 import { combineDateTime } from "./utils";
 
 import { requireAuthContext } from "@/lib/authz";
+import { Database } from "@/lib/database.types";
 import { revalidatePath } from "next/cache";
 import {redirect} from "next/navigation";
 
@@ -41,7 +42,7 @@ export async function createAppointment(formData: FormData) {
   const { error } = await supabase.from("lead_activities").insert({
     lead_id: leadId,
     property_id: propertyId === "none" ? null : propertyId,
-    activity_type: activityType as any,
+    activity_type: activityType as Database["public"]["Enums"]["lead_activity_type"],
     created_at: isoString,
     note: note,
     created_by: user.id,

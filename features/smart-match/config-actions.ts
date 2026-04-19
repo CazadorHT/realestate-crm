@@ -374,16 +374,16 @@ export async function getSmartMatchSettings(): Promise<SmartMatchSettings> {
 
   const settings: SmartMatchSettings = { ...DEFAULT_SETTINGS };
 
-  data.forEach((row) => {
+  data.forEach((row: { key: string; value: any }) => {
     const key = row.key as keyof SmartMatchSettings;
     if (key in settings) {
       // Parse JSON value
       try {
         const parsed = JSON.parse(row.value as string);
-        (settings as any)[key] = parsed;
+        (settings as Record<string, unknown>)[key] = parsed;
       } catch {
         // Use raw value if not JSON
-        (settings as any)[key] = row.value;
+        (settings as Record<string, unknown>)[key] = row.value;
       }
     }
   });
@@ -393,7 +393,7 @@ export async function getSmartMatchSettings(): Promise<SmartMatchSettings> {
 
 export async function updateSmartMatchSetting(
   key: string,
-  value: any,
+  value: unknown,
 ): Promise<{ success: boolean; error?: string }> {
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);

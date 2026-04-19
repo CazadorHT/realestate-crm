@@ -84,7 +84,7 @@ export async function saveCommissionRulesAction(
   try {
     const { error } = await supabase.from("site_settings").upsert({
       key: SETTINGS_KEY,
-      value: ruleSet as any,
+      value: ruleSet as unknown as Record<string, unknown>,
       updated_at: new Date().toISOString(),
     });
 

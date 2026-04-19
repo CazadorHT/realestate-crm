@@ -88,12 +88,12 @@ export async function bulkDeleteDocumentsAction(
       deletedCount: count ?? ids.length,
       message: `ลบเอกสารสำเร็จ ${count ?? ids.length} รายการ`,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("bulkDeleteDocumentsAction error:", error);
     return {
       success: false,
       deletedCount: 0,
-      message: mapDbError(error) || "เกิดข้อผิดพลาดในการลบ",
+      message: (error as Error).message || "เกิดข้อผิดพลาดในการลบ",
     };
   }
 }

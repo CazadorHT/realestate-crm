@@ -69,8 +69,8 @@ export async function finalizeUploadSession(params: {
   if (leftErr) throw leftErr;
 
   const toRemove = (leftovers ?? [])
-    .map((x) => x.storage_path)
-    .filter((p): p is string => !!p && !used.includes(p));
+    .map((x: { storage_path: string | null }) => x.storage_path)
+    .filter((p: string | null): p is string => !!p && !used.includes(p));
 
   if (toRemove.length > 0) {
     await supabase.storage.from(PROPERTY_IMAGES_BUCKET).remove(toRemove);

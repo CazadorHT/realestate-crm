@@ -88,7 +88,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 
     const settings = { ...DEFAULT_SETTINGS };
 
-    for (const row of data || []) {
+    for (const row of (data || [])) {
       const key = row.key as SiteSettingKey;
       if (!(key in settings)) continue;
 
@@ -96,13 +96,13 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 
       // 1. Handle Arrays (Keywords)
       if (key === "social_automation_keywords") {
-        (settings as any)[key] = Array.isArray(val) ? val : [];
+        (settings as Record<string, unknown>)[key] = Array.isArray(val) ? val : [];
         continue;
       }
 
       // 2. Handle Objects (Tokens)
       if (key === "tiktok_auth_token" || key === "google_integration_tokens") {
-        (settings as any)[key] = val && typeof val === "object" ? val : undefined;
+        (settings as Record<string, unknown>)[key] = val && typeof val === "object" ? val : undefined;
         continue;
       }
 
@@ -117,23 +117,23 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 
       if (key.includes("_post_template") || stringKeys.includes(key)) {
         if (typeof val === "string") {
-          (settings as any)[key] = val;
+          (settings as Record<string, unknown>)[key] = val;
         }
         continue;
       }
 
       // 4. Handle Numbers
       if (key === "hot_lead_threshold") {
-        (settings as any)[key] = typeof val === "number" ? val : Number(val) || 80;
+        (settings as Record<string, unknown>)[key] = typeof val === "number" ? val : Number(val) || 80;
         continue;
       }
 
       // 5. Handle Booleans (everything else)
-      (settings as any)[key] = val === true || val === "true";
+      (settings as Record<string, unknown>)[key] = val === true || val === "true";
     }
 
     return settings;
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error in getSiteSettings:", error);
     return DEFAULT_SETTINGS;
   }
@@ -142,7 +142,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 /**
  * Get a specific site setting
  */
-export async function getSiteSetting(key: SiteSettingKey): Promise<any> {
+export async function getSiteSetting(key: SiteSettingKey): Promise<unknown> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -193,7 +193,7 @@ export async function getSiteSetting(key: SiteSettingKey): Promise<any> {
  */
 export async function updateSiteSetting(
   key: SiteSettingKey,
-  value: boolean | any[] | string | object,
+  value: boolean | string[] | string | Record<string, unknown> | null | undefined,
 ): Promise<{ success: boolean; message?: string }> {
   try {
     const ctx = await requireAuthContext();
@@ -226,7 +226,7 @@ export async function updateSiteSetting(
     const { error } = await supabase.from("site_settings").upsert(
       {
         key,
-        value: value as any,
+        value: value as string | number | boolean | null,
         updated_at: new Date().toISOString(),
         updated_by: userId,
       },
@@ -274,7 +274,7 @@ export async function updateSiteSettings(
 
     const updates = Object.entries(settings).map(([key, value]) => ({
       key,
-      value: value as any,
+      value: value as string | number | boolean | null,
       updated_at: new Date().toISOString(),
       updated_by: userId,
     }));
@@ -425,11 +425,11 @@ export async function generateSocialAutomationTemplatesAction(
       success: true,
       data: result.text.trim().replace(/^```/, "").replace(/```$/, ""),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("AI Generation Error:", error);
     return {
       success: false,
-      message: mapDbError(error) || "ไม่สามารถสร้างข้อความด้วย AI ได้ในขณะนี้",
+      message: (error as Error).message || "ไม่สามารถสร้างข้อความด้วย AI ได้ในขณะนี้",
     };
   }
 }

@@ -7,8 +7,9 @@ import { saveOmniMessage } from "@/lib/line";
 import { revalidatePath } from "next/cache";
 import { sendMetaMessage, sendWhatsAppMessage } from "@/lib/meta";
 import { OmniMessage } from "./types";
+import { Database } from "@/lib/database.types";
 
-export type ActionResponse<T = any> = {
+export type ActionResponse<T = unknown> = {
   success: boolean;
   data?: T;
   error?: string;
@@ -66,7 +67,7 @@ export async function sendDirectReplyAction(
     // 3. Log to omni_messages
     await saveOmniMessage({
       lead_id: leadId,
-      source: lead.source as any,
+      source: lead.source as Database["public"]["Enums"]["lead_source"],
       content,
       direction: "OUTGOING",
       payload: { system_push: true },
@@ -75,9 +76,9 @@ export async function sendDirectReplyAction(
 
     revalidatePath("/protected/inbox");
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[sendDirectReplyAction] Error:", err);
-    return { success: false, error: err.message };
+    return { success: false, error: (err as Error).message };
   }
 }
 
@@ -109,7 +110,7 @@ export async function replyToCommentAction(
     // 3. Save to omni_messages
     await saveOmniMessage({
       lead_id: msg.lead_id,
-      source: msg.source as any,
+      source: msg.source as Database["public"]["Enums"]["lead_source"],
       content,
       direction: "OUTGOING",
       payload: { comment_reply: true, parent_id: msg.external_message_id },
@@ -118,9 +119,9 @@ export async function replyToCommentAction(
 
     revalidatePath("/protected/inbox");
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[replyToCommentAction] Error:", err);
-    return { success: false, error: err.message };
+    return { success: false, error: (err as Error).message };
   }
 }
 
@@ -164,9 +165,9 @@ export async function getLeadMessagesAction(
       data: finalMessages,
       hasMore
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[getLeadMessagesAction] Error:", err);
-    return { success: false, error: err.message };
+    return { success: false, error: (err as Error).message };
   }
 }
 
@@ -195,7 +196,7 @@ export async function updateLeadCategoryAction(
     if (!lead) throw new Error("ไม่พบข้อมูลผู้ติดต่อ");
 
     const newPreferences = {
-      ...(lead.preferences as any || {}),
+      ...((lead.preferences as Record<string, unknown>) || {}),
       category: validatedCategory,
       category_updated_at: new Date().toISOString(),
     };
@@ -211,9 +212,9 @@ export async function updateLeadCategoryAction(
 
     revalidatePath("/protected/inbox");
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[updateLeadCategoryAction] Error:", err);
-    return { success: false, error: err instanceof z.ZodError ? "Invalid category" : err.message };
+    return { success: false, error: err instanceof z.ZodError ? "Invalid category" : (err as Error).message };
   }
 }
 
@@ -234,8 +235,8 @@ export async function markLeadMessagesAsReadAction(
 
     revalidatePath("/protected/inbox");
     return { success: true };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("[markLeadMessagesAsReadAction] Error:", err);
-    return { success: false, error: err.message };
+    return { success: false, error: (err as Error).message };
   }
 }

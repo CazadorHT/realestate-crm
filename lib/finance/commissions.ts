@@ -59,7 +59,7 @@ export function validateRuleSet(ruleSet: CommissionRuleSet): void {
     }
 
     let lastMax: number | null = -1;
-    ruleSet.tiers.forEach((t, idx) => {
+    ruleSet.tiers.forEach((t: CommissionTier, idx: number) => {
       if (t.percentage < 0 || t.percentage > 100) {
         throw new FinanceError(`เปอร์เซ็นต์ในขั้นที่ ${idx + 1} ต้องอยู่ระหว่าง 0 ถึง 100`);
       }
@@ -196,7 +196,7 @@ export function calculateAdvancedSplit(
     { role: "AGENCY", pct: config.agencyPercent },
   ];
 
-  roles.forEach((r) => {
+  roles.forEach((r: any) => {
     const actualPct = r.pct * scale;
     const amount = roundToTwo((totalCommission * actualPct) / 100);
     const whtAmount = r.role !== "AGENCY" && r.id ? roundToTwo((amount * WHT_RATE) / 100) : 0;

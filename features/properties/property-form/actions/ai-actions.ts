@@ -16,7 +16,7 @@ export async function generateAIPropertyDescriptionAction(
       .from("features")
       .select("name")
       .in("id", values.feature_ids);
-    featureNames = data?.map((f) => f.name) || [];
+    featureNames = data?.map((f: { name: string }) => f.name) || [];
   }
 
   // 2. Build prompt
@@ -101,7 +101,7 @@ export async function generateAIPropertyDescriptionAction(
       .trim()
       .replace(/^```html/, "")
       .replace(/```$/, "");
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("AI Generation Error:", error);
 
     const { getAiModelConfig } = await import("@/features/ai-settings/actions");
@@ -113,7 +113,7 @@ export async function generateAIPropertyDescriptionAction(
       model: modelName || "unknown",
       feature: "description_generator",
       status: "error",
-      errorMessage: error.message,
+      errorMessage: (error as Error).message,
     });
     throw new Error("ไม่สามารถสร้างคำบรรยายด้วย AI ได้ในขณะนี้");
   }
@@ -168,14 +168,14 @@ export async function translatePlaceNamesAction(texts: string[]) {
         name_cn: item?.cn || "",
       };
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("AI Batch Translation Error:", error);
     const { logAiUsage } = await import("@/features/ai-monitor/actions");
     await logAiUsage({
       model: "gemini-flash-latest",
       feature: "property_translator",
       status: "error",
-      errorMessage: error.message,
+      errorMessage: (error as Error).message,
     });
     return texts.map(() => ({ name_en: "", name_cn: "" }));
   }

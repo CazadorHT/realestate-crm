@@ -29,7 +29,7 @@ export async function GET(request: Request) {
       if (provErr) throw provErr;
 
       // Extract unique Thai names and map to English display names
-      const uniqueThai = Array.from(new Set(provinces.map((p) => p.province).filter(Boolean)));
+      const uniqueThai = Array.from(new Set((provinces as { province: string }[]).map((p: { province: string }) => p.province).filter(Boolean)));
       
       // Reverse map for display (Simplified)
       const displayMap: Record<string, string> = {

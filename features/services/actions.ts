@@ -126,7 +126,7 @@ export async function getServices(
     data: (data || []).map((row: any) => ({
       ...row,
       gallery_images: Array.isArray(row.gallery_images)
-        ? row.gallery_images
+        ? (row.gallery_images as string[])
         : [],
     })) as ServiceRow[],
     count: count || 0,
@@ -184,13 +184,13 @@ export async function createService(input: CreateServiceInput) {
     revalidatePath("/services");
     revalidatePath("/protected/services");
     return { success: true, message: "สร้างบริการใหม่เข้าสู่ระบบเรียบร้อย ✨" };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("createService error:", err);
     return { 
       success: false, 
       message: err instanceof z.ZodError 
         ? err.issues[0].message 
-        : mapDbError(err) 
+        : (err as Error).message || "เกิดข้อผิดพลาดในการสร้างบริการ"
     };
   }
 }
@@ -244,13 +244,13 @@ export async function updateService(input: UpdateServiceInput) {
     revalidatePath("/services");
     revalidatePath("/protected/services");
     return { success: true, message: "อัปเดตข้อมูลบริการเรียบร้อย ✨" };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("updateService error:", err);
     return { 
       success: false, 
       message: err instanceof z.ZodError 
         ? err.issues[0].message 
-        : mapDbError(err) 
+        : (err as Error).message || "เกิดข้อผิดพลาดในการอัปเดต"
     };
   }
 }
@@ -258,7 +258,7 @@ export async function updateService(input: UpdateServiceInput) {
 /**
  * Helper to identify changed fields between two objects.
  */
-function getDelta(oldObj: any, newObj: any): string[] {
+function getDelta(oldObj: Record<string, unknown>, newObj: Record<string, unknown>): string[] {
   const changes: string[] = [];
   Object.keys(newObj).forEach((key) => {
     // Basic comparison for primitive types and arrays
@@ -305,9 +305,9 @@ export async function deleteService(id: string) {
     revalidatePath("/services");
     revalidatePath("/protected/services");
     return { success: true, message: "ย้ายบริการลงถังขยะเรียบร้อย ✅" };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("deleteService error:", err);
-    return { success: false, message: mapDbError(err) };
+    return { success: false, message: (err as Error).message || "เกิดข้อผิดพลาดในการลบ" };
   }
 }
 
@@ -339,9 +339,9 @@ export async function restoreServiceAction(id: string) {
 
     revalidatePath("/protected/services");
     return { success: true, message: "กู้คืนบริการเรียบร้อย ✨" };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("restoreService error:", err);
-    return { success: false, message: mapDbError(err) };
+    return { success: false, message: (err as Error).message || "เกิดข้อผิดพลาดในการกู้คืน" };
   }
 }
 
@@ -378,7 +378,7 @@ export async function permanentDeleteServiceAction(id: string) {
       }
       
       if (Array.isArray(service.gallery_images)) {
-        service.gallery_images.forEach((img: any) => {
+        (service.gallery_images as unknown[]).forEach((img) => {
           if (typeof img === 'string') {
             const path = extractPath(img);
             if (path) filesToDelete.push(path);
@@ -404,9 +404,9 @@ export async function permanentDeleteServiceAction(id: string) {
                 message: storageError.message,
                 name: storageError.name,
                 status: storageError.status,
-                statusCode: (storageError as any).statusCode
+                statusCode: (storageError as { statusCode?: string }).statusCode
               }
-            } as Json,
+            } as unknown as Json,
             status: "pending"
           });
         }
@@ -434,9 +434,9 @@ export async function permanentDeleteServiceAction(id: string) {
 
     revalidatePath("/protected/services");
     return { success: true, message: "ลบบริการและไฟล์สื่อถาวรเรียบร้อย 🗑️" };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("permanentDelete error:", err);
-    return { success: false, message: mapDbError(err) };
+    return { success: false, message: (err as Error).message || "เกิดข้อผิดพลาดในการลบถาวร" };
   }
 }
 
@@ -494,9 +494,9 @@ export async function uploadServiceImageAction(formData: FormData) {
       data: { publicUrl },
       message: "อัปโหลดรูปภาพสำเร็จ ✨" 
     };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("uploadServiceImage error:", err);
-    return { success: false, message: mapDbError(err) };
+    return { success: false, message: (err as Error).message || "อัปโหลดไม่สำเร็จ" };
   }
 }
 
@@ -521,7 +521,7 @@ export async function cleanupOrphanedServiceImagesAction() {
 
     let successCount = 0;
     for (const log of logs) {
-      const details = log.details as any;
+      const details = log.details as { files?: string[] } | null;
       if (details && Array.isArray(details.files)) {
         const { error: storageError } = await ctx.supabase.storage
           .from("service-images")
@@ -538,9 +538,9 @@ export async function cleanupOrphanedServiceImagesAction() {
     }
 
     return { success: true, count: successCount, message: "ดูแลรักษาพื้นที่จัดเก็บสำเร็จ (รูปภาพส่วนเกินถูกลบทิ้ง)" };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("cleanupOrphanedImages error:", err);
-    return { success: false, message: mapDbError(err), count: 0 };
+    return { success: false, message: (err as Error).message || "เกิดข้อผิดพลาดในการทำความสะอาด", count: 0 };
   }
 }
 
@@ -580,7 +580,7 @@ export async function emptyServiceTrashAction() {
         if (p) filesToDelete.push(p);
       }
       if (Array.isArray(s.gallery_images)) {
-        s.gallery_images.forEach((img: any) => {
+        (s.gallery_images as unknown[]).forEach((img) => {
           if (typeof img === 'string') {
             const p = extractPath(img);
             if (p) filesToDelete.push(p);
@@ -605,7 +605,7 @@ export async function emptyServiceTrashAction() {
           details: { 
             files: filesToDelete, 
             storage_error: storageError.message
-          } as Json,
+          } as unknown as Json,
           status: "pending"
         });
       }
@@ -631,8 +631,8 @@ export async function emptyServiceTrashAction() {
 
     revalidatePath("/protected/services");
     return { success: true, message: `ล้างถังขยะเรียบร้อยแล้ว (ลบ ${services.length} รายการ)` };
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("emptyServiceTrash error:", err);
-    return { success: false, message: mapDbError(err) };
+    return { success: false, message: (err as Error).message || "เกิดข้อผิดพลาดในการล้างถังขยะ" };
   }
 }

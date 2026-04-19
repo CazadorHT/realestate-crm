@@ -3,34 +3,32 @@
 import React from "react";
 
 import { revalidatePath } from "next/cache";
-import { 
-  requireAuthContext, 
-  assertStaff, 
-  assertAdmin, 
-  authzFail 
+import {
+  requireAuthContext,
+  assertStaff,
+  assertAdmin,
+  authzFail,
 } from "@/lib/authz";
 import { mapDbError } from "@/lib/db-error";
 import { logAudit } from "@/lib/audit";
-import { 
-  PayoutStatusUpdateResult, 
+import {
+  PayoutStatusUpdateResult,
   BulkPayoutResult,
-  PaginatedPayoutResult
+  PaginatedPayoutResult,
+  JoinedPayout,
+  RecalculatePreview,
+  CommissionPayoutRecord
 } from "./types";
 import { Database } from "@/lib/database.types";
 import { getCommissionRulesAction } from "@/features/dashboard/actions/commission-actions";
-
-type CommissionStatus = Database["public"]["Enums"]["commission_status"];
-
-/**
- * Marks a commission record as READY_TO_PAY.
- * Usually performed by a manager after verifying deal documents.
- */
 import { FinanceMath } from "@/lib/finance/precision";
 
 /**
  * Marks multiple commissions as READY_TO_PAY using high-performance RPC.
  */
-export async function bulkMarkAsReadyToPayAction(commissionIds: string[]): Promise<BulkPayoutResult> {
+export async function bulkMarkAsReadyToPayAction(
+  commissionIds: string[],
+): Promise<BulkPayoutResult> {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
@@ -41,15 +39,20 @@ export async function bulkMarkAsReadyToPayAction(commissionIds: string[]): Promi
       .eq("id", user.id)
       .single();
 
-    const { data, error } = await supabase.rpc("bulk_mark_commissions_as_ready_to_pay" as any, {
+    const { data, error } = await (
+      supabase.rpc as unknown as (
+        name: string,
+        args: Record<string, unknown>,
+      ) => Promise<{ data: { updated_count: number } | null; error: unknown }>
+    )("bulk_mark_commissions_as_ready_to_pay", {
       p_commission_ids: commissionIds,
       p_tenant_id: tenantId!,
       p_user_id: user.id,
-      p_user_full_name: profile?.full_name || "System Admin"
+      p_user_full_name: profile?.full_name || "System Admin",
     });
 
     if (error) throw new Error(mapDbError(error));
-    
+
     // 🛡️ Audit Hardening: Log the bulk action
     await logAudit(
       { supabase, user, role },
@@ -57,36 +60,42 @@ export async function bulkMarkAsReadyToPayAction(commissionIds: string[]): Promi
         action: "finance.commission_ready",
         entity: "deal_commissions",
         entityId: "BULK_UPDATE",
-        summary: `อนุมัติรอจ่ายแบบกลุ่มสำเร็จ ${(data as any)?.updated_count || 0} รายการ`,
-        metadata: { commissionIds, updated_count: (data as any)?.updated_count }
-      }
+        summary: `อนุมัติรอจ่ายแบบกลุ่มสำเร็จ ${data?.updated_count || 0} รายการ`,
+        metadata: { commissionIds, updated_count: data?.updated_count },
+      },
     );
 
     revalidatePath("/protected/finance/payouts");
-    return { 
-      success: true, 
-      processedCount: (data as any)?.updated_count || 0,
-      message: `อนุมัติรอจ่ายสำเร็จ ${(data as any)?.updated_count || 0} รายการ` 
+    return {
+      success: true,
+      processedCount: data?.updated_count || 0,
+      message: `อนุมัติรอจ่ายสำเร็จ ${data?.updated_count || 0} รายการ`,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("bulkMarkAsReady Error:", error);
-    return { success: false, error: error.message, processedCount: 0 };
+    return {
+      success: false,
+      error: (error as Error).message,
+      processedCount: 0,
+    };
   }
 }
 
 /**
  * Marks a commission record as READY_TO_PAY.
  */
-export async function markAsReadyToPayAction(commissionId: string): Promise<PayoutStatusUpdateResult> {
+export async function markAsReadyToPayAction(
+  commissionId: string,
+): Promise<PayoutStatusUpdateResult> {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     const { data, error } = await supabase
       .from("deal_commissions")
-      .update({ 
-        status: "READY_TO_PAY" as any,
-        updated_at: new Date().toISOString() 
+      .update({
+        status: "READY_TO_PAY",
+        updated_at: new Date().toISOString(),
       })
       .eq("id", commissionId)
       .eq("tenant_id", tenantId!)
@@ -102,15 +111,18 @@ export async function markAsReadyToPayAction(commissionId: string): Promise<Payo
         entity: "deal_commissions",
         entityId: commissionId,
         summary: `อนุมัติยอดคอมมิชชัน ${FinanceMath.format(data.amount)} บ. เตรียมโอนเงิน`,
-        metadata: { commissionId, amount: data.amount }
-      }
+        metadata: { commissionId, amount: data.amount },
+      },
     );
 
     revalidatePath("/protected/finance/payouts");
-    return { success: true, message: "อนุมัติรายการเตรียมโอนเงินเรียบร้อยแล้ว" };
-  } catch (error: any) {
+    return {
+      success: true,
+      message: "อนุมัติรายการเตรียมโอนเงินเรียบร้อยแล้ว",
+    };
+  } catch (error: unknown) {
     console.error("markAsReadyToPay Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }
 
@@ -122,7 +134,7 @@ export async function createCommissionAdjustmentAction(payload: {
   commission_id: string;
   description: string;
   amount: number;
-  adjustment_type: 'MARKETING' | 'FEE' | 'BONUS' | 'OTHER';
+  adjustment_type: "MARKETING" | "FEE" | "BONUS" | "OTHER";
 }) {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
@@ -135,16 +147,18 @@ export async function createCommissionAdjustmentAction(payload: {
       .single();
 
     if (currentCommission?.tenant_id !== tenantId) {
-       throw new Error("ไม่สามารถเพิ่มรายการปรับปรุงข้ามสาขาได้ กรุณาสลับสาขาให้ถูกต้อง");
+      throw new Error(
+        "ไม่สามารถเพิ่มรายการปรับปรุงข้ามสาขาได้ กรุณาสลับสาขาให้ถูกต้อง",
+      );
     }
 
     const { data, error } = await supabase
-      .from("commission_adjustments" as any)
+      .from("commission_adjustments")
       .insert({
         ...payload,
         created_by: user.id,
-        tenant_id: tenantId
-      } as any)
+        tenant_id: tenantId,
+      })
       .select()
       .single();
 
@@ -157,15 +171,18 @@ export async function createCommissionAdjustmentAction(payload: {
         entity: "deal_commissions",
         entityId: payload.commission_id,
         summary: `เพิ่มรายการปรับปรุง: ${payload.description} (${payload.amount} บ.)`,
-        metadata: payload
-      }
+        metadata: payload,
+      },
     );
 
     revalidatePath("/protected/finance/payouts");
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("createAdjustment Error:", error);
-    return { success: false, error: "ไม่สามารถบันทึกรายการปรับปรุงได้: " + error.message };
+    return {
+      success: false,
+      error: "ไม่สามารถบันทึกรายการปรับปรุงได้: " + (error as Error).message,
+    };
   }
 }
 
@@ -173,7 +190,10 @@ export async function createCommissionAdjustmentAction(payload: {
  * Recalculates commission totals (Gross/WHT/Net) for a pending payout.
  * Strictly allowed only for UNPAID or READY_TO_PAY records.
  */
-export async function recalculatePayoutTotalsAction(commissionId: string, previewOnly: boolean = false) {
+export async function recalculatePayoutTotalsAction(
+  commissionId: string,
+  previewOnly: boolean = false,
+): Promise<{ success: boolean; message?: string; data?: any; error?: string }> {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
@@ -184,49 +204,87 @@ export async function recalculatePayoutTotalsAction(commissionId: string, previe
 
     const { data: current, error: fetchErr } = await supabase
       .from("deal_commissions")
-      .select(`
+      .select(
+        `
         *,
         deal:deals(commission_percent, commission_amount),
         adjustments:commission_adjustments(*)
-      `)
+      `,
+      )
       .eq("id", commissionId)
       .eq("tenant_id", tenantId) // 🛡️ Strict tenant check
       .single();
 
     if (fetchErr || !current) throw new Error("ไม่พบข้อมูลรายการคอมมิชชัน");
-    if (current.status === "PAID") throw new Error("ไม่สามารถคำนวณใหม่ได้สำหรับรายการที่จ่ายแล้ว");
+    if (current.status === "PAID")
+      throw new Error("ไม่สามารถคำนวณใหม่ได้สำหรับรายการที่จ่ายแล้ว");
 
     // 2. Resolve Tax Rate (Smart Fallback)
     const rulesRes = await getCommissionRulesAction();
-    const globalDefaultWht = rulesRes.success ? (rulesRes.data?.defaultWhtRate || 3) : 3;
-    
+    const globalDefaultWht = rulesRes.success
+      ? rulesRes.data?.defaultWhtRate || 3
+      : 3;
+
     let taxRate = current.tax_rate;
     if (taxRate === null) {
       // Fallback: Agent -> Tenant -> Global
-      const { data: agentProfile } = await supabase.from("profiles").select("default_tax_rate" as any).eq("id", current.agent_id || "").single();
-      taxRate = (agentProfile as any)?.default_tax_rate ? ((agentProfile as any).default_tax_rate / 100) : (globalDefaultWht / 100);
+      const { data: agentProfile } = await supabase
+        .from("profiles")
+        .select("default_tax_rate")
+        .eq("id", current.agent_id || "")
+        .single();
+
+      const agentTaxRate = agentProfile?.default_tax_rate ?? null;
+      
+      taxRate = agentTaxRate ? agentTaxRate / 100 : globalDefaultWht / 100;
     }
 
     const oldAmount = Number(current.amount);
     const oldNet = Number(current.net_amount);
-    
+
     // We assume recalculation might change the gross amount if the deal changed
     const dealAmount = Number(current.deal?.commission_amount || 0);
-    const totalCommsForDeal = (await supabase.from("deal_commissions").select("amount").eq("deal_id", current.deal_id)).data?.reduce((a, b) => a + Number(b.amount), 0) || 0;
-    
+    const totalCommsForDeal =
+      (
+        await supabase
+          .from("deal_commissions")
+          .select("amount")
+          .eq("deal_id", current.deal_id)
+      ).data?.reduce(
+        (a: number, b: { amount: number | string }) => a + Number(b.amount),
+        0,
+      ) || 0;
+
     // Calculate new values with precision
-    const newAmount = FinanceMath.toDecimal(current.amount); 
+    const newAmount = FinanceMath.toDecimal(current.amount);
     const newWht = FinanceMath.calculateWht(newAmount, taxRate);
-    const newNetTransfer = FinanceMath.calculateNetPayout(newAmount, newWht, current.adjustments || []);
+    const newNetTransfer = FinanceMath.calculateNetPayout(
+      newAmount,
+      newWht,
+      current.adjustments || [],
+    );
 
     if (previewOnly) {
       return {
         success: true,
         data: {
-          before: { amount: oldAmount, wht: Number(current.wht_amount), net: oldNet, taxRate: current.tax_rate },
-          after: { amount: newAmount.toNumber(), wht: newWht.toNumber(), net: newNetTransfer.toNumber(), taxRate: taxRate },
-          reason: Math.abs(dealAmount - totalCommsForDeal) > 0.01 ? `ยอดรวมดีลเปลี่ยนเป็น ${FinanceMath.format(dealAmount)} (เดิม ${FinanceMath.format(totalCommsForDeal)})` : "ปรับปรุงอัตราภาษีหรือรายการหักลบ",
-        }
+          before: {
+            amount: oldAmount,
+            wht: Number(current.wht_amount),
+            net: oldNet,
+            taxRate: current.tax_rate,
+          },
+          after: {
+            amount: newAmount.toNumber(),
+            wht: newWht.toNumber(),
+            net: newNetTransfer.toNumber(),
+            taxRate: taxRate,
+          },
+          reason:
+            Math.abs(dealAmount - totalCommsForDeal) > 0.01
+              ? `ยอดรวมดีลเปลี่ยนเป็น ${FinanceMath.format(dealAmount)} (เดิม ${FinanceMath.format(totalCommsForDeal)})`
+              : "ปรับปรุงอัตราภาษีหรือรายการหักลบ",
+        },
       };
     }
 
@@ -236,7 +294,7 @@ export async function recalculatePayoutTotalsAction(commissionId: string, previe
         tax_rate: taxRate,
         wht_amount: FinanceMath.toNumber(newWht),
         net_amount: FinanceMath.toNumber(newNetTransfer),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq("id", commissionId)
       .eq("tenant_id", tenantId!);
@@ -251,31 +309,34 @@ export async function recalculatePayoutTotalsAction(commissionId: string, previe
         entity: "deal_commissions",
         entityId: commissionId,
         summary: `คำนวณยอดเงินใหม่ (WHT: ${(taxRate * 100).toFixed(1)}%, Net: ${FinanceMath.format(newNetTransfer)} บ.)`,
-        metadata: { 
-          commissionId, 
+        metadata: {
+          commissionId,
           taxRate,
           before: { amount: oldAmount, net: oldNet },
-          after: { amount: newAmount.toNumber(), net: newNetTransfer.toNumber() },
-          deal_snapshot: { 
-            commission_amount: current.deal?.commission_amount 
-          }
-        }
-      }
+          after: {
+            amount: newAmount.toNumber(),
+            net: newNetTransfer.toNumber(),
+          },
+          deal_snapshot: {
+            commission_amount: current.deal?.commission_amount,
+          },
+        },
+      },
     );
 
     revalidatePath("/protected/finance/payouts");
     return { success: true, message: "คำนวณยอดเงินใหม่เรียบร้อยแล้ว" };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("recalculate Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }
 /**
  * Marks a commission as PAID with strict precision and audit logic.
  */
 export async function markAsPaidAction(
-  commissionId: string, 
-  payload: { slip_url: string; payment_reference: string }
+  commissionId: string,
+  payload: { slip_url: string; payment_reference: string },
 ) {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
@@ -285,39 +346,50 @@ export async function markAsPaidAction(
     }
 
     // 1. Audit Hardening: Validate Slip URL (Must be an image or PDF)
-    const isLocal = payload.slip_url.includes("localhost") || payload.slip_url.includes("127.0.0.1");
-    if (!isLocal && !payload.slip_url.match(/\.(jpg|jpeg|png|pdf|webp)/i) && !payload.slip_url.includes("storage")) {
-       throw new Error("รูปแบบไฟล์สลิปไม่ถูกต้อง หรือลิงก์ไม่ปลอดภัย (อนุญาตเฉพาะ JPG, PNG, PDF)");
+    const isLocal =
+      payload.slip_url.includes("localhost") ||
+      payload.slip_url.includes("127.0.0.1");
+    if (
+      !isLocal &&
+      !payload.slip_url.match(/\.(jpg|jpeg|png|pdf|webp)/i) &&
+      !payload.slip_url.includes("storage")
+    ) {
+      throw new Error(
+        "รูปแบบไฟล์สลิปไม่ถูกต้อง หรือลิงก์ไม่ปลอดภัย (อนุญาตเฉพาะ JPG, PNG, PDF)",
+      );
     }
 
     // 2. Fetch current record + adjustments
     const { data: current, error: fetchErr } = await supabase
       .from("deal_commissions")
-      .select(`
+      .select(
+        `
         *,
         agent:profiles!deal_commissions_agent_id_fkey(full_name, line_user_id),
         co_broker:co_brokers!deal_commissions_co_broker_id_fkey(name),
         adjustments:commission_adjustments(*)
-      `)
+      `,
+      )
       .eq("id", commissionId)
       .eq("tenant_id", tenantId) // 🛡️ ATOMIC TENANT CHECK
       .single();
 
     if (fetchErr || !current) throw new Error("ไม่พบข้อมูลรายการคอมมิชชัน");
-    if (current.status === "PAID") throw new Error("รายการนี้ถูกบันทึกว่าจ่ายแล้ว");
+    if (current.status === "PAID")
+      throw new Error("รายการนี้ถูกบันทึกว่าจ่ายแล้ว");
 
     // 3. Precision Calculation
     const netTransfer = FinanceMath.calculateNetPayout(
       current.amount,
       current.wht_amount,
-      current.adjustments || []
+      current.adjustments || [],
     );
 
     // 4. Execution with Metadata Snapshot + ATOMIC CHECK
     const { data: updated, error: updateErr } = await supabase
       .from("deal_commissions")
       .update({
-        status: "PAID" as any,
+        status: "PAID",
         slip_url: payload.slip_url,
         payment_reference: payload.payment_reference,
         paid_at: new Date().toISOString(),
@@ -329,13 +401,13 @@ export async function markAsPaidAction(
             tax_rate_snapshot: current.tax_rate || 0.03,
             net_base: Number(current.amount) - Number(current.wht_amount),
             adjustments: current.adjustments,
-            final_net: netTransfer.toNumber()
+            final_net: netTransfer.toNumber(),
           },
-          processed_by: user.id
-        }
-      } as any)
+          processed_by: user.id,
+        },
+      })
       .eq("id", commissionId)
-      .neq("status", "PAID" as any) // 🛡️ ATOMIC PROTECTION: Prevent double payment at SQL level
+      .neq("status", "PAID") // 🛡️ ATOMIC PROTECTION: Prevent double payment at SQL level
       .select()
       .single();
 
@@ -348,16 +420,17 @@ export async function markAsPaidAction(
         entity: "deal_commissions",
         entityId: commissionId,
         summary: `ยืนยันการโอนเงินสุทธิ ${FinanceMath.format(netTransfer)} บ. (Ref: ${payload.payment_reference})`,
-        metadata: { ...payload, netAmount: netTransfer.toNumber() }
-      }
+        metadata: { ...payload, netAmount: netTransfer.toNumber() },
+      },
     );
 
     revalidatePath("/protected/finance/payouts");
     revalidatePath("/protected/wallet");
-    
+
     // 🚀 Background Automation
     const { inngest } = await import("@/lib/inngest/client");
-    const recipientName = current.agent?.full_name || current.co_broker?.name || "Unknown Partner";
+    const recipientName =
+      current.agent?.full_name || current.co_broker?.name || "Unknown Partner";
 
     await inngest.send({
       name: "finance.commission_paid",
@@ -371,14 +444,17 @@ export async function markAsPaidAction(
         reference: payload.payment_reference,
         paidAt: updated?.paid_at || new Date().toISOString(),
         lineUserId: current.agent?.line_user_id,
-        idempotencyKey: `${current.deal_id}-${commissionId}`
-      }
+        idempotencyKey: `${current.deal_id}-${commissionId}`,
+      },
     });
-    
-    return { success: true, message: "บันทึกการโอนเงินสุทธิสำเร็จ และส่งแจ้งเตือนเรียบร้อยแล้ว" };
-  } catch (error: any) {
+
+    return {
+      success: true,
+      message: "บันทึกการโอนเงินสุทธิสำเร็จ และส่งแจ้งเตือนเรียบร้อยแล้ว",
+    };
+  } catch (error: unknown) {
     console.error("markAsPaid Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }
 
@@ -397,15 +473,15 @@ export async function getSignedSlipUrlAction(slipUrl: string) {
     // Format: .../storage/v1/object/public/payout-slips/TENANT_ID/filename.jpg
     let filePath = slipUrl;
     if (slipUrl.includes("/storage/v1/object/")) {
-       const parts = slipUrl.split("/payout-slips/");
-       if (parts.length > 1) {
-         filePath = parts[1];
-       }
+      const parts = slipUrl.split("/payout-slips/");
+      if (parts.length > 1) {
+        filePath = parts[1];
+      }
     }
 
     // Security check: Must belong to current tenant
     if (!filePath.includes(tenantId!)) {
-       throw new Error("คุณไม่มีสิทธิ์เข้าถึงไฟล์ชุดนี้ (Unauthorized Access)");
+      throw new Error("คุณไม่มีสิทธิ์เข้าถึงไฟล์ชุดนี้ (Unauthorized Access)");
     }
 
     const { data, error } = await supabase.storage
@@ -415,17 +491,17 @@ export async function getSignedSlipUrlAction(slipUrl: string) {
     if (error) throw new Error(error.message);
 
     return { success: true, url: data.signedUrl };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("getSignedSlipUrl Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }
 
 /**
  * Fetches the Payout Queue with full calculation stats and server-side pagination.
  */
-export async function getPayoutQueueAction(filters?: { 
-  status?: any; 
+export async function getPayoutQueueAction(filters?: {
+  status?: Database["public"]["Enums"]["commission_status"];
   agentId?: string;
   page?: number;
   pageSize?: number;
@@ -436,10 +512,9 @@ export async function getPayoutQueueAction(filters?: {
     const pageSize = filters?.pageSize || 20;
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
-    
-    let query = supabase
-      .from("deal_commissions")
-      .select(`
+
+    let queryBuilder = supabase.from("deal_commissions").select(
+      `
         *,
         agent:profiles!deal_commissions_agent_id_fkey (id, full_name, phone),
         co_broker:co_brokers!deal_commissions_co_broker_id_fkey (id, name, phone, company_name),
@@ -453,76 +528,105 @@ export async function getPayoutQueueAction(filters?: {
           commission_amount,
           property:properties!deals_property_id_fkey (title, property_type, listing_type)
         )
-      `, { count: "exact" });
+      `,
+      { count: "exact" },
+    );
 
     // 🌐 Cross-branch Logic: If Admin/Manager, they can see ALL if they want
     if (role === "ADMIN" || role === "MANAGER") {
-      if (tenantId) {
-        query = query.eq("tenant_id", tenantId);
+      if (tenantId && tenantId !== "ALL") {
+        queryBuilder = queryBuilder.eq("tenant_id", tenantId);
       }
-      // If tenantId is undefined (ALL Mode), we don't apply the tenant filter
     } else {
       if (!tenantId) throw new Error("ไม่พบข้อมูลสาขาที่สังกัด");
-      query = query.eq("tenant_id", tenantId);
+      queryBuilder = queryBuilder.eq("tenant_id", tenantId);
     }
-
-    query = query
-      .order("created_at", { ascending: false })
-      .range(from, to);
 
     if (filters?.status) {
-      query = query.eq("status", filters.status);
+      queryBuilder = queryBuilder.eq("status", filters.status);
     } else {
-      query = query.in("status", ["UNPAID", "READY_TO_PAY"]);
+      queryBuilder = queryBuilder.in("status", ["UNPAID", "READY_TO_PAY"]);
     }
 
-    const { data, error, count } = await query;
+    // 1. นำ JoinedPayout ไปประกาศไว้ที่ Type ของ data
+    const { data, error, count } = (await queryBuilder
+      .order("created_at", { ascending: false })
+      .range(from, to)) as {
+      data: JoinedPayout[] | null;
+      error: any;
+      count: number | null;
+    };
+
     if (error) throw new Error(mapDbError(error));
 
     // 🕵️ Data Integrity: Fetch total calculated commissions for these deals to detect drift
-    const dealIds = Array.from(new Set(data.map((item: any) => item.deal_id)));
+    const dealIds = Array.from(
+      new Set((data || []).map((item) => item.deal_id)),
+    );
     const { data: allCommsForDeals } = await supabase
       .from("deal_commissions")
       .select("deal_id, amount")
       .in("deal_id", dealIds);
 
     // Group sums by deal_id
-    const commissionSumsByDeal = (allCommsForDeals || []).reduce((acc: any, curr) => {
-      acc[curr.deal_id] = (acc[curr.deal_id] || 0) + Number(curr.amount);
-      return acc;
-    }, {});
+    const commissionSumsByDeal = (allCommsForDeals || []).reduce(
+      (
+        acc: Record<string, number>,
+        curr: { deal_id: string; amount: number | string },
+      ) => {
+        acc[curr.deal_id] = (acc[curr.deal_id] || 0) + Number(curr.amount);
+        return acc;
+      },
+      {},
+    );
 
     // Enhance records with totals from the SQL View and Stale Detection
-    const enhancedData = data.map((item: any) => {
+    // 2. เปลี่ยน (item: any) ใน .map เป็น JoinedPayout
+    const enhancedData = (data || []).map((item: JoinedPayout): CommissionPayoutRecord => {
       const summary = item.summary_view;
-      const recipientName = item.agent?.full_name || item.co_broker?.name || "Unknown";
-      const actualDealCommission = Number(item.deal?.commission_amount || 0);
+      const agent = item.agent;
+
+      const co_broker = item.co_broker;
+      const deal = item.deal;
+
+      const recipientName = agent?.full_name || co_broker?.name || "Unknown";
+      const actualDealCommission = Number(deal?.commission_amount || 0);
       const calculatedTotal = commissionSumsByDeal[item.deal_id] || 0;
-      
+
       // Calculate stale status: total of saved commissions matches the deal's current commission amount
-      const isStale = Math.abs(actualDealCommission - calculatedTotal) > 0.01;
-      
+      const isStale =
+        !deal || Math.abs(actualDealCommission - calculatedTotal) > 0.01;
+      const netAmount = Number(summary?.net_payout_amount || item.net_amount);
+
       return {
         ...item,
         recipient_name: recipientName,
         total_adjustments: Number(summary?.total_adjustments || 0),
-        net_amount: Number(summary?.net_payout_amount || item.net_amount),
+        net_amount: netAmount,
+        net_transfer_amount: netAmount,
         is_stale: isStale,
         expected_total: actualDealCommission,
-        calculated_total: calculatedTotal
+        calculated_total: calculatedTotal,
       };
     });
 
-    return { 
-      success: true, 
-      data: enhancedData as any,
+    return {
+      success: true,
+      data: enhancedData as unknown as PaginatedPayoutResult["data"],
       totalCount: count || 0,
       page,
-      pageSize
+      pageSize,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("getPayoutQueue Error:", error);
-    return { success: false, error: error.message, data: [], totalCount: 0, page: 1, pageSize: 20 };
+    return {
+      success: false,
+      error: (error as Error).message,
+      data: [],
+      totalCount: 0,
+      page: 1,
+      pageSize: 20,
+    };
   }
 }
 
@@ -537,7 +641,8 @@ export async function getWhtCertificateDataAction(commissionId: string) {
     // 1. Fetch record with everything needed for the certificate
     const { data: current, error: fetchErr } = await supabase
       .from("deal_commissions")
-      .select(`
+      .select(
+        `
         id,
         amount,
         wht_amount,
@@ -546,32 +651,46 @@ export async function getWhtCertificateDataAction(commissionId: string) {
         agent:profiles!deal_commissions_agent_id_fkey(full_name, phone),
         co_broker:co_brokers!deal_commissions_co_broker_id_fkey(name, phone, tax_id, tax_address),
         tenant:tenants(name)
-      `)
+      `,
+      )
       .eq("id", commissionId)
       .eq("tenant_id", tenantId!)
       .single();
 
-    if (fetchErr || !current) throw new Error("ไม่พบข้อมูลสำหรับการออกใบรับรอง");
+    if (fetchErr || !current)
+      throw new Error("ไม่พบข้อมูลสำหรับการออกใบรับรอง");
 
-    const netAmount = FinanceMath.calculateNetPayout(current.amount, current.wht_amount, []);
+    const netAmount = FinanceMath.calculateNetPayout(
+      current.amount,
+      current.wht_amount,
+      [],
+    );
 
     return {
       success: true,
       data: {
-        agentName: current.agent?.full_name || current.co_broker?.name || "Unknown Partner",
+        agentName:
+          current.agent?.full_name ||
+          current.co_broker?.name ||
+          "Unknown Partner",
         address: current.co_broker?.tax_address || "ระบุในโปรไฟล์เอเยนต์",
         taxId: current.co_broker?.tax_id || null,
         taxAmount: FinanceMath.format(current.wht_amount),
         grossAmount: FinanceMath.format(current.amount),
         netAmount: FinanceMath.format(netAmount),
-        date: current.paid_at ? new Intl.DateTimeFormat('th-TH').format(new Date(current.paid_at)) : "-",
-        tenantName: (current.tenant as any)?.name || "Real Estate CRM Provider",
-        referenceCode: current.payment_reference || current.id.slice(0, 8).toUpperCase()
-      }
+        date: current.paid_at
+          ? new Intl.DateTimeFormat("th-TH").format(new Date(current.paid_at))
+          : "-",
+        tenantName:
+          (current.tenant as { name: string } | null)?.name ||
+          "Real Estate CRM Provider",
+        referenceCode:
+          current.payment_reference || current.id.slice(0, 8).toUpperCase(),
+      },
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("getWhtData Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }
 
@@ -582,42 +701,55 @@ export async function getCommissionAuditTrailAction(commissionId: string) {
   try {
     // 🛡️ Security Check: Verify audit log belongs to current tenant unless Super Admin
     const { supabase, role: userRole, tenantId } = await requireAuthContext();
-    
+
     let query = supabase
       .from("audit_logs")
-      .select(`
+      .select(
+        `
         id,
         action,
         metadata,
         created_at,
         profiles:user_id (full_name)
-      `)
+      `,
+      )
       .eq("entity_id", commissionId);
 
     if (userRole !== "ADMIN") {
-       if (!tenantId) throw new Error("Unauthorized access to audit trail");
-       query = query.eq("tenant_id", tenantId);
+      if (!tenantId) throw new Error("Unauthorized access to audit trail");
+      query = query.eq("tenant_id", tenantId);
     }
 
-    const { data, error } = await query
-      .order("created_at", { ascending: true });
+    const { data, error } = await (query as any).order("created_at", {
+      ascending: true,
+    });
 
     if (error) throw new Error(mapDbError(error));
 
     return {
       success: true,
-      data: data.map((log: any) => ({
-        id: log.id,
-        action: log.action,
-        summary: log.metadata?.summary || log.action,
-        created_at: log.created_at,
-        user_full_name: log.profiles?.full_name || "System",
-        metadata: log.metadata
-      }))
+      data: (data || []).map(
+        (
+          log: Database["public"]["Tables"]["audit_logs"]["Row"] & {
+            profiles?: { full_name: string } | null;
+          },
+        ) => ({
+          id: log.id,
+          action: log.action,
+          summary:
+            (log.metadata as { summary?: string } | null)?.summary ||
+            log.action,
+          created_at: log.created_at,
+          user_full_name:
+            (log.profiles as { full_name: string } | null)?.full_name ||
+            "System",
+          metadata: log.metadata,
+        }),
+      ),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("getCommissionAuditTrail Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }
 
@@ -627,46 +759,57 @@ export async function getAgentWalletStatsAction() {
 
     const { data: commissions, error: commErr } = await supabase
       .from("deal_commissions")
-      .select(`
+      .select(
+        `
         *,
         adjustments:commission_adjustments(*),
         deal:deals!deal_commissions_deal_id_fkey (
           id, status,
           property:properties!deals_property_id_fkey (title, image_url, listing_type, property_type)
         )
-      `)
+      `,
+      )
       .eq("agent_id", user.id)
       .eq("tenant_id", tenantId!)
       .order("created_at", { ascending: false });
 
     if (commErr) throw new Error(mapDbError(commErr));
 
-    const enhanced = commissions.map((c: any) => ({
+    const enhanced = (commissions || []).map((c) => ({
       ...c,
-      net_amount: FinanceMath.calculateNetPayout(c.amount, c.wht_amount, c.adjustments || []).toNumber()
+      net_amount: FinanceMath.calculateNetPayout(
+        c.amount,
+        c.wht_amount,
+        c.adjustments || [],
+      ).toNumber(),
     }));
 
     const totalEarnings = enhanced
-      .filter(c => c.status === "PAID")
-      .reduce((acc, c) => acc + c.net_amount, 0);
-    
+      .filter((c: any) => c.status === "PAID")
+      .reduce((acc: number, c: any) => acc + c.net_amount, 0);
+
     const pendingAmount = enhanced
-      .filter(c => c.status === "UNPAID" || c.status === "READY_TO_PAY")
-      .reduce((acc, c) => acc + c.net_amount, 0);
+      .filter((c: any) => c.status === "UNPAID" || c.status === "READY_TO_PAY")
+      .reduce((acc: number, c: any) => acc + c.net_amount, 0);
 
     const closedDealsCount = new Set(
-      enhanced.filter(c => c.status === "PAID").map(c => c.deal_id)
+      enhanced.filter((c: any) => c.status === "PAID").map((c: any) => c.deal_id),
     ).size;
 
     return {
       success: true,
       data: {
-        stats: { totalEarnings, pendingAmount, closedDealsCount, totalCommissionsCount: commissions.length },
-        history: enhanced
-      }
+        stats: {
+          totalEarnings,
+          pendingAmount,
+          closedDealsCount,
+          totalCommissionsCount: (commissions || []).length,
+        },
+        history: enhanced,
+      },
     };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: (error as Error).message };
   }
 }
 
@@ -677,8 +820,9 @@ export async function getAgentWalletStatsAction() {
 export async function generateWhtPdfAction(commissionId: string) {
   try {
     const { renderToBuffer } = await import("@react-pdf/renderer");
-    const { WhtCertificateTemplate } = await import("./components/WhtCertificateTemplate");
-    
+    const { WhtCertificateTemplate } =
+      await import("./components/WhtCertificateTemplate");
+
     // 1. Fetch data for the certificate
     const res = await getWhtCertificateDataAction(commissionId);
     if (!res.success || !res.data) {
@@ -686,7 +830,9 @@ export async function generateWhtPdfAction(commissionId: string) {
     }
 
     // 2. Render PDF to Buffer
-    const element = React.createElement(WhtCertificateTemplate, { data: res.data });
+    const element = React.createElement(WhtCertificateTemplate, {
+      data: res.data as any,
+    });
     const buffer = await renderToBuffer(element as any);
 
     // 3. Log Audit
@@ -698,18 +844,18 @@ export async function generateWhtPdfAction(commissionId: string) {
         entity: "deal_commissions",
         entityId: commissionId,
         summary: `ออกใบรับรองหักภาษี ณ ที่จ่าย (50 ทวิ) สำหรับรายการ ID: ${commissionId.slice(0, 8)}`,
-        metadata: { commissionId }
-      }
+        metadata: { commissionId },
+      },
     );
 
     // 4. Return as Base64 for client-side download
     return {
       success: true,
       fileName: `WHT_${res.data.referenceCode}.pdf`,
-      content: buffer.toString("base64")
+      content: buffer.toString("base64"),
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("generateWhtPdf Error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: (error as Error).message };
   }
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { createClient } from "@/lib/supabase/server";
 import {
   replacePlaceholders,
   formatCurrency,
@@ -41,7 +42,7 @@ const additionalDataSchema = z.object({
  */
 async function getImageBase64(
   imageUrl: string,
-  supabase?: any,
+  supabase?: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
 ): Promise<string> {
   if (!imageUrl) return "";
 
@@ -140,7 +141,7 @@ export async function generateDocumentFromTemplateAction(
     config.companySignature = signatureB64;
     config.companyStamp = stampB64;
 
-    let contextData: any = {
+    let contextData: Record<string, any> = {
       date: {
         today: formatDate(new Date(), lang),
       },
@@ -157,7 +158,7 @@ export async function generateDocumentFromTemplateAction(
         .single();
       if (lError) throw new Error(mapDbError(lError));
       if (!lead) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
-      ownerTenantId = (lead as any).tenant_id;
+      ownerTenantId = lead.tenant_id;
       contextData.lead = localizeObject(lead, lang);
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
@@ -167,7 +168,7 @@ export async function generateDocumentFromTemplateAction(
         .single();
       if (pError) throw new Error(mapDbError(pError));
       if (!property) throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
-      ownerTenantId = (property as any).tenant_id;
+      ownerTenantId = property.tenant_id;
       contextData.property = localizeObject(property, lang);
     } else if (ownerType === "DEAL") {
       const { data: deal, error: dError } = await supabase
@@ -177,10 +178,10 @@ export async function generateDocumentFromTemplateAction(
         .single();
       if (dError) throw new Error(mapDbError(dError));
       if (!deal) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
-      ownerTenantId = (deal as any).tenant_id;
+      ownerTenantId = deal.tenant_id;
       contextData.deal = localizeObject(deal, lang);
-      contextData.lead = localizeObject((deal as any)?.lead, lang);
-      contextData.property = localizeObject((deal as any)?.property, lang);
+      contextData.lead = localizeObject(deal.lead, lang);
+      contextData.property = localizeObject(deal.property, lang);
 
       // Add formatted values based on deal type
       if (deal && contextData.property) {
@@ -236,7 +237,7 @@ export async function generateDocumentFromTemplateAction(
         .single();
       if (cError) throw new Error(mapDbError(cError));
       if (!contract) throw new Error("ไม่พบข้อมูลสัญญาเช่าที่ระบุ");
-      ownerTenantId = (contract as any).tenant_id;
+      ownerTenantId = contract.tenant_id;
       contextData.contract = localizeObject(contract, lang);
     }
 
@@ -266,7 +267,6 @@ export async function generateDocumentFromTemplateAction(
       contextData.lead.line_id = validData.client_line_override;
     }
 
-    // Ensure common fields are at top level context for easier template access
     contextData.payment_period =
       validData.payment_period || contextData.deal?.payment_period || "";
     contextData.payment_method = validData.payment_method || "Transfer";
@@ -430,8 +430,7 @@ export async function generateDocumentFromTemplateAction(
   } catch (error: unknown) {
     if (error instanceof z.ZodError) return { success: false, message: "ข้อมูลนำเข้าไม่ถูกต้อง: " + error.issues[0].message };
     console.error("Document Generation Error:", error);
-    const msg = error instanceof Error ? mapDbError(error) : "เกิดข้อผิดพลาดในการสร้างเอกสาร";
-    return { success: false, message: msg };
+    return { success: false, message: error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างเอกสาร" };
   }
 }
 
@@ -465,7 +464,7 @@ export async function generateDocxDocumentFromTemplateAction(
     const lang = validData.language;
     const translations = await getTranslations(lang);
 
-    let contextData: any = {
+    let contextData: Record<string, any> = {
       date: { today: formatDate(new Date(), lang) },
       config: siteConfig,
       t: translations,
@@ -480,7 +479,7 @@ export async function generateDocxDocumentFromTemplateAction(
         .single();
       if (lError) throw new Error(mapDbError(lError));
       if (!lead) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
-      ownerTenantId = (lead as any).tenant_id;
+      ownerTenantId = lead.tenant_id;
       contextData.lead = localizeObject(lead, lang);
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
@@ -490,7 +489,7 @@ export async function generateDocxDocumentFromTemplateAction(
         .single();
       if (pError) throw new Error(mapDbError(pError));
       if (!property) throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
-      ownerTenantId = (property as any).tenant_id;
+      ownerTenantId = property.tenant_id;
       contextData.property = localizeObject(property, lang);
     } else if (ownerType === "DEAL") {
       const { data: deal, error: dError } = await supabase
@@ -500,10 +499,10 @@ export async function generateDocxDocumentFromTemplateAction(
         .single();
       if (dError) throw new Error(mapDbError(dError));
       if (!deal) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
-      ownerTenantId = (deal as any).tenant_id;
+      ownerTenantId = deal.tenant_id;
       contextData.deal = localizeObject(deal, lang);
-      contextData.lead = localizeObject((deal as any)?.lead, lang);
-      contextData.property = localizeObject((deal as any)?.property, lang);
+      contextData.lead = localizeObject(deal.lead, lang);
+      contextData.property = localizeObject(deal.property, lang);
 
       if (deal && contextData.property) {
         const isRent = deal.deal_type === "RENT";
@@ -549,7 +548,7 @@ export async function generateDocxDocumentFromTemplateAction(
         .single();
       if (cError) throw new Error(mapDbError(cError));
       if (!contract) throw new Error("ไม่พบข้อมูลสัญญาเช่าที่ระบุ");
-      ownerTenantId = (contract as any).tenant_id;
+      ownerTenantId = contract.tenant_id;
       contextData.contract = localizeObject(contract, lang);
     }
 
@@ -583,11 +582,12 @@ export async function generateDocxDocumentFromTemplateAction(
     try {
       doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
       doc.render(contextData);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Docxtemplater parsing error:", error);
       let errorMsg = "รูปแบบตัวแปร(Tag) ในไฟล์ DOCX ไม่ถูกต้อง";
-      if (error.properties && error.properties.errors instanceof Array) {
-        const errorDetails = error.properties.errors.map((e: any) => e.properties.explanation || e.message).join(", ");
+      const err = error as { properties?: { errors?: { properties?: { explanation?: string }; message?: string }[] } };
+      if (err.properties && err.properties.errors instanceof Array) {
+        const errorDetails = err.properties.errors.map((e) => e.properties?.explanation || e.message).join(", ");
         errorMsg += ` รายละเอียด: ${errorDetails}`;
       }
       throw new Error(errorMsg);
@@ -634,7 +634,6 @@ export async function generateDocxDocumentFromTemplateAction(
   } catch (error: unknown) {
     if (error instanceof z.ZodError) return { success: false, message: "ข้อมูลนำเข้าไม่ถูกต้อง: " + error.issues[0].message };
     console.error("DOCX Generation Error:", error);
-    const msg = error instanceof Error ? mapDbError(error) : "เกิดข้อผิดพลาดในการสร้างไฟล์ DOCX";
-    return { success: false, message: msg };
+    return { success: false, message: error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างไฟล์ DOCX" };
   }
 }

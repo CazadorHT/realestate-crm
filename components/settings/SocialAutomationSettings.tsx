@@ -198,7 +198,10 @@ export function SocialAutomationSettings({
     startTransition(async () => {
       try {
         const promises = [
-          updateSiteSetting("social_automation_keywords", keywords),
+          updateSiteSetting(
+            "social_automation_keywords",
+            keywords.map((k) => k.keyword),
+          ),
           updateSiteSetting("facebook_post_template", templates.facebook.th),
           updateSiteSetting("facebook_post_template_en", templates.facebook.en),
           updateSiteSetting("facebook_post_template_cn", templates.facebook.cn),
