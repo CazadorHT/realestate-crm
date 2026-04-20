@@ -149,58 +149,70 @@ export function PropertyBadgesSection({
 
   const badgeItems = [
     {
+      condition: property.near_transit || property.meta_keywords?.includes("ทำเลดี เดินทางสะดวก"),
+      label: "ทำเลดี เดินทางสะดวก",
+      icon: TrainFront,
+      color: "bg-blue-50 text-blue-800", // Highlighted colors
+    },
+    {
+      condition: !property.is_bare_shell || property.meta_keywords?.includes("พร้อมเข้าอยู่"),
+      label: "พร้อมเข้าอยู่",
+      icon: CheckCircle2,
+      color: "bg-emerald-50 text-emerald-800",
+    },
+    {
+      condition: (property.bedrooms || 0) >= 2 || property.meta_keywords?.includes("เหมาะสำหรับครอบครัว"),
+      label: "เหมาะสำหรับครอบครัว",
+      icon: Users,
+      color: "bg-purple-50 text-purple-800",
+    },
+    {
       condition: property.is_pet_friendly,
       label: t("property.badges.pet_friendly"),
       icon: PawPrint,
-      color: "bg-orange-100 text-orange-700",
+      color: "bg-orange-50 text-orange-700",
     },
     {
       condition: property.is_foreigner_quota,
       label: t("property.badges.foreigner_quota"),
       icon: Globe,
-      color: "bg-indigo-100 text-indigo-800",
+      color: "bg-indigo-50 text-indigo-800",
     },
     {
       condition: property.is_renovated,
       label: t("property.badges.renovated"),
       icon: Sparkles,
-      color: "bg-emerald-100 text-emerald-800",
+      color: "bg-emerald-50 text-emerald-800",
     },
     {
       condition: property.is_corner_unit,
       label: t("property.badges.corner_unit"),
       icon: LayoutDashboard,
-      color: "bg-purple-100 text-purple-800",
+      color: "bg-purple-50 text-purple-800",
     },
     {
       condition: property.is_fully_furnished,
       label: t("property.badges.fully_furnished"),
       icon: PackageCheck,
-      color: "bg-blue-100 text-blue-800",
+      color: "bg-blue-50 text-blue-800",
     },
     {
       condition: property.has_private_pool,
       label: t("property.badges.private_pool"),
       icon: Waves,
-      color: "bg-cyan-100 text-cyan-800",
+      color: "bg-cyan-50 text-cyan-800",
     },
     {
       condition: property.is_selling_with_tenant,
       label: t("property.badges.selling_with_tenant"),
       icon: Users,
-      color: "bg-green-100 text-green-800",
+      color: "bg-green-50 text-green-800",
     },
     {
       condition: property.is_exclusive,
       label: t("property.badges.exclusive"),
       icon: ShieldCheck,
-      color: "bg-rose-100 text-rose-800",
-    },
-    {
-      condition: property.near_transit,
-      label: t("property.badges.near_transit"),
-      icon: TrainFront,
-      color: "bg-blue-50 text-blue-600",
+      color: "bg-rose-50 text-rose-800",
     },
     {
       condition: property.has_river_view,

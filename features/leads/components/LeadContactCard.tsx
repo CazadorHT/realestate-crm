@@ -1,4 +1,5 @@
-import { leadStageLabelNullable } from "@/features/leads/labels";
+import { leadStageLabelNullable, type LeadStage } from "@/features/leads/labels";
+import { type LeadPreferences } from "../types";
 import { RiContactsBookLine } from "react-icons/ri";
 import { 
   ShieldCheck, 
@@ -11,10 +12,10 @@ import {
 
 interface LeadContactCardProps {
   lead: {
-    stage: string | null;
+    stage: LeadStage | null;
     phone: string | null;
     email: string | null;
-    preferences: unknown;
+    preferences: LeadPreferences | null;
     nationality: string | null;
     is_foreigner: boolean | null;
     note: string | null;
@@ -44,7 +45,7 @@ export function LeadContactCard({ lead }: LeadContactCardProps) {
               <span className="text-sm font-medium text-slate-500">สถานะลูกค้า</span>
             </div>
             <span className="font-semibold bg-emerald-50 text-emerald-700 px-3 py-1 rounded-full text-[10px] uppercase tracking-wider ring-1 ring-emerald-100">
-              {leadStageLabelNullable(lead.stage as any)}
+              {leadStageLabelNullable(lead.stage)}
             </span>
           </div>
 
@@ -101,7 +102,7 @@ export function LeadContactCard({ lead }: LeadContactCardProps) {
               <span className="text-sm font-medium text-slate-500">Line ID</span>
             </div>
             <span className="text-sm font-semibold text-emerald-600">
-              {(lead.preferences as any)?.line_id || <span className="text-slate-300">ไม่ระบุ</span>}
+              {lead.preferences?.line_id || <span className="text-slate-300">ไม่ระบุ</span>}
             </span>
           </div>
 

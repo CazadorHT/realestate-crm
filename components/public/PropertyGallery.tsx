@@ -111,9 +111,11 @@ const ImageWithFallback = ({
         src={img.image_url}
         alt={alt}
         fill={fill}
-        className={cn("transition-all duration-500", className)}
         priority={priority}
         {...(priority ? { fetchPriority: "high" } : {})}
+        decoding="async"
+        loading={priority ? "eager" : "lazy"}
+        className={cn("transition-all duration-500", className)}
         sizes={sizes}
         onError={() => onImageError(img.id)}
       />

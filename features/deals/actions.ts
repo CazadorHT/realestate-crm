@@ -19,7 +19,7 @@ import {
   UpdateDealInput,
 } from "./schema";
 import { z } from "zod";
-import { Deal, DealStatus, DealType, DealCommission, SplitWithTax } from "./types";
+import { Deal, DealStatus, DealType, DealCommission, SplitWithTax, ProfileWithTax, CoBrokerWithTax } from "./types";
 import { logAudit } from "@/lib/audit";
 import { getCommissionRulesAction } from "../dashboard/actions/commission-actions";
 import {
@@ -404,33 +404,32 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     // 3. Fetch Agent/Co-broker Specific Tax Rates (Fallback Logic)
     const agentIds = [deal.property?.assigned_to, deal.created_by].filter(Boolean) as string[];
-    // Use Record<string, any> to bypass missing column in types while it's being reconciled in DB
-    let agentProfiles: any[] = [];
+    let agentProfiles: ProfileWithTax[] = [];
     
     if (agentIds.length > 0) {
       const { data } = await supabase
         .from("profiles")
-        .select("id, default_tax_rate" as any)
+        .select("id, default_tax_rate")
         .in("id", agentIds);
-      if (data) agentProfiles = data;
+      if (data) agentProfiles = data as unknown as ProfileWithTax[];
     }
 
-    let coBrokerProfile: any = null;
+    let coBrokerProfile: CoBrokerWithTax | null = null;
     if (deal.partner_co_broker_id) {
       const { data } = await supabase
         .from("co_brokers")
         .select("id, default_tax_rate" as any)
         .eq("id", deal.partner_co_broker_id)
         .single();
-      if (data) coBrokerProfile = data;
+      if (data) coBrokerProfile = data as unknown as CoBrokerWithTax;
     }
 
     const getTaxRateForAgent = (id?: string) => {
-      const p = agentProfiles.find((ap: any) => ap.id === id);
-      return (p?.default_tax_rate as number | undefined) ?? globalDefaultWht;
+      const p = agentProfiles.find((ap) => ap.id === id);
+      return (p?.default_tax_rate ?? globalDefaultWht);
     };
 
-    const coBrokerTaxRate = (coBrokerProfile?.default_tax_rate as number | undefined) ?? globalDefaultWht;
+    const coBrokerTaxRate = (coBrokerProfile?.default_tax_rate ?? globalDefaultWht);
 
     // 4. Simple or Advanced Split
     let splits: SplitWithTax[] = [];

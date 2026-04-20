@@ -20,6 +20,7 @@ interface PropertyCardImageProps {
   onFavoriteClick: (e: React.MouseEvent) => void;
   comparisonBadges: { label: string; icon: any; color: string }[];
   areaProvince: string;
+  isHotDeal?: boolean;
 }
 
 export function PropertyCardImage({
@@ -30,9 +31,11 @@ export function PropertyCardImage({
   onFavoriteClick,
   comparisonBadges,
   areaProvince,
+  isHotDeal = false,
 }: PropertyCardImageProps) {
   const { t } = useLanguage();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isInteracted, setIsInteracted] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Tracking refs (prevent duplicate fires per card instance)
@@ -48,10 +51,21 @@ export function PropertyCardImage({
   const touchStartY = useRef(0);
   const isHorizontalSwipe = useRef<boolean | null>(null);
 
-  const displayImages =
-    property.images && property.images.length > 0
-      ? property.images
-      : ([property.image_url].filter(Boolean) as string[]);
+  // Normalized images list from both possible formats (string array or object array with .url)
+  const displayImages = (() => {
+    const rawImages: (string | { url: string } | null | undefined)[] = 
+      property.images && property.images.length > 0
+        ? property.images
+        : [property.image_url];
+    
+    return (rawImages || [])
+      .filter((img): img is string | { url: string } => img !== null && img !== undefined)
+      .map(img => {
+        if (typeof img === 'string') return img;
+        return (img as { url: string }).url;
+      })
+      .filter(url => typeof url === 'string' && url.trim() !== "");
+  })();
 
   const badge = getListingBadge(property.listing_type);
 
@@ -208,17 +222,19 @@ export function PropertyCardImage({
     : null;
 
   return (
-    <div className="group/image relative aspect-square sm:aspect-4/3 md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5">
+    <div 
+      onMouseEnter={() => setIsInteracted(true)}
+      onTouchStartCapture={() => setIsInteracted(true)}
+      className="group/image relative aspect-square sm:aspect-4/3 md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5"
+    >
       {displayImages.length > 0 ? (
         <div
           ref={scrollRef}
-          onScroll={handleScroll}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-          className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none"
+          onScroll={isInteracted ? handleScroll : undefined}
+          onPointerDown={() => setIsInteracted(true)}
+          className={`flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none ${!isInteracted ? "overflow-hidden" : ""}`}
         >
-          {displayImages.map((img, index) => (
+          {(!isInteracted ? displayImages.slice(0, 1) : displayImages).map((img, index) => (
             <div
               key={index}
               className="relative h-full w-full shrink-0 snap-start"
@@ -237,10 +253,10 @@ export function PropertyCardImage({
                   areaProvince ? ` ${t("nav.properties")} ${areaProvince}` : ""
                 } - Image ${index + 1}`}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
+                sizes="(max-width: 640px) 384px, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
                 className="object-cover object-top transform-gpu will-change-transform"
                 priority={priority && index === 0}
-                loading={priority && index === 0 ? "eager" : "lazy"}
+                {...(!(priority && index === 0) && { loading: "lazy" })}
               />
             </div>
           ))}
@@ -252,7 +268,7 @@ export function PropertyCardImage({
       )}
 
       {/* Pagination Dots */}
-      {displayImages.length > 1 && (
+      {isInteracted && displayImages.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20 pointer-events-none opacity-100 xl:opacity-0 xl:group-hover/image:opacity-100 transition-opacity duration-300">
           {displayImages
             .slice(
@@ -297,18 +313,14 @@ export function PropertyCardImage({
       {/* Badge Overlay Container */}
       <div className="absolute top-3 left-3 flex flex-col items-start gap-2 z-20">
         {/* Hot Deal Badge */}
-        {/* {((property.original_price && property.price && property.price < property.original_price) ||
-          (property.original_rental_price && property.rental_price && property.rental_price < property.original_rental_price) ||
-          property.meta_keywords?.includes("Hot Deal") || 
-          property.meta_keywords?.includes("HotDeal") || 
-          property.meta_keywords?.includes("hot deal")) && (
+        {isHotDeal && (
           <div className={`flex items-center bg-linear-to-br from-red-500 to-orange-600 text-white p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
             <PiFireFill className="w-5 h-5 fill-yellow-200" />
             <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               HOT DEAL
             </span>
           </div>
-        )} */}
+        )}
 
 
         {/* Verified Badge */}

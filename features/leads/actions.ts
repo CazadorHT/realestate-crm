@@ -12,6 +12,7 @@ import type {
 } from "./types";
 import { generateLeadSummary } from "./services/ai-lead-service";
 import { z } from "zod";
+import { getCoverImage } from "@/lib/property-hardened-utils";
 import { logAudit } from "@/lib/audit";
 import { UserRole } from "@/lib/authz";
 import { Database } from "@/lib/database.types";
@@ -273,7 +274,7 @@ export const searchPropertiesAction = createSafeAction(
     let sb = supabase
       .from("properties")
       .select(
-        "id, title, price, rental_price, listing_type, property_type, province, district, popular_area, status, property_images(image_url, is_cover)",
+        "id, title, price, rental_price, listing_type, property_type, province, district, popular_area, status, images",
       )
       .is("deleted_at", null);
 
@@ -325,7 +326,12 @@ export const searchPropertiesAction = createSafeAction(
       district: string | null;
       popular_area: string | null;
       status: string | null;
-      property_images: { image_url: string; is_cover: boolean }[];
+      images: Array<{
+        url: string;
+        image_url?: string;
+        is_cover: boolean | null;
+        sort_order: number | null;
+      }>;
     }
 
     const properties = (data as unknown as PropertyResult[]) || [];
@@ -340,12 +346,7 @@ export const searchPropertiesAction = createSafeAction(
         original_rental_price: x.original_rental_price,
         listing_type: x.listing_type,
         property_type: x.property_type,
-        cover_image_url:
-          x.property_images?.find(
-            (img: { image_url: string; is_cover: boolean }) => img.is_cover,
-          )?.image_url ||
-          x.property_images?.[0]?.image_url ||
-          null,
+        cover_image_url: getCoverImage(x.images),
         province: x.province,
         district: x.district,
         popular_area: x.popular_area,

@@ -17,8 +17,10 @@ import type {
   InventoryProperty,
   InventoryFilterCounts 
 } from "@/app/(protected)/protected/admin/inventory/types";
+import { getCoverImage } from "@/lib/property-hardened-utils";
 import { getRecommendedProperties } from "../queries";
 import { mapDbError } from "@/lib/db-error";
+import { Database } from "@/lib/database.types";
 
 /**
  * Get property by ID with images
@@ -63,18 +65,8 @@ export async function getPropertyWithImages(
 
   const { data, error } = await supabase
     .from("properties")
-    .select(
-      `
+    .select(`
       *,
-      property_images (
-        id,
-        property_id,
-        image_url,
-        storage_path,
-        is_cover,
-        sort_order,
-        created_at
-      ),
       property_agents (
         agent_id
       ),
@@ -94,10 +86,10 @@ export async function getPropertyWithImages(
 
   const property = data as unknown as PropertyWithImages;
 
-  if (property.property_images) {
-    property.property_images.sort(
-      (a: { sort_order: number }, b: { sort_order: number }) =>
-        a.sort_order - b.sort_order,
+  // Sorting is now handled by the SQL Trigger but safe to sort here too if needed
+  if (property.images) {
+    property.images.sort(
+      (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
     );
   }
 
@@ -194,20 +186,9 @@ export async function addPopularAreaAction(data: {
 /**
  * 🛡️ Elite Type Hardening for Relational Data
  */
-interface JoinedPropertyRow {
-  id: string;
-  title: string;
-  price: number | null;
-  original_price: number | null;
-  rental_price: number | null;
-  original_rental_price: number | null;
-  status: string;
-  property_type: string;
-  listing_type: string;
-  created_at: string;
+type JoinedPropertyRow = Database["public"]["Tables"]["properties"]["Row"] & {
   tenants: { name: string } | null;
-  property_images: { image_url: string; is_cover: boolean }[];
-}
+};
 
 /**
  * Get global properties for administration (cross-tenant)
@@ -233,7 +214,7 @@ export async function getGlobalPropertiesTableDataAction(params: {
 
   let query = supabase
     .from("properties")
-    .select("*, tenants(name), property_images(image_url, is_cover)", {
+    .select("*, tenants(name)", {
       count: "exact",
     })
     .is("deleted_at", null)
@@ -276,11 +257,8 @@ export async function getGlobalPropertiesTableDataAction(params: {
   const typedData = data as unknown as JoinedPropertyRow[];
 
   const tableData = typedData.map((p: JoinedPropertyRow) => {
-    // 🛡️ Find cover image or use the first one
-    const mainImage =
-      p.property_images?.find((img) => img.is_cover)?.image_url ||
-      p.property_images?.[0]?.image_url ||
-      null;
+    // 🛡️ Find cover image (Already structured in JSONB)
+    const mainImage = getCoverImage(p.images);
 
     return {
       id: p.id,
@@ -291,7 +269,7 @@ export async function getGlobalPropertiesTableDataAction(params: {
       property_type: p.property_type,
       listing_type: p.listing_type,
       main_image_url: mainImage,
-      tenant_name: p.tenants?.name || "Unknown Branch",
+      tenant_name: (p.tenants as any)?.name || "Unknown Branch",
       created_at: p.created_at,
     };
   });

@@ -14,8 +14,10 @@ const nextConfig: NextConfig = {
   images: {
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    qualities: [75, 90],
-    formats: ["image/avif", "image/webp"], // แนะนำให้เพิ่มเพื่อให้ประสิทธิภาพสูงสุด
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 3600, // แคชรูปไว้อย่างน้อย 1 ชม. เพื่อลดภาระเซิร์ฟเวอร์
     remotePatterns: (() => {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       if (!supabaseUrl) return [];

@@ -46,12 +46,18 @@ function normalizeModelName(modelName: string): string {
 /**
  * Get a specific generative model by name
  */
-export function getModel(modelName: string = DEFAULT_MODEL) {
+export function getModel(modelName: string = DEFAULT_MODEL, options?: { useSearch?: boolean }) {
   const genAI = getClient();
   if (!genAI) return null;
 
   const normalizedModelName = normalizeModelName(modelName);
-  return genAI.getGenerativeModel({ model: normalizedModelName });
+  const modelOptions: any = { model: normalizedModelName };
+  
+  if (options?.useSearch) {
+    modelOptions.tools = [{ googleSearchRetrieval: {} }];
+  }
+
+  return genAI.getGenerativeModel(modelOptions);
 }
 
 // Keep core model for simple legacy calls
@@ -59,7 +65,6 @@ export const geminiModel = getModel(DEFAULT_MODEL);
 
 /**
  * Rotates to the next available API key
- * Returns true if we managed to rotate (there were other keys), false if we exhausted or only have one.
  */
 function rotateApiKey(): boolean {
   if (API_KEYS.length <= 1) return false;
@@ -78,20 +83,41 @@ export type AiGenerationResult = {
   groundingMetadata?: any;
 };
 
+/**
+ * Generates an embedding vector (768 dimensions) for a given text
+ */
+export async function generateEmbedding(text: string): Promise<number[] | null> {
+  if (!text || text.trim() === "") return null;
+  const genAI = getClient();
+  if (!genAI) return null;
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const result = await model.embedContent(text.replace(/\n/g, " ").trim());
+    return result.embedding.values;
+  } catch (error: any) {
+    console.error("Error generating Gemini embedding:", error);
+    if (error.status === 429 && rotateApiKey()) {
+      return generateEmbedding(text);
+    }
+    return null;
+  }
+}
+
+/**
+ * Advanced Text Generation with Rotation and Multi-modal support
+ */
 export async function generateText(
   prompt: string | any[],
   modelName: string = DEFAULT_MODEL,
   retryCount: number = 0,
-  options?: {
-    useSearch?: boolean;
-  },
+  options?: { useSearch?: boolean }
 ): Promise<AiGenerationResult> {
   const genAI = getClient();
   if (!genAI) {
     throw new Error("No GEMINI_API_KEY configured in environment");
   }
 
-  // Configure model with tools if needed
   const normalizedModelName = normalizeModelName(modelName);
   const modelOptions: any = { model: normalizedModelName };
   if (options?.useSearch) {
@@ -101,18 +127,15 @@ export async function generateText(
   const model = genAI.getGenerativeModel(modelOptions);
 
   try {
-    // 👁️ Support for Multimodal: Handle both simple strings and arrays of parts
     const contentParts = Array.isArray(prompt) ? prompt : [prompt];
     const result = await model.generateContent(contentParts);
     const response = await result.response;
     const text = response.text();
 
-    // Capture token usage
     const usage = result.response.usageMetadata
       ? {
           promptTokens: result.response.usageMetadata.promptTokenCount || 0,
-          completionTokens:
-            result.response.usageMetadata.candidatesTokenCount || 0,
+          completionTokens: result.response.usageMetadata.candidatesTokenCount || 0,
           totalTokens: result.response.usageMetadata.totalTokenCount || 0,
         }
       : undefined;
@@ -129,22 +152,15 @@ export async function generateText(
       keyIndex: currentKeyIndex,
     });
 
-    // Handle 429 (Rate Limit) with Key Rotation
     if (error.status === 429) {
       if (rotateApiKey() && retryCount < API_KEYS.length) {
         console.log("🚀 Retrying with rotated key...");
         return generateText(prompt, modelName, retryCount + 1, options);
       }
-      throw new Error(
-        "[RATE_LIMIT] โควต้า AI เต็มแล้ว (All Keys Exhausted) กรุณารอสักครู่แล้วลองใหม่ครับ",
-      );
+      throw new Error("[RATE_LIMIT] โควต้า AI เต็มแล้ว กรุณารอสักครู่แล้วลองใหม่ครับ");
     }
 
-    // Retry for 503 Service Unavailable
-    if (
-      error.status === 503 ||
-      (error.message && error.message.includes("503"))
-    ) {
+    if (error.status === 503 || (error.message && error.message.includes("503"))) {
       if (retryCount < 2) {
         console.log(`Retrying due to 503 (Attempt ${retryCount + 1})...`);
         await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -154,4 +170,27 @@ export async function generateText(
 
     throw new Error(`AI Error: ${error.message || "Unknown error"}`);
   }
+}
+
+/**
+ * Helper to consolidate lead preferences for vectorization.
+ */
+export function constructLeadRequirementText(lead: {
+  full_name?: string;
+  budget_min?: number | null;
+  budget_max?: number | null;
+  preferred_property_types?: string[] | null;
+  preferred_locations?: string[] | null;
+  min_bedrooms?: number | null;
+  note?: string | null;
+  has_pets?: boolean | null;
+}): string {
+  const parts: string[] = [];
+  if (lead.preferred_property_types?.length) parts.push(`Wants ${lead.preferred_property_types.join(", ")}`);
+  if (lead.preferred_locations?.length) parts.push(`Location: ${lead.preferred_locations.join(", ")}`);
+  if (lead.budget_max) parts.push(`Budget up to ${lead.budget_max}`);
+  if (lead.min_bedrooms) parts.push(`Min ${lead.min_bedrooms} bedrooms`);
+  if (lead.has_pets) parts.push("Pet friendly required");
+  if (lead.note) parts.push(`Extra details: ${lead.note}`);
+  return parts.join(" | ") || "Looking for property";
 }

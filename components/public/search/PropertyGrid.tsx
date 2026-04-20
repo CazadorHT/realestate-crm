@@ -10,6 +10,11 @@ interface PropertyGridProps {
   currentPage: number;
 }
 
+/**
+ * [S-Tier] Optimized Property Grid
+ * - Supports Priority Loading for top results (LCP boost)
+ * - Smooth AnimatePresence transitions
+ */
 export function PropertyGrid({ properties, currentPage }: PropertyGridProps) {
   return (
     <m.div
@@ -32,6 +37,7 @@ export function PropertyGrid({ properties, currentPage }: PropertyGridProps) {
           >
             <PropertyCard
               property={item}
+              // [S-Tier Boost] Prioritize 4 images for faster LCP
               priority={currentPage === 1 && i < 4}
             />
           </m.div>

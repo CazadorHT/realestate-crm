@@ -1,6 +1,10 @@
 "use server";
 
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { generateEmbedding, constructLeadRequirementText } from "@/lib/ai/gemini";
+import { notifyAgentOfSmartMatch } from "@/lib/line/messaging";
 import { SearchCriteria, PropertyMatch } from "./types";
 import { calculateMatchScore } from "./matching";
 import { v4 as uuidv4 } from "uuid";
@@ -11,35 +15,120 @@ import { getOfficePrice } from "@/lib/property-utils";
 type PropertyWithImages = Database["public"]["Tables"]["properties"]["Row"] & {
   property_images: Pick<
     Database["public"]["Tables"]["property_images"]["Row"],
-    "image_url" | "sort_order" | "is_cover"
+    "image_url" | "sort_order"
   >[];
 };
 
-export async function searchPropertiesAction(criteria: SearchCriteria) {
-  const supabase = createAdminClient();
+/**
+ * [ADMIN] Update Property Embedding
+ * Vectorizes the property's AI summary content for semantic search.
+ */
+export async function updatePropertyEmbeddingAction(propertyId: string) {
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
-  // Debug check for supabase client
-  const hasFrom = supabase ? Reflect.has(supabase, "from") : false;
+  try {
+    const { data: property, error: fetchErr } = await supabase
+      .from("properties")
+      .select("ai_summary_content, tenant_id")
+      .eq("id", propertyId)
+      .single();
 
-  if (!supabase || typeof supabase.from !== "function") {
-    console.error(
-      "Critical: Supabase client is invalid in searchPropertiesAction",
-      {
-        isDefined: !!supabase,
-        type: typeof supabase,
-        hasFrom,
-      },
-    );
-    throw new Error("เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล");
+    if (fetchErr || !property) throw new Error("Property not found");
+    if (!property.ai_summary_content) return { success: false, message: "No AI content to vectorize" };
+
+    const vector = await generateEmbedding(property.ai_summary_content);
+    if (!vector) throw new Error("Failed to generate embedding");
+
+    const { error: updateErr } = await supabase
+      .from("properties")
+      .update({ embedding: vector } as any)
+      .eq("id", propertyId);
+
+    if (updateErr) throw new Error(updateErr.message);
+    return { success: true };
+  } catch (error: any) {
+    console.error("updatePropertyEmbeddingAction error:", error);
+    return { success: false, error: error.message };
   }
+}
 
-  const sessionToken = uuidv4();
+/**
+ * [ADMIN] Run Smart Match for Lead (Vector Search)
+ * Finds matches using semantic similarity.
+ */
+export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
 
-  // 1. Log the search session
+  try {
+    const { data: lead, error: leadErr } = await supabase
+      .from("leads")
+      .select("*")
+      .eq("id", leadId)
+      .single();
+
+    if (leadErr || !lead) throw new Error("Lead not found");
+
+    const requirementText = constructLeadRequirementText(lead);
+    const vector = await generateEmbedding(requirementText);
+    if (!vector) throw new Error("Failed to generate lead embedding");
+
+    await supabase.from("leads").update({ embedding: vector } as any).eq("id", leadId);
+
+    const { data: matches, error: matchErr } = await supabase.rpc("match_properties" as any, {
+      query_embedding: vector as any,
+      match_threshold: 0.5,
+      match_count: 6,
+      p_tenant_id: lead.tenant_id
+    });
+
+    if (matchErr) throw new Error(matchErr.message);
+
+    const filteredMatches = ((matches as any) || []).filter((m: any) => {
+      if (lead.budget_max && m.price > lead.budget_max * 1.15) return false;
+      return true;
+    });
+
+    if (notifyAgent && filteredMatches.length > 0) {
+      const topMatch = filteredMatches[0];
+      if (topMatch.similarity > 0.85) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, line_user_id")
+          .eq("id", lead.assigned_to || "")
+          .single();
+
+        if (profile?.line_user_id) {
+          await notifyAgentOfSmartMatch({
+            lineUserId: profile.line_user_id,
+            agentName: profile.full_name || "Agent",
+            leadName: lead.full_name || "New Lead",
+            propertyTitle: topMatch.title,
+            matchScore: topMatch.similarity,
+          });
+        }
+      }
+    }
+
+    return { success: true, matches: filteredMatches, requirementSummary: requirementText, error: null };
+  } catch (error: any) {
+    console.error("runSmartMatchAction error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * [PUBLIC] Search Properties for Wizard (FULL RESTORATION)
+ * The legendary wizard search with sessions and heuristics.
+ */
+export async function searchPropertiesAction(criteria: SearchCriteria) {
+  const supabase = await createClient();
+
+  // 1. Create Search Session for analytics
   const { data: session, error: sessionError } = await supabase
     .from("property_search_sessions")
     .insert({
-      session_token: sessionToken,
       purpose: criteria.purpose,
       budget_min: criteria.budgetMin,
       budget_max: criteria.budgetMax,
@@ -50,17 +139,14 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
     .select()
     .single();
 
-  if (sessionError) {
-    console.error("Error creating search session:", sessionError);
-  }
+  if (sessionError) console.error("Error creating search session:", sessionError);
 
   // 2. Fetch properties
-  // Basic filtering to reduce result set before scoring
   let query = supabase
     .from("properties")
-    .select(
-      "id, slug, title, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, property_images(*)",
-    );
+    .select("id, slug, title, title_en, title_cn, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(*)")
+    .eq("status", "ACTIVE")
+    .is("deleted_at", null);
 
   if (criteria.purpose === "BUY" || criteria.purpose === "INVEST") {
     query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
@@ -68,119 +154,62 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
     query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
   }
 
-  // active properties only
-  query = query.eq("status", "ACTIVE");
-
-  // Property Type Filter
+  // Filter Type
   if (criteria.propertyType) {
     query = query.eq("property_type", criteria.propertyType);
   }
 
-  const { data: properties, error: propertiesError } = await query.limit(100); // Increased limit since we'll filter after
+  const { data: properties, error: propertiesError } = await query.limit(100);
+  if (propertiesError) throw new Error(mapDbError(propertiesError) || "Failed to fetch properties");
 
-  if (propertiesError) {
-    throw new Error(mapDbError(propertiesError) || "Failed to fetch properties for matching");
-  }
-
-  // Filter by budget range (post-query to handle complex OR logic correctly)
+  // 3. Post-query Budget Filter
   let filteredProperties = properties || [];
-
   if (criteria.budgetMin !== undefined || criteria.budgetMax !== undefined) {
-    filteredProperties = filteredProperties.filter((p) => {
-      let price: number | null = null;
-
-      if (criteria.purpose === "BUY" || criteria.purpose === "INVEST") {
-        // Use price or original_price for buying
-        price = p.price || p.original_price || null;
-      } else if (criteria.purpose === "RENT") {
-        // Use rental_price or original_rental_price for renting
-        price = p.rental_price || p.original_rental_price || null;
-      }
-
-      // If no price available, exclude this property
-      if (price === null) return false;
-
-      // Check if price is within budget range
-      const minCheck =
-        criteria.budgetMin === undefined ||
-        criteria.budgetMin === 0 ||
-        price >= criteria.budgetMin;
-      const maxCheck =
-        criteria.budgetMax === undefined ||
-        criteria.budgetMax >= 999999999 ||
-        price <= criteria.budgetMax;
-
+    filteredProperties = filteredProperties.filter((p: any) => {
+      let price = criteria.purpose === "RENT" ? p.rental_price || p.original_rental_price : p.price || p.original_price;
+      if (price === null || price === undefined) return false;
+      const minCheck = criteria.budgetMin === undefined || criteria.budgetMin === 0 || price >= criteria.budgetMin;
+      const maxCheck = criteria.budgetMax === undefined || criteria.budgetMax >= 999999999 || price <= criteria.budgetMax;
       return minCheck && maxCheck;
     });
   }
 
-  // 3. Calculate scores and match
+  // 4. Score and Build Results
   const results: PropertyMatch[] = (filteredProperties || [])
-    .map((p) => {
-      // Safe cast to our extended type
+    .map((p: any) => {
       const prop = p as unknown as PropertyWithImages;
-      const { score, reasons, scoreBreakdown } = calculateMatchScore(
-        prop,
-        criteria,
-      );
-      const imageUrl =
-        prop.property_images?.[0]?.image_url ||
-        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80";
+      const { score, reasons, scoreBreakdown } = calculateMatchScore(prop, criteria);
+      const imageUrl = prop.property_images?.[0]?.image_url || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80";
 
-      // Heuristic for commute time
-      let commuteTime = 35; // Base time for BKK
+      // Commute Time Heuristic (Legendary)
+      let commuteTime = 35;
       if (prop.popular_area === criteria.area) commuteTime -= 15;
       if (prop.near_transit) commuteTime -= 10;
-      // Add a small jitter
       commuteTime += Math.floor(Math.random() * 5) - 2;
       if (commuteTime < 10) commuteTime = 10;
 
-      // Select correct price based on purpose
-      let primaryPrice =
-        criteria.purpose === "RENT"
-          ? prop.rental_price || prop.original_rental_price
-          : prop.price || prop.original_price;
+      // Price Formatting Logic (Office aware)
+      let primaryPrice = criteria.purpose === "RENT" ? prop.rental_price || prop.original_rental_price : prop.price || prop.original_price;
       let secondaryPrice: number | undefined;
       let isSqmPrice = false;
 
-      // Office-specific logic: Total vs SQM override using helper
-      const officePrice = getOfficePrice(prop);
+      const officePrice = getOfficePrice(prop as any);
       if (officePrice?.isCalculated) {
         primaryPrice = officePrice.totalPrice ?? null;
         secondaryPrice = officePrice.sqmPrice || undefined;
-        isSqmPrice = false;
       } else if (prop.property_type === "OFFICE_BUILDING" && !primaryPrice) {
-        // Fallback for office if we only have SQM but no size (can't calculate total)
-        const sqmPrice =
-          criteria.purpose === "RENT"
-            ? prop.rent_price_per_sqm
-            : prop.price_per_sqm;
-        if (sqmPrice) {
-          primaryPrice = sqmPrice;
-          isSqmPrice = true;
-        }
+        const sqmPrice = criteria.purpose === "RENT" ? prop.rent_price_per_sqm : prop.price_per_sqm;
+        if (sqmPrice) { primaryPrice = sqmPrice; isSqmPrice = true; }
       }
 
-      // Secondary fallback if primary is still missing (Cross-purpose fallback)
       if (!primaryPrice) {
-        primaryPrice =
-          criteria.purpose === "RENT"
-            ? prop.price || prop.original_price
-            : prop.rental_price || prop.original_rental_price;
+         primaryPrice = criteria.purpose === "RENT" ? prop.price || prop.original_price : prop.rental_price || prop.original_rental_price;
       }
 
-      // Strictly for actual discounts (Current < Original)
       let originalDisplayPrice: number | undefined;
-      const rawOriginal =
-        criteria.purpose === "RENT"
-          ? prop.original_rental_price
-          : prop.original_price;
-
-      // Disable strikethrough for offices as original total price often gets mis-compared with current sqm price
-      if (prop.property_type !== "OFFICE_BUILDING") {
-        if (rawOriginal && primaryPrice && rawOriginal > primaryPrice) {
-          originalDisplayPrice = rawOriginal;
-        }
+      const rawOriginal = criteria.purpose === "RENT" ? prop.original_rental_price : prop.original_price;
+      if (prop.property_type !== "OFFICE_BUILDING" && rawOriginal && primaryPrice && rawOriginal > primaryPrice) {
+        originalDisplayPrice = rawOriginal;
       }
 
       return {
@@ -205,12 +234,12 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
         property_type: prop.property_type,
       } as PropertyMatch;
     })
-    .filter((m: PropertyMatch) => m.match_score > 30) // Only show semi-relevant matches
+    .filter((m: PropertyMatch) => m.match_score > 30)
     .sort((a: PropertyMatch, b: PropertyMatch) => b.match_score - a.match_score)
-    .slice(0, 5); // Top 5
+    .slice(0, 5);
 
-  // 4. Save results to matches table
-  if (session) {
+  // 5. Save results for analytics
+  if (session && results.length > 0) {
     const matchInserts = results.map((m, idx) => ({
       session_id: session.id,
       property_id: m.id,
@@ -218,18 +247,16 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
       match_reasons: m.match_reasons,
       rank: idx + 1,
     }));
-
-    if (matchInserts.length > 0) {
-      await supabase.from("property_matches").insert(matchInserts);
-    }
+    await supabase.from("property_matches").insert(matchInserts);
   }
 
-  return {
-    sessionId: session?.id,
-    matches: results,
-  };
+  return { sessionId: session?.id, matches: results };
 }
 
+/**
+ * [PUBLIC] Create Lead from Match Wizard (FULL RESTORATION)
+ * Handles lead creation and conversion linking.
+ */
 export async function createLeadFromMatchAction(data: {
   sessionId: string;
   propertyId: string;
@@ -238,7 +265,7 @@ export async function createLeadFromMatchAction(data: {
   email?: string;
   lineId?: string;
 }) {
-  const supabase = createAdminClient();
+  const supabase = await createAdminClient();
 
   // 1. Create Lead
   const { data: lead, error: leadError } = await supabase
@@ -250,16 +277,12 @@ export async function createLeadFromMatchAction(data: {
       lead_type: "INDIVIDUAL",
       source: "WEBSITE",
       stage: "NEW",
-      note: `Auto-generated from Smart Match Wizard. SessionID: ${
-        data.sessionId
-      }\nLine ID: ${data.lineId || "-"}`,
+      note: `Auto-generated from Smart Match Wizard. SessionID: ${data.sessionId}\nLine ID: ${data.lineId || "-"}`,
     })
     .select()
     .single();
 
-  if (leadError) {
-    throw new Error(mapDbError(leadError));
-  }
+  if (leadError) throw new Error(mapDbError(leadError));
 
   // 2. Link with search session
   await supabase

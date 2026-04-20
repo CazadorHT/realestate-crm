@@ -94,7 +94,7 @@ async function runContractExpiryCheck() {
     const { data: expiringContracts, error } = await supabase
       .from("rental_contracts")
       .select(
-        "id, deal_id, end_date, start_date, rent_price, deals(property_id, properties(id, title, property_images(image_url, is_cover)))",
+        "id, deal_id, end_date, start_date, rent_price, deals(property_id, properties(id, title, images))",
       )
       .eq("status", "ACTIVE")
       .not("end_date", "is", null)
@@ -121,13 +121,15 @@ async function runContractExpiryCheck() {
       );
 
       if (shouldNotify) {
-        const property = (contract.deals as unknown as { properties: { id: string; title: string | null; property_images: { image_url: string; is_cover: boolean }[] } | null })?.properties;
+        const property = (contract.deals as unknown as { properties: { id: string; title: string | null; images: any[] } | null })?.properties;
         const propertyTitle = property?.title || "ทรัพย์สิน";
         const propertyId = property?.id;
 
-        const images = property?.property_images || [];
+        const images = (property?.images as any[]) || [];
         const coverImageUrl =
+          images.find((img) => img.is_cover)?.url ||
           images.find((img) => img.is_cover)?.image_url ||
+          images[0]?.url ||
           images[0]?.image_url;
 
         let color = "#1E88E5";
@@ -380,7 +382,7 @@ async function runRentNotifications(startTime: number) {
       .select(
         `
         *,
-        properties (*, property_images (*)),
+        properties (*),
         line_groups (group_id, group_name),
         rent_notification_history (status, created_at, retry_count)
       `,

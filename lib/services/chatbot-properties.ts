@@ -1,5 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { 
+  getSafeImages, 
+  getCoverImage, 
+  getSafeNearbyPlaces, 
+  getSafeNearbyTransits 
+} from "@/lib/property-hardened-utils";
 
 export type PropertyRow = {
   id: string;
@@ -33,8 +39,9 @@ export type PropertyRow = {
   transit_distance_meters: number | null;
   google_maps_link: string | null;
 
-  property_images?: Array<{
-    image_url: string;
+  images?: Array<{
+    url: string;
+    image_url?: string;
     storage_path: string | null;
     is_cover: boolean | null;
     sort_order: number | null;
@@ -48,17 +55,6 @@ export type PropertyRow = {
   }> | null;
 };
 
-function pickCoverImage(
-  images: PropertyRow["property_images"] | undefined | null,
-) {
-  if (!images || images.length === 0) return null;
-  const cover = images.find((img) => img.is_cover) || images[0];
-  if (!cover) return null;
-  if (cover.image_url && cover.image_url.startsWith("http"))
-    return cover.image_url;
-  if (cover.storage_path) return getPublicImageUrl(cover.storage_path);
-  return cover.image_url ?? null;
-}
 
 function buildLocation(row: PropertyRow) {
   const parts = [
@@ -104,7 +100,7 @@ export async function searchPropertiesForChatbot(
       bedrooms, meta_keywords, bathrooms, size_sqm, parking_slots, floor,
       created_at, updated_at, listing_type, popular_area, province, district,
       subdistrict, address_line1,
-      property_images (image_url, storage_path, is_cover, sort_order),
+      images,
       property_features (features (id, name, icon_key)),
       near_transit, transit_type, transit_station_name, transit_distance_meters, google_maps_link
     `,
@@ -366,7 +362,8 @@ export async function searchPropertiesForChatbot(
       district: r.district,
       subdistrict: r.subdistrict,
       address_line1: r.address_line1,
-      image_url: pickCoverImage(r.property_images),
+      image_url: getCoverImage(r.images),
+      images: getSafeImages(r.images),
       location: buildLocation(r),
       features: (r.property_features || [])
         .map((pf) => pf.features)
@@ -376,6 +373,8 @@ export async function searchPropertiesForChatbot(
       transit_station_name: r.transit_station_name,
       transit_distance_meters: r.transit_distance_meters,
       google_maps_link: r.google_maps_link,
+      nearby_places: getSafeNearbyPlaces((r as any).nearby_places),
+      nearby_transits: getSafeNearbyTransits((r as any).nearby_transits),
     };
   });
 }

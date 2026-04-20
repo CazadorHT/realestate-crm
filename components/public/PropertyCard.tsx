@@ -14,6 +14,7 @@ import { toggleFavoriteId, readFavoriteIds } from "@/lib/favorite-store";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
+import { useRouter } from "next/navigation";
 
 // New Sub-components
 import { PropertyCardImage } from "./property-card/PropertyCardImage";
@@ -23,7 +24,8 @@ import { PropertyCardFeatures } from "./property-card/PropertyCardFeatures";
 import { PropertyCardFooter } from "./property-card/PropertyCardFooter";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
-import { FaFire,  } from "react-icons/fa6";
+import { getEffectivePrice } from "@/lib/property-hardened-utils";
+import { FaFire } from "react-icons/fa6";
 
 // Re-using types or defining subset
 export type PropertyCardProps = {
@@ -52,7 +54,7 @@ export type PropertyCardProps = {
   updated_at: string;
   listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
   image_url?: string | null;
-  images?: string[] | null;
+  images?: (string | { url: string })[] | null;
   location?: string | null;
   size_sqm?: number | null;
   parking_slots?: number | null;
@@ -99,6 +101,8 @@ export function PropertyCard({
   const { t, language } = useLanguage();
   const [isInCompare, setIsInCompare] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const router = useRouter();
+  const prefetchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Sync with compare store
   useEffect(() => {
@@ -159,7 +163,7 @@ export function PropertyCard({
         content_ids: [property.id],
         content_name: property.title,
         content_type: "product",
-        value: property.listing_type === "RENT" ? property.rental_price : property.price,
+        value: prices.rentalPrice || prices.salePrice,
         currency: "THB",
       });
       updateAIScore(30);
@@ -174,11 +178,13 @@ export function PropertyCard({
     .filter(Boolean)
     .join(" • ");
 
+  const prices = getEffectivePrice(property);
+
   // Comparison Logic
   const comparisonBadges = [];
   if (compareWith) {
     const currentPrice =
-      property.listing_type === "RENT" ? property.rental_price : property.price;
+      property.listing_type === "RENT" ? prices.rentalPrice : prices.salePrice;
     const comparePrice = compareWith.price;
 
     if (currentPrice && comparePrice && currentPrice < comparePrice) {
@@ -215,9 +221,9 @@ export function PropertyCard({
   }
 
   const isHotDeal = 
-    (property.original_price && property.price && property.price < property.original_price) ||
-    (property.original_rental_price && property.rental_price && property.rental_price < property.original_rental_price) ||
-    property.meta_keywords?.includes("Hot Deal") || property.meta_keywords?.includes("HotDeal") || property.meta_keywords?.includes("hot deal");
+    prices.hasSaleDiscount || 
+    prices.hasRentalDiscount || 
+    property.meta_keywords?.some(k => k.toLowerCase().includes("hot deal") || k.toLowerCase().includes("hotdeal"));
 
   const cardRef = useRef<HTMLDivElement>(null);
   const hasTrackedImpression = useRef(false);
@@ -263,8 +269,26 @@ export function PropertyCard({
     updateAIScore(5);
   }, [property.id, property.title, property.property_type, property.listing_type, property.price, property.rental_price]);
 
+  // Smart Prefetch: Trigger only on intentional hover (100ms)
+  const handleMouseEnter = () => {
+    prefetchTimerRef.current = setTimeout(() => {
+      router.prefetch(`/properties/${property.slug || property.id}`);
+    }, 100);
+  };
+
+  const handleMouseLeave = () => {
+    if (prefetchTimerRef.current) {
+      clearTimeout(prefetchTimerRef.current);
+    }
+  };
+
   return (
-    <div ref={cardRef} className="group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[360px] md:max-w-none mx-auto bg-white shadow-md h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10 cursor-pointer">
+    <div 
+      ref={cardRef} 
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[360px] md:max-w-none mx-auto bg-white shadow-md h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10 cursor-pointer"
+    >
       <style jsx global>{`
         @keyframes fire-flicker {
           0% { transform: scale(1) rotate(-12deg) translateZ(0); }
@@ -292,6 +316,7 @@ export function PropertyCard({
       )}
       <Link
         href={`/properties/${property.slug || property.id}`}
+        prefetch={false}
         className="flex flex-col h-full focus:outline-none overflow-hidden rounded-2xl sm:rounded-2xl md:rounded-3xl"
         aria-label={`${t("common.view_all")} ${property.title}`}
         onClick={handleCardClick}
@@ -299,6 +324,7 @@ export function PropertyCard({
         <PropertyCardImage
           property={property}
           priority={priority}
+          isHotDeal={isHotDeal}
           isFavorite={isFavorite}
           isAnimating={isAnimating}
           onFavoriteClick={handleFavoriteClick}

@@ -1,7 +1,7 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { mapDbError } from "@/lib/db-error";
-import type { LeadRow, LeadWithActivities } from "./types";
+import type { LeadRow, LeadWithActivities, LeadWithJoins } from "./types";
 import type { Database } from "@/lib/database.types";
 
 type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
@@ -68,7 +68,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   if (error) throw new Error(mapDbError(error));
 
-  const leads = (data || []) as LeadRow[];
+  const leads = (data || []) as unknown as LeadWithJoins[];
   const leadIds = leads.map((l) => l.id);
 
   // fetch deals for these leads and compute counts client-side
@@ -93,7 +93,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   }));
 
   return {
-    data: leadsWithCounts as LeadRow[],
+    data: leadsWithCounts as LeadWithJoins[],
     count: count ?? 0,
     page,
     pageSize,
@@ -157,10 +157,10 @@ export async function getLeadsForKanbanQuery() {
 
   if (error) throw new Error(mapDbError(error));
 
-  return (data ?? []) as LeadRow[];
+  return (data ?? []) as unknown as LeadWithJoins[];
 }
 // ใช้สำหรับแสดง leads รายเดียว
-export async function getLeadByIdQuery(id: string): Promise<LeadRow | null> {
+export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null> {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
   const config = await getSystemConfig();
@@ -181,7 +181,7 @@ export async function getLeadByIdQuery(id: string): Promise<LeadRow | null> {
     if (error && "code" in error && error.code === "PGRST116") return null;
     throw new Error(error.message);
   }
-  return data;
+  return data as unknown as LeadWithJoins;
 }
 // ใช้สำหรับแสดง leads พร้อมกับ activities
 export async function getLeadWithActivitiesQuery(

@@ -136,19 +136,20 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
     type PropertyWithImages = {
       id: string;
       title: string | null;
-      property_images: { image_url: string }[];
+      images: Array<{ url: string; image_url?: string; is_cover: boolean | null }>;
     };
 
     return (properties as unknown as PropertyWithImages[])
       .filter((p: PropertyWithImages) => !existingIds.has(p.id))
-      .map((p: PropertyWithImages) => ({
-        id: p.id,
-        title: p.title || "Unknown Property",
-        image:
-          p.property_images && p.property_images.length > 0
-            ? p.property_images[0].image_url
-            : null,
-      }));
+      .map((p: PropertyWithImages) => {
+        const imagesArr = p.images || [];
+        const cover = imagesArr.find((img) => img.is_cover) || imagesArr[0];
+        return {
+          id: p.id,
+          title: p.title || "Unknown Property",
+          image: cover?.url || cover?.image_url || null,
+        };
+      });
   }
 
   return (data as any[] || []).map((p: { id: string; title: string; image_url: string | null }) => ({

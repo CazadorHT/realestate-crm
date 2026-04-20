@@ -106,8 +106,9 @@ export function RecentPropertiesTable({
                           </div>
                         )}
                         {(() => {
-                          const coverImg = property.property_images?.find((img: any) => img.is_cover) || property.property_images?.[0];
-                          const imageUrl = coverImg?.image_url;
+                          const imagesArr = (property.images as any[]) || [];
+                          const coverImg = imagesArr.find((img: any) => img.is_cover) || imagesArr[0];
+                          const imageUrl = coverImg?.url || coverImg?.image_url;
 
                           return imageUrl ? (
                             <Dialog>
@@ -311,8 +312,9 @@ export function RecentPropertiesTable({
                     </div>
                   )}
                   {(() => {
-                    const coverImg = property.property_images?.find((img: any) => img.is_cover) || property.property_images?.[0];
-                    const imageUrl = coverImg?.image_url;
+                    const imagesArr = (property.images as any[]) || [];
+                    const coverImg = imagesArr.find((img: any) => img.is_cover) || imagesArr[0];
+                    const imageUrl = coverImg?.url || coverImg?.image_url;
 
                     return imageUrl ? (
                       <Image

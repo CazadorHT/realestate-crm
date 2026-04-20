@@ -1,5 +1,6 @@
+import type { PropertyRow, NearbyItem } from "@/features/properties/types";
+import { getSafeImages, getSafeNearbyPlaces } from "@/lib/property-hardened-utils";
 import { type PropertyFormValues } from "@/features/properties/schema";
-import type { PropertyRow } from "@/features/properties/types";
 
 export const EMPTY_VALUES: PropertyFormValues = {
   title: "",
@@ -304,8 +305,10 @@ export const FIELD_LABELS: Record<keyof PropertyFormValues | string, string> = {
 
 // Helper: Convert DB row to form values
 export function mapRowToFormValues(
-  row: PropertyRow,
-  images?: string[],
+  row: PropertyRow & {
+    property_agents?: { agent_id: string }[];
+    property_features?: { feature_id: string }[];
+  },
 ): PropertyFormValues {
   const structuredData = row.structured_data as unknown as {
     is_co_agent?: boolean;
@@ -319,11 +322,11 @@ export function mapRowToFormValues(
 
   return {
     title: row.title ?? "",
-    title_en: (row as any).title_en ?? "",
-    title_cn: (row as any).title_cn ?? "",
+    title_en: row.title_en || row.title || "",
+    title_cn: row.title_cn || "",
     description: row.description ?? undefined,
-    description_en: (row as any).description_en ?? "",
-    description_cn: (row as any).description_cn ?? "",
+    description_en: row.description_en || row.description || "",
+    description_cn: row.description_cn || "",
     property_type: row.property_type ?? "HOUSE",
     listing_type: row.listing_type ?? "SALE",
     status: row.status ?? "DRAFT",
@@ -342,8 +345,8 @@ export function mapRowToFormValues(
     zoning: row.zoning ?? undefined,
     currency: row.currency ?? "THB",
     address_line1: row.address_line1 ?? "",
-    address_line1_en: (row as any).address_line1_en ?? "",
-    address_line1_cn: (row as any).address_line1_cn ?? "",
+    address_line1_en: row.address_line1_en || row.address_line1 || "",
+    address_line1_cn: row.address_line1_cn || "",
     province: row.province ?? "",
     district: row.district ?? "",
     subdistrict: row.subdistrict ?? "",
@@ -353,14 +356,14 @@ export function mapRowToFormValues(
     owner_id: row.owner_id ?? undefined,
     property_source: row.property_source ?? "",
     assigned_to: row.assigned_to ?? undefined,
-    agent_ids: (row as any).property_agents?.map((a: any) => a.agent_id) ?? [],
-    images: images ?? [],
+    agent_ids: row.property_agents?.map((a) => a.agent_id) ?? [],
+    images: getSafeImages(row.images).map((img) => img.storage_path || img.url),
     commission_sale_percentage: row.commission_sale_percentage ?? 3,
     commission_rent_months: row.commission_rent_months ?? 1,
     near_transit: row.near_transit ?? false,
     transit_station_name: row.transit_station_name ?? "",
-    transit_station_name_en: (row as any).transit_station_name_en ?? "",
-    transit_station_name_cn: (row as any).transit_station_name_cn ?? "",
+    transit_station_name_en: row.transit_station_name_en || row.transit_station_name || "",
+    transit_station_name_cn: row.transit_station_name_cn || "",
     transit_type: (row.transit_type as any) ?? "BTS",
     transit_distance_meters: row.transit_distance_meters ?? undefined,
     is_co_agent: row.is_co_agent ?? structuredData?.is_co_agent ?? false,
@@ -427,10 +430,9 @@ export function mapRowToFormValues(
     ),
     is_high_floor: (row.meta_keywords || []).includes("High Floor"),
     is_never_lived_in: (row.meta_keywords || []).includes("Never Lived In"),
-    feature_ids:
-      (row as any).property_features?.map((f: any) => f.feature_id) ?? [],
-    nearby_places: (row.nearby_places as any[]) || [],
-    nearby_transits: ((row as any).nearby_transits as any[]) || [],
+    feature_ids: row.property_features?.map((f) => f.feature_id) ?? [],
+    nearby_places: getSafeNearbyPlaces(row.nearby_places) as any,
+    nearby_transits: (row.nearby_transits as any[]) || [],
     requires_ai_review: row.requires_ai_review ?? false,
     ceiling_height: row.ceiling_height ?? undefined,
     electricity_charge: row.electricity_charge ?? "",
@@ -444,10 +446,10 @@ export function mapRowToFormValues(
     has_raised_floor: row.has_raised_floor ?? false,
 
     // Stock Management
-    total_units: (row as any).total_units ?? 1,
-    sold_units: (row as any).sold_units ?? 0,
-    
+    total_units: row.total_units ?? 1,
+    sold_units: row.sold_units ?? 0,
+
     // Versioning
-    version: (row as any).version ?? 1,
+    version: row.version ?? 1,
   };
 }

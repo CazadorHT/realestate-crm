@@ -26,6 +26,12 @@ export const publicPropertyFilterSchema = z.object({
   ids: z.array(z.string()).optional(),
   filter: z.enum(["hot_deals", "all"]).default("all").optional(),
   limit: z.coerce.number().default(60).optional(),
+  // Boolean filters
+  nearTrain: z.coerce.boolean().optional(),
+  petFriendly: z.coerce.boolean().optional(),
+  fullyFurnished: z.coerce.boolean().optional(),
+  isForeigner: z.coerce.boolean().optional(),
+  companyRegistered: z.coerce.boolean().optional(),
 });
 
 export const inquiryLeadSchema = z.object({

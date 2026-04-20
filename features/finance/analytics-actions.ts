@@ -3,6 +3,8 @@
 import { requireAuthContext, assertAdminOrManager, authzFail } from "@/lib/authz";
 import { FinanceMath } from "@/lib/finance/precision";
 import { generateExcelBuffer, generateMultiSheetExcelBuffer, ExcelColumn } from "@/lib/excel-export";
+import { Database } from "@/lib/database.types";
+import { CommissionStatus } from "./types";
 
 export type ExportActionResponse = {
   success: boolean;
@@ -142,6 +144,31 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
 }
 
 /**
+ * Deep type for Yearly Finance Export to prevent 'any' in result mapping
+ */
+type ExportFinanceDealRow = {
+  id: string;
+  closed_at: string | null;
+  commission_amount: number | null;
+  property: { title: string } | null;
+  commissions: {
+    amount: number;
+    status: CommissionStatus;
+    wht_amount: number;
+    net_amount: number;
+    agent: {
+      full_name: string | null;
+      tax_id: string | null;
+      tax_address: string | null;
+    } | null;
+    adjustments: {
+      amount: number;
+      description: string;
+    }[];
+  }[];
+};
+
+/**
  * Exports a full yearly financial report to Excel (Cross-branch supported).
  */
 export async function exportYearlyFinanceAction(year?: number): Promise<ExportActionResponse> {
@@ -182,12 +209,12 @@ export async function exportYearlyFinanceAction(year?: number): Promise<ExportAc
     const whtPaidData: Record<string, unknown>[] = [];
     const whtReadyData: Record<string, unknown>[] = [];
 
-    (data || []).forEach((deal) => {
-      const commissions = (deal.commissions || []) as any[];
-      const totalPayouts = commissions.reduce((acc: number, c: any) => acc + (Number(c.amount) || 0), 0);
+    (data as unknown as ExportFinanceDealRow[] || []).forEach((deal) => {
+      const commissions = (deal.commissions || []);
+      const totalPayouts = commissions.reduce((acc, c) => acc + (Number(c.amount) || 0), 0);
       
-      const allAdjustments = commissions.flatMap(c => (c.adjustments || []) as any[]);
-      const totalAdjustments = allAdjustments.reduce((acc: number, a: any) => acc + (Number(a.amount) || 0), 0);
+      const allAdjustments = commissions.flatMap(c => (c.adjustments || []));
+      const totalAdjustments = allAdjustments.reduce((acc, a) => acc + (Number(a.amount) || 0), 0);
       
       const revenue = Number(deal.commission_amount) || 0;
       

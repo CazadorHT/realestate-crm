@@ -1,11 +1,4 @@
-﻿"use client";
-
-import { MapPin } from "lucide-react";
-import { useEffect } from "react";
-import { LuMap } from "react-icons/lu";
-import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
-import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
-import { updateAIScore } from "@/lib/analytics-utils";
+import { PropertyMapClient } from "./PropertyMapClient";
 
 interface PropertyMapSectionProps {
   googleMapsLink: string | null;
@@ -14,130 +7,57 @@ interface PropertyMapSectionProps {
   language?: "th" | "en" | "cn";
 }
 
-export function PropertyMapSection({
-  googleMapsLink,
-  propertyId,
-  propertyTitle,
-  language: customLanguage,
-}: PropertyMapSectionProps) {
-  // Helper to extract location query from various Google Maps URL formats
-  const extractQuery = (url: string | null) => {
-    if (!url) return null;
-
-    // If it's not a URL (doesn't start with http), it's likely a raw address or place name
-    if (!url.startsWith("http")) return url;
-
+/**
+ * Server-Side Link Resolver
+ * Follows redirects for shortened Google Maps links to get the original 
+ * URL which contains query parameters for embedding.
+ */
+async function resolveGoogleMapsLink(url: string | null) {
+  if (!url) return null;
+  
+  // Only follow redirects for known shortened domains
+  if (
+    url.includes("goo.gl") ||
+    url.includes("maps.app.goo.gl") ||
+    url.includes("share.google")
+  ) {
     try {
-      // 1. Prioritize destination (daddr) if available to avoid showing directions/routes
-      const urlObj = new URL(url);
-      const daddr =
-        urlObj.searchParams.get("daddr") ||
-        urlObj.searchParams.get("destination");
-      if (daddr) return daddr;
-
-      // 2. Check for standard q= or query= parameters in standard URLs
-      const q =
-        urlObj.searchParams.get("q") || urlObj.searchParams.get("query");
-      if (q) return q;
-
-      // 2. Check for @LAT,LNG coordinates (Prioritize valid coordinates for precision)
-      const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
-      if (coordMatch) return `${coordMatch[1]},${coordMatch[2]}`;
-
-      // 3. Check for /place/ADDRESS/ pattern (Common in long URLs)
-      const placeMatch = url.match(/\/place\/([^\/]+)/);
-      if (placeMatch && placeMatch[1])
-        return decodeURIComponent(placeMatch[1]).replace(/\+/g, " ");
-
-      // 4. Check for /search/QUERY/ pattern
-
-      // 5. Shortened links (maps.app.goo.gl) - Cannot be parsed easily on client-side
-      // We return the URL and hope Google resolves it, but warn in documentation
-      return url;
+      // Use HEAD request to follow redirects without downloading content
+      const res = await fetch(url, {
+        method: "HEAD",
+        redirect: "follow",
+        next: { revalidate: 86400 }, // Cache resolution for 24 hours
+      });
+      return res.url;
     } catch (e) {
+      console.warn("Could not resolve shortened Google Maps link:", url);
       return url;
     }
-  };
+  }
+  return url;
+}
 
-  const { language: globalLanguage, t: globalT } = useLanguage();
-  const language = customLanguage || globalLanguage;
-
-  // Custom t function for language override
-  const t = (key: string) => {
-    if (!customLanguage) return globalT(key);
-    const dict = dictionaries[language as keyof typeof dictionaries] as any;
-    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
-  };
-
-  useEffect(() => {
-    try {
-      pushToDataLayer(GTM_EVENTS.VIEW_MAP, { 
-        has_link: !!googleMapsLink,
-        item_id: propertyId,
-        item_name: propertyTitle,
-      });
-    } catch (e) {}
-  }, [googleMapsLink]);
-
-  const locationQuery = extractQuery(googleMapsLink);
-  const embedUrl = locationQuery
-    ? `https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`
-    : null;
+/**
+ * Property Map Section (Server Component)
+ * Handles link resolution and passes data to the client-side viewer.
+ */
+export async function PropertyMapSection({
+  googleMapsLink: rawLink,
+  propertyId,
+  propertyTitle,
+  language,
+}: PropertyMapSectionProps) {
+  // Resolve link on server to avoid client-side CORS issues
+  const googleMapsLink = await resolveGoogleMapsLink(rawLink);
 
   return (
-    <section>
-      <h3 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
-        <LuMap className="w-5 h-5 text-blue-600" /> {t("property_map.title")}
-      </h3>
-
-      <div className="space-y-4">
-        <div className="w-full h-[300px] md:h-[450px] bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 relative group">
-          {googleMapsLink && embedUrl ? (
-            <iframe
-              width="100%"
-              height="100%"
-              frameBorder="0"
-              scrolling="no"
-              marginHeight={0}
-              marginWidth={0}
-              src={embedUrl}
-              className="grayscale-[0.2] contrast-[1.1] hover:grayscale-0 transition-all duration-700"
-              title="Property Location"
-            />
-          ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 space-y-2">
-              <MapPin className="h-10 w-10 text-slate-300" />
-              <p className="text-sm">{t("property_map.no_data")}</p>
-            </div>
-          )}
-        </div>
-
-        {googleMapsLink && (
-          <div className="flex justify-center">
-            <a
-              href={googleMapsLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                try {
-                  pushToDataLayer(GTM_EVENTS.CLICK_MAP_EXTERNAL, { 
-                    url: googleMapsLink,
-                    item_id: propertyId,
-                    item_name: propertyTitle,
-                  });
-                  updateAIScore(10);
-                } catch (e) {}
-              }}
-              className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-6 py-2.5 rounded-full text-sm font-semibold transition-all border border-slate-200 shadow-sm hover:shadow-md cursor-pointer group"
-            >
-              <MapPin className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
-              {t("property_map.open_google_maps")}
-            </a>
-          </div>
-        )}
-      </div>
+    <section id="map-section" className="scroll-mt-20">
+      <PropertyMapClient 
+        googleMapsLink={googleMapsLink}
+        propertyId={propertyId}
+        propertyTitle={propertyTitle}
+        language={language}
+      />
     </section>
   );
 }
-
-

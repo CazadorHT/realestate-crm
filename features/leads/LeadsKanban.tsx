@@ -26,17 +26,17 @@ import { Badge } from "@/components/ui/badge";
 import { UserCircle, Phone, Mail, DollarSign } from "lucide-react";
 import { LEAD_STAGES } from "@/lib/validations/lead";
 import { LEAD_STAGE_LABELS } from "./labels";
-import type { LeadRow } from "./types";
+import type { LeadWithJoins, LeadRow } from "./types";
 import { updateLeadStageAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
 interface KanbanProps {
-  initialLeads: LeadRow[];
+  initialLeads: LeadWithJoins[];
 }
 
 export function LeadsKanban({ initialLeads }: KanbanProps) {
-  const [leads, setLeads] = React.useState<LeadRow[]>(initialLeads);
+  const [leads, setLeads] = React.useState<LeadWithJoins[]>(initialLeads);
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const router = useRouter();
 
@@ -171,7 +171,7 @@ const KanbanColumn = React.memo(function KanbanColumn({
 }: {
   id: string;
   title: string;
-  leads: LeadRow[];
+  leads: LeadWithJoins[];
 }) {
   const { setNodeRef } = useSortable({ id });
 
@@ -215,7 +215,7 @@ const KanbanColumn = React.memo(function KanbanColumn({
 const SortableLeadCard = React.memo(function SortableLeadCard({
   lead,
 }: {
-  lead: LeadRow;
+  lead: LeadWithJoins;
 }) {
   const {
     attributes,
@@ -243,7 +243,7 @@ const LeadCard = React.memo(function LeadCard({
   lead,
   isOverlay,
 }: {
-  lead: LeadRow;
+  lead: LeadWithJoins;
   isOverlay?: boolean;
 }) {
   const router = useRouter();
@@ -261,12 +261,12 @@ const LeadCard = React.memo(function LeadCard({
             <span className="font-semibold text-sm line-clamp-1">
               {lead.full_name}
             </span>
-            {(lead as any).ai_score > 0 && (
+            {(lead.ai_score ?? 0) > 0 && (
               <Badge 
                 variant="secondary" 
-                className={`text-[11px] h-5 px-1.5 ${(lead as any).ai_score >= 50 ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
+                className={`text-[11px] h-5 px-1.5 ${(lead.ai_score ?? 0) >= 50 ? 'bg-orange-100 text-orange-600 border-orange-200' : 'bg-blue-50 text-blue-600 border-blue-100'}`}
               >
-                🔥 {(lead as any).ai_score}
+                🔥 {lead.ai_score}
               </Badge>
             )}
           </div>
@@ -309,9 +309,9 @@ const LeadCard = React.memo(function LeadCard({
         <div className="pt-2 border-t border-slate-100 flex flex-wrap gap-2 justify-between items-center text-[11px] text-muted-foreground">
           <div className="flex items-center gap-2">
             <span>{new Date(lead.created_at).toLocaleDateString("th-TH")}</span>
-            {(lead as any).tenants?.name && (
+            {lead.tenants?.name && (
               <Badge variant="outline" className="text-[11px] h-5 px-1.5 bg-slate-50 text-slate-500 border-slate-200">
-                {(lead as any).tenants.name}
+                {lead.tenants.name}
               </Badge>
             )}
           </div>

@@ -23,7 +23,7 @@ export async function getDealsByLeadId(
         original_price,
         rental_price,
         original_rental_price,
-        images:property_images(image_url, is_cover)
+        images
       )
     `,
     )
@@ -58,7 +58,7 @@ export async function getDealById(
         original_price,
         rental_price,
         original_rental_price,
-        images:property_images(image_url, is_cover)
+        images
       ),
       lead:leads (
         id,

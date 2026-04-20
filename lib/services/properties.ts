@@ -1,5 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import type { Database } from "@/lib/database.types";
+import { 
+  getSafeImages, 
+  getCoverImage, 
+  getSafeNearbyPlaces, 
+  getSafeNearbyTransits 
+} from "@/lib/property-hardened-utils";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 export type PropertyRow = {
@@ -48,11 +53,13 @@ export type PropertyRow = {
   is_pet_friendly: boolean | null;
   is_foreigner_quota: boolean | null;
   is_tax_registered: boolean | null;
+  is_hot_deal: boolean | null;
   nearby_places: any | null;
   nearby_transits: any | null;
 
-  property_images?: Array<{
-    image_url: string;
+  images?: Array<{
+    url: string;
+    image_url?: string;
     storage_path: string | null;
     is_cover: boolean | null;
     sort_order: number | null;
@@ -68,6 +75,24 @@ export type PropertyRow = {
   }> | null;
 };
 
+// 🛡️ Data Seal: Strictly Whitelisted Public Columns
+const PUBLIC_COLUMNS = `
+  id, slug, title, title_en, title_cn, description, description_en, description_cn,
+  property_type, price, rental_price, original_price, original_rental_price,
+  verified, min_contract_months, bedrooms, meta_keywords, bathrooms,
+  size_sqm, land_size_sqwah, parking_slots, floor, created_at, updated_at,
+  listing_type, popular_area, province, district, subdistrict,
+  address_line1, address_line1_en, address_line1_cn,
+  nearby_places, nearby_transits, images, is_hot_deal,
+  near_transit, transit_type, transit_station_name,
+  transit_station_name_en, transit_station_name_cn, transit_distance_meters,
+  google_maps_link, is_fully_furnished, is_bare_shell,
+  is_pet_friendly, is_foreigner_quota, is_tax_registered,
+  property_features (
+    features (id, name, name_en, name_cn, icon_key)
+  )
+`;
+
 function buildLocation(row: PropertyRow) {
   const parts = [
     row.address_line1,
@@ -75,50 +100,7 @@ function buildLocation(row: PropertyRow) {
     row.district,
     row.province,
   ].filter(Boolean);
-
   return parts.length > 0 ? parts.join(", ") : null;
-}
-
-function pickCoverImage(
-  images: PropertyRow["property_images"] | undefined | null,
-) {
-  if (!images || images.length === 0) return null;
-
-  const cover = images.find((img) => img.is_cover) || images[0];
-  if (!cover) return null;
-
-  if (cover.image_url && cover.image_url.startsWith("http")) {
-    return cover.image_url;
-  }
-
-  if (cover.storage_path) {
-    return getPublicImageUrl(cover.storage_path);
-  }
-
-  return cover.image_url ?? null;
-}
-
-function processAllImages(
-  images: PropertyRow["property_images"] | undefined | null,
-) {
-  if (!images || images.length === 0) return [];
-
-  // Sort by sort_order if available
-  const sorted = [...images].sort(
-    (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
-  );
-
-  return sorted
-    .map((img) => {
-      if (img.image_url && img.image_url.startsWith("http")) {
-        return img.image_url;
-      }
-      if (img.storage_path) {
-        return getPublicImageUrl(img.storage_path);
-      }
-      return img.image_url ?? null;
-    })
-    .filter(Boolean) as string[];
 }
 
 export interface GetPropertiesOptions {
@@ -139,6 +121,11 @@ export interface GetPropertiesOptions {
   maxSize?: number;
   bedrooms?: number;
   bathrooms?: number;
+  nearTrain?: boolean;
+  petFriendly?: boolean;
+  fullyFurnished?: boolean;
+  isForeigner?: boolean;
+  companyRegistered?: boolean;
 }
 
 export async function getPublicProperties(options: GetPropertiesOptions = {}) {
@@ -146,342 +133,100 @@ export async function getPublicProperties(options: GetPropertiesOptions = {}) {
 
   let query = supabase
     .from("properties")
-    .select(
-      `
-      id,
-      slug,
-      title,
-      title_en,
-      title_cn,
-      description,
-      description_en,
-      description_cn,
-      property_type,
-      price,
-      rental_price,
-      original_price,
-      original_rental_price,
-      verified,
-      min_contract_months,
-      bedrooms,
-      meta_keywords,
-      bathrooms,
-      size_sqm,
-      parking_slots,
-      floor,
-      created_at,
-      updated_at,
-      listing_type,
-      popular_area,
-      province,
-      district,
-      subdistrict,
-      address_line1,
-      address_line1_en,
-      address_line1_cn,
-      nearby_places,
-      nearby_transits,
-      property_images (
-        image_url,
-        storage_path,
-        is_cover,
-        sort_order
-      ),
-      property_features (
-        features (
-          id,
-          name,
-          name_en,
-          name_cn,
-          icon_key
-        )
-      ),
-      near_transit,
-      transit_type,
-      transit_station_name,
-      transit_station_name_en,
-      transit_station_name_cn,
-      transit_distance_meters,
-      google_maps_link,
-      is_fully_furnished,
-      is_bare_shell,
-      is_pet_friendly,
-      is_foreigner_quota,
-      is_tax_registered
-    `,
-    )
+    .select(PUBLIC_COLUMNS)
     .eq("status", "ACTIVE");
 
-  // Filter by IDs (Additive)
-  if (options.ids && options.ids.length > 0) {
-    query = query.in("id", options.ids);
-  }
+  // Filter Logic (Server-Side)
+  if (options.ids && options.ids.length > 0) query = query.in("id", options.ids);
+  if (options.filter === "hot_deals" || options.filter as any === "hot_deal") query = query.eq("is_hot_deal", true);
 
-  // Hot Deals logic (Additive)
-  if (options.filter === "hot_deals") {
-    query = query.or("original_price.not.is.null,original_rental_price.not.is.null");
-  }
+  const itemsPerPage = options.limit || 60;
 
-  // Sorting and Limit
+  // Sorting
   if (options.filter === "hot_deals") {
-    query = query.order("updated_at", { ascending: false }).limit(options.limit || 30);
+    query = query.order("updated_at", { ascending: false });
+  } else if (options.listingType === "RENT") {
+    query = query.order("rental_price", { ascending: true, nullsFirst: false });
   } else {
-    query = query.order("created_at", { ascending: false }).limit(options.limit || 60);
+    query = query.order("price", { ascending: true, nullsFirst: false });
   }
 
-  // Filter by Location Type
-  if (options.province) {
-    query = query.ilike("province", `%${options.province}%`);
-  }
-  if (options.district) {
-    query = query.ilike("district", `%${options.district}%`);
-  }
+  // Basic Server-Side Filtering Bridge
+  if (options.province) query = query.ilike("province", `%${options.province}%`);
+  if (options.district) query = query.ilike("district", `%${options.district}%`);
   if (options.area || options.popular_area) {
     const area = options.area || options.popular_area;
     query = query.or(`subdistrict.ilike.%${area}%,popular_area.ilike.%${area}%`);
   }
-
-  // Filter by Property Type
-  if (options.propertyType && options.propertyType !== "all") {
+  if (options.propertyType && options.propertyType !== "all" && options.propertyType !== "ALL") {
     query = query.eq("property_type", options.propertyType as any);
   }
 
-  // Filter by Price
+  // Price Filtering (Server-Side)
   const effectivePriceType = options.priceType || options.listingType;
-
   if (options.minPrice || options.maxPrice) {
     const min = options.minPrice || 0;
-    const max = options.maxPrice || 2147483647; // Default max for INT
-
+    const max = options.maxPrice || 999999999;
     if (effectivePriceType === "RENT") {
-      query = query.or(
-        `and(rental_price.gte.${min},rental_price.lte.${max}),and(original_rental_price.gte.${min},original_rental_price.lte.${max})`,
-      );
+      query = query.gte("rental_price", min).lte("rental_price", max);
     } else {
-      query = query.or(
-        `and(price.gte.${min},price.lte.${max}),and(original_price.gte.${min},original_price.lte.${max})`,
-      );
+      query = query.gte("price", min).lte("price", max);
     }
   }
 
-  // Filter by Listing Type (Intent)
-  if (options.listingType) {
-    if (options.listingType === "SALE") {
-      query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
-    } else if (options.listingType === "RENT") {
-      query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
-    }
+  if (options.listingType && options.listingType !== "ALL") {
+    if (options.listingType === "SALE") query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+    else if (options.listingType === "RENT") query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
   }
 
-  // Filter by Specs
-  if (options.bedrooms) {
-    query = query.gte("bedrooms", options.bedrooms);
-  }
-  if (options.bathrooms) {
-    query = query.gte("bathrooms", options.bathrooms);
-  }
-  if (options.minSize) {
-    query = query.gte("size_sqm", options.minSize);
-  }
-  if (options.maxSize) {
-    query = query.lte("size_sqm", options.maxSize);
-  }
+  // Boolean Flags (Server-Side)
+  if (options.nearTrain) query = query.eq("near_transit", true);
+  if (options.petFriendly) query = query.eq("is_pet_friendly", true);
+  if (options.fullyFurnished) query = query.eq("is_fully_furnished", true);
+  if (options.isForeigner) query = query.eq("is_foreigner_quota", true);
+  if (options.companyRegistered) query = query.eq("is_tax_registered", true);
 
-  // General Keyword Search
   if (options.q) {
     const searchTerm = `%${options.q}%`;
-    // We search in title and description using ilike
-    // For meta_keywords (array), we use 'cs' (contains)
-    query = query.or(
-      `title.ilike.${searchTerm},description.ilike.${searchTerm},meta_keywords.cs.{${options.q}}`,
-    );
+    query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
   }
 
-  const { data, error } = await query;
-
+  const { data, error } = await query.limit(itemsPerPage);
   if (error) {
     console.error("Error fetching properties:", error);
     return [];
   }
 
-  // Fetch Popular Area Translations
-  const popularAreaNames = Array.from(
-    new Set(
-      data
-        .map((row) => row.popular_area)
-        .filter((area): area is string => !!area),
-    ),
-  );
-
-  const areaTranslationsMap = new Map<
-    string,
-    { en: string | null; cn: string | null }
-  >();
+  // Fetch Popular Area Translations (Optimized)
+  const popularAreaNames = Array.from(new Set(data.map((row) => row.popular_area).filter((area): area is string => !!area)));
+  const areaTranslationsMap = new Map<string, { en: string | null; cn: string | null }>();
 
   if (popularAreaNames.length > 0) {
-    const { data: areaData } = await supabase
-      .from("popular_areas")
-      .select("name, name_en, name_cn")
-      .in("name", popularAreaNames);
-
-    (areaData || []).forEach((a) => {
-      areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn });
-    });
+    const { data: areaData } = await supabase.from("popular_areas").select("name, name_en, name_cn").in("name", popularAreaNames);
+    (areaData || []).forEach((a) => areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn }));
   }
 
-  // Transform Data
-  let items = (data ?? []).map((row: any) => {
-    const typedRow = row as unknown as PropertyRow; // Cast because supabase types might be loose or strict
-    const trans = areaTranslationsMap.get(typedRow.popular_area || "");
-
+  return (data ?? []).map((row: any) => {
+    const trans = areaTranslationsMap.get(row.popular_area || "");
     return {
-      id: typedRow.id,
-      slug: typedRow.slug,
-      title: typedRow.title,
-      title_en: typedRow.title_en,
-      title_cn: typedRow.title_cn,
-      description: typedRow.description,
-      description_en: typedRow.description_en,
-      description_cn: typedRow.description_cn,
-      property_type: typedRow.property_type,
-      price: typedRow.price,
-      rental_price: typedRow.rental_price,
-      original_price: typedRow.original_price,
-      original_rental_price: typedRow.original_rental_price,
-      verified: typedRow.verified,
-      min_contract_months: typedRow.min_contract_months,
-      meta_keywords: typedRow.meta_keywords,
-      bedrooms: typedRow.bedrooms,
-      bathrooms: typedRow.bathrooms,
-      size_sqm: typedRow.size_sqm,
-      parking_slots: typedRow.parking_slots,
-      floor: typedRow.floor,
-      created_at: typedRow.created_at,
-      updated_at: typedRow.updated_at,
-      listing_type: typedRow.listing_type,
-      popular_area: typedRow.popular_area,
+      ...row,
       popular_area_en: trans?.en ?? null,
       popular_area_cn: trans?.cn ?? null,
-      province: typedRow.province,
-      district: typedRow.district,
-      subdistrict: typedRow.subdistrict,
-      address_line1: typedRow.address_line1,
-      address_line1_en: typedRow.address_line1_en,
-      address_line1_cn: typedRow.address_line1_cn,
-      image_url: pickCoverImage(typedRow.property_images),
-      images: processAllImages(typedRow.property_images),
-      location: buildLocation(typedRow),
-      features: (typedRow.property_features || [])
-        .map((pf) => pf.features)
-        .filter((f): f is NonNullable<typeof f> => f !== null),
-      near_transit: typedRow.near_transit,
-      transit_type: typedRow.transit_type,
-      transit_station_name: typedRow.transit_station_name,
-      transit_station_name_en: typedRow.transit_station_name_en,
-      transit_station_name_cn: typedRow.transit_station_name_cn,
-      transit_distance_meters: typedRow.transit_distance_meters,
-      google_maps_link: typedRow.google_maps_link,
-      is_fully_furnished: typedRow.is_fully_furnished,
-      is_bare_shell: typedRow.is_bare_shell,
-      is_pet_friendly: typedRow.is_pet_friendly,
-      is_foreigner_quota: typedRow.is_foreigner_quota,
-      is_tax_registered: typedRow.is_tax_registered,
-      nearby_places: typedRow.nearby_places,
-      nearby_transits: typedRow.nearby_transits,
+      image_url: getCoverImage(row.images),
+      images: getSafeImages(row.images),
+      location: buildLocation(row as any),
+      features: (row.property_features || []).map((pf: any) => pf.features).filter(Boolean),
+      nearby_places: getSafeNearbyPlaces(row.nearby_places),
+      nearby_transits: getSafeNearbyTransits(row.nearby_transits),
     };
   });
-  // Hot Deals Post-Filter
-  if (options.filter === "hot_deals") {
-    items = items.filter((item) => {
-      const isSaleDrop =
-        (item.listing_type === "SALE" ||
-          item.listing_type === "SALE_AND_RENT") &&
-        item.original_price &&
-        item.price &&
-        item.price < item.original_price;
-
-      const isRentDrop =
-        (item.listing_type === "RENT" ||
-          item.listing_type === "SALE_AND_RENT") &&
-        item.original_rental_price &&
-        item.rental_price &&
-        item.rental_price < item.original_rental_price;
-
-      return isSaleDrop || isRentDrop;
-    });
-  }
-
-  return items;
 }
 
 export async function getPublicPropertyBySlug(slug: string) {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("properties")
-    .select(
-      `
-      id,
-      slug,
-      title,
-      title_en,
-      title_cn,
-      description,
-      description_en,
-      description_cn,
-      property_type,
-      price,
-      rental_price,
-      original_price,
-      original_rental_price,
-      verified,
-      min_contract_months,
-      bedrooms,
-      meta_keywords,
-      bathrooms,
-      size_sqm,
-      parking_slots,
-      floor,
-      created_at,
-      updated_at,
-      listing_type,
-      popular_area,
-      province,
-      district,
-      subdistrict,
-      address_line1,
-      address_line1_en,
-      address_line1_cn,
-      nearby_places,
-      nearby_transits,
-      property_images (
-        image_url,
-        storage_path,
-        is_cover,
-        sort_order
-      ),
-      property_features (
-        features (
-          id,
-          name,
-          name_en,
-          name_cn,
-          icon_key
-        )
-      ),
-      near_transit,
-      transit_type,
-      transit_station_name,
-      transit_station_name_en,
-      transit_station_name_cn,
-      transit_distance_meters,
-      google_maps_link,
-      is_fully_furnished,
-      is_bare_shell,
-      is_pet_friendly,
-      is_foreigner_quota,
-      is_tax_registered
-    `,
-    )
+    .select(PUBLIC_COLUMNS)
     .eq("slug", slug)
     .eq("status", "ACTIVE")
     .single();
@@ -489,74 +234,21 @@ export async function getPublicPropertyBySlug(slug: string) {
   if (error || !data) return null;
 
   const typedRow = data as unknown as PropertyRow;
-
-  // Fetch Popular Area Translations
   let trans = { en: null as string | null, cn: null as string | null };
   if (typedRow.popular_area) {
-    const { data: areaData } = await supabase
-      .from("popular_areas")
-      .select("name, name_en, name_cn")
-      .eq("name", typedRow.popular_area)
-      .single();
-
-    if (areaData) {
-      trans = { en: areaData.name_en, cn: areaData.name_cn };
-    }
+    const { data: areaData } = await supabase.from("popular_areas").select("name, name_en, name_cn").eq("name", typedRow.popular_area).single();
+    if (areaData) trans = { en: areaData.name_en, cn: areaData.name_cn };
   }
 
   return {
-    id: typedRow.id,
-    slug: typedRow.slug,
-    title: typedRow.title,
-    title_en: typedRow.title_en,
-    title_cn: typedRow.title_cn,
-    description: typedRow.description,
-    description_en: typedRow.description_en,
-    description_cn: typedRow.description_cn,
-    property_type: typedRow.property_type,
-    price: typedRow.price,
-    rental_price: typedRow.rental_price,
-    original_price: typedRow.original_price,
-    original_rental_price: typedRow.original_rental_price,
-    verified: typedRow.verified,
-    min_contract_months: typedRow.min_contract_months,
-    meta_keywords: typedRow.meta_keywords,
-    bedrooms: typedRow.bedrooms,
-    bathrooms: typedRow.bathrooms,
-    size_sqm: typedRow.size_sqm,
-    parking_slots: typedRow.parking_slots,
-    floor: typedRow.floor,
-    created_at: typedRow.created_at,
-    updated_at: typedRow.updated_at,
-    listing_type: typedRow.listing_type,
-    popular_area: typedRow.popular_area,
+    ...typedRow,
     popular_area_en: trans.en,
     popular_area_cn: trans.cn,
-    province: typedRow.province,
-    district: typedRow.district,
-    subdistrict: typedRow.subdistrict,
-    address_line1: typedRow.address_line1,
-    address_line1_en: typedRow.address_line1_en,
-    address_line1_cn: typedRow.address_line1_cn,
-    image_url: pickCoverImage(typedRow.property_images),
-    images: processAllImages(typedRow.property_images),
+    image_url: getCoverImage(typedRow.images),
+    images: getSafeImages(typedRow.images),
     location: buildLocation(typedRow),
-    features: (typedRow.property_features || [])
-      .map((pf) => pf.features)
-      .filter((f): f is NonNullable<typeof f> => f !== null),
-    near_transit: typedRow.near_transit,
-    transit_type: typedRow.transit_type,
-    transit_station_name: typedRow.transit_station_name,
-    transit_station_name_en: typedRow.transit_station_name_en,
-    transit_station_name_cn: typedRow.transit_station_name_cn,
-    transit_distance_meters: typedRow.transit_distance_meters,
-    google_maps_link: typedRow.google_maps_link,
-    is_fully_furnished: typedRow.is_fully_furnished,
-    is_bare_shell: typedRow.is_bare_shell,
-    is_pet_friendly: typedRow.is_pet_friendly,
-    is_foreigner_quota: typedRow.is_foreigner_quota,
-    is_tax_registered: typedRow.is_tax_registered,
-    nearby_places: typedRow.nearby_places,
-    nearby_transits: typedRow.nearby_transits,
+    features: (typedRow.property_features || []).map((pf) => pf.features).filter(Boolean),
+    nearby_places: getSafeNearbyPlaces(typedRow.nearby_places),
+    nearby_transits: getSafeNearbyTransits(typedRow.nearby_transits),
   };
 }

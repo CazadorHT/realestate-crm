@@ -99,6 +99,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "audit_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       audit_logs_2026_03: {
@@ -1235,6 +1242,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           email: string | null
+          embedding: string | null
           facebook_psid: string | null
           full_name: string
           has_pets: boolean | null
@@ -1282,6 +1290,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          embedding?: string | null
           facebook_psid?: string | null
           full_name: string
           has_pets?: boolean | null
@@ -1329,6 +1338,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          embedding?: string | null
           facebook_psid?: string | null
           full_name?: string
           has_pets?: boolean | null
@@ -1822,6 +1832,7 @@ export type Database = {
           address_line1_en: string | null
           ai_reviewed_at: string | null
           ai_reviewed_by: string | null
+          ai_summary_content: string | null
           allow_smoking: boolean | null
           assigned_to: string | null
           bathrooms: number | null
@@ -1845,6 +1856,7 @@ export type Database = {
           description_en: string | null
           district: string | null
           electricity_charge: string | null
+          embedding: string | null
           facing_east: boolean | null
           facing_north: boolean | null
           facing_south: boolean | null
@@ -1879,6 +1891,7 @@ export type Database = {
           is_handicapped_friendly: boolean | null
           is_high_ceiling: boolean | null
           is_high_floor: boolean | null
+          is_hot_deal: boolean | null
           is_never_lived_in: boolean | null
           is_pet_friendly: boolean | null
           is_renovated: boolean | null
@@ -1953,6 +1966,7 @@ export type Database = {
           address_line1_en?: string | null
           ai_reviewed_at?: string | null
           ai_reviewed_by?: string | null
+          ai_summary_content?: string | null
           allow_smoking?: boolean | null
           assigned_to?: string | null
           bathrooms?: number | null
@@ -1976,6 +1990,7 @@ export type Database = {
           description_en?: string | null
           district?: string | null
           electricity_charge?: string | null
+          embedding?: string | null
           facing_east?: boolean | null
           facing_north?: boolean | null
           facing_south?: boolean | null
@@ -2010,6 +2025,7 @@ export type Database = {
           is_handicapped_friendly?: boolean | null
           is_high_ceiling?: boolean | null
           is_high_floor?: boolean | null
+          is_hot_deal?: boolean | null
           is_never_lived_in?: boolean | null
           is_pet_friendly?: boolean | null
           is_renovated?: boolean | null
@@ -2084,6 +2100,7 @@ export type Database = {
           address_line1_en?: string | null
           ai_reviewed_at?: string | null
           ai_reviewed_by?: string | null
+          ai_summary_content?: string | null
           allow_smoking?: boolean | null
           assigned_to?: string | null
           bathrooms?: number | null
@@ -2107,6 +2124,7 @@ export type Database = {
           description_en?: string | null
           district?: string | null
           electricity_charge?: string | null
+          embedding?: string | null
           facing_east?: boolean | null
           facing_north?: boolean | null
           facing_south?: boolean | null
@@ -2141,6 +2159,7 @@ export type Database = {
           is_handicapped_friendly?: boolean | null
           is_high_ceiling?: boolean | null
           is_high_floor?: boolean | null
+          is_hot_deal?: boolean | null
           is_never_lived_in?: boolean | null
           is_pet_friendly?: boolean | null
           is_renovated?: boolean | null
@@ -3405,6 +3424,16 @@ export type Database = {
         Returns: Json
       }
       check_is_staff_for_audit: { Args: never; Returns: boolean }
+      fn_check_hot_deal: {
+        Args: {
+          p_keywords: string[]
+          p_orig_price: number
+          p_orig_rental: number
+          p_price: number
+          p_rental: number
+        }
+        Returns: boolean
+      }
       get_analytics_summary_v2: {
         Args: {
           p_area?: string
@@ -3460,12 +3489,7 @@ export type Database = {
           property_count: number
         }[]
       }
-      get_user_tenants: {
-        Args: never
-        Returns: {
-          tenant_id: string
-        }[]
-      }
+      get_user_tenants: { Args: never; Returns: string[] }
       increment_blog_post_view: {
         Args: { post_id: string }
         Returns: undefined
@@ -3486,11 +3510,37 @@ export type Database = {
       }
       is_admin: { Args: never; Returns: boolean }
       is_manager_of: { Args: { agent_id: string }; Returns: boolean }
+      is_personal_record: {
+        Args: { target_profile_id: string }
+        Returns: boolean
+      }
       is_staff: { Args: never; Returns: boolean }
       is_system_admin: { Args: never; Returns: boolean }
       is_tenant_admin: { Args: { target_tenant_id: string }; Returns: boolean }
+      is_tenant_manager: {
+        Args: { target_tenant_id: string }
+        Returns: boolean
+      }
       is_tenant_member: { Args: { target_tenant_id: string }; Returns: boolean }
       is_tenant_staff: { Args: { target_tenant_id: string }; Returns: boolean }
+      match_properties: {
+        Args: {
+          match_count: number
+          match_threshold: number
+          p_tenant_id?: string
+          query_embedding: string
+        }
+        Returns: {
+          id: string
+          listing_type: Database["public"]["Enums"]["listing_type"]
+          price: number
+          property_type: Database["public"]["Enums"]["property_type"]
+          rental_price: number
+          similarity: number
+          slug: string
+          title: string
+        }[]
+      }
       search_leads_globally: {
         Args: { search_email: string; search_phone: string }
         Returns: {
@@ -3546,6 +3596,7 @@ export type Database = {
           address_line1_en: string | null
           ai_reviewed_at: string | null
           ai_reviewed_by: string | null
+          ai_summary_content: string | null
           allow_smoking: boolean | null
           assigned_to: string | null
           bathrooms: number | null
@@ -3569,6 +3620,7 @@ export type Database = {
           description_en: string | null
           district: string | null
           electricity_charge: string | null
+          embedding: string | null
           facing_east: boolean | null
           facing_north: boolean | null
           facing_south: boolean | null
@@ -3603,6 +3655,7 @@ export type Database = {
           is_handicapped_friendly: boolean | null
           is_high_ceiling: boolean | null
           is_high_floor: boolean | null
+          is_hot_deal: boolean | null
           is_never_lived_in: boolean | null
           is_pet_friendly: boolean | null
           is_renovated: boolean | null
@@ -3693,6 +3746,7 @@ export type Database = {
           address_line1_en: string | null
           ai_reviewed_at: string | null
           ai_reviewed_by: string | null
+          ai_summary_content: string | null
           allow_smoking: boolean | null
           assigned_to: string | null
           bathrooms: number | null
@@ -3716,6 +3770,7 @@ export type Database = {
           description_en: string | null
           district: string | null
           electricity_charge: string | null
+          embedding: string | null
           facing_east: boolean | null
           facing_north: boolean | null
           facing_south: boolean | null
@@ -3750,6 +3805,7 @@ export type Database = {
           is_handicapped_friendly: boolean | null
           is_high_ceiling: boolean | null
           is_high_floor: boolean | null
+          is_hot_deal: boolean | null
           is_never_lived_in: boolean | null
           is_pet_friendly: boolean | null
           is_renovated: boolean | null

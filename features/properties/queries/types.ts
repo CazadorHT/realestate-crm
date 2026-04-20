@@ -1,5 +1,5 @@
 import type { Database } from "@/lib/database.types";
-import { PropertyRow, PropertyImage } from "../types";
+import { PropertyRow, PropertyImage ,PropertyImageMetadata} from "../types";
 
 export type PropertyImageRow = PropertyImage;
 
@@ -8,8 +8,10 @@ export type PublicPropertyImage = Pick<
   "id" | "property_id" | "image_url" | "is_cover" | "sort_order" | "created_at"
 >;
 
+
 export type PublicPropertyWithImages = PropertyRow & {
-  property_images: PublicPropertyImage[];
+  // Now using structural images from the main table
+  images: PropertyImageMetadata[] | null;
 };
 
 export type PropertyStats = {

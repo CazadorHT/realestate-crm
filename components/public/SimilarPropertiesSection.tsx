@@ -7,28 +7,7 @@ import { MdMapsHomeWork } from "react-icons/md";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { SimilarPropertiesClient } from "./SimilarPropertiesClient";
 
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
-type PropertyType = Database["public"]["Enums"]["property_type"];
-type PropertyImage = {
-  id: string;
-  image_url: string;
-  storage_path: string | null;
-  is_cover: boolean;
-  sort_order: number;
-};
-type PropertyWithImages = PropertyRow & {
-  property_images: PropertyImage[] | null;
-  property_features: {
-    features: {
-      id: string;
-      name: string;
-      name_en?: string | null;
-      name_cn?: string | null;
-      icon_key: string;
-      category: string | null;
-    } | null;
-  }[] | null;
-};
+import { PropertyWithImages, PropertyType } from "@/features/properties/types";
 
 interface SimilarPropertiesSectionProps {
   currentPropertyId: string;
@@ -59,13 +38,6 @@ export async function SimilarPropertiesSection({
     .select(
       `
       *,
-      property_images (
-        id,
-        image_url,
-        storage_path,
-        is_cover,
-        sort_order
-      ),
       property_features (
         features (
           id,

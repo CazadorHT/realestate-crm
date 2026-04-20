@@ -6,6 +6,7 @@ import { th, enUS, zhCN } from "date-fns/locale";
 import { formatPrice, getOfficePrice } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { getEffectivePrice } from "@/lib/property-hardened-utils";
 
 export function PropertyCardFooter({
   property,
@@ -16,6 +17,7 @@ export function PropertyCardFooter({
 }) {
   const { t, language } = useLanguage();
   const dateLocale = language === "th" ? th : language === "cn" ? zhCN : enUS;
+  const prices = getEffectivePrice(property);
 
   if (variant === "minimal") {
     return (
@@ -28,11 +30,8 @@ export function PropertyCardFooter({
               {t("common.sale")}
             </span>
             <div className="text-base sm:text-lg font-extrabold text-[#1B263B]">
-              {property.price || property.original_price
-                ? formatPrice(
-                    property.price || property.original_price!,
-                    language,
-                  )
+              {prices.salePrice > 0
+                ? formatPrice(prices.salePrice, language)
                 : t("common.contact_for_price")}
             </div>
           </div>
@@ -43,12 +42,9 @@ export function PropertyCardFooter({
               {t("common.rent")}
             </span>
             <div className="text-base sm:text-lg font-extrabold text-[#1B263B]">
-              {property.rental_price || property.original_rental_price ? (
+              {prices.rentalPrice > 0 ? (
                 <>
-                  {formatPrice(
-                    property.rental_price || property.original_rental_price!,
-                    language,
-                  )}
+                  {formatPrice(prices.rentalPrice, language)}
                   <span className="text-[10px] text-slate-400 font-medium ml-0.5">
                     {t("common.per_month_short")}
                   </span>
@@ -97,37 +93,24 @@ export function PropertyCardFooter({
               <span className="text-[10px] sm:text-[11px] md:text-xs font-bold uppercase tracking-tight mb-0.5">
                 {t("common.sale")}
               </span>
-              {property.original_price &&
-              property.price &&
-              property.original_price > property.price ? (
+              {prices.hasSaleDiscount ? (
                 <div className="flex flex-wrap items-baseline">
-                  {/* Discount Label */}
                   <div className="order-2 flex items-center gap-1">
                     <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
-                      {formatPrice(property.original_price, language)}
+                      {formatPrice(prices.originalPrice, language)}
                     </span>
                     <span className="text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100 px-1 rounded-sm">
-                      -
-                      {Math.round(
-                        ((property.original_price - property.price) /
-                          property.original_price) *
-                          100,
-                      )}
-                      %
+                      -{prices.saleDiscountPercent}%
                     </span>
                   </div>
-                  {/* Current Price */}
                   <div className="order-1 text-base lg:text-md xl:text-lg font-bold text-rose-600 truncate">
-                    {formatPrice(property.price, language)}
+                    {formatPrice(prices.salePrice, language)}
                   </div>
                 </div>
               ) : (
                 <div className="text-base lg:text-md xl:text-lg font-bold text-slate-900 truncate">
-                  {property.price || property.original_price
-                    ? formatPrice(
-                        property.price || property.original_price!,
-                        language,
-                      )
+                  {prices.salePrice > 0
+                    ? formatPrice(prices.salePrice, language)
                     : t("common.contact_for_price")}
                 </div>
               )}
@@ -138,29 +121,18 @@ export function PropertyCardFooter({
               <span className="text-[10px] md:text-xs font-bold uppercase tracking-tight mb-0.5">
                 {t("common.rent")}
               </span>
-              {property.original_rental_price &&
-              property.rental_price &&
-              property.original_rental_price > property.rental_price ? (
+              {prices.hasRentalDiscount ? (
                 <div className="flex flex-wrap items-baseline">
-                  {/* Discount Label */}
                   <div className="order-2 flex items-center gap-1">
                     <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
-                      {formatPrice(property.original_rental_price, language)}
+                      {formatPrice(prices.originalRentalPrice, language)}
                     </span>
                     <span className="text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-100 px-1 rounded-sm">
-                      -
-                      {Math.round(
-                        ((property.original_rental_price -
-                          property.rental_price) /
-                          property.original_rental_price) *
-                          100,
-                      )}
-                      %
+                      -{prices.rentalDiscountPercent}%
                     </span>
                   </div>
-                  {/* Current Price */}
                   <div className="order-1 text-base lg:text-md xl:text-lg font-bold text-rose-600 truncate">
-                    {formatPrice(property.rental_price, language)}
+                    {formatPrice(prices.rentalPrice, language)}
                     <span className="text-[10px] text-slate-500 font-normal ml-0.5">
                       {t("common.per_month_short")}
                     </span>
@@ -169,12 +141,8 @@ export function PropertyCardFooter({
               ) : (
                 <div className="flex flex-wrap items-baseline">
                   <div className="text-base lg:text-md xl:text-lg font-bold text-slate-900 truncate">
-                    {property.rental_price || property.original_rental_price
-                      ? formatPrice(
-                          property.rental_price ||
-                            property.original_rental_price!,
-                          language,
-                        )
+                    {prices.rentalPrice > 0
+                      ? formatPrice(prices.rentalPrice, language)
                       : t("common.contact_for_price")}
                     <span className="text-[10px] text-slate-400 font-normal ml-0.5">
                       {t("common.per_month_short")}
@@ -192,49 +160,26 @@ export function PropertyCardFooter({
                 : t("common.sale_price")}
             </div>
             <div className="text-base lg:text-md xl:text-lg font-bold text-[#1B263B] truncate flex items-baseline gap-1 md:gap-2">
-              {/* SALE or RENT Discount Logic */}
-              {(property.listing_type === "SALE"
-                ? property.original_price
-                : property.original_rental_price) &&
-              (property.price || property.rental_price) &&
-              (property.listing_type === "SALE"
-                ? property.original_price!
-                : property.original_rental_price!) >
-                (property.listing_type === "SALE"
-                  ? property.price!
-                  : property.rental_price!) &&
-              (property.listing_type === "SALE" ||
-                property.listing_type === "RENT") ? (
+              {(property.listing_type === "SALE" && prices.hasSaleDiscount) || 
+               (property.listing_type === "RENT" && prices.hasRentalDiscount) ? (
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-400 font-bold line-through decoration-slate-400/70">
                       {formatPrice(
-                        property.listing_type === "SALE"
-                          ? property.original_price!
-                          : property.original_rental_price!,
+                        property.listing_type === "SALE" ? prices.originalPrice : prices.originalRentalPrice,
                         language,
                       )}
                     </span>
                     <span className="text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
-                      -
-                      {Math.round(
-                        (((property.listing_type === "SALE"
-                          ? property.original_price!
-                          : property.original_rental_price!) -
-                          (property.listing_type === "SALE"
-                            ? property.price!
-                            : property.rental_price!)) /
-                          (property.listing_type === "SALE"
-                            ? property.original_price!
-                            : property.original_rental_price!)) *
-                          100,
-                      )}
-                      %
+                      -{property.listing_type === "SALE" ? prices.saleDiscountPercent : prices.rentalDiscountPercent}%
                     </span>
                   </div>
                   <div className="flex items-baseline gap-1">
                     <span className="text-base md:text-xl font-bold text-rose-600">
-                      {getDisplayPrice(property, t, language)}
+                      {formatPrice(
+                        property.listing_type === "SALE" ? prices.salePrice : prices.rentalPrice,
+                        language,
+                      )}
                     </span>
                     {property.listing_type === "RENT" && (
                       <span className="text-[10px] md:text-xs text-slate-500 font-normal">
@@ -245,7 +190,10 @@ export function PropertyCardFooter({
                 </div>
               ) : (
                 <>
-                  {getDisplayPrice(property, t, language)}
+                  {property.listing_type === "SALE" 
+                    ? (prices.salePrice > 0 ? formatPrice(prices.salePrice, language) : t("common.contact_for_price"))
+                    : (prices.rentalPrice > 0 ? formatPrice(prices.rentalPrice, language) : t("common.contact_for_price"))
+                  }
                   {property.listing_type === "RENT" && (
                     <span className="text-[10px] md:text-xs text-slate-500 font-normal">
                       {t("common.per_month_short")}
@@ -292,52 +240,3 @@ export function PropertyCardFooter({
 }
 
 // Helpers
-function getDisplayPrice(
-  property: PropertyCardProps,
-  t: (key: string) => string,
-  language: string,
-) {
-  // Office price override
-  const officePrice = getOfficePrice(property as any);
-
-  const salePrice =
-    property.price ??
-    (officePrice?.isCalculated &&
-    officePrice.sqmPrice === property.price_per_sqm
-      ? officePrice.totalPrice
-      : undefined);
-  const rentPrice =
-    property.rental_price ??
-    (officePrice?.isCalculated &&
-    officePrice.sqmPrice === property.rent_price_per_sqm
-      ? officePrice.totalPrice
-      : undefined);
-
-  let value: number | undefined;
-  let isRent = false;
-
-  if (property.listing_type === "SALE") {
-    value = salePrice ?? property.original_price ?? undefined;
-  } else if (property.listing_type === "RENT") {
-    value = rentPrice ?? property.original_rental_price ?? undefined;
-    isRent = true;
-  } else {
-    value =
-      salePrice ??
-      rentPrice ??
-      property.original_price ??
-      property.original_rental_price ??
-      undefined;
-
-    const hasSale = !!(salePrice ?? property.original_price);
-    const hasRent = !!(rentPrice ?? property.original_rental_price);
-
-    if (!hasSale && hasRent) {
-      isRent = true;
-    }
-  }
-
-  if (!value) return t("common.contact_for_price");
-  const formatted = formatPrice(value, language);
-  return isRent ? `${formatted}` : formatted;
-}

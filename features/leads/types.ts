@@ -9,14 +9,39 @@ export type LeadActivityRow =
   Database["public"]["Tables"]["lead_activities"]["Row"];
 export type LeadActivityInsert =
   Database["public"]["Tables"]["lead_activities"]["Insert"];
+// --- Hardened JSONB Schemas ---
+export interface LeadPreferences {
+  line_id?: string | null;
+  online_contact?: string | null;
+  is_smoker?: boolean;
+  budget_flexible?: boolean;
+  preferred_zones?: string[];
+  pet_friendly_required?: boolean;
+  [key: string]: any; // Allow for extensibility while prioritizing known fields
+}
+
+// --- Extended Feature Types ---
+export type LeadWithJoins = Omit<LeadRow, "preferences"> & {
+  ai_score?: number | null;
+  ai_status_label?: string | null;
+  utm_source?: string | null;
+  deals_count?: number | null;
+  tenants?: {
+    name: string;
+  } | null;
+  preferences: LeadPreferences | null;
+};
+
 // ใช้สำหรับแสดง leads พร้อมกับ activities
-export type LeadWithActivities = LeadRow & {
+export type LeadWithActivities = LeadWithJoins & {
   lead_activities: LeadActivityRow[];
 };
+
 // ใช้สำหรับแสดง leads พร้อมกับ last activity type
-export type LeadListRow = LeadRow & {
+export type LeadListRow = LeadWithJoins & {
   last_activity_type: LeadActivityType | null;
 };
+
 // ใช้สำหรับแสดงผล action ของ leads
 export type LeadActionResult =
   | { success: true; leadId: string }

@@ -49,6 +49,8 @@ export function HeroSection() {
         alt="Hero Background"
         fill
         priority
+        // @ts-ignore
+        fetchPriority="high"
         sizes="100vw"
         className="object-cover"
         quality={80}

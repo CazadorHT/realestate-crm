@@ -67,14 +67,14 @@ interface PropertyDataForSEO {
   nearby_transits?: {
     type: string;
     station_name: string;
-    station_name_en?: string;
-    station_name_cn?: string;
+    station_name_en?: string | null;
+    station_name_cn?: string | null;
   }[]; // Full list from Step 3
   nearby_places?: {
     category: string;
     name: string;
-    name_en?: string;
-    name_cn?: string;
+    name_en?: string | null;
+    name_cn?: string | null;
   }[];
   features?: string[];
 }

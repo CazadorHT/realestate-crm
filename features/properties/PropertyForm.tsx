@@ -170,7 +170,6 @@ export function PropertyForm({
       mode === "edit" && defaultValues
         ? mapRowToFormValues(
             defaultValues,
-            initialImages?.map((img) => img.storage_path) ?? [],
           )
         : {
             ...EMPTY_VALUES,

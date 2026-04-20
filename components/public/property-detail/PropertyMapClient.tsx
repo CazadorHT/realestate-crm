@@ -1,0 +1,131 @@
+"use client";
+
+import { MapPin } from "lucide-react";
+import { useEffect } from "react";
+import { LuMap } from "react-icons/lu";
+import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
+import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { updateAIScore } from "@/lib/analytics-utils";
+
+interface PropertyMapClientProps {
+  googleMapsLink: string | null;
+  propertyId?: string;
+  propertyTitle?: string;
+  language?: "th" | "en" | "cn";
+}
+
+export function PropertyMapClient({
+  googleMapsLink,
+  propertyId,
+  propertyTitle,
+  language: customLanguage,
+}: PropertyMapClientProps) {
+  const { language: globalLanguage, t: globalT } = useLanguage();
+  const language = customLanguage || globalLanguage;
+
+  // Helper to extract location query from various Google Maps URL formats
+  const extractQuery = (url: string | null) => {
+    if (!url) return null;
+    if (!url.startsWith("http")) return url;
+
+    try {
+      const urlObj = new URL(url);
+      const daddr = urlObj.searchParams.get("daddr") || urlObj.searchParams.get("destination");
+      if (daddr) return daddr;
+
+      const q = urlObj.searchParams.get("q") || urlObj.searchParams.get("query");
+      if (q) return q;
+
+      const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+      if (coordMatch) return `${coordMatch[1]},${coordMatch[2]}`;
+
+      const placeMatch = url.match(/\/place\/([^\/]+)/);
+      if (placeMatch && placeMatch[1])
+        return decodeURIComponent(placeMatch[1]).replace(/\+/g, " ");
+
+      return url;
+    } catch (e) {
+      return url;
+    }
+  };
+
+  // Custom t function for language override
+  const t = (key: string) => {
+    if (!customLanguage) return globalT(key);
+    const dict = dictionaries[language as keyof typeof dictionaries] as any;
+    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+  };
+
+  useEffect(() => {
+    try {
+      pushToDataLayer(GTM_EVENTS.VIEW_MAP, { 
+        has_link: !!googleMapsLink,
+        item_id: propertyId,
+        item_name: propertyTitle,
+      });
+    } catch (e) {}
+  }, [googleMapsLink, propertyId, propertyTitle]);
+
+  const locationQuery = extractQuery(googleMapsLink);
+  const embedUrl = locationQuery
+    ? `https://maps.google.com/maps?q=${encodeURIComponent(locationQuery)}&t=&z=15&ie=UTF8&iwloc=&output=embed`
+    : null;
+
+  return (
+    <>
+      <h3 className="text-lg md:text-xl border-l-4 border-blue-600 bg-linear-to-r from-blue-50 to-white px-4 py-3 rounded-r-xl font-semibold text-blue-900 mb-6 flex items-center gap-2">
+        <LuMap className="w-5 h-5 text-blue-600" /> {t("property_map.title")}
+      </h3>
+
+      <div className="space-y-4">
+        <div className="w-full h-[300px] md:h-[450px] bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 relative group">
+          {googleMapsLink && embedUrl ? (
+            <iframe
+              width="100%"
+              height="100%"
+              frameBorder="0"
+              scrolling="no"
+              marginHeight={0}
+              marginWidth={0}
+              src={embedUrl}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              sandbox="allow-scripts allow-same-origin allow-popups"
+              className="grayscale-[0.2] contrast-[1.1] hover:grayscale-0 transition-all duration-700"
+              title="Property Location"
+            />
+          ) : (
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 space-y-2">
+              <MapPin className="h-10 w-10 text-slate-300" />
+              <p className="text-sm">{t("property_map.no_data")}</p>
+            </div>
+          )}
+        </div>
+
+        {googleMapsLink && (
+          <div className="flex justify-center">
+            <a
+              href={googleMapsLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                try {
+                  pushToDataLayer(GTM_EVENTS.CLICK_MAP_EXTERNAL, { 
+                    url: googleMapsLink,
+                    item_id: propertyId,
+                    item_name: propertyTitle,
+                  });
+                  updateAIScore(10);
+                } catch (e) {}
+              }}
+              className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-6 py-2.5 rounded-full text-sm font-semibold transition-all border border-slate-200 shadow-sm hover:shadow-md cursor-pointer group"
+            >
+              <MapPin className="w-4 h-4 text-blue-500 group-hover:scale-110 transition-transform" />
+              {t("property_map.open_google_maps")}
+            </a>
+          </div>
+        )}
+      </div>
+    </>
+  );
+}

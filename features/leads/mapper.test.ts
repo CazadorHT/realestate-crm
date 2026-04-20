@@ -40,13 +40,14 @@ describe('Lead Mapper - leadRowToFormValues', () => {
     facebook_psid: null,
     instagram_sid: null,
     last_viewed_at: null,
-    line_id: null,
-    referral_url: null,
+    line_id: "test-line",
+    embedding: null,
     utm_campaign: null,
     utm_content: null,
     utm_medium: null,
     utm_source: null,
-    utm_term: null
+    utm_term: null,
+    referral_url: null,
   };
 
   it('should map a full lead row to form values correctly', () => {

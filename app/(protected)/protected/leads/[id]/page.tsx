@@ -25,6 +25,7 @@ import { LeadRequirementsCard } from "@/features/leads/components/LeadRequiremen
 import { LeadSummaryCard } from "@/features/leads/components/LeadSummaryCard";
 import { PDPAStatus } from "@/features/leads/components/PDPAStatus";
 import { LeadTransferButton } from "@/features/leads/components/LeadTransferButton";
+import { LeadSmartMatch } from "@/features/smart-match/components/LeadSmartMatch";
 
 type LeadActivity = Database["public"]["Tables"]["lead_activities"]["Row"];
 
@@ -56,7 +57,7 @@ export default async function LeadDetailPage({
       c
         .from("properties")
         .select(
-          "id, title, price, original_price, rental_price, original_rental_price, listing_type, district, popular_area, commission_sale_percentage, commission_rent_months, property_images(image_url, is_cover)",
+          "id, title, price, original_price, rental_price, original_rental_price, listing_type, district, popular_area, commission_sale_percentage, commission_rent_months, images",
         )
         .eq("tenant_id", tenantId)
         .eq("status", "ACTIVE")
@@ -75,10 +76,11 @@ export default async function LeadDetailPage({
     popular_area: p.popular_area,
     commission_sale_percentage: p.commission_sale_percentage,
     commission_rent_months: p.commission_rent_months,
-    cover_image:
-      p.property_images?.find((img: any) => img.is_cover)?.image_url ||
-      p.property_images?.[0]?.image_url ||
-      null,
+    cover_image: (() => {
+      const imagesArr = (p.images as any[]) || [];
+      const cover = imagesArr.find((img: any) => img.is_cover) || imagesArr[0];
+      return cover?.url || cover?.image_url || null;
+    })(),
   }));
 
   async function onCreateActivity(values: LeadActivityFormValues) {
@@ -172,6 +174,12 @@ export default async function LeadDetailPage({
           <LeadSummaryCard leadId={id} />
         </div>
       </div>
+
+      {/* AI Smart Match Section */}
+      <LeadSmartMatch 
+        leadId={id} 
+        leadName={lead.full_name ?? "ลูกค้า"} 
+      />
 
       {/* Top Row - Contact & Requirements (2 columns) */}
       <div className="grid gap-6 lg:gap-8 md:grid-cols-2">

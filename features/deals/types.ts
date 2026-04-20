@@ -6,6 +6,17 @@ export type DealStatus = Database["public"]["Enums"]["deal_status"];
 export type DealType = Database["public"]["Enums"]["deal_type"];
 
 export type Deal = Database["public"]["Tables"]["deals"]["Row"];
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type CoBroker = Database["public"]["Tables"]["co_brokers"]["Row"];
+
+/** 💎 Hardened Extensions for Missing/Computed Columns */
+export type ProfileWithTax = Profile & {
+  default_tax_rate?: number | null;
+};
+
+export type CoBrokerWithTax = CoBroker & {
+  default_tax_rate?: number | null;
+};
 
 // View model that includes the joined property title/code
 export type DealWithProperty = Deal & {
@@ -108,6 +119,8 @@ export type JoinedDealRow = Deal & {
     id: string;
     full_name: string | null;
     phone: string | null;
+    email: string | null;
+    stage: string | null;
   } | null;
 };
 

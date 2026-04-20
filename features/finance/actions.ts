@@ -772,7 +772,7 @@ export async function getCommissionAuditTrailAction(commissionId: string) {
       query = query.eq("tenant_id", tenantId);
     }
 
-    const { data, error } = await (query as any).order("created_at", {
+    const { data, error } = await query.order("created_at", {
       ascending: true,
     });
 
@@ -780,12 +780,8 @@ export async function getCommissionAuditTrailAction(commissionId: string) {
 
     return {
       success: true,
-      data: (data || []).map(
-        (
-          log: Database["public"]["Tables"]["audit_logs"]["Row"] & {
-            profiles?: { full_name: string } | null;
-          },
-        ) => ({
+      data: (data as any[] || []).map(
+        (log) => ({
           id: log.id,
           action: log.action,
           summary:
@@ -841,15 +837,15 @@ export async function getAgentWalletStatsAction(): Promise<{
     }));
 
     const totalEarnings = enhanced
-      .filter((c: any) => c.status === "PAID")
-      .reduce((acc: number, c: any) => acc + c.net_amount, 0);
+      .filter((c) => c.status === "PAID")
+      .reduce((acc, c) => acc + c.net_amount, 0);
 
     const pendingAmount = enhanced
-      .filter((c: any) => c.status === "UNPAID" || c.status === "READY_TO_PAY")
-      .reduce((acc: number, c: any) => acc + c.net_amount, 0);
+      .filter((c) => c.status === "UNPAID" || c.status === "READY_TO_PAY")
+      .reduce((acc, c) => acc + c.net_amount, 0);
 
     const closedDealsCount = new Set(
-      enhanced.filter((c: any) => c.status === "PAID").map((c: any) => c.deal_id),
+      enhanced.filter((c) => c.status === "PAID").map((c) => c.deal_id),
     ).size;
 
     return {
@@ -887,9 +883,9 @@ export async function generateWhtPdfAction(commissionId: string) {
 
     // 2. Render PDF to Buffer
     const element = React.createElement(WhtCertificateTemplate, {
-      data: res.data as any,
+      data: res.data,
     });
-    const buffer = await renderToBuffer(element as any);
+    const buffer = await renderToBuffer(element as React.ReactElement<any>);
 
     // 3. Log Audit
     const { supabase, user, role } = await requireAuthContext();

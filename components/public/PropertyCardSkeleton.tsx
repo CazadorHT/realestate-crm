@@ -1,8 +1,8 @@
 export function PropertyCardSkeleton() {
   return (
-    <div className="rounded-3xl bg-white overflow-hidden shadow-sm h-full flex flex-col border border-slate-100/50 w-[350px]">
-      {/* Image Section Skeleton - Matches h-[300px] */}
-      <div className="relative h-[300px] w-full animate-pulse bg-slate-200" />
+    <div className="rounded-2xl sm:rounded-2xl md:rounded-3xl bg-white overflow-hidden shadow-sm h-full flex flex-col border border-slate-100/50 w-full max-w-[360px] md:max-w-none mx-auto transition-all duration-300">
+      {/* Image Section Skeleton - Sync aspect with PropertyCardImage */}
+      <div className="relative aspect-square sm:aspect-4/3 md:aspect-square h-auto sm:h-auto md:h-[300px] w-full animate-pulse bg-slate-200" />
 
       {/* Content Section Skeleton */}
       <div className="pt-4 pb-6 px-6 space-y-4 grow min-h-[250px]">

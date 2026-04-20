@@ -1,4 +1,5 @@
 import { Database } from "@/lib/database.types";
+import { type PropertyImage } from "@/features/properties/types";
 
 export type CommissionStatus = Database["public"]["Enums"]["commission_status"];
 export type CommissionRole = Database["public"]["Enums"]["commission_role"];
@@ -43,7 +44,7 @@ export interface CommissionAuditRecord {
   summary: string;
   created_at: string;
   user_full_name: string | null;
-  metadata: any;
+  metadata: Record<string, unknown>;
 }
 
 export type PayoutStatusUpdateResult = {
@@ -101,7 +102,7 @@ export type AgentWalletHistory = Database["public"]["Tables"]["deal_commissions"
     status: string;
     property: {
       title: string;
-      images: any; 
+      images: PropertyImage[]; 
       listing_type: string;
       property_type: string;
     } | null;

@@ -52,11 +52,21 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { type LeadWithJoins } from "@/features/leads/types";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { TransferLeadsDialog } from "@/features/leads/components/TransferLeadsDialog";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+
+interface LeadsTableProps {
+  leads: LeadWithJoins[];
+  totalCount: number;
+  showBranch?: boolean;
+  currentTenantId?: string | null;
+  isMultiTenant?: boolean;
+  filters?: { q?: string; stage?: string };
+}
 
 export function LeadsTable({
   leads,
@@ -65,14 +75,7 @@ export function LeadsTable({
   currentTenantId,
   isMultiTenant,
   filters = {},
-}: {
-  leads: LeadRow[];
-  totalCount: number;
-  showBranch?: boolean;
-  currentTenantId?: string | null;
-  isMultiTenant?: boolean;
-  filters?: { q?: string; stage?: string };
-}) {
+}: LeadsTableProps) {
   const allIds = useMemo(() => leads.map((l) => l.id), [leads]);
   const {
     toggleSelect,
@@ -307,12 +310,12 @@ export function LeadsTable({
                     <div className="flex flex-col gap-1">
                       <Badge
                         variant="secondary"
-                        className={`w-fit font-bold ${(l as any).ai_score >= 50 ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-blue-50 text-blue-700 border-blue-100"}`}
+                        className={`w-fit font-bold ${(l.ai_score ?? 0) >= 50 ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-blue-50 text-blue-700 border-blue-100"}`}
                       >
-                        {(l as any).ai_score ?? 0}
+                        {l.ai_score ?? 0}
                       </Badge>
                       <span className="text-[10px] text-muted-foreground font-medium">
-                        {(l as any).ai_status_label || "New Visitor"}
+                        {l.ai_status_label || "New Visitor"}
                       </span>
                     </div>
                   </TableCell>
@@ -322,13 +325,13 @@ export function LeadsTable({
                       <span className="font-medium text-[11px]">
                         {safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}
                       </span>
-                      {(l as any).utm_source && (
+                      {l.utm_source && (
                         <div className="flex items-center gap-1">
                           <Badge
                             variant="outline"
                             className="text-[11px] h-5 px-1.5 border-emerald-100 bg-emerald-50 text-emerald-700"
                           >
-                            {(l as any).utm_source}
+                            {l.utm_source}
                           </Badge>
                         </div>
                       )}
@@ -337,12 +340,12 @@ export function LeadsTable({
                   {/* Branch */}
                   {isMultiTenant && (
                     <TableCell className="text-[11px] font-medium text-slate-500">
-                      {(l as any).tenants?.name || "-"}
+                      {l.tenants?.name || "-"}
                     </TableCell>
                   )}
                   {/* Action */}
                   <TableCell className="text-center">
-                    {(l as any).deals_count ?? 0}
+                    {l.deals_count ?? 0}
                   </TableCell>
                   <TableCell className="text-right">
                     <LeadRowActions
@@ -389,7 +392,7 @@ export function LeadsTable({
                       .slice(0, 2)
                   : "??";
                 const selected = isSelected(l.id);
-                const aiScore = (l as any).ai_score ?? 0;
+                const aiScore = l.ai_score ?? 0;
 
                 return (
                   <m.div

@@ -1,4 +1,4 @@
-import type { LeadRow } from "./types";
+import type { LeadPreferences, LeadRow } from "./types";
 import type { LeadFormValues } from "./types";
 // แปลง row → form values แบบกัน null ช่วยให้หน้า edit ไม่พัง และทำให้แก้ schema
 export function leadRowToFormValues(row: LeadRow): LeadFormValues {
@@ -24,7 +24,7 @@ export function leadRowToFormValues(row: LeadRow): LeadFormValues {
 
     // JSONB / Specific fields
     preferences: row.preferences
-      ? (row.preferences as Record<string, any>)
+      ? (row.preferences as unknown as LeadPreferences)
       : null,
     preferred_locations:
       (row.preferred_locations as string[] | null | undefined) ?? null,

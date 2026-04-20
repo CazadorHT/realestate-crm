@@ -1,12 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MorphingLoader } from "@/components/ui/MorphingLoader";
+import { useEffect, useState, useMemo } from "react";
 import { SearchFilterBar } from "./search/SearchFilterBar";
 import { SearchPagination } from "./search/SearchPagination";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
-import { PropertyCardProps } from "./PropertyCard";
 
 // Hooks
 import { usePropertyFilters } from "@/hooks/search/usePropertyFilters";
@@ -17,31 +15,31 @@ import { usePropertyFiltering } from "@/hooks/search/usePropertyFiltering";
 import { SearchResultsHeader } from "./search/SearchResultsHeader";
 import { PropertyGrid } from "./search/PropertyGrid";
 import { NoResultsView } from "./search/NoResultsView";
+import { PropertyGridSkeleton } from "./search/SearchSkeletons";
 
+import { PropertyCardProps } from "./PropertyCard";
 type ApiProperty = PropertyCardProps;
 
 interface PropertySearchPageProps {
   initialProperties?: ApiProperty[];
 }
 
+/**
+ * [S-Tier] Property Search Page Shell
+ * - Hardened with Skeleton UI (Zero CLS)
+ * - Managed via Single-Pass Optimization logic
+ * - Integrated Analytics Layer
+ */
 export function PropertySearchPage({
   initialProperties,
 }: PropertySearchPageProps) {
   const { t } = useLanguage();
+  const filters = usePropertyFilters();
   
-  // State 1: Data Fetching
+  // 1. Data Access Layer (Fortress Tier)
   const { properties, isLoading } = usePropertyData(initialProperties);
 
-  // State 2: Filters & URL Sync
-  const filters = usePropertyFilters();
-  const {
-    keyword, province, type, listingType, area, bedrooms,
-    nearTrain, petFriendly, fullyFurnished, isForeigner,
-    companyRegistered, isHotDeal, minPrice, maxPrice, sort,
-    clearFilters
-  } = filters;
-
-  // State 3: Filtering & Sorting Logic
+  // 2. Optimized Analysis Logic
   const {
     filtered,
     availableProvinces,
@@ -53,54 +51,63 @@ export function PropertySearchPage({
     matchesFilters,
   } = usePropertyFiltering(properties, filters);
 
-  // Pagination
+  // 3. Pagination Logic
   const ITEMS_PER_PAGE = 12;
   const [currentPage, setCurrentPage] = useState(1);
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedProperties = filtered.slice(startIndex, endIndex);
+  
+  const pagination = useMemo(() => {
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    const endIndex = startIndex + ITEMS_PER_PAGE;
+    return {
+      totalPages,
+      startIndex,
+      endIndex,
+      paginatedProperties: filtered.slice(startIndex, endIndex),
+    };
+  }, [filtered, currentPage]);
 
-  // Track No Results
+  const { totalPages, startIndex, endIndex, paginatedProperties } = pagination;
+
+  // 4. Analytics Layer (Hardened Effects)
   useEffect(() => {
-    if (!isLoading && properties.length > 0 && filtered.length === 0) {
+    if (!isLoading && properties.length === 0) {
       pushToDataLayer(GTM_EVENTS.SEARCH_NO_RESULTS, {
-        keyword, province, popular_area: area, property_type: type,
-        item_category: type, listing_type: listingType, min_price: minPrice,
-        max_price: maxPrice, bedrooms, near_train: nearTrain,
-        pet_friendly: petFriendly, fully_furnished: fullyFurnished,
-        is_foreigner: isForeigner, company_registered: companyRegistered,
-        is_hot_deal: isHotDeal,
+        keyword: filters.keyword,
+        province: filters.province,
+        popular_area: filters.area,
+        property_type: filters.type,
       });
     }
-  }, [isLoading, filtered.length, properties.length, keyword, province, area, type, listingType, minPrice, maxPrice, bedrooms, nearTrain, petFriendly, fullyFurnished, isForeigner, companyRegistered, isHotDeal]);
+  }, [isLoading, properties.length, filters.keyword, filters.province, filters.area, filters.type]);
 
-  // Track View Item List
   useEffect(() => {
-    if (!isLoading && properties.length > 0) {
+    if (!isLoading && filtered.length > 0) {
       pushToDataLayer(GTM_EVENTS.VIEW_ITEM_LIST, {
         items_count: filtered.length,
-        keyword, province, property_type: type, listing_type: listingType,
-        popular_area: area, bedrooms, near_train: nearTrain,
-        pet_friendly: petFriendly, fully_furnished: fullyFurnished,
-        is_foreigner: isForeigner, company_registered: companyRegistered,
-        is_hot_deal: isHotDeal,
+        property_type: filters.type,
+        listing_type: filters.listingType,
       });
     }
-  }, [isLoading, filtered.length, keyword, province, type, listingType, area, bedrooms, nearTrain, petFriendly, fullyFurnished, isForeigner, companyRegistered, isHotDeal]);
+  }, [isLoading, filtered.length, filters.type, filters.listingType]);
 
-  // Reset page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [
-    keyword, type, listingType, minPrice, maxPrice, area, province,
-    nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
-    companyRegistered, isHotDeal,
+  // Reset page on filter changes (Memoized triggers)
+  const filterFingerprint = JSON.stringify([
+    filters.keyword, filters.type, filters.listingType, filters.minPrice, 
+    filters.maxPrice, filters.area, filters.province, filters.nearTrain, 
+    filters.petFriendly, filters.fullyFurnished, filters.bedrooms, 
+    filters.isForeigner, filters.isHotDeal
   ]);
 
-  // Scroll to top when page changes
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setCurrentPage(1);
+  }, [filterFingerprint]);
+
+  // UX: Auto-scroll on pagination
+  useEffect(() => {
+    if (currentPage > 1) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }, [currentPage]);
 
   return (
@@ -119,7 +126,6 @@ export function PropertySearchPage({
         matchesFilters={matchesFilters}
       />
 
-      {/* Results Grid */}
       <div className="max-w-screen-2xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <SearchResultsHeader
           totalFound={filtered.length}
@@ -128,9 +134,10 @@ export function PropertySearchPage({
         />
 
         {isLoading ? (
-          <MorphingLoader />
+          /* S-Tier: Stable Skeleton instead of full-page loader */
+          <PropertyGridSkeleton count={8} />
         ) : filtered.length === 0 ? (
-          <NoResultsView onClearFilters={clearFilters} />
+          <NoResultsView onClearFilters={filters.clearFilters} />
         ) : (
           <>
             <PropertyGrid

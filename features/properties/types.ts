@@ -10,21 +10,47 @@ export type PropertyInsert =
 export type PropertyUpdate =
   Database["public"]["Tables"]["properties"]["Update"];
 
+// --- Hardened JSONB Schemas ---
+export interface PropertyImageMetadata {
+  id: string | null | undefined;
+  url: string;
+  storage_path: string | null | undefined;
+  alt_text: string | null | undefined;
+  is_cover: boolean;
+  sort_order: number;
+  category: string | null | undefined;
+}
+
+export interface NearbyItem {
+  category: string;
+  name: string;
+  distance: string | null | undefined;
+  time: string | null | undefined;
+  name_en: string | null | undefined;
+  name_cn: string | null | undefined;
+}
+
 // Property Image types
 export type PropertyImage =
   Database["public"]["Tables"]["property_images"]["Row"];
 export type PropertyImageInsert =
   Database["public"]["Tables"]["property_images"]["Insert"];
 
-// Property with nested images
+// Property with hardened JSONB fields and minimal relational joins
 export type PropertyWithImages = PropertyRow & {
-  property_images: PropertyImage[];
+  // Hardened JSONB accessors (Stored in the main properties table)
+  images: PropertyImageMetadata[] | null;
+  nearby_places?: NearbyItem[] | null;
+  nearby_transits?: any[] | null; 
+  
+  // Relational Joins (Still needed for agents/features)
   property_agents?: { agent_id: string }[];
   property_features?: { feature_id: string }[];
   reviewer?: { full_name: string | null } | null;
+  tenants?: { name: string } | null;
 };
 
-// Helper type for image upload data
+// Helper type for image upload data (Legacy/Form compatible)
 export type ImageUploadData = {
   storage_path: string;
   image_url: string;
@@ -94,4 +120,31 @@ export interface PropertyTableData {
   version?: number;
   ai_reviewed_at?: string | null;
   ai_reviewed_by?: string | null;
+}
+
+/**
+ * [S-Tier] Centralized Property Detail Type
+ * Pure extension of base row with mapped relations.
+ * No redundant field overrides here to prevent TS conflicts.
+ */
+export interface PropertyDetail extends PropertyRow {
+  // Hardened Relation mappings
+  images: Array<{
+    id: string | null | undefined;
+    url: string;
+    image_url?: string;
+    storage_path: string | null;
+    is_cover: boolean | null;
+    sort_order: number | null;
+  }>;
+  assigned_agent: Pick<
+    Database["public"]["Tables"]["profiles"]["Row"],
+    "full_name" | "phone" | "avatar_url" | "line_id"
+  > | null;
+  property_features: {
+    features: Pick<
+      Database["public"]["Tables"]["features"]["Row"],
+      "id" | "name" | "name_en" | "name_cn" | "icon_key" | "category"
+    > | null;
+  }[];
 }

@@ -7,17 +7,7 @@ export async function RecentPropertiesSection({ tenantId }: { tenantId?: string 
   const supabase = await createClient();
   let query = supabase
     .from("properties")
-    .select(
-      `
-      *,
-      property_images (
-         image_url,
-         storage_path,
-         is_cover,
-         sort_order
-      )
-    `,
-    )
+    .select("*")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(5);
@@ -31,9 +21,6 @@ export async function RecentPropertiesSection({ tenantId }: { tenantId?: string 
 
   const properties = (propertiesResult ?? []).map((p: any) => ({
     ...p,
-    property_images: p.property_images?.sort(
-      (a: any, b: any) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
-    ),
   })) as any;
 
   return <RecentPropertiesTable properties={properties} />;

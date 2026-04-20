@@ -6,32 +6,13 @@ import { MdMapsHomeWork } from "react-icons/md";
 import { PropertyCard } from "./PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import type { Database } from "@/lib/database.types";
-import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { 
+  PropertyWithImages, 
+  PropertyType 
+} from "@/features/properties/types";
+import { getCoverImage, getSafeImages } from "@/lib/property-hardened-utils";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
-
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
-type PropertyType = Database["public"]["Enums"]["property_type"];
-type PropertyImage = {
-  id: string;
-  image_url: string;
-  storage_path: string | null;
-  is_cover: boolean;
-  sort_order: number;
-};
-type PropertyWithImages = PropertyRow & {
-  property_images: PropertyImage[] | null;
-  property_features: {
-    features: {
-      id: string;
-      name: string;
-      name_en?: string | null;
-      name_cn?: string | null;
-      icon_key: string;
-      category: string | null;
-    } | null;
-  }[] | null;
-};
 
 interface SimilarPropertiesClientProps {
   properties: PropertyWithImages[];
@@ -73,17 +54,6 @@ export function SimilarPropertiesClient({
 
       <div className="grid grid-cols-1 sm:grid-cols-2  lg:grid-cols-4 gap-4 md:gap-6">
         {properties.map((property) => {
-          const coverImg =
-            property.property_images?.find((img) => img.is_cover) ||
-            property.property_images?.[0];
-
-          const imageUrl =
-            coverImg?.image_url && coverImg.image_url.startsWith("http")
-              ? coverImg.image_url
-              : coverImg?.storage_path
-                ? getPublicImageUrl(coverImg.storage_path)
-                : coverImg?.image_url;
-
           return (
             <div 
               key={property.id} 
@@ -101,13 +71,13 @@ export function SimilarPropertiesClient({
               <PropertyCard
                 property={{
                   ...property,
-                  image_url: imageUrl,
-                  images: property.property_images?.map((img) => img.image_url) || [],
+                  image_url: getCoverImage(property.images),
+                  images: getSafeImages(property.images).map((img) => img.url),
                   verified: property.verified ?? undefined,
-                  listing_type: property.listing_type as "SALE" | "RENT" | "SALE_AND_RENT" | null,
-                  features: property.property_features
-                    ?.map((pf) => pf.features)
-                    .filter((f): f is NonNullable<typeof f> => !!f) || [],
+                  listing_type: property.listing_type as any,
+                  features: (property.property_features || [])
+                    .map((pf: any) => pf.features)
+                    .filter((f) => !!f),
                 }}
                 compareWith={compareData}
                 footerVariant="minimal"
