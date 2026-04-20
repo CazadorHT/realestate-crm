@@ -1,6 +1,6 @@
 import { inngest } from "./client";
 import { createAdminClient } from "../supabase/admin";
-import { generateText } from "@/lib/ai/gemini";
+import { generateText, generateEmbedding } from "@/lib/ai/gemini";
 import { craftPropertyDescriptionPrompt } from "./ai-prompts";
 import { PROPERTY_IMAGES_BUCKET } from "@/features/properties/logic/images";
 import sharp from "sharp";
@@ -26,6 +26,7 @@ function normalizeAiResult(raw: any) {
     cn: ["cn", "chinese", "chinese_description", "Chinese"],
     meta_title: ["meta_title", "metaTitle", "seo_title", "seoTitle"],
     meta_description: ["meta_description", "metaDescription", "seo_description", "seoDescription"],
+    search_summary: ["search_summary", "searchSummary", "summary"],
   };
 
   const result: any = {};
@@ -154,11 +155,26 @@ export const processPropertyCreated = inngest.createFunction(
       }
     });
 
-    // 📢 Step 4: Safety Lock Update (Null Safety)
+    // 🧠 Step 4: Generate Semantic Embedding (Standard 768-dim)
+    const embedding = await step.run("generate-embedding", async () => {
+      // Use the search summary or the Thai description for the vector
+      const textToEmbed = aiResult.search_summary || aiResult.th || "";
+      if (!textToEmbed) return null;
+      
+      try {
+        const vector = await generateEmbedding(textToEmbed);
+        return vector;
+      } catch (error) {
+        console.error("Embedding generation failed:", error);
+        return null;
+      }
+    });
+
+    // 📢 Step 5: Safety Lock Update (Null Safety)
     await step.run("update-property-record", async () => {
       // 🛡️ SECURITY: Dynamic object to prevent overwriting existing data with NULLs
       const updateData: any = { 
-        requires_ai_review: true,
+        requires_ai_review: false,
         updated_at: new Date().toISOString()
       };
 
@@ -167,6 +183,8 @@ export const processPropertyCreated = inngest.createFunction(
       if (aiResult.cn) updateData.description_cn = aiResult.cn;
       if (aiResult.meta_title) updateData.meta_title = aiResult.meta_title;
       if (aiResult.meta_description) updateData.meta_description = aiResult.meta_description;
+      if (aiResult.search_summary) updateData.ai_summary_content = aiResult.search_summary;
+      if (embedding) updateData.embedding = embedding;
 
       const { error, count } = await supabase
         .from("properties")
@@ -179,7 +197,7 @@ export const processPropertyCreated = inngest.createFunction(
       return { status: "updated", fields: Object.keys(updateData) };
     });
 
-    // 📊 Step 5: Audit & Cost Tracking
+    // 📊 Step 6: Audit & Cost Tracking
     await step.run("log-ai-usage", async () => {
       const promptTokens = aiResult.usage?.promptTokens || 0;
       const completionTokens = aiResult.usage?.completionTokens || 0;

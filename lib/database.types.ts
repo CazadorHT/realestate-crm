@@ -3489,6 +3489,15 @@ export type Database = {
           property_count: number
         }[]
       }
+      get_public_property_facets: {
+        Args: {
+          p_listing_type?: string
+          p_property_type?: string
+          p_province?: string
+          p_q?: string
+        }
+        Returns: Json
+      }
       get_user_tenants: { Args: never; Returns: string[] }
       increment_blog_post_view: {
         Args: { post_id: string }

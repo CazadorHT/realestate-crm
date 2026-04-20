@@ -985,7 +985,18 @@
       "split_air": "Split Air",
       "access_247": "24/7 Access",
       "fiber_optic": "Fiber Optic",
-      "multi_parking": "Parking > 1 Car"
+      "multi_parking": "Parking > 1 Car",
+      "hot_deal": "Hot Deal!",
+      "verified": "Verified",
+      "cbd": "CBD Location",
+      "new_listing": "New / Never Lived In",
+      "smart_home": "Smart Home",
+      "private_elevator": "Private Elevator",
+      "accessible": "Accessible",
+      "investment_ready": "Investment Ready",
+      "good_location": "Good Location, Convenient",
+      "ready_to_move": "Ready to Move In",
+      "family_friendly": "Family Friendly"
     },
     "transit_types": {
       "BTS": "BTS",

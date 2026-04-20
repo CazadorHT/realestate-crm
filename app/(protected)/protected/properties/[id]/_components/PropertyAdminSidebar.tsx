@@ -10,8 +10,11 @@ import { FaLine } from "react-icons/fa";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 
+import { AdminAiTriggers } from "@/components/admin/properties/AdminAiTriggers";
+
 interface PropertyAdminSidebarProps {
   property: {
+    id: string;
     status: string | null;
     created_at: string;
     updated_at: string;
@@ -20,6 +23,10 @@ interface PropertyAdminSidebarProps {
     rental_price: number | null;
     property_type: string | null;
     property_source?: string | null;
+    ai_summary_content?: string | null;
+    embedding?: number[] | string | null;
+    requires_ai_review?: boolean;
+    is_featured?: boolean;
     owner: {
       id: string;
       full_name: string;
@@ -74,6 +81,14 @@ export function PropertyAdminSidebar({ property }: PropertyAdminSidebarProps) {
           </div>
         </div>
       </div>
+
+      <AdminAiTriggers
+        propertyId={property.id}
+        hasSummary={!!property.ai_summary_content}
+        hasEmbedding={!!property.embedding && property.embedding.length > 0}
+        requiresReview={!!property.requires_ai_review}
+        isFeatured={!!property.is_featured}
+      />
 
       <PropertySuitability
         listingType={(property.listing_type as any) || "SALE"}

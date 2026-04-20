@@ -71,6 +71,8 @@ export type PropertyCardProps = {
   is_pet_friendly?: boolean | null;
   is_foreigner_quota?: boolean | null;
   is_tax_registered?: boolean | null;
+  is_hot_deal?: boolean | null;
+  ai_summary_content?: string | null;
   features?:
     | {
         id: string;

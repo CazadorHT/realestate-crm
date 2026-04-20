@@ -2,7 +2,7 @@ import { getPublicProperties } from "../lib/services/properties";
 
 async function testPriceFilter() {
   console.log("Testing Sale Price Filter (Under 2M)...");
-  const saleUnder2M = await getPublicProperties({
+  const { properties: saleUnder2M } = await getPublicProperties({
     listingType: "SALE",
     maxPrice: 2000000,
   });
@@ -15,7 +15,7 @@ async function testPriceFilter() {
   });
 
   console.log("\nTesting Rent Price Filter (Above 100k)...");
-  const rentAbove100k = await getPublicProperties({
+  const { properties: rentAbove100k } = await getPublicProperties({
     listingType: "RENT",
     minPrice: 100000,
   });
@@ -28,7 +28,7 @@ async function testPriceFilter() {
   });
 
   console.log("\nTesting Area Size Filter (50-100 sqm)...");
-  const size50to100 = await getPublicProperties({
+  const { properties: size50to100 } = await getPublicProperties({
     minSize: 50,
     maxSize: 100,
   });

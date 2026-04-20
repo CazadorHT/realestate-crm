@@ -461,7 +461,7 @@ export function PropertyHeader({
               {/* Property Type */}
               <div className="flex lg:flex-row flex-col gap-4 w-full justify-between items-end">
                 <div className="space-y-3 grow min-w-0 w-full xl:max-w-[1000px] ">
-                  <div className="flex items-center gap-1 md:gap-2 flex-wrap sm:flex-nowrap">
+                  <div className="flex items-center gap-1 md:gap-2 overflow-x-auto no-scrollbar flex-nowrap py-1">
                     <Badge
                       className={`rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
                         property.listing_type === "SALE"

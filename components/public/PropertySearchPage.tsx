@@ -16,6 +16,7 @@ import { SearchResultsHeader } from "./search/SearchResultsHeader";
 import { PropertyGrid } from "./search/PropertyGrid";
 import { NoResultsView } from "./search/NoResultsView";
 import { PropertyGridSkeleton } from "./search/SearchSkeletons";
+import { AiInsightRibbon } from "./search/AiInsightRibbon";
 
 import { PropertyCardProps } from "./PropertyCard";
 type ApiProperty = PropertyCardProps;
@@ -37,7 +38,7 @@ export function PropertySearchPage({
   const filters = usePropertyFilters();
   
   // 1. Data Access Layer (Fortress Tier)
-  const { properties, isLoading } = usePropertyData(initialProperties);
+  const { properties, facets: serverFacets, isLoading } = usePropertyData(initialProperties);
 
   // 2. Optimized Analysis Logic
   const {
@@ -49,7 +50,7 @@ export function PropertySearchPage({
     availableQuickFilters,
     availableBedrooms,
     matchesFilters,
-  } = usePropertyFiltering(properties, filters);
+  } = usePropertyFiltering(properties, filters, serverFacets);
 
   // 3. Pagination Logic
   const ITEMS_PER_PAGE = 12;
@@ -124,6 +125,7 @@ export function PropertySearchPage({
         availableBedrooms={availableBedrooms}
         properties={properties}
         matchesFilters={matchesFilters}
+        setBulkFilters={filters.setBulkFilters}
       />
 
       <div className="max-w-screen-2xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -132,6 +134,13 @@ export function PropertySearchPage({
           startIndex={startIndex}
           endIndex={endIndex}
         />
+
+        {filters.aiInsight && (
+          <AiInsightRibbon 
+            insight={filters.aiInsight} 
+            onClear={() => filters.setAiInsight(null)} 
+          />
+        )}
 
         {isLoading ? (
           /* S-Tier: Stable Skeleton instead of full-page loader */

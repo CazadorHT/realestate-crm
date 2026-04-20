@@ -1,7 +1,8 @@
 "use client";
-
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { MagicAiSearch } from "./MagicAiSearch";
 import {
   Select,
   SelectContent,
@@ -79,6 +80,7 @@ interface DesktopFiltersProps {
   PROPERTY_TYPES: { value: string; label: string }[];
   getProvinceName: (name: string, lang: string) => string;
   getLocaleValue: (item: any, field: string, lang: string) => string;
+  setBulkFilters: (updates: any) => void;
 }
 
 export function DesktopFilters({
@@ -136,21 +138,18 @@ export function DesktopFilters({
   PROPERTY_TYPES,
   getProvinceName,
   getLocaleValue,
+  setBulkFilters,
 }: DesktopFiltersProps) {
   return (
     <div className="hidden xl:block">
       {/* Row 1: Core Search */}
       <div className="grid grid-cols-12 gap-3 mb-4">
         <div className="col-span-3">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-            <Input
-              placeholder={t("search.keyword_placeholder")}
-              className="pl-12 h-12! text-sm rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md focus:shadow-lg transition-all"
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-            />
-          </div>
+          <MagicAiSearch 
+            keyword={keyword} 
+            setKeyword={setKeyword} 
+            setBulkFilters={setBulkFilters}
+          />
         </div>
 
         <div className="col-span-2">

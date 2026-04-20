@@ -88,7 +88,7 @@ export function ResponsiveDialog({
 
   // 🛡️ Auto-Logic: Default to modal behavior unless explicitly disabled
   const finalModal = modal ?? true;
-  const finalScale = shouldScaleBackground ?? true;
+  const finalScale = shouldScaleBackground ?? false;
 
   React.useEffect(() => {
     setMounted(true);

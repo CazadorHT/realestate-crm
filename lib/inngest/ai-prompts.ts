@@ -70,7 +70,8 @@ export function craftPropertyDescriptionPrompt(property: any, hasImage: boolean 
       "en": "English description...",
       "cn": "Chinese description...",
       "meta_title": "SEO Optimized Title",
-      "meta_description": "SEO Optimized Description"
+      "meta_description": "SEO Optimized Description",
+      "search_summary": "A concise, single-paragraph summary containing all key keywords (Location, Condo name, Distance to BTS/MRT, Features) for high-performance Full Text Search."
     }
   `;
 }

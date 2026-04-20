@@ -30,16 +30,16 @@ import {
   CheckCircle2,
   Hammer,
   Star,
+  Flame,
+  CheckCircle,
+  Cpu,
+  Zap,
+  Navigation,
+  Accessibility,
+  ArrowUpCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import type { Database } from "@/lib/database.types";
 import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
@@ -96,33 +96,33 @@ export function PropertyBadgesSection({
     const speed = 0.8; // Base speed (pixels per 16.67ms)
 
     const scroll = (currentTime: number) => {
-      if (scrollContainer) {
-        const deltaTime = currentTime - lastTime;
-        lastTime = currentTime;
+      if (!scrollContainer || isDragging || isHovered) return;
 
-        const maxScroll =
-          scrollContainer.scrollWidth - scrollContainer.clientWidth;
+      const deltaTime = currentTime - lastTime;
+      lastTime = currentTime;
 
-        // Skip if content doesn't overflow
-        if (maxScroll > 1) {
-          // Precise move calculation (normalized to 60fps)
-          const move = (speed * deltaTime) / 16.67;
+      const maxScroll =
+        scrollContainer.scrollWidth - scrollContainer.clientWidth;
 
-          // Accumulate position using the ref (float precision for sub-pixel smoothness)
-          scrollPosRef.current += move * scrollDirectionRef.current;
+      // Skip if content doesn't overflow
+      if (maxScroll > 1) {
+        // Precise move calculation (normalized to 60fps)
+        const move = (speed * deltaTime) / 16.67;
 
-          // Ping-Pong bounce logic with boundary clamping
-          if (scrollPosRef.current >= maxScroll) {
-            scrollPosRef.current = maxScroll;
-            scrollDirectionRef.current = -1;
-          } else if (scrollPosRef.current <= 0) {
-            scrollPosRef.current = 0;
-            scrollDirectionRef.current = 1;
-          }
+        // Accumulate position using the ref (float precision for sub-pixel smoothness)
+        scrollPosRef.current += move * scrollDirectionRef.current;
 
-          // Apply to DOM (Sync high-precision float to scrollLeft)
-          scrollContainer.scrollLeft = scrollPosRef.current;
+        // Ping-Pong bounce logic with boundary clamping
+        if (scrollPosRef.current >= maxScroll) {
+          scrollPosRef.current = maxScroll;
+          scrollDirectionRef.current = -1;
+        } else if (scrollPosRef.current <= 0) {
+          scrollPosRef.current = 0;
+          scrollDirectionRef.current = 1;
         }
+
+        // Apply to DOM (Sync high-precision float to scrollLeft)
+        scrollContainer.scrollLeft = scrollPosRef.current;
       }
       animationId = requestAnimationFrame(scroll);
     };
@@ -148,29 +148,98 @@ export function PropertyBadgesSection({
   };
 
   const badgeItems = [
+    // 🔥 Priority Badges (The "Hooks")
+    {
+      condition: property.is_hot_deal,
+      label: t("property.badges.hot_deal"),
+      icon: Flame,
+      color: "bg-red-50 text-red-600 font-bold border border-red-200 animate-pulse",
+    },
+    {
+      condition: property.verified,
+      label: t("property.badges.verified"),
+      icon: CheckCircle,
+      color: "bg-blue-50 text-blue-600 font-bold border border-blue-200",
+    },
+    {
+      condition: property.is_exclusive,
+      label: t("property.badges.exclusive"),
+      icon: ShieldCheck,
+      color: "bg-rose-50 text-rose-800 font-bold",
+    },
+
+    // 🚀 Location & Status
+    {
+      condition: property.is_cbd,
+      label: t("property.badges.cbd"),
+      icon: Navigation,
+      color: "bg-indigo-50 text-indigo-800",
+    },
     {
       condition: property.near_transit || property.meta_keywords?.includes("ทำเลดี เดินทางสะดวก"),
-      label: "ทำเลดี เดินทางสะดวก",
+      label: t("property.badges.good_location"),
       icon: TrainFront,
-      color: "bg-blue-50 text-blue-800", // Highlighted colors
+      color: "bg-blue-50 text-blue-800",
     },
     {
       condition: !property.is_bare_shell || property.meta_keywords?.includes("พร้อมเข้าอยู่"),
-      label: "พร้อมเข้าอยู่",
+      label: t("property.badges.ready_to_move"),
       icon: CheckCircle2,
       color: "bg-emerald-50 text-emerald-800",
     },
     {
-      condition: (property.bedrooms || 0) >= 2 || property.meta_keywords?.includes("เหมาะสำหรับครอบครัว"),
-      label: "เหมาะสำหรับครอบครัว",
-      icon: Users,
-      color: "bg-purple-50 text-purple-800",
+      condition: property.is_never_lived_in,
+      label: t("property.badges.new_listing"),
+      icon: Zap,
+      color: "bg-amber-50 text-amber-800",
     },
+
+    // 🏠 Unit Features
+    {
+      condition: property.is_smart_home,
+      label: t("property.badges.smart_home"),
+      icon: Cpu,
+      color: "bg-violet-50 text-violet-800",
+    },
+    {
+      condition: property.is_high_ceiling,
+      label: t("property.badges.high_ceiling"),
+      icon: MoveUp,
+      color: "bg-slate-50 text-slate-600",
+    },
+    {
+      condition: property.has_private_elevator,
+      label: t("property.badges.private_elevator"),
+      icon: ArrowUpCircle,
+      color: "bg-slate-50 text-slate-800 font-medium",
+    },
+    {
+      condition: property.is_high_floor,
+      label: t("property.badges.high_floor"),
+      icon: Building2,
+      color: "bg-slate-50 text-slate-700",
+    },
+
+    // 🐕 Lifestyle
     {
       condition: property.is_pet_friendly,
       label: t("property.badges.pet_friendly"),
       icon: PawPrint,
       color: "bg-orange-50 text-orange-700",
+    },
+    {
+      condition: property.is_handicapped_friendly,
+      label: t("property.badges.accessible"),
+      icon: Accessibility,
+      color: "bg-blue-50 text-blue-700",
+    },
+
+    // 📋 Standard Stats
+    {
+      condition: (property.bedrooms || 0) >= 2 || property.meta_keywords?.includes("เหมาะสำหรับครอบครัว"),
+      label: t("property.badges.family_friendly"),
+      icon: Users,
+      color: "bg-purple-50 text-purple-800",
     },
     {
       condition: property.is_foreigner_quota,
@@ -204,20 +273,14 @@ export function PropertyBadgesSection({
     },
     {
       condition: property.is_selling_with_tenant,
-      label: t("property.badges.selling_with_tenant"),
-      icon: Users,
-      color: "bg-green-50 text-green-800",
-    },
-    {
-      condition: property.is_exclusive,
-      label: t("property.badges.exclusive"),
-      icon: ShieldCheck,
-      color: "bg-rose-50 text-rose-800",
+      label: t("property.badges.investment_ready"),
+      icon: Star,
+      color: "bg-green-50 text-green-800 font-medium",
     },
     {
       condition: property.has_river_view,
       label: t("property.badges.river_view"),
-      icon: Waves,
+      icon: Sunset,
       color: "bg-sky-50 text-sky-700",
     },
     {
@@ -243,12 +306,6 @@ export function PropertyBadgesSection({
       label: t("property.badges.allow_smoking"),
       icon: Cigarette,
       color: "bg-slate-100 text-slate-600",
-    },
-    {
-      condition: property.is_high_ceiling,
-      label: t("property.badges.high_ceiling"),
-      icon: MoveUp,
-      color: "bg-slate-50 text-slate-600",
     },
     {
       condition: property.is_column_free,
@@ -364,7 +421,7 @@ export function PropertyBadgesSection({
       if (!scrollRef.current) return;
       const x = e.pageX;
       const walk = (x - startX) * 2.0;
-      if (Math.abs(x - startX) > 5) setDragThresholdMet(true);
+      if (Math.abs(x - startX) > 10) setDragThresholdMet(true);
       scrollRef.current.scrollLeft = initialScrollLeft - walk;
       scrollPosRef.current = scrollRef.current.scrollLeft;
     };
@@ -382,7 +439,7 @@ export function PropertyBadgesSection({
       window.removeEventListener("mousemove", handleWindowMouseMove);
       window.removeEventListener("mouseup", handleWindowMouseUp);
     };
-  }, [isDragging, startX, initialScrollLeft]);
+  }, [isDragging, startX, initialScrollLeft, dragThresholdMet]);
 
   // Touch support
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -396,7 +453,7 @@ export function PropertyBadgesSection({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!scrollRef.current) return;
     const x = e.touches[0].pageX;
-    if (Math.abs(x - startX) > 5) setDragThresholdMet(true);
+    if (Math.abs(x - startX) > 10) setDragThresholdMet(true);
     const walk = (x - startX) * 2.0;
     scrollRef.current.scrollLeft = initialScrollLeft - walk;
     scrollPosRef.current = scrollRef.current.scrollLeft;
@@ -425,20 +482,13 @@ export function PropertyBadgesSection({
     <section
       id="property-badges-section"
       className={cn(
-        "space-y-4 transition-all duration-500 rounded-md p-2 items-center border-b border-slate-100 " ,
+        "space-y-4 transition-all duration-500 rounded-md p-2 items-center border-b border-slate-100 ",
         isDragging ? "select-none" : "",
         isHighlighted &&
           "ring-4 ring-blue-500/40 border-blue-300 animate-highlight-slow overflow-hidden",
       )}
     >
       <style key="badges-style">{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
         @keyframes highlight-pulse-slow {
           0%, 100% {
             box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
@@ -456,100 +506,96 @@ export function PropertyBadgesSection({
         }
       `}</style>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 ">
-          <div className="flex items-center gap-3 flex-1 max-w-3xl overflow-hidden group/container relative">
-            {/* Sale/Rent: Static */}
-            <div className="shrink-0 z-20 bg-white">
-              <Badge
-                className={`rounded-full px-5 py-2 font-semibold whitespace-nowrap shadow-sm ${
-                  property.listing_type === "SALE"
-                    ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                    : "bg-blue-600 hover:bg-blue-700 text-white"
-                }`}
-              >
-                {property.listing_type === "SALE"
-                  ? t("common.for_sale")
-                  : t("common.for_rent")}
-              </Badge>
-            </div>
-
-            {/* Others: Draggable & Ticker area */}
-            <div
-              ref={scrollRef}
-              onMouseDown={handleMouseDown}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              onMouseLeave={handleMouseLeave}
-              onMouseEnter={() => setIsHovered(true)}
-              onScroll={handleScroll}
-              className={`flex-1 overflow-x-auto no-scrollbar pb-1 flex items-center gap-2 touch-pan-y ${
-                isDragging ? "cursor-grabbing" : "cursor-grab"
+      {/* 🟢 Ticker Preview */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 ">
+        <div className="flex items-center gap-3 flex-1 max-w-3xl overflow-hidden group/container relative">
+          {/* Sale/Rent Status */}
+          <div className="shrink-0 z-20 bg-white">
+            <Badge
+              className={`rounded-full px-5 py-2 font-semibold whitespace-nowrap shadow-sm ${
+                property.listing_type === "SALE"
+                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
             >
-              {filteredBadges.map((item, idx) => (
-                <Badge
-                  key={idx}
-                  className={`rounded-full px-4 py-2 font-medium border-none whitespace-nowrap gap-1.5 shadow-xs transition-colors shrink-0 pointer-events-none ${item.color}`}
-                >
-                  <item.icon className="w-3.5 h-3.5" />
-                  {item.label}
-                </Badge>
-              ))}
-              {/* End spacing for loop feel */}
-              <div className="shrink-0 w-32 h-4" />
-            </div>
-
-            {/* Right side fade overlay */}
-            <div className="absolute right-0 top-0 bottom-0 w-16 bg-linear-to-l from-white to-transparent pointer-events-none z-10 hidden md:block" />
+              {property.listing_type === "SALE"
+                ? t("common.for_sale")
+                : t("common.for_rent")}
+            </Badge>
           </div>
 
-          <div className="flex items-center gap-2 text-[11px] md:text-xs font-medium text-slate-400 shrink-0 self-end md:self-center">
-            <Clock className="w-3.5 h-3.5" />
-            <span>
-              {t("property.created_at_label")} {formatDate(property.created_at)}
-            </span>
+          {/* Draggable Ticker area */}
+          <div
+            ref={scrollRef}
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onMouseLeave={handleMouseLeave}
+            onMouseEnter={() => setIsHovered(true)}
+            onScroll={handleScroll}
+            className={`flex-1 overflow-x-auto scrollbar-none pb-1 flex items-center gap-2 touch-pan-y ${
+              isDragging ? "cursor-grabbing" : "cursor-grab"
+            }`}
+          >
+            {filteredBadges.map((item, idx) => (
+              <Badge
+                key={idx}
+                className={`rounded-full px-4 py-2 font-medium border-none whitespace-nowrap gap-1.5 shadow-xs transition-colors shrink-0 pointer-events-none ${item.color}`}
+              >
+                <item.icon className="w-3.5 h-3.5" />
+                {item.label}
+              </Badge>
+            ))}
+            <div className="shrink-0 w-32 h-4" />
           </div>
+
+          <div className="absolute right-0 top-0 bottom-0 w-16 bg-linear-to-l from-white to-transparent pointer-events-none z-10 hidden md:block" />
         </div>
 
-        <DialogContent className="max-h-[90vh] md:max-h-[80vh]  flex flex-col p-0 overflow-hidden border-none shadow-2xl">
-          <DialogHeader className="p-6 border-b border-slate-100 shrink-0">
-            <DialogTitle className="text-xl font-bold text-slate-900">
-              {t("property.special_features")}
-            </DialogTitle>
-            <DialogDescription className="text-slate-500 font-medium">
-              {t("property.special_features_description")}{" "}
-              <span className="text-blue-600 font-bold">
-                {filteredBadges.length}
-              </span>{" "}
-              {t("property.special_features_count")}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {filteredBadges.map((item, idx) => (
-                <div
-                  key={idx}
-                  className={cn(
-                    "flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/50 transition-all duration-300 hover:bg-white hover:shadow-lg hover:-translate-y-1 group cursor-default",
-                    item.color,
-                  )}
-                >
-                  <div className="p-2 rounded-lg bg-white shadow-sm ring-1 ring-slate-200/50 group-hover:ring-blue-200 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
-                    <item.icon className="w-4 h-4" />
-                  </div>
-                  <span className="text-xs font-semibold leading-tight text-slate-700">
-                    {item.label}
-                  </span>
+        <div className="flex items-center gap-2 text-[11px] md:text-xs font-medium text-slate-400 shrink-0 self-end md:self-center">
+          <Clock className="w-3.5 h-3.5" />
+          <span>
+            {t("property.created_at_label")} {formatDate(property.created_at)}
+          </span>
+        </div>
+      </div>
+
+      <ResponsiveDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        title={t("property.special_features")}
+        description={
+          <>
+            {t("property.special_features_description")}{" "}
+            <span className="text-blue-600 font-bold">
+              {filteredBadges.length}
+            </span>{" "}
+            {t("property.special_features_count")}
+          </>
+        }
+      >
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {filteredBadges.map((item, idx) => (
+              <div
+                key={idx}
+                className={cn(
+                  "flex items-center gap-3 p-3 rounded-xl border border-slate-100 bg-slate-50/50 transition-all duration-300 hover:bg-white hover:shadow-lg hover:-translate-y-1 group cursor-default",
+                  item.color,
+                )}
+              >
+                <div className="p-2 rounded-lg bg-white shadow-sm ring-1 ring-slate-200/50 group-hover:ring-blue-200 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                  <item.icon className="w-4 h-4" />
                 </div>
-              ))}
-            </div>
+                <span className="text-xs font-semibold leading-tight text-slate-700 line-clamp-2">
+                  {item.label}
+                </span>
+              </div>
+            ))}
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </ResponsiveDialog>
     </section>
   );
 }
-
-

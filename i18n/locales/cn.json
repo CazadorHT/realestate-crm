@@ -994,7 +994,18 @@
       "split_air": "分体空调",
       "access_247": "24/7 出入",
       "fiber_optic": "光纤网络",
-      "multi_parking": "多车位"
+      "multi_parking": "多车位",
+      "hot_deal": "特价房 (Hot Deal)",
+      "verified": "已认证",
+      "cbd": "CBD 核心地段",
+      "new_listing": "全新/未入住",
+      "smart_home": "智能家居",
+      "private_elevator": "私人电梯",
+      "accessible": "无障碍设施",
+      "investment_ready": "投资首选",
+      "good_location": "地段优越，交通便利",
+      "ready_to_move": "即可入住",
+      "family_friendly": "适合家庭"
     },
     "transit_types": {
       "BTS": "曼谷轻轨 (BTS)",

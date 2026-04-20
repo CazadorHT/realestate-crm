@@ -1,11 +1,18 @@
+import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { 
-  getSafeImages, 
-  getCoverImage, 
-  getSafeNearbyPlaces, 
-  getSafeNearbyTransits 
+import {
+  getSafeImages,
+  getCoverImage,
+  getSafeNearbyPlaces,
+  getSafeNearbyTransits,
 } from "@/lib/property-hardened-utils";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { 
+  PropertySearchResponse, 
+  PropertyFacets,
+  FacetRPCParams 
+} from "@/features/properties/types/search";
 
 export type PropertyRow = {
   id: string;
@@ -88,6 +95,7 @@ const PUBLIC_COLUMNS = `
   transit_station_name_en, transit_station_name_cn, transit_distance_meters,
   google_maps_link, is_fully_furnished, is_bare_shell,
   is_pet_friendly, is_foreigner_quota, is_tax_registered,
+  ai_summary_content,
   property_features (
     features (id, name, name_en, name_cn, icon_key)
   )
@@ -126,103 +134,172 @@ export interface GetPropertiesOptions {
   fullyFurnished?: boolean;
   isForeigner?: boolean;
   companyRegistered?: boolean;
+  includeFacets?: boolean;
 }
 
-export async function getPublicProperties(options: GetPropertiesOptions = {}) {
-  const supabase = createAdminClient();
+/**
+ * [S-Tier] Hardened Public Properties Fetcher
+ * - React.cache for Request Memoization
+ * - Server-Side Filtering Logic
+ * - Security Whitelisted Columns
+ * - Server-Side Faceting Support
+ */
+export const getPublicProperties = cache(
+  async (options: GetPropertiesOptions = {}): Promise<PropertySearchResponse> => {
+    const supabase = createAdminClient();
 
-  let query = supabase
-    .from("properties")
-    .select(PUBLIC_COLUMNS)
-    .eq("status", "ACTIVE");
+    let query = supabase
+      .from("properties")
+      .select(PUBLIC_COLUMNS)
+      .eq("status", "ACTIVE")
+      .is("deleted_at", null);
 
-  // Filter Logic (Server-Side)
-  if (options.ids && options.ids.length > 0) query = query.in("id", options.ids);
-  if (options.filter === "hot_deals" || options.filter as any === "hot_deal") query = query.eq("is_hot_deal", true);
+    // Filter Logic (Server-Side)
+    if (options.ids && options.ids.length > 0)
+      query = query.in("id", options.ids);
+    
+    if (options.filter === "hot_deals" || (options.filter as any) === "hot_deal")
+      query = query.eq("is_hot_deal", true);
 
-  const itemsPerPage = options.limit || 60;
-
-  // Sorting
-  if (options.filter === "hot_deals") {
-    query = query.order("updated_at", { ascending: false });
-  } else if (options.listingType === "RENT") {
-    query = query.order("rental_price", { ascending: true, nullsFirst: false });
-  } else {
-    query = query.order("price", { ascending: true, nullsFirst: false });
-  }
-
-  // Basic Server-Side Filtering Bridge
-  if (options.province) query = query.ilike("province", `%${options.province}%`);
-  if (options.district) query = query.ilike("district", `%${options.district}%`);
-  if (options.area || options.popular_area) {
-    const area = options.area || options.popular_area;
-    query = query.or(`subdistrict.ilike.%${area}%,popular_area.ilike.%${area}%`);
-  }
-  if (options.propertyType && options.propertyType !== "all" && options.propertyType !== "ALL") {
-    query = query.eq("property_type", options.propertyType as any);
-  }
-
-  // Price Filtering (Server-Side)
-  const effectivePriceType = options.priceType || options.listingType;
-  if (options.minPrice || options.maxPrice) {
-    const min = options.minPrice || 0;
-    const max = options.maxPrice || 999999999;
-    if (effectivePriceType === "RENT") {
-      query = query.gte("rental_price", min).lte("rental_price", max);
-    } else {
-      query = query.gte("price", min).lte("price", max);
+    // Province & Area Filtering
+    if (options.province && options.province !== "ALL") {
+      query = query.eq("province", options.province);
     }
-  }
+    if (options.area && options.area !== "ALL") {
+      query = query.or(`subdistrict.ilike.%${options.area}%,popular_area.ilike.%${options.area}%`);
+    }
 
-  if (options.listingType && options.listingType !== "ALL") {
-    if (options.listingType === "SALE") query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
-    else if (options.listingType === "RENT") query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
-  }
+    // Property Type
+    if (options.propertyType && options.propertyType !== "ALL") {
+      query = query.eq("property_type", options.propertyType as any);
+    }
 
-  // Boolean Flags (Server-Side)
-  if (options.nearTrain) query = query.eq("near_transit", true);
-  if (options.petFriendly) query = query.eq("is_pet_friendly", true);
-  if (options.fullyFurnished) query = query.eq("is_fully_furnished", true);
-  if (options.isForeigner) query = query.eq("is_foreigner_quota", true);
-  if (options.companyRegistered) query = query.eq("is_tax_registered", true);
+    // Listing Type (Hardened logic)
+    if (options.listingType && options.listingType !== "ALL") {
+      if (options.listingType === "SALE")
+        query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+      else if (options.listingType === "RENT")
+        query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+    }
 
-  if (options.q) {
-    const searchTerm = `%${options.q}%`;
-    query = query.or(`title.ilike.${searchTerm},description.ilike.${searchTerm}`);
-  }
+    // Price Filtering (Server-Side)
+    const effectivePriceType = options.priceType || options.listingType;
+    if (options.minPrice || options.maxPrice) {
+      const min = Number(options.minPrice) || 0;
+      const max = Number(options.maxPrice) || 2000000000;
+      if (effectivePriceType === "RENT") {
+        query = query.gte("rental_price", min).lte("rental_price", max);
+      } else {
+        query = query.gte("price", min).lte("price", max);
+      }
+    }
 
-  const { data, error } = await query.limit(itemsPerPage);
-  if (error) {
-    console.error("Error fetching properties:", error);
-    return [];
-  }
+    // Size Filtering
+    if (options.minSize || options.maxSize) {
+      const minS = Number(options.minSize) || 0;
+      const maxS = Number(options.maxSize) || 100000;
+      query = query.gte("size_sqm", minS).lte("size_sqm", maxS);
+    }
 
-  // Fetch Popular Area Translations (Optimized)
-  const popularAreaNames = Array.from(new Set(data.map((row) => row.popular_area).filter((area): area is string => !!area)));
-  const areaTranslationsMap = new Map<string, { en: string | null; cn: string | null }>();
+    // Boolean Flags (Server-Side)
+    if (options.nearTrain) query = query.eq("near_transit", true);
+    if (options.petFriendly) query = query.eq("is_pet_friendly", true);
+    if (options.fullyFurnished) query = query.eq("is_fully_furnished", true);
+    if (options.isForeigner) query = query.eq("is_foreigner_quota", true);
+    if (options.companyRegistered) query = query.eq("is_tax_registered", true);
 
-  if (popularAreaNames.length > 0) {
-    const { data: areaData } = await supabase.from("popular_areas").select("name, name_en, name_cn").in("name", popularAreaNames);
-    (areaData || []).forEach((a) => areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn }));
-  }
+    // 🌍 AI-Ready Unified Search (Extended Multilingual Coverage)
+    if (options.q) {
+      const searchTerm = `%${options.q}%`;
+      query = query.or(
+        `title.ilike.${searchTerm},title_en.ilike.${searchTerm},title_cn.ilike.${searchTerm},` +
+        `description.ilike.${searchTerm},description_en.ilike.${searchTerm},description_cn.ilike.${searchTerm},` +
+        `ai_summary_content.ilike.${searchTerm},popular_area.ilike.${searchTerm}`
+      );
+    }
 
-  return (data ?? []).map((row: any) => {
-    const trans = areaTranslationsMap.get(row.popular_area || "");
+    // Items Per Page
+    const itemsPerPage = options.limit || 60;
+
+    // Sorting
+    if (options.filter === "hot_deals") {
+      query = query.order("updated_at", { ascending: false });
+    } else if (options.listingType === "RENT") {
+      query = query.order("rental_price", { ascending: true, nullsFirst: false });
+    } else {
+      query = query.order("price", { ascending: true, nullsFirst: false });
+    }
+
+    const { data: propertiesData, error } = await query.limit(itemsPerPage);
+    
+    if (error) {
+      console.error("Error fetching properties:", error);
+      return { properties: [], facets: null };
+    }
+
+    // Server-Side Faceting Logic (Optimized for scale)
+    let facets: PropertyFacets | null = null;
+    if (options.includeFacets) {
+      // Type-safe RPC call using Augmented Type Interface
+      const rpcParams: FacetRPCParams = {
+        p_q: options.q || null,
+        p_province: options.province || null,
+        p_property_type: options.propertyType || null,
+        p_listing_type: options.listingType || null
+      };
+
+      const { data: facetData } = await (supabase.rpc as any)('get_public_property_facets', rpcParams);
+      facets = facetData as PropertyFacets | null;
+    }
+
+    // Fetch Popular Area Translations (Optimized)
+    const popularAreaNames = Array.from(
+      new Set(
+        (propertiesData || [])
+          .map((row) => row.popular_area)
+          .filter((area): area is string => !!area),
+      ),
+    );
+    const areaTranslationsMap = new Map<
+      string,
+      { en: string | null; cn: string | null }
+    >();
+
+    if (popularAreaNames.length > 0) {
+      const { data: areaData } = await supabase
+        .from("popular_areas")
+        .select("name, name_en, name_cn")
+        .in("name", popularAreaNames);
+      (areaData || []).forEach((a) =>
+        areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn }),
+      );
+    }
+
+    const finalProperties = (propertiesData ?? []).map((row: any) => {
+      const trans = areaTranslationsMap.get(row.popular_area || "");
+      return {
+        ...row,
+        popular_area_en: trans?.en ?? null,
+        popular_area_cn: trans?.cn ?? null,
+        image_url: getCoverImage(row.images),
+        images: getSafeImages(row.images),
+        location: buildLocation(row as any),
+        features: (row.property_features || [])
+          .map((pf: any) => pf.features)
+          .filter(Boolean),
+        nearby_places: getSafeNearbyPlaces(row.nearby_places),
+        nearby_transits: getSafeNearbyTransits(row.nearby_transits),
+      };
+    });
+
     return {
-      ...row,
-      popular_area_en: trans?.en ?? null,
-      popular_area_cn: trans?.cn ?? null,
-      image_url: getCoverImage(row.images),
-      images: getSafeImages(row.images),
-      location: buildLocation(row as any),
-      features: (row.property_features || []).map((pf: any) => pf.features).filter(Boolean),
-      nearby_places: getSafeNearbyPlaces(row.nearby_places),
-      nearby_transits: getSafeNearbyTransits(row.nearby_transits),
+      properties: finalProperties,
+      facets
     };
-  });
-}
+  },
+);
 
-export async function getPublicPropertyBySlug(slug: string) {
+export const getPublicPropertyBySlug = cache(async (slug: string) => {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("properties")
@@ -236,7 +313,11 @@ export async function getPublicPropertyBySlug(slug: string) {
   const typedRow = data as unknown as PropertyRow;
   let trans = { en: null as string | null, cn: null as string | null };
   if (typedRow.popular_area) {
-    const { data: areaData } = await supabase.from("popular_areas").select("name, name_en, name_cn").eq("name", typedRow.popular_area).single();
+    const { data: areaData } = await supabase
+      .from("popular_areas")
+      .select("name, name_en, name_cn")
+      .eq("name", typedRow.popular_area)
+      .single();
     if (areaData) trans = { en: areaData.name_en, cn: areaData.name_cn };
   }
 
@@ -247,8 +328,10 @@ export async function getPublicPropertyBySlug(slug: string) {
     image_url: getCoverImage(typedRow.images),
     images: getSafeImages(typedRow.images),
     location: buildLocation(typedRow),
-    features: (typedRow.property_features || []).map((pf) => pf.features).filter(Boolean),
+    features: (typedRow.property_features || [])
+      .map((pf) => pf.features)
+      .filter(Boolean),
     nearby_places: getSafeNearbyPlaces(typedRow.nearby_places),
     nearby_transits: getSafeNearbyTransits(typedRow.nearby_transits),
   };
-}
+});

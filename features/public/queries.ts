@@ -8,8 +8,8 @@ export async function getPublicProperties(
   filter: PublicPropertyFilter,
 ): Promise<PublicProperty[]> {
   try {
-    const items = await getProperties(filter);
-    return items as unknown as PublicProperty[];
+    const { properties } = await getProperties(filter);
+    return properties as unknown as PublicProperty[];
   } catch (error) {
     console.error("Error fetching public properties:", error);
     return [];

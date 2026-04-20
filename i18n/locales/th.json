@@ -961,7 +961,7 @@
       "fully_furnished": "เฟอร์ฯ ครบ",
       "private_pool": "สระส่วนตัว",
       "selling_with_tenant": "ขายพร้อมผู้เช่า",
-      "exclusive": "Exclusive Listing",
+      "exclusive": "ตัวแทนหลัก",
       "near_transit": "ใกล้รถไฟฟ้า",
       "river_view": "วิวแม่น้ำ",
       "city_view": "วิวเมือง",
@@ -986,7 +986,18 @@
       "split_air": "แอร์แยก",
       "access_247": "เข้า-ออก 24 ชม.",
       "fiber_optic": "Fiber Optic",
-      "multi_parking": "จอดรถ > 1 คัน"
+      "multi_parking": "จอดรถ > 1 คัน",
+      "hot_deal": "ราคาพิเศษ (Hot Deal)",
+      "verified": "ตรวจสอบแล้ว",
+      "cbd": "ย่านธุรกิจ (CBD)",
+      "new_listing": "ใหม่/ไม่เคยเข้าอยู่",
+      "smart_home": "บ้านอัจฉริยะ (Smart Home)",
+      "private_elevator": "ลิฟต์ส่วนตัว",
+      "accessible": "รองรับรถเข็น/ผู้สูงอายุ",
+      "investment_ready": "พร้อมลงทุน (Investment Ready)",
+      "good_location": "ทำเลดี เดินทางสะดวก",
+      "ready_to_move": "พร้อมเข้าอยู่",
+      "family_friendly": "เหมาะสำหรับครอบครัว"
     },
     "transit_types": {
       "BTS": "BTS",

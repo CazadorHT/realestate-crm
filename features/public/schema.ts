@@ -32,6 +32,7 @@ export const publicPropertyFilterSchema = z.object({
   fullyFurnished: z.coerce.boolean().optional(),
   isForeigner: z.coerce.boolean().optional(),
   companyRegistered: z.coerce.boolean().optional(),
+  includeFacets: z.coerce.boolean().default(true).optional(),
 });
 
 export const inquiryLeadSchema = z.object({

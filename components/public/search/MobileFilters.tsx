@@ -29,8 +29,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { MobileFilterSheet } from "./MobileFilterSheet";
-import { PriceRangeSelect } from "./PriceRangeSelect";
-import { AreaSizeSelect } from "./AreaSizeSelect";
+import { MagicAiSearch } from "./MagicAiSearch";
 
 import { MdManageSearch, MdOutlinePets as PetIcon, MdWork as WorkIcon } from "react-icons/md";
 import { FaFire as FireIcon, FaTrainSubway as TrainIcon } from "react-icons/fa6";
@@ -110,6 +109,7 @@ interface MobileFiltersProps {
   MOBILE_ITEMS_LIMIT: number;
   pushToDataLayer: (event: string, params: any) => void;
   GTM_EVENTS: any;
+  setBulkFilters: (updates: any) => void;
 }
 
 export function MobileFilters({
@@ -171,6 +171,7 @@ export function MobileFilters({
   MOBILE_ITEMS_LIMIT,
   pushToDataLayer,
   GTM_EVENTS,
+  setBulkFilters,
 }: MobileFiltersProps) {
   const getPropertyIcon = (val: string, isActive: boolean) => {
     const iconClass = "w-4 h-4 transition-colors";
@@ -191,13 +192,11 @@ export function MobileFilters({
 
   return (
     <div className="xl:hidden flex gap-3 my-4">
-      <div className="relative flex-1">
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-        <Input
-          placeholder={t("search.keyword_placeholder")}
-          className="pl-12 h-12 text-base rounded-xl border-slate-200 bg-white shadow-sm"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
+      <div className="flex-1">
+        <MagicAiSearch 
+          keyword={keyword} 
+          setKeyword={setKeyword} 
+          setBulkFilters={setBulkFilters}
         />
       </div>
       {/* Sort by */}

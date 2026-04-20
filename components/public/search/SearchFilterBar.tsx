@@ -64,6 +64,7 @@ interface SearchFilterBarProps {
   availableBedrooms: Record<string, number>;
   properties?: any[];
   matchesFilters?: (p: any, excludeFilters?: string[]) => boolean;
+  setBulkFilters: (updates: any) => void;
 }
 
 export function SearchFilterBar({
@@ -113,6 +114,7 @@ export function SearchFilterBar({
   availableBedrooms,
   properties,
   matchesFilters,
+  setBulkFilters,
 }: SearchFilterBarProps) {
   const { t, language } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -391,6 +393,7 @@ export function SearchFilterBar({
           MOBILE_ITEMS_LIMIT={MOBILE_ITEMS_LIMIT}
           pushToDataLayer={pushToDataLayer}
           GTM_EVENTS={GTM_EVENTS}
+          setBulkFilters={setBulkFilters}
         />
 
         <DesktopFilters
@@ -448,6 +451,7 @@ export function SearchFilterBar({
           PROPERTY_TYPES={PROPERTY_TYPES}
           getProvinceName={getProvinceName}
           getLocaleValue={getLocaleValue}
+          setBulkFilters={setBulkFilters}
         />
       </div>
     </div>

@@ -54,45 +54,93 @@ export async function updatePropertyEmbeddingAction(propertyId: string) {
 }
 
 /**
- * [ADMIN] Run Smart Match for Lead (Vector Search)
- * Finds matches using semantic similarity.
+ * [ADMIN] Run Smart Match for Lead (Hybrid Vector Search)
+ * Finds matches using semantic similarity (70%) + Hard Filters (30%).
+ * Adheres to Zero-Cost principle: No LLM reasoning, SQL-driven matching.
  */
 export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
   try {
+    // 1. Fetch Lead Requirements
     const { data: lead, error: leadErr } = await supabase
       .from("leads")
       .select("*")
       .eq("id", leadId)
+      .eq("tenant_id", tenantId || "")
       .single();
 
     if (leadErr || !lead) throw new Error("Lead not found");
 
+    // 2. Resolve Lead Intent (Purpose)
+    // Since leads table doesn't store purpose natively, we check the most recent session
+    const { data: session } = await supabase
+      .from("property_search_sessions")
+      .select("purpose")
+      .eq("lead_id", leadId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    // Heuristic: If no session, assume BUY if budget is high, otherwise RENT
+    const leadPurpose = session?.purpose || (lead.budget_max && lead.budget_max > 200000 ? "BUY" : "RENT");
+
+    // 3. Vectorize Requirements (Free/Cheap Embedding)
     const requirementText = constructLeadRequirementText(lead);
     const vector = await generateEmbedding(requirementText);
     if (!vector) throw new Error("Failed to generate lead embedding");
 
+    // Persist embedding for future quick matches
     await supabase.from("leads").update({ embedding: vector } as any).eq("id", leadId);
 
-    const { data: matches, error: matchErr } = await supabase.rpc("match_properties" as any, {
+    // 3. Search Candidates via pgvector RPC
+    // We fetch more than we need to allow for re-scoring/filtering
+    const { data: candidates, error: matchErr } = await supabase.rpc("match_properties" as any, {
       query_embedding: vector as any,
-      match_threshold: 0.5,
-      match_count: 6,
-      p_tenant_id: lead.tenant_id
+      match_threshold: 0.3, // Lower threshold for candidate pool
+      match_count: 20,
+      p_tenant_id: tenantId
     });
 
     if (matchErr) throw new Error(matchErr.message);
 
-    const filteredMatches = ((matches as any) || []).filter((m: any) => {
-      if (lead.budget_max && m.price > lead.budget_max * 1.15) return false;
-      return true;
-    });
+    // 4. Hybrid Re-scoring (Zero-Cost Local Logic)
+    // Score = (70% Semantic Similarity) + (30% Hard Criteria Match)
+    const processedMatches = ((candidates as any) || []).map((m: any) => {
+      let filterScore = 0;
+      const totalFilterPoints = 3; // price, type, listing_type
+      
+      // Filter 1: Price (Simple within 15% budget)
+      const propPrice = m.listing_type === "RENT" ? m.rental_price : m.price;
+      if (lead.budget_max && propPrice <= lead.budget_max * 1.15) filterScore += 1;
+      
+      // Filter 2: Listing Type Match (using resolved leadPurpose)
+      const isListingMatch = 
+        (leadPurpose === "BUY" && (m.listing_type === "SALE" || m.listing_type === "SALE_AND_RENT")) ||
+        (leadPurpose === "RENT" && (m.listing_type === "RENT" || m.listing_type === "SALE_AND_RENT"));
+      if (isListingMatch) filterScore += 1;
 
-    if (notifyAgent && filteredMatches.length > 0) {
-      const topMatch = filteredMatches[0];
-      if (topMatch.similarity > 0.85) {
+      // Filter 3: Property Type Match
+      if (lead.preferred_property_types?.includes(m.property_type)) filterScore += 1;
+
+      const filterWeight = (filterScore / totalFilterPoints) * 30;
+      const vectorWeight = m.similarity * 70;
+      const finalScore = Math.round(vectorWeight + filterWeight);
+
+      return {
+        ...m,
+        match_score: finalScore,
+        match_reasons: m.similarity > 0.8 ? ["Semantic Strong Match"] : ["Filter Match"]
+      };
+    })
+    .sort((a: any, b: any) => b.match_score - a.match_score)
+    .slice(0, 10);
+
+    // 5. Automation: Notify if strong match (Zero-Cost notification)
+    if (notifyAgent && processedMatches.length > 0) {
+      const topMatch = processedMatches[0];
+      if (topMatch.match_score > 85) {
         const { data: profile } = await supabase
           .from("profiles")
           .select("full_name, line_user_id")
@@ -105,13 +153,18 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
             agentName: profile.full_name || "Agent",
             leadName: lead.full_name || "New Lead",
             propertyTitle: topMatch.title,
-            matchScore: topMatch.similarity,
+            matchScore: topMatch.match_score / 100, // Normalized for notification
           });
         }
       }
     }
 
-    return { success: true, matches: filteredMatches, requirementSummary: requirementText, error: null };
+    return { 
+      success: true, 
+      matches: processedMatches, 
+      requirementSummary: requirementText, 
+      error: null 
+    };
   } catch (error: any) {
     console.error("runSmartMatchAction error:", error);
     return { success: false, error: error.message };

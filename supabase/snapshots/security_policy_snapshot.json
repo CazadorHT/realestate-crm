@@ -1,0 +1,5036 @@
+{
+    "tables": [
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "model",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "feature",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "status",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "error_message",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "prompt_tokens",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "completion_tokens",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "cost_thb",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "(auth.role() = 'authenticated'::text)",
+                    "policy_name": "Allow authenticated users to insert logs",
+                    "using_expression": null
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Allow users to view their own logs",
+                    "using_expression": "(auth.uid() = user_id)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Allow admins to view all logs",
+                    "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'ADMIN'::user_role))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "ai_usage_logs",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "action",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "metadata",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": null,
+            "rls_forced": false,
+            "table_name": "audit_logs_2026_03",
+            "rls_enabled": false
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "action",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "metadata",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": null,
+            "rls_forced": false,
+            "table_name": "audit_logs_2026_04",
+            "rls_enabled": false
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "action",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "metadata",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": null,
+            "rls_forced": false,
+            "table_name": "audit_logs_2026_05",
+            "rls_enabled": false
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "action",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "metadata",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": null,
+            "rls_forced": false,
+            "table_name": "audit_logs_2026_06",
+            "rls_enabled": false
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "action",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "metadata",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": null,
+            "rls_forced": false,
+            "table_name": "audit_logs_history",
+            "rls_enabled": false
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "slug",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_cn",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage blog_categories",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public categories are viewable by everyone",
+                    "using_expression": "true"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "blog_categories",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "post_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "true",
+                    "policy_name": "Public can insert blog views log",
+                    "using_expression": null
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Admins can view blog analytics",
+                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "blog_post_views_log",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "slug",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "excerpt",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "content",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "cover_image",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "category",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "author",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "published_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "reading_time",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "ARRAY",
+                    "column_name": "tags",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_published",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "structured_data",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "excerpt_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "excerpt_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "content_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "content_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "author_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "deleted_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "bigint",
+                    "column_name": "view_count",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "requires_ai_review",
+                    "is_nullable": "NO"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage blog_posts",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public can view published posts",
+                    "using_expression": "(is_published = true)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public View Published Blogs",
+                    "using_expression": "(is_published = true)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Staff Manage blog_posts",
+                    "using_expression": "is_staff()"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "blog_posts",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "co_broker_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "file_name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "file_url",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "file_type",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "file_size",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "created_by",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Tenant Isolation co_broker_documents",
+                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "view_documents",
+                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "manage_documents",
+                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid()))) AND (EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text]))))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "co_broker_documents",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "company_name",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "phone",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "email",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "line_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "whatsapp",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "notes",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "created_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "rating",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "internal_notes",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "ARRAY",
+                    "column_name": "specialized_areas",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "ARRAY",
+                    "column_name": "property_types",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "tax_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "tax_address",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "standard_commission_rate",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "deleted_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "broker_group",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "External Agents: View members of their tenant",
+                    "using_expression": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.tenant_id = co_brokers.tenant_id) AND (tenant_members.profile_id = auth.uid()))))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Co-brokers: View shared tenant directory",
+                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid()))) AND (deleted_at IS NULL))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Co-brokers: Manage shared tenant directory",
+                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "ALL",
+                    "with_check": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.tenant_id = tenant_members.tenant_id) AND (tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text, 'AGENT'::text])))))",
+                    "policy_name": "External Agents: Manage members of their tenant",
+                    "using_expression": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.tenant_id = co_brokers.tenant_id) AND (tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text])))))"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "view_co_brokers",
+                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid()))) AND ((deleted_at IS NULL) OR (EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text])))))))"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))",
+                    "policy_name": "insert_co_brokers",
+                    "using_expression": null
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))",
+                    "policy_name": "update_co_brokers",
+                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "DELETE",
+                    "with_check": null,
+                    "policy_name": "hard_delete_co_brokers",
+                    "using_expression": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = 'ADMIN'::text))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "co_brokers",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "commission_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "description",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "amount",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "adjustment_type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "created_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Finance: Adjustment View",
+                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM deal_commissions dc\n  WHERE ((dc.id = commission_adjustments.commission_id) AND (is_personal_record(dc.agent_id) OR is_tenant_manager(dc.tenant_id))))))"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Adjustments: Admins manage all",
+                    "using_expression": "(auth.uid() IN ( SELECT profiles.id\n   FROM profiles\n  WHERE ((profiles.role = 'ADMIN'::user_role) AND (commission_adjustments.tenant_id = commission_adjustments.tenant_id))))"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Adjustments: Agents view their own",
+                    "using_expression": "(EXISTS ( SELECT 1\n   FROM deal_commissions dc\n  WHERE ((dc.id = commission_adjustments.commission_id) AND (dc.agent_id = auth.uid()))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "commission_adjustments",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "description",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "content",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "created_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "file_url",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "template_format",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Allow authenticated users to read templates",
+                    "using_expression": "(auth.role() = 'authenticated'::text)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Allow admins to manage templates",
+                    "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'ADMIN'::user_role))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "contract_templates",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "deal_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "agent_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "role",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "percentage",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "amount",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "wht_amount",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "net_amount",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "status",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "idempotency_key",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "payout_metadata",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "slip_url",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "paid_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "payment_reference",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "metadata",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "co_broker_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "tax_rate",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Finance: Personal or Admin View",
+                    "using_expression": "(is_system_admin() OR is_personal_record(agent_id) OR is_tenant_manager(tenant_id))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "deal_commissions",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "lead_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "deal_type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "status",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "source",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "co_agent_name",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "co_agent_contact",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "commission_percent",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "commission_amount",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "created_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "closed_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "transaction_date",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "transaction_end_date",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "co_agent_online",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "undetermined_date",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "partner_co_broker_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Tenant Isolation deals",
+                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "deals",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "owner_type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "owner_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "document_type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "storage_path",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "file_name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "mime_type",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "bigint",
+                    "column_name": "size_bytes",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_encrypted",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "created_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "version",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "parent_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "esign_status",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "esign_provider",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "esign_envelope_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "esign_signed_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "root_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "ai_summary",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "ai_analysis",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "ai_verified_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "ai_verified_by",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Tenant Isolation documents",
+                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "documents",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "question",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "answer",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "category",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "sort_order",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "question_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "question_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "answer_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "answer_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "deleted_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "bigint",
+                    "column_name": "view_count",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "tsvector",
+                    "column_name": "fts_vector",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public FAQs are viewable by everyone",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Enable read access for all users",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "ALL",
+                    "with_check": "is_system_admin()",
+                    "policy_name": "SuperAdmin: Full Access on faqs",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public/Tenants: Read Access on faqs",
+                    "using_expression": "((is_active = true) AND (deleted_at IS NULL))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "faqs",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "icon_key",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "category",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_cn",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage features",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public Read features",
+                    "using_expression": "true"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "features",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "lead_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "activity_type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "note",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "created_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "true",
+                    "policy_name": "Public Insert lead_activities",
+                    "using_expression": null
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "lead_activities",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "lead_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "from_tenant_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "to_tenant_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "requested_by",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "status",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "note",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                }
+            ],
+            "policies": null,
+            "rls_forced": false,
+            "table_name": "lead_transfers",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "full_name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "phone",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "email",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "source",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "stage",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "assigned_to",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "budget_min",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "budget_max",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "note",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "created_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "lead_type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "nationality",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_foreigner",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "ARRAY",
+                    "column_name": "preferred_property_types",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "ARRAY",
+                    "column_name": "preferred_locations",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "min_bedrooms",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "min_bathrooms",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "min_size_sqm",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "max_size_sqm",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "num_occupants",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_pets",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "need_company_registration",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "allow_airbnb",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "preferences",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "line_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "facebook_psid",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "instagram_sid",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "pdpa_consent",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "consent_date",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "ai_score",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "ai_status_label",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "last_viewed_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "utm_source",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "utm_medium",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "utm_campaign",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "utm_content",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "utm_term",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "referral_url",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "embedding",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Staff can view leads",
+                    "using_expression": "is_staff()"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "is_staff()",
+                    "policy_name": "Staff can insert leads",
+                    "using_expression": null
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": "is_staff()",
+                    "policy_name": "Staff can update leads",
+                    "using_expression": "is_staff()"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "DELETE",
+                    "with_check": null,
+                    "policy_name": "Staff can delete leads",
+                    "using_expression": "is_staff()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Tenant Isolation leads",
+                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "true",
+                    "policy_name": "Public Insert leads",
+                    "using_expression": null
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "leads",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "text",
+                    "column_name": "group_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "group_name",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "picture_url",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "joined_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Enable read access for authenticated users",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "service_role"
+                    ],
+                    "command": "ALL",
+                    "with_check": "true",
+                    "policy_name": "Enable all access for service_role",
+                    "using_expression": "true"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "line_groups",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "text",
+                    "column_name": "key",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "config",
+                    "is_nullable": "NO"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage line_templates",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public Read line_templates",
+                    "using_expression": "true"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "line_templates",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity_type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "entity_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "action",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "details",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "status",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Admins can view maintenance logs",
+                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "maintenance_logs",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "message",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "link",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_read",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Users can view their own notifications",
+                    "using_expression": "(auth.uid() = user_id)"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": "(auth.uid() = user_id)",
+                    "policy_name": "Users can update their own notifications",
+                    "using_expression": "(auth.uid() = user_id)"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "DELETE",
+                    "with_check": null,
+                    "policy_name": "Users can delete their own notifications",
+                    "using_expression": "(auth.uid() = user_id)"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "true",
+                    "policy_name": "Authenticated users can insert notifications",
+                    "using_expression": null
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Users can see their own notifications",
+                    "using_expression": "(auth.uid() = user_id)"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "notifications",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "lead_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "source",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "external_message_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "content",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "payload",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "direction",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_read",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "true",
+                    "policy_name": "Public Insert messages",
+                    "using_expression": null
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "omni_messages",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "full_name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "phone",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "line_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "facebook_url",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "other_contact",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "owner_type",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "company_name",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "created_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Owners: Tenant Isolation",
+                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "owners",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "logo_url",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "website_url",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "sort_order",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public Partners are viewable by everyone",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Enable read access for all users",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "ALL",
+                    "with_check": "is_system_admin()",
+                    "policy_name": "SuperAdmin: Full Access on partners",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public/Tenants: Read Access on partners",
+                    "using_expression": "(is_active = true)"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "partners",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "province",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "slug",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "image_url",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "sort_order",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "featured",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Allow public read access",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public Read popular_areas",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Staff Manage popular_areas",
+                    "using_expression": "is_staff()"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "popular_areas",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "role",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "full_name",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "phone",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "email",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "avatar_url",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "line_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "facebook_url",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "other_contact",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "whatsapp_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "wechat_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "notification_preferences",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "facebook_psid",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "line_user_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "team_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "tax_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "tax_address",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "default_tax_rate",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "profiles_select_own",
+                    "using_expression": "(id = auth.uid())"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": "((id = auth.uid()) AND (role = 'AGENT'::user_role))",
+                    "policy_name": "profiles_agent_update_self",
+                    "using_expression": "((id = auth.uid()) AND (role = 'AGENT'::user_role))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "profiles_admin_select_all",
+                    "using_expression": "(COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": "((COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text) AND (role = ANY (ARRAY['ADMIN'::user_role, 'AGENT'::user_role])))",
+                    "policy_name": "profiles_admin_update_all",
+                    "using_expression": "(COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "DELETE",
+                    "with_check": null,
+                    "policy_name": "profiles_admin_delete_agents",
+                    "using_expression": "((COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text) AND (role = 'AGENT'::user_role))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "profiles_select_matching_tenant",
+                    "using_expression": "((id = auth.uid()) OR (id IN ( SELECT tm2.profile_id\n   FROM (tenant_members tm1\n     JOIN tenant_members tm2 ON ((tm1.tenant_id = tm2.tenant_id)))\n  WHERE (tm1.profile_id = auth.uid()))) OR (role = 'ADMIN'::user_role))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Profiles: Staff Network View",
+                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM (tenant_members tm1\n     JOIN tenant_members tm2 ON ((tm1.tenant_id = tm2.tenant_id)))\n  WHERE ((tm1.profile_id = auth.uid()) AND (tm2.profile_id = profiles.id)))) OR (id = auth.uid()))"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": "(auth.uid() = id)",
+                    "policy_name": "Users can update own profile",
+                    "using_expression": "(auth.uid() = id)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Admins can view all profiles for audit",
+                    "using_expression": "check_is_staff_for_audit()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Profiles: Public Minimal View",
+                    "using_expression": "(role = ANY (ARRAY['ADMIN'::user_role, 'AGENT'::user_role, 'MANAGER'::user_role]))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Users can view their own profile",
+                    "using_expression": "(auth.uid() = id)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public View Agent Profiles",
+                    "using_expression": "(role = ANY (ARRAY['ADMIN'::user_role, 'AGENT'::user_role, 'MANAGER'::user_role]))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "profiles",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "description",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "property_type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "listing_type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "status",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "price",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "rental_price",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "currency",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "bedrooms",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "bathrooms",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "size_sqm",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "land_size_sqwah",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "address_line1",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "province",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "district",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "subdistrict",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "postal_code",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "created_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "assigned_to",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "images",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "slug",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "meta_title",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "meta_description",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "ARRAY",
+                    "column_name": "meta_keywords",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "structured_data",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "owner_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "property_source",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "floor",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "parking_slots",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "maintenance_fee",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "zoning",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "google_maps_link",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "double precision",
+                    "column_name": "commission_sale_percentage",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "double precision",
+                    "column_name": "commission_rent_months",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "popular_area",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "near_transit",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "transit_station_name",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "transit_type",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "transit_distance_meters",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "co_agent_contact_channel",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_co_agent",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "co_agent_name",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "co_agent_phone",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "co_agent_contact_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "co_agent_sale_commission_percent",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "co_agent_rent_commission_months",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "original_price",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "original_rental_price",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "verified",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "min_contract_months",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "view_count",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "nearby_places",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "nearby_transits",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "electricity_charge",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "water_charge",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "parking_fee_additional",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "rent_free_period_days",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "parking_type",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "ceiling_height",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "orientation",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "price_per_sqm",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "rent_price_per_sqm",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_bare_shell",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_exclusive",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_raised_floor",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_pet_friendly",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_foreigner_quota",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "allow_smoking",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_renovated",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_fully_furnished",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_corner_unit",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_private_pool",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_selling_with_tenant",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_garden_view",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_pool_view",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_city_view",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "facing_east",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "facing_north",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_multi_parking",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_grade_a",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_grade_b",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_grade_c",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_column_free",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_central_air",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_split_air",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_247_access",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_fiber_optic",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_tax_registered",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_unblocked_view",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_river_view",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_high_ceiling",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "facing_south",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "facing_west",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "total_units",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "sold_units",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "description_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "description_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "address_line1_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "address_line1_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "transit_station_name_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "transit_station_name_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "meta_title_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "meta_title_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "meta_description_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "meta_description_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "deleted_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "posted_to_line_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "posted_to_tiktok_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "posted_to_facebook_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "posted_to_instagram_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "popular_area_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "popular_area_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_cbd",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_smart_home",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "has_private_elevator",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_handicapped_friendly",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_high_floor",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_never_lived_in",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "requires_ai_review",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "version",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "ai_reviewed_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "ai_reviewed_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "co_broker_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_hot_deal",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "ai_summary_content",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "USER-DEFINED",
+                    "column_name": "embedding",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Properties: Staff Full Access",
+                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Properties: Public Search",
+                    "using_expression": "((status = 'ACTIVE'::property_status) AND (deleted_at IS NULL))"
+                },
+                {
+                    "roles": [
+                        "anon"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public can read ACTIVE properties",
+                    "using_expression": "(status = 'ACTIVE'::property_status)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public view active properties",
+                    "using_expression": "(status = 'ACTIVE'::property_status)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Allow public read access to active properties",
+                    "using_expression": "(status = 'ACTIVE'::property_status)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public View Active Properties",
+                    "using_expression": "((status = 'ACTIVE'::property_status) AND (deleted_at IS NULL))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "properties",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "agent_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Staff View Property Agents",
+                    "using_expression": "is_staff()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Admin Manage Property Agents",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Property Agents: Join Isolation",
+                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM properties p\n  WHERE ((p.id = property_agents.property_id) AND (p.tenant_id = ANY (get_user_tenants()))))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "property_agents",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "feature_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage property_features",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public Read property_features",
+                    "using_expression": "true"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "property_features",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "session_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "storage_path",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "status",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Staff Manage property_image_uploads",
+                    "using_expression": "is_staff()"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "(auth.uid() = user_id)",
+                    "policy_name": "piu_insert_own",
+                    "using_expression": null
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "property_image_uploads",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "image_url",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "storage_path",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_cover",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "sort_order",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "anon"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public can read images for ACTIVE properties",
+                    "using_expression": "(EXISTS ( SELECT 1\n   FROM properties p\n  WHERE ((p.id = property_images.property_id) AND (p.status = 'ACTIVE'::property_status))))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public View property_images",
+                    "using_expression": "(EXISTS ( SELECT 1\n   FROM properties\n  WHERE ((properties.id = property_images.property_id) AND (properties.status = 'ACTIVE'::property_status) AND (properties.deleted_at IS NULL))))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Staff View property_images",
+                    "using_expression": "is_staff()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Staff Manage property_images",
+                    "using_expression": "is_staff()"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "property_images",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "session_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "match_score",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "match_reasons",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "rank",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage property_matches",
+                    "using_expression": "is_system_admin()"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "property_matches",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "session_token",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "purpose",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "budget_min",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "budget_max",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "preferred_area",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "ip_address",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "user_agent",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "lead_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "converted_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "near_transit",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "transit_station_name",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "transit_type",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "transit_distance_meters",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "preferred_property_type",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage property_search_sessions",
+                    "using_expression": "is_system_admin()"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "property_search_sessions",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "portal_name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "external_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "status",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "last_sync",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "sync_error",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Enable all for authenticated users",
+                    "using_expression": "(auth.role() = 'authenticated'::text)"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "property_syndication",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "true",
+                    "policy_name": "Public can insert property views log",
+                    "using_expression": null
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Branch isolation for property views",
+                    "using_expression": "(is_system_admin() OR is_tenant_admin(tenant_id))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "property_views_log",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "rule_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "line_group_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "status",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "error_message",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "metadata",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "retry_count",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": null,
+            "rls_forced": false,
+            "table_name": "rent_notification_history",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "line_group_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "notification_day",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "last_sent_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "language",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "notification_hour",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": null,
+            "rls_forced": false,
+            "table_name": "rent_notification_rules",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "deal_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "rent_price",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "lease_term_months",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "date",
+                    "column_name": "start_date",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "date",
+                    "column_name": "end_date",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "date",
+                    "column_name": "check_in_date",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "date",
+                    "column_name": "check_out_date",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "deposit_amount",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "payment_cycle",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "notice_period_days",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "other_terms",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "contract_number",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "status",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "numeric",
+                    "column_name": "advance_payment_amount",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "created_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "updated_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Tenant Isolation rental_contracts",
+                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "rental_contracts",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "service_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "client_ip_hash",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "user_agent",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "true",
+                    "policy_name": "Public can insert service views log via RPC",
+                    "using_expression": null
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Admins can view service analytics",
+                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "service_views_log",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "slug",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "description",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "content",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "cover_image",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "gallery_images",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "price_range",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "contact_link",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "sort_order",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "description_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "description_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "content_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "content_cn",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "deleted_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "bigint",
+                    "column_name": "view_count",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage services",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public Read services",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public View Active Services",
+                    "using_expression": "(is_active = true)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Staff Manage services",
+                    "using_expression": "is_staff()"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "services",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "text",
+                    "column_name": "key",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "value",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "updated_by",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public Read Site Settings",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Admin manage site settings",
+                    "using_expression": "is_system_admin()"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "site_settings",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "purpose",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "bigint",
+                    "column_name": "min_value",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "bigint",
+                    "column_name": "max_value",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "sort_order",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label_cn",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage smart_match_budget_ranges",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Allow public read for budget ranges",
+                    "using_expression": "true"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "smart_match_budget_ranges",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "min_sqm",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "max_sqm",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "sort_order",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label_cn",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage smart_match_office_sizes",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Allow public read for office sizes",
+                    "using_expression": "true"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "smart_match_office_sizes",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "value",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "sort_order",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label_cn",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage smart_match_property_types",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Allow public read for property types",
+                    "using_expression": "true"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "smart_match_property_types",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "text",
+                    "column_name": "key",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "value",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage smart_match_settings",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Allow public read for settings",
+                    "using_expression": "true"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "smart_match_settings",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "manager_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage teams",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Teams are visible to branch members",
+                    "using_expression": "((tenant_id IS NULL) OR (tenant_id = (( SELECT ((auth.jwt() -> 'user_metadata'::text) ->> 'tenant_id'::text)))::uuid) OR is_admin())"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Teams are manageable by branch admins",
+                    "using_expression": "(is_admin() OR ((tenant_id = (( SELECT ((auth.jwt() -> 'user_metadata'::text) ->> 'tenant_id'::text)))::uuid) AND is_tenant_admin(tenant_id)))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "teams",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "email",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "role",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "invited_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "status",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "token",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "expires_at",
+                    "is_nullable": "NO"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Admins can manage invitations",
+                    "using_expression": "(tenant_id IN ( SELECT tm.tenant_id\n   FROM tenant_members tm\n  WHERE ((tm.profile_id = auth.uid()) AND (tm.role = ANY (ARRAY['OWNER'::text, 'ADMIN'::text])))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "tenant_invitations",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "profile_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "role",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                }
+            ],
+            "policies": null,
+            "rls_forced": false,
+            "table_name": "tenant_members",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "slug",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "logo_url",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "subscription_status",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "stripe_customer_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "omise_customer_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "settings",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "updated_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_deleted",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "anon",
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public View Tenants Branding",
+                    "using_expression": "((is_deleted = false) OR (is_deleted IS NULL))"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage Tenants",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Users can view tenants they are members of",
+                    "using_expression": "(id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Allow members to select their tenant",
+                    "using_expression": "(id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": "(id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text])))))",
+                    "policy_name": "Allow admins and managers to update their tenant",
+                    "using_expression": "(id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text])))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "tenants",
+            "rls_enabled": true
+        }
+    ],
+    "metadata": {
+        "project": "VC Connect Asset",
+        "audit_type": "Table & RLS Security Audit",
+        "exported_at": "2026-04-20T16:36:36.434188+00:00"
+    }
+} 

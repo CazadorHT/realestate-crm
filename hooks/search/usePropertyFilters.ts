@@ -47,6 +47,9 @@ export function usePropertyFilters() {
     searchParams.get("hot_deal") === "true",
   );
 
+  // --- Agentic AI State ---
+  const [aiInsight, setAiInsight] = useState<string | null>(null);
+
   // Update state when params change (for back/forward navigation)
   useEffect(() => {
     setKeyword(searchParams.get("keyword") || "");
@@ -66,6 +69,9 @@ export function usePropertyFilters() {
     setCompanyRegistered(searchParams.get("company_registered") === "true");
     setIsHotDeal(searchParams.get("hot_deal") === "true");
     setBedrooms(searchParams.get("bedrooms") || "ALL");
+    
+    // Clear AI insight on manual navigation change
+    setAiInsight(null);
   }, [searchParams]);
 
   // Sync state to URL
@@ -116,6 +122,27 @@ export function usePropertyFilters() {
     setIsForeigner(false);
     setCompanyRegistered(false);
     setIsHotDeal(false);
+    setAiInsight(null);
+  }, []);
+
+  /**
+   * [S-Tier] Bulk Filter Update
+   * Allows the AI Agent to set multiple filters in one pass.
+   */
+  const setBulkFilters = useCallback((updates: any) => {
+    if (updates.keyword !== undefined) setKeyword(updates.keyword);
+    if (updates.propertyType !== undefined) setType(updates.propertyType);
+    if (updates.listingType !== undefined) setListingType(updates.listingType);
+    if (updates.minPrice !== undefined) setMinPrice(updates.minPrice?.toString() || "");
+    if (updates.maxPrice !== undefined) setMaxPrice(updates.maxPrice?.toString() || "");
+    if (updates.area !== undefined) setArea(updates.area);
+    if (updates.province !== undefined) setProvince(updates.province);
+    if (updates.nearTrain !== undefined) setNearTrain(updates.nearTrain);
+    if (updates.petFriendly !== undefined) setPetFriendly(updates.petFriendly);
+    if (updates.fullyFurnished !== undefined) setFullyFurnished(updates.fullyFurnished);
+    if (updates.bedrooms !== undefined) setBedrooms(updates.bedrooms);
+    if (updates.isHotDeal !== undefined) setIsHotDeal(updates.isHotDeal);
+    if (updates.aiInsight !== undefined) setAiInsight(updates.aiInsight);
   }, []);
 
   return {
@@ -137,6 +164,8 @@ export function usePropertyFilters() {
     isForeigner, setIsForeigner,
     companyRegistered, setCompanyRegistered,
     isHotDeal, setIsHotDeal,
+    aiInsight, setAiInsight,
     clearFilters,
+    setBulkFilters,
   };
 }

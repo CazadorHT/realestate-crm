@@ -331,7 +331,7 @@ export function PropertyGallery({
           >
             {sortedImages.map((img, idx) => (
               <div
-                key={img.id}
+                key={`${img.id}-${idx}`}
                 className="shrink-0 w-full h-full snap-center relative overflow-hidden"
                 onClick={() => {
                   setCurrentIndex(idx);
@@ -360,7 +360,7 @@ export function PropertyGallery({
                 />
                 {/* Main Content Image */}
                 <ImageWithFallback
-                  img={img}
+                   img={img}
                   alt={`${imageAlt || title} - ${idx + 1}`}
                   containerClassName="relative z-10 "
                   className="object-contain "
@@ -421,7 +421,7 @@ export function PropertyGallery({
           <div className="grid grid-cols-2 gap-2 col-span-2 row-span-2 max-h-full">
             {subImages.map((img, idx) => (
               <div
-                key={img.id}
+                key={`${img.id}-${idx}`}
                 className="relative cursor-pointer overflow-hidden group/sub"
                 onClick={() => {
                   setCurrentIndex(idx + 1);
@@ -625,7 +625,7 @@ export function PropertyGallery({
           <div className="absolute bottom-2 md:bottom-4 left-0 right-0 flex justify-center gap-1.5 md:gap-2 overflow-x-auto px-2 md:px-4 py-2 md:py-3 no-scrollbar z-50">
             {sortedImages.map((img, idx) => (
               <button
-                key={img.id}
+                key={`${img.id}-${idx}`}
                 onClick={() => setCurrentIndex(idx)}
                 className={cn(
                   "relative w-12 h-12 md:w-20 md:h-20 rounded-md md:rounded-lg overflow-hidden border-2 transition-all shrink-0",
@@ -635,7 +635,7 @@ export function PropertyGallery({
                 )}
               >
                 <ImageWithFallback
-                  img={img}
+                   img={img}
                   alt=""
                   className="object-cover"
                   sizes="10vw"

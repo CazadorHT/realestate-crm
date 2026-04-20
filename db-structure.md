@@ -644,6 +644,223 @@
     "column_default": "false"
   },
   {
+    "table_name": "co_broker_documents",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "co_broker_documents",
+    "column_name": "co_broker_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "co_broker_documents",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "co_broker_documents",
+    "column_name": "file_name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "co_broker_documents",
+    "column_name": "file_url",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "co_broker_documents",
+    "column_name": "file_type",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_broker_documents",
+    "column_name": "file_size",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_broker_documents",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "co_broker_documents",
+    "column_name": "created_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "company_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "phone",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "email",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "line_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "whatsapp",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "notes",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "updated_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "created_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "rating",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "3"
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "internal_notes",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "specialized_areas",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": "'{}'::text[]"
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "property_types",
+    "data_type": "ARRAY",
+    "is_nullable": "YES",
+    "column_default": "'{}'::text[]"
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "tax_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "tax_address",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "standard_commission_rate",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "deleted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "broker_group",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'GENERAL'::text"
+  },
+  {
     "table_name": "commission_adjustments",
     "column_name": "id",
     "data_type": "uuid",
@@ -903,6 +1120,20 @@
     "column_default": "'{}'::jsonb"
   },
   {
+    "table_name": "deal_commissions",
+    "column_name": "co_broker_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deal_commissions",
+    "column_name": "tax_rate",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "0.03"
+  },
+  {
     "table_name": "deals",
     "column_name": "id",
     "data_type": "uuid",
@@ -1034,6 +1265,13 @@
     "data_type": "boolean",
     "is_nullable": "YES",
     "column_default": "false"
+  },
+  {
+    "table_name": "deals",
+    "column_name": "partner_co_broker_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "documents",
@@ -1764,6 +2002,13 @@
     "column_default": null
   },
   {
+    "table_name": "leads",
+    "column_name": "embedding",
+    "data_type": "USER-DEFINED",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "line_groups",
     "column_name": "group_id",
     "data_type": "text",
@@ -2455,6 +2700,27 @@
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "tax_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "tax_address",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "default_tax_rate",
+    "data_type": "numeric",
+    "is_nullable": "YES",
+    "column_default": "3.0"
   },
   {
     "table_name": "properties",
@@ -3349,6 +3615,34 @@
     "table_name": "properties",
     "column_name": "ai_reviewed_by",
     "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "co_broker_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "is_hot_deal",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "properties",
+    "column_name": "ai_summary_content",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "embedding",
+    "data_type": "USER-DEFINED",
     "is_nullable": "YES",
     "column_default": null
   },

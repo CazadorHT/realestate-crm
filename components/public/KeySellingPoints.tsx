@@ -1,4 +1,4 @@
-﻿import { Check, Star } from "lucide-react";
+import { Check, Star } from "lucide-react";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 
@@ -48,7 +48,7 @@ export function KeySellingPoints({
           {t("property.special_features")}
         </h3>
       </div>
-      <div className="flex flex-col sm:flex-row flex-wrap gap-x-6 gap-y-1">
+      <div className="flex flex-row flex-wrap gap-x-6 gap-y-1">
         {visiblePoints.map((point, index) => (
           <div
             key={index}

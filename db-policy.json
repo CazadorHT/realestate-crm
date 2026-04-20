@@ -161,6 +161,116 @@
   },
   {
     "schemaname": "public",
+    "tablename": "co_broker_documents",
+    "rls_enabled": true,
+    "policyname": "Tenant Isolation co_broker_documents",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "co_broker_documents",
+    "rls_enabled": true,
+    "policyname": "manage_documents",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid()))) AND (EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text]))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "co_broker_documents",
+    "rls_enabled": true,
+    "policyname": "view_documents",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "co_brokers",
+    "rls_enabled": true,
+    "policyname": "Co-brokers: Manage shared tenant directory",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "co_brokers",
+    "rls_enabled": true,
+    "policyname": "Co-brokers: View shared tenant directory",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid()))) AND (deleted_at IS NULL))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "co_brokers",
+    "rls_enabled": true,
+    "policyname": "External Agents: Manage members of their tenant",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.tenant_id = co_brokers.tenant_id) AND (tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text])))))",
+    "with_check": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.tenant_id = tenant_members.tenant_id) AND (tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text, 'AGENT'::text])))))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "co_brokers",
+    "rls_enabled": true,
+    "policyname": "External Agents: View members of their tenant",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.tenant_id = co_brokers.tenant_id) AND (tenant_members.profile_id = auth.uid()))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "co_brokers",
+    "rls_enabled": true,
+    "policyname": "hard_delete_co_brokers",
+    "permissive": "PERMISSIVE",
+    "cmd": "DELETE",
+    "qual": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = 'ADMIN'::text))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "co_brokers",
+    "rls_enabled": true,
+    "policyname": "insert_co_brokers",
+    "permissive": "PERMISSIVE",
+    "cmd": "INSERT",
+    "qual": null,
+    "with_check": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "co_brokers",
+    "rls_enabled": true,
+    "policyname": "update_co_brokers",
+    "permissive": "PERMISSIVE",
+    "cmd": "UPDATE",
+    "qual": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))",
+    "with_check": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
+  },
+  {
+    "schemaname": "public",
+    "tablename": "co_brokers",
+    "rls_enabled": true,
+    "policyname": "view_co_brokers",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid()))) AND ((deleted_at IS NULL) OR (EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text])))))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
     "tablename": "commission_adjustments",
     "rls_enabled": true,
     "policyname": "Adjustments: Admins manage all",
@@ -177,6 +287,16 @@
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",
     "qual": "(EXISTS ( SELECT 1\n   FROM deal_commissions dc\n  WHERE ((dc.id = commission_adjustments.commission_id) AND (dc.agent_id = auth.uid()))))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "commission_adjustments",
+    "rls_enabled": true,
+    "policyname": "Finance: Adjustment View",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM deal_commissions dc\n  WHERE ((dc.id = commission_adjustments.commission_id) AND (is_personal_record(dc.agent_id) OR is_tenant_manager(dc.tenant_id))))))",
     "with_check": null
   },
   {
@@ -203,30 +323,30 @@
     "schemaname": "public",
     "tablename": "deal_commissions",
     "rls_enabled": true,
-    "policyname": "Tenant Isolation: Deal Commissions",
+    "policyname": "Finance: Personal or Admin View",
     "permissive": "PERMISSIVE",
-    "cmd": "ALL",
-    "qual": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))",
+    "cmd": "SELECT",
+    "qual": "(is_system_admin() OR is_personal_record(agent_id) OR is_tenant_manager(tenant_id))",
     "with_check": null
   },
   {
     "schemaname": "public",
     "tablename": "deals",
     "rls_enabled": true,
-    "policyname": "Deals Enterprise Access",
+    "policyname": "Tenant Isolation deals",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
-    "qual": "(is_system_admin() OR is_staff() OR ((tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) AND (is_tenant_admin(tenant_id) OR (NOT get_isolation_setting('isolation_deals_enabled'::text)) OR (created_by = auth.uid()) OR is_manager_of(created_by))))",
+    "qual": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))",
     "with_check": null
   },
   {
     "schemaname": "public",
     "tablename": "documents",
     "rls_enabled": true,
-    "policyname": "Tenant Isolation: Documents",
+    "policyname": "Tenant Isolation documents",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
-    "qual": "((tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) OR is_staff() OR (tenant_id IS NULL))",
+    "qual": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))",
     "with_check": null
   },
   {
@@ -301,42 +421,12 @@
   },
   {
     "schemaname": "public",
-    "tablename": "lead_activities",
-    "rls_enabled": true,
-    "policyname": "Tenant Isolation: Lead Activities",
-    "permissive": "PERMISSIVE",
-    "cmd": "ALL",
-    "qual": "(is_system_admin() OR is_staff() OR (EXISTS ( SELECT 1\n   FROM leads l\n  WHERE ((l.id = lead_activities.lead_id) AND (l.tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))))))",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
     "tablename": "lead_transfers",
     "rls_enabled": true,
-    "policyname": "Users can create transfers from their tenants",
-    "permissive": "PERMISSIVE",
-    "cmd": "INSERT",
+    "policyname": null,
+    "permissive": null,
+    "cmd": null,
     "qual": null,
-    "with_check": "(from_tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))"
-  },
-  {
-    "schemaname": "public",
-    "tablename": "lead_transfers",
-    "rls_enabled": true,
-    "policyname": "Users can see transfers involving their tenants",
-    "permissive": "PERMISSIVE",
-    "cmd": "SELECT",
-    "qual": "((from_tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) OR (to_tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
-    "tablename": "leads",
-    "rls_enabled": true,
-    "policyname": "Leads Enterprise Access",
-    "permissive": "PERMISSIVE",
-    "cmd": "ALL",
-    "qual": "(is_system_admin() OR ((tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) AND (is_tenant_admin(tenant_id) OR (NOT get_isolation_setting('isolation_leads_enabled'::text)) OR (created_by = auth.uid()) OR (assigned_to = auth.uid()) OR is_manager_of(created_by) OR is_manager_of(assigned_to))))",
     "with_check": null
   },
   {
@@ -387,6 +477,16 @@
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",
     "qual": "is_staff()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "leads",
+    "rls_enabled": true,
+    "policyname": "Tenant Isolation leads",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))",
     "with_check": null
   },
   {
@@ -501,22 +601,12 @@
   },
   {
     "schemaname": "public",
-    "tablename": "omni_messages",
-    "rls_enabled": true,
-    "policyname": "Tenant Isolation: Omni Messages",
-    "permissive": "PERMISSIVE",
-    "cmd": "ALL",
-    "qual": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))",
-    "with_check": null
-  },
-  {
-    "schemaname": "public",
     "tablename": "owners",
     "rls_enabled": true,
-    "policyname": "Tenant Isolation: Owners",
+    "policyname": "Owners: Tenant Isolation",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
-    "qual": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))",
+    "qual": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))",
     "with_check": null
   },
   {
@@ -597,6 +687,26 @@
     "permissive": "PERMISSIVE",
     "cmd": "SELECT",
     "qual": "check_is_staff_for_audit()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "rls_enabled": true,
+    "policyname": "Profiles: Public Minimal View",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(role = ANY (ARRAY['ADMIN'::user_role, 'AGENT'::user_role, 'MANAGER'::user_role]))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "profiles",
+    "rls_enabled": true,
+    "policyname": "Profiles: Staff Network View",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM (tenant_members tm1\n     JOIN tenant_members tm2 ON ((tm1.tenant_id = tm2.tenant_id)))\n  WHERE ((tm1.profile_id = auth.uid()) AND (tm2.profile_id = profiles.id)))) OR (id = auth.uid()))",
     "with_check": null
   },
   {
@@ -703,10 +813,20 @@
     "schemaname": "public",
     "tablename": "properties",
     "rls_enabled": true,
-    "policyname": "Properties Enterprise Access",
+    "policyname": "Properties: Public Search",
+    "permissive": "PERMISSIVE",
+    "cmd": "SELECT",
+    "qual": "((status = 'ACTIVE'::property_status) AND (deleted_at IS NULL))",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "properties",
+    "rls_enabled": true,
+    "policyname": "Properties: Staff Full Access",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
-    "qual": "(is_system_admin() OR is_staff() OR ((tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)) AND (is_tenant_admin(tenant_id) OR (NOT get_isolation_setting('isolation_properties_enabled'::text)) OR (created_by = auth.uid()) OR (assigned_to = auth.uid()) OR is_manager_of(created_by))))",
+    "qual": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))",
     "with_check": null
   },
   {
@@ -747,6 +867,16 @@
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
     "qual": "is_system_admin()",
+    "with_check": null
+  },
+  {
+    "schemaname": "public",
+    "tablename": "property_agents",
+    "rls_enabled": true,
+    "policyname": "Property Agents: Join Isolation",
+    "permissive": "PERMISSIVE",
+    "cmd": "ALL",
+    "qual": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM properties p\n  WHERE ((p.id = property_agents.property_id) AND (p.tenant_id = ANY (get_user_tenants()))))))",
     "with_check": null
   },
   {
@@ -913,10 +1043,10 @@
     "schemaname": "public",
     "tablename": "rental_contracts",
     "rls_enabled": true,
-    "policyname": "Tenant Isolation: Rental Contracts",
+    "policyname": "Tenant Isolation rental_contracts",
     "permissive": "PERMISSIVE",
     "cmd": "ALL",
-    "qual": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))",
+    "qual": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))",
     "with_check": null
   },
   {
@@ -1123,10 +1253,10 @@
     "schemaname": "public",
     "tablename": "tenant_members",
     "rls_enabled": true,
-    "policyname": "View Members in Same Tenant",
-    "permissive": "PERMISSIVE",
-    "cmd": "SELECT",
-    "qual": "(tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))",
+    "policyname": null,
+    "permissive": null,
+    "cmd": null,
+    "qual": null,
     "with_check": null
   },
   {
@@ -1333,20 +1463,20 @@
     "schemaname": "storage",
     "tablename": "objects",
     "rls_enabled": true,
-    "policyname": "Tenant Isolation: Document Manage",
+    "policyname": "authenticated_view_documents",
     "permissive": "PERMISSIVE",
-    "cmd": "ALL",
-    "qual": "((bucket_id = 'documents'::text) AND (is_system_admin() OR (((storage.foldername(name))[1])::uuid IN ( SELECT get_user_tenants() AS get_user_tenants))))",
-    "with_check": "((bucket_id = 'documents'::text) AND (((storage.foldername(name))[1])::uuid IN ( SELECT get_user_tenants() AS get_user_tenants)))"
+    "cmd": "SELECT",
+    "qual": "(bucket_id = 'co-broker-documents'::text)",
+    "with_check": null
   },
   {
     "schemaname": "storage",
     "tablename": "objects",
     "rls_enabled": true,
-    "policyname": "Tenant Isolation: Document View",
+    "policyname": "tenant_members_manage_documents",
     "permissive": "PERMISSIVE",
-    "cmd": "SELECT",
-    "qual": "((bucket_id = 'documents'::text) AND (is_system_admin() OR (((storage.foldername(name))[1])::uuid IN ( SELECT get_user_tenants() AS get_user_tenants))))",
+    "cmd": "ALL",
+    "qual": "((bucket_id = 'co-broker-documents'::text) AND (EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid()))))",
     "with_check": null
   },
   {

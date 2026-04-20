@@ -89,7 +89,7 @@ export function PropertyAmenities({
               <h4 className="text-sm font-bold text-slate-400 uppercase tracking-widest px-1">
                 {cat.label}
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 {cat.items.map((item, i) => {
                   const Icon = ICON_MAP[item.icon_key] || DEFAULT_ICON;
                   const localizedName = getLocaleValue(item, "name", language);

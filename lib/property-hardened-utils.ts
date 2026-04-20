@@ -24,7 +24,7 @@ function isRawImage(obj: unknown): obj is RawImage {
 export function getSafeImages(images: unknown): PropertyImageMetadata[] {
   if (!images || !Array.isArray(images)) return [];
 
-  return (images as unknown[])
+  const processed = (images as unknown[])
     .filter(isRawImage)
     .map((img) => ({
       id: img.id || img.url || img.image_url || Math.random().toString(),
@@ -34,8 +34,12 @@ export function getSafeImages(images: unknown): PropertyImageMetadata[] {
       sort_order: typeof img.sort_order === "number" ? img.sort_order : 999,
       category: img.category || null,
       alt_text: img.alt_text || null,
-    }))
-    .sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
+    }));
+
+  // 🛡️ Deduplicate by URL to prevent showing the same image twice in the gallery
+  const unique = Array.from(new Map(processed.map((img) => [img.url, img])).values());
+
+  return unique.sort((a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0));
 }
 
 /**

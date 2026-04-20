@@ -67,8 +67,8 @@ export async function GET(request: Request) {
 
   try {
     // ⚡ Execute Optimized Server-Side Fetch
-    const items = await getPublicProperties(options);
-    return NextResponse.json(items);
+    const result = await getPublicProperties(options);
+    return NextResponse.json(result);
   } catch (error) {
     console.error("[API] Failed to load public properties:", error);
     return NextResponse.json(
