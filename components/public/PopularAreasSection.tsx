@@ -9,7 +9,7 @@ import "aos/dist/aos.css";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { RefreshCw } from "lucide-react";
 import {
   Tooltip,
@@ -17,40 +17,36 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import type { PopularAreaItem } from "@/features/public-data/popular-areas";
 
-type ApiPopularArea = {
-  popular_area: string;
-  popular_area_en: string | null;
-  popular_area_cn: string | null;
-  province: string;
-  count: number;
-  cover?: string | null;
-};
+type Province = { id: string; display: string };
 
-type AreaItem = {
-  key: string;
-  popular_area: string; // ชื่อทำเล (Default/Thai)
-  popular_area_en: string | null;
-  popular_area_cn: string | null;
-  count: number; // จำนวนทรัพย์
-  cover?: string | null; // รูปภาพ
-};
+interface PopularAreasSectionProps {
+  initialItems?: PopularAreaItem[];
+  initialProvinces?: Province[];
+}
 
 const LOADING = Array.from({ length: 6 });
 
-export function PopularAreasSection() {
+export function PopularAreasSection({ initialItems, initialProvinces }: PopularAreasSectionProps) {
   const { language, t } = useLanguage();
   const router = useRouter();
-  const [items, setItems] = useState<AreaItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [items, setItems] = useState<PopularAreaItem[]>(initialItems || []);
+  const [isLoading, setIsLoading] = useState(!initialItems);
   const [hasError, setHasError] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const isFirstMount = useRef(true);
+  const areaCache = useRef<Record<string, PopularAreaItem[]>>({});
 
   // Dynamic provinces state
-  const [provinces, setProvinces] = useState<{ id: string; display: string }[]>(
-    [],
-  );
-  const [activeProvIndex, setActiveProvIndex] = useState(0);
+  const [provinces, setProvinces] = useState<Province[]>(initialProvinces || []);
+  const [activeProvIndex, setActiveProvIndex] = useState(() => {
+    if (!initialProvinces) return 0;
+    const bkkIndex = initialProvinces.findIndex(
+      (p) => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร",
+    );
+    return bkkIndex !== -1 ? bkkIndex : 0;
+  });
 
   const activeProvince = provinces[activeProvIndex]?.id || "กรุงเทพมหานคร";
   const activeDisplay = provinces[activeProvIndex]
@@ -103,14 +99,10 @@ export function PopularAreasSection() {
     isHorizontalSwipe.current = null;
   };
 
-  // Initialize AOS & Fetch Provinces
+  // Initialize AOS & Fetch Provinces if not provided
   useEffect(() => {
-    // Delay AOS init
-    const timer = setTimeout(() => {
-      AOS.init({ duration: 800, easing: "ease-out-cubic", once: true });
-    }, 100);
+    if (initialProvinces) return;
 
-    // Fetch initial provinces
     async function fetchProvinces() {
       try {
         const res = await fetch("/api/public/popular-areas?mode=provinces");
@@ -118,7 +110,6 @@ export function PopularAreasSection() {
           const data = await res.json();
           if (data && data.length > 0) {
             setProvinces(data);
-            // Default to Bangkok if found, else first
             const bkkIndex = data.findIndex(
               (p: any) => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร",
             );
@@ -131,16 +122,34 @@ export function PopularAreasSection() {
     }
 
     fetchProvinces();
-    return () => clearTimeout(timer);
-  }, []);
+  }, [initialProvinces]);
 
+  // Handle data fetching for province changes
   useEffect(() => {
     if (provinces.length === 0) return;
+    
+    // Skip initial fetch if using SSR data (first mount only)
+    if (isFirstMount.current && initialItems) {
+      isFirstMount.current = false;
+      // Seed initial cache
+      areaCache.current[activeProvince] = initialItems;
+      return;
+    }
 
     const controller = new AbortController();
     async function load() {
+      // Check Cache First
+      if (areaCache.current[activeProvince]) {
+        setItems(areaCache.current[activeProvince]);
+        setIsLoading(false);
+        setHasError(false);
+        setTimeout(() => AOS.refresh(), 100);
+        return;
+      }
+
       try {
         setIsLoading(true);
+        setItems([]); // Clear old items immediately for instant visual feedback
         const url = new URL(
           "/api/public/popular-areas",
           window.location.origin,
@@ -152,21 +161,13 @@ export function PopularAreasSection() {
           signal: controller.signal,
         });
         if (!res.ok) throw new Error("failed");
-        const data: ApiPopularArea[] = await res.json();
-        const list = (Array.isArray(data) ? data : []).map(
-          (item: ApiPopularArea) => ({
-            key: `${item.popular_area}__${item.province}`,
-            popular_area: item.popular_area,
-            popular_area_en: item.popular_area_en,
-            popular_area_cn: item.popular_area_cn,
-            province: item.province,
-            count: item.count,
-            cover: item.cover,
-          }),
-        );
-        setItems(list);
+        const data: PopularAreaItem[] = await res.json();
+        
+        // Save to cache
+        areaCache.current[activeProvince] = data;
+        
+        setItems(data);
         setHasError(false);
-        // Refresh AOS after items change to ensure dynamic content starts animating
         setTimeout(() => AOS.refresh(), 100);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
@@ -179,6 +180,22 @@ export function PopularAreasSection() {
     load();
     return () => controller.abort();
   }, [activeProvince, provinces.length]);
+
+  // Prefetching for "S-Tier" speed
+  const prefetchProvince = async (provId: string) => {
+    if (!provId || areaCache.current[provId] || isLoading) return;
+    try {
+      const url = new URL("/api/public/popular-areas", window.location.origin);
+      url.searchParams.set("province", provId);
+      const res = await fetch(url.toString());
+      if (res.ok) {
+        const data = await res.json();
+        areaCache.current[provId] = data;
+      }
+    } catch (e) {
+      // Silent fail for prefetch
+    }
+  };
 
 
   // Drag to scroll handlers
@@ -244,18 +261,13 @@ export function PopularAreasSection() {
 
               {/* Province Switcher UI: Integrated Inline */}
               {provinces.length > 1 && (
-                /* 1. ใช้ flex-1 เพื่อให้กินพื้นที่ที่เหลือ 
-                   2. ใช้ min-w-full ในหน้าจอเล็ก (xs/sm) เพื่อบังคับขึ้นบรรทัดใหม่แล้วเต็มจอ 
-                   3. md:min-w-[200px] กลับไปเป็นขนาดปกติในจอใหญ่ 
-                */
                 <div className="flex-1 min-w-full sm:min-w-[250px] md:min-w-[300px] select-none relative my-4  xl:my-0">
                   <AnimatePresence mode="wait">
-                    <motion.div
+                    <m.div
                       key={activeDisplay}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       onAnimationComplete={() => {
-                        // Ensure AOS refreshes after the title transition too
                         AOS.refresh();
                       }}
                       exit={{ opacity: 0, y: -10 }}
@@ -272,6 +284,7 @@ export function PopularAreasSection() {
                           <TooltipTrigger asChild>
                             <button
                               onClick={() => setActiveProvIndex(nextProvIndex)}
+                              onMouseEnter={() => prefetchProvince(provinces[nextProvIndex]?.id)}
                               className="absolute -top-4 md:-top-7 left-0 flex items-center gap-2 group/sup cursor-pointer"
                             >
                               <span className="text-[10px] md:text-xs font-black tracking-[0.3em] text-blue-400/40 uppercase transition-all duration-500 group-hover/sup:text-blue-500 group-hover/sup:tracking-[0.5em] group-hover/sup:scale-110 origin-left italic">
@@ -303,10 +316,11 @@ export function PopularAreasSection() {
 
                         <button
                           onClick={() => setActiveProvIndex(nextProvIndex)}
+                          onMouseEnter={() => prefetchProvince(provinces[nextProvIndex]?.id)}
                           disabled={isLoading}
                           className="p-1.5 xs:p-2 rounded-lg xs:rounded-xl bg-slate-100 hover:bg-blue-600 text-blue-400 hover:text-white transition-all! group-active:scale-90 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <motion.div
+                          <m.div
                             animate={
                               isLoading
                                 ? { rotate: 360 }
@@ -327,10 +341,10 @@ export function PopularAreasSection() {
                             }
                           >
                             <RefreshCw className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
-                          </motion.div>
+                          </m.div>
                         </button>
                       </div>
-                    </motion.div>
+                    </m.div>
                   </AnimatePresence>
                 </div>
               )}
@@ -339,9 +353,6 @@ export function PopularAreasSection() {
         </div>
 
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8 px-4! md:px-0">
-          {" "}
-          {/* min-w-0 สำคัญมากเพื่อให้ truncate ทำงาน */}
-          {/* Subtitle Part 2: Separated line as requested */}
           <div
             className="flex flex-col px-4 md:px-0 "
             data-aos="fade-right"
@@ -351,7 +362,7 @@ export function PopularAreasSection() {
               {t("home.popular_areas.subtitle-2")}
             </h2>
             {/* SEO-Enhanced Description with Keywords */}
-            <p className="text-slate-600 text-sm sm:text-base md:text-lg leading-relaxed">
+            <p className="text-slate-600 text-sm sm:text-base md:lg leading-relaxed">
               {t("home.popular_areas.description")}
             </p>
           </div>
@@ -396,7 +407,7 @@ export function PopularAreasSection() {
 
         {/* Content Area - Fixed height to prevent layout shift */}
         <div className="min-h-[250px] relative mx-4">
-          {isLoading ? (
+          {isLoading && items.length === 0 ? (
             <div className="relative">
               {/* Centered Loading Overlay */}
               <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-[1px] rounded-[2.5rem]">
@@ -438,9 +449,7 @@ export function PopularAreasSection() {
               </p>
               <button
                 onClick={() => {
-                  // Manual reload trigger: re-running useEffect dependency trick
-                  setActiveProvIndex(prev => prev); // Or just call fetch logic directly if extracted
-                  window.location.reload(); // Simple retry for now
+                  window.location.reload();
                 }}
                 className="px-8 py-3 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition-all active:scale-95"
               >
@@ -497,7 +506,7 @@ export function PopularAreasSection() {
                       src={it.cover || "/images/area-placeholder1.jpg"}
                       alt={it.popular_area}
                       fill
-                      sizes="260px"
+                      sizes="(max-width: 640px) 220px, 260px"
                       className="object-cover transition-transform! duration-1000! group-hover:scale-110 "
                     />
                     {/* Double Gradient for readability */}

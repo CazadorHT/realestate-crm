@@ -45,7 +45,7 @@ import { getSettingsSummaryAction } from "@/lib/actions/system-status";
 import { SiteSettings } from "@/features/site-settings/schema";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 export const metadata: Metadata = {
   title: "Settings | CRM",
@@ -68,10 +68,13 @@ export default async function SettingsPage({
   const summary = await getSettingsSummaryAction();
 
   const isTikTokConnected = !!allSettings.tiktok_auth_token;
-  const isFacebookConnected = !!process.env.META_PAGE_ACCESS_TOKEN || !!allSettings.meta_page_access_token;
+  const isFacebookConnected =
+    !!process.env.META_PAGE_ACCESS_TOKEN ||
+    !!allSettings.meta_page_access_token;
 
   const isLineConnected =
-    !!process.env.LINE_CHANNEL_ACCESS_TOKEN || !!allSettings.line_channel_access_token;
+    !!process.env.LINE_CHANNEL_ACCESS_TOKEN ||
+    !!allSettings.line_channel_access_token;
 
   let lineBotInfo = null;
   if (isLineConnected) {
@@ -81,7 +84,7 @@ export default async function SettingsPage({
   return (
     <div className="space-y-8 max-w-screen-2xl pb-20">
       <SuccessAnimation />
-      
+
       <SettingsHeader />
 
       <Tabs defaultValue={activeTab} className="w-full">
@@ -102,21 +105,27 @@ export default async function SettingsPage({
               <Card
                 className={cn(
                   "relative group transition-all duration-500 overflow-hidden border-slate-200/60 bg-white/40 backdrop-blur-xl hover:shadow-2xl hover:shadow-emerald-500/10 hover:-translate-y-1 rounded-[24px]",
-                  isLineConnected && "ring-2 ring-emerald-500/50"
+                  isLineConnected && "ring-2 ring-emerald-500/50",
                 )}
               >
                 <CardHeader className="pb-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "relative p-3 rounded-2xl transition-all duration-300 transform group-hover:rotate-6",
-                        isLineConnected ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200" : "bg-emerald-50 text-emerald-500"
-                      )}>
+                      <div
+                        className={cn(
+                          "relative p-3 rounded-2xl transition-all duration-300 transform group-hover:rotate-6",
+                          isLineConnected
+                            ? "bg-emerald-500 text-white shadow-lg shadow-emerald-200"
+                            : "bg-emerald-50 text-emerald-500",
+                        )}
+                      >
                         <div className="absolute inset-0 bg-emerald-400/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                         <FaLine className="h-7 w-7 relative z-10" />
                       </div>
                       <div>
-                        <CardTitle className="text-xl font-bold text-slate-900">LINE</CardTitle>
+                        <CardTitle className="text-xl font-bold text-slate-900">
+                          LINE
+                        </CardTitle>
                         <CardDescription className="text-slate-500 font-medium">
                           Official Account Hub
                         </CardDescription>
@@ -133,10 +142,15 @@ export default async function SettingsPage({
                             <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse pointer-events-none absolute inset-0" />
                             <div className="h-3 w-3 rounded-full bg-emerald-500" />
                           </div>
-                          <span className="text-sm font-bold text-emerald-700">Connected</span>
+                          <span className="text-sm font-bold text-emerald-700">
+                            Connected
+                          </span>
                         </div>
                         {lineBotInfo?.displayName && (
-                          <Badge variant="outline" className="bg-white/80 border-emerald-200 text-emerald-700 font-bold px-3 py-1">
+                          <Badge
+                            variant="outline"
+                            className="bg-white/80 border-emerald-200 text-emerald-700 font-bold px-3 py-1"
+                          >
                             {lineBotInfo.displayName}
                           </Badge>
                         )}
@@ -158,10 +172,14 @@ export default async function SettingsPage({
                   ) : (
                     <div className="space-y-4">
                       <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                        เชื่อมต่อ Line OA เพื่อรับการแจ้งเตือนและแชทกับลูกค้าผ่านระบบ CRM ได้ทันที
+                        เชื่อมต่อ Line OA
+                        เพื่อรับการแจ้งเตือนและแชทกับลูกค้าผ่านระบบ CRM ได้ทันที
                       </p>
                       <Link href="/protected/line-manager">
-                        <Button variant="outline" className="w-full h-12 rounded-xl border-dashed border-2 border-emerald-200 text-emerald-600 hover:bg-emerald-50 font-bold">
+                        <Button
+                          variant="outline"
+                          className="w-full h-12 rounded-xl border-dashed border-2 border-emerald-200 text-emerald-600 hover:bg-emerald-50 font-bold"
+                        >
                           Connect LINE
                         </Button>
                       </Link>
@@ -174,21 +192,27 @@ export default async function SettingsPage({
               <Card
                 className={cn(
                   "relative group transition-all duration-500 overflow-hidden border-slate-200/60 bg-white/40 backdrop-blur-xl hover:shadow-2xl hover:shadow-slate-900/10 hover:-translate-y-1 rounded-[24px]",
-                  isTikTokConnected && "ring-2 ring-slate-900/50"
+                  isTikTokConnected && "ring-2 ring-slate-900/50",
                 )}
               >
                 <CardHeader className="pb-4">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "relative p-3 rounded-2xl transition-all duration-300 transform group-hover:-rotate-6",
-                        isTikTokConnected ? "bg-slate-900 text-white shadow-lg shadow-slate-300" : "bg-slate-100 text-slate-900"
-                      )}>
+                      <div
+                        className={cn(
+                          "relative p-3 rounded-2xl transition-all duration-300 transform group-hover:-rotate-6",
+                          isTikTokConnected
+                            ? "bg-slate-900 text-white shadow-lg shadow-slate-300"
+                            : "bg-slate-100 text-slate-900",
+                        )}
+                      >
                         <div className="absolute inset-0 bg-slate-400/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                         <FaTiktok className="h-7 w-7 relative z-10" />
                       </div>
                       <div>
-                        <CardTitle className="text-xl font-bold text-slate-900">TikTok</CardTitle>
+                        <CardTitle className="text-xl font-bold text-slate-900">
+                          TikTok
+                        </CardTitle>
                         <CardDescription className="text-slate-500 font-medium">
                           Video Marketing
                         </CardDescription>
@@ -202,10 +226,15 @@ export default async function SettingsPage({
                       <div className="flex items-center justify-between p-4 rounded-[20px] bg-slate-100/50 border border-slate-200/50">
                         <div className="flex items-center gap-3">
                           <div className="h-3 w-3 rounded-full bg-emerald-500" />
-                          <span className="text-sm font-bold text-emerald-700">Active</span>
+                          <span className="text-sm font-bold text-emerald-700">
+                            Active
+                          </span>
                         </div>
                         {allSettings.tiktok_auth_token?.display_name && (
-                          <Badge variant="outline" className="bg-white/80 border-slate-300 text-slate-700 font-bold px-3 py-1 text-[11px]">
+                          <Badge
+                            variant="outline"
+                            className="bg-white/80 border-slate-300 text-slate-700 font-bold px-3 py-1 text-[11px]"
+                          >
                             {allSettings.tiktok_auth_token.display_name}
                           </Badge>
                         )}
@@ -227,10 +256,14 @@ export default async function SettingsPage({
                   ) : (
                     <div className="space-y-4">
                       <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                        นำเข้าวิดีโอจาก TikTok เพื่อทำการตลาดและขายทรัพย์ของคุณได้อย่างน่าสนใจมากขึ้น
+                        นำเข้าวิดีโอจาก TikTok
+                        เพื่อทำการตลาดและขายทรัพย์ของคุณได้อย่างน่าสนใจมากขึ้น
                       </p>
                       <Link href="/api/auth/tiktok/login">
-                        <Button variant="outline" className="w-full h-12 rounded-xl border-dashed border-2 border-slate-300 text-slate-900 hover:bg-slate-50 font-bold">
+                        <Button
+                          variant="outline"
+                          className="w-full h-12 rounded-xl border-dashed border-2 border-slate-300 text-slate-900 hover:bg-slate-50 font-bold"
+                        >
                           Connect TikTok
                         </Button>
                       </Link>
@@ -243,7 +276,8 @@ export default async function SettingsPage({
               <Card
                 className={cn(
                   "relative group transition-all duration-500 overflow-hidden border-none bg-linear-to-br from-blue-600/5 via-indigo-600/5 to-pink-500/5 backdrop-blur-xl hover:shadow-2xl hover:shadow-indigo-500/20 hover:-translate-y-1 rounded-[24px]",
-                  isFacebookConnected && "ring-2 ring-indigo-500 shadow-xl shadow-indigo-100"
+                  isFacebookConnected &&
+                    "ring-2 ring-indigo-500 shadow-xl shadow-indigo-100",
                 )}
               >
                 {isFacebookConnected && (
@@ -252,17 +286,21 @@ export default async function SettingsPage({
                 <CardHeader className="pb-4 relative z-10">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "relative p-3 rounded-2xl transition-all duration-500 transform group-hover:scale-110",
-                        isFacebookConnected 
-                          ? "bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-indigo-200" 
-                          : "bg-blue-50 text-blue-600"
-                      )}>
+                      <div
+                        className={cn(
+                          "relative p-3 rounded-2xl transition-all duration-500 transform group-hover:scale-110",
+                          isFacebookConnected
+                            ? "bg-linear-to-br from-blue-500 to-indigo-600 text-white shadow-lg shadow-indigo-200"
+                            : "bg-blue-50 text-blue-600",
+                        )}
+                      >
                         <div className="absolute inset-0 bg-indigo-400/30 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
                         <FaMeta className="h-7 w-7 relative z-10" />
                       </div>
                       <div>
-                        <CardTitle className="text-xl font-bold text-slate-900">Meta</CardTitle>
+                        <CardTitle className="text-xl font-bold text-slate-900">
+                          Meta
+                        </CardTitle>
                         <CardDescription className="text-slate-500 font-medium">
                           FB & Instagram
                         </CardDescription>
@@ -276,14 +314,22 @@ export default async function SettingsPage({
                       <div className="flex items-center justify-between p-4 rounded-[20px] bg-indigo-50/80 border border-indigo-100/50 backdrop-blur-md">
                         <div className="flex items-center gap-3">
                           <div className="h-3 w-3 rounded-full bg-indigo-600 animate-pulse" />
-                          <span className="text-sm font-bold text-indigo-700">Integration Active</span>
+                          <span className="text-sm font-bold text-indigo-700">
+                            Integration Active
+                          </span>
                         </div>
-                        <Badge variant="outline" className="bg-white/90 border-indigo-200 text-indigo-700 font-bold px-3 py-1 text-[10px]">
+                        <Badge
+                          variant="outline"
+                          className="bg-white/90 border-indigo-200 text-indigo-700 font-bold px-3 py-1 text-[10px]"
+                        >
                           {allSettings.meta_page_name || "Enterprise"}
                         </Badge>
                       </div>
                       <div className="flex gap-2">
-                        <Link href="/api/auth/facebook/login" className="flex-1">
+                        <Link
+                          href="/api/auth/facebook/login"
+                          className="flex-1"
+                        >
                           <Button className="w-full h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-xl shadow-lg shadow-indigo-200 border-none transition-all active:scale-95">
                             Update Tokens
                           </Button>
@@ -299,7 +345,8 @@ export default async function SettingsPage({
                   ) : (
                     <div className="space-y-4">
                       <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                        ขยายตลาดไปยัง Facebook และ Instagram พร้อมรับการแจ้งเตือนและการตลาดอัตโนมัติ
+                        ขยายตลาดไปยัง Facebook และ Instagram
+                        พร้อมรับการแจ้งเตือนและการตลาดอัตโนมัติ
                       </p>
                       <Link href="/api/auth/facebook/login">
                         <Button className="w-full h-12 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-white font-black hover:opacity-90 shadow-md shadow-indigo-100">
@@ -331,7 +378,9 @@ export default async function SettingsPage({
                       <Cpu className="h-8 w-8 text-white" />
                     </div>
                     <div>
-                      <CardTitle className="text-2xl font-bold text-indigo-50">AI Control Center</CardTitle>
+                      <CardTitle className="text-2xl font-bold text-indigo-50">
+                        AI Control Center
+                      </CardTitle>
                       <CardDescription className="text-indigo-50 font-medium italic">
                         สถานะการทำงานของปัญญาประดิษฐ์ในระบบ
                       </CardDescription>
@@ -341,18 +390,26 @@ export default async function SettingsPage({
                 <CardContent className="relative z-10 pt-4">
                   <div className="flex flex-wrap gap-4">
                     <div className="px-6 py-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/10 flex flex-col gap-1 transition-all hover:bg-white/20">
-                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">LLM Provider</span>
-                      <span className="text-xl font-bold italic">Claude 3.5 Sonnet / Gemini</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
+                        LLM Provider
+                      </span>
+                      <span className="text-xl font-bold italic">
+                        Claude 3.5 Sonnet / Gemini
+                      </span>
                     </div>
                     <div className="px-6 py-4 rounded-3xl bg-white/10 backdrop-blur-md border border-white/10 flex flex-col gap-1 transition-all hover:bg-white/20">
-                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Status</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
+                        Status
+                      </span>
                       <span className="text-xl font-bold italic flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
                         Ready
                       </span>
                     </div>
                     <div className="px-6 py-4 rounded-3xl bg-emerald-500/20 backdrop-blur-md border border-emerald-500/30 flex flex-col gap-1 transition-all hover:bg-emerald-500/30">
-                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-80 text-emerald-200">Processing Mode</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-80 text-emerald-200">
+                        Processing Mode
+                      </span>
                       <span className="text-xl font-bold italic text-white flex items-center gap-2">
                         <Zap className="h-4 w-4 fill-emerald-300 text-emerald-300" />
                         Enterprise High-Speed
@@ -369,7 +426,9 @@ export default async function SettingsPage({
                       <Activity className="h-6 w-6 text-blue-600 group-hover:text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">AI Monitor</CardTitle>
+                      <CardTitle className="text-lg font-bold text-slate-900 group-hover:text-blue-600 transition-colors truncate">
+                        AI Monitor
+                      </CardTitle>
                       <CardDescription className="text-[13px] font-medium text-slate-500 truncate italic">
                         ตรวจสอบสถานะการทำงาน
                       </CardDescription>
@@ -386,7 +445,9 @@ export default async function SettingsPage({
                       <Cpu className="h-6 w-6 text-purple-600 group-hover:text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition-colors truncate">AI Model Config</CardTitle>
+                      <CardTitle className="text-lg font-bold text-slate-900 group-hover:text-purple-600 transition-colors truncate">
+                        AI Model Config
+                      </CardTitle>
                       <CardDescription className="text-[13px] font-medium text-slate-500 truncate italic">
                         จัดการ Model และ Prompt
                       </CardDescription>
@@ -403,7 +464,9 @@ export default async function SettingsPage({
                       <Sparkles className="h-6 w-6 text-amber-600 group-hover:text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-lg font-bold text-slate-900 group-hover:text-amber-600 transition-colors truncate">SmartMatch</CardTitle>
+                      <CardTitle className="text-lg font-bold text-slate-900 group-hover:text-amber-600 transition-colors truncate">
+                        SmartMatch
+                      </CardTitle>
                       <CardDescription className="text-[13px] font-medium text-slate-500 truncate italic">
                         ตั้งค่าแนะนำทรัพย์อัตโนมัติ
                       </CardDescription>
@@ -430,7 +493,9 @@ export default async function SettingsPage({
                       <Shield className="h-6 w-6" />
                     </div>
                     <div className="space-y-1">
-                      <CardTitle className="text-lg font-bold text-slate-900">จัดการผู้ใช้</CardTitle>
+                      <CardTitle className="text-lg font-bold text-slate-900">
+                        จัดการผู้ใช้
+                      </CardTitle>
                       <CardDescription className="text-[11px] font-bold text-slate-500 tracking-tight uppercase italic opacity-70">
                         Roles & Permissions
                       </CardDescription>
@@ -451,7 +516,9 @@ export default async function SettingsPage({
                       <Building2 className="h-6 w-6" />
                     </div>
                     <div className="space-y-1">
-                      <CardTitle className="text-lg font-bold text-slate-900">จัดการสาขา</CardTitle>
+                      <CardTitle className="text-lg font-bold text-slate-900">
+                        จัดการสาขา
+                      </CardTitle>
                       <CardDescription className="text-[11px] font-bold text-blue-500/70 tracking-tight uppercase italic opacity-70">
                         Multi-Office Control
                       </CardDescription>
@@ -472,7 +539,9 @@ export default async function SettingsPage({
                       <Users className="h-6 w-6" />
                     </div>
                     <div className="space-y-1">
-                      <CardTitle className="text-lg font-bold text-slate-900">จัดการทีม</CardTitle>
+                      <CardTitle className="text-lg font-bold text-slate-900">
+                        จัดการทีม
+                      </CardTitle>
                       <CardDescription className="text-[11px] font-bold text-indigo-500/70 tracking-tight uppercase italic opacity-70">
                         Group Resource Mgmt
                       </CardDescription>
@@ -488,7 +557,9 @@ export default async function SettingsPage({
                       <History className="h-6 w-6" />
                     </div>
                     <div className="space-y-1">
-                      <CardTitle className="text-lg font-bold text-slate-900">Audit Logs</CardTitle>
+                      <CardTitle className="text-lg font-bold text-slate-900">
+                        Audit Logs
+                      </CardTitle>
                       <CardDescription className="text-[11px] font-bold text-slate-500/70 tracking-tight uppercase italic opacity-70">
                         Security Tracing
                       </CardDescription>
@@ -497,7 +568,7 @@ export default async function SettingsPage({
                 </Card>
               </Link>
             </div>
-            
+
             {/* Elite Data Snapshot Section */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
               <Card className="border-none bg-linear-to-r from-slate-900 to-slate-800 text-white rounded-[28px] p-1 overflow-hidden relative group">
@@ -509,12 +580,18 @@ export default async function SettingsPage({
                     </div>
                     <div>
                       <h4 className="font-bold text-lg">System Health</h4>
-                      <p className="text-xs text-slate-400 font-medium">All database nodes optimized</p>
+                      <p className="text-xs text-slate-400 font-medium">
+                        All database nodes optimized
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-col items-end">
-                    <span className="text-2xl font-black italic text-blue-400">100%</span>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Stability Rate</span>
+                    <span className="text-2xl font-black italic text-blue-400">
+                      100%
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                      Stability Rate
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -527,12 +604,18 @@ export default async function SettingsPage({
                     </div>
                     <div>
                       <h4 className="font-bold text-lg">Security Score</h4>
-                      <p className="text-xs text-slate-300 font-medium italic">Elite hardening level active</p>
+                      <p className="text-xs text-slate-300 font-medium italic">
+                        Elite hardening level active
+                      </p>
                     </div>
                   </div>
                   <div className="flex flex-col items-end">
-                    <span className="text-2xl font-black italic text-indigo-400">A+</span>
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">Security Grade</span>
+                    <span className="text-2xl font-black italic text-indigo-400">
+                      A+
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-400">
+                      Security Grade
+                    </span>
                   </div>
                 </CardContent>
               </Card>

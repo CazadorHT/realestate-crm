@@ -5,7 +5,7 @@ import { MoveLeft, Home, Search } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Button } from "@/components/ui/button";
 import { siteConfig } from "@/lib/site-config";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 export default function NotFound() {
   const { t } = useLanguage();
@@ -35,13 +35,13 @@ export default function NotFound() {
       <div className="absolute top-[10%] -left-20 w-72 h-72 bg-blue-400/10 rounded-full blur-[100px] animate-pulse" />
       <div className="absolute bottom-[20%] -right-20 w-96 h-96 bg-purple-400/10 rounded-full blur-[120px] animate-pulse delay-700" />
 
-      <motion.div
+      <m.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         className="relative z-10 flex flex-col items-center text-center max-w-2xl mx-auto"
       >
-        <motion.div variants={itemVariants} className="relative mb-8">
+        <m.div variants={itemVariants} className="relative mb-8">
           {/* Animated background element */}
           <div className="absolute -inset-6 bg-linear-to-tr from-blue-500/20 to-purple-500/20 rounded-full blur-2xl animate-pulse" />
           <div className="relative bg-white p-10 rounded-full shadow-2xl border border-blue-50/50 group hover:scale-105 transition-transform duration-500">
@@ -52,9 +52,9 @@ export default function NotFound() {
               404
             </span>
           </div>
-        </motion.div>
+        </m.div>
 
-        <motion.div variants={itemVariants} className="space-y-4">
+        <m.div variants={itemVariants} className="space-y-4">
           <h1 className="text-5xl md:text-7xl font-black tracking-tighter bg-linear-to-r from-slate-900 via-slate-800 to-slate-600 bg-clip-text text-transparent mb-2">
             OOPS!
           </h1>
@@ -64,9 +64,9 @@ export default function NotFound() {
           <p className="text-slate-500 text-lg max-w-md mx-auto leading-relaxed">
             {t("errors.property_not_found_desc")}
           </p>
-        </motion.div>
+        </m.div>
 
-        <motion.div
+        <m.div
           variants={itemVariants}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12 w-full sm:w-auto"
         >
@@ -91,10 +91,10 @@ export default function NotFound() {
               {t("errors.go_home")}
             </Link>
           </Button>
-        </motion.div>
+        </m.div>
 
         {/* Subtle branding/footer */}
-        <motion.div
+        <m.div
           variants={itemVariants}
           className="mt-24 opacity-30 select-none pointer-events-none flex items-center gap-4"
         >
@@ -103,8 +103,8 @@ export default function NotFound() {
             {siteConfig.name}
           </span>
           <div className="h-px w-12 bg-slate-300" />
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </main>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { Mail, MessageSquare, Sparkles } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import Image from "next/image";
 
 export function ContactHero({ 
@@ -24,7 +24,7 @@ export function ContactHero({
 
       {/* Floating Decorative Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div 
+        <m.div 
           animate={{ 
             y: [0, -40, 0],
             rotate: [0, 10, 0],
@@ -33,7 +33,7 @@ export function ContactHero({
           transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
           className="absolute top-1/4 left-10 w-48 lg:w-96 h-48 lg:h-96 bg-blue-500/10 rounded-full blur-3xl opacity-50"
         />
-        <motion.div 
+        <m.div 
           animate={{ 
             y: [0, 40, 0],
             rotate: [0, -10, 0],
@@ -50,7 +50,7 @@ export function ContactHero({
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-16 items-center mt-6 lg:mt-0">
             {/* Left Side: Messaging */}
             <div className="lg:col-span-7 text-center lg:text-left">
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: "circOut" }}
@@ -60,9 +60,9 @@ export function ContactHero({
                 <span className="text-[10px] lg:text-xs font-medium uppercase tracking-widest text-blue-50">
                   {t("contact.title_badge") || "Get in Touch"}
                 </span>
-              </motion.div>
+              </m.div>
 
-              <motion.div
+              <m.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2, ease: "circOut" }}
@@ -70,16 +70,16 @@ export function ContactHero({
                 <h1 className="text-3xl sm:text-4xl lg:text-7xl font-semibold mb-3 lg:mb-8 tracking-tighter leading-tight drop-shadow-2xl">
                   {t("contact.hero_title")}
                 </h1>
-              </motion.div>
+              </m.div>
 
-              <motion.p
+              <m.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4, ease: "circOut" }}
                 className="text-sm text-blue-100/90 leading-relaxed font-medium"
               >
                 {t("contact.hero_desc")}
-              </motion.p>
+              </m.p>
             </div>
 
             {/* Right Side: Integrated Body (Form) */}
@@ -90,14 +90,14 @@ export function ContactHero({
 
           {/* Integrated Footer (Info Cards) */}
           {footer && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.8, ease: "circOut" }}
               className="w-full"
             >
               {footer}
-            </motion.div>
+            </m.div>
           )}
         </div>
       </div>

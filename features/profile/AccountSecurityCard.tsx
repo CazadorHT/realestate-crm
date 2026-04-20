@@ -13,7 +13,7 @@ import { KeyRound, LogOut, ShieldCheck } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 export function AccountSecurityCard() {
   const router = useRouter();
@@ -35,15 +35,17 @@ export function AccountSecurityCard() {
     <Card className="border-slate-200 shadow-sm overflow-hidden">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-2">
-           <ShieldCheck className="h-5 w-5 text-slate-900" />
-           <CardTitle className="text-lg font-bold">บัญชีและความปลอดภัย</CardTitle>
+          <ShieldCheck className="h-5 w-5 text-slate-900" />
+          <CardTitle className="text-lg font-bold">
+            บัญชีและความปลอดภัย
+          </CardTitle>
         </div>
         <CardDescription>
           จัดการการเข้าสู่ระบบและความปลอดภัยของบัญชี
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4 px-6 pb-6 pt-2">
-        <motion.div 
+        <m.div
           whileHover={{ x: 4 }}
           className="flex gap-4 items-center justify-between p-4 border border-slate-100 rounded-xl bg-slate-50/30 hover:bg-white hover:border-blue-100 hover:shadow-md hover:shadow-blue-500/5 transition-all duration-300"
         >
@@ -58,18 +60,25 @@ export function AccountSecurityCard() {
               </p>
             </div>
           </div>
-          <Button variant="outline" size="sm" className="rounded-lg h-9 border-slate-200  hover:text-white transition-colors" asChild>
+          <Button
+            variant="outline"
+            size="sm"
+            className="rounded-lg h-9 border-slate-200  hover:text-white transition-colors"
+            asChild
+          >
             <a href="/auth/update-password">แก้ไข</a>
           </Button>
-        </motion.div>
+        </m.div>
 
         <div className="flex items-center gap-4 py-2">
           <Separator className="flex-1 opacity-50" />
-          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Logout Zone</span>
+          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+            Logout Zone
+          </span>
           <Separator className="flex-1 opacity-50" />
         </div>
 
-        <motion.div 
+        <m.div
           whileHover={{ x: 4 }}
           className="flex gap-4 items-center justify-between group p-4 border border-transparent rounded-xl hover:bg-rose-50/30 transition-all duration-300"
         >
@@ -82,15 +91,15 @@ export function AccountSecurityCard() {
               <p className="text-xs text-slate-400">ออกจากบัญชีบนอุปกรณ์นี้</p>
             </div>
           </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={handleSignOut} 
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSignOut}
             className="rounded-lg h-9 text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
           >
             Sign Out
           </Button>
-        </motion.div>
+        </m.div>
       </CardContent>
     </Card>
   );

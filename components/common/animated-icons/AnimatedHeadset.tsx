@@ -1,31 +1,30 @@
 "use client";
 
-import { motion, useAnimation } from "framer-motion";
+import { m, useAnimation } from "framer-motion";
 import { Headset } from "lucide-react";
 
-export const AnimatedHeadset = ({
-  size = 20,
-  className = "",
-}: {
+interface AnimatedHeadsetProps {
   size?: number;
   className?: string;
-}) => {
+}
+
+export function AnimatedHeadset({ size = 24, className }: AnimatedHeadsetProps) {
   const controls = useAnimation();
 
   return (
     <div
       onMouseEnter={() =>
         controls.start({
-          scale: [1, 1.05, 1],
-          rotate: [0, -5, 5, 0],
+          scale: [1, 1.15, 1],
+          y: [0, -3, 0],
           transition: { duration: 0.4 },
         })
       }
       className={className}
     >
-      <motion.div animate={controls}>
+      <m.div animate={controls}>
         <Headset size={size} />
-      </motion.div>
+      </m.div>
     </div>
   );
-};
+}

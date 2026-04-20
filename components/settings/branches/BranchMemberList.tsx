@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Users2, Search, ArrowRightLeft, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,12 +27,19 @@ interface BranchMemberListProps {
   onRemove: (member: TenantMember) => void;
 }
 
-export function BranchMemberList({ members, onTransfer, onRemove }: BranchMemberListProps) {
+export function BranchMemberList({
+  members,
+  onTransfer,
+  onRemove,
+}: BranchMemberListProps) {
   const [memberSearch, setMemberSearch] = useState("");
 
-  const filteredMembers = members.filter(m => 
-    m.profiles?.full_name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
-    m.profiles?.email?.toLowerCase().includes(memberSearch.toLowerCase())
+  const filteredMembers = members.filter(
+    (m) =>
+      m.profiles?.full_name
+        ?.toLowerCase()
+        .includes(memberSearch.toLowerCase()) ||
+      m.profiles?.email?.toLowerCase().includes(memberSearch.toLowerCase()),
   );
 
   return (
@@ -41,15 +48,18 @@ export function BranchMemberList({ members, onTransfer, onRemove }: BranchMember
         <div>
           <h3 className="text-2xl font-semibold text-slate-800 flex items-center gap-2.5">
             <Users2 size={24} className="text-indigo-600" />
-            รายชื่อพนักงาน <span className="text-slate-400 font-normal">(Branch Members)</span>
+            รายชื่อพนักงาน{" "}
+            <span className="text-slate-400 font-normal">(Branch Members)</span>
           </h3>
-          <p className="text-[13px] text-slate-500 mt-1 font-medium">จัดการรายชื่อและสิทธิ์การเข้าถึงทรัพย์ในสาขานี้</p>
+          <p className="text-[13px] text-slate-500 mt-1 font-medium">
+            จัดการรายชื่อและสิทธิ์การเข้าถึงทรัพย์ในสาขานี้
+          </p>
         </div>
 
         <div className="relative w-full md:w-64">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-          <Input 
-            placeholder="ค้นหาพนักงาน (Search)..." 
+          <Input
+            placeholder="ค้นหาพนักงาน (Search)..."
             className="pl-10 h-11 rounded-2xl bg-white border-slate-200 focus-visible:ring-indigo-500 transition-all shadow-sm font-semibold"
             value={memberSearch}
             onChange={(e) => setMemberSearch(e.target.value)}
@@ -60,7 +70,7 @@ export function BranchMemberList({ members, onTransfer, onRemove }: BranchMember
       <div className="space-y-4">
         <AnimatePresence mode="popLayout">
           {filteredMembers.map((member) => (
-            <motion.div
+            <m.div
               layout
               key={member.id}
               initial={{ opacity: 0, x: -10 }}
@@ -71,7 +81,9 @@ export function BranchMemberList({ members, onTransfer, onRemove }: BranchMember
               <div className="flex items-center gap-5 italic">
                 <div className="relative">
                   <Avatar className="h-14 w-14 border-2 border-white shadow-sm ring-1 ring-slate-100 group-hover:ring-indigo-200 transition-all">
-                    <AvatarImage src={member.profiles?.avatar_url || undefined} />
+                    <AvatarImage
+                      src={member.profiles?.avatar_url || undefined}
+                    />
                     <AvatarFallback className="bg-slate-50 text-slate-400 font-semibold">
                       {member.profiles?.full_name?.[0]?.toUpperCase() || "?"}
                     </AvatarFallback>
@@ -91,14 +103,16 @@ export function BranchMemberList({ members, onTransfer, onRemove }: BranchMember
               </div>
 
               <div className="flex items-center gap-6 w-full sm:w-auto justify-between sm:justify-end">
-                <Badge className={cn(
-                  "px-4 py-1.5 rounded-xl uppercase text-[10px] tracking-widest shadow-xs font-semibold border italic",
-                  member.role === "OWNER" || member.role === "ADMIN" 
-                    ? "bg-indigo-50 text-indigo-700 border-indigo-100"
-                    : member.role === "MANAGER"
-                    ? "bg-blue-50 text-blue-700 border-blue-100"
-                    : "bg-slate-50 text-slate-600 border-slate-100"
-                )}>
+                <Badge
+                  className={cn(
+                    "px-4 py-1.5 rounded-xl uppercase text-[10px] tracking-widest shadow-xs font-semibold border italic",
+                    member.role === "OWNER" || member.role === "ADMIN"
+                      ? "bg-indigo-50 text-indigo-700 border-indigo-100"
+                      : member.role === "MANAGER"
+                        ? "bg-blue-50 text-blue-700 border-blue-100"
+                        : "bg-slate-50 text-slate-600 border-slate-100",
+                  )}
+                >
                   {member.role}
                 </Badge>
 
@@ -124,14 +138,16 @@ export function BranchMemberList({ members, onTransfer, onRemove }: BranchMember
                   </div>
                 )}
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </AnimatePresence>
 
         {filteredMembers.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-slate-300 bg-slate-50/50 rounded-[32px] border border-dashed border-slate-200">
             <Users2 className="h-16 w-16 mb-4 opacity-10" />
-            <p className="text-[13px] font-semibold italic">ไม่พบรายชื่อพนักงานที่ระบุ (No members found)</p>
+            <p className="text-[13px] font-semibold italic">
+              ไม่พบรายชื่อพนักงานที่ระบุ (No members found)
+            </p>
           </div>
         )}
       </div>

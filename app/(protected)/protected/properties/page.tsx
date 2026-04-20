@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
-import { getPropertiesDashboardStatsQuery } from "@/features/properties/queries/stats";
+import { getPropertiesDashboardStatsQuery, getPropertiesFastCountQuery } from "@/features/properties/queries/stats";
 import { getPropertiesTableData } from "@/features/properties/queries/table";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { PropertiesHeader } from "./_components/PropertiesHeader";
@@ -10,6 +10,8 @@ import { PropertyFilters } from "@/components/properties/PropertyFilters";
 import { requireAuthContext } from "@/lib/authz";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import { MobileFloatingAction } from "@/components/ui/mobile-floating-action";
+import { Suspense } from "react";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   title: "จัดการทรัพย์",
@@ -68,39 +70,25 @@ export default async function PropertiesPage({
   const PAGE_SIZE = 10;
   const currentPage = Number(params.page) || 1;
 
-  // 1. Fetch Data via Refactored Query
-  const config = await getSystemConfig();
-  const { role, tenantId, supabase } = await requireAuthContext();
+  // [PERFORMANCE] Parallel Fetching: Break the waterfall for core config
+  const [config, authContext] = await Promise.all([
+    getSystemConfig(),
+    requireAuthContext(),
+  ]);
+
+  const { role, tenantId, supabase } = authContext;
   const isAdminUser = role === "ADMIN";
   const isMultiTenant = config.multi_tenant_enabled;
-
-  let currentTenantName = null;
-  if (tenantId) {
-    const { data: tenantData } = await supabase
-      .from("tenants")
-      .select("name")
-      .eq("id", tenantId)
-      .single();
-    currentTenantName = tenantData?.name;
-  }
-
-  const { tableData, count, filterMetadata } =
-    await getPropertiesTableData(params);
-  const stats = await getPropertiesDashboardStatsQuery(params.allBranches);
-
-  // Redirect if page is empty and not on first page
-  if (tableData.length === 0 && currentPage > 1) {
-    redirect("/protected/properties?page=1");
-  }
-
-  const isEmptyState = tableData.length === 0 && currentPage === 1;
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
       <SuccessAnimation />
-      <PropertiesHeader count={count} />
+      <PropertiesHeaderWrapper params={params} />
 
-      <PropertiesDashboard stats={stats} />
+      {/* DASHBOARD STREAMING */}
+      <Suspense fallback={<div className="h-32 animate-pulse bg-slate-100 rounded-2xl" />}>
+        <DashboardWrapper allBranches={params.allBranches} />
+      </Suspense>
 
       <div id="table" className="space-y-4 scroll-mt-4">
         {/* Section Title */}
@@ -110,44 +98,98 @@ export default async function PropertiesPage({
             <div className="relative w-1.5 h-8 bg-linear-to-b from-blue-500 to-indigo-600 rounded-full" />
           </div>
           <div>
-            <h2 className="text-lg font-bold text-slate-800">
-              รายการทรัพย์สิน
-            </h2>
+            <h2 className="text-lg font-bold text-slate-800">รายการทรัพย์สิน</h2>
             <p className="text-xs text-slate-400 font-medium">
               คลิกที่แถวเพื่อดูรายละเอียดหรือแก้ไข
             </p>
           </div>
-          
         </div>
 
-        <PropertyFilters
-          totalCount={count}
-          filterMetadata={filterMetadata}
-          isMultiTenant={config.multi_tenant_enabled}
-        />
-
-        {isEmptyState ? (
-          <PropertiesEmptyState />
-        ) : (
-          <>
-            <PropertiesTable
-              data={tableData}
-              isAdmin={isAdminUser}
-              isMultiTenant={isMultiTenant}
-              currentTenantId={tenantId}
-              currentTenantName={currentTenantName}
-              showBranch={isAdminUser && params.allBranches === "true" && isMultiTenant}
-              totalCount={count}
-              filters={params}
-            />
-          </>
-        )}
+        {/* TABLE & FILTERS STREAMING */}
+        <Suspense fallback={<div className="h-96 animate-pulse bg-slate-100 rounded-2xl" />}>
+          <TableWrapper
+            params={params}
+            isAdminUser={isAdminUser}
+            isMultiTenant={isMultiTenant}
+            tenantId={tenantId}
+            currentPage={currentPage}
+          />
+        </Suspense>
       </div>
 
-      <MobileFloatingAction 
-        href="/protected/properties/new" 
-        label="เพิ่มทรัพย์ใหม่" 
+      <MobileFloatingAction
+        href="/protected/properties/new"
+        label="เพิ่มทรัพย์ใหม่"
       />
     </div>
+  );
+}
+
+/** 🚀 PERFORMANCE WRAPPERS (Streaming Pattern) */
+
+async function PropertiesHeaderWrapper({ params }: { params: any }) {
+  const count = await getPropertiesFastCountQuery(params.allBranches);
+  return <PropertiesHeader count={count} />;
+}
+
+async function DashboardWrapper({ allBranches }: { allBranches?: string }) {
+  const stats = await getPropertiesDashboardStatsQuery(allBranches);
+  return <PropertiesDashboard stats={stats} />;
+}
+
+async function TableWrapper({
+  params,
+  isAdminUser,
+  isMultiTenant,
+  tenantId,
+  currentPage,
+}: {
+  params: any;
+  isAdminUser: boolean;
+  isMultiTenant: boolean;
+  tenantId: string | undefined;
+  currentPage: number;
+}) {
+  const supabase = await createClient();
+  
+  // Parallel fetch: Table data AND Tenant Name (if applicable)
+  const [tableResult, tenantResult] = await Promise.all([
+    getPropertiesTableData(params),
+    tenantId
+      ? supabase.from("tenants").select("name").eq("id", tenantId).single()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const { tableData, count, filterMetadata } = tableResult;
+  const currentTenantName = tenantResult.data?.name || null;
+
+  if (tableData.length === 0 && currentPage > 1) {
+    redirect("/protected/properties?page=1");
+  }
+
+  if (tableData.length === 0 && currentPage === 1) {
+    return <PropertiesEmptyState />;
+  }
+
+  return (
+    <>
+      <PropertyFilters
+        totalCount={count}
+        filterMetadata={filterMetadata}
+        isMultiTenant={isMultiTenant}
+      />
+      <PropertiesTable
+        data={tableData}
+        isAdmin={isAdminUser}
+        isMultiTenant={isMultiTenant}
+        currentTenantId={tenantId}
+        currentTenantName={currentTenantName}
+        showBranch={
+          isAdminUser && params.allBranches === "true" && isMultiTenant
+        }
+        totalCount={count}
+        filters={params}
+      />
+    </>
   );
 }

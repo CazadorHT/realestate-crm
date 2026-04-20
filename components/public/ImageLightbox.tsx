@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@/components/ui/visually-hidden";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -98,7 +98,7 @@ export function ImageLightbox({
         {/* Main Content Area */}
         <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 mb-20 mt-12 overflow-hidden">
           <AnimatePresence initial={false} custom={direction}>
-            <motion.div
+            <m.div
               key={currentIndex}
               custom={direction}
               variants={{
@@ -150,7 +150,7 @@ export function ImageLightbox({
                   sizes="100vw"
                 />
               </div>
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
 

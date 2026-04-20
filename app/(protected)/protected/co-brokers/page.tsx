@@ -11,9 +11,6 @@ export const metadata = {
 };
 
 export default async function CoBrokersPage() {
-  const result = await getCoBrokersAction();
-  const initialData = result.success ? result.data : [];
-
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
       <PageHeader
@@ -28,11 +25,18 @@ export default async function CoBrokersPage() {
       />
 
       <Suspense fallback={<CoBrokersLoading />}>
-        <CoBrokersContent initialData={initialData as any} />
+        <CoBrokersContentWrapper />
       </Suspense>
     </div>
   );
 }
+
+async function CoBrokersContentWrapper() {
+  const result = await getCoBrokersAction();
+  const initialData = result.success ? result.data : [];
+  return <CoBrokersContent initialData={initialData as any} />;
+}
+
 
 function CoBrokersLoading() {
   return (

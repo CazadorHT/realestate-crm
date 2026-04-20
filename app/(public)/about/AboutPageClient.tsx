@@ -1,7 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import {
   ShieldCheck,
   Target,
@@ -105,20 +105,20 @@ export default function AboutPageClient() {
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[120%] bg-linear-to-b from-blue-50/50 via-white to-white blur-3xl rounded-full" />
         </div>
 
-        <motion.div
+        <m.div
           variants={containerVariants}
           initial="hidden"
           animate="visible"
           className="max-w-4xl mx-auto text-center space-y-8"
         >
-          <motion.div
+          <m.div
             variants={itemVariants}
             className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100/50 text-blue-700 text-xs font-bold uppercase tracking-widest"
           >
             {siteConfig.name}
-          </motion.div>
+          </m.div>
 
-          <motion.h1
+          <m.h1
             variants={itemVariants}
             className="text-4xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.05]"
           >
@@ -127,17 +127,17 @@ export default function AboutPageClient() {
             <span className="bg-linear-to-r from-blue-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
               {t("about.hero_subtitle")}
             </span>
-          </motion.h1>
+          </m.h1>
 
-          <motion.p
+          <m.p
             variants={itemVariants}
             className="text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-medium"
           >
             {t("about.description")}
-          </motion.p>
+          </m.p>
 
           {/* New Stats Board */}
-          <motion.div
+          <m.div
             variants={itemVariants}
             className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-12 max-w-3xl mx-auto"
           >
@@ -157,8 +157,8 @@ export default function AboutPageClient() {
                 </div>
               </div>
             ))}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </section>
 
       {/* ── Values Grid ── */}
@@ -175,7 +175,7 @@ export default function AboutPageClient() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {values.map((val, idx) => (
-              <motion.div
+              <m.div
                 key={idx}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -192,7 +192,7 @@ export default function AboutPageClient() {
                 <p className="text-slate-500 leading-relaxed text-sm lg:text-base">
                   {val.desc}
                 </p>
-              </motion.div>
+              </m.div>
             ))}
           </div>
         </div>

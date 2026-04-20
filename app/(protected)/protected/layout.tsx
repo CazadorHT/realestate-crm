@@ -26,16 +26,12 @@ export default async function ProtectedLayout({
 }) {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return redirect("/auth/login");
-  }
-
-  // ดึงข้อมูล Profile (ชื่อ, รูป, Role) จาก Server-side เพื่อส่งให้ Client Component แสดงผล
-  const profile = await getCurrentProfile();
+  // [PERFORMANCE] Parallel Fetching: Core Profile & Sidebar Stats
+  const [profile, propertyStats, cookieStore] = await Promise.all([
+    getCurrentProfile(),
+    getPropertiesDashboardStatsQuery(),
+    cookies(),
+  ]);
 
   if (!profile) {
     return redirect("/auth/login");
@@ -47,11 +43,7 @@ export default async function ProtectedLayout({
   // Note: Notifications are fetched client-side inside NotificationBell
 
   // อ่านสถานะ Sidebar จาก Cookie (เพื่อให้ตอน Refresh หน้าเว็บ ไม่เกิดอาการกางแล้วหุบ)
-  const cookieStore = await cookies();
   const initialCollapsed = cookieStore.get("sidebar-collapsed")?.value === "true";
-
-  // Fetch AI Review count for Sidebar notification
-  const propertyStats = await getPropertiesDashboardStatsQuery();
 
   return (
     <TenantProvider>

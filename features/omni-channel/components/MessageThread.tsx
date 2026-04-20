@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Send, User, MessageCircle, X, RefreshCw, ChevronDown, Check, Loader2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import {
@@ -315,7 +315,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
     <div className="flex flex-col h-full bg-slate-50/10">
       <AnimatePresence>
         {isTyping && (
-          <motion.div 
+          <m.div 
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -323,7 +323,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
           >
             <div className="flex gap-1">
               {[0, 1, 2].map((i) => (
-                <motion.span
+                <m.span
                   key={i}
                   animate={{ scale: [1, 1.5, 1] }}
                   transition={{ repeat: Infinity, duration: 1, delay: i * 0.2 }}
@@ -332,7 +332,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
               ))}
             </div>
             <span>{typerName} กำลังพิมพ์...</span>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
       {/* Header */}
@@ -446,7 +446,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
         {/* Infinite Scroll Anchor & Loader */}
         <div ref={topAnchorRef} className="h-4 w-full flex items-center justify-center -mt-2">
           {isLoadingMore && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               className="px-4 py-1 rounded-full bg-white shadow-sm border border-slate-100 flex items-center gap-2"
@@ -455,7 +455,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
                 กำลังโหลดข้อความเก่า...
               </span>
-            </motion.div>
+            </m.div>
           )}
         </div>
 

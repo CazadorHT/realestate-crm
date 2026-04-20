@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 interface UserRoleSelectProps {
   userId: string;
@@ -148,7 +148,7 @@ export function UserRoleSelect({
             const isActive = selectedRole === role.id;
             const Icon = role.icon;
             return (
-              <motion.button
+              <m.button
                 key={role.id}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
@@ -189,24 +189,24 @@ export function UserRoleSelect({
 
                 {/* ✅ Checkbox Indicator */}
                 <div className="shrink-0 ml-auto">
-                    {isActive ? (
-                      <div className="h-6 w-6 rounded-full bg-slate-900 flex items-center justify-center text-white">
-                        <Check className="h-3.5 w-3.5" />
-                      </div>
-                    ) : (
-                      <div className="h-6 w-6 rounded-full border-2 border-slate-200 bg-white/50" />
-                    )}
+                  {isActive ? (
+                    <div className="h-6 w-6 rounded-full bg-slate-900 flex items-center justify-center text-white">
+                      <Check className="h-3.5 w-3.5" />
+                    </div>
+                  ) : (
+                    <div className="h-6 w-6 rounded-full border-2 border-slate-200 bg-white/50" />
+                  )}
                 </div>
 
                 {isActive && (
-                  <motion.div
+                  <m.div
                     layoutId="active-indicator"
                     className="absolute -inset-px border border-slate-200 rounded-3xl pointer-events-none"
                     initial={false}
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
-              </motion.button>
+              </m.button>
             );
           })}
         </div>

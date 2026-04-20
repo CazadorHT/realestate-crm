@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 // Icon map - add icons as needed
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -66,7 +66,7 @@ export function EmptyState({
   const ActionIcon = ICON_MAP[actionIcon] || PlusCircle;
 
   return (
-    <motion.div
+    <m.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
@@ -86,23 +86,23 @@ export function EmptyState({
       <div className="relative flex flex-col items-center justify-center text-center space-y-8">
         {/* Animated Icon Container */}
         <div className="relative group">
-          <motion.div 
-            animate={{ 
+          <m.div
+            animate={{
               scale: [1, 1.05, 1],
             }}
-            transition={{ 
-              duration: 4, 
+            transition={{
+              duration: 4,
               repeat: Infinity,
-              ease: "easeInOut"
+              ease: "easeInOut",
             }}
-            className="absolute inset-0 bg-indigo-500/20 rounded-full blur-2xl scale-150" 
+            className="absolute inset-0 bg-indigo-500/20 rounded-full blur-2xl scale-150"
           />
-          <motion.div 
+          <m.div
             whileHover={{ scale: 1.1, rotate: 5 }}
             className="relative p-8 bg-linear-to-br from-indigo-600 to-violet-600 rounded-xl shadow-2xl shadow-indigo-500/40 transition-transform duration-500"
           >
             <Icon className="h-14 w-14 text-white" />
-          </motion.div>
+          </m.div>
           {/* Subtle ring */}
           <div className="absolute -inset-2 border-2 border-indigo-100 rounded-[2.5rem] opacity-50 group-hover:scale-110 transition-transform duration-500" />
         </div>
@@ -148,6 +148,6 @@ export function EmptyState({
 
       {/* Glossy overlay */}
       <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-white/10 pointer-events-none" />
-    </motion.div>
+    </m.div>
   );
 }

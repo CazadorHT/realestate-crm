@@ -80,13 +80,14 @@ import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
 export default async function DashboardPage() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // [PERFORMANCE] Parallel Fetching: Core Auth & Context
+  const [userResponse, tenantId, profile] = await Promise.all([
+    supabase.auth.getUser(),
+    getActiveTenantCookie(),
+    getCurrentProfile(),
+  ]);
 
-  const tenantId = await getActiveTenantCookie();
-
-  const profile = await getCurrentProfile();
+  const user = userResponse.data.user;
   const staff = profile ? isStaff(profile.role) : false;
 
   const showAnalytics = isFeatureEnabled("dashboard_analytics");

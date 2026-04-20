@@ -34,7 +34,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
 import { Skeleton } from "@/components/ui/skeleton";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 /**
  * 🦴 Shimmer Loading Grid for Elite UX
@@ -142,7 +142,10 @@ export default function BranchesPage() {
       <SettingsHeader
         title="จัดการสาขา & แฟรนไชส์"
         description="บริหารจัดการโครงสร้างองค์กรและสิทธิ์การเข้าถึงรายสาขา"
-        subPath={[{ label: "System Control", href: "/protected/settings" }, { label: "จัดการสาขา" }]}
+        subPath={[
+          { label: "System Control", href: "/protected/settings" },
+          { label: "จัดการสาขา" },
+        ]}
         actions={
           <ResponsiveDialog
             open={open}
@@ -165,7 +168,7 @@ export default function BranchesPage() {
                 >
                   ยกเลิก
                 </Button>
-                <Button 
+                <Button
                   onClick={handleCreate}
                   disabled={isCreating}
                   className="flex-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl h-12 px-8 shadow-lg shadow-slate-200 transition-all font-semibold"
@@ -182,7 +185,12 @@ export default function BranchesPage() {
           >
             <div className="grid gap-6 p-6">
               <div className="grid gap-3">
-                <Label htmlFor="name" className="text-sm font-semibold text-slate-700">ชื่อสาขา</Label>
+                <Label
+                  htmlFor="name"
+                  className="text-sm font-semibold text-slate-700"
+                >
+                  ชื่อสาขา
+                </Label>
                 <Input
                   id="name"
                   placeholder="เช่น สาขาเชียงใหม่, Real Estate Plus"
@@ -195,7 +203,12 @@ export default function BranchesPage() {
                 />
               </div>
               <div className="grid gap-3">
-                <Label htmlFor="slug" className="text-sm font-semibold text-slate-700">Slug (URL)</Label>
+                <Label
+                  htmlFor="slug"
+                  className="text-sm font-semibold text-slate-700"
+                >
+                  Slug (URL)
+                </Label>
                 <Input
                   id="slug"
                   placeholder="เช่น chiang-mai"
@@ -204,7 +217,9 @@ export default function BranchesPage() {
                   onChange={(e) =>
                     setNewBranch({
                       ...newBranch,
-                      slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+                      slug: e.target.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9-]/g, "-"),
                     })
                   }
                   required
@@ -220,117 +235,122 @@ export default function BranchesPage() {
       />
 
       <div className=" pt-4">
-
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <BranchCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : (
-        <motion.div 
-          layout
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          <AnimatePresence mode="popLayout">
-            {branches.map((branch) => (
-              <motion.div
-                key={branch.id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="group relative"
-              >
-                <Link href={`/protected/settings/branches/${branch.id}`}>
-                  <div className="bg-white/50 backdrop-blur-sm border border-slate-200/60 rounded-3xl p-6 hover:shadow-2xl hover:shadow-slate-200 transition-all duration-300 group hover:-translate-y-1 h-full flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-2xl group-hover:bg-slate-900 transition-colors duration-300 shadow-inner">
-                          <Building2 className="h-6 w-6 text-slate-400 group-hover:text-white" />
-                        </div>
-                        <div className="flex items-center gap-3">
-                          {/* 📡 Status Pulse */}
-                          <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold uppercase tracking-wider">
-                            <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                            </span>
-                            Active
-                          </div>
-                          
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-10 w-10 rounded-2xl hover:bg-slate-100 transition-all active:scale-95"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setSelectedBranchForMenu(branch);
-                              setMenuOpen(true);
-                            }}
-                          >
-                            <MoreVertical className="h-5 w-5 text-slate-400" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      <h3 className="text-xl font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
-                        {branch.name}
-                      </h3>
-                      <p className="text-slate-400 text-sm font-mono flex items-center gap-1">
-                        <Layers size={14} className="opacity-50" />
-                        {branch.slug}
-                      </p>
-                    </div>
-
-                    <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex -space-x-2">
-                          {[1, 2].map((i) => (
-                            <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center overflow-hidden">
-                              <Users size={14} className="text-slate-400" />
-                            </div>
-                          ))}
-                        </div>
-                        <span className="text-xs font-semibold text-slate-500">
-                          {branch.memberCount} พนักงาน
-                        </span>
-                      </div>
-                      <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
-                        <ChevronRight className="h-4 w-4" />
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </motion.div>
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <BranchCardSkeleton key={i} />
             ))}
-          </AnimatePresence>
+          </div>
+        ) : (
+          <m.div
+            layout
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            <AnimatePresence mode="popLayout">
+              {branches.map((branch) => (
+                <m.div
+                  key={branch.id}
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  className="group relative"
+                >
+                  <Link href={`/protected/settings/branches/${branch.id}`}>
+                    <div className="bg-white/50 backdrop-blur-sm border border-slate-200/60 rounded-3xl p-6 hover:shadow-2xl hover:shadow-slate-200 transition-all duration-300 group hover:-translate-y-1 h-full flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-2xl group-hover:bg-slate-900 transition-colors duration-300 shadow-inner">
+                            <Building2 className="h-6 w-6 text-slate-400 group-hover:text-white" />
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {/* 📡 Status Pulse */}
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-semibold uppercase tracking-wider">
+                              <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                              </span>
+                              Active
+                            </div>
 
-          {branches.length === 0 && (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="col-span-full flex flex-col items-center justify-center py-20 px-6 bg-slate-50/50 rounded-[40px] border-2 border-dashed border-slate-200"
-            >
-              <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-xl shadow-slate-200 mb-6">
-                <Building2 className="h-10 w-10 text-slate-200" />
-              </div>
-              <h4 className="text-xl font-semibold text-slate-900 mb-2">ยังไม่มีสาขาในระบบ</h4>
-              <p className="text-slate-500 text-center max-w-sm mb-8">
-                เริ่มต้นสร้างสาขาหรือแฟรนไชส์ของคุณ เพื่อแยกการบริหารจัดการข้อมูลและพนักงาน
-              </p>
-              <Button 
-                onClick={() => setOpen(true)}
-                className="bg-slate-900 hover:bg-slate-800 text-white rounded-2xl h-14 px-8 shadow-xl shadow-slate-200"
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-10 w-10 rounded-2xl hover:bg-slate-100 transition-all active:scale-95"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setSelectedBranchForMenu(branch);
+                                setMenuOpen(true);
+                              }}
+                            >
+                              <MoreVertical className="h-5 w-5 text-slate-400" />
+                            </Button>
+                          </div>
+                        </div>
+
+                        <h3 className="text-xl font-semibold text-slate-900 mb-1 group-hover:text-blue-600 transition-colors">
+                          {branch.name}
+                        </h3>
+                        <p className="text-slate-400 text-sm font-mono flex items-center gap-1">
+                          <Layers size={14} className="opacity-50" />
+                          {branch.slug}
+                        </p>
+                      </div>
+
+                      <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="flex -space-x-2">
+                            {[1, 2].map((i) => (
+                              <div
+                                key={i}
+                                className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center overflow-hidden"
+                              >
+                                <Users size={14} className="text-slate-400" />
+                              </div>
+                            ))}
+                          </div>
+                          <span className="text-xs font-semibold text-slate-500">
+                            {branch.memberCount} พนักงาน
+                          </span>
+                        </div>
+                        <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all duration-300">
+                          <ChevronRight className="h-4 w-4" />
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                  </m.div>
+              ))}
+            </AnimatePresence>
+
+            {branches.length === 0 && (
+              <m.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="col-span-full flex flex-col items-center justify-center py-20 px-6 bg-slate-50/50 rounded-[40px] border-2 border-dashed border-slate-200"
               >
-                <Plus className="mr-2 h-5 w-5" />
-                สร้างสาขาแรกของคุณ
-              </Button>
-            </motion.div>
-          )}
-        </motion.div>
-      )}
+                <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center shadow-xl shadow-slate-200 mb-6">
+                  <Building2 className="h-10 w-10 text-slate-200" />
+                </div>
+                <h4 className="text-xl font-semibold text-slate-900 mb-2">
+                  ยังไม่มีสาขาในระบบ
+                </h4>
+                <p className="text-slate-500 text-center max-w-sm mb-8">
+                  เริ่มต้นสร้างสาขาหรือแฟรนไชส์ของคุณ
+                  เพื่อแยกการบริหารจัดการข้อมูลและพนักงาน
+                </p>
+                <Button
+                  onClick={() => setOpen(true)}
+                  className="bg-slate-900 hover:bg-slate-800 text-white rounded-2xl h-14 px-8 shadow-xl shadow-slate-200"
+                >
+                  <Plus className="mr-2 h-5 w-5" />
+                  สร้างสาขาแรกของคุณ
+                </Button>
+              </m.div>
+            )}
+            </m.div>
+        )}
 
         {/* Edit Branch Dialog */}
         <ResponsiveDialog
@@ -348,7 +368,7 @@ export default function BranchesPage() {
               >
                 ยกเลิก
               </Button>
-              <Button 
+              <Button
                 onClick={handleUpdate}
                 disabled={isProcessing}
                 className="flex-1 bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-12 px-8 shadow-lg shadow-slate-200 font-semibold"
@@ -365,7 +385,12 @@ export default function BranchesPage() {
         >
           <div className="grid gap-6 p-6">
             <div className="grid gap-3">
-              <Label htmlFor="edit-name" className="text-sm font-semibold text-slate-700">ชื่อสาขา</Label>
+              <Label
+                htmlFor="edit-name"
+                className="text-sm font-semibold text-slate-700"
+              >
+                ชื่อสาขา
+              </Label>
               <Input
                 id="edit-name"
                 className="h-12 rounded-xl border-slate-200 focus:ring-slate-900 font-semibold"
@@ -377,7 +402,12 @@ export default function BranchesPage() {
               />
             </div>
             <div className="grid gap-3">
-              <Label htmlFor="edit-slug" className="text-sm font-semibold text-slate-700">Slug (URL)</Label>
+              <Label
+                htmlFor="edit-slug"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Slug (URL)
+              </Label>
               <Input
                 id="edit-slug"
                 className="h-12 rounded-xl border-slate-200 focus:ring-slate-900 font-mono text-sm"
@@ -385,7 +415,9 @@ export default function BranchesPage() {
                 onChange={(e) =>
                   setEditBranch({
                     ...editBranch,
-                    slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"),
+                    slug: e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9-]/g, "-"),
                   })
                 }
                 required
@@ -409,7 +441,11 @@ export default function BranchesPage() {
           }
           description={
             <div className="pt-2 italic">
-              คุณแน่ใจหรือไม่ว่าต้องการลบสาขา <strong className="text-slate-900">"{branchToDelete?.name}"</strong>?
+              คุณแน่ใจหรือไม่ว่าต้องการลบสาขา{" "}
+              <strong className="text-slate-900">
+                "{branchToDelete?.name}"
+              </strong>
+              ?
             </div>
           }
           footer={
@@ -443,8 +479,8 @@ export default function BranchesPage() {
                 <AlertTriangle size={14} /> ⚠️ คำเตือนสำคัญ:
               </span>{" "}
               <p className="text-xs text-slate-600 leading-relaxed font-medium">
-                ข้อมูลทั้งหมดที่เกี่ยวข้องกับสาขานี้ (Leads, Properties, สัญญา) ทั้งหมด
-                จะถูกลบออกจากระบบอย่างถาวรและไม่สามารถกู้คืนกลับมาได้อีก
+                ข้อมูลทั้งหมดที่เกี่ยวข้องกับสาขานี้ (Leads, Properties, สัญญา)
+                ทั้งหมด จะถูกลบออกจากระบบอย่างถาวรและไม่สามารถกู้คืนกลับมาได้อีก
               </p>
             </div>
           </div>
@@ -475,8 +511,12 @@ export default function BranchesPage() {
                 <Edit2 className="h-5 w-5" />
               </div>
               <div className="text-left">
-                 <p className="font-semibold text-slate-900 leading-none mb-1 group-hover:text-blue-700">แก้ไขข้อมูลพื้นฐาน</p>
-                 <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Branch Details & URL Slug</p>
+                <p className="font-semibold text-slate-900 leading-none mb-1 group-hover:text-blue-700">
+                  แก้ไขข้อมูลพื้นฐาน
+                </p>
+                <p className="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">
+                  Branch Details & URL Slug
+                </p>
               </div>
             </Button>
 
@@ -496,8 +536,12 @@ export default function BranchesPage() {
                 <Trash2 className="h-5 w-5" />
               </div>
               <div className="text-left">
-                 <p className="font-semibold text-red-600 leading-none mb-1 group-hover:text-red-700">ลบสาขาออกจากระบบ</p>
-                 <p className="text-[11px] text-red-400 font-semibold uppercase tracking-wider">DANGER: Permanent Deletion</p>
+                <p className="font-semibold text-red-600 leading-none mb-1 group-hover:text-red-700">
+                  ลบสาขาออกจากระบบ
+                </p>
+                <p className="text-[11px] text-red-400 font-semibold uppercase tracking-wider">
+                  DANGER: Permanent Deletion
+                </p>
               </div>
             </Button>
 

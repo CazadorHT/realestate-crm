@@ -22,6 +22,7 @@ import { getSystemConfig } from "@/lib/actions/system-config";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import { MobileFloatingAction } from "@/components/ui/mobile-floating-action";
 import { UserPlus } from "lucide-react";
+import { Suspense } from "react";
 
 export default async function LeadsPage({
   searchParams,
@@ -35,30 +36,17 @@ export default async function LeadsPage({
   }>;
 }) {
   const sp = (await searchParams) ?? {};
-  const { tenantId } = await requireAuthContext();
-  const config = await getSystemConfig();
+  
+  // [PERFORMANCE] Parallel Fetching: Core Auth & Context
+  const [authContext, config] = await Promise.all([
+    requireAuthContext(),
+    getSystemConfig(),
+  ]);
+
+  const { tenantId } = authContext;
   const isMultiTenant = config.multi_tenant_enabled;
   const view = sp.view ?? "list";
   const page = Number(sp.page ?? "1") || 1;
-
-  const {
-    data: listLeads,
-    count,
-    pageSize,
-  } = await getLeadsQuery({
-    q: sp.q,
-    stage: sp.stage,
-    page,
-    pageSize: 20,
-  });
-
-  // If kanban, we fetch a larger set (or a different subset)
-  // For simplicity, we'll use a separate query for Kanban to avoid pagination issues
-  let kanbanLeads: any[] = [];
-  if (view === "kanban") {
-    const allLeads = await getLeadsForKanbanQuery();
-    kanbanLeads = allLeads;
-  }
 
   const toggleViewHref = (v: string) => {
     const params = new URLSearchParams();
@@ -68,98 +56,149 @@ export default async function LeadsPage({
     return `/protected/leads?${params.toString()}`;
   };
 
-  /* Fetch Dashboard Stats */
-  const stats = await getLeadsDashboardStatsQuery();
-
-  const isEmptyState =
-    listLeads.length === 0 && page === 1 && !sp.q && !sp.stage;
-
   return (
     <div className="space-y-6 animate-fade-in">
       <SuccessAnimation />
-      {/* Premium Header */}
-      <PageHeader
-        title="ลูกค้า (Leads)"
-        subtitle="จัดการและติดตามลูกค้าที่สนใจ"
-        count={count}
-        icon="users"
-        actionLabel="สร้างลูกค้าใหม่"
-        actionHref="/protected/leads/new"
-        actionIcon="userPlus"
-        gradient="emerald"
-      >
-        <div className="flex justify-end">
-          <div className="flex bg-white/10 p-1 rounded-xl border border-white/20 shadow-sm backdrop-blur-sm">
-            <Link
-              href={toggleViewHref("list")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                view === "list"
-                  ? "bg-white shadow-sm text-slate-900"
-                  : "text-white/70 hover:text-white"
-              }`}
-            >
-              📋 รายการ
-            </Link>
-            <Link
-              href={toggleViewHref("kanban")}
-              className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
-                view === "kanban"
-                  ? "bg-white shadow-sm text-slate-900"
-                  : "text-white/70 hover:text-white"
-              }`}
-            >
-              📊 กระดานงาน
-            </Link>
-          </div>
-        </div>
-      </PageHeader>
+      
+      {/* 1. HEADER (Static part fetched in wrapper) */}
+      <PageHeaderWrapper sp={sp} view={view} toggleViewHref={toggleViewHref} />
 
-      {/* Stats Section */}
-      <LeadsStats stats={stats} />
+      {/* 2. STATS SECTION (Streamed) */}
+      <Suspense fallback={<div className="h-32 animate-pulse bg-slate-50 rounded-2xl" />}>
+        <LeadsStatsWrapper />
+      </Suspense>
 
-      {view === "list" ? (
-        <div className="space-y-4">
-          <SectionTitle
-            title="รายการลีดทั้งหมด"
-            subtitle="คลิกที่แถวเพื่อดูรายละเอียด"
-            color="emerald"
-          />
+      {/* 3. MAIN CONTENT (Streamed) */}
+      <Suspense fallback={<div className="h-96 animate-pulse bg-slate-50 rounded-2xl" />}>
+        <LeadsContentWrapper 
+          view={view} 
+          sp={sp} 
+          page={page} 
+          tenantId={tenantId}
+          isMultiTenant={isMultiTenant}
+        />
+      </Suspense>
 
-          <LeadsFilters />
-
-          {isEmptyState ? (
-            <EmptyState
-              icon="users"
-              title="ยังไม่มีลีดในระบบ"
-              description="เริ่มต้นสร้างลีดแรกของคุณเพื่อติดตามลูกค้าที่สนใจทรัพย์"
-              actionLabel="สร้างลีดแรก"
-              actionHref="/protected/leads/new"
-              actionIcon="userPlus"
-            />
-          ) : (
-            <>
-              <LeadsTable 
-                leads={listLeads} 
-                totalCount={count} 
-                showBranch={sp.allBranches === "true"}
-                currentTenantId={tenantId}
-                isMultiTenant={isMultiTenant}
-                filters={{ q: sp.q, stage: sp.stage }} 
-              />
-            </>
-          )}
-        </div>
-      ) : (
-        <div className="pt-2">
-          <LeadsKanban initialLeads={kanbanLeads} />
-        </div>
-      )}
-
-      <MobileFloatingAction 
-        href="/protected/leads/new" 
+      <MobileFloatingAction
+        href="/protected/leads/new"
         icon={<UserPlus className="h-6 w-6" />}
-        label="สร้างลูกค้าใหม่" 
+        label="สร้างลูกค้าใหม่"
       />
     </div>
   );
 }
+
+/** 🚀 LEADS PERFORMANCE WRAPPERS (Streaming Pattern) */
+
+async function PageHeaderWrapper({ sp, view, toggleViewHref }: { sp: any; view: string; toggleViewHref: any }) {
+  const stats = await getLeadsDashboardStatsQuery();
+  const count = stats.totalLeads;
+
+  return (
+    <PageHeader
+      title="ลูกค้า (Leads)"
+      subtitle="จัดการและติดตามลูกค้าที่สนใจ"
+      count={count}
+      icon="users"
+      actionLabel="สร้างลูกค้าใหม่"
+      actionHref="/protected/leads/new"
+      actionIcon="userPlus"
+      gradient="emerald"
+    >
+      <div className="flex justify-end">
+        <div className="flex bg-white/10 p-1 rounded-xl border border-white/20 shadow-sm backdrop-blur-sm">
+          <Link
+            href={toggleViewHref("list")}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              view === "list"
+                ? "bg-white shadow-sm text-slate-900"
+                : "text-white/70 hover:text-white"
+            }`}
+          >
+            📋 รายการ
+          </Link>
+          <Link
+            href={toggleViewHref("kanban")}
+            className={`px-4 py-2 text-sm font-medium rounded-lg transition-all ${
+              view === "kanban"
+                ? "bg-white shadow-sm text-slate-900"
+                : "text-white/70 hover:text-white"
+            }`}
+          >
+            📊 กระดานงาน
+          </Link>
+        </div>
+      </div>
+    </PageHeader>
+  );
+}
+
+async function LeadsStatsWrapper() {
+  const stats = await getLeadsDashboardStatsQuery();
+  return <LeadsStats stats={stats} />;
+}
+
+async function LeadsContentWrapper({ 
+  view, 
+  sp, 
+  page, 
+  tenantId, 
+  isMultiTenant 
+}: { 
+  view: string; 
+  sp: any; 
+  page: number; 
+  tenantId: string | undefined;
+  isMultiTenant: boolean;
+}) {
+  if (view === "list") {
+    const { data: listLeads, count } = await getLeadsQuery({
+      q: sp.q,
+      stage: sp.stage,
+      page,
+      pageSize: 20,
+    });
+
+    const isEmptyState = listLeads.length === 0 && page === 1 && !sp.q && !sp.stage;
+
+    return (
+      <div className="space-y-4">
+        <SectionTitle
+          title="รายการลีดทั้งหมด"
+          subtitle="คลิกที่แถวเพื่อดูรายละเอียด"
+          color="emerald"
+        />
+
+        <LeadsFilters />
+
+        {isEmptyState ? (
+          <EmptyState
+            icon="users"
+            title="ยังไม่มีลีดในระบบ"
+            description="เริ่มต้นสร้างลีดแรกของคุณเพื่อติดตามลูกค้าที่สนใจทรัพย์"
+            actionLabel="สร้างลีดแรก"
+            actionHref="/protected/leads/new"
+            actionIcon="userPlus"
+          />
+        ) : (
+          <LeadsTable
+            leads={listLeads}
+            totalCount={count}
+            showBranch={sp.allBranches === "true"}
+            currentTenantId={tenantId}
+            isMultiTenant={isMultiTenant}
+            filters={{ q: sp.q, stage: sp.stage }}
+          />
+        )}
+      </div>
+    );
+  } else {
+    const kanbanLeads = await getLeadsForKanbanQuery();
+    return (
+      <div className="pt-2">
+        <LeadsKanban initialLeads={kanbanLeads} />
+      </div>
+    );
+  }
+}
+

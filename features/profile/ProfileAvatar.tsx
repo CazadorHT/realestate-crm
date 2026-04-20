@@ -6,7 +6,7 @@ import { Camera, Loader2 } from "lucide-react";
 import { uploadAvatarAction } from "./actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface ProfileAvatarProps {
@@ -66,7 +66,8 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
 
         try {
           // Dynamic import to reduce initial bundle size
-          const { default: imageCompression } = await import("browser-image-compression");
+          const { default: imageCompression } =
+            await import("browser-image-compression");
           fileToUpload = await imageCompression(file, options);
         } catch (compressionError) {
           console.error(
@@ -102,15 +103,15 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
   return (
     <div className="flex flex-col items-center gap-5">
       <div className="relative group">
-        <motion.div
-           whileHover={{ scale: 1.02 }}
-           whileTap={{ scale: 0.98 }}
-           className="relative"
+        <m.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="relative"
         >
           <Avatar className="h-40 w-40 border-4 border-white shadow-2xl ring-1 ring-slate-100 overflow-hidden">
-            <AvatarImage 
-              src={preview} 
-              alt={fullName || ""} 
+            <AvatarImage
+              src={preview}
+              alt={fullName || ""}
               className="object-cover"
             />
             <AvatarFallback className="text-5xl bg-slate-50 font-semibold text-slate-300">
@@ -123,22 +124,22 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
             htmlFor="avatar-upload"
             className={cn(
               "absolute inset-0 flex flex-col items-center justify-center bg-slate-900/60 backdrop-blur-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer overflow-hidden",
-              isUploading && "opacity-100"
+              isUploading && "opacity-100",
             )}
           >
             <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
             <AnimatePresence mode="wait">
               {isUploading ? (
-                <motion.div
+                <m.div
                   key="loading"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                 >
                   <Loader2 className="h-10 w-10 text-white animate-spin" />
-                </motion.div>
+                </m.div>
               ) : (
-                <motion.div
+                <m.div
                   key="camera"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -146,15 +147,20 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
                   className="flex flex-col items-center gap-1 z-10"
                 >
                   <Camera className="h-10 w-10 text-white drop-shadow-md" />
-                  <span className="text-[10px] text-white font-bold uppercase tracking-widest">Update</span>
-                </motion.div>
+                  <span className="text-[10px] text-white font-bold uppercase tracking-widest">
+                    Update
+                  </span>
+                </m.div>
               )}
             </AnimatePresence>
           </label>
-        </motion.div>
+        </m.div>
 
         {/* Status Indicator */}
-        <div className="absolute bottom-3 right-3 h-6 w-6 rounded-full bg-emerald-500 border-4 border-white shadow-lg animate-pulse" title="ออนไลน์" />
+        <div
+          className="absolute bottom-3 right-3 h-6 w-6 rounded-full bg-emerald-500 border-4 border-white shadow-lg animate-pulse"
+          title="ออนไลน์"
+        />
 
         <input
           id="avatar-upload"
@@ -168,10 +174,10 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
 
       <div className="text-center space-y-1">
         <div className="flex items-center gap-2 justify-center">
-           <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-bounce" />
-           <p className="text-[11px] font-bold text-slate-500 uppercase tracking-tighter">
-             Profile Identity
-           </p>
+          <div className="h-1.5 w-1.5 rounded-full bg-blue-500 animate-bounce" />
+          <p className="text-[11px] font-bold text-slate-500 uppercase tracking-tighter">
+            Profile Identity
+          </p>
         </div>
         <p className="text-[10px] text-slate-400 max-w-[150px] leading-tight">
           รูปนี้จะแสดงในระบบสมาชิกและเอกสารที่เกี่ยวข้อง

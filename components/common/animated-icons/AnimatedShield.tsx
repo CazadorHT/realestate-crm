@@ -1,27 +1,30 @@
 "use client";
 
-import { motion, useAnimation } from "framer-motion";
-import { ShieldCheck } from "lucide-react";
+import { m, useAnimation } from "framer-motion";
+import { Shield } from "lucide-react";
 
-export const AnimatedShield = ({
-  size = 20,
-  className = "",
-}: {
+interface AnimatedShieldProps {
   size?: number;
   className?: string;
-}) => {
+}
+
+export function AnimatedShield({ size = 24, className }: AnimatedShieldProps) {
   const controls = useAnimation();
 
   return (
     <div
       onMouseEnter={() =>
-        controls.start({ scale: [1, 1.1, 1], transition: { duration: 0.3 } })
+        controls.start({
+          scale: [1, 1.1, 1],
+          y: [0, -2, 0],
+          transition: { duration: 0.5 },
+        })
       }
       className={className}
     >
-      <motion.div animate={controls}>
-        <ShieldCheck size={size} />
-      </motion.div>
+      <m.div animate={controls}>
+        <Shield size={size} />
+      </m.div>
     </div>
   );
-};
+}

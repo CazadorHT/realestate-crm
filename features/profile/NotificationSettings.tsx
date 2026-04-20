@@ -15,7 +15,7 @@ import { Bell, Mail, MessageSquare, UserPlus, Clock } from "lucide-react";
 import { updateNotificationSettings } from "./actions";
 import { toast } from "sonner";
 import type { Json } from "@/lib/database.types";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface NotificationSettingsProps {
@@ -77,7 +77,7 @@ export function NotificationSettings({
           icon: <Mail className="h-4 w-4" />,
           color: "bg-amber-500",
         },
-      ]
+      ],
     },
     {
       title: "ตลาดและสัญญา (Market & Contracts)",
@@ -96,8 +96,8 @@ export function NotificationSettings({
           icon: <Clock className="h-4 w-4" />,
           color: "bg-orange-500",
         },
-      ]
-    }
+      ],
+    },
   ];
 
   const handleToggle = async (id: string, current: boolean) => {
@@ -128,14 +128,16 @@ export function NotificationSettings({
   };
 
   return (
-    <Card className={cn(
-      "border-slate-200 shadow-sm transition-opacity duration-300",
-      isUpdating && "opacity-60 pointer-events-none"
-    )}>
+    <Card
+      className={cn(
+        "border-slate-200 shadow-sm transition-opacity duration-300",
+        isUpdating && "opacity-60 pointer-events-none",
+      )}
+    >
       <CardHeader className="pb-4">
         <div className="flex items-center gap-2">
-           <Bell className="h-5 w-5 text-slate-900" />
-           <CardTitle className="text-lg font-bold">ศูนย์การแจ้งเตือน</CardTitle>
+          <Bell className="h-5 w-5 text-slate-900" />
+          <CardTitle className="text-lg font-bold">ศูนย์การแจ้งเตือน</CardTitle>
         </div>
         <CardDescription>
           ตั้งค่าการรับข่าวสารและการอัปเดตที่สำคัญจากระบบ
@@ -151,21 +153,23 @@ export function NotificationSettings({
               {group.items.map((item) => {
                 const isEnabled = settings[item.id] ?? false;
                 return (
-                  <motion.div 
+                  <m.div
                     key={item.id}
                     layout
                     className={cn(
                       "flex items-center justify-between p-4 rounded-xl border transition-all duration-300",
-                      isEnabled 
-                        ? "bg-white border-slate-100 shadow-sm" 
-                        : "bg-slate-50/50 border-transparent grayscale-[0.5] opacity-80"
+                      isEnabled
+                        ? "bg-white border-slate-100 shadow-sm"
+                        : "bg-slate-50/50 border-transparent grayscale-[0.5] opacity-80",
                     )}
                   >
                     <div className="flex items-center gap-4">
-                      <div className={cn(
-                        "p-2.5 rounded-xl text-white shadow-lg",
-                        isEnabled ? item.color : "bg-slate-300"
-                      )}>
+                      <div
+                        className={cn(
+                          "p-2.5 rounded-xl text-white shadow-lg",
+                          isEnabled ? item.color : "bg-slate-300",
+                        )}
+                      >
                         {item.icon}
                       </div>
                       <div className="flex flex-col">
@@ -173,7 +177,7 @@ export function NotificationSettings({
                           htmlFor={item.id}
                           className={cn(
                             "text-sm font-bold cursor-pointer transition-colors",
-                            isEnabled ? "text-slate-900" : "text-slate-500"
+                            isEnabled ? "text-slate-900" : "text-slate-500",
                           )}
                         >
                           {item.label}
@@ -190,17 +194,17 @@ export function NotificationSettings({
                       disabled={isUpdating}
                       className="data-[state=checked]:bg-slate-900"
                     />
-                  </motion.div>
+                  </m.div>
                 );
               })}
             </div>
           </div>
         ))}
-        
+
         <div className="pt-2">
-           <p className="text-[10px] text-center text-slate-300 font-medium">
-             ระบบจะส่งการแจ้งเตือนผ่านหน้าเว็บ และ LINE หากมีการเปิดใช้งาน
-           </p>
+          <p className="text-[10px] text-center text-slate-300 font-medium">
+            ระบบจะส่งการแจ้งเตือนผ่านหน้าเว็บ และ LINE หากมีการเปิดใช้งาน
+          </p>
         </div>
       </CardContent>
     </Card>

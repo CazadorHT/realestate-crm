@@ -20,7 +20,7 @@ import {
   Building2,
 } from "lucide-react";
 import { FaFacebook, FaLine } from "react-icons/fa";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,16 +122,22 @@ export function OwnerForm(props: Props) {
 
     startTransition(async () => {
       try {
-        const res = props.mode === "create"
-          ? await createOwnerAction(payload)
-          : await updateOwnerAction(props.id, payload);
+        const res =
+          props.mode === "create"
+            ? await createOwnerAction(payload)
+            : await updateOwnerAction(props.id, payload);
 
         if (res?.success === false) {
           toast.error(res.message || "เกิดข้อผิดพลาด");
           return;
         }
 
-        toast.success(res.message || (props.mode === "create" ? "เพิ่มเจ้าของสำเร็จ" : "บันทึกข้อมูลสำเร็จ"));
+        toast.success(
+          res.message ||
+            (props.mode === "create"
+              ? "เพิ่มเจ้าของสำเร็จ"
+              : "บันทึกข้อมูลสำเร็จ"),
+        );
 
         router.refresh();
 

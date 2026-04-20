@@ -1,7 +1,7 @@
 "use client";
 
 import { useTransition, useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -191,7 +191,7 @@ export function ContactForm() {
         <span>{Math.round((step / 3) * 100)}%</span>
       </div>
       <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
-        <motion.div 
+        <m.div 
           className="h-full bg-linear-to-r from-blue-500 to-indigo-500 rounded-full"
           initial={{ width: 0 }}
           animate={{ width: `${(step / 3) * 100}%` }}
@@ -246,7 +246,7 @@ export function ContactForm() {
     switch (step) {
       case 1:
         return (
-          <motion.div
+          <m.div
             key="step1"
             custom={direction}
             variants={variants}
@@ -295,12 +295,12 @@ export function ContactForm() {
                 ))}
               </div>
             </div>
-          </motion.div>
+          </m.div>
         );
 
       case 2:
         return (
-          <motion.div
+          <m.div
             key="step2"
             custom={direction}
             variants={variants}
@@ -374,12 +374,12 @@ export function ContactForm() {
                 </Button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         );
 
       case 3:
         return (
-          <motion.div
+          <m.div
             key="step3"
             custom={direction}
             variants={variants}
@@ -468,7 +468,7 @@ export function ContactForm() {
                 </Button>
               </div>
             </div>
-          </motion.div>
+          </m.div>
         );
       default:
         return null;
@@ -504,14 +504,14 @@ export function ContactForm() {
       </div>
 
       {errorMsg && (
-        <motion.div 
+        <m.div 
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="mt-6 p-4 bg-rose-500/10 border border-rose-500/20 text-rose-300 text-sm rounded-2xl flex items-center gap-3 font-medium"
         >
           <span className="shrink-0 w-8 h-8 bg-white/10 rounded-full flex items-center justify-center">⚠️</span>
           {errorMsg}
-        </motion.div>
+        </m.div>
       )}
 
       {!isSuccess && (

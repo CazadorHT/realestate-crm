@@ -22,7 +22,7 @@ interface ConfirmDialogProps {
 
 import { useState } from "react";
 import { Loader2, Check } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 export function ConfirmDialog({
   open: controlledOpen,
@@ -111,31 +111,31 @@ export function ConfirmDialog({
           >
             <AnimatePresence mode="wait">
               {isConfirming ? (
-                <motion.div
+                <m.div
                   key="loader"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
                 >
                   <Loader2 className="w-5 h-5 animate-spin" />
-                </motion.div>
+                </m.div>
               ) : isSuccess ? (
-                <motion.div
+                <m.div
                   key="success"
                   initial={{ opacity: 0, scale: 0.5 }}
                   animate={{ opacity: 1, scale: 1.2 }}
                   transition={{ type: "spring", stiffness: 300, damping: 15 }}
                 >
                   <Check className="w-5 h-5" />
-                </motion.div>
+                </m.div>
               ) : (
-                <motion.span
+                <m.span
                   key="text"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                 >
                    {finalConfirmText}
-                </motion.span>
+                </m.span>
               )}
             </AnimatePresence>
           </Button>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
   MoreHorizontal,
@@ -73,7 +73,7 @@ export function PropertyRowActions({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  
+
   const [postStatus, setPostStatus] = useState<
     Record<string, "idle" | "loading" | "success" | "error">
   >({});
@@ -83,10 +83,13 @@ export function PropertyRowActions({
   // Robust transition handler: Wait for the first dialog to close before opening the next one
   useEffect(() => {
     if (!isMenuOpen && nextAction) {
-      const timer = setTimeout(() => {
-        nextAction();
-        setNextAction(null);
-      }, isMobile ? 800 : 150); // Increased mobile timeout to be even safer (800ms)
+      const timer = setTimeout(
+        () => {
+          nextAction();
+          setNextAction(null);
+        },
+        isMobile ? 800 : 150,
+      ); // Increased mobile timeout to be even safer (800ms)
       return () => clearTimeout(timer);
     }
   }, [isMenuOpen, nextAction, isMobile]);
@@ -149,7 +152,7 @@ export function PropertyRowActions({
   return (
     <>
       <ResponsiveDialog
-      className="xl:w-2xl"
+        className="xl:w-2xl"
         open={isMenuOpen}
         onOpenChange={setIsMenuOpen}
         title={title || "จัดการทรัพย์สิน"}
@@ -392,19 +395,25 @@ export function PropertyRowActions({
         description={
           <div className="space-y-4">
             <div className="space-y-2">
-              <p>คุณต้องการย้ายทรัพย์นี้ลงถังขยะใช่หรือไม่? คุณสามารถกู้คืนได้ภายหลังในหน้าถังขยะ (Trash)</p>
+              <p>
+                คุณต้องการย้ายทรัพย์นี้ลงถังขยะใช่หรือไม่?
+                คุณสามารถกู้คืนได้ภายหลังในหน้าถังขยะ (Trash)
+              </p>
               <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-200 font-medium leading-relaxed">
-                ⚠️ หมายเหตุ: รายการที่มีสถานะ ขายแล้ว/เช่าแล้ว หรือมีดีลที่ปิดแล้ว ไม่สามารถลบได้
+                ⚠️ หมายเหตุ: รายการที่มีสถานะ ขายแล้ว/เช่าแล้ว
+                หรือมีดีลที่ปิดแล้ว ไม่สามารถลบได้
               </p>
             </div>
-            
+
             <div className="flex items-center space-x-2 pt-2 border-t border-slate-100">
-              <Checkbox 
+              <Checkbox
                 id={`confirm-delete-${id}`}
                 checked={isDeleteConfirmed}
-                onCheckedChange={(checked) => setIsDeleteConfirmed(checked === true)}
+                onCheckedChange={(checked) =>
+                  setIsDeleteConfirmed(checked === true)
+                }
               />
-              <Label 
+              <Label
                 htmlFor={`confirm-delete-${id}`}
                 className="text-sm font-medium text-slate-700 cursor-pointer select-none"
               >

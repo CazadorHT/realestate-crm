@@ -12,10 +12,16 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { User, ChevronRight, AlertTriangle, Loader2, CheckCircle2 } from "lucide-react";
+import {
+  User,
+  ChevronRight,
+  AlertTriangle,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
 import { FaPhone, FaLine, FaFacebook, FaChevronRight } from "react-icons/fa6";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -24,10 +30,10 @@ import { CreateOwnerDialog } from "@/components/owners/CreateOwnerDialog";
 import type { Owner } from "@/features/owners/types";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
-import { 
+import {
   bulkDeleteOwnersAction,
   bulkMoveOwnersToTenantAction,
-  getAllOwnerIdsAction
+  getAllOwnerIdsAction,
 } from "@/features/owners/bulk-actions";
 import { exportOwnersAction } from "@/features/owners/export-action";
 import { toast } from "sonner";
@@ -209,10 +215,10 @@ export function OwnersTable({
         onDelete={handleBulkDelete}
         onPull={
           isMultiTenant &&
-          currentTenantId && 
-          currentTenantId !== "ALL" && 
-          !showBranch 
-            ? handleBulkPull 
+          currentTenantId &&
+          currentTenantId !== "ALL" &&
+          !showBranch
+            ? handleBulkPull
             : undefined
         }
         onPullLabel="ดึงมาสาขาตัวเอง"
@@ -246,7 +252,10 @@ export function OwnersTable({
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in duration-300">
           <div className="flex items-center gap-3 text-sm text-emerald-800">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            <span>คุณได้เลือกทั้งหมด <strong>{count}</strong> รายชื่อในระบบแล้ว (ทุกหน้า)</span>
+            <span>
+              คุณได้เลือกทั้งหมด <strong>{count}</strong> รายชื่อในระบบแล้ว
+              (ทุกหน้า)
+            </span>
           </div>
           <button
             onClick={clearSelection}
@@ -392,36 +401,43 @@ export function OwnersTable({
         {/* Mobile/Tablet Card View - Premium Adaptive Grid */}
         <div className="lg:hidden p-4 bg-slate-50/30">
           <AnimatePresence mode="popLayout">
-            <motion.div 
+            <m.div
               layout
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             >
               {owners.map((owner, idx) => {
-                const isItemNew = owner.created_at && 
-                  differenceInHours(new Date(), new Date(owner.created_at)) < 24;
+                const isItemNew =
+                  owner.created_at &&
+                  differenceInHours(new Date(), new Date(owner.created_at)) <
+                    24;
                 const initials = owner.full_name
-                  ? owner.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+                  ? owner.full_name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)
                   : "??";
                 const selected = isSelected(owner.id);
 
                 return (
-                  <motion.div
+                  <m.div
                     key={owner.id}
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 300, 
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
                       damping: 30,
-                      delay: idx * 0.03 
+                      delay: idx * 0.03,
                     }}
                     className={cn(
                       "group relative flex flex-col h-full bg-white rounded-[32px] border transition-all duration-300",
-                      selected 
-                        ? "border-blue-500 shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)] ring-2 ring-blue-500/20" 
-                        : "border-slate-200/60 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50"
+                      selected
+                        ? "border-blue-500 shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)] ring-2 ring-blue-500/20"
+                        : "border-slate-200/60 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50",
                     )}
                   >
                     {/* Card Header: Selection & Avatar & Actions */}
@@ -435,14 +451,14 @@ export function OwnersTable({
                               className="rounded-full h-5 w-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                             />
                           </div>
-                          
+
                           <Avatar className="h-10 w-10 border-2 border-slate-50 shadow-sm shrink-0">
                             <AvatarFallback className="bg-blue-50 text-blue-600 font-semibold text-xs">
                               {initials}
                             </AvatarFallback>
                           </Avatar>
                         </div>
-                        
+
                         <div className="shrink-0">
                           <OwnerRowActions
                             owner={owner}
@@ -467,7 +483,7 @@ export function OwnersTable({
                             </Badge>
                           )}
                         </div>
-                        
+
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           <div className="bg-blue-50 text-[10px] font-semibold text-blue-700 px-2.5 py-1 rounded-full uppercase tracking-tighter border border-blue-100/50 flex items-center gap-1">
                             <User className="h-2.5 w-2.5" />
@@ -493,16 +509,18 @@ export function OwnersTable({
                           href={owner.phone ? `tel:${owner.phone}` : "#"}
                           className={cn(
                             "flex items-center justify-between min-h-[46px] w-full px-4 rounded-2xl transition-all font-semibold text-sm",
-                            owner.phone 
-                              ? "bg-blue-50/50 text-blue-700 hover:bg-blue-600 hover:text-white shadow-xs" 
-                              : "bg-slate-50 text-slate-300 pointer-events-none cursor-not-allowed"
+                            owner.phone
+                              ? "bg-blue-50/50 text-blue-700 hover:bg-blue-600 hover:text-white shadow-xs"
+                              : "bg-slate-50 text-slate-300 pointer-events-none cursor-not-allowed",
                           )}
                         >
                           <div className="flex items-center gap-3">
                             <FaPhone className="h-3.5 w-3.5 mb-0.5" />
                             <span>{owner.phone || "ไม่มีเบอร์โทร"}</span>
                           </div>
-                          {owner.phone && <FaChevronRight className="h-3 w-3 opacity-50" />}
+                          {owner.phone && (
+                            <FaChevronRight className="h-3 w-3 opacity-50" />
+                          )}
                         </a>
 
                         <div className="grid grid-cols-2 gap-2">
@@ -510,13 +528,15 @@ export function OwnersTable({
                           <div
                             className={cn(
                               "flex items-center justify-center gap-2 min-h-[46px] rounded-2xl transition-all font-semibold text-sm px-2",
-                              owner.line_id 
-                                ? "bg-emerald-50/50 text-emerald-700 border border-emerald-100/50 hover:bg-emerald-600 hover:text-white" 
-                                : "bg-slate-50 text-slate-300 border border-slate-100"
+                              owner.line_id
+                                ? "bg-emerald-50/50 text-emerald-700 border border-emerald-100/50 hover:bg-emerald-600 hover:text-white"
+                                : "bg-slate-50 text-slate-300 border border-slate-100",
                             )}
                           >
                             <FaLine className="h-4 w-4 shrink-0 mb-0.5" />
-                            <span className="truncate">{owner.line_id || "LINE"}</span>
+                            <span className="truncate">
+                              {owner.line_id || "LINE"}
+                            </span>
                           </div>
 
                           {/* Facebook Action */}
@@ -526,9 +546,9 @@ export function OwnersTable({
                             rel="noopener noreferrer"
                             className={cn(
                               "flex items-center justify-center gap-2 min-h-[46px] rounded-2xl transition-all font-semibold text-sm px-2",
-                              owner.facebook_url 
-                                ? "bg-indigo-50/50 text-indigo-700 border border-indigo-100/50 hover:bg-indigo-600 hover:text-white shadow-xs" 
-                                : "bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed"
+                              owner.facebook_url
+                                ? "bg-indigo-50/50 text-indigo-700 border border-indigo-100/50 hover:bg-indigo-600 hover:text-white shadow-xs"
+                                : "bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed",
                             )}
                           >
                             <FaFacebook className="h-4 w-4 shrink-0 mb-0.5" />
@@ -537,10 +557,10 @@ export function OwnersTable({
                         </div>
                       </div>
                     </div>
-                  </motion.div>
+                  </m.div>
                 );
               })}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
       </div>

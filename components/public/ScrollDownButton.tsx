@@ -2,7 +2,7 @@
 
 import { Mouse, ChevronDown } from "lucide-react";
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export function ScrollDownButton() {
@@ -56,7 +56,7 @@ export function ScrollDownButton() {
   return (
     <AnimatePresence>
       {isVisible && (
-        <motion.button
+        <m.button
           initial={{ opacity: 0, y: 20, x: "-50%" }}
           animate={{ opacity: 1, y: 0, x: "-50%" }}
           exit={{ opacity: 0, y: 10, x: "-50%" }}
@@ -70,7 +70,7 @@ export function ScrollDownButton() {
         >
           {/* Main Visual: Mouse Icon with Pulse Ring */}
           <div className="relative flex items-center justify-center">
-            <motion.div
+            <m.div
               animate={{
                 scale: [1, 1.2, 1],
                 opacity: [0.5, 0.2, 0.5],
@@ -89,7 +89,7 @@ export function ScrollDownButton() {
 
           {/* Animated Chevron Trail */}
           <div className="flex flex-col items-center -mt-1">
-            <motion.div
+            <m.div
               animate={{
                 y: [0, 5, 0],
                 opacity: [0.3, 1, 0.3],
@@ -101,8 +101,8 @@ export function ScrollDownButton() {
               }}
             >
               <ChevronDown className="h-5 w-5 text-white" />
-            </motion.div>
-            <motion.div
+            </m.div>
+            <m.div
               animate={{
                 y: [0, 4, 0],
                 opacity: [0.1, 0.6, 0.1],
@@ -116,17 +116,17 @@ export function ScrollDownButton() {
               className="-mt-3"
             >
               <ChevronDown className="h-4 w-4 text-white" />
-            </motion.div>
+            </m.div>
           </div>
 
-          <motion.span
+          <m.span
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.7 }}
             className="text-[10px] font-medium tracking-widest text-white uppercase mt-1 opacity-0 group-hover:opacity-100 transition-opacity"
           >
             Scroll
-          </motion.span>
-        </motion.button>
+          </m.span>
+        </m.button>
       )}
     </AnimatePresence>
   );

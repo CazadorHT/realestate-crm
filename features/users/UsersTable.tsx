@@ -29,19 +29,24 @@ import { UserDeleteDialog } from "./UserDeleteDialog";
 import { type UserRole } from "@/lib/auth-shared";
 import { formatDate } from "@/lib/utils";
 import { type EliteUser, maskSensitiveData } from "@/lib/users-utils";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import { 
-  Shield, 
-  Users, 
-  UserCheck, 
-  User as UserIcon, 
-  ListFilter, 
+import {
+  Shield,
+  Users,
+  UserCheck,
+  User as UserIcon,
+  ListFilter,
   Check,
-  Filter
+  Filter,
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 // ── Auth Provider Badge ───────────────────────────────────────────────────────
@@ -102,20 +107,61 @@ interface UsersTableProps {
   isMultiTenant?: boolean;
 }
 
-export function UsersTable({ users, currentUserId, teams, isMultiTenant = true }: UsersTableProps) {
+export function UsersTable({
+  users,
+  currentUserId,
+  teams,
+  isMultiTenant = true,
+}: UsersTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
 
   const roleOptions = [
-    { value: "ALL", label: "ทุกบทบาท", icon: ListFilter, color: "text-slate-600", bgColor: "bg-slate-50", borderColor: "border-slate-200" },
-    { value: "ADMIN", label: "ผู้ดูแลระบบ (Admin)", icon: Shield, color: "text-indigo-600", bgColor: "bg-indigo-50", borderColor: "border-indigo-100" },
-    { value: "MANAGER", label: "หัวหน้าทีม (Manager)", icon: Users, color: "text-blue-600", bgColor: "bg-blue-50", borderColor: "border-blue-100" },
-    { value: "AGENT", label: "เอเจนท์ (Agent)", icon: UserCheck, color: "text-emerald-600", bgColor: "bg-emerald-50", borderColor: "border-emerald-100" },
-    { value: "USER", label: "ผู้ใช้งาน (User)", icon: UserIcon, color: "text-amber-600", bgColor: "bg-amber-50", borderColor: "border-amber-100" },
+    {
+      value: "ALL",
+      label: "ทุกบทบาท",
+      icon: ListFilter,
+      color: "text-slate-600",
+      bgColor: "bg-slate-50",
+      borderColor: "border-slate-200",
+    },
+    {
+      value: "ADMIN",
+      label: "ผู้ดูแลระบบ (Admin)",
+      icon: Shield,
+      color: "text-indigo-600",
+      bgColor: "bg-indigo-50",
+      borderColor: "border-indigo-100",
+    },
+    {
+      value: "MANAGER",
+      label: "หัวหน้าทีม (Manager)",
+      icon: Users,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
+      borderColor: "border-blue-100",
+    },
+    {
+      value: "AGENT",
+      label: "เอเจนท์ (Agent)",
+      icon: UserCheck,
+      color: "text-emerald-600",
+      bgColor: "bg-emerald-50",
+      borderColor: "border-emerald-100",
+    },
+    {
+      value: "USER",
+      label: "ผู้ใช้งาน (User)",
+      icon: UserIcon,
+      color: "text-amber-600",
+      bgColor: "bg-amber-50",
+      borderColor: "border-amber-100",
+    },
   ];
 
-  const activeRole = roleOptions.find(opt => opt.value === roleFilter) || roleOptions[0];
+  const activeRole =
+    roleOptions.find((opt) => opt.value === roleFilter) || roleOptions[0];
 
   // Filter users based on search and role
   const filteredUsers = useMemo(() => {
@@ -163,7 +209,7 @@ export function UsersTable({ users, currentUserId, teams, isMultiTenant = true }
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] hidden md:block">
             ตัวกรองบทบาท:
           </span>
-          
+
           <ResponsiveDialog
             open={isRoleDialogOpen}
             onOpenChange={setIsRoleDialogOpen}
@@ -175,8 +221,15 @@ export function UsersTable({ users, currentUserId, teams, isMultiTenant = true }
                 className="w-full sm:w-60 bg-white/50 border-slate-200 h-11 rounded-xl focus:ring-4 focus:ring-blue-500/10 font-semibold flex items-center justify-between px-4 group hover:bg-white hover:border-slate-300 transition-all shadow-sm"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className={cn("p-1.5 rounded-lg transition-colors", activeRole.bgColor)}>
-                    <activeRole.icon className={cn("h-3.5 w-3.5", activeRole.color)} />
+                  <div
+                    className={cn(
+                      "p-1.5 rounded-lg transition-colors",
+                      activeRole.bgColor,
+                    )}
+                  >
+                    <activeRole.icon
+                      className={cn("h-3.5 w-3.5", activeRole.color)}
+                    />
                   </div>
                   <span className="text-slate-700">{activeRole.label}</span>
                 </div>
@@ -198,25 +251,29 @@ export function UsersTable({ users, currentUserId, teams, isMultiTenant = true }
                       "flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 group active:scale-[0.98]",
                       isActive
                         ? "bg-slate-900 border-slate-900 text-white shadow-lg shadow-slate-900/10"
-                        : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                        : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50",
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "p-2 rounded-xl transition-colors",
-                        isActive ? "bg-white/20" : option.bgColor
-                      )}>
-                        <option.icon className={cn("h-4 w-4", isActive ? "text-white" : option.color)} />
+                      <div
+                        className={cn(
+                          "p-2 rounded-xl transition-colors",
+                          isActive ? "bg-white/20" : option.bgColor,
+                        )}
+                      >
+                        <option.icon
+                          className={cn(
+                            "h-4 w-4",
+                            isActive ? "text-white" : option.color,
+                          )}
+                        />
                       </div>
                       <span className="font-semibold">{option.label}</span>
                     </div>
                     {isActive && (
-                      <motion.div
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                      >
+                      <m.div initial={{ scale: 0 }} animate={{ scale: 1 }}>
                         <Check className="h-4 w-4 text-white" />
-                      </motion.div>
+                      </m.div>
                     )}
                   </button>
                 );
@@ -320,8 +377,13 @@ export function UsersTable({ users, currentUserId, teams, isMultiTenant = true }
                                       {maskSensitiveData(user.email, "email")}
                                     </span>
                                   </TooltipTrigger>
-                                  <TooltipContent side="right" className="rounded-xl border-slate-200">
-                                    <p className="text-xs font-semibold">{user.email}</p>
+                                  <TooltipContent
+                                    side="right"
+                                    className="rounded-xl border-slate-200"
+                                  >
+                                    <p className="text-xs font-semibold">
+                                      {user.email}
+                                    </p>
                                   </TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
@@ -332,18 +394,20 @@ export function UsersTable({ users, currentUserId, teams, isMultiTenant = true }
                           </div>
                         </TableCell>
                         <TableCell className="px-6">
-                           <TooltipProvider>
-                             <Tooltip>
-                               <TooltipTrigger asChild>
-                                 <span className="text-xs font-semibold text-slate-600 cursor-help">
-                                   {maskSensitiveData(user.phone, "phone")}
-                                 </span>
-                               </TooltipTrigger>
-                               <TooltipContent className="rounded-xl border-slate-200">
-                                 <p className="text-xs font-semibold">{user.phone || "-"}</p>
-                               </TooltipContent>
-                             </Tooltip>
-                           </TooltipProvider>
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="text-xs font-semibold text-slate-600 cursor-help">
+                                  {maskSensitiveData(user.phone, "phone")}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent className="rounded-xl border-slate-200">
+                                <p className="text-xs font-semibold">
+                                  {user.phone || "-"}
+                                </p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         </TableCell>
                         <TableCell className="px-6">
                           <UserRoleBadge role={user.role} />
@@ -352,10 +416,10 @@ export function UsersTable({ users, currentUserId, teams, isMultiTenant = true }
                           <TableCell className="px-6">
                             <div className="flex flex-wrap gap-1 max-w-[150px]">
                               {user.tenants.length > 0 ? (
-                                user.tenants.map(t => (
-                                  <Badge 
-                                    key={t.id} 
-                                    variant="outline" 
+                                user.tenants.map((t) => (
+                                  <Badge
+                                    key={t.id}
+                                    variant="outline"
                                     className="bg-slate-50 text-[10px] border-slate-200 text-slate-600 font-semibold px-2 py-0"
                                   >
                                     {t.name}

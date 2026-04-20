@@ -140,3 +140,32 @@ export async function getPropertiesDashboardStatsQuery(
     aiReviewCount,
   };
 }
+
+/**
+ * ⚡ FAST COUNT: Returns only the total number of properties for the header.
+ * Uses 'head: true' to minimize data transfer and DB load.
+ */
+export async function getPropertiesFastCountQuery(allBranches?: string): Promise<number> {
+  const { supabase, role, tenantId } = await requireAuthContext();
+  const config = await getSystemConfig();
+  const isMultiTenant = config.multi_tenant_enabled;
+
+  let query = supabase
+    .from("properties")
+    .select("*", { count: "exact", head: true })
+    .is("deleted_at", null);
+
+  if (isMultiTenant) {
+    const isSuperAdmin = role === "ADMIN";
+    const wantsAllBranches = allBranches === "true" || tenantId === "ALL" || !tenantId;
+
+    if (!(wantsAllBranches && isSuperAdmin)) {
+      if (tenantId && tenantId !== "ALL") {
+        query = query.eq("tenant_id", tenantId);
+      }
+    }
+  }
+
+  const { count } = await query;
+  return count || 0;
+}

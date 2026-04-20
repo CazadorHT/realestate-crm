@@ -210,7 +210,7 @@ export function PublicNav() {
             scrolled ? "bg-white/95 backdrop-blur-md shadow-lg" : "bg-white"
           }`}
         >
-          <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8">
             <div className="flex justify-between items-center h-16">
               {/* Logo */}
               <div>

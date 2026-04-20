@@ -10,7 +10,7 @@ import { ContactInfoCards } from "@/components/public/contact/ContactInfoCards";
 import { ContactSidebar } from "@/components/public/contact/ContactSidebar";
 import { ContactFAQ } from "@/components/public/contact/ContactFAQ";
 import { ContactMap } from "@/components/public/contact/ContactMap";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import AOS from "aos";
 import "aos/dist/aos.css";
 import { useEffect } from "react";
@@ -93,7 +93,7 @@ export default function ContactPageClient({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 lg:mt-24 pb-24 relative z-0 w-full">
         {/* Info Content Grid - Sidebar & FAQ */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start">
-          <motion.div
+          <m.div
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -107,9 +107,9 @@ export default function ContactPageClient({
                 <ContactMap googleMapsUrl={googleMapsUrl} />
               </div>
             )}
-          </motion.div>
+          </m.div>
 
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -117,7 +117,7 @@ export default function ContactPageClient({
             className="lg:col-span-2 sticky top-24"
           >
             <ContactFAQ />
-          </motion.div>
+          </m.div>
         </div>
       </div>
     </main>

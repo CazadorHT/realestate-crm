@@ -3,6 +3,12 @@ import dynamic from "next/dynamic";
 import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations } from "@/lib/i18n";
+import { HotDealsSkeleton } from "@/components/public/HotDealsSkeleton";
+import { MortgageCalculatorSkeleton } from "@/components/public/MortgageCalculatorSkeleton";
+import { RecentlyViewedSkeleton } from "@/components/public/RecentlyViewedSkeleton";
+import { PopularAreasSection } from "@/components/public/PopularAreasSection";
+import { getPopularAreasAction } from "@/features/public-data/popular-areas";
+import { createClient } from "@/lib/supabase/server";
 
 // Critical components loaded immediately
 import { HeroSection } from "@/components/public/HeroSection";
@@ -11,25 +17,28 @@ import { StatsBand } from "@/components/public/StatsBand";
 import { PartnerSection } from "@/components/public/PartnerSection";
 
 // Lazy loaded components (below the fold)
-const PopularAreasSection = dynamic(() =>
-  import("@/components/public/PopularAreasSection").then(
-    (mod) => mod.PopularAreasSection,
-  ),
-);
 const PropertyListingSection = dynamic(() =>
   import("@/components/public/PropertyListingSection").then(
     (mod) => mod.PropertyListingSection,
   ),
 );
-const RecentlyViewedSection = dynamic(() =>
-  import("@/components/public/RecentlyViewedSection").then(
-    (mod) => mod.RecentlyViewedSection,
-  ),
+const RecentlyViewedSection = dynamic(
+  () =>
+    import("@/components/public/RecentlyViewedSection").then(
+      (mod) => mod.RecentlyViewedSection,
+    ),
+  {
+    loading: () => <RecentlyViewedSkeleton />,
+  },
 );
-const HotDealsSection = dynamic(() =>
-  import("@/components/public/HotDealsSection").then(
-    (mod) => mod.HotDealsSection,
-  ),
+const HotDealsSection = dynamic(
+  () =>
+    import("@/components/public/HotDealsSection").then(
+      (mod) => mod.HotDealsSection,
+    ),
+  {
+    loading: () => <HotDealsSkeleton />,
+  },
 );
 const TrustSection = dynamic(() =>
   import("@/components/public/TrustSection").then((mod) => mod.TrustSection),
@@ -52,10 +61,14 @@ const TestimonialsSection = dynamic(() =>
 const CTASection = dynamic(() =>
   import("@/components/public/CTASection").then((mod) => mod.CTASection),
 );
-const MortgageCalculatorSection = dynamic(() =>
-  import("@/components/public/MortgageCalculatorSection").then(
-    (mod) => mod.MortgageCalculatorSection,
-  ),
+const MortgageCalculatorSection = dynamic(
+  () =>
+    import("@/components/public/MortgageCalculatorSection").then(
+      (mod) => mod.MortgageCalculatorSection,
+    ),
+  {
+    loading: () => <MortgageCalculatorSkeleton />,
+  },
 );
 const BlogSection = dynamic(() =>
   import("@/components/public/BlogSection").then((mod) => mod.BlogSection),
@@ -103,6 +116,31 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function LandingPage() {
   const { t } = await getServerTranslations();
+
+  // Point 4: Edge Prefetching & SSR
+  const client = await createClient();
+  const { data: provData } = await client
+    .from("properties")
+    .select("province")
+    .eq("status", "ACTIVE")
+    .not("province", "is", null);
+
+  const uniqueThai = Array.from(new Set((provData || []).map((p: any) => p.province).filter(Boolean)));
+  const displayMap: Record<string, string> = {
+    "กรุงเทพมหานคร": "Bangkok",
+    "ภูเก็ต": "Phuket",
+    "เชียงใหม่": "Chiang Mai",
+    "ชลบุรี": "Chonburi",
+  };
+  const provinces = uniqueThai.map(name => ({
+    id: name as string,
+    display: displayMap[name as string] || name as string
+  }));
+
+  const bkkIndex = provinces.findIndex(p => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร");
+  const initialProvince = bkkIndex !== -1 ? provinces[bkkIndex].id : provinces[0]?.id;
+  
+  const popularAreas = await getPopularAreasAction(initialProvince);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -152,7 +190,7 @@ export default async function LandingPage() {
       <PropertyTypeGrid />
       <StatsBand />
       <PartnerSection />
-      <PopularAreasSection />
+      <PopularAreasSection initialItems={popularAreas} initialProvinces={provinces} />
       <HotDealsSection />
       <PropertyListingSection />
       <MortgageCalculatorSection />

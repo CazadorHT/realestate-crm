@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 interface MobileFloatingActionProps {
   href?: string;
@@ -65,7 +65,7 @@ export function MobileFloatingAction({
 
 function FloatingContent({ icon, label, isExpanded }: { icon: React.ReactNode, label?: string, isExpanded: boolean }) {
   return (
-    <motion.div
+    <m.div
       layout
       initial={false}
       animate={{
@@ -90,17 +90,17 @@ function FloatingContent({ icon, label, isExpanded }: { icon: React.ReactNode, l
         
         <AnimatePresence mode="popLayout" initial={false}>
           {isExpanded && label && (
-            <motion.span
+            <m.span
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -10 }}
               className="font-bold text-sm"
             >
               {label}
-            </motion.span>
+            </m.span>
           )}
         </AnimatePresence>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

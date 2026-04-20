@@ -1,7 +1,8 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache, revalidateTag } from "next/cache";
+import { cache } from "react";
 import { z } from "zod";
 import {
   SiteSettingKey,
@@ -72,9 +73,9 @@ export async function skipOnboardingStepAction(
 }
 
 /**
- * Get all site settings
+ * Internal function to get all site settings (Hits DB)
  */
-export async function getSiteSettings(): Promise<SiteSettings> {
+async function getSiteSettingsInternal(): Promise<SiteSettings> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
@@ -140,52 +141,25 @@ export async function getSiteSettings(): Promise<SiteSettings> {
 }
 
 /**
- * Get a specific site setting
+ * Get all site settings (Cached with revalidation tag)
+ */
+export const getSiteSettings = cache(async () => {
+  return unstable_cache(
+    async () => getSiteSettingsInternal(),
+    ["site-settings"],
+    {
+      revalidate: 3600, // Cache for 1 hour
+      tags: ["site-settings"],
+    }
+  )();
+});
+
+/**
+ * Get a specific site setting (Cached via getSiteSettings)
  */
 export async function getSiteSetting(key: SiteSettingKey): Promise<unknown> {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("key", key)
-      .single();
-
-    if (error || !data) {
-      return DEFAULT_SETTINGS[key];
-    }
-
-    const val = data.value;
-
-    if (key === "social_automation_keywords") {
-      return Array.isArray(val) ? val : [];
-    }
-
-    if (key === "tiktok_auth_token" || key === "google_integration_tokens") {
-      return val && typeof val === "object" ? val : DEFAULT_SETTINGS[key];
-    }
-
-    const stringKeys: SiteSettingKey[] = [
-      "site_name", "company_name", "site_description",
-      "contact_phone", "contact_email", "contact_address",
-      "google_maps_url", "facebook_url", "instagram_url", "line_url", "tiktok_url",
-      "line_id", "logo_light", "logo_dark", "favicon",
-      "google_tag_manager_id", "meta_page_access_token", "line_channel_access_token", "meta_page_name"
-    ];
-
-    if (key.includes("_post_template") || stringKeys.includes(key)) {
-      return typeof val === "string" ? val : DEFAULT_SETTINGS[key];
-    }
-
-    if (key === "hot_lead_threshold") {
-      return typeof val === "number" ? val : Number(val) || 80;
-    }
-
-    return val === true || val === "true";
-  } catch (error) {
-    console.error(`Error getting setting ${key}:`, error);
-    return DEFAULT_SETTINGS[key];
-  }
+  const settings = await getSiteSettings();
+  return settings[key];
 }
 
 /**
@@ -240,6 +214,7 @@ export async function updateSiteSetting(
 
     revalidatePath("/");
     revalidatePath("/protected/settings");
+    revalidateTag("site-settings", "hours");
 
     return { success: true };
   } catch (error) {
@@ -290,6 +265,7 @@ export async function updateSiteSettings(
 
     revalidatePath("/");
     revalidatePath("/protected/settings");
+    revalidateTag("site-settings", "hours");
 
     return { success: true };
   } catch (error) {

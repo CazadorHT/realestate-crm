@@ -12,6 +12,9 @@ import { EmptyState } from "@/components/dashboard/EmptyState";
 import { CreateOwnerDialog } from "@/components/owners/CreateOwnerDialog";
 import { requireAuthContext } from "@/lib/authz";
 import { GlobalLookupToggle } from "@/components/owners/GlobalLookupToggle";
+import { Suspense } from "react";
+import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
+import { getSystemConfig } from "@/lib/actions/system-config";
 
 export const metadata: Metadata = {
   title: "จัดการเจ้าของทรัพย์",
@@ -26,54 +29,30 @@ type PageProps = {
   }>;
 };
 
-import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
-
 export default async function OwnersPage({ searchParams }: PageProps) {
   const sp = await searchParams;
   const page = Number(sp.page) || 1;
   const q = sp.q || "";
   const allBranches = sp.all_branches === "true";
 
-  const { role, tenantId, supabase } = await requireAuthContext();
+  // [PERFORMANCE] Parallel Fetching: Core Auth & Global Context
+  const [authContext, config] = await Promise.all([
+    requireAuthContext(),
+    getSystemConfig(),
+  ]);
+
+  const { role, tenantId, supabase } = authContext;
   const isAdminUser = role === "ADMIN";
-  const { getSystemConfig } = await import("@/lib/actions/system-config");
-  const config = await getSystemConfig();
   const isMultiTenant = config?.multi_tenant_enabled ?? false;
-
-  let currentTenantName = null;
-  if (tenantId) {
-    const { data: tenantData } = await supabase
-      .from("tenants")
-      .select("name")
-      .eq("id", tenantId)
-      .single();
-    currentTenantName = tenantData?.name;
-  }
-
-  const {
-    data: owners,
-    count,
-  } = await getOwnersQuery({
-    q,
-    page,
-    pageSize: 10,
-    allBranches: isAdminUser && allBranches && isMultiTenant,
-  });
-
-  const stats = await getOwnersDashboardStatsQuery(
-    isAdminUser && allBranches && isMultiTenant,
-  );
-
-  const isEmptyState = owners.length === 0 && page === 1 && !q;
 
   return (
     <div className="space-y-6 animate-fade-in">
       <SuccessAnimation />
-      {/* Premium Header */}
+      
+      {/* 🚀 1. HEADER (Instant with meta info) */}
       <PageHeader
         title="เจ้าของทรัพย์"
         subtitle="จัดการข้อมูลเจ้าของทรัพย์และผู้ติดต่อ"
-        count={count}
         icon="userCircle"
         actionSlot={<CreateOwnerDialog />}
         gradient="purple"
@@ -85,37 +64,106 @@ export default async function OwnersPage({ searchParams }: PageProps) {
         )}
       </PageHeader>
 
-      <OwnersStats stats={stats} />
-
-      <div id="table" className="space-y-4 scroll-mt-4">
-        <SectionTitle
-          title="รายการเจ้าของทั้งหมด"
-          subtitle="คลิกที่แถวเพื่อดูรายละเอียด"
-          color="purple"
+      {/* 🚀 2. STATS SECTION (Streamed) */}
+      <Suspense fallback={<div className="h-32 animate-pulse bg-slate-50 rounded-2xl" />}>
+        <OwnersStatsWrapper 
+          isAdminUser={isAdminUser} 
+          allBranches={allBranches} 
+          isMultiTenant={isMultiTenant} 
         />
+      </Suspense>
 
-        {isEmptyState ? (
-          <EmptyState
-            icon="userCircle"
-            title="ยังไม่มีเจ้าของในระบบ"
-            description="เริ่มต้นเพิ่มเจ้าของทรัพย์คนแรกเพื่อจัดการข้อมูลผู้ติดต่อ"
-            actionSlot={<CreateOwnerDialog />}
-          />
-        ) : (
-          <>
-            <OwnersTable
-              owners={owners}
-              showBranch={isAdminUser && allBranches}
-              isAdmin={isAdminUser}
-              isMultiTenant={isMultiTenant}
-              currentTenantId={tenantId}
-              currentTenantName={currentTenantName}
-              count={count}
-              q={q}
-            />
-          </>
-        )}
-      </div>
+      {/* 🚀 3. MAIN CONTENT (Streamed) */}
+      <Suspense fallback={<div className="h-96 animate-pulse bg-slate-50 rounded-2xl" />}>
+        <OwnersContentWrapper 
+          q={q} 
+          page={page} 
+          isAdminUser={isAdminUser} 
+          allBranches={allBranches} 
+          isMultiTenant={isMultiTenant}
+          tenantId={tenantId}
+          supabase={supabase}
+        />
+      </Suspense>
     </div>
   );
 }
+
+/** 🚀 OWNERS PERFORMANCE WRAPPERS */
+
+async function OwnersStatsWrapper({ isAdminUser, allBranches, isMultiTenant }: { 
+  isAdminUser: boolean; 
+  allBranches: boolean; 
+  isMultiTenant: boolean; 
+}) {
+  const stats = await getOwnersDashboardStatsQuery(
+    isAdminUser && allBranches && isMultiTenant
+  );
+  return <OwnersStats stats={stats} />;
+}
+
+async function OwnersContentWrapper({ 
+  q, 
+  page, 
+  isAdminUser, 
+  allBranches, 
+  isMultiTenant,
+  tenantId,
+  supabase
+}: { 
+  q: string; 
+  page: number; 
+  isAdminUser: boolean; 
+  allBranches: boolean; 
+  isMultiTenant: boolean;
+  tenantId: string | undefined;
+  supabase: any;
+}) {
+  // Parallel fetch: Tenant Name + Main Owners Data
+  const [ownersResult, tenantResult] = await Promise.all([
+    getOwnersQuery({
+      q,
+      page,
+      pageSize: 10,
+      allBranches: isAdminUser && allBranches && isMultiTenant,
+    }),
+    tenantId
+      ? supabase.from("tenants").select("name").eq("id", tenantId).single()
+      : Promise.resolve({ data: null })
+  ]);
+
+  const { data: owners, count } = ownersResult;
+  const currentTenantName = tenantResult.data?.name || null;
+
+  if (owners.length === 0 && page === 1 && !q) {
+    return (
+      <EmptyState
+        icon="userCircle"
+        title="ยังไม่มีเจ้าของในระบบ"
+        description="เริ่มต้นเพิ่มเจ้าของทรัพย์คนแรกเพื่อจัดการข้อมูลผู้ติดต่อ"
+        actionSlot={<CreateOwnerDialog />}
+      />
+    );
+  }
+
+  return (
+    <div id="table" className="space-y-4 scroll-mt-4">
+      <SectionTitle
+        title="รายการเจ้าของทั้งหมด"
+        subtitle="คลิกที่แถวเพื่อดูรายละเอียด"
+        color="purple"
+      />
+      <OwnersTable
+        owners={owners}
+        showBranch={isAdminUser && allBranches}
+        isAdmin={isAdminUser}
+        isMultiTenant={isMultiTenant}
+        currentTenantId={tenantId}
+        currentTenantName={currentTenantName}
+        count={count}
+        q={q}
+      />
+    </div>
+  );
+}
+

@@ -14,6 +14,9 @@ import { requireAuthContext } from "@/lib/authz";
 import { createClient } from "@/lib/supabase/server";
 import { Badge } from "@/components/ui/badge";
 import { BsStars } from "react-icons/bs";
+import { Suspense } from "react";
+import { PropertyRelatedDealsSection } from "./_components/PropertyRelatedDealsSection";
+import { PropertyCRMDetailsSkeleton } from "@/components/skeletons/PropertyDetailSkeleton";
 
 interface PropertyWithDetails extends PropertyRow {
   owner: {
@@ -65,50 +68,55 @@ export default async function PropertyDetailsPage({
 }) {
   const { id } = await params;
   const supabase = await createClient();
-  const { tenantId } = await requireAuthContext();
 
-  // 1. Fetch Property with owner and agent info
-  const { data: propertyData, error } = await supabase
-    .from("properties")
-    .select(
-      `
-      *,
-      owner:owners!owner_id (
-        id,
-        full_name,
-        phone,
-        line_id,
-        facebook_url,
-        other_contact
-      ),
-      agent:profiles!assigned_to (
-        id,
-        full_name,
-        phone,
-        email,
-        line_id,
-        facebook_url,
-        other_contact,
-        avatar_url
-      ),
-      property_images (
-        id,
-        image_url,
-        is_cover,
-        sort_order
-      ),
-      property_features (
-        features (
+  // [PERFORMANCE] Parallel Fetching: Break the Waterfall
+  const [authContext, propertyResponse] = await Promise.all([
+    requireAuthContext(),
+    supabase
+      .from("properties")
+      .select(
+        `
+        *,
+        owner:owners!owner_id (
           id,
-          name,
-          icon_key,
-          category
+          full_name,
+          phone,
+          line_id,
+          facebook_url,
+          other_contact
+        ),
+        agent:profiles!assigned_to (
+          id,
+          full_name,
+          phone,
+          email,
+          line_id,
+          facebook_url,
+          other_contact,
+          avatar_url
+        ),
+        property_images (
+          id,
+          image_url,
+          is_cover,
+          sort_order
+        ),
+        property_features (
+          features (
+            id,
+            name,
+            icon_key,
+            category
+          )
         )
+      `,
       )
-    `,
-    )
-    .eq("id", id)
-    .single();
+      .eq("id", id)
+      .single(),
+  ]);
+
+  const { tenantId } = authContext;
+  const { data: propertyData, error } = propertyResponse;
 
   const property = propertyData as unknown as PropertyWithDetails | null;
 
@@ -155,41 +163,6 @@ export default async function PropertyDetailsPage({
       : "-";
 
   const isClosed = property.status === "SOLD" || property.status === "RENTED";
-
-  // Fetch related closed deal (if property sold/rented)
-  let relatedDeal: RelatedDeal | null = null;
-  let relatedContract: any = null;
-  if (isClosed) {
-    const { data: dealData } = await supabase
-      .from("deals")
-      .select(
-        "id, deal_type, commission_amount, commission_percent, created_by, status, lead:leads(id, full_name)",
-      )
-      .eq("property_id", id)
-      .eq("status", "CLOSED_WIN")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    relatedDeal = (dealData as unknown as RelatedDeal) ?? null;
-
-    if (relatedDeal) {
-      const { data: contractData } = await supabase
-        .from("rental_contracts")
-        .select("*")
-        .eq("deal_id", relatedDeal.id)
-        .single();
-      relatedContract = contractData ?? null;
-    }
-  }
-
-  const commissionLabel = relatedDeal
-    ? relatedDeal.commission_amount != null
-      ? `฿${Number(relatedDeal.commission_amount).toLocaleString()}`
-      : relatedDeal.commission_percent != null
-        ? `${Number(relatedDeal.commission_percent).toLocaleString()}%`
-        : "-"
-    : "-";
 
   const keySellingPoints = [
     property.is_pet_friendly && { name: "เลี้ยงสัตว์ได้", icon: "dog" },
@@ -329,14 +302,15 @@ export default async function PropertyDetailsPage({
                   language="th"
                 />
 
-                {/* Deal & Contracts (CRM only) */}
-                <PropertyCRMDetails
-                  property={property}
-                  relatedDeal={relatedDeal}
-                  relatedContract={relatedContract}
-                  commissionLabel={commissionLabel}
-                  tenantId={tenantId}
-                />
+                {/* Deal & Contracts (CRM only) - Streamed via Suspense */}
+                <Suspense fallback={<PropertyCRMDetailsSkeleton />}>
+                  <PropertyRelatedDealsSection
+                    propertyId={id}
+                    isClosed={isClosed}
+                    property={property}
+                    tenantId={tenantId}
+                  />
+                </Suspense>
               </div>
 
               {/* Right Column (Sidebar) */}

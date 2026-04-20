@@ -28,7 +28,7 @@ import {
   AnimatedUser,
   AnimatedPhone,
 } from "@/components/common/animated-icons";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 
 export function renderNameField(
   form: UseFormReturn<DepositLeadInput>,
@@ -255,7 +255,7 @@ export function renderPropertyTypeField(
             )}
           >
             {propertyOptions.map((option) => (
-              <motion.button
+              <m.button
                 key={option.value}
                 type="button"
                 whileHover={{ scale: 1.02, y: -2 }}
@@ -288,7 +288,7 @@ export function renderPropertyTypeField(
                 <span className="text-[10px] xs:text-[11px] font-semibold uppercase tracking-widest text-center px-1">
                   {option.label}
                 </span>
-              </motion.button>
+              </m.button>
             ))}
           </div>
           <FormMessage />

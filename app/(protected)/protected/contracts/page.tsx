@@ -11,6 +11,7 @@ import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { getContracts } from "@/features/contracts/queries";
 import { mapDbError } from "@/lib/db-error";
 import { StatsTimeFilter } from "../../../../components/dashboard/StatsTimeFilter";
+import { Suspense } from "react";
 
 interface RentalContractsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -25,10 +26,43 @@ export default async function RentalContractsPage({
   const params = await searchParams;
   const timeRange = (params.timeRange as string) || "all";
 
-  // Fetch contracts using centralized query with multi-tenancy logic
-  // requireAuthContext already handles the active_tenant_id cookie (including "ALL" for all branches)
+  return (
+    <div className="space-y-6 animate-fade-in">
+      <SuccessAnimation />
+      {/* Premium Header */}
+      <PageHeader
+        title="สัญญาเช่า (Contracts)"
+        subtitle="จัดการและติดตามสัญญาเช่าทั้งหมด"
+        icon="fileText"
+        gradient="emerald"
+        actionSlot={<CreateContractDialog />}
+      />
+
+      {/* Time Filter for Stats */}
+      <StatsTimeFilter />
+
+      {/* 🚀 STREAMED CONTENT */}
+      <Suspense fallback={<div className="h-96 animate-pulse bg-slate-50 rounded-2xl" />}>
+        <ContractsContentSection 
+          tenantId={tenantId}
+          timeRange={timeRange}
+        />
+      </Suspense>
+    </div>
+  );
+}
+
+/** 🚀 CONTRACTS PERFORMANCE WRAPPER */
+
+async function ContractsContentSection({
+  tenantId,
+  timeRange,
+}: {
+  tenantId: string | undefined;
+  timeRange: string;
+}) {
   const { data, count, error } = await getContracts({
-    tenantId: tenantId,
+    tenantId,
     timeRange,
   });
 
@@ -42,33 +76,19 @@ export default async function RentalContractsPage({
 
   const contracts = (data as unknown as RentalContractWithRelations[]) || [];
   const expiringSoonContracts = contracts.filter(
-    (c) => getContractStatus(c.end_date).status === "expiring-soon",
+    (c) => getContractStatus(c.end_date).status === "expiring-soon"
   ).length;
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <SuccessAnimation />
-      {/* Premium Header */}
-      <PageHeader
-        title="สัญญาเช่า (Contracts)"
-        subtitle="จัดการและติดตามสัญญาเช่าทั้งหมด"
-        count={contracts.length}
-        icon="fileText"
-        gradient="emerald"
-        actionSlot={<CreateContractDialog />}
-      />
-
-      {/* Time Filter for Stats */}
-      <StatsTimeFilter />
-
+    <>
       {/* Statistics Cards */}
       <ContractStats contracts={contracts} />
 
       {/* Contracts Table */}
-      <ContractsTable 
-        contracts={contracts} 
-        totalCount={count} 
-        filters={{ timeRange }} 
+      <ContractsTable
+        contracts={contracts}
+        totalCount={count}
+        filters={{ timeRange }}
       />
 
       {/* Quick Stats Footer */}
@@ -90,6 +110,7 @@ export default async function RentalContractsPage({
           }
         />
       )}
-    </div>
+    </>
   );
 }
+

@@ -1,9 +1,15 @@
 "use client";
 
 import { Info, Shield, Users, User, Key, Check } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export function RolePermissionsNote() {
   const roles = [
@@ -37,26 +43,28 @@ export function RolePermissionsNote() {
     <Card className="border-slate-200 shadow-sm overflow-hidden bg-white/50 backdrop-blur-sm">
       <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
         <div className="flex items-center gap-2">
-           <div className="p-1.5 rounded-lg bg-slate-900 text-white">
-             <Key className="h-4 w-4" />
-           </div>
-           <div>
-             <CardTitle className="text-base font-semibold text-slate-900">อธิบายสิทธิ์การใช้งาน</CardTitle>
-             <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
-               Role & Permissions Guide
-             </CardDescription>
-           </div>
+          <div className="p-1.5 rounded-lg bg-slate-900 text-white">
+            <Key className="h-4 w-4" />
+          </div>
+          <div>
+            <CardTitle className="text-base font-semibold text-slate-900">
+              อธิบายสิทธิ์การใช้งาน
+            </CardTitle>
+            <CardDescription className="text-[10px] uppercase font-bold tracking-widest text-slate-400">
+              Role & Permissions Guide
+            </CardDescription>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         <div className="flex flex-col">
           {roles.map((role, i) => (
-            <motion.div 
-              key={i} 
+            <m.div
+              key={i}
               whileHover={{ backgroundColor: "rgba(255,255,255,0.8)" }}
               className={cn(
                 "p-4 flex gap-4 transition-all duration-300 border-b border-slate-50 last:border-0",
-                role.color
+                role.color,
               )}
             >
               <div className="mt-0.5 relative">
@@ -66,18 +74,22 @@ export function RolePermissionsNote() {
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-slate-900 tracking-tight">{role.title}</span>
+                  <span className="text-xs font-semibold text-slate-900 tracking-tight">
+                    {role.title}
+                  </span>
                   <div className="h-1 w-1 rounded-full bg-slate-300" />
                   <div className="flex items-center gap-1">
                     <Check className="h-3 w-3 text-emerald-500" />
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase">Active</span>
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase">
+                      Active
+                    </span>
                   </div>
                 </div>
                 <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
                   {role.desc}
                 </p>
               </div>
-            </motion.div>
+            </m.div>
           ))}
         </div>
       </CardContent>

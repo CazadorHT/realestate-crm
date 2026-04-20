@@ -43,7 +43,7 @@ export function SubmitButton({
   );
 }
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 // ── Step Indicator Icon (Enhanced) ──
 export function StepIcon({
@@ -64,7 +64,7 @@ export function StepIcon({
     <div className={cn("relative flex items-center justify-center", sizeClass)}>
       <AnimatePresence mode="wait">
         {isCompleted ? (
-          <motion.div
+          <m.div
             key="check"
             initial={{ scale: 0.5, rotate: -45, opacity: 0 }}
             animate={{ scale: 1, rotate: 0, opacity: 1 }}
@@ -80,9 +80,9 @@ export function StepIcon({
               size={iconSize}
               strokeWidth={3}
             />
-          </motion.div>
+          </m.div>
         ) : isActive ? (
-          <motion.div
+          <m.div
             key="active"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -100,9 +100,9 @@ export function StepIcon({
             >
               {stepNum}
             </span>
-          </motion.div>
+          </m.div>
         ) : (
-          <motion.div
+          <m.div
             key="pending"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -119,7 +119,7 @@ export function StepIcon({
             >
               {stepNum}
             </span>
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

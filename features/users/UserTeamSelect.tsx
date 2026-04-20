@@ -4,12 +4,19 @@ import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { updateUserTeamAction } from "@/features/teams/actions/teamActions";
-import { Users, Loader2, Search, Check, ChevronDown, XCircle } from "lucide-react";
+import {
+  Users,
+  Loader2,
+  Search,
+  Check,
+  ChevronDown,
+  XCircle,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 interface UserTeamSelectProps {
   userId: string;
@@ -33,7 +40,7 @@ export function UserTeamSelect({
 
   const filteredTeams = useMemo(() => {
     return teams.filter((team) =>
-      team.name.toLowerCase().includes(searchQuery.toLowerCase())
+      team.name.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [teams, searchQuery]);
 
@@ -77,13 +84,15 @@ export function UserTeamSelect({
             disabled={disabled || isLoading}
             className={cn(
               "h-10 px-3 rounded-xl border-slate-200 hover:text-white bg-white/50 backdrop-blur-sm transition-all duration-300 flex items-center gap-2.5 group hover:border-slate-300",
-              className
+              className,
             )}
           >
-            <div className={cn(
-              "p-1 rounded-lg transition-transform group-hover:scale-110 bg-slate-100 text-slate-500",
-              currentTeam && "bg-indigo-50 text-indigo-600"
-            )}>
+            <div
+              className={cn(
+                "p-1 rounded-lg transition-transform group-hover:scale-110 bg-slate-100 text-slate-500",
+                currentTeam && "bg-indigo-50 text-indigo-600",
+              )}
+            >
               <Users className="h-3.5 w-3.5" />
             </div>
             <span className="font-semibold  text-sm truncate max-w-[100px]">
@@ -137,7 +146,9 @@ export function UserTeamSelect({
             {filteredTeams.length === 0 && searchQuery && (
               <div className="py-12 flex flex-col items-center justify-center text-slate-400 gap-3">
                 <Search size={32} className="opacity-20" />
-                <p className="text-sm font-semibold italic">ไม่พบทีมที่คุณค้นหา</p>
+                <p className="text-sm font-semibold italic">
+                  ไม่พบทีมที่คุณค้นหา
+                </p>
               </div>
             )}
           </div>
@@ -147,23 +158,23 @@ export function UserTeamSelect({
   );
 }
 
-function TeamItem({ 
-  id, 
-  name, 
-  isActive, 
-  onSelect, 
+function TeamItem({
+  id,
+  name,
+  isActive,
+  onSelect,
   disabled,
-  isSpecial 
-}: { 
-  id: string, 
-  name: string, 
-  isActive: boolean, 
-  onSelect: () => void,
-  disabled: boolean,
-  isSpecial?: boolean
+  isSpecial,
+}: {
+  id: string;
+  name: string;
+  isActive: boolean;
+  onSelect: () => void;
+  disabled: boolean;
+  isSpecial?: boolean;
 }) {
   return (
-    <motion.button
+    <m.button
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
       onClick={onSelect}
@@ -172,23 +183,33 @@ function TeamItem({
         "w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300 text-left",
         isActive
           ? "bg-indigo-50/50 border-indigo-200 text-indigo-700 shadow-xs"
-          : isSpecial 
+          : isSpecial
             ? "border-slate-100 bg-slate-50/50 text-slate-400 hover:bg-slate-100 italic"
-            : "border-transparent bg-white hover:bg-slate-50 text-slate-700"
+            : "border-transparent bg-white hover:bg-slate-50 text-slate-700",
       )}
     >
       <div className="flex items-center gap-3">
-        <div className={cn(
-          "h-10 w-10 rounded-xl flex items-center justify-center bg-white border shadow-xs transition-colors",
-          isActive ? "border-indigo-200 text-indigo-600" : "border-slate-100 text-slate-400"
-        )}>
-          {isSpecial ? <XCircle className="h-5 w-5" /> : <Users className="h-5 w-5" />}
+        <div
+          className={cn(
+            "h-10 w-10 rounded-xl flex items-center justify-center bg-white border shadow-xs transition-colors",
+            isActive
+              ? "border-indigo-200 text-indigo-600"
+              : "border-slate-100 text-slate-400",
+          )}
+        >
+          {isSpecial ? (
+            <XCircle className="h-5 w-5" />
+          ) : (
+            <Users className="h-5 w-5" />
+          )}
         </div>
         <div>
-          <p className={cn(
-            "font-semibold text-sm tracking-tight",
-            isActive ? "text-indigo-900" : "text-slate-800"
-          )}>
+          <p
+            className={cn(
+              "font-semibold text-sm tracking-tight",
+              isActive ? "text-indigo-900" : "text-slate-800",
+            )}
+          >
             {name}
           </p>
           {!isSpecial && (
@@ -203,6 +224,6 @@ function TeamItem({
           <Check className="h-3.5 w-3.5" />
         </div>
       )}
-    </motion.button>
+    </m.button>
   );
 }

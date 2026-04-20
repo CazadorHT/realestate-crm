@@ -5,7 +5,16 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, ChevronsUpDown, User, Search, Users, Sparkles, XCircle, ArrowRight } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  User,
+  Search,
+  Users,
+  Sparkles,
+  XCircle,
+  ArrowRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -14,13 +23,17 @@ import {
   TeamWithManager,
 } from "@/features/teams/actions/teamActions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 interface TeamFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   team: TeamWithManager | null;
-  potentialManagers: { id: string; full_name: string | null; avatar_url: string | null }[];
+  potentialManagers: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+  }[];
   onSuccess: (team: TeamWithManager) => void;
 }
 
@@ -49,7 +62,7 @@ export function TeamFormDialog({
 
   const filteredManagers = useMemo(() => {
     return potentialManagers.filter((m) =>
-      m.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      m.full_name?.toLowerCase().includes(searchQuery.toLowerCase()),
     );
   }, [potentialManagers, searchQuery]);
 
@@ -75,7 +88,12 @@ export function TeamFormDialog({
             ...team,
             name,
             manager_id: managerId,
-            manager: managerObj ? { full_name: managerObj.full_name, avatar_url: managerObj.avatar_url } : null,
+            manager: managerObj
+              ? {
+                  full_name: managerObj.full_name,
+                  avatar_url: managerObj.avatar_url,
+                }
+              : null,
           });
           onOpenChange(false);
         } else {
@@ -89,7 +107,12 @@ export function TeamFormDialog({
           const managerObj = potentialManagers.find((m) => m.id === managerId);
           onSuccess({
             ...result.data,
-            manager: managerObj ? { full_name: managerObj.full_name, avatar_url: managerObj.avatar_url } : null,
+            manager: managerObj
+              ? {
+                  full_name: managerObj.full_name,
+                  avatar_url: managerObj.avatar_url,
+                }
+              : null,
             agent_count: 0,
             member_previews: [],
           } as TeamWithManager);
@@ -105,7 +128,7 @@ export function TeamFormDialog({
     }
   };
 
-  const selectedManager = potentialManagers.find(m => m.id === managerId);
+  const selectedManager = potentialManagers.find((m) => m.id === managerId);
 
   return (
     <ResponsiveDialog
@@ -129,7 +152,11 @@ export function TeamFormDialog({
             className="flex-2 h-12 rounded-2xl font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-95"
             disabled={isLoading}
           >
-            {isLoading ? "กำลังประมวลผล..." : team ? "บันทึกการเปลี่ยนแปลง" : "สร้างทีมใหม่ทันที"}
+            {isLoading
+              ? "กำลังประมวลผล..."
+              : team
+                ? "บันทึกการเปลี่ยนแปลง"
+                : "สร้างทีมใหม่ทันที"}
           </Button>
         </div>
       }
@@ -139,7 +166,10 @@ export function TeamFormDialog({
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <div className="h-2 w-2 rounded-full bg-indigo-500" />
-            <Label htmlFor="name" className="text-slate-900 font-semibold text-xs uppercase tracking-widest">
+            <Label
+              htmlFor="name"
+              className="text-slate-900 font-semibold text-xs uppercase tracking-widest"
+            >
               ชื่อทีมพนักงาน
             </Label>
           </div>
@@ -153,7 +183,7 @@ export function TeamFormDialog({
               disabled={isLoading}
             />
             <div className="absolute right-5 top-1/2 -translate-y-1/2 opacity-0 group-focus-within:opacity-100 transition-opacity">
-               <ArrowRight className="h-5 w-5 text-indigo-400" />
+              <ArrowRight className="h-5 w-5 text-indigo-400" />
             </div>
           </div>
         </div>
@@ -166,7 +196,7 @@ export function TeamFormDialog({
               หัวหน้าทีมผู้รับผิดชอบ
             </Label>
           </div>
-          
+
           <ResponsiveDialog
             open={managerOpen}
             onOpenChange={setManagerOpen}
@@ -177,7 +207,7 @@ export function TeamFormDialog({
                 type="button"
                 className={cn(
                   "w-full h-18 flex items-center justify-between px-6 rounded-[32px] border-2 border-slate-100 bg-white/50 backdrop-blur-sm transition-all duration-300 hover:border-indigo-200 hover:bg-white text-left shadow-xs",
-                  selectedManager && "border-amber-100 bg-amber-50/30"
+                  selectedManager && "border-amber-100 bg-amber-50/30",
                 )}
                 disabled={isLoading}
               >
@@ -187,7 +217,9 @@ export function TeamFormDialog({
                       <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
                         <AvatarImage src={selectedManager.avatar_url || ""} />
                         <AvatarFallback className="bg-amber-100 text-amber-600 font-semibold text-xs">
-                          {selectedManager.full_name?.substring(0, 2).toUpperCase()}
+                          {selectedManager.full_name
+                            ?.substring(0, 2)
+                            .toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full bg-amber-500 border-2 border-white flex items-center justify-center">
@@ -208,7 +240,9 @@ export function TeamFormDialog({
                     <div className="h-10 w-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
                       <User className="h-5 w-5" />
                     </div>
-                    <span className="text-slate-400 font-semibold italic">ค้นหาและเลือกหัวหน้าทีม...</span>
+                    <span className="text-slate-400 font-semibold italic">
+                      ค้นหาและเลือกหัวหน้าทีม...
+                    </span>
                   </div>
                 )}
                 <ChevronsUpDown className="h-4 w-4 text-slate-300" />
@@ -216,62 +250,76 @@ export function TeamFormDialog({
             }
           >
             <div className="flex flex-col h-full max-h-[60vh] italic">
-               <div className="sticky top-0 z-30 p-4 bg-white/80 backdrop-blur-xl border-b border-slate-100">
-                  <div className="relative">
-                    <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                    <Input
-                      placeholder="พิมพ์ชื่อพนักงาน..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 h-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white transition-all font-semibold"
-                    />
+              <div className="sticky top-0 z-30 p-4 bg-white/80 backdrop-blur-xl border-b border-slate-100">
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    placeholder="พิมพ์ชื่อพนักงาน..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10 h-12 rounded-2xl border-slate-200 bg-slate-50/50 focus:bg-white transition-all font-semibold"
+                  />
+                </div>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                <button
+                  onClick={() => {
+                    setManagerId(null);
+                    setManagerOpen(false);
+                  }}
+                  className="w-full p-4 rounded-2xl border border-dashed border-slate-200 flex items-center gap-4 hover:bg-slate-50 transition-colors"
+                >
+                  <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400">
+                    <XCircle className="h-5 w-5" />
                   </div>
-               </div>
-               <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                  <button
-                    onClick={() => { setManagerId(null); setManagerOpen(false); }}
-                    className="w-full p-4 rounded-2xl border border-dashed border-slate-200 flex items-center gap-4 hover:bg-slate-50 transition-colors"
-                  >
-                    <div className="h-10 w-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400">
-                      <XCircle className="h-5 w-5" />
-                    </div>
-                    <span className="font-semibold text-slate-400">--- ไม่ระบุหัวหน้าทีม ---</span>
-                  </button>
+                  <span className="font-semibold text-slate-400">
+                    --- ไม่ระบุหัวหน้าทีม ---
+                  </span>
+                </button>
 
-                  {filteredManagers.map((manager) => (
-                    <button
-                      key={manager.id}
-                      onClick={() => { setManagerId(manager.id); setManagerOpen(false); }}
-                      className={cn(
-                        "w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300",
-                        managerId === manager.id 
-                          ? "bg-amber-50/50 border-amber-200" 
-                          : "border-transparent bg-white hover:bg-slate-50"
-                      )}
-                    >
-                      <div className="flex items-center gap-4">
-                        <Avatar className="h-11 w-11 border-2 border-white shadow-sm">
-                          <AvatarImage src={manager.avatar_url || ""} />
-                          <AvatarFallback className="bg-slate-200 text-slate-600 font-semibold">
-                            {manager.full_name?.substring(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="text-left">
-                          <p className="font-semibold text-slate-900 leading-none mb-1">{manager.full_name}</p>
-                          <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-widest">Employee Profile</p>
-                        </div>
+                {filteredManagers.map((manager) => (
+                  <button
+                    key={manager.id}
+                    onClick={() => {
+                      setManagerId(manager.id);
+                      setManagerOpen(false);
+                    }}
+                    className={cn(
+                      "w-full flex items-center justify-between p-4 rounded-2xl border transition-all duration-300",
+                      managerId === manager.id
+                        ? "bg-amber-50/50 border-amber-200"
+                        : "border-transparent bg-white hover:bg-slate-50",
+                    )}
+                  >
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-11 w-11 border-2 border-white shadow-sm">
+                        <AvatarImage src={manager.avatar_url || ""} />
+                        <AvatarFallback className="bg-slate-200 text-slate-600 font-semibold">
+                          {manager.full_name?.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="text-left">
+                        <p className="font-semibold text-slate-900 leading-none mb-1">
+                          {manager.full_name}
+                        </p>
+                        <p className="text-[10px] uppercase font-semibold text-slate-400 tracking-widest">
+                          Employee Profile
+                        </p>
                       </div>
-                      {managerId === manager.id && <Check className="h-5 w-5 text-amber-600" />}
-                    </button>
-                  ))}
-               </div>
+                    </div>
+                    {managerId === manager.id && (
+                      <Check className="h-5 w-5 text-amber-600" />
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           </ResponsiveDialog>
-          
+
           <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100/50 flex items-start gap-3">
             <Sparkles className="h-4 w-4 text-amber-500 mt-0.5" />
             <p className="text-[10px] text-slate-500 font-semibold leading-relaxed uppercase tracking-tighter">
-              ระบบแสดงพนักงานที่มีบทบาท ADMIN หรือ MANAGER <br/>
+              ระบบแสดงพนักงานที่มีบทบาท ADMIN หรือ MANAGER <br />
               ในสโคปสาขาที่คุณกำลังบริหารจัดการเท่านั้น
             </p>
           </div>

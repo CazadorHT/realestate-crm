@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/common/CookieConsent";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { TenantProvider } from "@/components/providers/TenantProvider";
+import { AnimationProvider } from "@/components/providers/AnimationProvider";
 import { SiteConfigProvider } from "@/components/providers/SiteConfigProvider";
 import { GTMScrollTracker } from "@/components/providers/GTMScrollTracker";
 import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
@@ -16,18 +17,18 @@ import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { siteConfig } from "@/lib/site-config";
 import { getSiteSettings } from "@/features/site-settings/actions";
-
-export const dynamic = "force-dynamic";
-
+export const dynamic = 'force-dynamic';
+// Removed force-dynamic to allow Next.js to optimize routing. 
+// Next.js will still dynamically render where cookies() are used.
 const prompt = Prompt({
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
   subsets: ["thai", "latin"],
   display: "swap",
   variable: "--font-prompt",
 });
 
 const notoThai = Noto_Sans_Thai({
-  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700"],
   subsets: ["thai", "latin"],
   display: "swap",
   variable: "--font-noto-thai",
@@ -138,14 +139,16 @@ export default async function RootLayout({
 
         <LanguageProvider initialLanguage={lang as any}>
           <SiteConfigProvider initialSettings={settings}>
-            <TenantProvider>
-              <div vaul-drawer-wrapper="" className="min-h-screen bg-white">
-                {children}
-              </div>
-              <NavigationProgressBar />
-              <Toaster />
-              <CookieConsent />
-            </TenantProvider>
+            <AnimationProvider>
+              <TenantProvider>
+                <div vaul-drawer-wrapper="" className="min-h-screen bg-white">
+                  {children}
+                </div>
+                <NavigationProgressBar />
+                <Toaster />
+                <CookieConsent />
+              </TenantProvider>
+            </AnimationProvider>
           </SiteConfigProvider>
         </LanguageProvider>
       </body>

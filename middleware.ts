@@ -31,7 +31,11 @@ export async function middleware(request: NextRequest) {
   const isExcludedPath = 
     path.startsWith("/_next") || 
     path.startsWith("/fonts") ||
+    path.startsWith("/api/og") ||
+    path.startsWith("/monitoring") ||
     path.includes("/blocking") ||
+    path === "/robots.txt" ||
+    path === "/sitemap.xml" ||
     isStaticExtension;
 
   if (isExcludedPath) {

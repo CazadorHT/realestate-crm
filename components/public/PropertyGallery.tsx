@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   Dialog,
   DialogContent,
@@ -113,6 +113,7 @@ const ImageWithFallback = ({
         fill={fill}
         className={cn("transition-all duration-500", className)}
         priority={priority}
+        {...(priority ? { fetchPriority: "high" } : {})}
         sizes={sizes}
         onError={() => onImageError(img.id)}
       />
@@ -536,7 +537,7 @@ export function PropertyGallery({
 
           <div className="relative w-full h-full flex items-center justify-center p-4 sm:p-8 md:p-12 lg:p-16 mb-20 mt-12 overflow-hidden">
             <AnimatePresence initial={false} custom={direction}>
-              <motion.div
+              <m.div
                 key={currentIndex}
                 custom={direction}
                 variants={{
@@ -588,7 +589,7 @@ export function PropertyGallery({
                   onImageError={handleImageError}
                   failedImages={failedImages}
                 />
-              </motion.div>
+              </m.div>
             </AnimatePresence>
           </div>
 

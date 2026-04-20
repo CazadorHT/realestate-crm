@@ -91,3 +91,26 @@ export type JoinedPayout = Database["public"]["Tables"]["deal_commissions"]["Row
     } | null;
   } | null;
 };
+
+/** 🧬 REFACTORED TYPES TO AVOID INTERFACE EXTENSION ISSUES */
+export type AgentWalletHistory = Database["public"]["Tables"]["deal_commissions"]["Row"] & {
+  net_amount: number;
+  adjustments: Database["public"]["Tables"]["commission_adjustments"]["Row"][];
+  deal: {
+    id: string;
+    status: string;
+    property: {
+      title: string;
+      images: any; 
+      listing_type: string;
+      property_type: string;
+    } | null;
+  } | null;
+};
+
+export interface AgentWalletStats {
+  totalEarnings: number;
+  pendingAmount: number;
+  closedDealsCount: number;
+  totalCommissionsCount: number;
+}

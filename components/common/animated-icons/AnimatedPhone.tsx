@@ -1,15 +1,14 @@
 "use client";
 
-import { motion, useAnimation } from "framer-motion";
+import { m, useAnimation } from "framer-motion";
 import { Phone } from "lucide-react";
 
-export const AnimatedPhone = ({
-  size = 20,
-  className = "",
-}: {
+interface AnimatedPhoneProps {
   size?: number;
   className?: string;
-}) => {
+}
+
+export function AnimatedPhone({ size = 24, className }: AnimatedPhoneProps) {
   const controls = useAnimation();
 
   return (
@@ -22,9 +21,9 @@ export const AnimatedPhone = ({
       }
       className={className}
     >
-      <motion.div animate={controls}>
+      <m.div animate={controls}>
         <Phone size={size} />
-      </motion.div>
+      </m.div>
     </div>
   );
-};
+}

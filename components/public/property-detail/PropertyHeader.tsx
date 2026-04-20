@@ -401,217 +401,219 @@ export function PropertyHeader({
   return (
     <div
       className={cn(
-        "pt-20 lg:pt-24 px-5 md:px-6 lg:px-8 bg-white relative",
+        "pt-20 lg:pt-24 bg-white relative",
         className,
       )}
     >
-      <div className="max-w-screen-2xl lg:px-8  mx-auto">
-        <div className="flex flex-col gap-3 md:gap-4">
-          {!hideBreadcrumbs && (
-            <div className="mb-2">
-              <AppBreadcrumbs
-                items={[
-                  { label: t("nav.home"), href: "/" },
-                  { label: t("nav.properties"), href: "/properties" },
-                  ...(property.property_type
-                    ? [
-                        {
-                          label: t(
-                            `property_types.${property.property_type.toLowerCase()}`,
-                          ),
-                          href: `/properties?property_type=${property.property_type}`,
-                        },
-                      ]
-                    : []),
-                  ...(property.province
-                    ? [
-                        {
-                          label: displayProvince || property.province,
-                          href: `/properties?province=${property.province}`,
-                        },
-                      ]
-                    : []),
-                  ...(property.popular_area
-                    ? [
-                        {
-                          label: getLocaleValue(
-                            property,
-                            "popular_area",
-                            language,
-                          ),
-                          href: `/properties?popular_area=${property.popular_area}`,
-                        },
-                      ]
-                    : []),
-                  {
-                    label:
-                      localizedTitle?.length && localizedTitle.length > 40
-                        ? `${localizedTitle.slice(0, 40)}...`
-                        : localizedTitle,
-                    className: "text-slate-600 font-medium pointer-events-none",
-                  },
-                ]}
-              />
-            </div>
-          )}
-
-          <div className="flex flex-col  lg:items-start  gap-4 lg:gap-0">
-            {/* Property Type */}
-            <div className="flex lg:flex-row flex-col gap-4 w-full justify-between items-end">
-              <div className="space-y-3 grow min-w-0 max-w-[950px]">
-                <div className="flex items-center gap-1 md:gap-2 flex-wrap sm:flex-nowrap">
-                  <Badge
-                    className={`rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
-                      property.listing_type === "SALE"
-                        ? "bg-emerald-600 text-white"
-                        : "bg-linear-to-r from-sky-500 to-blue-600 text-white"
-                    }`}
-                  >
-                    {property.listing_type === "SALE"
-                      ? t("common.for_sale")
-                      : t("common.for_rent")}
-                  </Badge>
-
-                  {property.property_type && (
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        "rounded-full px-3 md:px-4 py-1.5 md:py-2 text-white text-[11px] md:text-sm font-bold border-transparent shadow-sm whitespace-nowrap",
-                        typeColor.bg,
-                        typeColor.text,
-                      )}
-                    >
-                      {t(
-                        `property_types.${property.property_type.toLowerCase()}`,
-                      )}
-                    </Badge>
-                  )}
-
-                  {property.is_fully_furnished && (
-                    <Badge
-                      variant="outline"
-                      className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
-                    >
-                      ✨ {t("property.specs.fully_furnished")}
-                    </Badge>
-                  )}
-
-                  {property.is_bare_shell && (
-                    <Badge
-                      variant="outline"
-                      className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
-                    >
-                      🏗️ {t("property.specs.bare_shell")}
-                    </Badge>
-                  )}
-                </div>
-
-                <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-tight line-clamp-2">
-                  {localizedTitle}
-                </h2>
-
-                <div className="flex items-center text-slate-600 gap-4 font-normal text-sm">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
-                    <span className="line-clamp-1">
-                      {locationParts || t("common.no_location")}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(property.id);
-                      toast.success(t("common.id_copied") || "ID Copied");
-                      try {
-                        pushToDataLayer(GTM_EVENTS.COPY_PROPERTY_ID, {
-                          platform: "copy_ref_id",
-                          item_id: property.id,
-                          item_name: localizedTitle,
-                        });
-                        updateAIScore(10);
-                      } catch (e) {}
-                    }}
-                    className="flex items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors group/copy cursor-pointer"
-                    title="Copy Property ID"
-                  >
-                    <Copy className="w-3.5 h-3.5 group-hover/copy:scale-110 transition-transform" />
-                    <span className="text-xs font-mono lowercase">
-                      ref: {property.id.slice(0, 8)}
-                    </span>
-                  </button>
-                </div>
-                <KeySellingPoints
-                  points={finalKeySellingPoints}
-                  listingType={property.listing_type || "SALE"}
-                  language={language}
+      <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8">
+        <div>
+          <div className="flex flex-col gap-3 md:gap-4">
+            {!hideBreadcrumbs && (
+              <div className="mb-2">
+                <AppBreadcrumbs
+                  items={[
+                    { label: t("nav.home"), href: "/" },
+                    { label: t("nav.properties"), href: "/properties" },
+                    ...(property.property_type
+                      ? [
+                          {
+                            label: t(
+                              `property_types.${property.property_type.toLowerCase()}`,
+                            ),
+                            href: `/properties?property_type=${property.property_type}`,
+                          },
+                        ]
+                      : []),
+                    ...(property.province
+                      ? [
+                          {
+                            label: displayProvince || property.province,
+                            href: `/properties?province=${property.province}`,
+                          },
+                        ]
+                      : []),
+                    ...(property.popular_area
+                      ? [
+                          {
+                            label: getLocaleValue(
+                              property,
+                              "popular_area",
+                              language,
+                            ),
+                            href: `/properties?popular_area=${property.popular_area}`,
+                          },
+                        ]
+                      : []),
+                    {
+                      label:
+                        localizedTitle?.length && localizedTitle.length > 40
+                          ? `${localizedTitle.slice(0, 40)}...`
+                          : localizedTitle,
+                      className:
+                        "text-slate-600 font-medium pointer-events-none",
+                    },
+                  ]}
                 />
               </div>
-              {/* Price */}
-              <div className="bg-slate-50/50 border border-slate-200  rounded-xl px-4 py-6 lg:mt-4 items-end  lg:items-end lg:w-[350px] w-full">
-                <div className="flex flex-col items-end gap-2">
-                  {(() => {
-                    if (property.listing_type === "SALE_AND_RENT") {
-                      return (
-                        <>
-                          {renderPriceBlock(
-                            property.price,
-                            property.original_price,
-                            t("common.for_sale"),
-                            false,
-                          )}
-                          {renderPriceBlock(
-                            property.rental_price,
-                            property.original_rental_price,
-                            t("common.for_rent"),
-                            true,
-                          )}
-                        </>
-                      );
-                    }
+            )}
 
-                    if (property.listing_type === "RENT") {
-                      return renderPriceBlock(
-                        property.rental_price,
-                        property.original_rental_price,
-                        t("common.for_rent"),
-                        true,
-                      );
-                    }
+            <div className="flex flex-col  lg:items-start  gap-4 lg:gap-0">
+              {/* Property Type */}
+              <div className="flex lg:flex-row flex-col gap-4 w-full justify-between items-end">
+                <div className="space-y-3 grow min-w-0 w-full xl:max-w-[1000px] ">
+                  <div className="flex items-center gap-1 md:gap-2 flex-wrap sm:flex-nowrap">
+                    <Badge
+                      className={`rounded-full px-4 md:px-8 py-1.5 md:py-2 text-[11px] md:text-sm font-bold shadow-sm whitespace-nowrap overflow-hidden transition-all ${
+                        property.listing_type === "SALE"
+                          ? "bg-emerald-600 text-white"
+                          : "bg-linear-to-r from-sky-500 to-blue-600 text-white"
+                      }`}
+                    >
+                      {property.listing_type === "SALE"
+                        ? t("common.for_sale")
+                        : t("common.for_rent")}
+                    </Badge>
 
-                    return renderPriceBlock(
-                      property.price,
-                      property.original_price,
-                      t("common.for_sale"),
-                      false,
-                    );
-                  })()}
-
-                  {(property.listing_type === "RENT" ||
-                    property.listing_type === "SALE_AND_RENT") &&
-                    property.min_contract_months && (
-                      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200 ">
-                        <CalendarDays className="w-4 h-4 text-blue-500" />
-                        <span className="text-sm text-slate-600">
-                          {t("property.min_contract")}{" "}
-                          <strong className="text-slate-900">
-                            {property.min_contract_months} {t("common.month")}
-                            {property.min_contract_months >= 12 &&
-                              property.min_contract_months % 12 === 0 && (
-                                <span className="text-slate-500 font-normal">
-                                  {" "}
-                                  {t("common.or")}{" "}
-                                  {property.min_contract_months / 12}{" "}
-                                  {t("common.year")}
-                                </span>
-                              )}
-                          </strong>
-                        </span>
-                      </div>
+                    {property.property_type && (
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          "rounded-full px-3 md:px-4 py-1.5 md:py-2 text-white text-[11px] md:text-sm font-bold border-transparent shadow-sm whitespace-nowrap",
+                          typeColor.bg,
+                          typeColor.text,
+                        )}
+                      >
+                        {t(
+                          `property_types.${property.property_type.toLowerCase()}`,
+                        )}
+                      </Badge>
                     )}
+
+                    {property.is_fully_furnished && (
+                      <Badge
+                        variant="outline"
+                        className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-emerald-200 bg-emerald-50 text-emerald-700 shadow-sm whitespace-nowrap"
+                      >
+                        ✨ {t("property.specs.fully_furnished")}
+                      </Badge>
+                    )}
+
+                    {property.is_bare_shell && (
+                      <Badge
+                        variant="outline"
+                        className="rounded-full px-3 md:px-4 py-1.5 md:py-2 text-[11px] md:text-sm font-bold border-amber-200 bg-amber-50 text-amber-700 shadow-sm whitespace-nowrap"
+                      >
+                        🏗️ {t("property.specs.bare_shell")}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-tight line-clamp-2">
+                    {localizedTitle}
+                  </h2>
+
+                  <div className="flex items-center text-slate-600 gap-4 font-normal text-sm">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-blue-500 shrink-0" />
+                      <span className="line-clamp-1">
+                        {locationParts || t("common.no_location")}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(property.id);
+                        toast.success(t("common.id_copied") || "ID Copied");
+                        try {
+                          pushToDataLayer(GTM_EVENTS.COPY_PROPERTY_ID, {
+                            platform: "copy_ref_id",
+                            item_id: property.id,
+                            item_name: localizedTitle,
+                          });
+                          updateAIScore(10);
+                        } catch (e) {}
+                      }}
+                      className="flex items-center gap-1 text-slate-400 hover:text-blue-600 transition-colors group/copy cursor-pointer"
+                      title="Copy Property ID"
+                    >
+                      <Copy className="w-3.5 h-3.5 group-hover/copy:scale-110 transition-transform" />
+                      <span className="text-xs font-mono lowercase">
+                        ref: {property.id.slice(0, 8)}
+                      </span>
+                    </button>
+                  </div>
+                  <KeySellingPoints
+                    points={finalKeySellingPoints}
+                    listingType={property.listing_type || "SALE"}
+                    language={language}
+                  />
+                </div>
+                {/* Price */}
+                <div className="bg-slate-50/50 border border-slate-200  rounded-xl px-4 py-6 lg:mt-4 items-end  lg:items-end lg:w-[350px] w-full">
+                  <div className="flex flex-col items-end gap-2">
+                    {(() => {
+                      if (property.listing_type === "SALE_AND_RENT") {
+                        return (
+                          <>
+                            {renderPriceBlock(
+                              property.price,
+                              property.original_price,
+                              t("common.for_sale"),
+                              false,
+                            )}
+                            {renderPriceBlock(
+                              property.rental_price,
+                              property.original_rental_price,
+                              t("common.for_rent"),
+                              true,
+                            )}
+                          </>
+                        );
+                      }
+
+                      if (property.listing_type === "RENT") {
+                        return renderPriceBlock(
+                          property.rental_price,
+                          property.original_rental_price,
+                          t("common.for_rent"),
+                          true,
+                        );
+                      }
+
+                      return renderPriceBlock(
+                        property.price,
+                        property.original_price,
+                        t("common.for_sale"),
+                        false,
+                      );
+                    })()}
+
+                    {(property.listing_type === "RENT" ||
+                      property.listing_type === "SALE_AND_RENT") &&
+                      property.min_contract_months && (
+                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200 ">
+                          <CalendarDays className="w-4 h-4 text-blue-500" />
+                          <span className="text-sm text-slate-600">
+                            {t("property.min_contract")}{" "}
+                            <strong className="text-slate-900">
+                              {property.min_contract_months} {t("common.month")}
+                              {property.min_contract_months >= 12 &&
+                                property.min_contract_months % 12 === 0 && (
+                                  <span className="text-slate-500 font-normal">
+                                    {" "}
+                                    {t("common.or")}{" "}
+                                    {property.min_contract_months / 12}{" "}
+                                    {t("common.year")}
+                                  </span>
+                                )}
+                            </strong>
+                          </span>
+                        </div>
+                      )}
+                  </div>
                 </div>
               </div>
+              {/* Key Selling Points */}
             </div>
-            {/* Key Selling Points */}
-            
           </div>
         </div>
       </div>

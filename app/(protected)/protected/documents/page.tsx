@@ -7,7 +7,7 @@ import { DocumentStats } from "@/features/documents/components/DocumentStats";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { TemplateDialog } from "@/features/documents/components/TemplateDialog";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
-import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
+import { Suspense } from "react";
 
 interface DocumentsPageProps {
   searchParams: Promise<{
@@ -20,17 +20,64 @@ interface DocumentsPageProps {
 }
 
 export default async function DocumentsPage(props: DocumentsPageProps) {
-  const { role } = await requireAuthContext();
-  assertStaff(role);
+  const [authContext, searchParams] = await Promise.all([
+    requireAuthContext(),
+    props.searchParams,
+  ]);
+  
+  assertStaff(authContext.role);
 
-  const searchParams = await props.searchParams;
-  const tenantId =
-    searchParams.tenant || (await getActiveTenantCookie()) || "ALL";
+  const tenantId = searchParams.tenant || authContext.tenantId || "ALL";
   const page = Number(searchParams.page) || 1;
   const q = searchParams.q || "";
   const type = searchParams.type || "ALL";
   const pageSize = 50;
 
+  return (
+    <div className="p-6 space-y-6 animate-fade-in">
+      {searchParams.success === "true" && <SuccessAnimation />}
+      
+      <PageHeader
+        title="คลังเอกสาร (Documents)"
+        subtitle="จัดการเอกสารและไฟล์แนบทั้งหมดในระบบ"
+        icon="fileText"
+        gradient="blue"
+        actionSlot={
+          <div className="flex flex-col lg:flex-row gap-2">
+            <TemplateDialog />
+            <UploadDocumentDialog tenantId={tenantId} />
+          </div>
+        }
+      />
+
+      <Suspense fallback={<div className="h-96 animate-pulse bg-slate-50 rounded-2xl" />}>
+        <DocumentsContentSection 
+          page={page} 
+          pageSize={pageSize} 
+          tenantId={tenantId} 
+          q={q} 
+          type={type} 
+        />
+      </Suspense>
+    </div>
+  );
+}
+
+/** 🚀 DOCUMENTS PERFORMANCE WRAPPER */
+
+async function DocumentsContentSection({
+  page,
+  pageSize,
+  tenantId,
+  q,
+  type,
+}: {
+  page: number;
+  pageSize: number;
+  tenantId: string;
+  q: string;
+  type: string;
+}) {
   const {
     data: documents,
     count: totalCount,
@@ -48,26 +95,8 @@ export default async function DocumentsPage(props: DocumentsPageProps) {
     return `${bytes} B`;
   };
 
-  const totalSize = documents.reduce((sum, doc) => sum + (doc.size_bytes || 0), 0);
-
   return (
-    <div className="p-6 space-y-6 animate-fade-in">
-      {searchParams.success === "true" && <SuccessAnimation />}
-      
-      <PageHeader
-        title="คลังเอกสาร (Documents)"
-        subtitle="จัดการเอกสารและไฟล์แนบทั้งหมดในระบบ"
-        count={totalCount}
-        icon="fileText"
-        gradient="blue"
-        actionSlot={
-          <div className="flex flex-col lg:flex-row gap-2">
-            <TemplateDialog />
-            <UploadDocumentDialog tenantId={tenantId} />
-          </div>
-        }
-      />
-
+    <>
       <DocumentStats documents={documents} />
 
       <DocumentsGrid
@@ -91,6 +120,6 @@ export default async function DocumentsPage(props: DocumentsPageProps) {
           ]}
         />
       )}
-    </div>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { ShieldAlert, Home, MessageCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "next/navigation";
@@ -30,19 +30,19 @@ function BlockingContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6 font-sans">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="max-w-md w-full bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 text-center"
       >
         {/* 🛡️ Icon Animation */}
-        <motion.div
+        <m.div
           animate={{ scale: [1, 1.1, 1] }}
           transition={{ repeat: Infinity, duration: 3 }}
           className="w-20 h-20 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-inner"
         >
           <ShieldAlert size={42} strokeWidth={1.5} />
-        </motion.div>
+        </m.div>
 
         {/* 📝 Messaging */}
         <h1 className="text-3xl font-bold text-slate-900 mb-4 tracking-tight">
@@ -92,7 +92,7 @@ function BlockingContent() {
         <p className="mt-8 text-xs text-slate-400 font-medium">
           Error 429: Too Many Requests | Security Layer v2.5
         </p>
-      </motion.div>
+      </m.div>
 
       {/* 🖼️ Subtle background branding */}
       <div className="fixed bottom-8 left-0 right-0 text-center opacity-10 pointer-events-none select-none">

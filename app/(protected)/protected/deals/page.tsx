@@ -14,9 +14,10 @@ import {
   Clock,
   DollarSign,
 } from "lucide-react";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SectionTitle } from "@/components/dashboard/SectionTitle";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { Suspense } from "react";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 
 export const metadata = {
   title: "Deals | จัดการดีล",
@@ -27,34 +28,21 @@ export default async function DealsPage({
 }: {
   searchParams: Promise<{ timeRange?: string; page?: string }>;
 }) {
-  const { tenantId } = await requireAuthContext();
-  const { timeRange = "all", page } = await searchParams;
-  const currentPage = Number(page) || 1;
+  const { timeRange = "all", page: spPage } = await searchParams;
+  const currentPage = Number(spPage) || 1;
 
-  const [{ data, count }, dealsStats, properties] = await Promise.all([
-    getDeals({ page: currentPage, pageSize: 20, timeRange }),
-    getDealsPageStats(timeRange),
+  // [PERFORMANCE] Parallel Fetching: Core Auth & Global Pre-fetches
+  const [authContext, properties] = await Promise.all([
+    requireAuthContext(),
     getPropertiesForSelect(),
   ]);
 
-  // Use accurate statistics from getDealsPageStats
-  const {
-    totalDeals,
-    activeDeals,
-    wonDeals,
-    lostDeals,
-    totalCommission,
-  } = dealsStats;
-
-  const isEmptyState = totalDeals === 0;
-
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Premium Header */}
+      {/* 🚀 1. HEADER (Static with fast context) */}
       <PageHeader
         title="ดีล (Deals)"
         subtitle="จัดการและติดตามดีลการขายและเช่า"
-        count={count}
         icon="handshake"
         gradient="amber"
         actionSlot={<CreateDealButton properties={properties} />}
@@ -63,7 +51,31 @@ export default async function DealsPage({
       {/* Time Filter for Stats */}
       <StatsTimeFilter />
 
-      {/* Statistics Cards */}
+      {/* 🚀 2. STATS SECTION (Streamed) */}
+      <Suspense fallback={<div className="h-32 animate-pulse bg-slate-50 rounded-2xl" />}>
+        <DealsStatsSection timeRange={timeRange} />
+      </Suspense>
+
+      {/* 🚀 3. MAIN CONTENT (Streamed) */}
+      <Suspense fallback={<div className="h-[60vh] animate-pulse bg-slate-50 rounded-2xl" />}>
+        <DealsContentSection 
+          currentPage={currentPage} 
+          timeRange={timeRange} 
+          properties={properties} 
+        />
+      </Suspense>
+    </div>
+  );
+}
+
+/** 🚀 DEALS PERFORMANCE WRAPPERS */
+
+async function DealsStatsSection({ timeRange }: { timeRange: string }) {
+  const dealsStats = await getDealsPageStats(timeRange);
+  const { totalDeals, activeDeals, wonDeals, lostDeals, totalCommission } = dealsStats;
+
+  return (
+    <>
       <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -78,15 +90,11 @@ export default async function DealsPage({
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              กำลังดำเนินการ
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">กำลังดำเนินการ</CardTitle>
             <Clock className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {activeDeals}
-            </div>
+            <div className="text-2xl font-bold text-blue-600">{activeDeals}</div>
             <p className="text-xs text-slate-500 mt-1">Active deals</p>
           </CardContent>
         </Card>
@@ -131,105 +139,115 @@ export default async function DealsPage({
         </Card>
       </div>
 
-      {/* Win Rate Card */}
       {totalDeals > 0 && (
-        <Card className="bg-linear-to-r from-blue-50 to-purple-50 border-blue-100">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <TrendingUp className="h-6 w-6 text-blue-600" />
+        <div className="mt-6">
+          <Card className="bg-linear-to-r from-blue-50 to-purple-50 border-blue-100">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <TrendingUp className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-slate-600">Win Rate</p>
+                    <p className="text-3xl font-bold text-slate-900">
+                      {((wonDeals / totalDeals) * 100).toFixed(1)}%
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-slate-600">Win Rate</p>
-                  <p className="text-3xl font-bold text-slate-900">
-                    {((wonDeals / totalDeals) * 100).toFixed(1)}%
+                <div className="text-right">
+                  <p className="text-sm text-slate-600">
+                    {wonDeals} Won / {lostDeals} Lost
                   </p>
+                  <p className="text-xs text-slate-500 mt-1">จากทั้งหมด {totalDeals} deals</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-slate-600">
-                  {wonDeals} Won / {lostDeals} Lost
-                </p>
-                <p className="text-xs text-slate-500 mt-1">
-                  จากทั้งหมด {totalDeals} deals
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {isEmptyState ? (
-        <div className="mt-8">
-          <EmptyState
-            icon="handshake"
-            title="ยังไม่มีดีลในระบบ"
-            description="เริ่มต้นสร้างดีลแรกของคุณเพื่อติดตามความคืบหน้าการขายหรือเช่า"
-            actionSlot={<CreateDealButton properties={properties} />}
-          />
+            </CardContent>
+          </Card>
         </div>
-      ) : (
-        <>
-          {/* Deals Table */}
-          <div className="space-y-4 mt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">
-                  รายการดีลทั้งหมด
-                </h2>
-                <p className="text-sm text-slate-500 mt-1">
-                  แสดง {data.length} จาก {count} ดีล
-                </p>
-              </div>
-              {activeDeals > 0 && (
-                <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-100">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm font-medium">
-                    {activeDeals} รอดำเนินการ
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden p-4">
-              <DealsTable
-                initialData={data}
-                initialCount={count}
-                initialPage={currentPage}
-                pageSize={20}
-                properties={properties}
-                timeRange={timeRange}
-              />
-            </div>
-          </div>
-
-          {/* Footer Stats */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-slate-500 px-2 mt-2">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-              <span className="font-medium text-slate-700">
-                แสดงทั้งหมด {totalDeals} ดีล
-              </span>
-              {activeDeals > 0 && (
-                <span className="flex items-center gap-1 text-blue-600 font-medium whitespace-nowrap">
-                  <Clock className="h-4 w-4" />
-                  {activeDeals} กำลังดำเนินการ
-                </span>
-              )}
-              {wonDeals > 0 && (
-                <span className="text-green-600 font-medium whitespace-nowrap">
-                  {wonDeals} สำเร็จ
-                </span>
-              )}
-            </div>
-            <div className="text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
-              <p className="text-xs">
-                อัพเดทล่าสุด: {new Date().toLocaleDateString("th-TH")}
-              </p>
-            </div>
-          </div>
-        </>
       )}
-    </div>
+    </>
   );
 }
+
+async function DealsContentSection({
+  currentPage,
+  timeRange,
+  properties,
+}: {
+  currentPage: number;
+  timeRange: string;
+  properties: any;
+}) {
+  const [{ data, count }, stats] = await Promise.all([
+    getDeals({ page: currentPage, pageSize: 20, timeRange }),
+    getDealsPageStats(timeRange), // We need this for the empty state check and additional labels
+  ]);
+
+  if (stats.totalDeals === 0) {
+    return (
+      <div className="mt-8">
+        <EmptyState
+          icon="handshake"
+          title="ยังไม่มีดีลในระบบ"
+          description="เริ่มต้นสร้างดีลแรกของคุณเพื่อติดตามความคืบหน้าการขายหรือเช่า"
+          actionSlot={<CreateDealButton properties={properties} />}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* Deals Table */}
+      <div className="space-y-4 mt-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">รายการดีลทั้งหมด</h2>
+            <p className="text-sm text-slate-500 mt-1">
+              แสดง {data.length} จาก {count} ดีล
+            </p>
+          </div>
+          {stats.activeDeals > 0 && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg border border-blue-100">
+              <Clock className="h-4 w-4" />
+              <span className="text-sm font-medium">{stats.activeDeals} รอดำเนินการ</span>
+            </div>
+          )}
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden p-4">
+          <DealsTable
+            initialData={data}
+            initialCount={count}
+            initialPage={currentPage}
+            pageSize={20}
+            properties={properties}
+            timeRange={timeRange}
+          />
+        </div>
+      </div>
+
+      {/* Footer Stats */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-slate-500 px-2 mt-2">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span className="font-medium text-slate-700">แสดงทั้งหมด {stats.totalDeals} ดีล</span>
+          {stats.activeDeals > 0 && (
+            <span className="flex items-center gap-1 text-blue-600 font-medium whitespace-nowrap">
+              <Clock className="h-4 w-4" />
+              {stats.activeDeals} กำลังดำเนินการ
+            </span>
+          )}
+          {stats.wonDeals > 0 && (
+            <span className="text-green-600 font-medium whitespace-nowrap">{stats.wonDeals} สำเร็จ</span>
+          )}
+        </div>
+        <div className="text-right border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
+          <p className="text-xs">อัพเดทล่าสุด: {new Date().toLocaleDateString("th-TH")}</p>
+        </div>
+      </div>
+    </>
+  );
+}
+
+

@@ -4,9 +4,7 @@ import dynamic from "next/dynamic";
 import { createAdminClient } from "@/lib/supabase/admin";
 // Critical LCP components
 import { PropertyGallery } from "@/components/public/PropertyGallery";
-import {
-  generatePropertySEO,
-} from "@/lib/seo-utils";
+import { generatePropertySEO } from "@/lib/seo-utils";
 import {
   getPublicImageUrl,
   getPublicAvatarUrl,
@@ -15,7 +13,7 @@ import { PropertySpecs } from "@/components/public/PropertySpecs";
 import { AgentSidebar } from "@/components/public/AgentSidebar";
 import { ShareButtons } from "@/components/public/ShareButtons";
 import { MobilePropertyActions } from "@/components/public/MobilePropertyActions";
-import { BackToTop } from "@/components/public/BackToTop";
+// import { BackToTop } from "@/components/public/BackToTop";
 import { PropertySuitability } from "@/components/public/PropertySuitability";
 import { NearbyPlaces } from "@/components/public/NearbyPlaces";
 import { Database } from "@/lib/database.types";
@@ -205,32 +203,42 @@ export default async function PublicPropertyDetailPage(props: {
   // Generate Professional SEO Data (including FAQSchema)
   let seo;
   try {
-    seo = generatePropertySEO({
-      id: data.id,
-      slug: data.slug || slug,
-      title: data.title,
-      title_en: data.title_en || undefined,
-      title_cn: data.title_cn || undefined,
-      property_type: data.property_type,
-      listing_type: data.listing_type,
-      bedrooms: data.bedrooms ?? undefined,
-      bathrooms: data.bathrooms ?? undefined,
-      size_sqm: data.size_sqm ?? undefined,
-      description: data.description ?? undefined,
-      address_line1: data.address_line1 ?? undefined,
-      district: data.district ?? undefined,
-      province: data.province ?? undefined,
-      postal_code: data.postal_code || undefined,
-      near_transit: !!data.near_transit,
-      is_pet_friendly: !!data.meta_keywords?.includes("Pet Friendly"),
-      is_fully_furnished: !!data.meta_keywords?.includes("Fully Furnished"),
-      is_hot_sale: (data.original_price !== null && data.price !== null && data.original_price > data.price),
-      price: data.listing_type === "SALE" ? (data.price || undefined) : undefined,
-      rental_price: data.listing_type === "RENT" ? (data.rental_price || undefined) : undefined,
-      popular_area: data.popular_area ?? undefined,
-      nearby_transits: (data.nearby_transits as any) || [],
-      nearby_places: (data.nearby_places as any) || [],
-    }, language);
+    seo = generatePropertySEO(
+      {
+        id: data.id,
+        slug: data.slug || slug,
+        title: data.title,
+        title_en: data.title_en || undefined,
+        title_cn: data.title_cn || undefined,
+        property_type: data.property_type,
+        listing_type: data.listing_type,
+        bedrooms: data.bedrooms ?? undefined,
+        bathrooms: data.bathrooms ?? undefined,
+        size_sqm: data.size_sqm ?? undefined,
+        description: data.description ?? undefined,
+        address_line1: data.address_line1 ?? undefined,
+        district: data.district ?? undefined,
+        province: data.province ?? undefined,
+        postal_code: data.postal_code || undefined,
+        near_transit: !!data.near_transit,
+        is_pet_friendly: !!data.meta_keywords?.includes("Pet Friendly"),
+        is_fully_furnished: !!data.meta_keywords?.includes("Fully Furnished"),
+        is_hot_sale:
+          data.original_price !== null &&
+          data.price !== null &&
+          data.original_price > data.price,
+        price:
+          data.listing_type === "SALE" ? data.price || undefined : undefined,
+        rental_price:
+          data.listing_type === "RENT"
+            ? data.rental_price || undefined
+            : undefined,
+        popular_area: data.popular_area ?? undefined,
+        nearby_transits: (data.nearby_transits as any) || [],
+        nearby_places: (data.nearby_places as any) || [],
+      },
+      language,
+    );
   } catch (err) {
     console.error("SEO Generation failed:", err);
     // Minimal fallback
@@ -287,39 +295,42 @@ export default async function PublicPropertyDetailPage(props: {
           __html: JSON.stringify({
             "@context": "https://schema.org",
             "@type": "BreadcrumbList",
-            "itemListElement": [
+            itemListElement: [
               {
                 "@type": "ListItem",
-                "position": 1,
-                "name": t("nav.home") || "Home",
-                "item": siteConfig.url
+                position: 1,
+                name: t("nav.home") || "Home",
+                item: siteConfig.url,
               },
               {
                 "@type": "ListItem",
-                "position": 2,
-                "name": t("nav.properties") || "Properties",
-                "item": `${siteConfig.url}/properties`
+                position: 2,
+                name: t("nav.properties") || "Properties",
+                item: `${siteConfig.url}/properties`,
               },
               {
                 "@type": "ListItem",
-                "position": 3,
-                "name": data.property_type ? (t(`property_types.${data.property_type.toLowerCase()}`) || data.property_type) : "Property",
-                "item": `${siteConfig.url}/properties?type=${data.property_type}`
+                position: 3,
+                name: data.property_type
+                  ? t(`property_types.${data.property_type.toLowerCase()}`) ||
+                    data.property_type
+                  : "Property",
+                item: `${siteConfig.url}/properties?type=${data.property_type}`,
               },
               {
                 "@type": "ListItem",
-                "position": 4,
-                "name": data.province || "Location",
-                "item": `${siteConfig.url}/properties?province=${data.province}`
+                position: 4,
+                name: data.province || "Location",
+                item: `${siteConfig.url}/properties?province=${data.province}`,
               },
               {
                 "@type": "ListItem",
-                "position": 5,
-                "name": getLocaleValue(data, "title", language),
-                "item": `${siteConfig.url}/properties/${data.slug || data.id}`
-              }
-            ]
-          })
+                position: 5,
+                name: getLocaleValue(data, "title", language),
+                item: `${siteConfig.url}/properties/${data.slug || data.id}`,
+              },
+            ],
+          }),
         }}
       />
       {/* 1.2 FAQ Schema */}
@@ -346,8 +357,8 @@ export default async function PublicPropertyDetailPage(props: {
       {/* 1. Header & Breadcrumb */}
       <PropertyHeader property={data} features={features as any} />
 
-      <div className="max-w-screen-2xl px-4 sm:px-6 lg:px-8 mx-auto mt-4 lg:mt-8">
-        <div className="max-w-screen-2xl px-4 sm:px-6 lg:px-0 mx-auto">
+      <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8 mt-4 lg:mt-8">
+        <div className="max-w-screen-2xl mx-auto ">
           {/* 2. Gallery (Mosaic) */}
           <section className="mb-6 md:mb-10">
             <PropertyGallery
@@ -580,7 +591,7 @@ export default async function PublicPropertyDetailPage(props: {
           title_cn: data.title_cn,
         }}
       />
-      <BackToTop />
+      {/* <BackToTop /> */}
     </main>
   );
 }
@@ -668,7 +679,9 @@ export async function generateMetadata(props: {
 
   // Ensure COVER_IMAGE is an absolute URL for OpenGraph compatibility
   if (COVER_IMAGE && !COVER_IMAGE.startsWith("http")) {
-    const cleanPath = COVER_IMAGE.startsWith("/") ? COVER_IMAGE : `/${COVER_IMAGE}`;
+    const cleanPath = COVER_IMAGE.startsWith("/")
+      ? COVER_IMAGE
+      : `/${COVER_IMAGE}`;
     COVER_IMAGE = `${siteConfig.url}${cleanPath}`;
   }
 
@@ -676,8 +689,11 @@ export async function generateMetadata(props: {
   const ogUrl = new URL(`${siteConfig.url}/api/og/property`);
   // Truncate title for OG param safety (max 40 chars to keep the total URL short for LINE)
   const ogTitle = pageTitle.split(" - ")[0].split(" | ")[0];
-  ogUrl.searchParams.set("title", ogTitle.length > 60 ? ogTitle.slice(0, 57) + "..." : ogTitle);
-  
+  ogUrl.searchParams.set(
+    "title",
+    ogTitle.length > 60 ? ogTitle.slice(0, 57) + "..." : ogTitle,
+  );
+
   // Logic to handle Sale + Rent and find the most relevant price
   let displayPrice = "";
   if (data.listing_type === "RENT") {
@@ -689,14 +705,21 @@ export async function generateMetadata(props: {
   } else if (data.listing_type === "SALE_AND_RENT") {
     const sp = data.price || data.original_price;
     const rp = data.rental_price || data.original_rental_price;
-    if (sp && rp) displayPrice = `฿ ${sp.toLocaleString()} | ฿ ${rp.toLocaleString()}/mo`;
+    if (sp && rp)
+      displayPrice = `฿ ${sp.toLocaleString()} | ฿ ${rp.toLocaleString()}/mo`;
     else if (sp) displayPrice = `฿ ${sp.toLocaleString()}`;
     else if (rp) displayPrice = `฿ ${rp.toLocaleString()}/mo`;
   }
   // Sanitize price for OG param safety (remove symbols, the API will re-add them)
   const cleanPrice = displayPrice.replace(/[฿|,]/g, "").trim();
   ogUrl.searchParams.set("price", cleanPrice);
-  ogUrl.searchParams.set("type", data.property_type ? (t(`property_types.${data.property_type.toLowerCase()}`) || data.property_type) : "");
+  ogUrl.searchParams.set(
+    "type",
+    data.property_type
+      ? t(`property_types.${data.property_type.toLowerCase()}`) ||
+          data.property_type
+      : "",
+  );
   ogUrl.searchParams.set("location", data.popular_area || data.district || "");
   ogUrl.searchParams.set("id", data.id); // Send ID instead of full image URL to keep OG URL short
   ogUrl.searchParams.set("lang", language);

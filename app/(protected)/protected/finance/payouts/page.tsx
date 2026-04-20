@@ -19,7 +19,8 @@ import {
   markAsReadyToPayAction,
   getCommissionAuditTrailAction,
   getPayoutQueueAction,
-  recalculatePayoutTotalsAction
+  recalculatePayoutTotalsAction,
+  getPayoutStatsAction
 } from "@/features/finance/actions";
 import { CommissionPayoutRecord, RecalculatePreview } from "@/features/finance/types";
 import { toast } from "sonner";
@@ -55,6 +56,12 @@ export default function PayoutDashboardPage() {
   // 📑 Pagination State
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [globalStats, setGlobalStats] = useState({
+    readyToPayAmount: 0,
+    unpaidCount: 0,
+    paidAmountThisMonth: 0,
+    totalPoolAmount: 0
+  });
   const pageSize = 10;
   
   // ✅ High Performance Store (Zustand)
@@ -92,15 +99,24 @@ export default function PayoutDashboardPage() {
       setIsInitialLoading(true);
     }
 
-    const res = await getPayoutQueueAction({ 
-      page: targetPage, 
-      pageSize,
-      status: statusFilter === "ALL" ? undefined : statusFilter as "UNPAID" | "READY_TO_PAY" | "PAID",
-    });
-    if (res.success) {
-      setPayouts(res.data || []);
-      setTotalCount(res.totalCount);
+    // [PERFORMANCE] Parallel Fetching: Table Data & Global Stats
+    const [queueRes, statsRes] = await Promise.all([
+      getPayoutQueueAction({ 
+        page: targetPage, 
+        pageSize,
+        status: statusFilter === "ALL" ? undefined : statusFilter as "UNPAID" | "READY_TO_PAY" | "PAID",
+      }),
+      getPayoutStatsAction()
+    ]);
+
+    if (queueRes.success) {
+      setPayouts(queueRes.data || []);
+      setTotalCount(queueRes.totalCount);
       clearSelection(); 
+    }
+
+    if (statsRes.success && statsRes.data) {
+      setGlobalStats(statsRes.data);
     }
     setLoading(false);
     setIsInitialLoading(false);
@@ -239,10 +255,10 @@ export default function PayoutDashboardPage() {
       ) : (
         <>
           <PayoutStats 
-            readyToPayAmount={payouts.filter(p => p.status === 'READY_TO_PAY').reduce((acc, p) => acc + (p.net_amount || p.net_transfer_amount || 0), 0)}
-            unpaidCount={payouts.filter(p => p.status === 'UNPAID').length}
-            paidAmountThisMonth={payouts.filter(p => p.status === 'PAID').reduce((acc, p) => acc + (p.net_amount || 0), 0)}
-            totalPoolAmount={payouts.reduce((acc, p) => acc + (p.amount || 0), 0)}
+            readyToPayAmount={globalStats.readyToPayAmount}
+            unpaidCount={globalStats.unpaidCount}
+            paidAmountThisMonth={globalStats.paidAmountThisMonth}
+            totalPoolAmount={globalStats.totalPoolAmount}
             formatCurrency={formatCurrency}
             isLoading={loading}
           />

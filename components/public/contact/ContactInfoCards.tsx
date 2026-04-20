@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Phone, Mail } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FaLine } from "react-icons/fa6";
 
@@ -58,14 +58,14 @@ export function ContactInfoCards() {
   };
 
   return (
-    <motion.div 
+    <m.div 
       variants={container}
       initial="hidden"
       animate="show"
       className="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-6"
     >
       {contactInfo.map((info, index) => (
-        <motion.a
+        <m.a
           key={index}
           variants={item}
           href={info.href}
@@ -104,8 +104,8 @@ export function ContactInfoCards() {
               </div>
             </div>
           </div>
-        </motion.a>
+        </m.a>
       ))}
-    </motion.div>
+    </m.div>
   );
 }

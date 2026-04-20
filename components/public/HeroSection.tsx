@@ -13,35 +13,20 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ScrollDownButton } from "@/components/public/ScrollDownButton";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import Image from "next/image";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { DepositWizard } from "@/components/public/deposit/DepositWizard";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 export function HeroSection() {
   const { t } = useLanguage();
-  const [showSmartMatch, setShowSmartMatch] = useState(true);
+  const settings = useSiteConfig();
+  const showSmartMatch = settings.smart_match_wizard_enabled;
   const [isDepositOpen, setIsDepositOpen] = useState(false);
   const [isDepositSuccess, setIsDepositSuccess] = useState(false);
-
-  useEffect(() => {
-    // Fetch setting on client side
-    async function checkSetting() {
-      try {
-        const response = await fetch("/api/site-settings/smart-match");
-        if (response.ok) {
-          const data = await response.json();
-          setShowSmartMatch(data.enabled);
-        }
-      } catch (error) {
-        // Default to showing if error
-        setShowSmartMatch(true);
-      }
-    }
-    checkSetting();
-  }, []);
 
   const handleScrollToDeposit = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -64,8 +49,9 @@ export function HeroSection() {
         alt="Hero Background"
         fill
         priority
+        sizes="100vw"
         className="object-cover"
-        quality={90}
+        quality={80}
       />
       {/* Gradient Overlay สำหรับความคมของ text */}
       <div className="absolute inset-0 bg-linear-to-b from-black/20 via-black/50 to-black/50" />

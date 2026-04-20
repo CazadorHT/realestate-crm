@@ -7,7 +7,7 @@ import { DepositLeadInput } from "@/features/public/types";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,7 +95,7 @@ export function DepositDesktopView({
 
         <div className="relative z-10 space-y-12">
           {/* Logo Section */}
-          <motion.div
+          <m.div
             initial={{ y: -10, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             className="flex items-center gap-3"
@@ -117,7 +117,7 @@ export function DepositDesktopView({
                 {t("deposit.wizard.property_portal") || "Property Portal"}
               </span>
             </div>
-          </motion.div>
+          </m.div>
 
           {/* Vertical Step Indicator */}
           <div className="space-y-8 pt-4">
@@ -171,7 +171,7 @@ export function DepositDesktopView({
       <div className="flex-1 bg-white flex flex-col min-h-0">
         {/* Horizontal Progress Bar */}
         <div className="h-1.5 w-full bg-slate-50 relative shrink-0">
-          <motion.div
+          <m.div
             className="absolute inset-y-0 left-0 bg-linear-to-r from-blue-600 to-indigo-600 shadow-[2px_0_8px_rgba(37,99,235,0.3)]"
             initial={{ width: "0%" }}
             animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
@@ -187,7 +187,7 @@ export function DepositDesktopView({
           >
             <div className="flex-1 min-h-[350px]">
               <AnimatePresence mode="wait">
-                <motion.div
+                <m.div
                   key={currentStep}
                   initial={{ x: 20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
@@ -221,7 +221,7 @@ export function DepositDesktopView({
                       </div>
                     )}
                   </div>
-                </motion.div>
+                </m.div>
               </AnimatePresence>
             </div>
 

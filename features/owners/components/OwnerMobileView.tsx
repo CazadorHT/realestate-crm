@@ -1,7 +1,7 @@
 "use client";
 
 import { UseFormReturn } from "react-hook-form";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   User,
   Phone,
@@ -54,7 +54,7 @@ export function OwnerMobileView({
           </span>
         </div>
         <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-          <motion.div
+          <m.div
             initial={{ width: 0 }}
             animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
             className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
@@ -65,7 +65,7 @@ export function OwnerMobileView({
       <div className="flex-1 flex flex-col min-h-0">
         <div className="flex-1 overflow-y-auto px-6 py-6">
           <AnimatePresence mode="wait">
-            <motion.div
+            <m.div
               key={currentStep}
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
@@ -82,38 +82,49 @@ export function OwnerMobileView({
                       </div>
                       ข้อมูลพื้นฐาน
                     </div>
-                    
+
                     <div className="space-y-4 pt-2">
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">ชื่อเจ้าของ <span className="text-red-500">*</span></label>
+                        <label className="text-sm font-semibold text-slate-700">
+                          ชื่อเจ้าของ <span className="text-red-500">*</span>
+                        </label>
                         <Input
                           placeholder="กรอกชื่อ-นามสกุล"
                           className="h-13 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
                           {...form.register("full_name")}
                         />
                         {form.formState.errors.full_name && (
-                          <p className="text-xs font-semibold text-red-500 mt-1 ml-1">{(form.formState.errors.full_name as any).message}</p>
+                          <p className="text-xs font-semibold text-red-500 mt-1 ml-1">
+                            {(form.formState.errors.full_name as any).message}
+                          </p>
                         )}
                       </div>
 
                       <div className="space-y-3">
-                        <label className="text-sm font-semibold text-slate-700">ประเภทเจ้าของ</label>
+                        <label className="text-sm font-semibold text-slate-700">
+                          ประเภทเจ้าของ
+                        </label>
                         <div className="grid grid-cols-2 gap-2 p-1.5 bg-slate-50 rounded-2xl border border-slate-100">
                           {[
                             { id: "individual", label: "บุคคลธรรมดา" },
                             { id: "corporate", label: "นิติบุคคล / บริษัท" },
                           ].map((type) => {
-                            const isActive = form.watch("owner_type") === type.id;
+                            const isActive =
+                              form.watch("owner_type") === type.id;
                             return (
                               <button
                                 key={type.id}
                                 type="button"
-                                onClick={() => form.setValue("owner_type", type.id, { shouldDirty: true })}
+                                onClick={() =>
+                                  form.setValue("owner_type", type.id, {
+                                    shouldDirty: true,
+                                  })
+                                }
                                 className={cn(
                                   "py-3 px-2 rounded-xl text-xs font-bold transition-all duration-300",
-                                  isActive 
-                                    ? "bg-white text-emerald-600 shadow-sm border border-emerald-100 ring-4 ring-emerald-500/5" 
-                                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-100/50"
+                                  isActive
+                                    ? "bg-white text-emerald-600 shadow-sm border border-emerald-100 ring-4 ring-emerald-500/5"
+                                    : "text-slate-500 hover:text-slate-700 hover:bg-slate-100/50",
                                 )}
                               >
                                 {type.label}
@@ -124,7 +135,9 @@ export function OwnerMobileView({
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">ชื่อบริษัท (ถ้ามี)</label>
+                        <label className="text-sm font-semibold text-slate-700">
+                          ชื่อบริษัท (ถ้ามี)
+                        </label>
                         <div className="relative">
                           <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                           <Input
@@ -151,19 +164,25 @@ export function OwnerMobileView({
 
                     <div className="space-y-4 pt-2">
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">เบอร์โทรศัพท์</label>
+                        <label className="text-sm font-semibold text-slate-700">
+                          เบอร์โทรศัพท์
+                        </label>
                         <Input
                           placeholder="08X-XXX-XXXX"
                           className="h-13 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
                           {...form.register("phone")}
                         />
                         {form.formState.errors.phone && (
-                          <p className="text-xs font-semibold text-red-500 mt-1 ml-1">{(form.formState.errors.phone as any).message}</p>
+                          <p className="text-xs font-semibold text-red-500 mt-1 ml-1">
+                            {(form.formState.errors.phone as any).message}
+                          </p>
                         )}
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Line ID</label>
+                        <label className="text-sm font-semibold text-slate-700">
+                          Line ID
+                        </label>
                         <div className="relative">
                           <FaLine className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#06C755]" />
                           <Input
@@ -190,7 +209,9 @@ export function OwnerMobileView({
 
                     <div className="space-y-4 pt-2">
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">Facebook URL</label>
+                        <label className="text-sm font-semibold text-slate-700">
+                          Facebook URL
+                        </label>
                         <div className="relative">
                           <FaFacebook className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#1877F2]" />
                           <Input
@@ -202,7 +223,9 @@ export function OwnerMobileView({
                       </div>
 
                       <div className="space-y-2">
-                        <label className="text-sm font-semibold text-slate-700">ช่องทางอื่นๆ</label>
+                        <label className="text-sm font-semibold text-slate-700">
+                          ช่องทางอื่นๆ
+                        </label>
                         <div className="relative">
                           <AtSign className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                           <Input
@@ -216,7 +239,7 @@ export function OwnerMobileView({
                   </div>
                 </div>
               )}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
 
@@ -259,8 +282,16 @@ export function OwnerMobileView({
               disabled={isPending || !form.formState.isValid}
               className="flex-1 h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xl shadow-emerald-600/20 active:scale-95 transition-all gap-2"
             >
-              {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
-              {isPending ? "กำลังบันทึก..." : mode === "create" ? "เพิ่มเจ้าของ" : "บันทึกข้อมูล"}
+              {isPending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Save className="h-5 w-5" />
+              )}
+              {isPending
+                ? "กำลังบันทึก..."
+                : mode === "create"
+                  ? "เพิ่มเจ้าของ"
+                  : "บันทึกข้อมูล"}
             </Button>
           )}
         </div>

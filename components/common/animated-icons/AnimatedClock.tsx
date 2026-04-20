@@ -1,31 +1,29 @@
 "use client";
 
-import { motion, useAnimation } from "framer-motion";
+import { m, useAnimation } from "framer-motion";
 import { Clock } from "lucide-react";
 
-export const AnimatedClock = ({
-  size = 20,
-  className = "",
-}: {
+interface AnimatedClockProps {
   size?: number;
   className?: string;
-}) => {
+}
+
+export function AnimatedClock({ size = 24, className }: AnimatedClockProps) {
   const controls = useAnimation();
 
   return (
     <div
       onMouseEnter={() =>
         controls.start({
-          rotate: 360,
-          transition: { duration: 2, ease: "linear", repeat: Infinity },
+          rotate: [0, 360],
+          transition: { duration: 0.8, ease: "easeInOut" },
         })
       }
-      onMouseLeave={() => controls.stop()}
       className={className}
     >
-      <motion.div animate={controls}>
+      <m.div animate={controls}>
         <Clock size={size} />
-      </motion.div>
+      </m.div>
     </div>
   );
-};
+}

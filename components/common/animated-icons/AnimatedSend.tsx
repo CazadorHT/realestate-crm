@@ -1,31 +1,30 @@
 "use client";
 
-import { motion, useAnimation } from "framer-motion";
+import { m, useAnimation } from "framer-motion";
 import { Send } from "lucide-react";
 
-export const AnimatedSend = ({
-  size = 20,
-  className = "",
-}: {
+interface AnimatedSendProps {
   size?: number;
   className?: string;
-}) => {
+}
+
+export function AnimatedSend({ size = 24, className }: AnimatedSendProps) {
   const controls = useAnimation();
 
   return (
     <div
       onMouseEnter={() =>
         controls.start({
-          x: [0, 5, 0],
-          y: [0, -5, 0],
+          x: [0, 5, -2, 0],
+          y: [0, -5, 2, 0],
           transition: { duration: 0.5 },
         })
       }
       className={className}
     >
-      <motion.div animate={controls}>
+      <m.div animate={controls}>
         <Send size={size} />
-      </motion.div>
+      </m.div>
     </div>
   );
-};
+}

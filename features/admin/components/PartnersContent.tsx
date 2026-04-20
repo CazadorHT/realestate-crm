@@ -14,14 +14,18 @@ import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import { Database } from "@/lib/database.types";
 import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
-
 type Partner = Database["public"]["Tables"]["partners"]["Row"];
-
 interface PartnersContentProps {
   isSuperAdmin: boolean;
+  initialData?: Partner[];
+  initialCount?: number;
 }
 
-export function PartnersContent({ isSuperAdmin }: PartnersContentProps) {
+export function PartnersContent({ 
+  isSuperAdmin,
+  initialData = [],
+  initialCount = 0
+}: PartnersContentProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -31,9 +35,9 @@ export function PartnersContent({ isSuperAdmin }: PartnersContentProps) {
   const searchQuery = searchParams.get("q") || "";
   const pageSize = 10;
 
-  const [partners, setPartners] = useState<Partner[]>([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [partners, setPartners] = useState<Partner[]>(initialData);
+  const [totalCount, setTotalCount] = useState(initialCount);
+  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchInput, setSearchInput] = useState(searchQuery);
 

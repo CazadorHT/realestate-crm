@@ -237,7 +237,7 @@ export function PropertyCardImage({
                   areaProvince ? ` ${t("nav.properties")} ${areaProvince}` : ""
                 } - Image ${index + 1}`}
                 fill
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
                 className="object-cover object-top transform-gpu will-change-transform"
                 priority={priority && index === 0}
                 loading={priority && index === 0 ? "eager" : "lazy"}

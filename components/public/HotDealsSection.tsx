@@ -139,6 +139,7 @@ export function HotDealsSection() {
             <div
               className="inline-flex items-center gap-2 bg-linear-to-r from-red-500 to-orange-500 text-white pl-2 pr-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/60 transform hover:scale-105 transition-all animate-pulse-scale "
               data-aos="fade-right"
+              suppressHydrationWarning
             >
               <div className="bg-white/20 p-1 rounded-full">
                 <Flame className="h-3.5 w-3.5 fill-yellow-200 animate-pulse" />
@@ -151,6 +152,7 @@ export function HotDealsSection() {
               className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.1]"
               data-aos="fade-up"
               data-aos-delay="100"
+              suppressHydrationWarning
             >
               {t("home.hot_deals.subtitle")
                 .split("!")
@@ -184,6 +186,7 @@ export function HotDealsSection() {
               className="flex items-start gap-3 text-slate-300 text-sm sm:text-base md:text-base"
               data-aos="fade-up"
               data-aos-delay="200"
+              suppressHydrationWarning
             >
               <TrendingDown className="h-5 w-5  md:h-6 md:w-6 text-red-500 mt-0.5 md:mt-1 shrink-0" />
               <p>{t("home.hot_deals.description")}</p>
@@ -194,6 +197,7 @@ export function HotDealsSection() {
             className="flex gap-3 w-full md:w-auto"
             data-aos="fade-left"
             data-aos-delay="300"
+            suppressHydrationWarning
           >
             {/* Fixed CTA Button */}
             <Button

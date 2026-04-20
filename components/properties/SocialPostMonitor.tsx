@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSocialPostEventListener } from "@/lib/social-post-events";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Loader2, X, ChevronUp, ChevronDown } from "lucide-react";
 import {
   FaFacebook,
@@ -76,7 +76,7 @@ export function SocialPostMonitor() {
   return (
     <div className="fixed bottom-4 right-4 z-100 w-80">
       <AnimatePresence>
-        <motion.div
+        <m.div
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           className="bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden"
@@ -87,24 +87,24 @@ export function SocialPostMonitor() {
               <div className="relative">
                 <AnimatePresence mode="wait">
                   {activeCount > 0 ? (
-                    <motion.div
+                    <m.div
                       key="loading"
                       initial={{ scale: 0.8, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
                       exit={{ scale: 0.8, opacity: 0 }}
                     >
                       <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />
-                    </motion.div>
+                    </m.div>
                   ) : errorCount > 0 ? (
-                    <motion.div
+                    <m.div
                       key="error"
                       initial={{ scale: 0.5, opacity: 0 }}
                       animate={{ scale: 1.2, opacity: 1 }}
                     >
                       <FaExclamationCircle className="h-4 w-4 text-red-500" />
-                    </motion.div>
+                    </m.div>
                   ) : (
-                    <motion.div
+                    <m.div
                       key="success"
                       initial={{ scale: 0.5, opacity: 0 }}
                       animate={{ scale: 1.2, opacity: 1 }}
@@ -115,7 +115,7 @@ export function SocialPostMonitor() {
                       }}
                     >
                       <FaCheckCircle className="h-4 w-4 text-emerald-500" />
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
                 {activeCount > 0 && (
@@ -160,7 +160,7 @@ export function SocialPostMonitor() {
           {/* Task List */}
           <AnimatePresence>
             {!isMinimized && (
-              <motion.div
+              <m.div
                 initial={{ height: 0 }}
                 animate={{ height: "auto" }}
                 exit={{ height: 0 }}
@@ -220,10 +220,10 @@ export function SocialPostMonitor() {
                     </div>
                   </div>
                 ))}
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </div>
   );

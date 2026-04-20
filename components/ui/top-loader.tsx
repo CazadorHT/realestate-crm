@@ -1,12 +1,12 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 export function TopLoader({ isLoading }: { isLoading: boolean }) {
   return (
     <AnimatePresence>
       {isLoading && (
-        <motion.div
+        <m.div
           initial={{ scaleX: 0, opacity: 0 }}
           animate={{ scaleX: 1, opacity: 1 }}
           exit={{ opacity: 0 }}

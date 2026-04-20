@@ -11,7 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 export function MorphingLoader({ className }: { className?: string }) {
   const [index, setIndex] = useState(0);
@@ -51,7 +51,7 @@ export function MorphingLoader({ className }: { className?: string }) {
           <div className="absolute inset-0 bg-linear-to-tr from-slate-50 to-white opacity-50" />
           
           <AnimatePresence mode="wait" initial={false}>
-            <motion.div
+            <m.div
               key={index}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -60,14 +60,14 @@ export function MorphingLoader({ className }: { className?: string }) {
               className={cn("relative z-10", currentColor)}
             >
               <CurrentIcon className="h-11 w-11 md:h-12 md:w-12" />
-            </motion.div>
+            </m.div>
           </AnimatePresence>
         </div>
       </div>
 
       <div className="mt-10 text-center space-y-3 px-6">
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div
+          <m.div
             key={index}
             initial={{ opacity: 0, y: 5 }}
             animate={{ opacity: 1, y: 0 }}
@@ -81,7 +81,7 @@ export function MorphingLoader({ className }: { className?: string }) {
             <p className="text-slate-400 text-sm max-w-[300px] mx-auto leading-relaxed">
               {t("loading.subtitle", { siteName: siteConfig.name })}
             </p>
-          </motion.div>
+          </m.div>
         </AnimatePresence>
       </div>
     </div>

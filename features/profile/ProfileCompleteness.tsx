@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,14 +21,14 @@ export function ProfileCompleteness({ score }: ProfileCompletenessProps) {
         <span
           className={cn(
             "font-semibold text-xs",
-            scoreClamped === 100 ? "text-emerald-600" : "text-blue-600"
+            scoreClamped === 100 ? "text-emerald-600" : "text-blue-600",
           )}
         >
           {scoreClamped}%
         </span>
       </div>
       <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-50">
-        <motion.div
+        <m.div
           initial={{ width: 0 }}
           animate={{ width: `${scoreClamped}%` }}
           transition={{ duration: 1.5, ease: "easeOut" }}
@@ -36,7 +36,7 @@ export function ProfileCompleteness({ score }: ProfileCompletenessProps) {
             "h-full rounded-full transition-all duration-1000",
             scoreClamped === 100
               ? "bg-linear-to-r from-emerald-500 to-teal-600"
-              : "bg-linear-to-r from-blue-600 via-indigo-600 to-violet-600"
+              : "bg-linear-to-r from-blue-600 via-indigo-600 to-violet-600",
           )}
         />
       </div>

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { UseFormReturn } from "react-hook-form";
 import { DepositLeadInput } from "@/features/public/types";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import {
   renderNameField,
   renderPhoneField,
@@ -92,7 +92,7 @@ export function DepositMobileView({
           onSubmit={form.handleSubmit(onSubmit, onInvalid)}
           className="flex flex-col h-full overflow-hidden"
         >
-          <motion.div
+          <m.div
             variants={containerVariants}
             initial="hidden"
             animate="visible"
@@ -102,16 +102,16 @@ export function DepositMobileView({
             <div className="flex-1 overflow-y-auto no-scrollbar">
               <div className="flex flex-col min-h-full">
                 {/* Scrollable Header Section */}
-                <motion.div variants={itemVariants} className="flex flex-col items-center pt-4 pb-2">
+                <m.div variants={itemVariants} className="flex flex-col items-center pt-4 pb-2">
                   {/* Title */}
                   <div className="px-6 text-center mb-6">
-                    <motion.h2
+                    <m.h2
                       initial={{ opacity: 0, y: -4 }}
                       animate={{ opacity: 1, y: 0 }}
                       className="text-xl md:text-2xl font-bold bg-linear-to-r from-blue-700 via-indigo-700 to-blue-800 bg-clip-text text-transparent tracking-tight leading-tight"
                     >
                       {t("deposit.dialog.title")}
-                    </motion.h2>
+                    </m.h2>
                     <div className="flex items-center justify-center gap-2 mt-1.5">
                       <div className="h-px w-4 bg-slate-200" />
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.15em] opacity-80">
@@ -130,7 +130,7 @@ export function DepositMobileView({
                         <div className="absolute inset-0 bg-slate-100" />
                         
                         {/* Active Progress Fill */}
-                        <motion.div
+                        <m.div
                           className="absolute top-0 left-0 h-full bg-linear-to-r from-blue-500 to-indigo-500 shadow-[0_0_8px_rgba(59,130,246,0.15)]"
                           initial={{ width: "0%" }}
                           animate={{
@@ -148,7 +148,7 @@ export function DepositMobileView({
                         >
                           <StepIcon stepNum={step.id} currentStep={currentStep} />
                           <div className="absolute top-10 left-1/2 -translate-x-1/2 w-20 pointer-events-none">
-                            <motion.span
+                            <m.span
                               animate={{
                                 opacity: currentStep === step.id ? 1 : 0.5,
                                 scale: currentStep === step.id ? 1 : 0.95,
@@ -160,19 +160,19 @@ export function DepositMobileView({
                               )}
                             >
                               {step.label.split(" ")[0]}
-                            </motion.span>
+                            </m.span>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div className="w-full h-px bg-slate-50/80" />
-                </motion.div>
+                </m.div>
 
                 {/* Form Fields Section */}
-                <motion.div variants={itemVariants} className="p-4 space-y-4 flex-1">
+                <m.div variants={itemVariants} className="p-4 space-y-4 flex-1">
                   <AnimatePresence mode="wait">
-                    <motion.div
+                    <m.div
                       key={currentStep}
                       initial={{ x: 10, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
@@ -194,14 +194,14 @@ export function DepositMobileView({
                           {renderMessageField(form, true, t, onFormStart)}
                         </div>
                       )}
-                    </motion.div>
+                    </m.div>
                   </AnimatePresence>
-                </motion.div>
+                </m.div>
               </div>
             </div>
 
             {/* ── Fixed Mobile Footer (Outside Scrollable Area) ── */}
-            <motion.div
+            <m.div
               variants={itemVariants}
               className="shrink-0 px-4 xs:px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,20px)+24px)] bg-white border-t border-slate-50 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] z-10"
             >
@@ -260,8 +260,8 @@ export function DepositMobileView({
                   )}
                 </div>
               </div>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         </form>
       </div>
     </>

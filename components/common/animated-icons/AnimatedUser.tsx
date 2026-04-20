@@ -1,27 +1,30 @@
 "use client";
 
-import { motion, useAnimation } from "framer-motion";
+import { m, useAnimation } from "framer-motion";
 import { User } from "lucide-react";
 
-export const AnimatedUser = ({
-  size = 20,
-  className = "",
-}: {
+interface AnimatedUserProps {
   size?: number;
   className?: string;
-}) => {
+}
+
+export function AnimatedUser({ size = 24, className }: AnimatedUserProps) {
   const controls = useAnimation();
 
   return (
     <div
       onMouseEnter={() =>
-        controls.start({ y: [0, -2, 0], transition: { duration: 0.5 } })
+        controls.start({
+          scale: [1, 1.2, 1],
+          rotate: [0, 10, -10, 0],
+          transition: { duration: 0.5 },
+        })
       }
       className={className}
     >
-      <motion.div animate={controls}>
+      <m.div animate={controls}>
         <User size={size} />
-      </motion.div>
+      </m.div>
     </div>
   );
-};
+}

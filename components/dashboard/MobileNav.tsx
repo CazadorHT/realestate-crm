@@ -37,10 +37,7 @@ import {
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
-import { 
-  AnimatePresence, 
-  motion 
-} from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import {
   Sheet,
   SheetContent,
@@ -58,7 +55,13 @@ import { LogOut } from "lucide-react";
 import { useState } from "react";
 import { RiTeamLine } from "react-icons/ri";
 
-export function MobileNav({ role, profile }: { role: UserRole, profile: Profile | null }) {
+export function MobileNav({
+  role,
+  profile,
+}: {
+  role: UserRole;
+  profile: Profile | null;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
@@ -338,7 +341,11 @@ export function MobileNav({ role, profile }: { role: UserRole, profile: Profile 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="sm:hidden hover:bg-slate-100/50 rounded-full transition-all">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="sm:hidden hover:bg-slate-100/50 rounded-full transition-all"
+        >
           <Menu className="h-5 w-5 text-slate-700" />
         </Button>
       </SheetTrigger>
@@ -347,12 +354,14 @@ export function MobileNav({ role, profile }: { role: UserRole, profile: Profile 
         className="w-80 p-0 flex flex-col border-r border-slate-200 bg-white/95 backdrop-blur-xl"
       >
         <SheetTitle className="sr-only">เมนูหลัก</SheetTitle>
-        
+
         {/* 1. Header & Branding (Compact Inline) */}
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between gap-4 bg-white/50">
           <div className="flex items-center gap-2.5 min-w-0">
             <div className="h-8 w-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200 shrink-0">
-              <span className="text-white font-bold text-sm">{siteConfig.name?.charAt(0)}</span>
+              <span className="text-white font-bold text-sm">
+                {siteConfig.name?.charAt(0)}
+              </span>
             </div>
             <div className="flex flex-col min-w-0">
               <h1 className="text-sm font-bold tracking-tight text-slate-900 uppercase truncate">
@@ -409,26 +418,35 @@ export function MobileNav({ role, profile }: { role: UserRole, profile: Profile 
                   )}
                 >
                   <div className="flex items-center gap-2.5">
-                    <group.icon className={cn("h-4 w-4", hasActiveItem ? "text-blue-600" : "text-slate-400")} />
+                    <group.icon
+                      className={cn(
+                        "h-4 w-4",
+                        hasActiveItem ? "text-blue-600" : "text-slate-400",
+                      )}
+                    />
                     <span className="text-[10px] font-bold uppercase tracking-wider">
                       {group.title}
                     </span>
                   </div>
-                  <motion.div
+                  <m.div
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   >
                     <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-                  </motion.div>
+                  </m.div>
                 </button>
 
                 <AnimatePresence initial={false}>
                   {isOpen && (
-                    <motion.div
+                    <m.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
                       exit={{ height: 0, opacity: 0 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
                       className="overflow-hidden"
                     >
                       <div className="space-y-1 mt-1 ml-2 border-l-2 border-slate-100 pl-2">
@@ -456,7 +474,7 @@ export function MobileNav({ role, profile }: { role: UserRole, profile: Profile 
                           </Link>
                         ))}
                       </div>
-                    </motion.div>
+                    </m.div>
                   )}
                 </AnimatePresence>
               </div>

@@ -92,7 +92,7 @@ export function MortgageCalculatorSection() {
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">
           {/* Left: SEO-Optimized Text Content */}
-          <div className="lg:col-span-5 space-y-4" data-aos="fade-right">
+          <div className="lg:col-span-5 space-y-4" data-aos="fade-right" suppressHydrationWarning>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600/10 text-blue-700 text-sm font-bold border border-blue-200/50">
               <Calculator className="w-4 h-4" /> {t("home.mortgage.title")}
             </div>
@@ -123,6 +123,7 @@ export function MortgageCalculatorSection() {
           <div
             className="lg:col-span-7 bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm"
             data-aos="fade-left"
+            suppressHydrationWarning
           >
             <div className="p-6 md:p-8 space-y-6">
               {/* Input Groups */}

@@ -22,7 +22,10 @@ import {
 } from "@/features/leads/labels";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
-import { bulkDeleteLeadsAction, getAllLeadIdsAction } from "@/features/leads/bulk-actions";
+import {
+  bulkDeleteLeadsAction,
+  getAllLeadIdsAction,
+} from "@/features/leads/bulk-actions";
 import { exportLeadsAction } from "@/features/leads/export-action";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -37,17 +40,17 @@ import {
   CheckCircle2,
   ChevronRight,
 } from "lucide-react";
-import { 
-  FaPhone, 
-  FaLine, 
-  FaEnvelope, 
-  FaChevronRight, 
-  FaCalendar, 
-  FaBuilding, 
-  FaNoteSticky
+import {
+  FaPhone,
+  FaLine,
+  FaEnvelope,
+  FaChevronRight,
+  FaCalendar,
+  FaBuilding,
+  FaNoteSticky,
 } from "react-icons/fa6";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
@@ -139,10 +142,10 @@ export function LeadsTable({
         onExport={() => exportLeadsAction(Array.from(selectedIds))}
         onTransfer={
           isMultiTenant &&
-          currentTenantId && 
-          currentTenantId !== "ALL" && 
-          !showBranch 
-            ? (() => setIsTransferDialogOpen(true)) 
+          currentTenantId &&
+          currentTenantId !== "ALL" &&
+          !showBranch
+            ? () => setIsTransferDialogOpen(true)
             : undefined
         }
         entityName="ลีด"
@@ -173,7 +176,10 @@ export function LeadsTable({
         <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 flex items-center justify-between animate-in fade-in duration-300">
           <div className="flex items-center gap-3 text-sm text-emerald-800">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            <span>คุณได้เลือกทั้งหมด <strong>{totalCount}</strong> ลีดในระบบแล้ว (ทุกหน้า)</span>
+            <span>
+              คุณได้เลือกทั้งหมด <strong>{totalCount}</strong> ลีดในระบบแล้ว
+              (ทุกหน้า)
+            </span>
           </div>
           <button
             onClick={clearSelection}
@@ -259,7 +265,9 @@ export function LeadsTable({
                   </TableCell>
                   {/* เบอร์โทร */}
                   <TableCell className="text-[11px] text-muted-foreground">
-                    <div className="font-medium text-slate-700">{l.phone ?? "-"}</div>
+                    <div className="font-medium text-slate-700">
+                      {l.phone ?? "-"}
+                    </div>
                     {l.email && <div>{l.email}</div>}
                     {(l as any).line_id && (
                       <div className="text-green-600 font-medium">
@@ -297,11 +305,11 @@ export function LeadsTable({
                   {/* AI Score */}
                   <TableCell>
                     <div className="flex flex-col gap-1">
-                      <Badge 
-                        variant="secondary" 
-                        className={`w-fit font-bold ${(l as any).ai_score >= 50 ? 'bg-orange-100 text-orange-700 border-orange-200' : 'bg-blue-50 text-blue-700 border-blue-100'}`}
+                      <Badge
+                        variant="secondary"
+                        className={`w-fit font-bold ${(l as any).ai_score >= 50 ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-blue-50 text-blue-700 border-blue-100"}`}
                       >
-                         {(l as any).ai_score ?? 0}
+                        {(l as any).ai_score ?? 0}
                       </Badge>
                       <span className="text-[10px] text-muted-foreground font-medium">
                         {(l as any).ai_status_label || "New Visitor"}
@@ -311,10 +319,15 @@ export function LeadsTable({
                   {/* Source / UTM */}
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-medium text-[11px]">{safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}</span>
+                      <span className="font-medium text-[11px]">
+                        {safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}
+                      </span>
                       {(l as any).utm_source && (
                         <div className="flex items-center gap-1">
-                          <Badge variant="outline" className="text-[11px] h-5 px-1.5 border-emerald-100 bg-emerald-50 text-emerald-700">
+                          <Badge
+                            variant="outline"
+                            className="text-[11px] h-5 px-1.5 border-emerald-100 bg-emerald-50 text-emerald-700"
+                          >
                             {(l as any).utm_source}
                           </Badge>
                         </div>
@@ -332,7 +345,12 @@ export function LeadsTable({
                     {(l as any).deals_count ?? 0}
                   </TableCell>
                   <TableCell className="text-right">
-                    <LeadRowActions id={l.id} fullName={l.full_name} phone={l.phone} email={l.email} />
+                    <LeadRowActions
+                      id={l.id}
+                      fullName={l.full_name}
+                      phone={l.phone}
+                      email={l.email}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -354,37 +372,43 @@ export function LeadsTable({
         {/* Mobile/Tablet Card View - Premium Adaptive Grid */}
         <div className="lg:hidden p-4 bg-slate-50/30">
           <AnimatePresence mode="popLayout">
-            <motion.div 
+            <m.div
               layout
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
             >
               {leads.map((l, idx) => {
-                const isNew = l.created_at && 
+                const isNew =
+                  l.created_at &&
                   differenceInHours(new Date(), new Date(l.created_at)) < 24;
                 const initials = l.full_name
-                  ? l.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+                  ? l.full_name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2)
                   : "??";
                 const selected = isSelected(l.id);
                 const aiScore = (l as any).ai_score ?? 0;
 
                 return (
-                  <motion.div
+                  <m.div
                     key={l.id}
                     layout
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ 
-                      type: "spring", 
-                      stiffness: 300, 
+                    transition={{
+                      type: "spring",
+                      stiffness: 300,
                       damping: 30,
-                      delay: idx * 0.02 
+                      delay: idx * 0.02,
                     }}
                     className={cn(
                       "group relative flex flex-col h-full bg-white rounded-[32px] border transition-all duration-300",
-                      selected 
-                        ? "border-blue-500 shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)] ring-2 ring-blue-500/20" 
-                        : "border-slate-200/60 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50"
+                      selected
+                        ? "border-blue-500 shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)] ring-2 ring-blue-500/20"
+                        : "border-slate-200/60 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50",
                     )}
                   >
                     {/* Card Header: Selection & Identity */}
@@ -398,7 +422,7 @@ export function LeadsTable({
                               className="rounded-full h-5 w-5 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                             />
                           </div>
-                          
+
                           <Avatar className="h-10 w-10 border-2 border-slate-50 shadow-sm shrink-0">
                             <AvatarFallback className="bg-blue-50 text-blue-600 font-semibold text-xs">
                               {initials}
@@ -421,13 +445,22 @@ export function LeadsTable({
                             </div>
                             <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
                               <FaCalendar className="h-2.5 w-2.5" />
-                              {l.created_at ? format(new Date(l.created_at), "d MMM yy", { locale: th }) : "-"}
+                              {l.created_at
+                                ? format(new Date(l.created_at), "d MMM yy", {
+                                    locale: th,
+                                  })
+                                : "-"}
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="shrink-0">
-                          <LeadRowActions id={l.id} fullName={l.full_name} phone={l.phone} email={l.email} />
+                          <LeadRowActions
+                            id={l.id}
+                            fullName={l.full_name}
+                            phone={l.phone}
+                            email={l.email}
+                          />
                         </div>
                       </div>
 
@@ -439,13 +472,13 @@ export function LeadsTable({
                         >
                           {safeEnumLabel(LEAD_STAGE_LABELS as any, l.stage)}
                         </Badge>
-                        <Badge 
-                          variant="outline" 
+                        <Badge
+                          variant="outline"
                           className={cn(
                             "h-5 text-[10px] px-2 font-semibold border-0 uppercase tracking-tighter",
-                            aiScore >= 50 
-                              ? "bg-orange-100 text-orange-700" 
-                              : "bg-blue-50 text-blue-700"
+                            aiScore >= 50
+                              ? "bg-orange-100 text-orange-700"
+                              : "bg-blue-50 text-blue-700",
                           )}
                         >
                           Score: {aiScore}
@@ -469,16 +502,18 @@ export function LeadsTable({
                           href={l.phone ? `tel:${l.phone}` : "#"}
                           className={cn(
                             "flex items-center justify-between min-h-[46px] w-full px-4 rounded-2xl transition-all font-semibold text-sm",
-                            l.phone 
-                              ? "bg-blue-50/50 text-blue-700 hover:bg-blue-600 hover:text-white shadow-xs" 
-                              : "bg-slate-50 text-slate-300 pointer-events-none cursor-not-allowed"
+                            l.phone
+                              ? "bg-blue-50/50 text-blue-700 hover:bg-blue-600 hover:text-white shadow-xs"
+                              : "bg-slate-50 text-slate-300 pointer-events-none cursor-not-allowed",
                           )}
                         >
                           <div className="flex items-center gap-3">
                             <FaPhone className="h-3.5 w-3.5 mb-0.5" />
                             <span>{l.phone || "ไม่มีเบอร์โทร"}</span>
                           </div>
-                          {l.phone && <FaChevronRight className="h-3 w-3 opacity-50" />}
+                          {l.phone && (
+                            <FaChevronRight className="h-3 w-3 opacity-50" />
+                          )}
                         </a>
 
                         <div className="grid grid-cols-2 gap-2">
@@ -486,22 +521,24 @@ export function LeadsTable({
                           <div
                             className={cn(
                               "flex items-center justify-center gap-2 min-h-[46px] rounded-2xl transition-all font-semibold text-sm px-2",
-                              (l as any).line_id 
-                                ? "bg-emerald-50/50 text-emerald-700 border border-emerald-100/50" 
-                                : "bg-slate-50 text-slate-300 border border-slate-100"
+                              (l as any).line_id
+                                ? "bg-emerald-50/50 text-emerald-700 border border-emerald-100/50"
+                                : "bg-slate-50 text-slate-300 border border-slate-100",
                             )}
                           >
                             <FaLine className="h-4 w-4 shrink-0 mb-0.5" />
-                            <span className="truncate">{(l as any).line_id || "LINE"}</span>
+                            <span className="truncate">
+                              {(l as any).line_id || "LINE"}
+                            </span>
                           </div>
 
                           <a
                             href={l.email ? `mailto:${l.email}` : "#"}
                             className={cn(
                               "flex items-center justify-center gap-2 min-h-[46px] rounded-2xl transition-all font-semibold text-sm px-2",
-                              l.email 
-                                ? "bg-indigo-50/50 text-indigo-700 border border-indigo-100/50 hover:bg-indigo-600 hover:text-white" 
-                                : "bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed"
+                              l.email
+                                ? "bg-indigo-50/50 text-indigo-700 border border-indigo-100/50 hover:bg-indigo-600 hover:text-white"
+                                : "bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed",
                             )}
                           >
                             <FaEnvelope className="h-4 w-4 shrink-0 mb-0.5" />
@@ -517,7 +554,9 @@ export function LeadsTable({
                             className="flex items-center gap-3 min-h-[46px] w-full px-4 rounded-2xl bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-semibold text-xs border border-slate-100 hover:border-blue-100"
                           >
                             <FaBuilding className="h-3.5 w-3.5 shrink-0 opacity-40" />
-                            <span className="truncate">{(l as any).property.title}</span>
+                            <span className="truncate">
+                              {(l as any).property.title}
+                            </span>
                           </Link>
                         )}
                       </div>
@@ -526,14 +565,16 @@ export function LeadsTable({
                       {l.note && (
                         <div className="mt-3 p-3 bg-slate-50/50 border border-slate-100/50 rounded-2xl text-[11px] text-slate-500 italic flex gap-2">
                           <FaNoteSticky className="h-3 w-3 text-slate-300 shrink-0 mt-0.5" />
-                          <span className="line-clamp-2 leading-relaxed">{l.note}</span>
+                          <span className="line-clamp-2 leading-relaxed">
+                            {l.note}
+                          </span>
                         </div>
                       )}
                     </div>
-                  </motion.div>
+                  </m.div>
                 );
               })}
-            </motion.div>
+            </m.div>
           </AnimatePresence>
           {leads.length === 0 && (
             <div className="p-10 text-center text-sm text-slate-400 bg-white rounded-[32px] border border-dashed border-slate-200 mt-4">

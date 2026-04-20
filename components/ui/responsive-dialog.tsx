@@ -25,7 +25,7 @@ import {
   DrawerTrigger,
   DrawerClose,
 } from "@/components/ui/drawer";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 
 /**
  * 🛰️ ResponsiveDialog Context:
@@ -106,7 +106,7 @@ export function ResponsiveDialog({
       >
         <AnimatePresence>
           {isLoading && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -114,7 +114,7 @@ export function ResponsiveDialog({
             >
               <div className="relative flex flex-col items-center gap-4">
                 {/* Outer pulsing ring */}
-                <motion.div
+                <m.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{
                     repeat: Infinity,
@@ -126,7 +126,7 @@ export function ResponsiveDialog({
 
                 {/* Spinner inside a ring */}
                 <div className="relative h-12 w-12">
-                  <motion.div
+                  <m.div
                     animate={{ rotate: 360 }}
                     transition={{
                       repeat: Infinity,
@@ -135,7 +135,7 @@ export function ResponsiveDialog({
                     }}
                     className="absolute inset-0 border-3 border-slate-100 rounded-full"
                   />
-                  <motion.div
+                  <m.div
                     animate={{ rotate: 360 }}
                     transition={{
                       repeat: Infinity,
@@ -145,7 +145,7 @@ export function ResponsiveDialog({
                     className="absolute inset-0 border-3 border-t-blue-600 border-r-transparent border-b-transparent border-l-transparent rounded-full"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <motion.div
+                    <m.div
                       animate={{ scale: [0.8, 1, 0.8] }}
                       transition={{
                         repeat: Infinity,
@@ -154,7 +154,7 @@ export function ResponsiveDialog({
                       }}
                     >
                       <Loader2 className="h-5 w-5 text-blue-600" />
-                    </motion.div>
+                    </m.div>
                   </div>
                 </div>
 
@@ -167,7 +167,7 @@ export function ResponsiveDialog({
                   </p>
                 </div>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
         <div

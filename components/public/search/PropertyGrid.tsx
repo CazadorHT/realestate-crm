@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { PropertyCard, PropertyCardProps } from "../PropertyCard";
 
 type ApiProperty = PropertyCardProps;
@@ -12,13 +12,13 @@ interface PropertyGridProps {
 
 export function PropertyGrid({ properties, currentPage }: PropertyGridProps) {
   return (
-    <motion.div
+    <m.div
       layout
       className="grid gap-6 md:gap-y-8 lg:gap-x-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-12"
     >
       <AnimatePresence mode="popLayout">
         {properties.map((item, i) => (
-          <motion.div
+          <m.div
             key={item.id}
             layout
             initial={{ opacity: 0, y: 20 }}
@@ -34,9 +34,9 @@ export function PropertyGrid({ properties, currentPage }: PropertyGridProps) {
               property={item}
               priority={currentPage === 1 && i < 4}
             />
-          </motion.div>
+          </m.div>
         ))}
       </AnimatePresence>
-    </motion.div>
+    </m.div>
   );
 }
