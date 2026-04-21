@@ -53,6 +53,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
       updated_at: new Date().toISOString(),
       tax_id: null,
       tax_address: null,
+      telegram_id: null,
       default_tax_rate: null,
     };
   }
