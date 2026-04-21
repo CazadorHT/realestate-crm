@@ -286,6 +286,16 @@ export async function notifySignupAction(email: string) {
       },
     });
     console.log("[NOTIFY] notifySignupAction completed for:", email);
+
+    // 🛡️ S-Tier Telegram Notification (Admin Hub)
+    try {
+      const { sendAdminNotification } = await import("@/lib/telegram");
+      await sendAdminNotification(
+        `👤 <b>แจ้งเตือนสมาชิกใหม่ (New Signup)</b>\n━━━━━━━━━━━━━━━━━━\n\n<b>📧 อีเมล:</b> <code>${email}</code>\n<b>⏰ เวลา:</b> ${new Date().toLocaleString("th-TH")}\n\n<i>กรุณาตรวจสอบและกำหนดบทบาท (Role) ในระบบหลังบ้านครับ</i>`
+      );
+    } catch (tgErr) {
+      console.error("[NOTIFY] Telegram Notification failed for Signup:", tgErr);
+    }
   } catch (error) {
     console.error("[NOTIFY] Error in notifySignupAction:", error);
   }
