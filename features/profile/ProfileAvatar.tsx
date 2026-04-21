@@ -102,7 +102,7 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
 
   return (
     <div className="flex flex-col items-center gap-5">
-      <div className="relative group">
+      <div className="relative group/avatar">
         <m.div
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -123,11 +123,11 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
           <label
             htmlFor="avatar-upload"
             className={cn(
-              "absolute inset-0 flex flex-col items-center justify-center bg-slate-900/60 backdrop-blur-[2px] rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer overflow-hidden",
+              "absolute inset-0 flex flex-col items-center justify-center bg-indigo-950/60 backdrop-blur-[3px] rounded-full opacity-0 group-hover/avatar:opacity-100 transition-all duration-500 cursor-pointer overflow-hidden",
               isUploading && "opacity-100",
             )}
           >
-            <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-indigo-950/40 to-transparent" />
             <AnimatePresence mode="wait">
               {isUploading ? (
                 <m.div
@@ -141,14 +141,17 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
               ) : (
                 <m.div
                   key="camera"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="flex flex-col items-center gap-1 z-10"
+                  initial={{ opacity: 0, y: 15, scale: 0.9 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -15, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  className="flex flex-col items-center gap-3 z-10"
                 >
-                  <Camera className="h-10 w-10 text-white drop-shadow-md" />
-                  <span className="text-[10px] text-white font-bold uppercase tracking-widest">
-                    Update
+                  <div className="p-3.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 shadow-2xl transition-all duration-500 group-hover/avatar:scale-110 group-hover/avatar:bg-white/20">
+                    <Camera className="h-7 w-7 text-white drop-shadow-xl" />
+                  </div>
+                  <span className="text-[10px] text-white font-black uppercase tracking-[0.2em] drop-shadow-md">
+                    อัพรูปภาพ
                   </span>
                 </m.div>
               )}

@@ -18,7 +18,7 @@ import { ProfileCompleteness } from "@/features/profile/ProfileCompleteness";
 import { calculateProfileScore } from "@/lib/profile-utils";
 import { type TenantMembership } from "@/features/profile/types";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle2, LayoutDashboard, Trophy, Zap } from "lucide-react";
+import { CheckCircle2, Fingerprint, LayoutDashboard, ShieldCheck, Trophy, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 
@@ -54,7 +54,7 @@ export default async function ProfilePage() {
   const scoreClamped = calculateProfileScore(profile);
 
   return (
-    <div className="relative min-h-[calc(100vh-12rem)] pb-20">
+    <div className="relative max-w-7xl mx-auto min-h-[calc(100vh-12rem)] pb-20">
       {/* Immersive Background Layer */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />
@@ -93,7 +93,7 @@ export default async function ProfilePage() {
           <div className="lg:col-span-4 space-y-6">
             {/* Elite Profile Card */}
             <div className="relative group rounded-3xl overflow-hidden bg-white/70 backdrop-blur-md border border-white/40 shadow-2xl shadow-slate-200/50">
-              <div className="h-32 bg-linear-to-br from-slate-900 via-slate-800 to-indigo-950 relative overflow-hidden">
+              <div className="h-32 bg-linear-to-br from-blue-400 via-indigo-400 to-indigo-500 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
                    <Zap className="h-24 w-24 text-white" />
                 </div>
@@ -119,15 +119,26 @@ export default async function ProfilePage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 pt-2">
-                     <div className="p-3 rounded-2xl bg-white/50 border border-slate-100">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Status</p>
-                        <p className="text-xs font-black text-blue-600 uppercase">Verified Account</p>
-                     </div>
-                     <div className="p-3 rounded-2xl bg-white/50 border border-slate-100">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Access</p>
-                        <p className="text-xs font-black text-blue-600 uppercase">{profile.role}</p>
-                     </div>
+                  <div className="grid grid-cols-2 gap-3 pt-2">
+                    <div className="p-3 rounded-2xl bg-blue-50/50 border border-blue-100/50 flex items-center gap-3 transition-all hover:bg-blue-50">
+                      <div className="shrink-0 p-2 rounded-xl bg-blue-100 text-blue-600">
+                        <ShieldCheck className="h-4 w-4" />
+                      </div>
+                      <div className="text-left overflow-hidden">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Status</p>
+                        <p className="text-[11px] font-black text-blue-600 uppercase truncate">Verified</p>
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-2xl bg-indigo-50/50 border border-indigo-100/50 flex items-center gap-3 transition-all hover:bg-indigo-50">
+                      <div className="shrink-0 p-2 rounded-xl bg-indigo-100 text-indigo-600">
+                        <Fingerprint className="h-4 w-4" />
+                      </div>
+                      <div className="text-left overflow-hidden">
+                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Access</p>
+                        <p className="text-[11px] font-black text-indigo-600 uppercase truncate">{profile.role}</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -154,35 +165,21 @@ export default async function ProfilePage() {
           {/* Right Column - High Performance Forms (8 cols) */}
           <div className="lg:col-span-8 space-y-8">
             {/* Section 1: Profile Information */}
-            <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 overflow-hidden">
-              <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 tracking-tight">ข้อมูลส่วนตัวเชิงธุรกิจ</h3>
-                  <p className="text-sm text-slate-500 font-medium">Business Identity & Contact Details</p>
-                </div>
-                {scoreClamped === 100 && (
-                  <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-2xl border border-emerald-100 animate-bounce">
-                     <CheckCircle2 className="h-4 w-4" />
-                     <span className="text-[10px] font-semibold uppercase tracking-widest">Complete</span>
-                  </div>
-                )}
-              </div>
-              <div className="p-8">
-                <ProfileInfoForm
-                  fullName={profile.full_name}
-                  phone={profile.phone}
-                  line_id={profile.line_id}
-                  line_user_id={profile.line_user_id}
-                  facebook_url={profile.facebook_url}
-                  whatsapp_id={profile.whatsapp_id}
-                  wechat_id={profile.wechat_id}
-                  email={profile.email}
-                  role={profile.role}
-                  tax_id={profile.tax_id}
-                  tax_address={profile.tax_address}
-                />
-              </div>
-            </div>
+            <ProfileInfoForm
+              fullName={profile.full_name}
+              phone={profile.phone}
+              line_id={profile.line_id}
+              line_user_id={profile.line_user_id}
+              facebook_url={profile.facebook_url}
+              whatsapp_id={profile.whatsapp_id}
+              wechat_id={profile.wechat_id}
+              email={profile.email}
+              role={profile.role}
+              tax_id={profile.tax_id}
+              tax_address={profile.tax_address}
+              telegram_id={profile.telegram_id}
+              score={scoreClamped}
+            />
 
             {/* Section 3: Notification Preferences */}
             <NotificationSettings

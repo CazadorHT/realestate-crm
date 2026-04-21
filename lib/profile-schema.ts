@@ -10,6 +10,12 @@ export const profileSchema = z.object({
   wechat_id: z.string().optional(),
   tax_id: z.string().optional(),
   tax_address: z.string().optional(),
+  telegram_id: z
+    .string()
+    .optional()
+    .refine((val) => !val || /^\d+$/.test(val), {
+      message: "Telegram ID ต้องเป็นตัวเลขเท่านั้น",
+    }),
 });
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;

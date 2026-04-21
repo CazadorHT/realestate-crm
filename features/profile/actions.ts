@@ -51,16 +51,20 @@ export async function updateProfileAction(
     const wechat_id = formData.get("wechat_id") as string | null;
     const tax_id = formData.get("tax_id") as string | null;
     const tax_address = formData.get("tax_address") as string | null;
+    const telegram_id = formData.get("telegram_id") as string | null;
 
     if (line_id !== null) updateData.line_id = line_id.trim();
     if (line_user_id !== null) updateData.line_user_id = line_user_id.trim();
     if (facebook_url !== null) updateData.facebook_url = facebook_url.trim();
     if (whatsapp_id !== null) updateData.whatsapp_id = whatsapp_id.trim();
     if (wechat_id !== null) updateData.wechat_id = wechat_id.trim();
-    
+
     // 🛡️ Sensitive Tax Information
     if (tax_id !== null) updateData.tax_id = tax_id.trim();
     if (tax_address !== null) updateData.tax_address = tax_address.trim();
+
+    // 📟 Telegram Back-office
+    if (telegram_id !== null) updateData.telegram_id = telegram_id.trim();
 
     const { error } = await ctx.supabase
       .from("profiles")
@@ -69,7 +73,10 @@ export async function updateProfileAction(
 
     if (error) {
       console.error("Profile update error:", error);
-      return { success: false, message: mapDbError(error) || "เกิดข้อผิดพลาดในการอัปเดตข้อมูล" };
+      return {
+        success: false,
+        message: mapDbError(error) || "เกิดข้อผิดพลาดในการอัปเดตข้อมูล",
+      };
     }
 
     await logAudit(ctx, {
@@ -151,7 +158,9 @@ export async function uploadAvatarAction(
   if (uploadError) {
     console.error("Avatar upload error details:", uploadError);
     // แจ้ง Error ละเอียดขึ้นใน Console ของ Server
-    throw new Error(mapDbError(uploadError) || `อัปโหลดไม่สำเร็จ: ${uploadError.message}`);
+    throw new Error(
+      mapDbError(uploadError) || `อัปโหลดไม่สำเร็จ: ${uploadError.message}`,
+    );
   }
 
   // 4. สร้าง public URL
@@ -204,7 +213,10 @@ export async function updateNotificationSettings(
 
     if (error) {
       console.error("Error updating notification settings:", error);
-      return { success: false, message: mapDbError(error) || "Failed to update settings" };
+      return {
+        success: false,
+        message: mapDbError(error) || "Failed to update settings",
+      };
     }
 
     /* 
@@ -221,6 +233,9 @@ export async function updateNotificationSettings(
     return { success: true, message: "บันทึกการตั้งค่าสำเร็จ" };
   } catch (error: unknown) {
     console.error("updateNotificationSettings error:", error);
-    return { success: false, message: (error as Error).message || "Unauthorized or Error" };
+    return {
+      success: false,
+      message: (error as Error).message || "Unauthorized or Error",
+    };
   }
 }

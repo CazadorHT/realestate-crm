@@ -1,0 +1,40 @@
+import { Bot } from "grammy";
+
+const token = process.env.TELEGRAM_BOT_TOKEN;
+
+// Initialize bot instance for reuse
+export const telegramBot = token ? new Bot(token) : null;
+
+/**
+ * 📢 Enterprise Admin Notification Bridge
+ * Sends messages to a specific Group or individual Admin
+ */
+export async function sendAdminNotification(
+  message: string, 
+  options: { 
+    chatId?: string; 
+    parseMode?: "HTML" | "MarkdownV2";
+    replyMarkup?: any;
+  } = {}
+) {
+  if (!telegramBot) {
+    console.warn("[TELEGRAM] Skip notification: Bot token missing");
+    return;
+  }
+
+  const targetId = options.chatId || process.env.TELEGRAM_ADMIN_GROUP_ID;
+
+  if (!targetId) {
+    console.error("[TELEGRAM] Skip notification: No target chatId provided and TELEGRAM_ADMIN_GROUP_ID is missing");
+    return;
+  }
+
+  try {
+    await telegramBot.api.sendMessage(targetId, message, {
+      parse_mode: options.parseMode || "HTML",
+      reply_markup: options.replyMarkup,
+    });
+  } catch (error) {
+    console.error("[TELEGRAM] Failed to send admin notification:", error);
+  }
+}

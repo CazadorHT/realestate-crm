@@ -14,6 +14,8 @@ import { getLineProfile, saveOmniMessage, sendLineNotification } from "@/lib/lin
 import { siteConfig } from "@/lib/site-config";
 import { chatWithAI } from "@/features/chatbot/actions";
 import { redis } from "@/lib/redis";
+import { sendAdminNotification } from "@/lib/telegram";
+import { formatLeadNotification, buildLeadActionKeyboard } from "@/lib/telegram-formatters";
 import {
   buildWelcomeFlex,
   buildPropertyTypeQuickReply,
@@ -618,6 +620,25 @@ async function handleInteractiveCommand(
     // 4. แจ้งเตือนแอดมินทันที
     const adminAlert = `🔔 มีคนสนใจทรัพย์สิน!\n\nผู้สนใจ: ${profile?.displayName || lead?.full_name || "ลูกค้า LINE"}\nทรัพย์สิน: ${propertyTitle}\nรหัส: ${propertyId || "-"}\n\nกรุณาติดต่อกลับโดยด่วนครับ`;
     await sendLineNotification(adminAlert);
+
+    // 🚀 Bridge to Telegram
+    try {
+      const tgMessage = formatLeadNotification({
+        ...lead,
+        full_name: profile?.displayName || lead?.full_name || "ลูกค้า LINE",
+        last_message: text,
+        interesting_property: `${propertyTitle} (ID: ${propertyId})`
+      }, profile);
+      
+      const tgKeyboard = buildLeadActionKeyboard(lead?.id || "");
+      
+      await sendAdminNotification(tgMessage, { 
+        parseMode: "HTML",
+        replyMarkup: tgKeyboard
+      });
+    } catch (tgErr) {
+      console.error("[BRIDGE] Telegram notification failed:", tgErr);
+    }
 
     // 5. บันทึกข้อมูลเพิ่มลงในโน้ตของ Lead (ถ้ามี)
     if (lead) {

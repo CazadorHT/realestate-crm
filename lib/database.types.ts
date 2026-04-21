@@ -1767,6 +1767,7 @@ export type Database = {
           tax_address: string | null
           tax_id: string | null
           team_id: string | null
+          telegram_id: string | null
           updated_at: string
           wechat_id: string | null
           whatsapp_id: string | null
@@ -1789,6 +1790,7 @@ export type Database = {
           tax_address?: string | null
           tax_id?: string | null
           team_id?: string | null
+          telegram_id?: string | null
           updated_at?: string
           wechat_id?: string | null
           whatsapp_id?: string | null
@@ -1811,6 +1813,7 @@ export type Database = {
           tax_address?: string | null
           tax_id?: string | null
           team_id?: string | null
+          telegram_id?: string | null
           updated_at?: string
           wechat_id?: string | null
           whatsapp_id?: string | null
