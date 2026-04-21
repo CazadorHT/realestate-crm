@@ -1,36 +1,124 @@
 import { InlineKeyboard } from "grammy";
 import { siteConfig } from "@/lib/site-config";
+import type { Tables } from "./database.types";
 import { 
   PROPERTY_TYPE_LABELS, 
   LISTING_TYPE_LABELS 
 } from "@/features/properties/labels";
 
 /**
- * 📝 Property Detail Formatter for Telegram (HTML Mode)
+ * 🏁 Nationality Emoji Mapping
  */
-export function formatPropertyDetail(prop: any) {
+const FLAGS: Record<string, string> = {
+  "ไทย": "🇹🇭",
+  "จีน": "🇨🇳",
+  "ญี่ปุ่น": "🇯🇵",
+  "เกาหลี": "🇰🇷",
+  "อเมริกัน": "🇺🇸",
+  "อังกฤษ": "🇬🇧",
+  "ฝรั่งเศส": "🇫🇷",
+  "เยอรมัน": "🇩🇪",
+  "รัสเซีย": "🇷🇺",
+  "อินเดีย": "🇮🇳",
+  "สิงคโปร์": "🇸🇬",
+  "มาเลเซีย": "🇲🇾",
+  "พม่า": "🇲🇲",
+  "กัมพูชา": "🇰🇭",
+  "ลาว": "🇱🇦",
+  "เวียดนาม": "🇻🇳",
+  "ไต้หวัน": "🇹🇼",
+  "ฮ่องกง": "🇭🇰",
+  "ออสเตรเลีย": "🇦🇺",
+};
+
+/**
+ * 💰 Elite Budget Formatter (e.g., 5.5M)
+ */
+function formatMoneyM(val: number | null | undefined): string {
+  if (val === null || val === undefined) return "N/A";
+  if (val >= 1000000) {
+    const million = val / 1000000;
+    return `฿${million.toFixed(1)}M`;
+  }
+  return `฿${val.toLocaleString()}`;
+}
+
+function formatBudgetRange(min: number | null | undefined, max: number | null | undefined): string {
+  if (!min && !max) return "ตามตกลง (N/A)";
+  if (min === max) return formatMoneyM(min);
+  return `${formatMoneyM(min)} - ${formatMoneyM(max)}`;
+}
+
+/**
+ * 🏠 Property Detail Formatter
+ */
+export function formatPropertyDetail(prop: Tables<"properties">) {
   const baseUrl = siteConfig.url.endsWith("/") ? siteConfig.url.slice(0, -1) : siteConfig.url;
-  const adminUrl = `${baseUrl}/dashboard/properties/${prop.id}`; // Adjusted to match typical CRM dashboard path
+  const adminUrl = `${baseUrl}/dashboard/properties/${prop.id}`;
   
-  const price = prop.price ? `${prop.price.toLocaleString()} THB` : "N/A";
-  const rent = prop.rental_price ? `${prop.rental_price.toLocaleString()} THB/mo` : "N/A";
+  const statusBadges: Record<string, string> = {
+    ACTIVE: "🟢 ACTIVE",
+    SOLD: "🔴 SOLD",
+    RENTED: "🔵 RENTED",
+    RESERVED: "🟡 RESERVED",
+    UNDER_OFFER: "🟠 UNDER OFFER",
+    ARCHIVED: "⚪ ARCHIVED",
+    DRAFT: "📝 DRAFT",
+  };
+
+  const badge = statusBadges[prop.status || "DRAFT"] || `⚪ ${prop.status}`;
   
   const typeLabel = PROPERTY_TYPE_LABELS[prop.property_type as keyof typeof PROPERTY_TYPE_LABELS] || prop.property_type || "N/A";
   const listingLabel = LISTING_TYPE_LABELS[prop.listing_type as keyof typeof LISTING_TYPE_LABELS] || prop.listing_type || "N/A";
 
-  return `
-<b>🏠 [${prop.id}] ${prop.title}</b>
+  // 💰 Pricing Intelligence
+  let priceLines = "";
+  
+  // Sale Section
+  if (prop.listing_type === "SALE" || prop.listing_type === "SALE_AND_RENT") {
+    const isHotDeal = prop.original_price && prop.price && prop.price < prop.original_price;
+    const discountPercent = isHotDeal ? Math.round(((prop.original_price! - prop.price!) / prop.original_price!) * 100) : 0;
+    
+    priceLines += `<b>💰 ราคาขาย:</b> ${prop.price ? formatMoneyM(prop.price) : "N/A"}`;
+    if (isHotDeal) priceLines += ` (🔥 <i>ลด ${discountPercent}% จาก ${formatMoneyM(prop.original_price)}</i>)`;
+    if (prop.price_per_sqm) priceLines += `\n└ 📐 ฿${prop.price_per_sqm.toLocaleString()}/ตร.ม.`;
+    priceLines += "\n";
+  }
 
-<b>สถานะ:</b> <code>${prop.status || "UNKNOWN"}</code>
+  // Rent Section
+  if (prop.listing_type === "RENT" || prop.listing_type === "SALE_AND_RENT") {
+    const isHotRent = prop.original_rental_price && prop.rental_price && prop.rental_price < prop.original_rental_price;
+    const discountRentPercent = isHotRent ? Math.round(((prop.original_rental_price! - prop.rental_price!) / prop.original_rental_price!) * 100) : 0;
+
+    priceLines += `<b>💎 ค่าเช่า:</b> ${prop.rental_price ? `${formatMoneyM(prop.rental_price)}/ด.` : "N/A"}`;
+    if (isHotRent) priceLines += ` (🔥 <i>ลด ${discountRentPercent}% จาก ${formatMoneyM(prop.original_rental_price)}</i>)`;
+    if (prop.rent_price_per_sqm) priceLines += `\n└ 📐 ฿${prop.rent_price_per_sqm.toLocaleString()}/ตร.ม.`;
+    priceLines += "\n";
+  }
+
+  // Additional Fees
+  let feeLines = "";
+  if (prop.maintenance_fee) feeLines += `• 🛠️ ส่วนกลาง: ฿${prop.maintenance_fee.toLocaleString()}/ด.\n`;
+  if (prop.parking_fee_additional) feeLines += `• 🚗 จอดรถเสริม: ฿${prop.parking_fee_additional.toLocaleString()}/ด.\n`;
+  if (prop.water_charge) feeLines += `• 💧 ค่าน้ำ: ${prop.water_charge}\n`;
+  if (prop.electricity_charge) feeLines += `• ⚡ ค่าไฟ: ${prop.electricity_charge}\n`;
+
+  return `
+<b>🏢 [${prop.id}] ${prop.title}</b>
+━━━━━━━━━━━━━━━━━━
+
+<b>สถานะ:</b> <code>${badge}</code>
 <b>ประเภท:</b> ${typeLabel} (${listingLabel})
 <b>ทำเล:</b> ${prop.popular_area || prop.district || "N/A"}
-<b>ราคาขาย:</b> ${price}
-<b>ค่าเช่า:</b> ${rent}
+
+${priceLines.trim()}
 
 <b>รายละเอียด:</b>
-${prop.bedrooms || 0} ห้องนอน | ${prop.bathrooms || 0} ห้องน้ำ | ${prop.size_sqm || 0} ตร.ม.
+• 🛏️ ${prop.bedrooms || 0} นอน | 🚿 ${prop.bathrooms || 0} น้ำ
+• 📐 ${prop.size_sqm || 0} ตร.ม. | ชั้น ${prop.floor || "-"}
+${feeLines.trim()}
 
-<a href="${adminUrl}">🔗 จัดการบน CRM Dashboard</a>
+<a href="${adminUrl}">🔍 จัดการบน CRM Dashboard</a>
   `.trim();
 }
 
@@ -42,10 +130,10 @@ export function buildPropertyKeyboard(propId: string) {
   const adminUrl = `${baseUrl}/dashboard/properties/${propId}`;
 
   return new InlineKeyboard()
-    .url("🌐 แก้ไขบน CRM", adminUrl)
+    .url("🌐 แก้ไขข้อมูล", adminUrl)
     .row()
-    .text("✅ ตรวจสอบแล้ว", `confirm_prop:${propId}`)
-    .text("❌ ปิดการขาย", `sold_prop:${propId}`);
+    .text("✅ Verified", `confirm_prop:${propId}`)
+    .text("🎉 Sold/ปิดการขาย", `sold_prop:${propId}`);
 }
 
 /**
@@ -69,34 +157,66 @@ export function formatDailyReport(data: {
 
 <b>🆕 Lead ใหม่วันนี้:</b> <code>${data.newLeads}</code> ราย
 <b>📅 การจอง/นัดหมายใหม่:</b> <code>${data.newBookings}</code> เคส
-<b>🏘️ ทรัพย์ที่ Active อยู่:</b> <code>${data.activeProperties}</code> รายการ
+<b>🏘️ ทรัพย์ที่ Active:</b> <code>${data.activeProperties}</code> รายการ
 <b>⚡ กิจกรรมทีมงาน:</b> <code>${data.totalTeamActions}</code> ครั้ง
 
-<i>"ยินดีด้วยกับความสำเร็จในวันนี้นะครับ ทีมงานลุยต่อครับ!"</i>
+<i>"ทีมงาน VCC Asset ลุยต่อครับ!"</i>
   `.trim();
 }
 
 /**
  * 🔔 Lead Notification Formatter
  */
-export function formatLeadNotification(lead: any, profile?: any) {
+export function formatLeadNotification(
+  lead: Partial<Tables<"leads">>, 
+  options?: { 
+    property?: Tables<"properties">; 
+    lastMessage?: string; 
+    customPropertyTitle?: string;
+  }
+) {
+  const flag = FLAGS[lead.nationality || ""] || "🏳️";
+  const budget = formatBudgetRange(lead.budget_min, lead.budget_max);
+  const leadType = lead.lead_type === "COMPANY" ? "🏢 นิติบุคคล" : "👤 บุคคลธรรมดา";
+  
+  const propertyInfo = options?.property 
+    ? `${options.property.title} [${options.property.id}]`
+    : (options?.customPropertyTitle || lead.property_id || "ไม่ระบุ");
+
   return `
-<b>🆕 🔔 มีคนสนใจทรัพย์สิน! (Lead ใหม่)</b>
+<b>🆕 🔔 มี Lead สนใจอสังหาฯ!</b>
+━━━━━━━━━━━━━━━━━━
 
-<b>👤 ผู้สนใจ:</b> ${profile?.displayName || lead.full_name || "ลูกค้า LINE"}
-<b>📱 ช่องทาง:</b> ${lead.source || "LINE"}
-<b>💬 ข้อความล่าสุด:</b> <i>"${lead.last_message || "สนใจทรัพย์"}"</i>
+<b>👤 ชื่อ:</b> ${lead.full_name || "ลูกค้า"} (${flag})
+<b>💰 งบประมาณ:</b> <code>${budget}</code>
+<b>🎭 ประเภท:</b> ${leadType}
+<b>📍 สนใจทรัพย์:</b> ${propertyInfo}
 
-<b>📍 ทรัพย์ที่สนใจ:</b> ${lead.interesting_property || "ไม่ระบุ"}
+<b>📱 ข้อมูลติดต่อ:</b>
+• โทร: <code>${lead.phone || "-"}</code>
+• LINE: <code>${lead.line_id || "-"}</code>
+
+<b>💬 ข้อความ:</b> <i>"${options?.lastMessage || lead.note || "สนใจทรัพย์"}"</i>
   `.trim();
 }
 
-export function buildLeadActionKeyboard(leadId: string) {
+/**
+ * ⌨️ Action Keyboard for Leads
+ */
+export function buildLeadActionKeyboard(leadId: string, phone: string | null) {
   const baseUrl = siteConfig.url.endsWith("/") ? siteConfig.url.slice(0, -1) : siteConfig.url;
   const leadUrl = `${baseUrl}/dashboard/leads/${leadId}`;
-
-  return new InlineKeyboard()
+  const cleanPhone = phone?.replace(/\D/g, "") || "";
+  
+  const kb = new InlineKeyboard()
     .text("🙋‍♂️ รับงาน (Claim)", `claim_lead:${leadId}`)
-    .row()
-    .url("🔍 ดูรายละเอียด Lead", leadUrl);
+    .row();
+
+  if (cleanPhone) {
+    kb.url("📞 โทรออก", `tel:${cleanPhone}`)
+      .url("💬 WhatsApp", `https://wa.me/${cleanPhone.startsWith("0") ? "66" + cleanPhone.slice(1) : cleanPhone}`)
+      .row();
+  }
+
+  return kb.url("🔍 ดูบน CRM", leadUrl);
 }

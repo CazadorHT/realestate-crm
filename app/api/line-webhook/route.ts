@@ -623,14 +623,18 @@ async function handleInteractiveCommand(
 
     // 🚀 Bridge to Telegram
     try {
-      const tgMessage = formatLeadNotification({
-        ...lead,
-        full_name: profile?.displayName || lead?.full_name || "ลูกค้า LINE",
-        last_message: text,
-        interesting_property: `${propertyTitle} (ID: ${propertyId})`
-      }, profile);
+      const tgMessage = formatLeadNotification(
+        {
+          ...lead,
+          full_name: profile?.displayName || lead?.full_name || "ลูกค้า LINE",
+        }, 
+        {
+          lastMessage: text,
+          customPropertyTitle: `${propertyTitle} (ID: ${propertyId})`
+        }
+      );
       
-      const tgKeyboard = buildLeadActionKeyboard(lead?.id || "");
+      const tgKeyboard = buildLeadActionKeyboard(lead?.id || "", lead?.phone || null);
       
       await sendAdminNotification(tgMessage, { 
         parseMode: "HTML",
