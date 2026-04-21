@@ -7,14 +7,21 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const BUCKET_NAME = "property-images";
 
 /**
- * Generate public URL from storage path
+ * Generate public URL from storage path with optional optimization
  * @param storagePath - path in storage like "properties/xxx.jpg"
  * @param bucket - specific storage bucket (default: "property-images")
- * @returns public URL
+ * @param options - transformation options (width, quality, format)
+ * @returns public URL (optimized if options provided)
  */
 export function getPublicImageUrl(
   storagePath: string,
   bucket: string = BUCKET_NAME,
+  options?: {
+    width?: number;
+    height?: number;
+    quality?: number;
+    format?: "webp" | "origin";
+  },
 ): string {
   if (!storagePath) return "";
 
@@ -40,6 +47,18 @@ export function getPublicImageUrl(
     .map((segment) => encodeURIComponent(segment))
     .join("/");
 
+  // 🛡️ Elite Optimization: Use Supabase Render service if options are provided
+  if (options && (options.width || options.height || options.quality)) {
+    const params = new URLSearchParams();
+    if (options.width) params.append("width", options.width.toString());
+    if (options.height) params.append("height", options.height.toString());
+    if (options.quality) params.append("quality", options.quality.toString());
+    if (options.format) params.append("format", options.format);
+
+    return `${baseUrl}/storage/v1/render/image/public/${bucket}/${encodedPath}?${params.toString()}`;
+  }
+
+  // Fallback to standard public URL
   return `${baseUrl}/storage/v1/object/public/${bucket}/${encodedPath}`;
 }
 

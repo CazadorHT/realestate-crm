@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse ,after} from "next/server";
 import { Bot, webhookCallback } from "grammy";
 import { redis } from "@/lib/redis";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -8,13 +8,42 @@ import {
   formatDailyReport 
 } from "@/lib/telegram-formatters";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
-import { logAudit } from "@/lib/audit";
+import { logAudit, type MinimalAuditContext } from "@/lib/audit";
 
-// 🤖 Initialize Bot with Token
+// ⚡ Enable Vercel Edge Runtime for Low Latency (No Cold Starts)
+export const runtime = "edge";
+
+// 🌐 1. Types & Context Definition
+// Using Supabase generated types for maximum precision
+type AdminClient = ReturnType<typeof createAdminClient>;
+
+interface BotContextFlavor {
+  userProfile?: {
+    id: string;
+    role: string;
+    full_name: string | null;
+  };
+  adminSupabase?: AdminClient;
+}
+
+import { Context } from "grammy";
+type MyContext = Context & BotContextFlavor;
+
+// 🌐 2. Global Instance Sharing
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN is missing");
 
-const bot = new Bot(token);
+const bot = new Bot<MyContext>(token);
+
+// Shared Supabase Admin (Singleton-like pattern for Edge)
+let globalAdminClient: AdminClient | null = null;
+
+const getAdminClient = async (): Promise<AdminClient> => {
+  if (!globalAdminClient) {
+    globalAdminClient = createAdminClient();
+  }
+  return globalAdminClient;
+};
 
 // 🛡️ Middleware 1: Idempotency (Deduplication)
 bot.use(async (ctx, next) => {
@@ -40,12 +69,12 @@ bot.use(async (ctx, next) => {
   const tgId = ctx.from?.id.toString();
   if (!tgId) return;
 
-  const supabase = await createAdminClient();
+  const supabase = await getAdminClient();
   
   // Check if this Telegram ID belongs to a staff member
   const { data: profile, error } = await supabase
     .from("profiles")
-    .select("role")
+    .select("id, role, full_name")
     .eq("telegram_id", tgId)
     .maybeSingle();
 
@@ -67,9 +96,9 @@ bot.use(async (ctx, next) => {
 
   if (!isAuthorized) return; // Ignore in groups/channels if not authorized
  
-  // Attach profile & supabase to context for use in commands
-  (ctx as any).userProfile = profile;
-  (ctx as any).adminSupabase = supabase; // Shared instance
+  // 🛡️ Elite Pattern: Strictly Typed Context (No more 'any')
+  ctx.userProfile = profile;
+  ctx.adminSupabase = supabase; 
   await next();
 });
 
@@ -91,9 +120,11 @@ bot.command("help", (ctx) => {
 
 // 👤 Me Command
 bot.command("me", (ctx) => {
-  const profile = (ctx as any).userProfile;
+  const profile = ctx.userProfile;
   const isGroup = ctx.chat?.type !== "private";
   
+  if (!profile) return;
+
   return ctx.reply(
     `👤 <b>ข้อมูลบัญชีและแชท</b>\n\n<b>ชื่อ:</b> ${profile.full_name || "ไม่ระบุ"}\n<b>บทบาท:</b> <code>${profile.role}</code>\n<b>Telegram ID:</b> <code>${ctx.from?.id}</code>\n\n<b>ที่อยู่แชทนี้ (Chat ID):</b> <code>${ctx.chat.id}</code>\n${isGroup ? "<i>(คัดลอก ID นี้ไปอัปเดตที่ <b>Vercel Dashboard</b> ตัวแปร <code>TELEGRAM_ADMIN_GROUP_ID</code> เพื่อย้ายกลุ่มแจ้งเตือน)</i>" : ""}\n\n✅ เชื่อมต่อระบบ Back-office เรียบร้อยแล้ว`,
     { parse_mode: "HTML" }
@@ -105,7 +136,8 @@ bot.command("check", async (ctx) => {
   const propertyId = ctx.match?.trim();
   if (!propertyId) return ctx.reply("💡 กรุณาระบุรหัสทรัพย์ เช่น <code>/check 123</code>", { parse_mode: "HTML" });
 
-  const supabase = await createAdminClient();
+  const supabase = ctx.adminSupabase;
+  if (!supabase) return;
   
   // Fetch property including images
   const { data: prop, error } = await supabase
@@ -132,7 +164,8 @@ bot.command("check", async (ctx) => {
                  || prop.property_images?.[0]?.image_url;
   
   if (rawImageUrl) {
-    const imageUrl = getPublicImageUrl(rawImageUrl);
+    // 🖼️ Optimized for Telegram: 800px width for faster loading (Edge Transformation)
+    const imageUrl = getPublicImageUrl(rawImageUrl, "property-images", { width: 800, quality: 80 });
     return ctx.replyWithPhoto(imageUrl, {
       caption: message,
       parse_mode: "HTML",
@@ -148,27 +181,32 @@ bot.command("check", async (ctx) => {
 
 // 📊 Daily Report Command
 bot.command("report", async (ctx) => {
-  const supabase = await createAdminClient();
+  const supabase = ctx.adminSupabase;
+  if (!supabase) return;
+
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
   
-  // 1. New Leads Today
-  const { count: newLeads } = await supabase
-    .from("leads")
-    .select("*", { count: "exact", head: true })
-    .gte("created_at", startOfDay.toISOString());
+  // 🚀 Robust Parallel Execution: Fetch all counts simultaneously with independent error handling
+  const [newLeadsResult, activePropsResult] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("*", { count: "exact", head: true })
+      .gte("created_at", startOfDay.toISOString()),
+    supabase
+      .from("properties")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "ACTIVE")
+  ]);
 
-  // 2. Total active properties
-  const { count: activeProps } = await supabase
-    .from("properties")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "ACTIVE");
+  // Check errors independently to provide a robust response
+  if (newLeadsResult.error) console.error("[TG-BOT] Report: Leads fetch error:", newLeadsResult.error);
+  if (activePropsResult.error) console.error("[TG-BOT] Report: Properties fetch error:", activePropsResult.error);
 
-  // 3. Mocking some data for report (as we might not have all tracking yet)
   const reportData = {
-    newLeads: newLeads || 0,
+    newLeads: newLeadsResult.count || 0,
     newBookings: 0, // Placeholder
-    activeProperties: activeProps || 0,
+    activeProperties: activePropsResult.count || 0,
     totalTeamActions: 0, // Placeholder
   };
 
@@ -178,15 +216,16 @@ bot.command("report", async (ctx) => {
 
 // 📢 Broadcast Command (Admin Only)
 bot.command("broadcast", async (ctx) => {
-  const profile = (ctx as any).userProfile;
-  const supabase = (ctx as any).adminSupabase;
+  const profile = ctx.userProfile;
+  const supabase = ctx.adminSupabase;
   
+  if (!profile || !supabase) return;
   if (profile.role !== "ADMIN") return;
 
   const msg = ctx.match?.trim();
   if (!msg) return ctx.reply("💡 กรุณาพิมพ์ข้อความที่ต้องการประกาศ เช่น <code>/broadcast แจ้งประชุมด่วนครับ</code>", { parse_mode: "HTML" });
 
-  // Fetch all staff members with telegram_id
+  // ⚡ Lightweight Select: Only fetch IDs needed for broadcasting
   const { data: staff, error } = await supabase
     .from("profiles")
     .select("telegram_id, full_name")
@@ -197,8 +236,10 @@ bot.command("broadcast", async (ctx) => {
   let successCount = 0;
   for (const s of staff || []) {
     try {
-      await ctx.api.sendMessage(s.telegram_id, `📢 <b>ประกาศจาก Admin (${profile.full_name}):</b>\n\n${msg}`, { parse_mode: "HTML" });
-      successCount++;
+      if (s.telegram_id) {
+        await ctx.api.sendMessage(s.telegram_id, `📢 <b>ประกาศจาก Admin (${profile.full_name}):</b>\n\n${msg}`, { parse_mode: "HTML" });
+        successCount++;
+      }
     } catch (e) {
       console.warn(`[BROADCAST] Failed to send to ${s.full_name} (${s.telegram_id})`);
     }
@@ -210,11 +251,18 @@ bot.command("broadcast", async (ctx) => {
 // 🖱️ Callback Query Handlers (Claim, Sold, Confirm)
 bot.on("callback_query:data", async (ctx) => {
   const data = ctx.callbackQuery.data;
-  const profile = (ctx as any).userProfile;
-  const supabase = (ctx as any).adminSupabase;
+  const profile = ctx.userProfile;
+  const supabase = ctx.adminSupabase;
+  
+  if (!profile || !supabase) return;
+
   const adminName = profile.full_name || "Agent";
 
-  const auditCtx = { supabase, user: { id: profile.id } } as any;
+  // Explicit Audit Context Type: Strongly Typed & No more 'any'
+  const auditCtx: MinimalAuditContext = { 
+    supabase, 
+    user: { id: profile.id } 
+  };
 
   // 🙋‍♂️ Case: Claim Lead
   if (data.startsWith("claim_lead:")) {
@@ -223,7 +271,7 @@ bot.on("callback_query:data", async (ctx) => {
     // Double-claim prevention: only update if currently unassigned
     const { data: updatedLead, error } = await supabase
       .from("leads")
-      .update({ assigned_to: profile.id, stage: "PROCEEDING" })
+      .update({ assigned_to: profile.id, stage: "CONTACTED" })
       .eq("id", leadId)
       .is("assigned_to", null) 
       .select("full_name")
@@ -232,15 +280,17 @@ bot.on("callback_query:data", async (ctx) => {
     if (error) return ctx.answerCallbackQuery("❌ เกิดข้อผิดพลาดในการรับงาน");
     
     if (!updatedLead) {
-      // If no row was updated, it means someone else already claimed it
       return ctx.answerCallbackQuery("⚠️ มีคนตัดหน้าคุณไปแล้วครับ! เคสนี้มีคนดูแลแล้ว");
     }
 
-    await logAudit(auditCtx, {
-      action: "lead.update",
-      entity: "leads",
-      entityId: leadId,
-      summary: `เจ้าหน้าที่ ${adminName} รับงาน Lead: ${updatedLead?.full_name || leadId} ผ่าน Telegram`
+    // 🛡️ Edge Safe: Ensure background logging finishes via unstable_after
+    after(() => {
+      logAudit(auditCtx, {
+        action: "lead.update",
+        entity: "leads",
+        entityId: leadId,
+        summary: `เจ้าหน้าที่ ${adminName} รับงาน Lead: ${updatedLead?.full_name || leadId} ผ่าน Telegram`
+      });
     });
 
     // Update message to notify everyone in group
@@ -259,11 +309,14 @@ bot.on("callback_query:data", async (ctx) => {
 
     if (error) return ctx.answerCallbackQuery("❌ ไม่สามารถอัปเดตสถานะทรัพย์ได้");
 
-    await logAudit(auditCtx, {
-      action: "property.status.update",
-      entity: "properties",
-      entityId: propId,
-      summary: `เจ้าหน้าที่ ${adminName} ปิดการขายทรัพย์รหัส ${propId} ผ่าน Telegram`
+    // 🛡️ Edge Safe: Background Audit Logging
+    after(() => {
+      logAudit(auditCtx, {
+        action: "property.status.update",
+        entity: "properties",
+        entityId: propId,
+        summary: `เจ้าหน้าที่ ${adminName} ปิดการขายทรัพย์รหัส ${propId} ผ่าน Telegram`
+      });
     });
 
     await ctx.editMessageText(`🎉 <b>ปิดการขายได้สำเร็จ!</b>\nทรัพย์รหัส: <code>${propId}</code>\nโดย: ${adminName}\n\n<i>ยินดีด้วยกับความสำเร็จครั้งนี้ครับ! 🎊</i>`, { parse_mode: "HTML" });
@@ -274,11 +327,14 @@ bot.on("callback_query:data", async (ctx) => {
   if (data.startsWith("confirm_prop:")) {
     const propId = data.split(":")[1];
 
-    await logAudit(auditCtx, {
-      action: "property.update",
-      entity: "properties",
-      entityId: propId,
-      summary: `เจ้าหน้าที่ ${adminName} ยืนยันข้อมูลทรัพย์สินถูกต้อง (Verified) ผ่าน Telegram`
+    // 🛡️ Edge Safe: Background Audit Logging
+    after(() => {
+      logAudit(auditCtx, {
+        action: "property.update",
+        entity: "properties",
+        entityId: propId,
+        summary: `เจ้าหน้าที่ ${adminName} ยืนยันข้อมูลทรัพย์สินถูกต้อง (Verified) ผ่าน Telegram`
+      });
     });
 
     return ctx.answerCallbackQuery("ยืนยันข้อมูลเรียบร้อย ขอบคุณครับ 🙏");

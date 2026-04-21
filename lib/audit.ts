@@ -93,8 +93,23 @@ export type AuditAction =
 
 type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
 
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { type UserRole } from "./auth-shared";
+
+/**
+ * 🛡️ Minimal context required for auditing
+ * Permits usage in both standard AuthContext (Web) and custom bot contexts.
+ */
+export interface MinimalAuditContext {
+  supabase: SupabaseClient<Database>;
+  user: { id: string };
+  role?: UserRole; // Using strict UserRole instead of any
+  tenantId?: string;
+}
+
 export async function logAudit(
-  ctx: AuthContext,
+  ctx: MinimalAuditContext,
   input: {
     action: AuditAction;
     entity: string;
