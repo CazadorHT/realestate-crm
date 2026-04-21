@@ -3,15 +3,74 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath, unstable_cache, revalidateTag } from "next/cache";
 import { cache } from "react";
+import { after } from "next/server";
 import { z } from "zod";
 import {
   SiteSettingKey,
   SocialKeyword,
   SiteSettings,
   siteSettingsSchema,
+  SENSITIVE_KEYS,
 } from "./schema";
-import { mapDbError } from "@/lib/db-error";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { encrypt, decrypt, isEncrypted } from "@/lib/crypto";
+import { sendAdminNotification } from "@/lib/telegram";
+import { mapDbError } from "@/lib/db-error";
+
+
+/**
+ * Helper to decrypt sensitive values with plaintext fallback
+ */
+export async function decryptValue(key: string, value: unknown): Promise<unknown> {
+  if (!SENSITIVE_KEYS.includes(key as SiteSettingKey) || typeof value !== "string") {
+    return value;
+  }
+
+  if (!isEncrypted(value)) {
+    // 🛡️ Lazy Encryption Strategy: Re-save in background to encrypt
+    // Since this runs in a server action/route, we use after() for non-blocking update
+    after(async () => {
+      console.log(`[LAZY-ENCRYPTION] Encrypting plaintext key on-the-fly: ${key}`);
+      await updateSiteSetting(key as SiteSettingKey, value);
+    });
+    return value; // Return plaintext for immediate use
+  }
+
+  try {
+    const decrypted = decrypt(value);
+    // If it was originally a JSON object, parse it
+    try {
+      return JSON.parse(decrypted);
+    } catch {
+      return decrypted;
+    }
+  } catch (error) {
+    // 🛡️ Security Watchdog: Alert on decryption failure
+    await sendAdminNotification(
+      `🚨 <b>SECURITY ALERT: Decryption Failed</b>\n━━━━━━━━━━━━━━━━━━\n\n<b>Key:</b> <code>${key}</code>\n<b>Warning:</b> ตรวจพบความผิดพลาดในการถอดรหัสข้อมูลสำคัญในฐานข้อมูล หรือกุญแจเข้ารหัสไม่ถูกต้อง!`
+    ).catch(console.error);
+    
+    return undefined;
+  }
+}
+
+/**
+ * Helper to encrypt sensitive values
+ */
+export async function encryptValue(key: string, value: unknown): Promise<unknown> {
+  if (!SENSITIVE_KEYS.includes(key as SiteSettingKey) || value === null || value === undefined) {
+    return value;
+  }
+
+  const stringValue = typeof value === "object" ? JSON.stringify(value) : String(value);
+  
+  try {
+    return encrypt(stringValue);
+  } catch (error) {
+    console.error(`[CRYPTO-ERROR] Failed to encrypt key: ${key}`);
+    throw error;
+  }
+}
 
 const DEFAULT_SETTINGS: SiteSettings = {
   smart_match_wizard_enabled: true,
@@ -93,7 +152,7 @@ async function getSiteSettingsInternal(): Promise<SiteSettings> {
       const key = row.key as SiteSettingKey;
       if (!(key in settings)) continue;
 
-      const val = row.value;
+      const val = await decryptValue(key, row.value);
 
       // 1. Handle Arrays (Keywords)
       if (key === "social_automation_keywords") {
@@ -141,9 +200,9 @@ async function getSiteSettingsInternal(): Promise<SiteSettings> {
 }
 
 /**
- * Get all site settings (Cached with revalidation tag)
+ * Internal cached getter for site settings
  */
-export const getSiteSettings = cache(async () => {
+const getCachedSiteSettings = cache(async () => {
   return unstable_cache(
     async () => getSiteSettingsInternal(),
     ["site-settings"],
@@ -153,6 +212,13 @@ export const getSiteSettings = cache(async () => {
     }
   )();
 });
+
+/**
+ * Get all site settings (Cached with revalidation tag)
+ */
+export async function getSiteSettings() {
+  return getCachedSiteSettings();
+}
 
 /**
  * Get a specific site setting (Cached via getSiteSettings)
@@ -197,10 +263,12 @@ export async function updateSiteSetting(
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData?.user?.id;
 
+    const encryptedValue = await encryptValue(key, value);
+
     const { error } = await supabase.from("site_settings").upsert(
       {
         key,
-        value: value as string | number | boolean | null,
+        value: encryptedValue as string | number | boolean | null,
         updated_at: new Date().toISOString(),
         updated_by: userId,
       },
@@ -220,6 +288,57 @@ export async function updateSiteSetting(
   } catch (error) {
     console.error("Error in updateSiteSetting:", error);
     return { success: false, message: "เกิดข้อผิดพลาดที่ไม่คาดคิด" };
+  }
+}
+
+/**
+ * 🛡️ Phase 3 Migration: Encrypt existing plaintext secrets
+ * This action fetches all sensitive keys and re-saves them to trigger encryption.
+ */
+export async function migrateSecretsAction(): Promise<{ 
+  success: boolean; 
+  message?: string;
+  count?: number;
+}> {
+  try {
+    const ctx = await requireAuthContext();
+    if (ctx.role !== "ADMIN") {
+      return { success: false, message: "Unauthorized: Admin only" };
+    }
+
+    const supabase = ctx.supabase;
+    const { data: settings, error: fetchError } = await supabase
+      .from("site_settings")
+      .select("key, value")
+      .in("key", SENSITIVE_KEYS);
+
+    if (fetchError) throw fetchError;
+
+    let migratedCount = 0;
+    
+    for (const row of (settings || [])) {
+      const key = row.key as SiteSettingKey;
+      const value = row.value;
+
+      // Only migrate if it's not already encrypted and not empty
+      if (value && typeof value === "string" && !isEncrypted(value)) {
+        await updateSiteSetting(key, value);
+        migratedCount++;
+      } else if (value && typeof value === "object" && !isEncrypted(JSON.stringify(value))) {
+        // Handle JSON objects (like google_integration_tokens)
+        await updateSiteSetting(key, value as Record<string, unknown>);
+        migratedCount++;
+      }
+    }
+
+    return { 
+      success: true, 
+      message: `ดำเนินการเข้ารหัสข้อมูลเดิมเรียบร้อยแล้ว (${migratedCount} รายการ)`,
+      count: migratedCount
+    };
+  } catch (error) {
+    console.error("Error in migrateSecretsAction:", error);
+    return { success: false, message: "Migration failed" };
   }
 }
 
@@ -247,12 +366,14 @@ export async function updateSiteSettings(
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData?.user?.id;
 
-    const updates = Object.entries(settings).map(([key, value]) => ({
-      key,
-      value: value as string | number | boolean | null,
-      updated_at: new Date().toISOString(),
-      updated_by: userId,
-    }));
+    const updates = await Promise.all(
+      Object.entries(settings).map(async ([key, value]) => ({
+        key,
+        value: (await encryptValue(key, value)) as string | number | boolean | null,
+        updated_at: new Date().toISOString(),
+        updated_by: userId,
+      }))
+    );
 
     const { error } = await supabase
       .from("site_settings")

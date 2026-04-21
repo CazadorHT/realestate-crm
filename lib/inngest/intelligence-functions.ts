@@ -1,20 +1,18 @@
-import { inngest } from "./client";
+import { inngest, leadCreatedEvent, authLoginEvent } from "./client";
 import { createAdminClient } from "../supabase/admin";
 import { sendAdminNotification } from "../telegram";
 
 /**
  * 🤖 AI Smart Match Infrastructure
- * Triggers when a new Lead is created. Performs a vector search to find 
- * matching properties and notifies the assigned agent.
  */
 export const onLeadCreated = inngest.createFunction(
   { 
     id: "on-lead-created-match", 
     name: "AI Lead-Property Matcher",
-    triggers: [{ event: "lead.created" }]
+    triggers: [{ event: leadCreatedEvent }]
   },
-  async ({ event, step }: { event: any; step: any }) => {
-    const { leadId } = event.data as { leadId: string; tenantId: string };
+  async ({ event, step }) => {
+    const { leadId } = event.data;
     const supabase = createAdminClient();
 
     // 🕵️ Step 1: Fetch Lead requirements
@@ -54,21 +52,15 @@ export const onLeadCreated = inngest.createFunction(
 
 /**
  * 🛡️ Security Watchdog: Login Notification (Hybrid Model)
- * Sends a private alert to the user and a summary to the Admin Group.
  */
 export const onUserLogin = inngest.createFunction(
   { 
     id: "on-user-login-alert", 
     name: "Security Login Watcher",
-    triggers: [{ event: "auth.login" }]
+    triggers: [{ event: authLoginEvent }]
   },
-  async ({ event, step }: { event: any; step: any }) => {
-    const { userId, email, role, metadata } = event.data as { 
-      userId: string; 
-      email: string; 
-      role: string; 
-      metadata: any 
-    };
+  async ({ event, step }) => {
+    const { userId, email, role, metadata } = event.data;
     const supabase = createAdminClient();
 
     // 🕵️ Step 1: Notify User (Private)

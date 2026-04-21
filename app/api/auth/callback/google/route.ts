@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { googleConfig } from "@/lib/google-config";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { encryptValue } from "@/features/site-settings/actions";
+import { getBaseUrl } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -21,12 +23,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const baseUrl = getBaseUrl(request);
+    const redirectUri = `${baseUrl}/api/auth/callback/google`;
+
     const url = "https://oauth2.googleapis.com/token";
     const values = {
       code,
       client_id: googleConfig.clientId,
       client_secret: googleConfig.clientSecret,
-      redirect_uri: googleConfig.redirectUri,
+      redirect_uri: redirectUri,
       grant_type: "authorization_code",
     };
 
@@ -62,13 +67,16 @@ export async function GET(request: NextRequest) {
     }
 
     const supabase = createAdminClient();
+    const configKey = "google_integration_tokens";
+    const configValue = {
+      ...data,
+      email,
+      updated_at: new Date().toISOString(),
+    };
+
     await supabase.from("site_settings").upsert({
-      key: "google_integration_tokens",
-      value: {
-        ...data,
-        email,
-        updated_at: new Date().toISOString(),
-      },
+      key: configKey,
+      value: (await encryptValue(configKey, configValue)) as any,
     });
 
     return NextResponse.redirect(

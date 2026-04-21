@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { metaConfig } from "@/lib/meta-config";
+import { getBaseUrl } from "@/lib/utils";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const appId = metaConfig.appId;
-  const redirectUri = encodeURIComponent(
-    `${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback/facebook`,
-  );
+  const baseUrl = getBaseUrl(request);
+  const redirectUri = encodeURIComponent(`${baseUrl}/api/auth/callback/facebook`);
+  
   const scope = [
     "public_profile",
     "email",

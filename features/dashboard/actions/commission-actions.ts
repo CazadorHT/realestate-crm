@@ -1,8 +1,9 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { CommissionRuleSet } from "@/lib/finance/commissions";
+import { getSiteSetting, updateSiteSetting } from "@/features/site-settings/actions";
+import { SiteSettingKey } from "@/features/site-settings/schema";
 
 export type CommissionActionResponse = {
   success: boolean;
@@ -16,40 +17,31 @@ const SETTINGS_KEY = "commission_rules";
  * Get the global commission rules from site_settings
  */
 export async function getCommissionRulesAction(): Promise<CommissionActionResponse> {
-  const supabase = await createClient();
-
   try {
-    const { data, error } = await supabase
-      .from("site_settings")
-      .select("value")
-      .eq("key", SETTINGS_KEY)
-      .single();
+    const data = await getSiteSetting(SETTINGS_KEY as SiteSettingKey);
 
-    if (error) {
-      if (error.code === "PGRST116") {
-        // Not found, return default
-        return {
-          success: true,
-          data: {
-            type: "TIERED",
-            tiers: [
-              { minPrice: 0, maxPrice: 5000000, percentage: 3 },
-              { minPrice: 5000001, maxPrice: 10000000, percentage: 4 },
-              { minPrice: 10000001, maxPrice: null, percentage: 5 },
-            ],
-            defaultListingPercent: 30,
-            defaultClosingPercent: 50,
-            defaultAgencyPercent: 20,
-            defaultTeamPoolPercent: 2,
-            enableTeamPoolByDefault: false,
-            enableAdvancedSplit: true,
-          },
-        };
-      }
-      throw error;
+    if (!data) {
+      // Not found, return default
+      return {
+        success: true,
+        data: {
+          type: "TIERED",
+          tiers: [
+            { minPrice: 0, maxPrice: 5000000, percentage: 3 },
+            { minPrice: 5000001, maxPrice: 10000000, percentage: 4 },
+            { minPrice: 10000001, maxPrice: null, percentage: 5 },
+          ],
+          defaultListingPercent: 30,
+          defaultClosingPercent: 50,
+          defaultAgencyPercent: 20,
+          defaultTeamPoolPercent: 2,
+          enableTeamPoolByDefault: false,
+          enableAdvancedSplit: true,
+        },
+      };
     }
 
-    const ruleSet = data.value as unknown as CommissionRuleSet;
+    const ruleSet = data as unknown as CommissionRuleSet;
 
     return {
       success: true,
@@ -79,16 +71,13 @@ export async function getCommissionRulesAction(): Promise<CommissionActionRespon
 export async function saveCommissionRulesAction(
   ruleSet: CommissionRuleSet,
 ): Promise<CommissionActionResponse> {
-  const supabase = await createClient();
-
   try {
-    const { error } = await supabase.from("site_settings").upsert({
-      key: SETTINGS_KEY,
-      value: ruleSet as unknown as Record<string, unknown>,
-      updated_at: new Date().toISOString(),
-    });
+    const result = await updateSiteSetting(
+      SETTINGS_KEY as SiteSettingKey,
+      ruleSet as unknown as Record<string, unknown>
+    );
 
-    if (error) throw error;
+    if (!result.success) throw new Error(result.message);
 
     revalidatePath("/protected/dashboard");
     revalidatePath("/protected/deals");

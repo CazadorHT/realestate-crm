@@ -25,6 +25,7 @@ export interface TikTokUserInfo {
  */
 export async function exchangeTikTokCode(
   code: string,
+  redirectUri: string,
 ): Promise<TikTokTokenResponse | null> {
   const url = "https://open.tiktokapis.com/v2/oauth/token/";
   const params = new URLSearchParams({
@@ -32,7 +33,7 @@ export async function exchangeTikTokCode(
     client_secret: tiktokConfig.clientSecret,
     code: code,
     grant_type: "authorization_code",
-    redirect_uri: tiktokConfig.redirectUri,
+    redirect_uri: redirectUri,
   });
 
   try {

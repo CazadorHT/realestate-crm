@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { exchangeTikTokCode, saveTikTokToken, getTikTokUserInfo } from "@/lib/tiktok";
+import { getBaseUrl } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -20,7 +21,9 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const tokenData = await exchangeTikTokCode(code);
+  const baseUrl = getBaseUrl(request);
+  const redirectUri = `${baseUrl}/api/auth/callback/tiktok`;
+  const tokenData = await exchangeTikTokCode(code, redirectUri);
 
   if (tokenData) {
     // 1. Fetch user info to display in settings

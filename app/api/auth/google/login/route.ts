@@ -1,10 +1,14 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { googleConfig } from "@/lib/google-config";
+import { getBaseUrl } from "@/lib/utils";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const rootUrl = "https://accounts.google.com/o/oauth2/v2/auth";
+  const baseUrl = getBaseUrl(request);
+  const redirectUri = `${baseUrl}/api/auth/callback/google`;
+
   const options = {
-    redirect_uri: googleConfig.redirectUri,
+    redirect_uri: redirectUri,
     client_id: googleConfig.clientId,
     access_type: "offline",
     response_type: "code",

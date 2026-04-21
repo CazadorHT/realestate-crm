@@ -48,3 +48,17 @@ export function formatTimeAgo(dateString: string): string {
   if (diffHours < 24) return `${diffHours} ชม. ที่แล้ว`;
   return formatDate(dateString);
 }
+
+/**
+ * Helper to get the base URL of the request dynamically.
+ * Useful for OAuth redirects and absolute URL generation.
+ */
+export function getBaseUrl(request: Request) {
+  const host = request.headers.get("host");
+  const protocol = host?.includes("localhost") ? "http" : "https";
+
+  // Fallback for cases without Host header (e.g., Edge functions or background tasks)
+  if (!host) return process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
+
+  return `${protocol}://${host}`;
+}

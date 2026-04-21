@@ -1,9 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { tiktokConfig } from "@/lib/tiktok-config";
+import { getBaseUrl } from "@/lib/utils";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const clientKey = tiktokConfig.clientKey;
-  const redirectUri = encodeURIComponent(tiktokConfig.redirectUri);
+  const baseUrl = getBaseUrl(request);
+  const redirectUri = encodeURIComponent(`${baseUrl}/api/auth/callback/tiktok`);
   const scope = "user.info.basic,video.upload,video.publish";
   const state = Math.random().toString(36).substring(7);
 
