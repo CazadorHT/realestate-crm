@@ -367,7 +367,7 @@ export async function markAsPaidAction(
       .select(
         `
         *,
-        agent:profiles!deal_commissions_agent_id_fkey(full_name, line_user_id),
+        agent:profiles!deal_commissions_agent_id_fkey(full_name, line_user_id, telegram_id),
         co_broker:co_brokers!deal_commissions_co_broker_id_fkey(name),
         adjustments:commission_adjustments(*)
       `,
@@ -446,6 +446,7 @@ export async function markAsPaidAction(
         reference: payload.payment_reference,
         paidAt: updated?.paid_at || new Date().toISOString(),
         lineUserId: current.agent?.line_user_id,
+        telegramId: current.agent?.telegram_id,
         idempotencyKey: `${current.deal_id}-${commissionId}`,
       },
     });

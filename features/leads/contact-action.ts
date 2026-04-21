@@ -149,6 +149,13 @@ export async function submitContactFormAction(
       };
     }
 
+    // 🤖 Trigger AI Smart Match Infrastructure
+    const { inngest } = await import("@/lib/inngest/client");
+    await inngest.send({
+      name: "lead.created",
+      data: { leadId: lead.id, tenantId: lead.tenant_id }
+    });
+
     // Intelligence: Get Hot Lead Threshold
     const settings = await getSiteSettings();
     const threshold = settings.hot_lead_threshold || 80;

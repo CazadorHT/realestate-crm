@@ -201,6 +201,101 @@ export function formatLeadNotification(
 }
 
 /**
+ * 🔥 Price Drop Notification Formatter
+ */
+export function formatPriceDropNotification(
+  prop: Tables<"properties">, 
+  oldPrice: number, 
+  newPrice: number,
+  type: "SALE" | "RENT"
+) {
+  const discountPercent = Math.round(((oldPrice - newPrice) / oldPrice) * 100);
+  const fireCount = discountPercent >= 30 ? "🔥🔥🔥" : discountPercent >= 15 ? "🔥🔥" : "🔥";
+  
+  const baseUrl = siteConfig.url.endsWith("/") ? siteConfig.url.slice(0, -1) : siteConfig.url;
+  const adminUrl = `${baseUrl}/dashboard/properties/${prop.id}`;
+
+  return `
+${fireCount} <b>PRICE DROP ALERT!</b> ${fireCount}
+━━━━━━━━━━━━━━━━━━
+
+<b>🏢 ทรัพย์:</b> ${prop.title} [${prop.id}]
+<b>📍 ทำเล:</b> ${prop.popular_area || prop.district || "ไม่ระบุ"}
+
+<b>📉 ราคาลดลง:</b> <code>${discountPercent}%</code>
+<b>💰 เดิม:</b> ${formatMoneyM(oldPrice)}
+<b>✅ ใหม่:</b> <b>${formatMoneyM(newPrice)}</b>${type === "RENT" ? "/ด." : ""}
+
+<i>"โอกาสทอง! รีบเสนอขายลูกค้าด่วนครับทีมงาน"</i>
+
+<a href="${adminUrl}">🔍 ดูรายละเอียดและจัดการ</a>
+  `.trim();
+}
+
+/**
+ * 📅 Contract Expiry Notification Formatter
+ */
+export function formatContractExpiryNotification(
+  data: {
+    contractId: string;
+    propertyName: string;
+    customerName: string;
+    endDate: string;
+    daysRemaining: number;
+    agentId?: string;
+  }
+) {
+  const urgencyBadge = data.daysRemaining <= 7 ? "🔴 ด่วนที่สุด" : data.daysRemaining <= 14 ? "🟡 เร่งด่วน" : "🟢 แจ้งเตือน";
+  const baseUrl = siteConfig.url.endsWith("/") ? siteConfig.url.slice(0, -1) : siteConfig.url;
+  const contractUrl = `${baseUrl}/dashboard/contracts/${data.contractId}`;
+
+  return `
+⏰ <b>${urgencyBadge} (Expiry Alert)</b>
+━━━━━━━━━━━━━━━━━━
+
+<b>📋 สัญญาเลขที่:</b> <code>${data.contractId}</code>
+<b>👤 ลูกค้า:</b> ${data.customerName}
+<b>🏠 ทรัพย์:</b> ${data.propertyName}
+
+<b>🗓️ วันหมดอายุ:</b> <code>${new Date(data.endDate).toLocaleDateString("th-TH")}</code>
+<b>⏳ เหลือเวลา:</b> <b>${data.daysRemaining} วัน</b>
+
+<i>"กรุณาติดต่อลูกค้าเพื่อทำเรื่องต่อสัญญาหรือตรวจรับทรัพย์คืนครับ"</i>
+
+<a href="${contractUrl}">🔍 ตรวจสอบสัญญาบน CRM</a>
+  `.trim();
+}
+
+/**
+ * 💰 Commission Payout Notification Formatter
+ */
+export function formatPayoutSuccessNotification(
+  data: {
+    agentName: string;
+    netAmount: number;
+    reference: string;
+    dealId: string;
+  }
+) {
+  const baseUrl = siteConfig.url.endsWith("/") ? siteConfig.url.slice(0, -1) : siteConfig.url;
+  const walletUrl = `${baseUrl}/dashboard/wallet`;
+
+  return `
+🎊 <b>ยินดีด้วยครับ! ค่าคอมมิชชันโอนสำเร็จ</b> 🎊
+━━━━━━━━━━━━━━━━━━━
+
+<b>👤 เอเยนต์:</b> ${data.agentName}
+<b>💵 ยอดโอนสุทธิ:</b> <b>฿${data.netAmount.toLocaleString()}</b>
+<b>🧾 เลขอ้างอิง:</b> <code>${data.reference}</code>
+
+<i>บัญชีของคุณได้รับการอัพเดทเรียบร้อยแล้ว</i>
+<i>ขอบคุณสำหรับความทุ่มเทเพื่อ VCC Asset ครับ! ✨</i>
+
+<a href="${walletUrl}">📄 ดูสลิปและใบ 50 ทวิ</a>
+  `.trim();
+}
+
+/**
  * ⌨️ Action Keyboard for Leads
  */
 export function buildLeadActionKeyboard(leadId: string, phone: string | null) {

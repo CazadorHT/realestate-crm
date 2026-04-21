@@ -9,7 +9,10 @@ import {
   buildPropertyKeyboard, 
   formatDailyReport,
   formatLeadNotification,
-  buildLeadActionKeyboard
+  buildLeadActionKeyboard,
+  formatPriceDropNotification,
+  formatContractExpiryNotification,
+  formatPayoutSuccessNotification
 } from "@/lib/telegram-formatters";
 
 // 🌐 0. Environment Variables
@@ -227,7 +230,82 @@ bot.command("report", async (ctx) => {
     totalTeamActions: 0, // Placeholder
   };
 
+  const { formatDailyReport } = await import("@/lib/telegram-formatters");
   const message = formatDailyReport(reportData);
+  return ctx.reply(message, { parse_mode: "HTML" });
+});
+
+// 📈 Monthly Stats Command (Admin/Manager Only)
+bot.command("stats_monthly", async (ctx) => {
+  const profile = ctx.userProfile;
+  const supabase = ctx.adminSupabase;
+  if (!profile || !supabase) return;
+  
+  if (profile.role !== "ADMIN" && profile.role !== "MANAGER") {
+    return ctx.reply("❌ คำสั่งนี้เฉพาะระดับ Admin หรือ Manager เท่านั้นครับ");
+  }
+
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  const [leadsRes, soldRes, topAgentRes] = await Promise.all([
+    supabase.from("leads").select("*", { count: "exact", head: true }).gte("created_at", startOfMonth.toISOString()),
+    supabase.from("properties").select("*", { count: "exact", head: true }).eq("status", "SOLD").gte("updated_at", startOfMonth.toISOString()),
+    supabase.from("deal_commissions").select("agent_id, profiles(full_name)").eq("status", "PAID").gte("paid_at", startOfMonth.toISOString())
+  ]);
+
+  const statsMessage = `
+📈 <b>สถิติประจำเดือน (${new Intl.DateTimeFormat("th-TH", { month: "long" }).format(new Date())})</b>
+━━━━━━━━━━━━━━━━━━
+
+<b>🆕 ลีดใหม่:</b> <code>${leadsRes.count || 0}</code> รายการ
+<b>🎊 ปิดการขายแล้ว:</b> <code>${soldRes.count || 0}</code> ทรัพย์สิน
+
+<i>"ขยันเข้าไว้ ทีมงานคุณภาพ VCC Asset! 🚀"</i>
+  `.trim();
+
+  return ctx.reply(statsMessage, { parse_mode: "HTML" });
+});
+
+// 🏆 Top Agent Command
+bot.command("top_agent", async (ctx) => {
+  const supabase = ctx.adminSupabase;
+  if (!supabase) return;
+
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0, 0, 0, 0);
+
+  // Fetch PAID commissions to see who's making money
+  const { data, error } = await supabase
+    .from("deal_commissions")
+    .select("agent_id, profiles(full_name)")
+    .eq("status", "PAID")
+    .gte("paid_at", startOfMonth.toISOString());
+
+  if (error || !data) return ctx.reply("❌ ไม่สามารถดึงข้อมูลได้ในขณะนี้");
+
+  // Aggregate counts
+  const agentCounts: Record<string, { name: string; count: number }> = {};
+  data.forEach(item => {
+    const id = item.agent_id;
+    const name = (item.profiles as any)?.full_name || "Unknown";
+    if (id) {
+      agentCounts[id] = { name, count: (agentCounts[id]?.count || 0) + 1 };
+    }
+  });
+
+  const sortedAgents = Object.values(agentCounts).sort((a, b) => b.count - a.count).slice(0, 5);
+
+  if (sortedAgents.length === 0) return ctx.reply("🎯 ยังไม่มีรายการปิดดีลในเดือนนี้ครับ พยายามเข้า!");
+
+  let message = `🏆 <b>Hall of Fame: Top Agents</b>\n━━━━━━━━━━━━━━━━━━\n\n`;
+  sortedAgents.forEach((agent, index) => {
+    const trophy = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "🎖️";
+    message += `${trophy} <b>${agent.name}</b>: ${agent.count} ดีล\n`;
+  });
+
   return ctx.reply(message, { parse_mode: "HTML" });
 });
 
@@ -425,12 +503,44 @@ bot.on("callback_query:data", async (ctx) => {
   }
 });
 
-// 🛠️ Webhook Export
+// 🛠️ Dual-Purpose POST Handler (Webhook + Dispatcher API)
 export async function POST(req: NextRequest) {
-  // Security: Check for secret token in URL
   const { searchParams } = new URL(req.url);
-  const secret = searchParams.get("secret");
+  const authHeader = req.headers.get("Authorization");
+  
+  // 🛡️ Mode 1: Internal Notification Dispatch (System -> Telegram)
+  if (authHeader?.startsWith("Bearer ")) {
+    const token = authHeader.substring(7);
+    if (token !== process.env.INTERNAL_SECRET_TOKEN) {
+      return NextResponse.json({ error: "Unauthorized dispatcher" }, { status: 401 });
+    }
 
+    try {
+      const payload = await req.json();
+      const { to, template, data } = payload as { to: string; template: string; data: any };
+      
+      let message = "";
+      if (template === "PRICE_DROP") {
+        message = formatPriceDropNotification(data.prop, data.oldPrice, data.newPrice, data.type);
+      } else if (template === "EXPIRY") {
+        message = formatContractExpiryNotification(data);
+      } else if (template === "PAYOUT") {
+        message = formatPayoutSuccessNotification(data);
+      } else {
+        message = data.message || "No content";
+      }
+
+      const { sendAdminNotification } = await import("@/lib/telegram");
+      await sendAdminNotification(message, { chatId: to });
+
+      return NextResponse.json({ success: true });
+    } catch (err: any) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
+    }
+  }
+
+  // 🤖 Mode 2: Telegram Webhook (Standard Bot Interaction)
+  const secret = searchParams.get("secret");
   if (secret !== process.env.TELEGRAM_WEBHOOK_SECRET) {
     console.warn("[TG-BOT] Unauthorized webhook attempt (invalid secret)");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

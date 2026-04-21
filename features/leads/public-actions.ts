@@ -32,6 +32,22 @@ export async function subscribeToLineAction(
     }
 
     revalidatePath("/protected/leads"); // Update CRM list
+
+    // 🤖 Trigger AI Smart Match Infrastructure (If lead ID was returned)
+    const { data: leadIdRes } = await supabase
+      .from("leads")
+      .select("id")
+      .eq("line_id", lineId.trim())
+      .single();
+
+    if (leadIdRes) {
+      const { inngest } = await import("@/lib/inngest/client");
+      await inngest.send({
+        name: "lead.created",
+        data: { leadId: leadIdRes.id }
+      });
+    }
+
     return { success: true, message: "บันทึกข้อมูลเรียบร้อยแล้ว" };
   } catch (error) {
     console.error("Error in subscribeToLineAction:", error);

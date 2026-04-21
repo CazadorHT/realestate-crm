@@ -1,6 +1,11 @@
 import { siteConfig } from "@/lib/site-config";
 import { sendLineNotification } from "@/lib/line";
 import type { PropertyRow } from "../types";
+import { after } from "next/server";
+import { sendAdminNotification } from "@/lib/telegram";
+import { 
+  formatPriceDropNotification, 
+} from "@/lib/telegram-formatters";
 
 export async function sendStatusUpdateNotification(
   existing: Partial<PropertyRow> & { title: string; id: string },
@@ -66,6 +71,12 @@ export async function sendStatusUpdateNotification(
         ],
       },
     },
+  });
+
+  // 🛡️ Telegram Admin Bridge Notification
+  after(async () => {
+    const message = `🎊 <b>ปิดดีลเรียบร้อย! (${dealType})</b>\n━━━━━━━━━━━━━━━━━━\n\n<b>🏢 ทรัพย์:</b> ${existing.title}\n<b>🔍 รหัส:</b> <code>${existing.id}</code>\n\n<i>ยินดีด้วยกับเอเยนต์ผู้ดูแลเคสนี้ครับ! 🎉</i>`;
+    await sendAdminNotification(message);
   });
 }
 
@@ -176,5 +187,11 @@ export async function sendPriceDropNotification(
     type: "flex",
     altText: `📉 ลดราคา${typeLabel}! ${existing.title}`,
     contents: flexContents,
+  });
+
+  // 🔥 Telegram Price Drop Notification
+  after(async () => {
+    const tgMessage = formatPriceDropNotification(existing, oldPrice, newPrice, dropType);
+    await sendAdminNotification(tgMessage);
   });
 }

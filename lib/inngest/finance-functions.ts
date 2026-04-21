@@ -99,10 +99,28 @@ export const syncCommissionPayment = inngest.createFunction(
       });
     }
 
+    // 🛡️ Step 3: Send Telegram Notification (If agent has linked ID)
+    if (event.data.telegramId) {
+      await step.run("send-telegram-notification", async () => {
+        const { sendAdminNotification } = await import("@/lib/telegram");
+        const { formatPayoutSuccessNotification } = await import("@/lib/telegram-formatters");
+
+        const tgMessage = formatPayoutSuccessNotification({
+          agentName: event.data.agentName,
+          netAmount: event.data.netAmount,
+          reference: event.data.reference,
+          dealId: event.data.dealId
+        });
+
+        return await sendAdminNotification(tgMessage, { chatId: event.data.telegramId });
+      });
+    }
+
     return { 
       message: `Commission ${commissionId} synced to ${syncResult.provider}`,
       externalId: syncResult.externalId,
-      lineSent: !!event.data.lineUserId
+      lineSent: !!event.data.lineUserId,
+      telegramSent: !!event.data.telegramId
     };
   }
 );

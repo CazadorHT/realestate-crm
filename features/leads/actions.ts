@@ -45,6 +45,14 @@ export const createLeadAction = createSafeAction(
     }
 
     revalidatePath("/protected/leads");
+
+    // 🤖 Trigger AI Smart Match Infrastructure
+    const { inngest } = await import("@/lib/inngest/client");
+    await inngest.send({
+      name: "lead.created",
+      data: { leadId: lead.id, tenantId }
+    });
+
     return { leadId: lead.id };
   },
 );

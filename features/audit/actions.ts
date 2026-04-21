@@ -207,6 +207,18 @@ export async function logActivityAction(
         altText: "🔓 มีผู้ใช้งานเข้าสู่ระบบ",
         contents: flexContents,
       });
+
+      // 🛡️ S-Tier Telegram Security Alert (Hybrid Model)
+      const { inngest } = await import("@/lib/inngest/client");
+      await inngest.send({
+        name: "auth.login",
+        data: {
+          userId: user?.id,
+          email: email,
+          role: profile?.role || "USER",
+          metadata: enrichedMetadata
+        }
+      });
     }
   } catch (error) {
     console.error("Failed to log activity:", error);
