@@ -894,6 +894,39 @@ export type Database = {
           },
         ]
       }
+      deleted_records_archive: {
+        Row: {
+          data: Json
+          deleted_at: string | null
+          deleted_by: string | null
+          entity_type: string
+          id: string
+          metadata: Json | null
+          original_id: string
+          tenant_id: string | null
+        }
+        Insert: {
+          data: Json
+          deleted_at?: string | null
+          deleted_by?: string | null
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          original_id: string
+          tenant_id?: string | null
+        }
+        Update: {
+          data?: Json
+          deleted_at?: string | null
+          deleted_by?: string | null
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          original_id?: string
+          tenant_id?: string | null
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           ai_analysis: Json | null
@@ -3436,6 +3469,14 @@ export type Database = {
           p_rental: number
         }
         Returns: boolean
+      }
+      fn_cleanup_old_archives: {
+        Args: { p_days_retention?: number }
+        Returns: number
+      }
+      fn_restore_property_from_archive: {
+        Args: { p_archive_id: string }
+        Returns: string
       }
       get_analytics_summary_v2: {
         Args: {

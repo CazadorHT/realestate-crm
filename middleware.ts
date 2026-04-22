@@ -42,6 +42,40 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // 1.5 🌏 Auto-Language Detection (IP & Locale based)
+  // [PREMIUM] Automatically serve localized experience to international visitors
+  const hasLangCookie = request.cookies.has("app-language");
+  let detectedLang: string | null = null;
+
+  if (!hasLangCookie) {
+    const acceptLang = request.headers.get("accept-language")?.toLowerCase();
+    const country = request.headers.get("x-vercel-ip-country")?.toUpperCase();
+
+    if (acceptLang) {
+      const primaryLang = acceptLang.split(',')[0];
+      if (primaryLang.startsWith("th")) detectedLang = "th";
+      else if (primaryLang.startsWith("en")) detectedLang = "en";
+      else if (primaryLang.startsWith("zh")) detectedLang = "cn";
+      
+      if (!detectedLang) {
+        if (acceptLang.includes("th")) detectedLang = "th";
+        else if (acceptLang.includes("en")) detectedLang = "en";
+        else if (acceptLang.includes("zh")) detectedLang = "cn";
+      }
+    }
+
+    if (!detectedLang) {
+      if (country === "CN" || country === "HK" || country === "TW") {
+        detectedLang = "cn";
+      } else if (country && country !== "TH") {
+        detectedLang = "en";
+      }
+    }
+
+    // Default to 'th' if no specific detection, but we only set it if detected a "foreign" lang
+    // to keep the cookie list clean for local users who prefer default.
+  }
+
   // 2. 🔑 Supabase Session Management (Auth Refresh)
   // [OPTIMIZATION] Returns both response and user context to avoid redundant hits
   const { response: authResponse, user } = await updateSession(request);
@@ -154,6 +188,15 @@ export async function middleware(request: NextRequest) {
 
   // 5. 🛡️ Apply Security Headers (CSP, etc.)
   response = applySecurityHeaders(request, response);
+
+  // 6. 🌏 Set Auto-Detected Language Cookie
+  if (detectedLang) {
+    response.cookies.set("app-language", detectedLang, {
+      path: "/",
+      maxAge: 31536000, // 1 year
+      sameSite: "lax",
+    });
+  }
 
   return response;
 }

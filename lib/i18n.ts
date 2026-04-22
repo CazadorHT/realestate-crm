@@ -41,11 +41,36 @@ export async function getServerLanguage(): Promise<Language> {
   try {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
-    const langValue = cookieStore.get("app-language")?.value as Language;
+    const cookieLang = cookieStore.get("app-language")?.value as Language;
+    if (cookieLang && ["th", "en", "cn"].includes(cookieLang)) {
+      return cookieLang;
+    }
 
-    return langValue && ["th", "en", "cn"].includes(langValue)
-      ? langValue
-      : "th";
+    // [ELITE FALLBACK] If no cookie, detect via Headers (for the very first load)
+    const { headers } = await import("next/headers");
+    const headersList = await headers();
+    const acceptLang = headersList.get("accept-language")?.toLowerCase();
+    const country = headersList.get("x-vercel-ip-country")?.toUpperCase();
+
+    // 1. Check Device Language (Smart Parsing for user preference)
+    if (acceptLang) {
+      // First, check the primary (first) language preferred by the device
+      const primaryLang = acceptLang.split(',')[0];
+      if (primaryLang.startsWith("th")) return "th";
+      if (primaryLang.startsWith("en")) return "en";
+      if (primaryLang.startsWith("zh")) return "cn";
+
+      // If primary is not supported, check if any of our supported languages are in their list
+      if (acceptLang.includes("th")) return "th";
+      if (acceptLang.includes("en")) return "en";
+      if (acceptLang.includes("zh")) return "cn";
+    }
+
+    // 2. Fallback to IP-based Location (For tourists/visitors)
+    if (country === "CN" || country === "HK" || country === "TW") return "cn";
+    if (country && country !== "TH") return "en";
+
+    return "th";
   } catch (error) {
     return "th";
   }
