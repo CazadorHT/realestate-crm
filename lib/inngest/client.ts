@@ -23,7 +23,28 @@ export const authLoginEvent = eventType("auth.login", {
   }>(),
 });
 
+export const financeCommissionPaidEvent = eventType("finance.commission_paid", {
+  schema: staticSchema<{
+    commissionId: string;
+    agentName: string;
+    amount: number;
+    taxAmount: number;
+    netAmount: number;
+    dealId: string;
+    reference: string;
+    paidAt: string;
+    idempotencyKey?: string;
+    lineUserId?: string | null;
+    telegramId?: string | null;
+  }>(),
+});
+
 // 🔥 Create Inngest Client
 export const inngest = new Inngest({ 
-  id: "real-estate-crm" 
+  id: "real-estate-crm",
+  schemas: {
+    "lead.created": leadCreatedEvent,
+    "auth.login": authLoginEvent,
+    "finance.commission_paid": financeCommissionPaidEvent,
+  }
 });

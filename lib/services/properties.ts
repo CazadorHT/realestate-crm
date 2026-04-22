@@ -66,9 +66,15 @@ export type PropertyRow = {
   nearby_transits: unknown | null;
   ai_summary_content: string | null;
 
-  images?: Array<{
-    url: string;
+  images: Array<{
+    url?: string;
     image_url?: string;
+    storage_path: string | null;
+    is_cover: boolean | null;
+    sort_order: number | null;
+  }> | null;
+  property_images?: Array<{
+    image_url: string;
     storage_path: string | null;
     is_cover: boolean | null;
     sort_order: number | null;
@@ -92,12 +98,15 @@ const PUBLIC_COLUMNS = `
   size_sqm, land_size_sqwah, parking_slots, floor, created_at, updated_at,
   listing_type, popular_area, province, district, subdistrict,
   address_line1, address_line1_en, address_line1_cn,
-  nearby_places, nearby_transits, images, is_hot_deal,
+  nearby_places, nearby_transits, is_hot_deal,
   near_transit, transit_type, transit_station_name,
   transit_station_name_en, transit_station_name_cn, transit_distance_meters,
   google_maps_link, is_fully_furnished, is_bare_shell,
   is_pet_friendly, is_foreigner_quota, is_tax_registered,
   ai_summary_content,
+  property_images (
+    image_url, storage_path, is_cover, sort_order
+  ),
   property_features (
     features (id, name, name_en, name_cn, icon_key)
   )
@@ -280,14 +289,19 @@ export const getPublicProperties = cache(
     const finalProperties = (propertiesData as unknown as PropertyRow[] ?? []).map((row: PropertyRow) => {
       const trans = areaTranslationsMap.get(row.popular_area || "");
       // 🛡️ Exclude DB-specific fields from the card object
-      const { structured_data: _, property_features: __, images: ___, ...cardBase } = row;
+      const { structured_data: _, property_features: __, property_images: pi, images: legacyImages, ...cardBase } = row;
       
+      // Use normalized property_images if available, fallback to legacy
+      const finalImages = (pi && pi.length > 0) 
+        ? pi.map(img => ({ ...img, url: img.image_url })) 
+        : getSafeImages(legacyImages);
+
       return {
         ...cardBase,
         popular_area_en: trans?.en ?? null,
         popular_area_cn: trans?.cn ?? null,
-        image_url: getCoverImage(row.images),
-        images: getSafeImages(row.images),
+        image_url: getCoverImage(finalImages),
+        images: finalImages,
         location: buildLocation(row),
         features: (row.property_features || [])
           .map((pf) => pf.features)
@@ -327,12 +341,17 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
     if (areaData) trans = { en: areaData.name_en, cn: areaData.name_cn };
   }
 
+  // Use normalized property_images if available, fallback to legacy
+  const finalImages = (typedRow.property_images && typedRow.property_images.length > 0)
+    ? typedRow.property_images.map(img => ({ ...img, url: img.image_url }))
+    : getSafeImages(typedRow.images);
+
   return {
     ...typedRow,
     popular_area_en: trans.en,
     popular_area_cn: trans.cn,
-    image_url: getCoverImage(typedRow.images),
-    images: getSafeImages(typedRow.images),
+    image_url: getCoverImage(finalImages),
+    images: finalImages,
     location: buildLocation(typedRow),
     features: (typedRow.property_features || [])
       .map((pf) => pf.features)

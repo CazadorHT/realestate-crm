@@ -25,26 +25,42 @@ export class AuthzError extends Error {
 }
 
 /**
- * ดึง role จากตาราง profiles เท่านั้น (ห้ามเดาจาก metadata เพื่อไม่เผลอยกระดับสิทธิ)
- * ถ้าไม่พบ profile ให้ fallback เป็น AGENT (never elevate).
+ * 🛡️ Stateless Role Extraction: ดึงสิทธิจาก JWT Metadata ทันทีโดยไม่ยิง DB
+ * ช่วยลด Latency และป้องกันปัญหา Auth Waterfall
+ */
+function getRoleStateless(user: User): UserRole | null {
+  return (user.app_metadata?.role as UserRole) || null;
+}
+
+/**
+ * ดึง role จากตาราง profiles (Fallback) 
+ * หรือใช้จาก Metadata ถ้ามี (Stateless)
  */
 async function getRole(
   supabase: AuthContext["supabase"],
-  userId: string,
+  user: User,
 ): Promise<UserRole | null> {
+  // 1. Try Stateless first (JWT Claims)
+  const statelessRole = getRoleStateless(user);
+  if (statelessRole) return statelessRole;
+
+  // 2. Fallback to DB if Metadata is missing
   const { data } = await supabase
     .from("profiles")
     .select("role")
-    .eq("id", userId)
+    .eq("id", user.id)
     .maybeSingle();
 
   if (!data?.role) return null;
   return data.role as UserRole;
 }
 
-export async function getAuthContextOrNull(
+import { cache } from "react";
+import { getSystemConfig } from "@/lib/actions/system-config";
+
+export const getAuthContextOrNull = cache(async (
   injectedSupabase?: SupabaseClient<Database>,
-): Promise<AuthContext | null> {
+): Promise<AuthContext | null> => {
   // 🛡️ Test Infrastructure Bridge
   const supabase = injectedSupabase ?? (await createClient());
   const { data, error } = await supabase.auth.getUser();
@@ -52,18 +68,16 @@ export async function getAuthContextOrNull(
   // 🛡️ Zombie Session Protection: Verify user exists and JWT is still valid
   if (error || !data?.user) return null;
 
-  const role = await getRole(supabase, data.user.id);
+  const role = await getRole(supabase, data.user);
   if (!role) return null; // 🛡️ Mission Critical: No profile = No access
 
   return { supabase, user: data.user, role };
-}
+});
 
-import { getSystemConfig } from "@/lib/actions/system-config";
-
-export async function requireAuthContext(
+export const requireAuthContext = cache(async (
   requestedTenantId?: string,
   injectedSupabase?: SupabaseClient<Database>,
-): Promise<AuthContext> {
+): Promise<AuthContext> => {
   const ctx = await getAuthContextOrNull(injectedSupabase);
   if (!ctx) throw new AuthzError("UNAUTHORIZED", "Unauthorized");
 
@@ -124,7 +138,8 @@ export async function requireAuthContext(
   }
 
   return ctx;
-}
+
+});
 
 /**
  * ใช้กับ resource ที่มีฟิลด์ created_by / owner_id (เช่น properties/leads)

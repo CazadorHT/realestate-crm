@@ -50,7 +50,14 @@ function BranchDetailSkeleton() {
 }
 
 // 🏷️ Types
-type Tenant = Database["public"]["Tables"]["tenants"]["Row"];
+type TenantBranch = {
+  id: string;
+  name: string;
+  slug: string;
+  logo_url: string | null;
+  created_at: string;
+  memberCount: number;
+};
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type TenantMember = Database["public"]["Tables"]["tenant_members"]["Row"] & {
   profiles: {
@@ -72,8 +79,8 @@ export default function BranchDetailPage({
   const { refresh: refreshTenants } = useTenant();
 
   // --- States ---
-  const [branch, setBranch] = useState<Tenant | null>(null);
-  const [branches, setBranches] = useState<Tenant[]>([]);
+  const [branch, setBranch] = useState<TenantBranch | null>(null);
+  const [branches, setBranches] = useState<TenantBranch[]>([]);
   const [members, setMembers] = useState<TenantMember[]>([]);
   const [invitations, setInvitations] = useState<TenantInvitation[]>([]);
   const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
@@ -104,7 +111,7 @@ export default function BranchDetailPage({
       if (bRes.data) {
         const current = bRes.data.find((t) => t.id === id);
         setBranch(current || null);
-        setBranches(bRes.data.filter(b => b.id !== id) as Tenant[]);
+        setBranches(bRes.data.filter(b => b.id !== id));
       }
       if (sRes.data) setStats(sRes.data);
       if (mRes.data) setMembers(mRes.data as TenantMember[]);

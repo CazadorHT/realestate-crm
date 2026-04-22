@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { Database } from "../database.types";
 
 /**
  * Generates an XML feed for Meta Real Estate Catalog
@@ -27,12 +28,18 @@ export async function generateMetaCatalogFeed() {
 
   if (error) throw error;
 
+  type PropertyWithRelations = Database["public"]["Tables"]["properties"]["Row"] & {
+    property_images: Array<{ image_url: string; is_cover: boolean }>;
+    assigned_agent: { full_name: string | null; phone: string | null } | null;
+  };
+
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<listings>\n`;
   xml += `  <title>VC Connect Asset Catalog</title>\n`;
   xml += `  <link>${process.env.NEXT_PUBLIC_APP_URL || "https://your-crm.com"}</link>\n`;
 
-  for (const p of properties || []) {
+  for (const p_raw of (properties || [])) {
+    const p = p_raw as unknown as PropertyWithRelations;
     const propertyUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://your-crm.com"}/properties/${p.slug}`;
 
     xml += `  <listing>\n`;
@@ -77,7 +84,7 @@ export async function generateMetaCatalogFeed() {
 
     // Images — XML uses nested <image> blocks (not CSV bracket notation)
     const images = p.property_images || [];
-    images.slice(0, 20).forEach((img: any) => {
+    images.slice(0, 20).forEach((img) => {
       if (img.image_url) {
         xml += `    <image>\n      <url>${img.image_url}</url>\n    </image>\n`;
       }
@@ -134,7 +141,7 @@ export async function generateMetaCatalogFeed() {
     }
 
     // Agent Contact
-    const agent = (p as any).assigned_agent;
+    const agent = p.assigned_agent;
     if (agent?.full_name) {
       xml += `    <agent_name><![CDATA[${agent.full_name}]]></agent_name>\n`;
     }

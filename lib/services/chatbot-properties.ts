@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { Database, Json } from "@/lib/database.types";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { 
   getSafeImages, 
@@ -9,10 +10,10 @@ import {
 
 export type PropertyRow = {
   id: string;
-  slug: string;
+  slug: string | null;
   title: string;
   description: string | null;
-  property_type: string | null;
+  property_type: Database["public"]["Enums"]["property_type"] | null;
   price: number | null;
   rental_price: number | null;
   bedrooms: number | null;
@@ -20,8 +21,8 @@ export type PropertyRow = {
   size_sqm: number | null;
   parking_slots: number | null;
   floor: number | null;
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
+  updated_at: string | null;
   listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
   province: string | null;
   district: string | null;
@@ -38,21 +39,11 @@ export type PropertyRow = {
   transit_station_name: string | null;
   transit_distance_meters: number | null;
   google_maps_link: string | null;
+  nearby_places: Json;
+  nearby_transits: Json;
 
-  images?: Array<{
-    url: string;
-    image_url?: string;
-    storage_path: string | null;
-    is_cover: boolean | null;
-    sort_order: number | null;
-  }> | null;
-  property_features?: Array<{
-    features: {
-      id: string;
-      name: string;
-      icon_key: string;
-    } | null;
-  }> | null;
+  images?: Json | null;
+  property_features?: Json | null;
 };
 
 
@@ -102,7 +93,8 @@ export async function searchPropertiesForChatbot(
       subdistrict, address_line1,
       images,
       property_features (features (id, name, icon_key)),
-      near_transit, transit_type, transit_station_name, transit_distance_meters, google_maps_link
+      near_transit, transit_type, transit_station_name, transit_distance_meters, google_maps_link,
+      nearby_places, nearby_transits
     `,
     )
     .eq("status", "ACTIVE");
@@ -267,7 +259,7 @@ export async function searchPropertiesForChatbot(
       query = query.or(`property_type.eq.${type},${orSyns.join(",")}`);
     } else {
       // Fallback to .eq for enum column
-      query = query.eq("property_type", type as any);
+      query = query.eq("property_type", type as Database["public"]["Enums"]["property_type"]);
     }
   }
 
@@ -334,8 +326,7 @@ export async function searchPropertiesForChatbot(
     return [];
   }
 
-  return (data ?? []).map((row: any) => {
-    const r = row as unknown as PropertyRow;
+  return (data ?? []).map((r: PropertyRow) => {
     return {
       id: r.id,
       slug: r.slug,
@@ -365,7 +356,7 @@ export async function searchPropertiesForChatbot(
       image_url: getCoverImage(r.images),
       images: getSafeImages(r.images),
       location: buildLocation(r),
-      features: (r.property_features || [])
+      features: ((r.property_features as unknown as Array<{ features: { id: string, name: string, icon_key: string } | null }> ) || [])
         .map((pf) => pf.features)
         .filter((f): f is NonNullable<typeof f> => f !== null),
       near_transit: r.near_transit,
@@ -373,8 +364,8 @@ export async function searchPropertiesForChatbot(
       transit_station_name: r.transit_station_name,
       transit_distance_meters: r.transit_distance_meters,
       google_maps_link: r.google_maps_link,
-      nearby_places: getSafeNearbyPlaces((r as any).nearby_places),
-      nearby_transits: getSafeNearbyTransits((r as any).nearby_transits),
+      nearby_places: getSafeNearbyPlaces(r.nearby_places),
+      nearby_transits: getSafeNearbyTransits(r.nearby_transits),
     };
   });
 }

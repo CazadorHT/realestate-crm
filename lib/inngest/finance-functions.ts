@@ -11,7 +11,7 @@ export const syncCommissionPayment = inngest.createFunction(
     name: "Accounting Sync (PEAK/FlowAccount)", 
     triggers: [{ event: "finance.commission_paid" }]
   },
-  async ({ event, step }: { event: any; step: any }) => {
+  async ({ event, step }) => {
     const { 
       commissionId, 
       agentName, 
@@ -95,7 +95,7 @@ export const syncCommissionPayment = inngest.createFunction(
           }
         };
 
-        return await sendLineNotification(flexMessage as any);
+        return await sendLineNotification(flexMessage);
       });
     }
 

@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireAuthContext, assertAdmin, AuthzError } from "@/lib/authz";
+import { requireAuthContext, assertAdmin, AuthzError, UserRole } from "@/lib/authz";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/audit";
@@ -90,11 +90,11 @@ export async function migrateDataToTenantAction(tenantId: string) {
 
     if (profiles && profiles.length > 0) {
       const membersToInsert = profiles
-        .filter((p: any) => p.id !== ctx.user.id) // Skip admin since they are already OWNER
-        .map((p: any) => ({
+        .filter((p) => p.id !== ctx.user.id) // Skip admin since they are already OWNER
+        .map((p) => ({
           tenant_id: tenantId,
           profile_id: p.id,
-          role: p.role === "ADMIN" ? "ADMIN" : "AGENT", // fallback mapping
+          role: (p.role === "ADMIN" ? "ADMIN" : "AGENT") as UserRole, // fallback mapping
         }));
 
       if (membersToInsert.length > 0) {
@@ -115,8 +115,8 @@ export async function migrateDataToTenantAction(tenantId: string) {
     for (const table of tablesToMigrate) {
       // We only update rows that are currently NOT assigned to any tenant
       const { error } = await adminSupabase
-        .from(table as any)
-        .update({ tenant_id: tenantId })
+        .from(table as "properties" | "leads" | "deals")
+        .update({ tenant_id: tenantId } as any) // Supabase types for bulk update can be tricky, but we'll use a safer cast if possible
         .is("tenant_id", null);
 
       if (error) {
@@ -132,7 +132,7 @@ export async function migrateDataToTenantAction(tenantId: string) {
     });
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     return { error: mapDbError(error) };
   }
 }
@@ -189,9 +189,9 @@ export async function getTenantsAction() {
   }
 
   // Flatten member count if necessary (Supabase return type can be complex)
-  const branches = data.map((t: any) => ({
+  const branches = data.map((t) => ({
     ...t,
-    memberCount: t.member_count?.[0]?.count || 0,
+    memberCount: (t.member_count as unknown as { count: number }[])?.[0]?.count || 0,
   }));
 
   return { data: branches };
@@ -268,7 +268,7 @@ export async function addTenantMemberAction(
       supabase: adminSupabase,
       user: (await adminSupabase.auth.getUser()).data.user!,
       role: myRole,
-    } as any,
+    },
     {
       action: "member.add",
       entity: "tenant_members",
@@ -305,7 +305,7 @@ export async function removeTenantMemberAction(
       supabase: adminSupabase,
       user: (await adminSupabase.auth.getUser()).data.user!,
       role,
-    } as any,
+    },
     {
       action: "member.remove",
       entity: "tenant_members",
@@ -490,7 +490,7 @@ export async function cancelTenantInvitationAction(invitationId: string) {
       supabase: adminSupabase,
       user: (await adminSupabase.auth.getUser()).data.user!,
       role: ctx.role,
-    } as any,
+    },
     {
       action: "member.remove",
       entity: "tenant_invitations",
@@ -534,7 +534,7 @@ export async function updateTenantAction(
       supabase: adminSupabase,
       user: (await adminSupabase.auth.getUser()).data.user!,
       role,
-    } as any,
+    },
     {
       action: "tenant.update",
       entity: "tenants",
@@ -569,7 +569,7 @@ export async function deleteTenantAction(id: string) {
       supabase: adminSupabase,
       user: (await adminSupabase.auth.getUser()).data.user!,
       role,
-    } as any,
+    },
     {
       action: "tenant.delete",
       entity: "tenants",
@@ -600,7 +600,7 @@ export async function acceptInvitationAction(tenantId: string) {
   const { error: mError } = await adminSupabase.from("tenant_members").insert({
     tenant_id: tenantId,
     profile_id: ctx.user.id,
-    role: inv.role as any,
+    role: inv.role as UserRole,
   });
 
   if (mError) {
@@ -677,7 +677,7 @@ export async function getBranchStatsAction(tenantId: string) {
         propertyCount: propertyCount || 0,
       },
     };
-  } catch (err: any) {
+  } catch (err) {
     return { error: mapDbError(err) };
   }
 }

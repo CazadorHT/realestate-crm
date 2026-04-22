@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Database } from "@/lib/database.types";
+import { UserRole } from "@/lib/auth-shared";
 
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -35,7 +36,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     return {
       id: user.id,
       email: user.email ?? null,
-      role: (user.user_metadata?.role as any) ?? "USER", // Default to USER for new signups
+      role: (user.user_metadata?.role as UserRole) ?? "USER", // Default to USER for new signups
       avatar_url: user.user_metadata?.avatar_url ?? null, // รูปจาก Google
       full_name:
         user.user_metadata?.full_name ?? user.user_metadata?.name ?? null, // ชื่อจาก Google
@@ -59,7 +60,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   }
 
   // Merge Logic: ถ้ามี profiles แต่บางค่าเป็น Null ให้ลองดึงจาก Auth มาเติมให้เต็ม
-  const dbProfile = profile as unknown as Profile;
+  const dbProfile: Profile = profile;
 
   return {
     ...dbProfile,

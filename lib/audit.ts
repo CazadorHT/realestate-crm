@@ -1,5 +1,5 @@
 // lib/audit.ts
-import type { Database } from "@/lib/database.types";
+import type { Database, Json } from "@/lib/database.types";
 import type { AuthContext } from "@/lib/authz";
 
 export type AuditAction =
@@ -126,7 +126,7 @@ export async function logAudit(
     metadata: {
       ...(input.metadata ?? {}),
       ...(input.summary ? { summary: input.summary } : {}),
-    } as any,
+    } as Json,
     tenant_id: ctx.tenantId && ctx.tenantId !== "ALL" ? ctx.tenantId : null,
   };
 
@@ -162,7 +162,7 @@ export interface AuditLogMetadata {
 export function getReadableSummary(log: {
   action: string;
   entity: string;
-  metadata: any;
+  metadata: unknown;
 }): string {
   const meta = (log.metadata || {}) as AuditLogMetadata;
   const action = log.action;

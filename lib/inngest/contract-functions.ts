@@ -61,15 +61,23 @@ export const dailyContractExpiryCheck = inngest.createFunction(
         const diffDays = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         
         // Extract joined data safely with proper typing
-        const deal = Array.isArray(contract.deals) ? contract.deals[0] : contract.deals;
-        const propertyName = (deal as any)?.properties?.title || "Unknown Property";
-        const customerName = (deal as any)?.leads?.full_name || "Unknown Customer";
-        const agentTgId = (deal as any)?.leads?.agent?.telegram_id;
+        type JoinedDeal = {
+          properties: { title: string } | null;
+          leads: { 
+            full_name: string | null; 
+            agent: { telegram_id: string | null } | null; 
+          } | null;
+        };
+
+        const deal = (Array.isArray(contract.deals) ? contract.deals[0] : contract.deals) as unknown as JoinedDeal | null;
+        const propertyName = deal?.properties?.title || "Unknown Property";
+        const customerName = deal?.leads?.full_name || "Unknown Customer";
+        const agentTgId = deal?.leads?.agent?.telegram_id;
 
         const message = formatContractExpiryNotification({
           contractId: contract.id,
-          propertyName: propertyName as string,
-          customerName: customerName as string,
+          propertyName,
+          customerName,
           endDate: contract.end_date,
           daysRemaining: diffDays,
         });

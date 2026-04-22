@@ -7,10 +7,13 @@ export type SystemConfig = {
   default_tenant_id: string | null;
 };
 
+import { cache } from "react";
+
 /**
  * Fetches the global system configuration from site_settings.
+ * Memoized per request to prevent DB waterfalls.
  */
-export async function getSystemConfig(): Promise<SystemConfig> {
+export const getSystemConfig = cache(async (): Promise<SystemConfig> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("site_settings")
@@ -26,7 +29,9 @@ export async function getSystemConfig(): Promise<SystemConfig> {
   }
 
   return data.value as SystemConfig;
-}
+});
+
+import type { Json } from "@/lib/database.types";
 
 /**
  * Updates the global system configuration.
@@ -39,7 +44,7 @@ export async function updateSystemConfig(config: Partial<SystemConfig>) {
 
   const { error } = await supabase.from("site_settings").upsert({
     key: "system_config",
-    value: newValue as any,
+    value: newValue as Json,
     updated_at: new Date().toISOString(),
   });
 
