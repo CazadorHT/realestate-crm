@@ -519,8 +519,8 @@ export async function getPayoutQueueAction(filters?: {
     let queryBuilder = supabase.from("deal_commissions").select(
       `
         *,
-        agent:profiles!deal_commissions_agent_id_fkey (id, full_name, phone),
-        co_broker:co_brokers!deal_commissions_co_broker_id_fkey (id, name, phone, company_name),
+        agent:profiles!deal_commissions_agent_id_fkey (id, full_name, phone, bank_code, bank_account_no, bank_account_name, bank:ref_banks(name_th, name_en)),
+        co_broker:co_brokers!deal_commissions_co_broker_id_fkey (id, name, phone, company_name, bank_code, bank_account_no, bank_account_name, bank:ref_banks(name_th, name_en)),
         adjustments:commission_adjustments(*),
         summary_view:view_commission_payout_summaries!inner (
           total_adjustments,

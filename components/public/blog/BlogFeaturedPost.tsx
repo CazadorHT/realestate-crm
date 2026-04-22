@@ -1,26 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { BookOpen } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
 import { format } from "date-fns";
 import { th, enUS, zhCN } from "date-fns/locale";
+import type { BlogPost } from "@/lib/services/blog";
 
 interface BlogFeaturedPostProps {
-  post: {
-    slug: string;
-    title: string;
-    excerpt?: string | null;
-    published_at: string | null;
-    cover_image?: string | null;
-    category?: string | null;
-    author: any;
-    title_en?: string | null;
-    title_cn?: string | null;
-    excerpt_en?: string | null;
-    excerpt_cn?: string | null;
-  };
+  post: BlogPost;
 }
 
 export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
@@ -54,11 +44,14 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
           itemProp="url"
         >
           {post.cover_image ? (
-            <img
+            <Image
               src={post.cover_image}
               alt={title}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              fill
+              priority
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
               itemProp="image"
+              sizes="(max-width: 1024px) 100vw, 50vw"
             />
           ) : (
             <div className="w-full h-full bg-linear-to-br from-slate-100 to-slate-200 flex items-center justify-center text-slate-400">
@@ -103,14 +96,16 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
             itemScope
             itemType="https://schema.org/Person"
           >
-            {typeof post.author === "object" && post.author && (
+            {post.profiles && (
               <>
-                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden">
-                  {(post.author as any).avatar && (
-                    <img
-                      src={(post.author as any).avatar}
-                      className="w-full h-full object-cover"
+                <div className="w-10 h-10 rounded-full bg-slate-200 overflow-hidden relative">
+                  {post.profiles.avatar_url && (
+                    <Image
+                      src={post.profiles.avatar_url}
+                      fill
+                      className="object-cover"
                       alt=""
+                      sizes="40px"
                     />
                   )}
                 </div>
@@ -119,7 +114,7 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
                     className="text-sm font-bold text-slate-900"
                     itemProp="name"
                   >
-                    {(post.author as any).name || "Admin"}
+                    {post.profiles.full_name || "Admin"}
                   </p>
                   <p className="text-xs text-slate-500">
                     <time

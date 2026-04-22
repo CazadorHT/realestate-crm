@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, useTransition } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
 import {
   Table,
   TableBody,
@@ -112,7 +113,7 @@ function SortableRow({
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 50 : "auto",
-    position: "relative" as any,
+    position: "relative" as const,
   };
 
   return (
@@ -149,8 +150,14 @@ function SortableRow({
       <TableCell className="px-6">
         <div className="flex items-center gap-3">
           {item.image_url ? (
-            <div className="h-10 w-10 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shrink-0 shadow-sm">
-              <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+            <div className="h-10 w-10 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shrink-0 shadow-sm relative">
+              <Image 
+                src={item.image_url} 
+                alt={item.name} 
+                fill 
+                className="object-cover" 
+                sizes="40px"
+              />
             </div>
           ) : (
             <div className="h-10 w-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-300 shrink-0">

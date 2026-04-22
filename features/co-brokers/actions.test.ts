@@ -69,11 +69,16 @@ describe('Co-Brokers Module - Definitive Case', () => {
       name: 'Test Broker',
       phone: '0812345678',
       type: 'INDIVIDUAL',
+      bank_code: 'KBANK',
+      bank_account_no: '1234567890',
     } as any);
 
     if (!result.success) console.error("Create Failed:", result.error);
     expect(result.success).toBe(true);
-    expect(mockSupabase.insert).toHaveBeenCalled();
+    expect(mockSupabase.insert).toHaveBeenCalledWith(expect.objectContaining({
+      bank_code: 'KBANK',
+      bank_account_no: '1234567890',
+    }));
   });
 
   describe('permanentlyDeleteCoBrokerAction', () => {

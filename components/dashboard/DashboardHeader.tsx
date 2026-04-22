@@ -10,22 +10,12 @@ interface DashboardHeaderProps {
 }
 
 export function DashboardHeader({ email, name }: DashboardHeaderProps) {
-  // SSR will use server time, but we update to exact client browser time after mount
-  const [greeting, setGreeting] = useState(() => {
-    const hour = new Date().getHours();
-    return hour < 12 ? "สวัสดีตอนเช้า" : hour < 18 ? "สวัสดีตอนบ่าย" : "สวัสดีตอนเย็น";
-  });
-
-  const [currentDate, setCurrentDate] = useState(() => {
-    return new Date().toLocaleDateString("th-TH", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  });
+  const [mounted, setMounted] = useState(false);
+  const [greeting, setGreeting] = useState("");
+  const [currentDate, setCurrentDate] = useState("");
 
   useEffect(() => {
+    setMounted(true);
     const updateTime = () => {
       const now = new Date();
       const hour = now.getHours();
@@ -43,7 +33,6 @@ export function DashboardHeader({ email, name }: DashboardHeaderProps) {
     };
 
     updateTime();
-    // Keep it updated if the user leaves the tab open for a while
     const intervalId = setInterval(updateTime, 60 * 1000);
     return () => clearInterval(intervalId);
   }, []);
@@ -56,14 +45,13 @@ export function DashboardHeader({ email, name }: DashboardHeaderProps) {
 
       <div className="relative space-y-3 z-10">
         <p
-          className="text-xs md:text-sm font-semibold text-blue-100/90 capitalize flex items-center gap-2.5"
-          suppressHydrationWarning
+          className="text-xs md:text-sm font-semibold text-blue-100/90 capitalize flex items-center gap-2.5 min-h-[20px]"
         >
           <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_12px_rgba(52,211,153,0.8)]" />
-          {currentDate}
+          {mounted ? currentDate : <span className="h-3 w-32 bg-white/20 rounded-sm animate-pulse inline-block" />}
         </p>
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white drop-shadow-md flex flex-wrap items-center gap-2">
-          <span suppressHydrationWarning>{greeting}</span>
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-white drop-shadow-md flex flex-wrap items-center gap-2 min-h-[40px]">
+          {mounted ? greeting : <span className="h-8 w-40 bg-white/20 rounded-md animate-pulse inline-block" />}
           <span className="text-white/60 font-medium">,</span>
           <span>{name || email?.split("@")[0] || "คุณ"}</span>
           <MdWavingHand className="text-yellow-300 animate-wave inline-block ml-1" />

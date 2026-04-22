@@ -10,6 +10,9 @@ export const profileSchema = z.object({
   wechat_id: z.string().optional(),
   tax_id: z.string().optional(),
   tax_address: z.string().optional(),
+  bank_code: z.string().optional(),
+  bank_account_no: z.string().optional(),
+  bank_account_name: z.string().optional(),
   telegram_id: z
     .string()
     .optional()

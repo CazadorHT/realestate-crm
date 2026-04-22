@@ -14,6 +14,9 @@ export const CoBrokerSchema = z.object({
   property_types: z.array(z.string()).default([]),
   tax_id: z.string().trim().optional().nullable(),
   tax_address: z.string().trim().optional().nullable(),
+  bank_code: z.string().trim().optional().nullable(),
+  bank_account_no: z.string().trim().optional().nullable(),
+  bank_account_name: z.string().trim().optional().nullable(),
   standard_commission_rate: z.number().optional().nullable(),
   tenant_id: z.string().uuid().optional(),
   is_active: z.boolean().default(true),
@@ -29,6 +32,9 @@ export interface CoBroker extends Omit<CoBrokerFormValues, 'phone' | 'rating' | 
   rating: number | null;
   specialized_areas: string[] | null;
   property_types: string[] | null;
+  bank_code: string | null;
+  bank_account_no: string | null;
+  bank_account_name: string | null;
   is_active: boolean | null;
   broker_group: string | null;
   created_at: string | null;

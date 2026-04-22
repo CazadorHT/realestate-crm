@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 
 import { Clock } from "lucide-react";
 import { format } from "date-fns";
@@ -16,6 +17,12 @@ export function PropertyCardFooter({
   variant?: "default" | "minimal";
 }) {
   const { t, language } = useLanguage();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const dateLocale = language === "th" ? th : language === "cn" ? zhCN : enUS;
   const prices = getEffectivePrice(property);
 
@@ -70,8 +77,8 @@ export function PropertyCardFooter({
           {/* Date */}
           <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
             <Clock className="w-3 h-3" />
-            <span suppressHydrationWarning>
-              {property.updated_at
+            <span className="min-w-[60px]">
+              {mounted && property.updated_at
                 ? format(new Date(property.updated_at), "d MMM yyyy", {
                     locale: dateLocale,
                   })
@@ -223,13 +230,12 @@ export function PropertyCardFooter({
           {property.updated_at ? (
             <>
               <Clock className="h-3 w-3 mr-1" />
-              <span
-                className="text-slate-400 font-normal"
-                suppressHydrationWarning
-              >
-                {format(new Date(property.updated_at), "d MMM yyyy", {
-                  locale: dateLocale,
-                })}
+              <span className="text-slate-400 font-normal min-w-[70px]">
+                {mounted
+                  ? format(new Date(property.updated_at), "d MMM yyyy", {
+                      locale: dateLocale,
+                    })
+                  : ""}
               </span>
             </>
           ) : null}

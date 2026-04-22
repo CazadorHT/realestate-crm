@@ -1,3 +1,4 @@
+/** Standardized Supabase Database Types */
 export type Json =
   | string
   | number
@@ -478,6 +479,9 @@ export type Database = {
       }
       co_brokers: {
         Row: {
+          bank_account_name: string | null
+          bank_account_no: string | null
+          bank_code: string | null
           broker_group: string | null
           company_name: string | null
           created_at: string | null
@@ -502,6 +506,9 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          bank_account_name?: string | null
+          bank_account_no?: string | null
+          bank_code?: string | null
           broker_group?: string | null
           company_name?: string | null
           created_at?: string | null
@@ -526,6 +533,9 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          bank_account_name?: string | null
+          bank_account_no?: string | null
+          bank_code?: string | null
           broker_group?: string | null
           company_name?: string | null
           created_at?: string | null
@@ -550,6 +560,13 @@ export type Database = {
           whatsapp?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "co_brokers_bank_code_fkey"
+            columns: ["bank_code"]
+            isOneToOne: false
+            referencedRelation: "ref_banks"
+            referencedColumns: ["code"]
+          },
           {
             foreignKeyName: "external_agents_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -691,6 +708,8 @@ export type Database = {
           paid_at: string | null
           payment_reference: string | null
           payout_metadata: Json | null
+          payout_ref: string | null
+          payout_slip_url: string | null
           percentage: number
           role: Database["public"]["Enums"]["commission_role"]
           slip_url: string | null
@@ -713,6 +732,8 @@ export type Database = {
           paid_at?: string | null
           payment_reference?: string | null
           payout_metadata?: Json | null
+          payout_ref?: string | null
+          payout_slip_url?: string | null
           percentage?: number
           role: Database["public"]["Enums"]["commission_role"]
           slip_url?: string | null
@@ -735,6 +756,8 @@ export type Database = {
           paid_at?: string | null
           payment_reference?: string | null
           payout_metadata?: Json | null
+          payout_ref?: string | null
+          payout_slip_url?: string | null
           percentage?: number
           role?: Database["public"]["Enums"]["commission_role"]
           slip_url?: string | null
@@ -1784,6 +1807,9 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bank_account_name: string | null
+          bank_account_no: string | null
+          bank_code: string | null
           created_at: string
           default_tax_rate: number | null
           email: string | null
@@ -1807,6 +1833,9 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          bank_account_name?: string | null
+          bank_account_no?: string | null
+          bank_code?: string | null
           created_at?: string
           default_tax_rate?: number | null
           email?: string | null
@@ -1830,6 +1859,9 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          bank_account_name?: string | null
+          bank_account_no?: string | null
+          bank_code?: string | null
           created_at?: string
           default_tax_rate?: number | null
           email?: string | null
@@ -1852,6 +1884,13 @@ export type Database = {
           whatsapp_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_bank_code_fkey"
+            columns: ["bank_code"]
+            isOneToOne: false
+            referencedRelation: "ref_banks"
+            referencedColumns: ["code"]
+          },
           {
             foreignKeyName: "profiles_team_id_fkey"
             columns: ["team_id"]
@@ -2633,6 +2672,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ref_banks: {
+        Row: {
+          code: string
+          created_at: string | null
+          is_active: boolean | null
+          logo_url: string | null
+          name_en: string
+          name_th: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          name_en: string
+          name_th: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          is_active?: boolean | null
+          logo_url?: string | null
+          name_en?: string
+          name_th?: string
+        }
+        Relationships: []
       }
       rent_notification_history: {
         Row: {
@@ -4222,3 +4288,5 @@ export const Constants = {
     },
   },
 } as const
+
+export {};

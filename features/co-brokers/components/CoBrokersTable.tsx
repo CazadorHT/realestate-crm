@@ -32,7 +32,8 @@ import {
   Building2,
   RotateCcw,
   TrendingUp,
-  Handshake
+  Handshake,
+  Pencil
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -50,6 +51,7 @@ interface CoBrokersTableProps {
   data: CoBroker[];
   onUpdate: () => void;
   onViewPerformance: (broker: CoBroker) => void;
+  onEdit: (broker: CoBroker) => void;
   isTrash?: boolean;
   onSelectionChange?: (selectedIds: Set<string>) => void;
   hasActiveFilters?: boolean;
@@ -61,6 +63,7 @@ export function CoBrokersTable({
   onViewPerformance, 
   isTrash = false,
   onSelectionChange,
+  onEdit,
   hasActiveFilters = false
 }: CoBrokersTableProps) {
   const { activeTenant } = useTenant();
@@ -236,6 +239,12 @@ export function CoBrokersTable({
                         <TrendingUp className="mr-2 h-4 w-4 text-blue-500" />
                         ดูยอดขาย & ผลงาน
                       </DropdownMenuItem>
+                      {!isTrash && (
+                        <DropdownMenuItem onClick={() => onEdit(broker)}>
+                          <Pencil className="mr-2 h-4 w-4 text-indigo-500" />
+                          แก้ไขข้อมูล
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuSeparator />
                       
                       {isTrash ? (

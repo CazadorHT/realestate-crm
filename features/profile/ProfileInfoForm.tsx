@@ -46,6 +46,14 @@ import { FaFacebook, FaLine, FaTelegram, FaWhatsapp } from "react-icons/fa6";
 import { IoLogoWechat } from "react-icons/io5";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { AlertCircle } from "lucide-react";
+import { getBanksAction } from "../finance/bank-actions";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 interface ProfileInfoFormProps {
   fullName: string | null;
@@ -59,6 +67,9 @@ interface ProfileInfoFormProps {
   role: string | null;
   tax_id: string | null;
   tax_address: string | null;
+  bank_code?: string | null;
+  bank_account_no?: string | null;
+  bank_account_name?: string | null;
   telegram_id: string | null;
   score: number;
 }
@@ -75,6 +86,9 @@ export function ProfileInfoForm({
   role,
   tax_id,
   tax_address,
+  bank_code,
+  bank_account_no,
+  bank_account_name,
   telegram_id,
   score,
 }: ProfileInfoFormProps) {
@@ -97,9 +111,22 @@ export function ProfileInfoForm({
       wechat_id: wechat_id || "",
       tax_id: tax_id || "",
       tax_address: tax_address || "",
+      bank_code: bank_code || "",
+      bank_account_no: bank_account_no || "",
+      bank_account_name: bank_account_name || "",
       telegram_id: telegram_id || "",
     },
   });
+
+  const [banks, setBanks] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchBanks() {
+      const res = await getBanksAction();
+      if (res.success) setBanks(res.data || []);
+    }
+    fetchBanks();
+  }, []);
 
   const isDirty = form.formState.isDirty;
 
@@ -163,6 +190,11 @@ export function ProfileInfoForm({
       if (values.tax_id) formData.append("tax_id", values.tax_id);
       if (values.tax_address)
         formData.append("tax_address", values.tax_address);
+      if (values.bank_code) formData.append("bank_code", values.bank_code);
+      if (values.bank_account_no)
+        formData.append("bank_account_no", values.bank_account_no);
+      if (values.bank_account_name)
+        formData.append("bank_account_name", values.bank_account_name);
       if (values.telegram_id)
         formData.append("telegram_id", values.telegram_id);
 
@@ -630,6 +662,98 @@ export function ProfileInfoForm({
                           </m.div>
                         )}
                       </AnimatePresence>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="bank_code"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <div className="flex flex-col gap-0">
+                    <FormLabel className="text-[13px] font-medium text-slate-600">
+                      ธนาคารที่รับเงิน
+                    </FormLabel>
+                    <FormDescription className="text-[11px] text-slate-400">เลือกธนาคารมาตรฐานเพื่อความถูกต้องในการโอนเงิน</FormDescription>
+                  </div>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <div className="relative">
+                        <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500 z-10" />
+                        <SelectTrigger className="pl-10.5 h-11 rounded-xl border-indigo-50 focus:ring-indigo-500/20 font-normal shadow-none transition-all">
+                          <SelectValue placeholder="เลือกธนาคาร..." />
+                        </SelectTrigger>
+                      </div>
+                    </FormControl>
+                    <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
+                      {banks.map((bank) => (
+                        <SelectItem key={bank.code} value={bank.code} className="py-3 rounded-xl font-medium">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900">{bank.name_th}</span>
+                            <span className="text-[10px] text-slate-400 uppercase">{bank.code}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="bank_account_no"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <div className="flex flex-col gap-0">
+                    <FormLabel className="text-[13px] font-medium text-slate-600">
+                      เลขที่บัญชี (เฉพาะตัวเลข)
+                    </FormLabel>
+                    <FormDescription className="text-[11px] text-slate-400">ระบุเฉพาะตัวเลข 10-12 หลัก โดยไม่ต้องใส่ขีด</FormDescription>
+                  </div>
+                  <FormControl>
+                    <div className="relative">
+                      <AtSign className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        placeholder="เช่น 1234567890"
+                        className="pl-10.5 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 font-mono font-bold tracking-wider shadow-none transition-all"
+                        {...field}
+                        onChange={(e) => {
+                           const val = e.target.value.replace(/[^0-9]/g, '');
+                           field.onChange(val);
+                        }}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="bank_account_name"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <div className="flex flex-col gap-0">
+                    <FormLabel className="text-[13px] font-medium text-slate-600">
+                      ชื่อบัญชีธนาคาร
+                    </FormLabel>
+                    <FormDescription className="text-[11px] text-slate-400">ชื่อ-นามสกุลที่ปรากฏในบัญชีธนาคาร</FormDescription>
+                  </div>
+                  <FormControl>
+                    <div className="relative">
+                      <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        placeholder="ระบุชื่อบัญชี..."
+                        className="pl-10.5 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 font-normal shadow-none transition-all"
+                        {...field}
+                      />
                     </div>
                   </FormControl>
                   <FormMessage />

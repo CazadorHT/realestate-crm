@@ -22,6 +22,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { EditPartnerDialog } from "./EditPartnerDialog";
 import { cn } from "@/lib/utils";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import Image from "next/image";
 
 // Dnd Kit Imports
 import { 
@@ -341,11 +342,13 @@ export function PartnersTable({
                         )}
                       </div>
                       <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-100 p-2 flex items-center justify-center shrink-0 shadow-inner">
-                          <img
+                        <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-100 p-2 flex items-center justify-center shrink-0 shadow-inner relative">
+                          <Image
                             src={partner.logo_url}
                             alt={partner.name}
-                            className="h-full w-full object-contain"
+                            fill
+                            className="object-contain p-2"
+                            sizes="48px"
                           />
                         </div>
                         <h4 className="font-bold text-slate-900 leading-tight line-clamp-2">
@@ -544,10 +547,12 @@ function SortablePartnerRow({
       </TableCell>
       <TableCell className="px-6">
         <div className="h-10 w-24 relative bg-slate-50 rounded-lg border border-slate-100 p-1 flex items-center justify-center shadow-inner group-hover:bg-white transition-colors">
-          <img
+          <Image
             src={partner.logo_url}
             alt={partner.name}
-            className="h-full w-full object-contain"
+            fill
+            className="object-contain p-1"
+            sizes="96px"
           />
         </div>
       </TableCell>

@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import Image from "next/image";
+import { cn } from "@/lib/utils";
 
 type Partner = {
   id: string;
@@ -114,26 +116,9 @@ export function PartnerSection() {
                       key={partner.id}
                       data-aos="fade-up"
                       data-aos-delay={idx * 50}
-                      className="group relative flex items-center justify-center transition-all duration-500 ease-in-out px-4"
+                      className="group relative flex items-center justify-center transition-all duration-500 ease-in-out px-4 h-16 w-32 md:h-20 md:w-40"
                     >
-                      <img
-                        src={partner.logo_url}
-                        alt={`${partner.name} - ${t("home.partners.title")}${
-                          partner.category === "bank"
-                            ? ` ${t("home.partners.banks")}`
-                            : partner.category === "developer"
-                              ? ` ${t("home.partners.developers")}`
-                              : ""
-                        }`}
-                        title={partner.name}
-                        className="h-16 w-auto md:h-20 object-contain hover:scale-110 transition-transform duration-300 "
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            "/images/v-link-svg-png-logo.svg";
-                          (e.target as HTMLImageElement).className =
-                            "h-12 w-auto opacity-30 grayscale";
-                        }}
-                      />
+                      <PartnerLogo partner={partner} t={t} />
                     </div>
                   ))}
             </div>
@@ -157,26 +142,9 @@ export function PartnerSection() {
                       key={`duplicate-${partner.id}`}
                       data-aos="fade-up"
                       data-aos-delay={idx * 50}
-                      className="group relative flex items-center justify-center transition-all duration-500 ease-in-out px-4"
+                      className="group relative flex items-center justify-center transition-all duration-500 ease-in-out px-4 h-16 w-32 md:h-20 md:w-40"
                     >
-                      <img
-                        src={partner.logo_url}
-                        alt={`${partner.name} - ${t("home.partners.title")}${
-                          partner.category === "bank"
-                            ? ` ${t("home.partners.banks")}`
-                            : partner.category === "developer"
-                              ? ` ${t("home.partners.developers")}`
-                              : ""
-                        }`}
-                        title={partner.name}
-                        className="h-16 w-auto md:h-20 object-contain hover:scale-110 transition-transform duration-300 "
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src =
-                            "/images/v-link-svg-png-logo.svg";
-                          (e.target as HTMLImageElement).className =
-                            "h-12 w-auto opacity-30 grayscale";
-                        }}
-                      />
+                      <PartnerLogo partner={partner} t={t} />
                     </div>
                   ))}
             </div>
@@ -184,5 +152,24 @@ export function PartnerSection() {
         </div>
       </div>
     </section>
+  );
+}
+
+function PartnerLogo({ partner, t }: { partner: Partner; t: any }) {
+  const [error, setError] = useState(false);
+
+  return (
+    <Image
+      src={error ? "/images/v-link-svg-png-logo.svg" : partner.logo_url}
+      alt={`${partner.name} - ${t("home.partners.title")}`}
+      title={partner.name}
+      fill
+      className={cn(
+        "object-contain hover:scale-110 transition-transform duration-300",
+        error && "opacity-30 grayscale h-12! w-auto!"
+      )}
+      onError={() => setError(true)}
+      sizes="(max-width: 768px) 120px, 160px"
+    />
   );
 }

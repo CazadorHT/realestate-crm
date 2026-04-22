@@ -102,7 +102,7 @@ export default async function RootLayout({
   const settings = await getSiteSettings();
 
   return (
-    <html lang={lang} suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang={lang} data-scroll-behavior="smooth">
       <head>
         {/* Google Tag Manager - Unified */}
         {settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
@@ -118,7 +118,6 @@ export default async function RootLayout({
       </head>
       <body
         className={`${prompt.className} ${notoThai.variable} antialiased`}
-        suppressHydrationWarning
         style={{ scrollbarGutter: "stable" }}
       >
         <Suspense fallback={null}>

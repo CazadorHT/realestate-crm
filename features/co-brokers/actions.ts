@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext } from "@/lib/authz";
-import { CoBrokerFormValues, CoBrokerSchema } from "./schema";
+import { CoBrokerFormValues, CoBrokerSchema, CoBroker } from "./schema";
 import { revalidatePath } from "next/cache";
 import { logActivityAction } from "@/features/audit/actions";
 
@@ -18,7 +18,7 @@ export interface CoBrokerDocumentInput {
 /**
  * 📊 ดึงรายการคู่ค้าทั้งหมด
  */
-export async function getCoBrokersAction(query?: string, area?: string) {
+export async function getCoBrokersAction(query?: string, area?: string): Promise<{ success: boolean; data?: CoBroker[]; error?: string }> {
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
@@ -41,7 +41,7 @@ export async function getCoBrokersAction(query?: string, area?: string) {
     const { data, error } = await dbQuery.order("name", { ascending: true });
 
     if (error) throw error;
-    return { success: true, data };
+    return { success: true, data: data as unknown as CoBroker[] };
   } catch (error: unknown) {
     console.error("Error fetching co-brokers:", error);
     return {
@@ -481,7 +481,7 @@ export async function bulkUpdateCoBrokerGroupAction(
 /**
  * 🗑️ ดึงข้อมูลจากถังขยะ (Recycle Bin)
  */
-export async function getTrashCoBrokersAction() {
+export async function getTrashCoBrokersAction(): Promise<{ success: boolean; data?: CoBroker[]; error?: string }> {
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
@@ -493,7 +493,7 @@ export async function getTrashCoBrokersAction() {
       .order("deleted_at", { ascending: false });
 
     if (error) throw error;
-    return { success: true, data };
+    return { success: true, data: data as unknown as CoBroker[] };
   } catch (error: unknown) {
     console.error("Error fetching trash co-brokers:", error);
     return { success: false, error: (error as Error).message };

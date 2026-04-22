@@ -25,6 +25,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn, formatDate } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -224,8 +225,14 @@ export function EventDetailsDialog({
             <div className="group relative overflow-hidden rounded-4xl border border-slate-100 bg-white p-2 shadow-sm hover:shadow-md transition-all duration-300">
               {event.meta?.propertyImage ? (
                 <div className="flex gap-4 items-center">
-                  <div className="h-20 w-24 rounded-2xl overflow-hidden shrink-0 border border-slate-100">
-                    <img src={event.meta?.propertyImage} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Res" />
+                  <div className="h-20 w-24 rounded-2xl overflow-hidden shrink-0 border border-slate-100 relative">
+                    <Image 
+                      src={event.meta?.propertyImage} 
+                      fill 
+                      className="object-cover transition-transform duration-500 group-hover:scale-110" 
+                      alt="Property" 
+                      sizes="96px"
+                    />
                   </div>
                   <div className="pr-4">
                     <p className="text-sm font-semibold text-slate-900 line-clamp-2 leading-relaxed tracking-tight">{event.meta?.propertyTitle}</p>
@@ -283,7 +290,7 @@ export function EventDetailsDialog({
                       </Button>
                     }
                     defaultValues={{
-                      activity_type: event.type.toUpperCase() as any,
+                      activity_type: event.type.toUpperCase() as LeadActivityFormValues["activity_type"],
                       note: event.meta?.note || "",
                       property_id: event.meta?.propertyId || null,
                     }}

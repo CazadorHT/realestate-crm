@@ -52,6 +52,9 @@ export async function updateProfileAction(
     const tax_id = formData.get("tax_id") as string | null;
     const tax_address = formData.get("tax_address") as string | null;
     const telegram_id = formData.get("telegram_id") as string | null;
+    const bank_code = formData.get("bank_code") as string | null;
+    const bank_account_no = formData.get("bank_account_no") as string | null;
+    const bank_account_name = formData.get("bank_account_name") as string | null;
 
     if (line_id !== null) updateData.line_id = line_id.trim();
     if (line_user_id !== null) updateData.line_user_id = line_user_id.trim();
@@ -62,6 +65,11 @@ export async function updateProfileAction(
     // 🛡️ Sensitive Tax Information
     if (tax_id !== null) updateData.tax_id = tax_id.trim();
     if (tax_address !== null) updateData.tax_address = tax_address.trim();
+
+    // 🏦 Fintech Bank Information
+    if (bank_code !== null) updateData.bank_code = bank_code.trim();
+    if (bank_account_no !== null) updateData.bank_account_no = bank_account_no.trim();
+    if (bank_account_name !== null) updateData.bank_account_name = bank_account_name.trim();
 
     // 📟 Telegram Back-office
     if (telegram_id !== null) updateData.telegram_id = telegram_id.trim();

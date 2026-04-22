@@ -12,6 +12,7 @@ import { DealCombobox } from "@/features/deals/components/DealCombobox";
 import { cn } from "@/lib/utils";
 import { useFormContext } from "react-hook-form";
 import { ContractFormInput, type ContractDealSummary } from "@/features/rental-contracts/schema";
+import Image from "next/image";
 
 interface Step1Props {
   selectedDeal: ContractDealSummary | null;
@@ -60,10 +61,12 @@ export function Step1DealSelection({
         <div className="flex flex-row gap-4 p-4 bg-white rounded-2xl border border-slate-200 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="relative w-24 h-24 sm:w-32 sm:h-32 shrink-0 overflow-hidden rounded-xl bg-slate-100 border border-slate-100 shadow-inner">
             {selectedDeal.cover_image_url ? (
-              <img
+              <Image
                 src={selectedDeal.cover_image_url}
                 alt={selectedDeal.property_title}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 96px, 128px"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-300">

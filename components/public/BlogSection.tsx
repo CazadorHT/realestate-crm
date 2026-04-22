@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
+import Image from "next/image";
 import { Calendar, ArrowRight, User, BookOpen } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,7 +56,7 @@ export function BlogSection() {
       datePublished: post.published_at,
       author: {
         "@type": "Person",
-        name: (post.author as any)?.name || "Admin",
+        name: post.profiles?.full_name || "Admin",
       },
       image: post.cover_image || "",
       url: `${siteConfig.url}/blog/${post.slug}`,
@@ -192,11 +193,13 @@ export function BlogSection() {
                       {/* Image */}
                       <div className="relative h-40 md:h-48 overflow-hidden bg-slate-100">
                         {post.cover_image ? (
-                          <img
+                          <Image
                             src={post.cover_image}
                             alt={title}
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-700"
                             itemProp="image"
+                            sizes="(max-width: 768px) 260px, (max-width: 1024px) 50vw, 25vw"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-300 bg-linear-to-br from-slate-50 to-slate-100">
@@ -259,21 +262,26 @@ export function BlogSection() {
                             itemScope
                             itemType="https://schema.org/Person"
                           >
-                            <Avatar className="w-8 h-8 border border-slate-100">
-                              <AvatarImage
-                                src={(post.author as any)?.avatar_url || ""}
-                                alt={(post.author as any)?.name || "Admin"}
-                                className="object-cover"
-                              />
-                              <AvatarFallback className="bg-slate-100 flex items-center justify-center">
-                                <User className="w-4 h-4 text-slate-400" />
-                              </AvatarFallback>
+                            <Avatar className="w-8 h-8 border border-slate-100 relative overflow-hidden">
+                              {post.profiles?.avatar_url ? (
+                                <Image
+                                  src={post.profiles.avatar_url}
+                                  alt={post.profiles.full_name || "Admin"}
+                                  fill
+                                  className="object-cover"
+                                  sizes="32px"
+                                />
+                              ) : (
+                                <AvatarFallback className="bg-slate-100 flex items-center justify-center">
+                                  <User className="w-4 h-4 text-slate-400" />
+                                </AvatarFallback>
+                              )}
                             </Avatar>
                             <span
                               className="text-sm font-medium text-slate-700 truncate"
                               itemProp="name"
                             >
-                              {(post.author as any)?.name || "Admin"}
+                              {post.profiles?.full_name || "Admin"}
                             </span>
                           </div>
                           <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />

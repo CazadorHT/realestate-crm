@@ -41,14 +41,31 @@ import {
   PROPERTY_TYPE_ORDER, 
   PROPERTY_TYPE_ICONS 
 } from "../../properties/labels";
+import { useEffect } from "react";
+import { getBanksAction } from "../../finance/bank-actions";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 interface CreateCoBrokerDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (newItem: CoBroker) => void;
+  initialData?: CoBroker | null;
+  mode?: "create" | "edit";
 }
 
-export function CreateCoBrokerDialog({ isOpen, onClose, onSuccess }: CreateCoBrokerDialogProps) {
+export function CreateCoBrokerDialog({ 
+  isOpen, 
+  onClose, 
+  onSuccess,
+  initialData,
+  mode = "create"
+}: CreateCoBrokerDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
@@ -67,10 +84,70 @@ export function CreateCoBrokerDialog({ isOpen, onClose, onSuccess }: CreateCoBro
       property_types: [],
       tax_id: "",
       tax_address: "",
+      bank_code: "",
+      bank_account_no: "",
+      bank_account_name: "",
       internal_notes: "",
       is_active: true,
     },
   });
+
+  const [banks, setBanks] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchBanks() {
+      const res = await getBanksAction();
+      if (res.success) setBanks(res.data || []);
+    }
+    fetchBanks();
+  }, []);
+
+  // Update form when initialData changes (for Edit mode)
+  useEffect(() => {
+    if (initialData && mode === "edit") {
+      form.reset({
+        id: initialData.id,
+        name: initialData.name || "",
+        company_name: initialData.company_name || "",
+        phone: initialData.phone || "",
+        email: initialData.email || "",
+        line_id: initialData.line_id || "",
+        whatsapp: initialData.whatsapp || "",
+        rating: initialData.rating || 3,
+        specialized_areas: initialData.specialized_areas || [],
+        property_types: initialData.property_types || [],
+        tax_id: initialData.tax_id || "",
+        tax_address: initialData.tax_address || "",
+        bank_code: initialData.bank_code || "",
+        bank_account_no: initialData.bank_account_no || "",
+        bank_account_name: initialData.bank_account_name || "",
+        internal_notes: initialData.internal_notes || "",
+        is_active: initialData.is_active ?? true,
+        broker_group: initialData.broker_group || "GENERAL",
+        tenant_id: initialData.tenant_id,
+      });
+    } else if (mode === "create") {
+      form.reset({
+        name: "",
+        company_name: "",
+        phone: "",
+        email: "",
+        line_id: "",
+        whatsapp: "",
+        rating: 3,
+        specialized_areas: [],
+        property_types: [],
+        tax_id: "",
+        tax_address: "",
+        bank_code: "",
+        bank_account_no: "",
+        bank_account_name: "",
+        internal_notes: "",
+        is_active: true,
+        broker_group: "GENERAL",
+      });
+    }
+  }, [initialData, mode, form]);
 
   async function handleNext() {
     // Validate current step fields
@@ -91,14 +168,21 @@ export function CreateCoBrokerDialog({ isOpen, onClose, onSuccess }: CreateCoBro
   async function onSubmit(values: CoBrokerFormValues) {
     setIsSubmitting(true);
     try {
-      const result = await createCoBrokerAction(values);
+      const { updateCoBrokerAction } = await import("../actions");
+      
+      const result = mode === "create"
+        ? await createCoBrokerAction(values)
+        : await updateCoBrokerAction(initialData!.id, values);
+
       if (result.success && result.data) {
-        toast.success("เพิ่มรายชื่อคู่ค้าเรียบร้อยแล้ว");
+        toast.success(mode === "create" ? "เพิ่มรายชื่อคู่ค้าเรียบร้อยแล้ว" : "อัปเดตข้อมูลคู่ค้าเรียบร้อยแล้ว");
         onSuccess(result.data as CoBroker);
-        form.reset();
-        setCurrentStep(1);
+        if (mode === "create") {
+          form.reset();
+          setCurrentStep(1);
+        }
       } else {
-        toast.error(result.error || "เกิดข้อผิดพลาดในการบันทึก");
+        toast.error((result as any).error || "เกิดข้อผิดพลาดในการบันทึก");
       }
     } catch (error) {
       toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
@@ -166,7 +250,11 @@ export function CreateCoBrokerDialog({ isOpen, onClose, onSuccess }: CreateCoBro
           </div>
           <div className="text-left">
              <div className="text-lg font-bold text-slate-900">
-                {currentStep === 1 ? "ข้อมูลตัวตนคู่ค้า" : currentStep === 2 ? "ความถนัดและพื้นที่" : "การเงินและบันทึก"}
+                {mode === "create" ? (
+                  currentStep === 1 ? "เพิ่มคู่ค้าใหม่: ข้อมูลตัวตน" : currentStep === 2 ? "เพิ่มคู่ค้าใหม่: ความถนัด" : "เพิ่มคู่ค้าใหม่: การเงิน"
+                ) : (
+                  currentStep === 1 ? "แก้ไขคู่ค้า: ข้อมูลตัวตน" : currentStep === 2 ? "แก้ไขคู่ค้า: ความถนัด" : "แก้ไขคู่ค้า: การเงิน"
+                )}
              </div>
              <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">ขั้นตอนที่ {currentStep} จาก {totalSteps}</p>
           </div>
@@ -228,7 +316,7 @@ export function CreateCoBrokerDialog({ isOpen, onClose, onSuccess }: CreateCoBro
                 ) : (
                   <>
                     <Check className="mr-2 h-4 w-4" />
-                    ยืนยันการเพิ่มคู่ค้า
+                    {mode === "create" ? "ยืนยันการเพิ่มคู่ค้า" : "บันทึกการแก้ไข"}
                   </>
                 )}
               </Button>
@@ -475,6 +563,74 @@ export function CreateCoBrokerDialog({ isOpen, onClose, onSuccess }: CreateCoBro
                   />
                </div>
 
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="bank_code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">ธนาคาร <span className="text-red-500">*</span></FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value || ""}>
+                          <FormControl>
+                            <SelectTrigger className="h-12 rounded-xl bg-slate-50/50 border-slate-200 font-medium">
+                              <SelectValue placeholder="เลือกธนาคาร..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
+                            {banks.map((bank) => (
+                              <SelectItem key={bank.code} value={bank.code} className="py-3 rounded-xl font-medium">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-slate-900">{bank.name_th}</span>
+                                  <span className="text-[10px] text-slate-400 uppercase">{bank.code}</span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="bank_account_no"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">เลขที่บัญชี (เฉพาะตัวเลข)</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="เช่น 1234567890" 
+                            {...field} 
+                            value={field.value || ""} 
+                            className="h-12 rounded-xl bg-slate-50/50 border-slate-200 font-mono font-bold tracking-wider" 
+                            onChange={(e) => {
+                               // Force numeric only at UI level too
+                               const val = e.target.value.replace(/[^0-9]/g, '');
+                               field.onChange(val);
+                            }}
+                          />
+                        </FormControl>
+                        <FormDescription className="text-[10px] ml-1">ระบุเฉพาะตัวเลข 10-12 หลัก โดยไม่ต้องใส่ขีดหรือช่องว่าง</FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="bank_account_name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">ชื่อบัญชี</FormLabel>
+                      <FormControl>
+                        <Input placeholder="ระบุชื่อบัญชี..." {...field} value={field.value || ""} className="h-12 rounded-xl bg-slate-50/50 border-slate-200" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="internal_notes"
@@ -484,7 +640,7 @@ export function CreateCoBrokerDialog({ isOpen, onClose, onSuccess }: CreateCoBro
                       <FormControl>
                         <Textarea 
                           placeholder="ระบุข้อตกลงพิเศษ หรือข้อควรระวังในการร่วมงาน..." 
-                          className="min-h-[150px] rounded-3xl bg-slate-50/30 border-slate-100 font-medium p-4 py-3"
+                          className="min-h-[120px] rounded-3xl bg-slate-50/30 border-slate-100 font-medium p-4 py-3"
                           {...field} 
                           value={field.value || ""}
                         />

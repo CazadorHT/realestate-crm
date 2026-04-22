@@ -54,6 +54,9 @@ export async function getCurrentProfile(): Promise<Profile | null> {
       updated_at: new Date().toISOString(),
       tax_id: null,
       tax_address: null,
+      bank_code: null,
+      bank_account_no: null,
+      bank_account_name: null,
       telegram_id: null,
       default_tax_rate: null,
     };

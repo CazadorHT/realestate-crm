@@ -57,6 +57,8 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
   const [selectedBroker, setSelectedBroker] = useState<CoBroker | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [editBroker, setEditBroker] = useState<CoBroker | null>(null);
+  const [dialogMode, setDialogMode] = useState<"create" | "edit">("create");
 
   // Selection state
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -256,6 +258,11 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
                   setSelectedBroker(broker);
                   setIsDrawerOpen(true);
                 }}
+                onEdit={(broker) => {
+                  setEditBroker(broker);
+                  setDialogMode("edit");
+                  setIsDialogOpen(true);
+                }}
               />
             )}
           </CardContent>
@@ -311,10 +318,22 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
 
       <CreateCoBrokerDialog 
         isOpen={isDialogOpen} 
-        onClose={() => setIsDialogOpen(false)}
-        onSuccess={(newItem: any) => {
-          setData([newItem, ...data]);
+        onClose={() => {
           setIsDialogOpen(false);
+          setEditBroker(null);
+          setDialogMode("create");
+        }}
+        mode={dialogMode}
+        initialData={editBroker}
+        onSuccess={(newItem: any) => {
+          if (dialogMode === "create") {
+            setData([newItem, ...data]);
+          } else {
+            setData(data.map(d => d.id === newItem.id ? newItem : d));
+          }
+          setIsDialogOpen(false);
+          setEditBroker(null);
+          setDialogMode("create");
         }}
       />
     </div>

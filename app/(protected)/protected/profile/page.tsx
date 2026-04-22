@@ -177,6 +177,9 @@ export default async function ProfilePage() {
               role={profile.role}
               tax_id={profile.tax_id}
               tax_address={profile.tax_address}
+              bank_code={profile.bank_code}
+              bank_account_no={profile.bank_account_no}
+              bank_account_name={profile.bank_account_name}
               telegram_id={profile.telegram_id}
               score={scoreClamped}
             />

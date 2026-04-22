@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { MapPin, Home, TrendingUp } from "lucide-react";
 import { PropertyMatch, PropertyType } from "@/features/smart-match/types";
 import { getTypeColor, getTypeLabel } from "@/lib/property-utils";
@@ -31,11 +32,13 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
         className="block"
       >
         <div className="flex gap-4">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shrink-0 bg-slate-200">
-            <img
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden shrink-0 bg-slate-200 relative">
+            <Image
               src={match.image_url}
               alt={match.title}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 80px, 96px"
             />
           </div>
           <div className="flex-1 min-w-0">

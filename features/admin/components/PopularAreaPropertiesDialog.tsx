@@ -7,6 +7,7 @@ import { Building2, ExternalLink, MapPin, Tag, Key, Repeat, ArrowUpRight } from 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import Image from "next/image";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface PopularAreaPropertiesDialogProps {
@@ -48,7 +49,7 @@ export function PopularAreaPropertiesDialog({
           });
 
           if (result && "data" in result && result.data?.properties) {
-            setProperties(result.data.properties as any);
+            setProperties(result.data.properties as PropertyListItem[]);
           }
         } catch (error) {
           console.error("Failed to fetch properties for area:", error);
@@ -106,10 +107,12 @@ export function PopularAreaPropertiesDialog({
                   {/* Image Section */}
                   <div className="relative h-44 overflow-hidden bg-slate-100">
                     {property.cover_image_url ? (
-                      <img
+                      <Image
                         src={property.cover_image_url}
                         alt={property.title}
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        sizes="(max-width: 640px) 100vw, 350px"
                       />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center">

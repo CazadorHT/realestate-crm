@@ -343,6 +343,7 @@ export default function PayoutDashboardPage() {
         onClose={() => setIsReceiptDialogOpen(false)}
         selectedPayout={selectedPayout}
         formatCurrency={formatCurrency}
+        onSuccess={fetchPayouts}
       />
 
       <RecalculateConfirmDialog 

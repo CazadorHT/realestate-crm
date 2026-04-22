@@ -39,7 +39,7 @@ import { siteConfig } from "@/lib/site-config";
 
 function convertToRecentProperty(
   prop: RecommendedProperty,
-  t: (key: any, params?: any) => string,
+  t: (key: string, params?: Record<string, string | number>) => string,
   language: string,
 ): RecentProperty {
   // Calculate price_text based on listing type and discount
@@ -145,7 +145,11 @@ function convertToRecentProperty(
 }
 
 // Helper to get consistent display price similar to PropertyCard
-function getCardPrice(item: RecentProperty, t: any, language: string) {
+function getCardPrice(
+  item: RecentProperty,
+  t: (key: string, params?: Record<string, string | number>) => string,
+  language: string,
+) {
   // Backward compatibility: If new price fields are missing (old history), use price_text
   const hasNewFields =
     item.price !== undefined ||
@@ -466,7 +470,6 @@ export function RecentlyViewedClient({
         <div
           className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2 md:mb-4"
           {...(!disableAos && { "data-aos": "fade-up" })}
-          suppressHydrationWarning
         >
           <div className="flex items-start sm:items-center gap-2 md:gap-3">
             <div
