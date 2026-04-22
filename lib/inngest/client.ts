@@ -39,6 +39,15 @@ export const financeCommissionPaidEvent = eventType("finance.commission_paid", {
   }>(),
 });
 
+export const propertyProactiveTriggerEvent = eventType("property.proactive_trigger", {
+  schema: staticSchema<{
+    propertyId: string;
+    visitorId: string;
+    userId?: string | null;
+    tenantId?: string;
+  }>(),
+});
+
 // 🔥 Create Inngest Client
 export const inngest = new Inngest({ 
   id: "real-estate-crm",
@@ -46,5 +55,6 @@ export const inngest = new Inngest({
     "lead.created": leadCreatedEvent,
     "auth.login": authLoginEvent,
     "finance.commission_paid": financeCommissionPaidEvent,
+    "property.proactive_trigger": propertyProactiveTriggerEvent,
   }
 });

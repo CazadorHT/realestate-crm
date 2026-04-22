@@ -38,6 +38,17 @@ export function getFingerprint(req: NextRequest): string {
 }
 
 /**
+ * 🆔 Helper: Generate fingerprint from standard Headers object (for Server Actions)
+ */
+export function getFingerprintFromHeaders(headersList: Headers): string {
+  const ua = headersList.get("user-agent") || "unknown-ua";
+  const lang = headersList.get("accept-language") || "unknown-lang";
+  const ip = headersList.get("x-forwarded-for")?.split(",")[0].trim() || "no-ip";
+  
+  return `fp:${ip}:${ua.slice(0, 50)}:${lang.slice(0, 20)}`;
+}
+
+/**
  * 🛡️ 2. Rate Limiting Profiles (Enterprise Granular)
  */
 

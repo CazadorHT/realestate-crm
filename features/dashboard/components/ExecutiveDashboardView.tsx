@@ -22,6 +22,7 @@ import { DashboardHeader } from "./executive-dashboard/DashboardHeader";
 import { DashboardToolbar } from "./executive-dashboard/DashboardToolbar";
 import { PerformanceStats } from "./executive-dashboard/PerformanceStats";
 import { RevenueChartSection } from "./executive-dashboard/RevenueChartSection";
+import { RevenueForecastSection } from "./executive-dashboard/RevenueForecastSection";
 import { TransactionSummary } from "./executive-dashboard/TransactionSummary";
 import { CommissionCalculator } from "./executive-dashboard/CommissionCalculator";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,7 @@ interface ExecutiveDashboardViewProps {
   compareMonthlyData?: MonthlyRevenue[] | null;
   compareTenantId?: string | null;
   setupProgress: SetupProgress;
+  forecastData: import("@/features/analytics/market-intelligence").ForecastData[];
   role: string;
 }
 
@@ -55,6 +57,7 @@ export function ExecutiveDashboardView({
   compareMonthlyData,
   compareTenantId,
   setupProgress,
+  forecastData,
   role,
 }: ExecutiveDashboardViewProps) {
   const {
@@ -165,6 +168,11 @@ export function ExecutiveDashboardView({
               compareMonthlyData={compareMonthlyData}
               topAgents={topAgents}
               mounted={mounted}
+            />
+
+            <RevenueForecastSection 
+              data={forecastData} 
+              mounted={mounted} 
             />
 
             <TransactionSummary 

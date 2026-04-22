@@ -36,7 +36,7 @@ export default async function ExecutiveDashboardPage({
   const allBranches = branchesResult.data || [];
 
   // Fetch primary data in parallel
-  const [stats, monthlyData, quarterlyData, agentStats, topAgents, setupProgress] =
+  const [stats, monthlyData, quarterlyData, agentStats, topAgents, setupProgress, forecastData] =
     await Promise.all([
       getExecutiveStats(selectedTenantId, year),
       getMonthlyRevenueData(selectedTenantId, year),
@@ -44,6 +44,7 @@ export default async function ExecutiveDashboardPage({
       getAgentKpiStats(selectedTenantId),
       getAdvancedTopAgents(selectedTenantId),
       getSetupProgress(selectedTenantId === "ALL" ? "" : selectedTenantId),
+      import("@/features/analytics/market-intelligence").then(m => m.getRevenueForecastAction())
     ]);
 
   // Fetch comparison data if compareId is present
@@ -74,6 +75,7 @@ export default async function ExecutiveDashboardPage({
         compareMonthlyData={compareMonthlyData}
         compareTenantId={compareId}
         setupProgress={setupProgress}
+        forecastData={forecastData as any}
       />
     </div>
   );

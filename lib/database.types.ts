@@ -1,4 +1,3 @@
-/** Standardized Supabase Database Types */
 export type Json =
   | string
   | number
@@ -1804,6 +1803,45 @@ export type Database = {
         }
         Relationships: []
       }
+      proactive_agent_triggers: {
+        Row: {
+          id: string
+          property_id: string | null
+          triggered_at: string | null
+          user_id: string | null
+          visitor_id: string | null
+        }
+        Insert: {
+          id?: string
+          property_id?: string | null
+          triggered_at?: string | null
+          user_id?: string | null
+          visitor_id?: string | null
+        }
+        Update: {
+          id?: string
+          property_id?: string | null
+          triggered_at?: string | null
+          user_id?: string | null
+          visitor_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proactive_agent_triggers_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proactive_agent_triggers_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2650,18 +2688,24 @@ export type Database = {
           id: string
           property_id: string | null
           tenant_id: string | null
+          user_id: string | null
+          visitor_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           property_id?: string | null
           tenant_id?: string | null
+          user_id?: string | null
+          visitor_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
           property_id?: string | null
           tenant_id?: string | null
+          user_id?: string | null
+          visitor_id?: string | null
         }
         Relationships: [
           {
@@ -2669,6 +2713,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_views_log_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -3615,8 +3666,15 @@ export type Database = {
       }
       increment_faq_view: { Args: { faq_id: string }; Returns: undefined }
       increment_property_view: {
-        Args: { property_id: string }
-        Returns: undefined
+        Args: {
+          p_property_id: string
+          p_user_id?: string
+          p_visitor_id?: string
+        }
+        Returns: {
+          success: boolean
+          trigger_proactive_agent: boolean
+        }[]
       }
       increment_service_view: {
         Args: {
@@ -4288,5 +4346,3 @@ export const Constants = {
     },
   },
 } as const
-
-export {};

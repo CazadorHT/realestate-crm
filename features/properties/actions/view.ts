@@ -1,33 +1,83 @@
 "use server";
+
 import { createAdminClient } from "@/lib/supabase/admin";
 import { headers } from "next/headers";
+import { getFingerprintFromHeaders } from "@/lib/redis";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Common bot patterns in User-Agents
  */
 const BOT_REGEX = /bot|spider|crawl|slurp|lighthouse|google|bing|yandex|duckduckbot|baiduspider|skypeuripreview|facebookexternalhit|twitterbot|linkedinbot|embedly|quora|pinterest|slackbot|redditbot|applebot|whatsapp|telegrambot/i;
 
+interface IncrementViewResult {
+  success: boolean;
+  trigger_proactive_agent: boolean;
+}
+
 /**
- * Increment property view count
+ * Increment property view count with identity tracking
  * Publicly accessible action (no auth required)
  */
 export async function incrementPropertyView(propertyId: string) {
   const headersList = await headers();
   const userAgent = headersList.get("user-agent") || "";
 
-  // Filter out known bots/crawlers
+  // 1. Filter out known bots/crawlers
   if (BOT_REGEX.test(userAgent)) {
     return;
   }
 
+  // 2. Identify the visitor/user
+  const visitorId = getFingerprintFromHeaders(headersList);
+  
+  // Try to get authenticated user if available
+  let userId: string | undefined = undefined;
+  try {
+    const supabaseClient = await createClient();
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    userId = user?.id; // user?.id is string | undefined
+  } catch (e) {
+    // Ignore auth errors for public tracking
+  }
+
   const supabase = createAdminClient();
 
-  // Call the secure database function
-  const { error } = await supabase.rpc("increment_property_view", {
-    property_id: propertyId,
+  // 3. Call the secure database function with identity parameters
+  const { data, error } = await supabase.rpc("increment_property_view", {
+    p_property_id: propertyId,
+    p_visitor_id: visitorId,
+    p_user_id: userId
   });
 
   if (error) {
     console.error("Error incrementing view count:", error);
+    return;
+  }
+
+  // 4. 🔥 Trigger Proactive AI Agent if threshold reached
+  // Based on database.types.ts, the return is an array of objects
+  const results = data as unknown as IncrementViewResult[];
+  const result = results?.[0];
+  
+  if (result?.trigger_proactive_agent) {
+    const { inngest } = await import("@/lib/inngest/client");
+    
+    // Get tenant_id for the property to ensure branch isolation
+    const { data: prop } = await supabase
+      .from("properties")
+      .select("tenant_id")
+      .eq("id", propertyId)
+      .single();
+
+    await inngest.send({
+      name: "property.proactive_trigger",
+      data: {
+        propertyId,
+        visitorId,
+        userId,
+        tenantId: prop?.tenant_id
+      }
+    });
   }
 }
