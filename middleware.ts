@@ -51,7 +51,20 @@ export async function middleware(request: NextRequest) {
     const acceptLang = request.headers.get("accept-language")?.toLowerCase();
     const country = request.headers.get("x-vercel-ip-country")?.toUpperCase();
 
-    if (acceptLang) {
+    // Priority 1: 🌏 Territory-based (IP)
+    if (country) {
+      if (country === "CN" || country === "HK" || country === "TW") {
+        detectedLang = "cn";
+      } else if (country === "TH") {
+        detectedLang = "th";
+      } else {
+        // Any other country defaults to English for international readiness
+        detectedLang = "en";
+      }
+    }
+
+    // Priority 2: 🖥️ Browser-based (Fallback if IP detection failed or returned no country)
+    if (!detectedLang && acceptLang) {
       const primaryLang = acceptLang.split(',')[0];
       if (primaryLang.startsWith("th")) detectedLang = "th";
       else if (primaryLang.startsWith("en")) detectedLang = "en";
@@ -61,14 +74,6 @@ export async function middleware(request: NextRequest) {
         if (acceptLang.includes("th")) detectedLang = "th";
         else if (acceptLang.includes("en")) detectedLang = "en";
         else if (acceptLang.includes("zh")) detectedLang = "cn";
-      }
-    }
-
-    if (!detectedLang) {
-      if (country === "CN" || country === "HK" || country === "TW") {
-        detectedLang = "cn";
-      } else if (country && country !== "TH") {
-        detectedLang = "en";
       }
     }
 
