@@ -59,6 +59,7 @@ interface ResponsiveDialogProps {
   isLoading?: boolean;
   loadingText?: React.ReactNode;
   minHeight?: string;
+  showCloseButton?: boolean;
 }
 
 export function ResponsiveDialog({
@@ -81,6 +82,7 @@ export function ResponsiveDialog({
   isLoading = false,
   loadingText,
   minHeight = "200px",
+  showCloseButton = true,
 }: ResponsiveDialogProps) {
   const isMobile = useIsMobile();
   const [mounted, setMounted] = React.useState(false);
@@ -195,7 +197,7 @@ export function ResponsiveDialog({
         {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
         <DrawerContent
           className={cn(
-            "max-h-[96vh] flex flex-col overflow-hidden pointer-events-auto",
+            "max-h-[96vh] flex flex-col pointer-events-auto",
             className,
           )}
           onOpenAutoFocus={onOpenAutoFocus}
@@ -252,11 +254,12 @@ export function ResponsiveDialog({
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       <DialogContent
         className={cn(
-          "max-w-lg flex flex-col max-h-[85vh] overflow-hidden pointer-events-auto",
+          "max-w-lg flex flex-col max-h-[85vh] pointer-events-auto",
           className,
         )}
         onOpenAutoFocus={onOpenAutoFocus}
         onCloseAutoFocus={onCloseAutoFocus}
+        showCloseButton={showCloseButton}
       >
         <DialogHeader className="shrink-0 px-6 pt-6 pb-5 pr-6 border-b border-slate-100">
           {title ? (

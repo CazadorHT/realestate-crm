@@ -46,24 +46,15 @@ export function AuthLayout({
 
         <div className="relative z-10 space-y-6 text-white mx-auto ">
           <h1 className="text-4xl font-bold leading-tight animate-in slide-in-from-bottom-10 fade-in duration-700 delay-500 fill-mode-backwards">
-            {greeting}
+            {/* {greeting} */}
           </h1>
           <p className="text-lg text-blue-100 animate-in slide-in-from-bottom-10 fade-in duration-700 delay-700 fill-mode-backwards">
-            {subtitle}
+            {/* {subtitle} */}
           </p>
 
           {/* Feature Highlights */}
           <div className="space-y-4 pt-6">
-            {features.map((feature, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-3 animate-in slide-in-from-left-10 fade-in duration-700 fill-mode-backwards"
-                style={{ animationDelay: `${900 + i * 150}ms` }}
-              >
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <span className="text-blue-50">{feature}</span>
-              </div>
-            ))}
+            
           </div>
         </div>
 

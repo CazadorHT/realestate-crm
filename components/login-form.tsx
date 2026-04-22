@@ -4,255 +4,567 @@ import { cn } from "@/lib/utils";
 import { logActivityAction } from "@/features/audit/actions";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Home, ArrowLeft, Lock, Mail, Eye, EyeOff } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  ArrowLeft,
+  Lock,
+  Mail,
+  Eye,
+  EyeOff,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
+import { m, AnimatePresence } from "framer-motion";
 
-import { AuthLayout } from "@/components/auth-layout";
-import { siteConfig } from "@/lib/site-config";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { AuthHeader } from "./auth/auth-header";
+import { SocialAuthButtons } from "./auth/social-auth-buttons";
+import { PremiumAuthLayout } from "./auth/premium-auth-layout";
+import { SiSupabase } from "react-icons/si";
+import { BsShieldFillCheck } from "react-icons/bs";
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) {
-  const { t } = useLanguage();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+export type AuthView = "login" | "signup" | "forgot-password";
+
+// --- Validation Schemas ---
+const loginSchema = z.object({
+  email: z.string().email("กรุณากรอกอีเมลให้ถูกต้อง"),
+  password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
+  honeypot: z.string().max(0).optional(), // Bot trap
+});
+
+const signupSchema = z
+  .object({
+    email: z.string().email("กรุณากรอกอีเมลให้ถูกต้อง"),
+    password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
+    confirmPassword: z.string().min(6, "กรุณายืนยันรหัสผ่าน"),
+    honeypot: z.string().max(0).optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "รหัสผ่านไม่ตรงกัน",
+    path: ["confirmPassword"],
+  });
+
+const forgotSchema = z.object({
+  email: z.string().email("กรุณากรอกอีเมลให้ถูกต้อง"),
+  honeypot: z.string().max(0).optional(),
+});
+
+type LoginValues = z.infer<typeof loginSchema>;
+type SignupValues = z.infer<typeof signupSchema>;
+type ForgotValues = z.infer<typeof forgotSchema>;
+
+interface LoginFormProps {
+  defaultView?: AuthView;
+}
+
+export function LoginForm({ defaultView = "login" }: LoginFormProps) {
+  const [view, setView] = useState<AuthView>(defaultView);
+  const [direction, setDirection] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const supabase = createClient();
+  // --- Form Hooks ---
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<any>({
+    resolver: zodResolver(
+      view === "login"
+        ? loginSchema
+        : view === "signup"
+          ? signupSchema
+          : forgotSchema,
+    ),
+  });
+
+  const handleSetView = (newView: AuthView) => {
+    const order: AuthView[] = ["forgot-password", "login", "signup"];
+    const currentIndex = order.indexOf(view);
+    const nextIndex = order.indexOf(newView);
+    setDirection(nextIndex > currentIndex ? 1 : -1);
+    setView(newView);
+    setError(null);
+    setSuccess(null);
+    reset();
+  };
+
+  const onFormSubmit = async (data: any) => {
+    // Honeypot check: If bot filled it, just silently ignore or return
+    if (data.honeypot) {
+      console.warn("Bot detected via honeypot");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
+    setSuccess(null);
+
+    const supabase = createClient();
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        // Log failed login attempt
-        await logActivityAction("LOGIN_FAILURE", "user", undefined, { email, error: error.message });
-        throw error;
+      if (view === "login") {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        if (error) {
+          await logActivityAction("LOGIN_FAILURE", "user", undefined, {
+            email: data.email,
+            error: error.message,
+          });
+          throw error;
+        }
+        await logActivityAction("LOGIN", "user", undefined, {
+          email: data.email,
+        });
+        router.push("/protected");
+      } else if (view === "signup") {
+        const { error } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/confirm`,
+          },
+        });
+        
+        if (error) {
+          await logActivityAction("SIGNUP_FAILURE", "user", undefined, {
+            email: data.email,
+            error: error.message,
+          });
+          throw error;
+        }
+
+        await logActivityAction("SIGNUP", "user", undefined, {
+          email: data.email,
+        });
+        
+        setSuccess("ส่งอีเมลยืนยันไปแล้วนะ! ไปเช็คดูใน Inbox ได้เลย");
+      } else {
+        const { error } = await supabase.auth.resetPasswordForEmail(
+          data.email,
+          {
+            redirectTo: `${window.location.origin}/auth/reset-password`,
+          },
+        );
+        if (error) throw error;
+        setSuccess("เราส่งลิงก์รีเซ็ตรหัสผ่านไปให้ทางอีเมลแล้วนะ!");
       }
-
-      // Log successful login
-      await logActivityAction("LOGIN", "user", undefined, { email });
-
-      router.push("/protected");
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : t("auth.errors.generic_error");
+      // Security Tip: If the error is about a user already existing, 
+      // sometimes it's better to show a generic success message or a 
+      // subtle hint to prevent User Enumeration.
+      const errorMessage =
+        error instanceof Error
+          ? error.message === "User already registered" 
+            ? "หากมีบัญชีอยู่แล้ว คุณจะได้รับอีเมลยืนยันหรือลิงก์เข้าสู่ระบบ"
+            : error.message
+          : "อ๊ะ! มีอะไรบางอย่างผิดพลาด ลองใหม่อีกทีนะ";
       setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const isLogin = view === "login";
+  const isSignUp = view === "signup";
+  const isForgot = view === "forgot-password";
+
+  const formVariants = {
+    initial: (direction: number) => ({
+      x: direction * 50,
+      opacity: 0,
+      filter: "blur(10px)",
+    }),
+    animate: {
+      x: 0,
+      opacity: 1,
+      filter: "blur(0px)",
+    },
+    exit: (direction: number) => ({
+      x: direction * -50,
+      opacity: 0,
+      filter: "blur(10px)",
+    }),
+  };
+
   return (
-    <AuthLayout
-      greeting={<>{t("auth.login.title")}</>}
-      subtitle={t("auth.login.subtitle")}
-      features={[
-        t("trust.verified_title"),
-        t("trust.safe_title"),
-        t("trust.service_title"),
-      ]}
+    <PremiumAuthLayout
+      view={view}
+      title={
+        <AuthHeader
+          view={view}
+          direction={direction}
+          variants={formVariants}
+        />
+      }
     >
-      <Card className="border-none shadow-xl">
-        <CardHeader className="space-y-2 pb-6">
-          <CardTitle className="text-3xl font-bold bg-linear-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            {t("auth.login.title")}
-          </CardTitle>
-          <CardDescription className="text-base">
-            {t("auth.login.subtitle")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-6">
-            {/* Email Field */}
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">
-                {t("auth.login.email_label")}
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="example@email.com"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10 h-12 bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium">
-                  {t("auth.login.password_label")}
-                </Label>
-                <Link
-                  href="/auth/forgot-password"
-                  className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors"
-                >
-                  {t("auth.login.forgot_password")}
-                </Link>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10 h-12 bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200">
-                <p className="text-sm text-red-600 flex items-center gap-2">
-                  <span className="text-red-500">⚠️</span>
-                  {error}
-                </p>
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full h-12 text-base font-medium bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all"
-              disabled={isLoading}
+      <m.div layout className="">
+        <AnimatePresence mode="wait" custom={direction}>
+          <m.div
+            key={view}
+            custom={direction}
+            variants={formVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+            className="will-change-[transform,opacity,filter]"
+          >
+            <form
+              onSubmit={handleSubmit(onFormSubmit)}
+              className="space-y-4 sm:space-y-6"
             >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  {t("auth.login.logging_in")}
-                </span>
-              ) : (
-                t("auth.login.submit_btn")
+              {/* Honeypot Field (Invisible to users) */}
+              <div className="sr-only opacity-0 absolute -z-50 pointer-events-none">
+                <input
+                  {...register("honeypot")}
+                  tabIndex={-1}
+                  autoComplete="off"
+                />
+              </div>
+
+              <div className="space-y-4">
+                {/* Email */}
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="email"
+                    className={cn(
+                      "text-xs font-medium uppercase tracking-[0.15em] ml-1 transition-colors",
+                      isLogin ? "text-slate-400" : "text-slate-500",
+                    )}
+                  >
+                    อีเมล
+                  </Label>
+                  <div className="relative group">
+                    <div
+                      className={cn(
+                        "absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300",
+                        isLogin
+                          ? "text-slate-400 group-focus-within:text-blue-600"
+                          : isSignUp
+                            ? "text-slate-600 group-focus-within:text-purple-500"
+                            : "text-slate-600 group-focus-within:text-amber-500",
+                      )}
+                    >
+                      <Mail className="h-4.5 w-4.5" />
+                    </div>
+                    <Input
+                      {...register("email")}
+                      id="email"
+                      type="email"
+                      placeholder="name@company.com"
+                      className={cn(
+                        "pl-12 h-12 rounded-xl transition-all text-sm",
+                        isLogin
+                          ? "bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/5"
+                          : isSignUp
+                            ? "bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:ring-purple-500/10"
+                            : "bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-amber-500/50 focus:ring-amber-500/10",
+                        errors.email && "border-red-500/50 focus:border-red-500",
+                      )}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="text-[10px] text-red-500 ml-1 font-medium">
+                      {(errors.email as any).message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Password - Hidden in Forgot View */}
+                {!isForgot && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between ml-1">
+                      <Label
+                        htmlFor="password"
+                        className={cn(
+                          "text-xs font-medium uppercase tracking-[0.15em] transition-colors",
+                          isLogin ? "text-slate-400" : "text-slate-500",
+                        )}
+                      >
+                        รหัสผ่าน
+                      </Label>
+                      {isLogin && (
+                        <button
+                          type="button"
+                          onClick={() => handleSetView("forgot-password")}
+                          className="text-[11px] font-semibold text-blue-600 hover:text-blue-500 transition-colors underline decoration-blue-500/20 underline-offset-4"
+                        >
+                          ลืมรหัสผ่าน?
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative group">
+                      <div
+                        className={cn(
+                          "absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300",
+                          isLogin
+                            ? "text-slate-400 group-focus-within:text-blue-600"
+                            : "text-slate-600 group-focus-within:text-purple-500",
+                        )}
+                      >
+                        <Lock className="h-4.5 w-4.5" />
+                      </div>
+                      <Input
+                        {...register("password")}
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        className={cn(
+                          "pl-12 pr-12 h-12 rounded-xl transition-all text-sm",
+                          isLogin
+                            ? "bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/5"
+                            : "bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:ring-purple-500/10",
+                          errors.password &&
+                            "border-red-500/50 focus:border-red-500",
+                        )}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className={cn(
+                          "absolute right-4 top-1/2 -translate-y-1/2 transition-colors",
+                          isLogin
+                            ? "text-slate-400 hover:text-slate-600"
+                            : "text-slate-600 hover:text-slate-400",
+                        )}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4.5 w-4.5" />
+                        ) : (
+                          <Eye className="h-4.5 w-4.5" />
+                        )}
+                      </button>
+                    </div>
+                    {errors.password && (
+                      <p className="text-[10px] text-red-500 ml-1 font-medium">
+                        {(errors.password as any).message}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Confirm Password (Signup only) */}
+                {isSignUp && (
+                  <m.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    className="space-y-2 overflow-hidden"
+                  >
+                    <Label
+                      htmlFor="confirmPassword"
+                      className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 ml-1"
+                    >
+                      ยืนยันรหัสผ่าน
+                    </Label>
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-purple-500 transition-all duration-300">
+                        <CheckCircle2 className="h-4.5 w-4.5" />
+                      </div>
+                      <Input
+                        {...register("confirmPassword")}
+                        id="confirmPassword"
+                        type={showPassword ? "text" : "password"}
+                        className={cn(
+                          "pl-12 h-12 bg-white/5 border-white/10 text-white placeholder:text-slate-600 rounded-xl focus:border-purple-500/50 focus:ring-purple-500/10 transition-all text-sm",
+                          errors.confirmPassword &&
+                            "border-red-500/50 focus:border-red-500",
+                        )}
+                      />
+                    </div>
+                    {errors.confirmPassword && (
+                      <p className="text-[10px] text-red-500 ml-1 font-medium">
+                        {(errors.confirmPassword as any).message}
+                      </p>
+                    )}
+                  </m.div>
+                )}
+              </div>
+
+              {error && (
+                <m.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={cn(
+                    "p-3 rounded-xl border transition-colors",
+                    isLogin
+                      ? "bg-red-50 border-red-100"
+                      : "bg-red-500/10 border-red-500/20",
+                  )}
+                >
+                  <p
+                    className={cn(
+                      "text-[13px] font-semibold flex items-center gap-2",
+                      isLogin ? "text-red-600" : "text-red-400",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "shrink-0 w-4 h-4 flex items-center justify-center rounded-full text-[8px]",
+                        isLogin ? "bg-red-100" : "bg-red-500/20",
+                      )}
+                    >
+                      ⚠️
+                    </span>
+                    {error}
+                  </p>
+                </m.div>
               )}
-            </Button>
 
-            {/* Sign Up Link */}
-            <div className="text-center pt-4 border-t border-slate-200">
-              <p className="text-sm text-slate-600 mb-6">
-                {t("auth.login.or_continue_with")}
-              </p>
-
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 border-slate-200 hover:bg-blue-50! hover:text-blue-600! transition-colors gap-2"
-                  onClick={async () => {
-                    const supabase = createClient();
-                    await supabase.auth.signInWithOAuth({
-                      provider: "google",
-                      options: {
-                        redirectTo: `${window.location.origin}/auth/confirm`,
-                      },
-                    });
-                  }}
+              {success && (
+                <m.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="p-3 rounded-xl bg-green-500/10 border border-green-500/20"
                 >
-                  <svg className="h-5 w-5" viewBox="0 0 24 24">
-                    <path
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      fill="#4285F4"
-                    />
-                    <path
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-1 .67-2.28 1.07-3.71 1.07-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      fill="#34A853"
-                    />
-                    <path
-                      d="M5.84 14.11c-.22-.66-.35-1.36-.35-2.11s.13-1.45.35-2.11V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.83z"
-                      fill="#FBBC05"
-                    />
-                    <path
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                      fill="#EA4335"
-                    />
-                  </svg>
-                  Google
-                </Button>
+                  <p className="text-[13px] text-green-400 font-semibold flex items-center gap-2">
+                    <CheckCircle2 className="h-4 w-4" />
+                    {success}
+                  </p>
+                </m.div>
+              )}
 
+              <div className="pt-2 ">
                 <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 border-slate-200 hover:bg-blue-50! hover:text-blue-600! transition-colors gap-2"
-                  onClick={async () => {
-                    const supabase = createClient();
-                    await supabase.auth.signInWithOAuth({
-                      provider: "facebook",
-                      options: {
-                        redirectTo: `${window.location.origin}/auth/confirm`,
-                      },
-                    });
-                  }}
+                  type="submit"
+                  className={cn(
+                    "w-full h-14  text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98]",
+                    isLogin
+                      ? "bg-linear-to-r from-blue-700 via-blue-600 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white"
+                      : isSignUp
+                        ? "bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
+                        : "bg-linear-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white",
+                  )}
+                  disabled={isLoading}
                 >
-                  <svg className="h-5 w-5" fill="#1877F2" viewBox="0 0 24 24">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                  </svg>
-                  Facebook
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                      แป๊บน้า...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                      {isLogin
+                        ? "เข้าสู่ระบบ"
+                        : isSignUp
+                          ? "ลงทะเบียน"
+                          : "ส่งลิงก์กู้คืน"}
+                      <ArrowLeft className="h-4 w-4 rotate-180" />
+                    </span>
+                  )}
                 </Button>
               </div>
 
-              <p className="text-sm text-slate-600">
-                {t("auth.login.no_account")}{" "}
-                <Link
-                  href="/auth/sign-up"
-                  className="font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors"
-                >
-                  {t("auth.login.register")}
-                </Link>
-              </p>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+              {/* Social Login Options - Hidden in Forgot View */}
+              {!isForgot && <SocialAuthButtons isLogin={isLogin} />}
 
-      {/* Help Text */}
-      <p className="text-center text-sm text-slate-500">
-        {t("contact.sidebar_quick_title")}{" "}
-        <Link
-          href={`mailto:${siteConfig.contact.email}`}
-          className="text-blue-600 hover:underline"
-        >
-          {t("contact.title")}
-        </Link>
-      </p>
-    </AuthLayout>
+              <div className="text-center space-y-6 pt-4">
+                <p
+                  className={cn(
+                    "text-xs font-medium transition-colors",
+                    isLogin ? "text-slate-500" : "text-slate-500",
+                  )}
+                >
+                  {isForgot
+                    ? "นึกรหัสออกแล้วหรอ?"
+                    : isLogin
+                      ? "ยังไม่มีบัญชีหรอ?"
+                      : "มีบัญชีอยู่แล้ว?"}{" "}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      handleSetView(
+                        isForgot ? "login" : isLogin ? "signup" : "login",
+                      )
+                    }
+                    className={cn(
+                      "underline underline-offset-8 transition-all font-bold",
+                      isLogin
+                        ? "text-blue-600 hover:text-blue-700 decoration-blue-500/30"
+                        : isSignUp
+                          ? "text-purple-400 hover:text-purple-300 decoration-purple-500/30"
+                          : "text-amber-400 hover:text-amber-300 decoration-amber-500/30",
+                    )}
+                  >
+                    {isForgot
+                      ? "กลับไปเข้าสู่ระบบ"
+                      : isLogin
+                        ? "สมัครสมาชิกที่นี่"
+                        : "เข้าสู่ระบบเลย"}
+                  </button>
+                </p>
+
+                {/* PDPA Notice */}
+                <p className="text-[11px] text-slate-500 font-medium leading-relaxed opacity-70">
+                  การเข้าสู่ระบบถือว่าคุณยอมรับ{" "}
+                  <button
+                    type="button"
+                    className="underline hover:text-blue-500 transition-colors"
+                  >
+                    ข้อกำหนดการใช้งาน
+                  </button>{" "}
+                  และ{" "}
+                  <button
+                    type="button"
+                    className="underline hover:text-blue-500 transition-colors"
+                  >
+                    นโยบายความเป็นส่วนตัว
+                  </button>
+                </p>
+
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-full border transition-all",
+                      isLogin
+                        ? "bg-blue-50 border-blue-100"
+                        : "bg-white/3 border-white/5",
+                    )}
+                  >
+                    <BsShieldFillCheck
+                      className={cn(
+                        "h-3.5 w-3.5",
+                        isLogin ? "text-blue-600" : "text-blue-500",
+                      )}
+                    />
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                      AES-256 Secure
+                    </span>
+                  </div>
+                  <div
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-2 rounded-full border transition-all",
+                      isLogin
+                        ? "bg-emerald-50 border-emerald-100"
+                        : "bg-white/3 border-white/5",
+                    )}
+                  >
+                    <SiSupabase
+                      className={cn(
+                        "h-3.5 w-3.5",
+                        isLogin ? "text-emerald-500" : "text-emerald-500",
+                      )}
+                    />
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                      Supabase Cloud
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </m.div>
+        </AnimatePresence>
+      </m.div>
+    </PremiumAuthLayout>
   );
 }

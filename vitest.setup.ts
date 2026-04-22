@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import '@testing-library/jest-dom/vitest';
 import { globalMockSupabase as mockSupabaseClient } from './tests/mocks/supabase';
 
 // 🛡️ Set global bridge for createClient()
@@ -51,3 +52,17 @@ vi.mock('@/lib/supabase/admin', () => ({
 vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn().mockImplementation(async () => mockSupabaseClient),
 }));
+// 7. Mock window.matchMedia (จำเป็นสำหรับ JSDOM)
+Object.defineProperty(window, 'matchMedia', {
+  writable: true,
+  value: vi.fn().mockImplementation((query) => ({
+    matches: false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(), // deprecated
+    removeListener: vi.fn(), // deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  })),
+});
