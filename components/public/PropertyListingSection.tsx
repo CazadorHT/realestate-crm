@@ -63,6 +63,11 @@ type ApiProperty = {
   features?: { id: string; name: string; icon_key: string }[];
 };
 
+type ApiResponse = {
+  properties: ApiProperty[];
+  facets: any | null;
+};
+
 function matchesFilter(item: ApiProperty, filter: FilterType) {
   if (filter === "ALL") return true;
 
@@ -232,8 +237,9 @@ function PropertyListingContent() {
           throw new Error(`Failed to load properties (${res.status})`);
         }
 
-        const data = (await res.json()) as ApiProperty[];
-        setProperties(Array.isArray(data) ? data : []);
+        const data = (await res.json()) as ApiResponse;
+        const propertiesArray = data.properties || [];
+        setProperties(Array.isArray(propertiesArray) ? propertiesArray : []);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
         setError(t("common.loading"));
@@ -278,7 +284,10 @@ function PropertyListingContent() {
     let items = properties.filter((item) => matchesFilter(item, filter));
 
     if (areaFilter) {
-      items = items.filter((p) => (p.popular_area ?? "").includes(areaFilter));
+      items = items.filter((p) => 
+        (p.popular_area ?? "").toLowerCase().includes(areaFilter.toLowerCase()) ||
+        (p.province ?? "").toLowerCase().includes(areaFilter.toLowerCase())
+      );
     }
     if (provinceFilter) {
       items = items.filter((p) => (p.province ?? "").includes(provinceFilter));

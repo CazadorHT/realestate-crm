@@ -58,24 +58,29 @@ export function getCoverImage(images: unknown): string {
 export function getSafeNearbyPlaces(places: unknown): NearbyItem[] {
   if (!places || !Array.isArray(places)) return [];
 
-  return (places as any[])
-    .filter((p): p is any => 
+  return (places as unknown[])
+    .filter((p): p is Record<string, unknown> => 
       typeof p === "object" && p !== null && ("name" in p || "category" in p)
     )
     .map(p => ({
-      category: p.category || "General",
-      name: p.name || "Unknown Place",
-      distance: p.distance || null,
-      time: p.time || null,
-      name_en: p.name_en || null,
-      name_cn: p.name_cn || null
+      category: (p.category as string) || "General",
+      name: (p.name as string) || "Unknown Place",
+      distance: (p.distance as string) || null,
+      time: (p.time as string) || null,
+      name_en: (p.name_en as string) || null,
+      name_cn: (p.name_cn as string) || null
     }));
 }
 
 /**
  * 🛡️ Hardened Price Logic (The Fallback King)
  */
-export function getEffectivePrice(row: any) {
+export function getEffectivePrice(row: { 
+  price?: number | null; 
+  original_price?: number | null; 
+  rental_price?: number | null; 
+  original_rental_price?: number | null; 
+}) {
   // 1. Sale Price Fallback
   const salePrice = row.price || row.original_price || 0;
   
@@ -83,16 +88,16 @@ export function getEffectivePrice(row: any) {
   const rentalPrice = row.rental_price || row.original_rental_price || 0;
   
   // 3. Discount Detection
-  const hasSaleDiscount = row.original_price > row.price && row.price > 0;
-  const hasRentalDiscount = row.original_rental_price > row.rental_price && row.rental_price > 0;
+  const hasSaleDiscount = (row.original_price ?? 0) > (row.price ?? 0) && (row.price ?? 0) > 0;
+  const hasRentalDiscount = (row.original_rental_price ?? 0) > (row.rental_price ?? 0) && (row.rental_price ?? 0) > 0;
 
   // 4. Percentage Calculation
-  const saleDiscountPercent = hasSaleDiscount 
-    ? Math.round(((row.original_price - row.price) / row.original_price) * 100) 
+  const saleDiscountPercent = hasSaleDiscount && row.original_price
+    ? Math.round(((row.original_price - (row.price ?? 0)) / row.original_price) * 100) 
     : 0;
     
-  const rentalDiscountPercent = hasRentalDiscount
-    ? Math.round(((row.original_rental_price - row.rental_price) / row.original_rental_price) * 100)
+  const rentalDiscountPercent = hasRentalDiscount && row.original_rental_price
+    ? Math.round(((row.original_rental_price - (row.rental_price ?? 0)) / row.original_rental_price) * 100)
     : 0;
 
   return {
@@ -110,7 +115,7 @@ export function getEffectivePrice(row: any) {
 /**
  * 🛡️ Hardened Nearby Transits Extractor
  */
-export function getSafeNearbyTransits(transits: unknown): any[] {
+export function getSafeNearbyTransits(transits: unknown): unknown[] {
   if (!transits || !Array.isArray(transits)) return [];
   return transits.filter(t => typeof t === "object" && t !== null);
 }

@@ -41,7 +41,7 @@ export type PropertyWithImages = PropertyRow & {
   // Hardened JSONB accessors (Stored in the main properties table)
   images: PropertyImageMetadata[] | null;
   nearby_places?: NearbyItem[] | null;
-  nearby_transits?: any[] | null; 
+  nearby_transits?: NearbyItem[] | null; 
   
   // Relational Joins (Still needed for agents/features)
   property_agents?: { agent_id: string }[];

@@ -1,6 +1,8 @@
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { createClient } from "@/lib/supabase/server";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { PublicPropertyWithImages } from "./types";
+import { PropertyType } from "../types";
 
 /**
  * ✅ PUBLIC: ใช้ในหน้า public เท่านั้น
@@ -72,7 +74,7 @@ export async function getRecommendedProperties(
     `,
     )
     .eq("status", "ACTIVE")
-    .eq("property_type", category as any)
+    .eq("property_type", category as PropertyType)
     .is("deleted_at", null);
 
   const { data, error } = await query
@@ -82,11 +84,11 @@ export async function getRecommendedProperties(
   if (error) return [];
 
   return (data || []).map((p: any) => {
-    const images = p.images || [];
+    const images = (p.images as unknown as { url: string; is_cover?: boolean }[]) || [];
     return {
       ...p,
       cover_image:
-        images.find((img: any) => img.is_cover)?.url ||
+        images.find((img) => img.is_cover)?.url ||
         images[0]?.url ||
         null,
     };

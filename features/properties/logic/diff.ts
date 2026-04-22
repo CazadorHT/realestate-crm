@@ -11,11 +11,11 @@ import { PropertyFormValues } from "@/features/properties/schema";
 export interface PropertyDiffResult {
   changed_fields: string[];
   summary: string[];
-  details: Record<string, { old: any; new: any }>;
+  details: Record<string, { old: unknown; new: unknown }>;
   image_changes?: { added: string[]; removed: string[] };
   word_counts?: Record<string, { old: number; new: number; delta: number }>;
-  oldState: any;
-  newState: any;
+  oldState: Partial<PropertyFormValues>;
+  newState: Partial<PropertyFormValues>;
 }
 
 export function getPropertyDiff(
@@ -37,11 +37,11 @@ export function getPropertyDiff(
   const trackField = (
     key: keyof PropertyFormValues, 
     label: string, 
-    formatter?: (v: any) => string,
+    formatter?: (v: unknown) => string,
     isLongText: boolean = false
   ) => {
-    const oldVal = (oldData as any)[key];
-    const newVal = (newData as any)[key];
+    const oldVal = (oldData as Record<string, unknown>)[key];
+    const newVal = (newData as Record<string, unknown>)[key];
 
     // Loose equality check for numeric strings vs numbers
     if (oldVal != newVal) {
@@ -68,7 +68,10 @@ export function getPropertyDiff(
   };
 
   // Helper for Enum Localization
-  const enumFormatter = (labels: Record<string, string>) => (val: any) => labels[val] || String(val ?? "N/A");
+  const enumFormatter = (labels: Record<string, string>) => (val: unknown) => {
+    const key = String(val ?? "");
+    return labels[key] || String(val ?? "N/A");
+  };
 
   // --- 1. CORE FIELDS ---
   trackField("price", "ราคาขายปัจจุบัน", formatCurrencyDiff);
@@ -169,7 +172,7 @@ export function getPropertyDiff(
 /**
  * Formats currency differences (e.g., 1000000 -> 1.0M)
  */
-export function formatCurrencyDiff(val: any): string {
+export function formatCurrencyDiff(val: unknown): string {
   if (val === null || val === undefined) return "N/A";
   const num = Number(val);
   if (isNaN(num)) return String(val);
@@ -184,8 +187,8 @@ export function formatCurrencyDiff(val: any): string {
  * Standardizes inputs by sorting and stringifying to prevent false positives from order changes
  */
 export function calculateCollectionDiff(
-  oldIds: (string | any)[],
-  newIds: (string | any)[],
+  oldIds: unknown[],
+  newIds: unknown[],
   labels: { id: string; label: string }[]
 ) {
   // Normalize: Convert all to sorted unique strings

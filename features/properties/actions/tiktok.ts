@@ -51,7 +51,7 @@ export async function postPropertyToTikTokAction(
       const contentData = await getPropertySocialContent(propertyId, lang, "TIKTOK");
       finalCaption = contentData.content;
     } else {
-      finalCaption = await renderPropertySocialTemplate(finalCaption, property, lang);
+      finalCaption = await renderPropertySocialTemplate(finalCaption, property as any, lang);
     }
 
     // TikTok Limits: 4000 characters for caption

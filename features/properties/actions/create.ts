@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { type Database } from "@/lib/database.types";
 import { randomUUID } from "crypto";
 import { inngest } from "@/lib/inngest/client";
-import { requireAuthContext, assertStaff, authzFail } from "@/lib/authz";
+import { requireAuthContext, assertStaff, authzFail, AuthzError } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { getPublicImageUrl } from "../image-utils";
 import { PropertyFormValues } from "../schema";
@@ -229,8 +229,8 @@ export async function createPropertyAction(
     };
   } catch (err: unknown) {
     console.error("createPropertyAction → error:", err);
-    if (err && typeof err === "object" && "code" in err && err.code === "AUTHZ_ERROR") {
-      return authzFail(err as any);
+    if (err instanceof AuthzError) {
+      return authzFail(err);
     }
     return { success: false, message: mapDbError(err) };
   }
@@ -293,7 +293,6 @@ export async function duplicatePropertyAction(
       meta_description: _meta_description,
       meta_keywords: _meta_keywords,
       structured_data: _structured_data,
-      property_images: _property_images,
       // ✨ Hardening: รีเซ็ตข้อมูลส่วนตัวของทรัพย์ต้นฉบับ
       view_count: _view_count,
       posted_to_facebook_at: _posted_to_facebook_at,
@@ -304,7 +303,7 @@ export async function duplicatePropertyAction(
       ai_reviewed_by: _ai_reviewed_by,
       verified: _verified,
       ...rest
-    } = src as any;
+    } = src as unknown as PropertyRow;
 
     const { data: inserted, error: insErr } = await supabase
       .from("properties")
@@ -432,8 +431,8 @@ export async function duplicatePropertyAction(
     return { success: true, message: "คัดลอกทรัพย์สำเร็จ", propertyId: newPropertyId };
   } catch (err: unknown) {
     console.error("duplicatePropertyAction → error:", err);
-    if (err && typeof err === "object" && "code" in err && (err as any).code === "AUTHZ_ERROR") {
-      return authzFail(err as any);
+    if (err instanceof AuthzError) {
+      return authzFail(err);
     }
     return { success: false, message: mapDbError(err) };
   }

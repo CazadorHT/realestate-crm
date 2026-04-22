@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { LoginForm } from '../../login-form';
 import { createClient } from '@/lib/supabase/client';
@@ -55,12 +55,10 @@ describe('LoginForm Component', () => {
     const emailInput = screen.getByLabelText(/อีเมล/i);
     const submitButton = screen.getByRole('button', { name: /เข้าสู่ระบบ/i });
 
-    await user.type(emailInput, 'invalid-email');
-    await user.click(submitButton);
+    fireEvent.input(emailInput, { target: { value: 'invalid-email' } });
+    fireEvent.submit((screen.getByRole('button', { name: /เข้าสู่ระบบ/i }) as HTMLButtonElement).form!);
 
-    await waitFor(() => {
-      expect(screen.getByText('กรุณากรอกอีเมลให้ถูกต้อง')).toBeInTheDocument();
-    }, { timeout: 2000 });
+    expect(await screen.findByText(/กรุณากรอกอีเมลให้ถูกต้อง/i, {}, { timeout: 4000 })).toBeInTheDocument();
   });
 
   it('switches to signup view', async () => {

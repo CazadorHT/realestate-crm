@@ -1,6 +1,6 @@
 import { cache } from "react";
 import { unstable_cache } from "next/cache";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import {
   getSafeImages,
   getCoverImage,
@@ -48,6 +48,7 @@ export type PropertyRow = {
   verified: boolean | null;
   min_contract_months: number | null;
   meta_keywords: string[] | null;
+  structured_data?: unknown | null;
   near_transit: boolean | null;
   transit_type: string | null;
   transit_station_name: string | null;
@@ -61,8 +62,9 @@ export type PropertyRow = {
   is_foreigner_quota: boolean | null;
   is_tax_registered: boolean | null;
   is_hot_deal: boolean | null;
-  nearby_places: any | null;
-  nearby_transits: any | null;
+  nearby_places: unknown | null;
+  nearby_transits: unknown | null;
+  ai_summary_content: string | null;
 
   images?: Array<{
     url: string;
@@ -146,7 +148,7 @@ export interface GetPropertiesOptions {
  */
 export const getPublicProperties = cache(
   async (options: GetPropertiesOptions = {}): Promise<PropertySearchResponse> => {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
 
     let query = supabase
       .from("properties")
@@ -158,7 +160,7 @@ export const getPublicProperties = cache(
     if (options.ids && options.ids.length > 0)
       query = query.in("id", options.ids);
     
-    if (options.filter === "hot_deals" || (options.filter as any) === "hot_deal")
+    if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal")
       query = query.eq("is_hot_deal", true);
 
     // Province & Area Filtering
@@ -171,7 +173,7 @@ export const getPublicProperties = cache(
 
     // Property Type
     if (options.propertyType && options.propertyType !== "ALL") {
-      query = query.eq("property_type", options.propertyType as any);
+      query = query.eq("property_type", options.propertyType);
     }
 
     // Listing Type (Hardened logic)
@@ -248,16 +250,16 @@ export const getPublicProperties = cache(
         p_listing_type: options.listingType || null
       };
 
-      const { data: facetData } = await (supabase.rpc as any)('get_public_property_facets', rpcParams);
-      facets = facetData as PropertyFacets | null;
+      const { data: facetData } = await supabase.rpc('get_public_property_facets', rpcParams);
+      facets = (facetData as unknown) as PropertyFacets | null;
     }
 
     // Fetch Popular Area Translations (Optimized)
     const popularAreaNames = Array.from(
       new Set(
         (propertiesData || [])
-          .map((row) => row.popular_area)
-          .filter((area): area is string => !!area),
+          .map((row: PropertyRow) => row.popular_area)
+          .filter((area: string | null): area is string => !!area),
       ),
     );
     const areaTranslationsMap = new Map<
@@ -270,23 +272,27 @@ export const getPublicProperties = cache(
         .from("popular_areas")
         .select("name, name_en, name_cn")
         .in("name", popularAreaNames);
-      (areaData || []).forEach((a) =>
+      (areaData || []).forEach((a: { name: string; name_en: string | null; name_cn: string | null }) =>
         areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn }),
       );
     }
 
-    const finalProperties = (propertiesData ?? []).map((row: any) => {
+    const finalProperties = (propertiesData as unknown as PropertyRow[] ?? []).map((row: PropertyRow) => {
       const trans = areaTranslationsMap.get(row.popular_area || "");
+      // 🛡️ Exclude DB-specific fields from the card object
+      const { structured_data: _, property_features: __, images: ___, ...cardBase } = row;
+      
       return {
-        ...row,
+        ...cardBase,
         popular_area_en: trans?.en ?? null,
         popular_area_cn: trans?.cn ?? null,
         image_url: getCoverImage(row.images),
         images: getSafeImages(row.images),
-        location: buildLocation(row as any),
+        location: buildLocation(row),
         features: (row.property_features || [])
-          .map((pf: any) => pf.features)
-          .filter(Boolean),
+          .map((pf) => pf.features)
+          .filter((f): f is NonNullable<typeof f> => !!f),
+        verified: row.verified === true ? true : row.verified === false ? false : undefined,
         nearby_places: getSafeNearbyPlaces(row.nearby_places),
         nearby_transits: getSafeNearbyTransits(row.nearby_transits),
       };
@@ -300,7 +306,7 @@ export const getPublicProperties = cache(
 );
 
 export const getPublicPropertyBySlug = cache(async (slug: string) => {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("properties")
     .select(PUBLIC_COLUMNS)

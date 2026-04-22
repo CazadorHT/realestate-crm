@@ -7,11 +7,47 @@ import { postToMetaPage } from "@/lib/meta";
 import { getSiteSettings } from "@/features/site-settings/actions";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
+import { PropertyRow } from "@/lib/services/properties";
+
+export interface SocialProperty {
+  [key: string]: unknown;
+  id: string;
+  slug?: string | null;
+  title: string;
+  description: string | null;
+  listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
+  price: number | null;
+  rental_price: number | null;
+  original_price: number | null;
+  original_rental_price: number | null;
+  price_per_sqm: number | null;
+  rent_price_per_sqm: number | null;
+  size_sqm: number | null;
+  property_type: string | null;
+  province: string | null;
+  district: string | null;
+  subdistrict: string | null;
+  popular_area: string | null;
+  transit_station_name: string | null;
+  transit_type: string | null;
+  transit_distance_meters: number | null;
+  google_maps_link: string | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  floor: number | null;
+  verified: boolean | null;
+  is_exclusive: boolean | null;
+  property_agents?: { profiles: { full_name?: string; phone?: string; line_id?: string } }[];
+  property_features?: { features: { id: string; name: string; icon_key: string; [key: string]: unknown } | null }[];
+  nearby_places?: { name?: string; distance?: string; category?: string }[];
+  nearby_transits?: { name?: string; distance?: string }[];
+  property_images?: { image_url: string }[];
+}
 
 /**
  * Helper function for formatting prices consistently
  */
-const formatPrice = (p: any) => {
+const formatPrice = (p: number | string | null | undefined) => {
   if (p === null || p === undefined) return "";
   const num = Number(p);
   return isNaN(num) ? p.toString() : num.toLocaleString();
@@ -20,7 +56,7 @@ const formatPrice = (p: any) => {
 /**
  * Render social template with property data
  */
-export async function renderPropertySocialTemplate(template: string, property: any, lang: string) {
+export async function renderPropertySocialTemplate(template: string, property: SocialProperty, lang: string) {
   if (!template) return "";
   if (!property) return template;
 
@@ -45,8 +81,8 @@ export async function renderPropertySocialTemplate(template: string, property: a
   }
 
   const primaryAgent = property.property_agents?.[0]?.profiles || {};
-  const tTitle = (lang === "th" ? property.title : (property as any)[`title_${lang}`]) || property.title || "";
-  const tDescription = (lang === "th" ? property.description : (property as any)[`description_${lang}`]) || property.description || "";
+  const tTitle = (lang === "th" ? property.title : (property[`title_${lang}`] as string)) || property.title || "";
+  const tDescription = (lang === "th" ? property.description : (property[`description_${lang}`] as string)) || property.description || "";
   
   // Use same logic as PropertyCard for consistent localization
   const tPopularArea = getLocaleValue(property, "popular_area", lang);
@@ -58,35 +94,35 @@ export async function renderPropertySocialTemplate(template: string, property: a
     en: { CONDO: "Condo", HOUSE: "House", TOWNHOUSE: "Townhouse", LAND: "Land", COMMERCIAL: "Commercial", OFFICE: "Office", WAREHOUSE: "Warehouse" },
     cn: { CONDO: "公寓", HOUSE: "别墅", TOWNHOUSE: "联排别墅", LAND: "土地", COMMERCIAL: "商用楼", OFFICE: "办公室", WAREHOUSE: "仓库" }
   };
-  const tPropertyType = PROPERTY_TYPE_LABELS[lang]?.[property.property_type] || property.property_type || "";
+  const tPropertyType = property.property_type ? (PROPERTY_TYPE_LABELS[lang]?.[property.property_type] || property.property_type) : "";
 
   const LISTING_TYPE_LABELS: Record<string, Record<string, string>> = {
     th: { SALE: "ขาย", RENT: "ให้เช่า", SALE_AND_RENT: "ขาย/เช่า" },
     en: { SALE: "Sale", RENT: "Rent", SALE_AND_RENT: "Sale/Rent" },
     cn: { SALE: "出售", RENT: "出租", SALE_AND_RENT: "出售/出租" }
   };
-  const tListingType = LISTING_TYPE_LABELS[lang]?.[property.listing_type] || property.listing_type || "";
+  const tListingType = property.listing_type ? (LISTING_TYPE_LABELS[lang]?.[property.listing_type] || property.listing_type) : "";
 
-  const tAmenities = (property as any).property_features
-    ?.map((f: any) => {
-      const name = (lang === "th" ? f.features?.name : (f.features?.[`name_${lang}`])) || f.features?.name;
+  const tAmenities = property.property_features
+    ?.map((f) => {
+      const name = (lang === "th" ? f.features?.name : (f.features?.[`name_${lang}`] as string)) || f.features?.name;
       return name ? `- ${name}` : null;
     })
     .filter(Boolean)
     .join("\n") || "-";
 
-  const nearbyPlaces = (property.nearby_places as any[] || [])
-    ?.map((p: any) => p.name ? `- ${p.name}${p.distance ? ` (${p.distance})` : ""}` : null)
+  const nearbyPlaces = (property.nearby_places || [])
+    ?.map((p) => p.name ? `- ${p.name}${p.distance ? ` (${p.distance})` : ""}` : null)
     .filter(Boolean)
     .slice(0, 5)
     .join("\n") || "-";
-
-  const nearbyTransits = (property.nearby_transits as any[] || [])
-    ?.map((p: any) => p.name ? `- ${p.name}${p.distance ? ` (${p.distance})` : ""}` : null)
+ 
+  const nearbyTransits = (property.nearby_transits || [])
+    ?.map((p) => p.name ? `- ${p.name}${p.distance ? ` (${p.distance})` : ""}` : null)
     .filter(Boolean)
     .join("\n") || "-";
 
-  const closestTransitName = (lang === "th" ? property.transit_station_name : (property as any)[`transit_station_name_${lang}`]) || property.transit_station_name || "";
+  const closestTransitName = (lang === "th" ? property.transit_station_name : (property[`transit_station_name_${lang}`] as string)) || property.transit_station_name || "";
   const closestTransit = closestTransitName ? `${property.transit_type || ""} ${closestTransitName} (${property.transit_distance_meters || "0"}m.)` : "-";
 
   const formatDetails = () => {
@@ -131,23 +167,23 @@ export async function renderPropertySocialTemplate(template: string, property: a
   const contactPrice = lang === "th" ? "ติดต่อสอบถามราคา" : lang === "en" ? "Contact for Price" : "联系咨询价格";
 
   // Robust price extraction (matches website behavior)
-  const actualPrice = property.price || property.price_per_sqm * (property.size_sqm || 0) || 0;
-  const actualRentPrice = property.rental_price || property.rent_price_per_sqm * (property.size_sqm || 0) || 0;
+  const actualPrice = (property.price || (Number(property.price_per_sqm || 0) * Number(property.size_sqm || 0))) || 0;
+  const actualRentPrice = (property.rental_price || (Number(property.rent_price_per_sqm || 0) * Number(property.size_sqm || 0))) || 0;
 
   if (property.listing_type === "SALE_AND_RENT") {
     const parts = [];
-    if (actualPrice) parts.push(formatSaleTag(actualPrice, property.original_price));
-    if (actualRentPrice) parts.push(formatRentTag(actualRentPrice, property.original_rental_price));
+    if (actualPrice) parts.push(formatSaleTag(actualPrice, property.original_price as number));
+    if (actualRentPrice) parts.push(formatRentTag(actualRentPrice, property.original_rental_price as number));
     priceTag = parts.length > 0 ? parts.join("\n") : contactPrice;
   } else if (property.listing_type === "RENT") {
     const finalPrice = actualRentPrice || actualPrice;
     priceTag = finalPrice 
-      ? formatRentTag(finalPrice, property.original_rental_price) 
+      ? formatRentTag(finalPrice, property.original_rental_price as number) 
       : (lang === "th" ? "ติดต่อสอบถามราคาเช่า" : lang === "en" ? "Contact for Rent" : "联系咨询租金");
   } else {
     const finalPrice = actualPrice || actualRentPrice;
     priceTag = finalPrice 
-      ? formatSaleTag(finalPrice, property.original_price) 
+      ? formatSaleTag(finalPrice, property.original_price as number) 
       : (lang === "th" ? "ติดต่อสอบถามราคาขาย" : lang === "en" ? "Contact for Sale" : "联系咨询售价");
   }
 
@@ -156,10 +192,10 @@ export async function renderPropertySocialTemplate(template: string, property: a
     .replace(/{{description}}/g, tDescription)
     .replace(/{{price}}/g, priceText)
     .replace(/{{original_price}}/g, priceText)
-    .replace(/{{sale_price}}/g, property.price ? `${formatPrice(property.price)} ${tBaht}` : "")
-    .replace(/{{rental_price}}/g, property.rental_price ? `${formatPrice(property.rental_price)} ${tBaht}${tPerMonth}` : "")
-    .replace(/{{original_sale_price}}/g, property.original_price ? `${formatPrice(property.original_price)} ${tBaht}` : "")
-    .replace(/{{original_rental_price}}/g, property.original_rental_price ? `${formatPrice(property.original_rental_price)} ${tBaht}${tPerMonth}` : "")
+    .replace(/{{sale_price}}/g, property.price ? `${formatPrice(property.price as number)} ${tBaht}` : "")
+    .replace(/{{rental_price}}/g, property.rental_price ? `${formatPrice(property.rental_price as number)} ${tBaht}${tPerMonth}` : "")
+    .replace(/{{original_sale_price}}/g, property.original_price ? `${formatPrice(property.original_price as number)} ${tBaht}` : "")
+    .replace(/{{original_rental_price}}/g, property.original_rental_price ? `${formatPrice(property.original_rental_price as number)} ${tBaht}${tPerMonth}` : "")
     .replace(/{{price_tag}}/g, priceTag)
     .replace(/{{details}}/g, formatDetails())
     .replace(/{{location}}/g, tLocation)
@@ -194,7 +230,7 @@ export async function getPropertySocialContent(
   const { supabase } = await requireAuthContext();
 
   // 1. Fetch property data
-  const { data: property, error: propError } = await supabase
+  const { data, error: propError } = await supabase
     .from("properties")
     .select(
       `
@@ -207,9 +243,11 @@ export async function getPropertySocialContent(
     .eq("id", propertyId)
     .single();
 
-  if (propError || !property) {
+  if (propError || !data) {
     throw new Error("Property not found");
   }
+
+  const property = data as unknown as SocialProperty;
 
   const settings = await getSiteSettings();
   
@@ -291,20 +329,20 @@ export async function getPropertySocialContent(
     priceText = property.price ? `${formatPrice(property.price)} ${tBaht}` : "";
   }
 
-  const tTitle = (lang === "th" ? property.title : (property as any)[`title_${lang}`]) || property.title || "";
-  const tDistrict = (lang === "th" ? property.district : (property as any)[`district_${lang}`]) || property.district || "";
-  const tProvince = (lang === "th" ? property.province : (property as any)[`province_${lang}`]) || property.province || "";
+  const tTitle = (lang === "th" ? (property.title as string) : (property[`title_${lang}`] as string)) || (property.title as string) || "";
+  const tDistrict = (lang === "th" ? (property.district as string) : (property[`district_${lang}`] as string)) || (property.district as string) || "";
+  const tProvince = (lang === "th" ? (property.province as string) : (property[`province_${lang}`] as string)) || (property.province as string) || "";
   
   const PROPERTY_TYPE_LABELS: Record<string, Record<string, string>> = {
     th: { CONDO: "Condo", HOUSE: "House", TOWNHOUSE: "Townhouse", LAND: "Land", COMMERCIAL: "Commercial", OFFICE: "Office", WAREHOUSE: "Warehouse" },
     en: { CONDO: "Condo", HOUSE: "House", TOWNHOUSE: "Townhouse", LAND: "Land", COMMERCIAL: "Commercial", OFFICE: "Office", WAREHOUSE: "Warehouse" },
     cn: { CONDO: "Condo", HOUSE: "House", TOWNHOUSE: "Townhouse", LAND: "Land", COMMERCIAL: "Commercial", OFFICE: "Office", WAREHOUSE: "Warehouse" }
   };
-  const tPropertyType = PROPERTY_TYPE_LABELS[lang]?.[property.property_type] || property.property_type;
+  const tPropertyType = property.property_type ? (PROPERTY_TYPE_LABELS[lang]?.[property.property_type] || property.property_type) : "";
 
-  const content = await renderPropertySocialTemplate(template, property, lang);
+  const content = await renderPropertySocialTemplate(template, property as any, lang);
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const images = property.property_images?.map((img: any) => {
+  const images = (property.property_images as { image_url: string }[])?.map((img) => {
     const url = img.image_url;
     if (!url) return null;
     if (url.startsWith("http")) return url;
@@ -348,19 +386,19 @@ export async function postPropertyToMetaAction(
     const { supabase, user, role } = await requireAuthContext();
     assertStaff(role);
 
-    const { data: property, error: propError } = await supabase
+    const { data: p, error: propError } = await supabase
       .from("properties")
       .select(`*, property_images(image_url), property_agents(profiles(*)), property_features(features(*))`)
       .eq("id", propertyId)
       .single();
 
-    if (propError || !property) throw new Error("ไม่พบข้อมูลอสังหาริมทรัพย์");
+    if (propError || !p) throw new Error("ไม่พบข้อมูลอสังหาริมทรัพย์");
 
     const contentData = await getPropertySocialContent(propertyId, lang, platform);
     const images = contentData.images;
 
     const finalContent = customContent 
-      ? await renderPropertySocialTemplate(customContent, property, lang)
+      ? await renderPropertySocialTemplate(customContent, p as SocialProperty, lang)
       : contentData.content;
 
     const result = await postToMetaPage(finalContent, images, platform);

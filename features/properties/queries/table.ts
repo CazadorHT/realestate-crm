@@ -1,8 +1,41 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
-import { PropertyTableData } from "../types";
+import { PropertyTableData, PropertyStatus, PropertyType, ListingType } from "../types";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
+
+interface TableQueryResult {
+  id: string;
+  title: string;
+  description: string | null;
+  status: PropertyStatus;
+  property_type: PropertyType;
+  listing_type: ListingType;
+  price: number | null;
+  rental_price: number | null;
+  original_price: number | null;
+  original_rental_price: number | null;
+  updated_at: string;
+  created_at: string;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  province: string | null;
+  district: string | null;
+  popular_area: string | null;
+  view_count: number | null;
+  address_line1: string | null;
+  images: any; // Legacy JSONB field
+  total_units: number | null;
+  sold_units: number | null;
+  posted_to_facebook_at: string | null;
+  posted_to_instagram_at: string | null;
+  posted_to_line_at: string | null;
+  posted_to_tiktok_at: string | null;
+  assigned_to: string | null;
+  tenant_id: string | null;
+  tenants: { name: string } | null;
+  requires_ai_review: boolean | null;
+}
 
 export async function getPropertiesTableData(params: {
   q?: string;
@@ -27,7 +60,7 @@ export async function getPropertiesTableData(params: {
 }): Promise<{
   tableData: PropertyTableData[];
   count: number;
-  filterMetadata: any[];
+  filterMetadata: Partial<TableQueryResult>[];
 }> {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
@@ -98,10 +131,10 @@ export async function getPropertiesTableData(params: {
 
   // Filters
   if (status && status !== "ALL") {
-    query = query.eq("status", status as any);
+    query = query.eq("status", status as PropertyStatus);
   }
   if (type && type !== "ALL") {
-    query = query.eq("property_type", type as any);
+    query = query.eq("property_type", type as PropertyType);
   }
   if (listing && listing !== "ALL") {
     if (listing === "SALE") {
@@ -109,7 +142,7 @@ export async function getPropertiesTableData(params: {
     } else if (listing === "RENT") {
       query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
     } else {
-      query = query.eq("listing_type", listing as any);
+      query = query.eq("listing_type", listing as ListingType);
     }
   }
   if (bedrooms) {
@@ -180,7 +213,8 @@ export async function getPropertiesTableData(params: {
 
   query = query.order(sortField, { ascending }).range(from, to);
 
-  const { data: properties, error, count } = await query;
+  const { data: propertiesRaw, error, count } = await query;
+  const properties = propertiesRaw as unknown as TableQueryResult[];
 
   if (error || !properties) {
     return { tableData: [], count: 0, filterMetadata: [] };
@@ -303,12 +337,12 @@ export async function getPropertiesTableData(params: {
       title: p.title,
       description: locationHint || p.description,
       image_url: imageUrl,
-      property_type: p.property_type as any,
-      listing_type: p.listing_type as any,
+      property_type: p.property_type,
+      listing_type: p.listing_type,
       price: p.price,
       rental_price: p.rental_price,
-      status: p.status as any,
-      requires_ai_review: (p as any).requires_ai_review ?? false,
+      status: p.status,
+      requires_ai_review: p.requires_ai_review ?? false,
       leads_count: leadsCountMap.get(p.id) || 0,
       updated_at: p.updated_at,
       created_at: p.created_at,
@@ -318,15 +352,15 @@ export async function getPropertiesTableData(params: {
       original_rental_price: p.original_rental_price,
       is_new: isNew,
       view_count: p.view_count || 0,
-      total_units: (p as any).total_units || undefined,
-      sold_units: (p as any).sold_units || undefined,
-      posted_to_facebook_at: (p as any).posted_to_facebook_at ?? null,
-      posted_to_instagram_at: (p as any).posted_to_instagram_at ?? null,
-      posted_to_line_at: (p as any).posted_to_line_at ?? null,
-      posted_to_tiktok_at: (p as any).posted_to_tiktok_at ?? null,
+      total_units: p.total_units || undefined,
+      sold_units: p.sold_units || undefined,
+      posted_to_facebook_at: p.posted_to_facebook_at ?? null,
+      posted_to_instagram_at: p.posted_to_instagram_at ?? null,
+      posted_to_line_at: p.posted_to_line_at ?? null,
+      posted_to_tiktok_at: p.posted_to_tiktok_at ?? null,
       agent_name: null,
       tenant_id: p.tenant_id,
-      tenant_name: (p as any).tenants?.name || null,
+      tenant_name: p.tenants?.name || null,
     };
   });
 

@@ -26,7 +26,7 @@ describe('Authorization Logic (Standardized Infrastructure)', () => {
   describe('requireAuthContext', () => {
     it('should throw UNAUTHORIZED if getUser returns null', async () => {
       mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null }, error: null });
-      await expect(requireAuthContext()).rejects.toThrow('Unauthorized');
+      await expect(requireAuthContext(undefined, mockSupabase)).rejects.toThrow('Unauthorized');
     });
 
     it('should resolve AuthContext for valid staff profile', async () => {
@@ -38,7 +38,7 @@ describe('Authorization Logic (Standardized Infrastructure)', () => {
         default_tenant_id: 't-default' 
       } as any);
 
-      const ctx = await requireAuthContext();
+      const ctx = await requireAuthContext(undefined, mockSupabase);
       expect(ctx.user.id).toBe('u1');
       expect(ctx.role).toBe('AGENT');
       expect(ctx.tenantId).toBe('t-default');
@@ -51,7 +51,7 @@ describe('Authorization Logic (Standardized Infrastructure)', () => {
        // Membership lookup
        mockSupabase.mockTableResult('tenant_members', { role: 'MEMBER' });
 
-       const ctx = await requireAuthContext('t1');
+       const ctx = await requireAuthContext('t1', mockSupabase);
        expect(ctx.tenantId).toBe('t1');
        expect(mockSupabase.from).toHaveBeenCalledWith('tenant_members');
     });

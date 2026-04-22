@@ -1,5 +1,6 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { PropertyStatus, PropertyType, ListingType, PropertyImageMetadata } from "../types";
 
 /**
  * Return minimal properties for select inputs in protected CRM
@@ -28,11 +29,11 @@ export async function getPropertiesForSelect() {
 
   // Map to include cover_image
   return (data ?? []).map((p) => {
-    const images = (p.images as any[]) || [];
+    const images = (p.images as unknown as PropertyImageMetadata[]) || [];
     return {
       ...p,
       cover_image:
-        images.find((img: any) => img.is_cover)?.url ||
+        images.find((img) => img.is_cover)?.url ||
         images[0]?.url ||
         null,
     };
@@ -110,10 +111,10 @@ export async function getAllPropertyIdsQuery(params: {
   }
 
   if (status && status !== "ALL") {
-    query = query.eq("status", status as any);
+    query = query.eq("status", status as PropertyStatus);
   }
   if (type && type !== "ALL") {
-    query = query.eq("property_type", type as any);
+    query = query.eq("property_type", type as PropertyType);
   }
   if (listing && listing !== "ALL") {
     if (listing === "SALE") {
@@ -121,7 +122,7 @@ export async function getAllPropertyIdsQuery(params: {
     } else if (listing === "RENT") {
       query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
     } else {
-      query = query.eq("listing_type", listing as any);
+      query = query.eq("listing_type", listing as ListingType);
     }
   }
   if (bedrooms) {

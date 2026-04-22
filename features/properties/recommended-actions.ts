@@ -88,8 +88,17 @@ export async function getRecommendedProperties(
     });
   }
 
+  interface RecommendedRow {
+    id: string; title: string; property_type: string | null; listing_type: string | null;
+    province: string | null; popular_area: string | null; price: number | null;
+    original_price: number | null; rental_price: number | null;
+    original_rental_price: number | null; price_per_sqm: number | null;
+    rent_price_per_sqm: number | null; size_sqm: number | null; slug: string | null;
+    property_images: { image_url: string; is_cover: boolean }[];
+  }
+
   // Transform to match RecommendedProperty type
-  return properties.map((prop: any) => {
+  return (properties as unknown as RecommendedRow[]).map((prop) => {
     // Find cover image or use first image
     const images = prop.property_images as { image_url: string; is_cover: boolean }[];
     const coverImage =

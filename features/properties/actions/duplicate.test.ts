@@ -3,7 +3,18 @@ import { duplicatePropertyAction } from './create';
 import { requireAuthContext } from '@/lib/authz';
 
 // 1. Mock Authz แบบ Auto-mock (วิธีที่เสถียรที่สุดสำหรับ Named Exports)
-vi.mock('@/lib/authz'); 
+vi.mock('@/lib/authz', () => ({
+  requireAuthContext: vi.fn(),
+  assertStaff: vi.fn(),
+  AuthzError: class AuthzError extends Error {
+    code: string;
+    constructor(code: string, message?: string) {
+      super(message || code);
+      this.code = code;
+      this.name = 'AuthzError';
+    }
+  }
+}));
 
 // 2. Mock Globals อื่นๆ (เหมือนเดิมแต่แก้ crypto ให้สมบูรณ์)
 vi.mock("crypto", async (importOriginal) => {

@@ -46,7 +46,7 @@ export async function getAuthContextOrNull(
   injectedSupabase?: SupabaseClient<Database>,
 ): Promise<AuthContext | null> {
   // 🛡️ Test Infrastructure Bridge
-  const supabase = injectedSupabase ?? (globalThis as any).__MOCK_SUPABASE__ ?? (await createClient());
+  const supabase = injectedSupabase ?? (await createClient());
   const { data, error } = await supabase.auth.getUser();
   
   // 🛡️ Zombie Session Protection: Verify user exists and JWT is still valid

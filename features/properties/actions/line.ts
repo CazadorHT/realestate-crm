@@ -3,10 +3,10 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { broadcastLineMessage } from "@/lib/line";
 import { buildSocialPostFlex, LOCATION_MAP, BotLang } from "@/lib/line-flex-builders";
-import { getPropertySocialContent, renderPropertySocialTemplate } from "./social";
+import { revalidatePath } from "next/cache";
+import { SocialProperty, getPropertySocialContent, renderPropertySocialTemplate } from "./social";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { getProvinceName } from "@/lib/utils/provinces";
-import { revalidatePath } from "next/cache";
 
 /**
  * แชร์ข้อมูลทรัพย์ไปยัง Line (Broadcast ไปยังทุกคน)
@@ -39,11 +39,11 @@ export async function postPropertyToLineAction(
     }
 
     // 2. Preparing localized location if needed (AI Fallback)
-    const p = property as any;
+    const p = property as unknown as SocialProperty;
     if (lang !== "th") {
       const provinceTr = p.province ? getProvinceName(p.province, lang) : "";
       
-      const hasDistrictTr = p.district && (p[`district_${lang}`] || LOCATION_MAP[p.district]);
+      const hasDistrictTr = p.district && (p[`district_${lang}`] || (LOCATION_MAP as any)[p.district]);
       const hasProvinceTr = p.province && (p[`province_${lang}`] || (provinceTr && provinceTr !== p.province));
 
       if (!hasDistrictTr || !hasProvinceTr) {
@@ -72,12 +72,12 @@ export async function postPropertyToLineAction(
 
     // หากมีการแก้ไขข้อความ (customMessage) ให้ลอง Render Tags ใหม่
     const finalContent = customMessage 
-      ? await renderPropertySocialTemplate(customMessage, property, lang)
+      ? await renderPropertySocialTemplate(customMessage, p, lang)
       : contentData.content;
 
     // 3. สร้าง Flex Message
     const flexMessage = buildSocialPostFlex(
-      property as any,
+      property as any, // buildSocialPostFlex still takes any in some places, but we cast here to be explicit
       images,
       finalContent,
       lang as BotLang

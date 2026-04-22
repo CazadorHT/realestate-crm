@@ -269,7 +269,7 @@ export async function getGlobalPropertiesTableDataAction(params: {
       property_type: p.property_type,
       listing_type: p.listing_type,
       main_image_url: mainImage,
-      tenant_name: (p.tenants as any)?.name || "Unknown Branch",
+      tenant_name: p.tenants?.name || "Unknown Branch",
       created_at: p.created_at,
     };
   });

@@ -8,6 +8,14 @@ vi.mock("@/lib/authz", () => ({
   requireAuthContext: vi.fn(),
   assertStaff: vi.fn(),
   authzFail: vi.fn((err) => ({ success: false, message: err.message, errorType: "UNAUTHORIZED" })),
+  AuthzError: class AuthzError extends Error {
+    code: string;
+    constructor(code: string, message?: string) {
+      super(message || code);
+      this.code = code;
+      this.name = 'AuthzError';
+    }
+  }
 }));
 
 vi.mock("@/lib/audit", () => ({

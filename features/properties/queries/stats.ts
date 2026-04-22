@@ -55,7 +55,7 @@ export async function getPropertiesDashboardStatsQuery(
   const soldOrRented = data.filter((p) =>
     ["SOLD", "RENTED"].includes(p.status),
   ).length;
-  const aiReviewCount = data.filter((p) => (p as any).requires_ai_review).length;
+  const aiReviewCount = data.filter((p) => p.requires_ai_review).length;
 
   const totalValue = data
     .filter((p) => p.status === "ACTIVE")

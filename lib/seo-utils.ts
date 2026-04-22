@@ -28,7 +28,7 @@ export interface PropertySEOData {
   ogPriceCurrency?: string;
 }
 
-interface PropertyDataForSEO {
+export interface PropertyDataForSEO {
   id?: string;
   slug?: string;
   title: string;

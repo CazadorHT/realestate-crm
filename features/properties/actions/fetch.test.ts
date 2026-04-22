@@ -24,6 +24,14 @@ vi.mock('@/lib/authz', () => ({
   requireAuthContext: vi.fn(),
   assertStaff: vi.fn(),
   assertAuthenticated: vi.fn(),
+  AuthzError: class AuthzError extends Error {
+    code: string;
+    constructor(code: string, message?: string) {
+      super(message || code);
+      this.code = code;
+      this.name = 'AuthzError';
+    }
+  }
 }));
 
 describe('Property Actions - Hardened Fetching', () => {
@@ -55,7 +63,8 @@ then: vi.fn().mockImplementation((resolve: (value: { data: any; error: any; coun
         listing_type: 'SALE',
         created_at: new Date().toISOString(),
         tenants: { name: 'Branch 1' },
-        property_images: [{ image_url: 'img1.jpg', is_cover: true }]
+        property_images: [{ image_url: 'img1.jpg', is_cover: true }],
+        images: [{ url: 'img1.jpg', is_cover: true, sort_order: 0 }]
       }];
 
       mockSupabase.then.mockImplementationOnce((resolve: (arg0: { data: { id: string; title: string; price: number; status: string; property_type: string; listing_type: string; created_at: string; tenants: { name: string; }; property_images: { image_url: string; is_cover: boolean; }[]; }[]; count: number; error: null; }) => any) => 

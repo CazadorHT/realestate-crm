@@ -31,6 +31,14 @@ vi.mock('@/lib/authz', () => ({
   assertAuthenticated: vi.fn(),
   isAdmin: vi.fn(),
   authzFail: vi.fn((err: any) => ({ success: false, message: err.message })),
+  AuthzError: class AuthzError extends Error {
+    code: string;
+    constructor(code: string, message?: string) {
+      super(message || code);
+      this.code = code;
+      this.name = 'AuthzError';
+    }
+  }
 }));
 
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn().mockResolvedValue(null) }));

@@ -7,6 +7,7 @@ import {
   assertStaff,
   isAdmin,
   authzFail,
+  AuthzError
 } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { PROPERTY_IMAGES_BUCKET } from "../logic/images";
@@ -139,8 +140,8 @@ export async function deletePropertyAction(formData: FormData) {
     return { success: true, message: "ลบทรัพย์สำเร็จ" };
   } catch (error: unknown) {
     console.error("deletePropertyAction → error:", error);
-    if (error && typeof error === "object" && "code" in error && error.code === "AUTHZ_ERROR") {
-      return authzFail(error as any);
+    if (error instanceof AuthzError) {
+      return authzFail(error);
     }
     return { success: false, message: mapDbError(error) };
   }

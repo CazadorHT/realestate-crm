@@ -6,6 +6,14 @@ import { requireAuthContext, assertStaff } from '@/lib/authz';
 vi.mock('@/lib/authz', () => ({
   requireAuthContext: vi.fn(),
   assertStaff: vi.fn(),
+  AuthzError: class AuthzError extends Error {
+    code: string;
+    constructor(code: string, message?: string) {
+      super(message || code);
+      this.code = code;
+      this.name = 'AuthzError';
+    }
+  }
 }));
 
 vi.mock('@/lib/file-validation', () => ({

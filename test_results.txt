@@ -1,0 +1,556 @@
+
+ RUN  v4.1.0 /Users/hunter/Developer/realestate-crm
+
+ ✓ lib/finance/precision.test.ts (4 tests) 35ms
+ ❯ lib/authz.test.ts (3 tests | 3 failed) 17ms
+       × should throw UNAUTHORIZED if getUser returns null 13ms
+       × should resolve AuthContext for valid staff profile 2ms
+       × should enforce multi-tenant membership for non-staff 1ms
+stderr | features/co-brokers/actions.test.ts > Co-Brokers Module - Definitive Case > should successfully create co-broker
+Error creating co-broker: TypeError: Cannot read properties of undefined (reading 'getUser')
+    at getAuthContextOrNull (/Users/hunter/Developer/realestate-crm/lib/authz.ts:50:47)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at requireAuthContext (/Users/hunter/Developer/realestate-crm/lib/authz.ts:67:15)
+    at createCoBrokerAction (/Users/hunter/Developer/realestate-crm/features/co-brokers/actions.ts:59:42)
+    at /Users/hunter/Developer/realestate-crm/features/co-brokers/actions.test.ts:48:20
+    at file:///Users/hunter/Developer/realestate-crm/node_modules/.pnpm/@vitest+runner@4.1.0/node_modules/@vitest/runner/dist/index.js:1258:20
+
+stderr | features/co-brokers/actions.test.ts > Co-Brokers Module - Definitive Case > should successfully create co-broker
+Create Failed: Cannot read properties of undefined (reading 'getUser')
+
+stderr | features/finance/actions.test.ts > Finance Actions - Agile Payout Hardening > markAsPaidAction - Hardened Logic > should fail if the user is not a staff member (RBAC Protection)
+markAsPaid Error: Error: Unauthorized
+    at /Users/hunter/Developer/realestate-crm/features/finance/actions.test.ts:134:66
+    at Mock (file:///Users/hunter/Developer/realestate-crm/node_modules/.pnpm/@vitest+spy@4.1.0/node_modules/@vitest/spy/dist/index.js:332:34)
+    at Module.markAsPaidAction (/Users/hunter/Developer/realestate-crm/features/finance/actions.ts:345:5)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at /Users/hunter/Developer/realestate-crm/features/finance/actions.test.ts:143:23
+    at file:///Users/hunter/Developer/realestate-crm/node_modules/.pnpm/@vitest+runner@4.1.0/node_modules/@vitest/runner/dist/index.js:1258:20
+
+stderr | features/co-brokers/actions.test.ts > Co-Brokers Module - Definitive Case > permanentlyDeleteCoBrokerAction > should allow admin users to delete
+Error permanent deleting co-broker: TypeError: Cannot read properties of undefined (reading 'getUser')
+    at getAuthContextOrNull (/Users/hunter/Developer/realestate-crm/lib/authz.ts:50:47)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at requireAuthContext (/Users/hunter/Developer/realestate-crm/lib/authz.ts:67:15)
+    at permanentlyDeleteCoBrokerAction (/Users/hunter/Developer/realestate-crm/features/co-brokers/actions.ts:181:42)
+    at /Users/hunter/Developer/realestate-crm/features/co-brokers/actions.test.ts:66:22
+    at file:///Users/hunter/Developer/realestate-crm/node_modules/.pnpm/@vitest+runner@4.1.0/node_modules/@vitest/runner/dist/index.js:1258:20
+
+stderr | features/co-brokers/actions.test.ts > Co-Brokers Module - Definitive Case > permanentlyDeleteCoBrokerAction > should allow admin users to delete
+Delete Failed: Cannot read properties of undefined (reading 'getUser')
+
+stderr | features/co-brokers/actions.test.ts > Co-Brokers Module - Definitive Case > permanentlyDeleteCoBrokerAction > should block non-admin users
+Error permanent deleting co-broker: TypeError: Cannot read properties of undefined (reading 'getUser')
+    at getAuthContextOrNull (/Users/hunter/Developer/realestate-crm/lib/authz.ts:50:47)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at requireAuthContext (/Users/hunter/Developer/realestate-crm/lib/authz.ts:67:15)
+    at permanentlyDeleteCoBrokerAction (/Users/hunter/Developer/realestate-crm/features/co-brokers/actions.ts:181:42)
+    at /Users/hunter/Developer/realestate-crm/features/co-brokers/actions.test.ts:77:22
+    at file:///Users/hunter/Developer/realestate-crm/node_modules/.pnpm/@vitest+runner@4.1.0/node_modules/@vitest/runner/dist/index.js:1258:20
+
+ ❯ features/co-brokers/actions.test.ts (3 tests | 3 failed) 166ms
+     × should successfully create co-broker 133ms
+       × should allow admin users to delete 17ms
+       × should block non-admin users 14ms
+stderr | features/finance/actions.test.ts > Finance Actions - Agile Payout Hardening > Security & Cross-Tenant Protection > should block createCommissionAdjustmentAction if commission belongs to another tenant
+createAdjustment Error: Error: ไม่สามารถเพิ่มรายการปรับปรุงข้ามสาขาได้ กรุณาสลับสาขาให้ถูกต้อง
+    at Module.createCommissionAdjustmentAction (/Users/hunter/Developer/realestate-crm/features/finance/actions.ts:152:13)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at /Users/hunter/Developer/realestate-crm/features/finance/actions.test.ts:279:22
+    at file:///Users/hunter/Developer/realestate-crm/node_modules/.pnpm/@vitest+runner@4.1.0/node_modules/@vitest/runner/dist/index.js:1258:20
+
+ ✓ features/finance/actions.test.ts (10 tests) 103ms
+ ✓ lib/seo-utils.test.ts (7 tests) 36ms
+stderr | features/properties/actions/restore.test.ts > restorePropertyVersionAction > should handle version conflict (VC409) from RPC
+RPC restore failed: { message: 'VC409: Version conflict' }
+
+stderr | features/properties/actions/restore.test.ts > restorePropertyVersionAction > should handle ownership errors (VC403) from RPC
+RPC restore failed: { message: 'VC403: Forbidden' }
+
+ ✓ features/properties/actions/restore.test.ts (5 tests) 420ms
+     ✓ should successfully restore a property to a previous state  411ms
+ ✓ features/leads/actions.test.ts (2 tests) 817ms
+     ✓ should successfully insert lead (Valid Enum Values)  792ms
+ ✓ features/properties/actions/update.test.ts (3 tests) 46ms
+ ✓ lib/property-utils.test.ts (14 tests) 33ms
+ ✓ features/documents/template-engine.test.ts (11 tests) 66ms
+ ✓ lib/finance/commissions.test.ts (12 tests) 8ms
+ ✓ features/properties/actions/fetch.test.ts (3 tests) 9ms
+stderr | features/properties/actions/avm.test.ts > Property Actions - Hardened AVM Valuation > should handle AI Hallucination (Malformed JSON) and throw a safe error
+AI Valuation Generation Error: Error: AI did not return a valid JSON object.
+    at Module.generatePropertyValuation (/Users/hunter/Developer/realestate-crm/features/properties/actions/avm.ts:199:13)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at /Users/hunter/Developer/realestate-crm/features/properties/actions/avm.test.ts:111:5
+    at file:///Users/hunter/Developer/realestate-crm/node_modules/.pnpm/@vitest+runner@4.1.0/node_modules/@vitest/runner/dist/index.js:1258:20
+
+ ✓ features/properties/actions/avm.test.ts (2 tests) 16ms
+stdout | features/teams/actions/teamActions.test.ts > Team Actions - Enterprise Model > getTeamsAction (Admin Scoped) > should filter teams by tenant_id when not a Super Admin
+[getTeamsAction] TenantID: tenant-123, Success: true, DataCount: 0
+
+stdout | features/teams/actions/teamActions.test.ts > Team Actions - Enterprise Model > getTeamsAction (Admin Scoped) > should NOT filter teams by tenant_id for Super Admin (ALL branches)
+[getTeamsAction] TenantID: ALL, Success: true, DataCount: 0
+
+ ✓ features/teams/actions/teamActions.test.ts (6 tests) 37ms
+ ✓ components/auth/__tests__/auth-schemas.test.ts (5 tests) 8ms
+ ✓ features/properties/bulk-actions.test.ts (3 tests) 29ms
+stderr | features/properties/actions/delete.test.ts > Property Actions - Hardened Deletion & Atomic Integrity > should verify Transaction Integrity: DO NOT delete storage if DB fails
+deletePropertyAction → error: Error: ลบไม่สำเร็จ: ข้อมูลมีการใช้งานอยู่ในส่วนอื่น (กรุณาแจ้ง Admin หรือลอง Archive แทน)
+    at Module.deletePropertyAction (/Users/hunter/Developer/realestate-crm/features/properties/actions/delete.ts:94:15)
+    at processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at /Users/hunter/Developer/realestate-crm/features/properties/actions/delete.test.ts:90:20
+    at file:///Users/hunter/Developer/realestate-crm/node_modules/.pnpm/@vitest+runner@4.1.0/node_modules/@vitest/runner/dist/index.js:1258:20
+
+ ✓ features/properties/actions/delete.test.ts (2 tests) 12ms
+ ✓ features/contracts/utils.test.ts (5 tests) 8ms
+ ✓ features/documents/actions.test.ts (2 tests) 23ms
+ ✓ features/deals/actions.test.ts (2 tests) 20ms
+stderr | features/properties/actions/create.test.ts > Property Actions - Branch Isolation & Rollback > should rollback property creation within tenant boundary if images fail
+Images insertion error: { message: 'Image DB Error' }
+
+ ✓ features/properties/actions/create.test.ts (3 tests) 18ms
+ ✓ features/analytics/agent-kpis.test.ts (4 tests) 6ms
+ ✓ features/site-settings/schema.test.ts (5 tests) 9ms
+ ✓ lib/validations/lead.test.ts (8 tests) 13ms
+ ✓ features/smart-match/matching.test.ts (7 tests) 9ms
+stderr | features/audit/getPropertyAuditLogsAction.test.ts > getPropertyAuditLogsAction - Branch Isolation & Data Fetching > should return false and message on Supabase failure
+Failed to fetch audit logs: { message: 'Database connection failed' }
+
+ ✓ features/audit/getPropertyAuditLogsAction.test.ts (4 tests) 11ms
+Warning: A vi.mock("./queries.getDeals") call in "/Users/hunter/Developer/realestate-crm/features/deals/bulk-actions.test.ts" is not at the top level of the module. Although it appears nested, it will be hoisted and executed before any tests run. Move it to the top level to reflect its actual execution order. This will become an error in a future version.
+See: https://vitest.dev/guide/mocking/modules#how-it-works
+stdout | supabase/tests/property-rpc.test.ts
+[dotenv@17.3.1] injecting env (26) from .env -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+
+stderr | components/auth/__tests__/login-form.test.tsx > LoginForm Component > renders login view by default
+Received `true` for a non-boolean attribute `layout`.
+
+If you want to write it to the DOM, pass a string instead: layout="true" or layout={value.toString()}.
+
+ ✓ features/deals/bulk-actions.test.ts (3 tests) 9ms
+stderr | supabase/tests/property-rpc.test.ts > RPC Integration Tests (Requires Local Supabase)
+⚠️ RPC Test Skip: Insufficient profiles for ownership testing.
+
+ ✓ supabase/tests/property-rpc.test.ts (5 tests) 6ms
+ ✓ features/rental-contracts/rental-logic.test.ts (9 tests) 60ms
+ ✓ lib/audit.test.ts (6 tests) 53ms
+ ✓ features/deals/logic/scoped-client.test.ts (6 tests) 22ms
+ ✓ features/properties/actions/duplicate.test.ts (2 tests) 7ms
+ ✓ features/blog/schema.test.ts (5 tests) 8ms
+ ✓ features/admin/admin-logic.test.ts (5 tests) 13ms
+ ✓ features/deals/logic/diff.test.ts (6 tests) 7ms
+stderr | features/properties/actions/images.test.ts > Property Image Actions - Security & Validation > uploadPropertyImageAction > should rollback and remove the file if DB tracking fails
+uploadPropertyImageAction → error: { message: 'DB Down' }
+
+ ✓ features/properties/actions/images.test.ts (4 tests) 65ms
+ ❯ components/auth/__tests__/login-form.test.tsx (5 tests | 1 failed) 3174ms
+     ✓ renders login view by default  397ms
+     × shows validation error for invalid email 1482ms
+     ✓ switches to signup view 187ms
+     ✓ validates password matching on signup  601ms
+     ✓ prevents submission if honeypot is filled (Bot Detection)  504ms
+ ✓ lib/thai-address/validation.test.ts (5 tests) 10ms
+ ✓ features/leads/mapper.test.ts (2 tests) 5ms
+ ✓ lib/actions/tenant-management.test.ts (4 tests) 8ms
+ ✓ features/properties/actions/property-trash.test.ts (5 tests) 7ms
+ ✓ features/properties/logic/seo.test.ts (5 tests) 6ms
+ ✓ features/owners/owners-logic.test.ts (2 tests) 5ms
+ ✓ features/properties/logic/properties-logic.test.ts (5 tests) 5ms
+ ✓ features/ai-settings/constants.test.ts (4 tests) 6ms
+ ✓ features/dashboard/dashboard-logic.test.ts (3 tests) 5ms
+ ✓ features/audit/actions.test.ts (5 tests) 7ms
+ ✓ features/ai-monitor/ai-monitor-logic.test.ts (4 tests) 4ms
+ ✓ features/users/users-logic.test.ts (3 tests) 4ms
+ ✓ features/teams/teams-logic.test.ts (4 tests) 4ms
+ ✓ lib/actions/executive-stats.test.ts (3 tests) 3ms
+ ✓ features/amenities/icons.test.ts (4 tests) 4ms
+ ✓ features/properties/logic/notifications.test.ts (2 tests) 3ms
+ ✓ features/deals/queries.test.ts (3 tests) 4ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 7 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  lib/authz.test.ts > Authorization Logic (Standardized Infrastructure) > requireAuthContext > should throw UNAUTHORIZED if getUser returns null
+AssertionError: expected [Function] to throw error including 'Unauthorized' but got 'Cannot read properties of undefined (…'
+
+Expected: "Unauthorized"
+Received: "Cannot read properties of undefined (reading 'getUser')"
+
+ ❯ lib/authz.test.ts:29:41
+     27|     it('should throw UNAUTHORIZED if getUser returns null', async () =…
+     28|       mockSupabase.auth.getUser.mockResolvedValue({ data: { user: null…
+     29|       await expect(requireAuthContext()).rejects.toThrow('Unauthorized…
+       |                                         ^
+     30|     });
+     31|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/7]⎯
+
+ FAIL  lib/authz.test.ts > Authorization Logic (Standardized Infrastructure) > requireAuthContext > should resolve AuthContext for valid staff profile
+TypeError: Cannot read properties of undefined (reading 'getUser')
+ ❯ getAuthContextOrNull lib/authz.ts:50:47
+     48|   // 🛡️ Test Infrastructure Bridge
+     49|   const supabase = injectedSupabase ?? (await createClient());
+     50|   const { data, error } = await supabase.auth.getUser();
+       |                                               ^
+     51|
+     52|   // 🛡️ Zombie Session Protection: Verify user exists and JWT is stil…
+ ❯ Module.requireAuthContext lib/authz.ts:67:15
+ ❯ lib/authz.test.ts:41:19
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/7]⎯
+
+ FAIL  lib/authz.test.ts > Authorization Logic (Standardized Infrastructure) > requireAuthContext > should enforce multi-tenant membership for non-staff
+TypeError: Cannot read properties of undefined (reading 'getUser')
+ ❯ getAuthContextOrNull lib/authz.ts:50:47
+     48|   // 🛡️ Test Infrastructure Bridge
+     49|   const supabase = injectedSupabase ?? (await createClient());
+     50|   const { data, error } = await supabase.auth.getUser();
+       |                                               ^
+     51|
+     52|   // 🛡️ Zombie Session Protection: Verify user exists and JWT is stil…
+ ❯ Module.requireAuthContext lib/authz.ts:67:15
+ ❯ lib/authz.test.ts:54:20
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/7]⎯
+
+ FAIL  features/co-brokers/actions.test.ts > Co-Brokers Module - Definitive Case > should successfully create co-broker
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ features/co-brokers/actions.test.ts:55:28
+     53|
+     54|     if (!result.success) console.error("Create Failed:", result.error);
+     55|     expect(result.success).toBe(true);
+       |                            ^
+     56|     expect(mockSupabase.insert).toHaveBeenCalled();
+     57|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/7]⎯
+
+ FAIL  features/co-brokers/actions.test.ts > Co-Brokers Module - Definitive Case > permanentlyDeleteCoBrokerAction > should allow admin users to delete
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ features/co-brokers/actions.test.ts:69:30
+     67|
+     68|       if (!result.success) console.error("Delete Failed:", result.erro…
+     69|       expect(result.success).toBe(true);
+       |                              ^
+     70|       expect(mockSupabase.delete).toHaveBeenCalled();
+     71|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+
+ FAIL  features/co-brokers/actions.test.ts > Co-Brokers Module - Definitive Case > permanentlyDeleteCoBrokerAction > should block non-admin users
+AssertionError: expected 'Cannot read properties of undefined (…' to contain 'สิทธิ์'
+
+Expected: "สิทธิ์"
+Received: "Cannot read properties of undefined (reading 'getUser')"
+
+ ❯ features/co-brokers/actions.test.ts:80:28
+     78|
+     79|       expect(result.success).toBe(false);
+     80|       expect(result.error).toContain('สิทธิ์'); // Thai text for "perm…
+       |                            ^
+     81|     });
+     82|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+
+ FAIL  components/auth/__tests__/login-form.test.tsx > LoginForm Component > shows validation error for invalid email
+TestingLibraryElementError: Unable to find an element with the text: กรุณากรอกอีเมลให้ถูกต้อง. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<span[39m
+    [33mdata-radix-focus-guard[39m=[32m""[39m
+    [33mstyle[39m=[32m"outline: none; opacity: 0; position: fixed; pointer-events: none;"[39m
+    [33mtabindex[39m=[32m"0"[39m
+  [36m/>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#020617]"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"absolute inset-0 z-0"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"absolute inset-0"[39m
+        [36m>[39m
+          [36m<img[39m
+            [33malt[39m=[32m"Luxury Penthouse View"[39m
+            [33mclass[39m=[32m"object-cover opacity-60 transition-opacity duration-1000 scale-105"[39m
+            [33mdata-nimg[39m=[32m"fill"[39m
+            [33mdecoding[39m=[32m"async"[39m
+            [33msizes[39m=[32m"100vw"[39m
+            [33msrc[39m=[32m"/_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=3840&q=75"[39m
+            [33msrcset[39m=[32m"/_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=640&q=75 640w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=750&q=75 750w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=828&q=75 828w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=1080&q=75 1080w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=1200&q=75 1200w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=1920&q=75 1920w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=2048&q=75 2048w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=3840&q=75 3840w"[39m
+            [33mstyle[39m=[32m"position: absolute; height: 100%; width: 100%; left: 0px; top: 0px; right: 0px; bottom: 0px; color: transparent;"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"absolute inset-0 transition-all duration-1000 bg-slate-950/30 backdrop-blur-xs"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33manimate[39m=[32m"[object Object]"[39m
+          [33mclass[39m=[32m"absolute inset-0 bg-linear-to-br from-blue-600/30 via-purple-600/20 to-blue-700/30 mix-blend-overlay overflow-hidden"[39m
+          [33mexit[39m=[32m"[object Object]"[39m
+          [33minitial[39m=[32m"[object Object]"[39m
+          [33mtransition[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"absolute inset-0 opacity-20 text-white"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"absolute top-20 left-20 w-72 h-72 bg-white/20 rounded-full blur-3xl animate-[blob_7s_infinite]"[39m
+            [36m/>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"absolute bottom-20 right-20 w-96 h-96 bg-white/20 rounded-full blur-3xl animate-[blob_7s_infinite_2s]"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33manimate[39m=[32m"[object Object]"[39m
+          [33mclass[39m=[32m"absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] transition-colors duration-1000"[39m
+        [36m/>[39m
+        [36m<div[39m
+          [33manimate[39m=[32m"[object Object]"[39m
+          [33mclass[39m=[32m"absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] transition-colors duration-1000"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"hidden lg:flex absolute top-8 left-8 z-20 flex-col gap-1 items-start"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"p-3 backdrop-blur-xl rounded-xl border shadow-2xl transition-all duration-700 bg-white/10 border-black/5"[39m
+        [36m>[39m
+          [36m<img[39m
+            [33malt[39m=[32m"VC Connect Asset"[39m
+            [33mclass[39m=[32m"h-24 w-auto transition-all"[39m
+            [33mdata-nimg[39m=[32m"1"[39m
+            [33mdecoding[39m=[32m"async"[39m
+            [33mheight[39m=[32m"40"[39m
+            [33mloading[39m=[32m"lazy"[39m
+            [33msrc[39m=[32m"/images/v-link-svg-png-dark.svg"[39m
+            [33mstyle[39m=[32m"color: transparent;"[39m
+            [33mwidth[39m=[32m"140"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-[9px] uppercase tracking-[0.2em] font-bold ml-1 py-2 transition-colors duration-700 text-white/40"[39m
+        [36m>[39m
+          [0mProperty Management System | CRM Solution[0m
+        [36m</p>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"absolute bottom-6 left-0 right-0 z-20 text-center px-4"[39m
+      [36m>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-[10px] font-bold tracking-wider transition-colors duration-700 text-white/70"[39m
+        [36m>[39m
+          [0m© [0m
+          [0m2026[0m
+          [0m VC Connect Asset Co., Ltd. All rights reserved.[0m
+        [36m</p>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"absolute top-4 right-4 lg:top-8 lg:right-8 z-30"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"flex items-center gap-2 px-4 py-2 backdrop-blur-md border rounded-full transition-all group active:scale-95 shadow-lg hover:scale-105 bg-white/10 border-black/5 text-white hover:bg-white/30"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-house h-5 w-5 text-blue-500"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-sm font-semibold hidden sm:inline"[39m
+          [36m>[39m
+            [0mกลับไปหน้าแรก[0m
+          [36m</span>[39m
+        [36m</a>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div[39m
+    [33maria-describedby[39m=[32m"radix-_r_5_"[39m
+    [33maria-labelledby[39m=[32m"radix-_r_4_"[39m
+    [33mclass[39m=[32m"data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]...
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<span[39m
+    [33mdata-radix-focus-guard[39m=[32m""[39m
+    [33mstyle[39m=[32m"outline: none; opacity: 0; position: fixed; pointer-events: none;"[39m
+    [33mtabindex[39m=[32m"0"[39m
+  [36m/>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#020617]"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"absolute inset-0 z-0"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"absolute inset-0"[39m
+        [36m>[39m
+          [36m<img[39m
+            [33malt[39m=[32m"Luxury Penthouse View"[39m
+            [33mclass[39m=[32m"object-cover opacity-60 transition-opacity duration-1000 scale-105"[39m
+            [33mdata-nimg[39m=[32m"fill"[39m
+            [33mdecoding[39m=[32m"async"[39m
+            [33msizes[39m=[32m"100vw"[39m
+            [33msrc[39m=[32m"/_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=3840&q=75"[39m
+            [33msrcset[39m=[32m"/_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=640&q=75 640w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=750&q=75 750w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=828&q=75 828w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=1080&q=75 1080w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=1200&q=75 1200w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=1920&q=75 1920w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=2048&q=75 2048w, /_next/image?url=%2Fimages%2Fauth-bg-3.webp&w=3840&q=75 3840w"[39m
+            [33mstyle[39m=[32m"position: absolute; height: 100%; width: 100%; left: 0px; top: 0px; right: 0px; bottom: 0px; color: transparent;"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"absolute inset-0 transition-all duration-1000 bg-slate-950/30 backdrop-blur-xs"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33manimate[39m=[32m"[object Object]"[39m
+          [33mclass[39m=[32m"absolute inset-0 bg-linear-to-br from-blue-600/30 via-purple-600/20 to-blue-700/30 mix-blend-overlay overflow-hidden"[39m
+          [33mexit[39m=[32m"[object Object]"[39m
+          [33minitial[39m=[32m"[object Object]"[39m
+          [33mtransition[39m=[32m"[object Object]"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"absolute inset-0 opacity-20 text-white"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"absolute top-20 left-20 w-72 h-72 bg-white/20 rounded-full blur-3xl animate-[blob_7s_infinite]"[39m
+            [36m/>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"absolute bottom-20 right-20 w-96 h-96 bg-white/20 rounded-full blur-3xl animate-[blob_7s_infinite_2s]"[39m
+            [36m/>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33manimate[39m=[32m"[object Object]"[39m
+          [33mclass[39m=[32m"absolute top-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] transition-colors duration-1000"[39m
+        [36m/>[39m
+        [36m<div[39m
+          [33manimate[39m=[32m"[object Object]"[39m
+          [33mclass[39m=[32m"absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] transition-colors duration-1000"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"hidden lg:flex absolute top-8 left-8 z-20 flex-col gap-1 items-start"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"p-3 backdrop-blur-xl rounded-xl border shadow-2xl transition-all duration-700 bg-white/10 border-black/5"[39m
+        [36m>[39m
+          [36m<img[39m
+            [33malt[39m=[32m"VC Connect Asset"[39m
+            [33mclass[39m=[32m"h-24 w-auto transition-all"[39m
+            [33mdata-nimg[39m=[32m"1"[39m
+            [33mdecoding[39m=[32m"async"[39m
+            [33mheight[39m=[32m"40"[39m
+            [33mloading[39m=[32m"lazy"[39m
+            [33msrc[39m=[32m"/images/v-link-svg-png-dark.svg"[39m
+            [33mstyle[39m=[32m"color: transparent;"[39m
+            [33mwidth[39m=[32m"140"[39m
+          [36m/>[39m
+        [36m</div>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-[9px] uppercase tracking-[0.2em] font-bold ml-1 py-2 transition-colors duration-700 text-white/40"[39m
+        [36m>[39m
+          [0mProperty Management System | CRM Solution[0m
+        [36m</p>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"absolute bottom-6 left-0 right-0 z-20 text-center px-4"[39m
+      [36m>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"text-[10px] font-bold tracking-wider transition-colors duration-700 text-white/70"[39m
+        [36m>[39m
+          [0m© [0m
+          [0m2026[0m
+          [0m VC Connect Asset Co., Ltd. All rights reserved.[0m
+        [36m</p>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"absolute top-4 right-4 lg:top-8 lg:right-8 z-30"[39m
+      [36m>[39m
+        [36m<a[39m
+          [33mclass[39m=[32m"flex items-center gap-2 px-4 py-2 backdrop-blur-md border rounded-full transition-all group active:scale-95 shadow-lg hover:scale-105 bg-white/10 border-black/5 text-white hover:bg-white/30"[39m
+          [33mhref[39m=[32m"/"[39m
+        [36m>[39m
+          [36m<svg[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"lucide lucide-house h-5 w-5 text-blue-500"[39m
+            [33mfill[39m=[32m"none"[39m
+            [33mheight[39m=[32m"24"[39m
+            [33mstroke[39m=[32m"currentColor"[39m
+            [33mstroke-linecap[39m=[32m"round"[39m
+            [33mstroke-linejoin[39m=[32m"round"[39m
+            [33mstroke-width[39m=[32m"2"[39m
+            [33mviewBox[39m=[32m"0 0 24 24"[39m
+            [33mwidth[39m=[32m"24"[39m
+            [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+          [36m>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"[39m
+            [36m/>[39m
+            [36m<path[39m
+              [33md[39m=[32m"M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"[39m
+            [36m/>[39m
+          [36m</svg>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"text-sm font-semibold hidden sm:inline"[39m
+          [36m>[39m
+            [0mกลับไปหน้าแรก[0m
+          [36m</span>[39m
+        [36m</a>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+  [36m<div[39m
+    [33maria-describedby[39m=[32m"radix-_r_5_"[39m
+    [33maria-labelledby[39m=[32m"radix-_r_4_"[39m
+    [33mclass[39m=[32m"data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]...
+ ❯ waitForWrapper node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/wait-for.js:163:27
+ ❯ node_modules/.pnpm/@testing-library+dom@10.4.1/node_modules/@testing-library/dom/dist/query-helpers.js:86:33
+ ❯ components/auth/__tests__/login-form.test.tsx:61:25
+     59|     await user.click(submitButton);
+     60|
+     61|     expect(await screen.findByText('กรุณากรอกอีเมลให้ถูกต้อง')).toBeIn…
+       |                         ^
+     62|   });
+     63|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+
+
+ Test Files  3 failed | 51 passed (54)
+      Tests  7 failed | 247 passed (254)
+   Start at  16:51:48
+   Duration  15.39s (transform 6.22s, setup 9.19s, import 25.63s, tests 5.49s, environment 76.35s)
+

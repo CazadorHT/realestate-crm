@@ -13,6 +13,7 @@ import {
 } from "@/lib/excel-export";
 import { logAudit } from "@/lib/audit";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { PropertyStatus, PropertyType, ListingType } from "./types";
 
 const PROPERTY_COLUMNS: ExcelColumn[] = [
   { key: "title", header: "ชื่อทรัพย์", width: 30 },
@@ -141,10 +142,10 @@ export async function exportPropertiesAction(
     }
 
     if (status && status !== "ALL") {
-      query = query.eq("status", status as any);
+      query = query.eq("status", status as PropertyStatus);
     }
     if (type && type !== "ALL") {
-      query = query.eq("property_type", type as any);
+      query = query.eq("property_type", type as PropertyType);
     }
     if (listing && listing !== "ALL") {
       if (listing === "SALE") {
@@ -152,7 +153,7 @@ export async function exportPropertiesAction(
       } else if (listing === "RENT") {
         query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
       } else {
-        query = query.eq("listing_type", listing as any);
+        query = query.eq("listing_type", listing as ListingType);
       }
     }
     if (bedrooms) {

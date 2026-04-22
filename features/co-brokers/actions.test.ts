@@ -12,6 +12,18 @@ describe('Co-Brokers Module - Definitive Case', () => {
 
     (globalThis as any).__MOCK_SUPABASE__ = mockSupabase;
 
+    vi.doMock('@/lib/authz', () => ({
+      requireAuthContext: vi.fn(),
+      AuthzError: class AuthzError extends Error {
+        code: string;
+        constructor(code: string, message?: string) {
+          super(message || code);
+          this.code = code;
+          this.name = 'AuthzError';
+        }
+      }
+    }));
+
     vi.doMock('@/lib/actions/system-config', () => ({
       getSystemConfig: vi.fn().mockResolvedValue({ 
         multi_tenant_enabled: true, 
@@ -37,6 +49,14 @@ describe('Co-Brokers Module - Definitive Case', () => {
       data: { user: { id: 'u1' } }, 
       error: null 
     });
+
+    const { requireAuthContext } = await import('@/lib/authz');
+    (requireAuthContext as any).mockResolvedValue({
+      supabase: mockSupabase,
+      user: { id: 'u1' },
+      role: 'AGENT',
+      tenantId: 'tenant-1'
+    });
   });
 
   it('should successfully create co-broker', async () => {
@@ -58,6 +78,14 @@ describe('Co-Brokers Module - Definitive Case', () => {
 
   describe('permanentlyDeleteCoBrokerAction', () => {
     it('should allow admin users to delete', async () => {
+      const { requireAuthContext } = await import('@/lib/authz');
+      (requireAuthContext as any).mockResolvedValue({
+        supabase: mockSupabase,
+        user: { id: 'admin-1' },
+        role: 'ADMIN',
+        tenantId: 'tenant-1'
+      });
+
       // 1. Role Check
       mockSupabase.mockTableResult('profiles', { role: 'ADMIN' });
       // 2. Success Delete

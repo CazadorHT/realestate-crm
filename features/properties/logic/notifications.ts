@@ -6,6 +6,7 @@ import { sendAdminNotification } from "@/lib/telegram";
 import { 
   formatPriceDropNotification, 
 } from "@/lib/telegram-formatters";
+import { FlexBubble } from "@/types/line";
 
 export async function sendStatusUpdateNotification(
   existing: Partial<PropertyRow> & { title: string; id: string },
@@ -81,7 +82,11 @@ export async function sendStatusUpdateNotification(
 }
 
 export async function sendPriceDropNotification(
-  existing: any,
+  existing: Partial<PropertyRow> & { 
+    id: string; 
+    title: string; 
+    property_images?: { image_url: string; is_cover?: boolean }[] 
+  },
   oldPrice: number,
   newPrice: number,
   dropType: "SALE" | "RENT",
@@ -91,11 +96,11 @@ export async function sendPriceDropNotification(
   const typeLabel = dropType === "SALE" ? "ราคาขาย" : "ค่าเช่า";
 
   // Fetch image for notification
-  const images = (existing as any).property_images || [];
+  const images = existing.property_images || [];
   const coverImageUrl =
-    images.find((img: any) => img.is_cover)?.image_url || images[0]?.image_url;
+    images.find((img) => img.is_cover)?.image_url || images[0]?.image_url;
 
-  const flexContents: any = {
+  const flexContents: FlexBubble = {
     type: "bubble",
     header: {
       type: "box",
@@ -191,7 +196,7 @@ export async function sendPriceDropNotification(
 
   // 🔥 Telegram Price Drop Notification
   after(async () => {
-    const tgMessage = formatPriceDropNotification(existing, oldPrice, newPrice, dropType);
+    const tgMessage = formatPriceDropNotification(existing as any, oldPrice, newPrice, dropType);
     await sendAdminNotification(tgMessage);
   });
 }

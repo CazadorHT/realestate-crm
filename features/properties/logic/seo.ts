@@ -1,5 +1,9 @@
 import { PropertyFormValues } from "../schema";
-import { generatePropertySEO } from "@/lib/seo-utils";
+import { generatePropertySEO, PropertyDataForSEO } from "@/lib/seo-utils";
+import { Database } from "@/lib/database.types";
+
+type PropertyType = Database["public"]["Enums"]["property_type"];
+type ListingType = Database["public"]["Enums"]["listing_type"];
 
 export function generateKeywords(
   safeValues: PropertyFormValues,
@@ -64,60 +68,62 @@ export function generateKeywords(
 }
 
 export function prepareSEOData(
-  propertyData: any,
+  propertyData: Record<string, unknown>,
   safeValues: PropertyFormValues,
   language: string = "th",
 ) {
   return generatePropertySEO(
     {
-      id: propertyData.id,
-      slug: propertyData.slug,
-      title: propertyData.title,
-      title_en: propertyData.title_en,
-      title_cn: propertyData.title_cn,
-    property_type: propertyData.property_type,
-    listing_type: propertyData.listing_type,
-    bedrooms: propertyData.bedrooms ?? undefined,
-    bathrooms: propertyData.bathrooms ?? undefined,
-    size_sqm: propertyData.size_sqm ?? undefined,
-    price: propertyData.price ?? undefined,
-    rental_price: propertyData.rental_price ?? undefined,
-    popular_area: propertyData.popular_area ?? undefined,
-    popular_area_en: propertyData.popular_area_en ?? undefined,
-    subdistrict: propertyData.subdistrict ?? undefined,
-    subdistrict_en: propertyData.subdistrict_en ?? undefined,
-    district: propertyData.district ?? undefined,
-    district_en: propertyData.district_en ?? undefined,
-    province: propertyData.province ?? undefined,
-    province_en: propertyData.province_en ?? undefined,
-    address_line1: propertyData.address_line1 ?? undefined,
-    address_line1_en: propertyData.address_line1_en ?? undefined,
-    postal_code: propertyData.postal_code ?? undefined,
-    description: propertyData.description ?? undefined,
-    transit_station_name: (propertyData as any).transit_station_name,
-    transit_station_name_en: (propertyData as any).transit_station_name_en,
-    // SEO Flags
-    is_pet_friendly: !!propertyData.is_pet_friendly,
-    is_corner_unit: !!propertyData.is_corner_unit,
-    is_renovated: !!propertyData.is_renovated,
-    is_fully_furnished: !!propertyData.is_fully_furnished,
-    is_selling_with_tenant: !!propertyData.is_selling_with_tenant,
-    is_foreigner_quota: !!propertyData.is_foreigner_quota,
-    is_hot_sale: !!(
-      (propertyData.original_price &&
-        propertyData.price &&
-        propertyData.original_price > propertyData.price) ||
-      (propertyData.original_rental_price &&
-        propertyData.rental_price &&
-        propertyData.original_rental_price > propertyData.rental_price)
-    ),
-    near_transit: !!(
-      ((propertyData.nearby_transits as any[])?.length || 0) > 0 ||
-      (propertyData as any).near_transit
-    ),
-    nearby_transits: (propertyData as any).nearby_transits || [],
-    nearby_places: (propertyData as any).nearby_places || [],
-    features: (propertyData as any).features || [],
-    main_image: (propertyData as any).main_image || undefined,
-  }, language);
+      id: propertyData.id as string | undefined,
+      slug: propertyData.slug as string | undefined,
+      title: propertyData.title as string,
+      title_en: propertyData.title_en as string | undefined,
+      title_cn: propertyData.title_cn as string | undefined,
+      property_type: propertyData.property_type as PropertyType,
+      listing_type: propertyData.listing_type as ListingType,
+      bedrooms: (propertyData.bedrooms as number) ?? undefined,
+      bathrooms: (propertyData.bathrooms as number) ?? undefined,
+      size_sqm: (propertyData.size_sqm as number) ?? undefined,
+      price: (propertyData.price as number) ?? undefined,
+      rental_price: (propertyData.rental_price as number) ?? undefined,
+      popular_area: propertyData.popular_area as string | undefined,
+      popular_area_en: propertyData.popular_area_en as string | undefined,
+      subdistrict: propertyData.subdistrict as string | undefined,
+      subdistrict_en: propertyData.subdistrict_en as string | undefined,
+      district: propertyData.district as string | undefined,
+      district_en: propertyData.district_en as string | undefined,
+      province: propertyData.province as string | undefined,
+      province_en: propertyData.province_en as string | undefined,
+      address_line1: propertyData.address_line1 as string | undefined,
+      address_line1_en: propertyData.address_line1_en as string | undefined,
+      postal_code: propertyData.postal_code as string | undefined,
+      description: propertyData.description as string | undefined,
+      transit_station_name: propertyData.transit_station_name as string | undefined,
+      transit_station_name_en: propertyData.transit_station_name_en as string | undefined,
+      // SEO Flags
+      is_pet_friendly: !!propertyData.is_pet_friendly,
+      is_corner_unit: !!propertyData.is_corner_unit,
+      is_renovated: !!propertyData.is_renovated,
+      is_fully_furnished: !!propertyData.is_fully_furnished,
+      is_selling_with_tenant: !!propertyData.is_selling_with_tenant,
+      is_foreigner_quota: !!propertyData.is_foreigner_quota,
+      is_hot_sale: !!(
+        (Number(propertyData.original_price || 0) > 0 &&
+          Number(propertyData.price || 0) > 0 &&
+          Number(propertyData.original_price) > Number(propertyData.price)) ||
+        (Number(propertyData.original_rental_price || 0) > 0 &&
+          Number(propertyData.rental_price || 0) > 0 &&
+          Number(propertyData.original_rental_price) > Number(propertyData.rental_price))
+      ),
+      near_transit: !!(
+        ((propertyData.nearby_transits as unknown[])?.length || 0) > 0 ||
+        !!propertyData.near_transit
+      ),
+      nearby_transits: (propertyData.nearby_transits as any) || [],
+      nearby_places: (propertyData.nearby_places as any) || [],
+      features: (propertyData.features as string[]) || [],
+      main_image: (propertyData.main_image as string) || undefined,
+    },
+    language,
+  );
 }

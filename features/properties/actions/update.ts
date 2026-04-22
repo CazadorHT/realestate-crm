@@ -19,6 +19,7 @@ import {
   CreatePropertyResult,
   UpdatePropertyStatusResult,
 } from "../types";
+import { PropertyRow } from "@/lib/services/properties";
 import {
   finalizeUploadSession,
   validatePropertyImagePaths,
@@ -59,6 +60,7 @@ export async function updatePropertyAction(
     const { images, agent_ids, feature_ids, ...propertyData } = safeValues;
 
     // 2) Fetch current state (for security check and Diff)
+
     const { data: existing, error: findErr } = await supabase
       .from("properties")
       .select(`
@@ -71,7 +73,22 @@ export async function updatePropertyAction(
       `)
       .eq("id", id)
       .eq("tenant_id", tenantId)
-      .single();
+      .single() as unknown as { 
+        data: {
+          id: string; tenant_id: string; created_by: string; meta_keywords: string[] | null;
+          price: number | null; rental_price: number | null; original_price: number | null;
+          original_rental_price: number | null; status: string; title: string;
+          description: string | null; listing_type: string | null; version: number;
+          images: unknown[] | null; property_type: string | null; is_exclusive: boolean | null;
+          requires_ai_review: boolean | null; address_line1: string | null;
+          district: string | null; province: string | null; subdistrict: string | null;
+          bedrooms: number | null; bathrooms: number | null; size_sqm: number | null;
+          land_size_sqwah: number | null;
+          property_agents: { agent_id: string }[];
+          property_features: { feature_id: string }[];
+        } | null;
+        error: { message: string } | null;
+      };
       
     if (findErr || !existing) {
       return { success: false, message: "Property not found" };
@@ -99,7 +116,7 @@ export async function updatePropertyAction(
       ] as const;
       const hasChanged = significantFields.some(key => {
         const newVal = propertyData[key as keyof typeof propertyData];
-        const oldVal = (existing as any)[key];
+        const oldVal = (existing as Record<string, unknown>)[key];
         
         if (newVal === undefined) return false;
 
@@ -132,7 +149,7 @@ export async function updatePropertyAction(
     const finalKeywords = generateKeywords(safeValues, (existing.meta_keywords || []) as string[]);
     
     // SEO Data needs a main image
-    const existingImages = (existing.images as any[]) || [];
+    const existingImages = (existing.images as { url: string }[]) || [];
     const mainImageUrl = images?.[0] ? getPublicImageUrl(images[0]) : (existingImages[0]?.url || "");
     
     const seoData = prepareSEOData({ ...propertyData, main_image: mainImageUrl }, safeValues);
@@ -144,7 +161,7 @@ export async function updatePropertyAction(
       slug: string;
     }
 
-    const { data: updatedRow, error: rpcError } = await (supabase as any).rpc("update_property_elite", {
+    const { data: updatedRow, error: rpcError } = await supabase.rpc("update_property_elite", {
       p_id: id,
       p_tenant_id: tenantId,
       p_user_id: user.id,
@@ -157,7 +174,7 @@ export async function updatePropertyAction(
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,
         meta_keywords: mergedKeywords,
-        structured_data: seoData.structuredData,
+        structured_data: seoData.structuredData as any,
         images: images !== undefined ? images.map((path, idx) => ({
           image_url: getPublicImageUrl(path),
           storage_path: path,
@@ -167,7 +184,7 @@ export async function updatePropertyAction(
         agent_ids: agent_ids ?? undefined,
         feature_ids: feature_ids ?? undefined
       }
-    }) as { data: EliteRpcResult | null, error: any };
+    }) as { data: EliteRpcResult | null, error: { message?: string; code?: string } | null };
 
     if (rpcError) {
       console.error("RPC update_property_elite failed:", rpcError);
@@ -180,11 +197,11 @@ export async function updatePropertyAction(
     // 5) GRANULAR AUDIT (Diffing)
     // Safely extract junction table IDs ensuring they are arrays of strings
     const oldAgents = Array.isArray(existing.property_agents) 
-      ? (existing.property_agents as any[]).map((a) => String(a.agent_id))
+      ? existing.property_agents.map((a) => String(a.agent_id))
       : [];
       
     const oldFeatures = Array.isArray(existing.property_features)
-      ? (existing.property_features as any[]).map((f) => String(f.feature_id))
+      ? existing.property_features.map((f) => String(f.feature_id))
       : [];
     
     // Fetch labels for semantic diff
@@ -207,7 +224,7 @@ export async function updatePropertyAction(
         supabase.from("features").select("id, name").in("id", [...new Set([...oldFeatures, ...(feature_ids || [])])])
       ]);
       // Explicitly map null full_names to empty strings for Type Safety
-      agentLabels = (agents || []).map((a: any) => ({ 
+      agentLabels = (agents || []).map((a) => ({ 
         id: a.id, 
         full_name: a.full_name || "Unknown Agent" 
       }));
@@ -249,10 +266,10 @@ export async function updatePropertyAction(
     }
     
     // Price Drop Logic (Sale & Rent)
-    const currentSalePrice = safeValues.price || safeValues.original_price || 0;
-    const oldSalePrice = existing.price || existing.original_price || 0;
-    const currentRentPrice = safeValues.rental_price || safeValues.original_rental_price || 0;
-    const oldRentPrice = existing.rental_price || existing.original_rental_price || 0;
+    const currentSalePrice = Number(safeValues.price || safeValues.original_price || 0);
+    const oldSalePrice = Number(existing.price || existing.original_price || 0);
+    const currentRentPrice = Number(safeValues.rental_price || safeValues.original_rental_price || 0);
+    const oldRentPrice = Number(existing.rental_price || existing.original_rental_price || 0);
 
     if (currentSalePrice > 0 && oldSalePrice > 0 && currentSalePrice < oldSalePrice) {
       await sendPriceDropNotification(existing as any, oldSalePrice, currentSalePrice, "SALE");
@@ -278,8 +295,9 @@ export async function updatePropertyAction(
     };
   } catch (err: unknown) {
     console.error("updatePropertyAction error:", err);
-    if (err && typeof err === "object" && "code" in err && (err as any).code === "AUTHZ_ERROR") {
-      return authzFail(err as any);
+    const errorWithCode = err as { code?: string };
+    if (errorWithCode?.code === "AUTHZ_ERROR") {
+      return authzFail(errorWithCode);
     }
     return { success: false, message: mapDbError(err) };
   }
@@ -326,14 +344,14 @@ export async function updatePropertyStatusAction(input: {
 
     const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
 
-    const { data: updatedRow, error: rpcError } = await (supabase as any).rpc("update_property_status_elite", {
+    const { data: updatedRow, error: rpcError } = await supabase.rpc("update_property_status_elite", {
       p_id: input.id,
       p_tenant_id: tenantId,
       p_user_id: user.id,
       p_is_admin: canBypassOwnership,
       p_status: input.status,
       p_version: input.version ?? existing?.version ?? 1,
-    });
+    }) as { data: unknown, error: { message?: string; code?: string } | null };
 
     if (rpcError) {
       console.error("RPC update_property_status_elite failed:", rpcError);
