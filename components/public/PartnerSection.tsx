@@ -155,18 +155,51 @@ export function PartnerSection() {
   );
 }
 
-function PartnerLogo({ partner, t }: { partner: Partner; t: any }) {
+function PartnerLogo({ 
+  partner, 
+  t 
+}: { 
+  partner: Partner; 
+  t: (key: string, params?: Record<string, string | number>) => string;
+}) {
   const [error, setError] = useState(false);
+
+  // 🛡️ Enterprise-Grade Hostname Validation
+  // Check if the URL is from an allowed domain to prevent Next.js Image unconfigured host error
+  const isAllowedHost = (url: string) => {
+    try {
+      const parsedUrl = new URL(url);
+      const host = parsedUrl.hostname;
+      const allowedHosts = [
+        "images.unsplash.com",
+        "api.dicebear.com",
+        "livinginsider.com",
+        "pgimgs.com",
+        "wikimedia.org",
+        "freepik.com"
+      ];
+      
+      return allowedHosts.some(allowed => host === allowed || host.endsWith("." + allowed)) || 
+             host.includes("supabase.co");
+    } catch {
+      return false;
+    }
+  };
+
+  // Immediate fallback if host is not in our known list
+  const finalSrc = (!error && isAllowedHost(partner.logo_url)) 
+    ? partner.logo_url 
+    : "/images/v-link-svg-png-logo.svg";
 
   return (
     <Image
-      src={error ? "/images/v-link-svg-png-logo.svg" : partner.logo_url}
+      src={finalSrc}
       alt={`${partner.name} - ${t("home.partners.title")}`}
       title={partner.name}
       fill
       className={cn(
         "object-contain hover:scale-110 transition-transform duration-300",
-        error && "opacity-30 grayscale h-12! w-auto!"
+        (error || !isAllowedHost(partner.logo_url)) && "opacity-20 grayscale scale-90"
       )}
       onError={() => setError(true)}
       sizes="(max-width: 768px) 120px, 160px"

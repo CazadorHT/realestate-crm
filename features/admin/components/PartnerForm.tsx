@@ -186,52 +186,17 @@ export function PartnerForm({
                 name="logo_url"
                 render={({ field }) => (
                   <FormItem>
-                    <Tabs defaultValue="upload" className="w-full">
-                      <TabsList className="grid w-full grid-cols-2 mb-4 bg-slate-100/50 p-1 h-11 rounded-xl">
-                        <TabsTrigger 
-                          value="upload" 
-                          className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm font-bold text-xs transition-all"
-                        >
-                          <Upload className="w-3.5 h-3.5 mr-2" />
-                          อัปโหลดไฟล์
-                        </TabsTrigger>
-                        <TabsTrigger 
-                          value="url"
-                          className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm font-bold text-xs transition-all"
-                        >
-                          <LinkIcon className="w-3.5 h-3.5 mr-2" />
-                          ระบุ URL
-                        </TabsTrigger>
-                      </TabsList>
-                      
-                      <TabsContent value="upload" className="mt-0 focus-visible:ring-0">
-                        <FormControl>
-                          <SiteAssetUploader
-                            value={field.value}
-                            onChange={field.onChange}
-                            uploadAction={uploadPartnerLogoAction}
-                            folder="partners"
-                            className="bg-slate-50/50"
-                          />
-                        </FormControl>
-                      </TabsContent>
-                      
-                      <TabsContent value="url" className="mt-0 focus-visible:ring-0">
-                        <div className="relative group">
-                          <FormControl>
-                            <Input
-                              placeholder="https://example.com/logo.png"
-                              className="bg-slate-50/50 border-slate-200 focus:border-blue-500 transition-all h-14 rounded-xl pl-11 font-medium"
-                              {...field}
-                            />
-                          </FormControl>
-                          <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                        </div>
-                        <p className="text-[10px] text-slate-400 mt-2 px-1">
-                          วางลิงก์รูปภาพโดยตรง เช่นไฟล์ .png, .jpg หรือ .svg จากแหล่งภายนอก
-                        </p>
-                      </TabsContent>
-                    </Tabs>
+                    <div className="bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-1">
+                      <FormControl>
+                        <SiteAssetUploader
+                          value={field.value}
+                          onChange={field.onChange}
+                          uploadAction={uploadPartnerLogoAction}
+                          folder="partners"
+                          className="bg-transparent border-none"
+                        />
+                      </FormControl>
+                    </div>
                     <FormDescription className="text-[11px] text-slate-400 leading-tight mt-3">
                       แนะนำไฟล์โปร่งใส PNG หรือ SVG เพื่อความสวยงาม (ขนาดแนะนำ: สี่เหลี่ยมจัตุรัส หรือ แนวนอน 2:1)
                     </FormDescription>

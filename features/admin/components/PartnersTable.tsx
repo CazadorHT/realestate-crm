@@ -343,13 +343,7 @@ export function PartnersTable({
                       </div>
                       <div className="flex items-center gap-4">
                         <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-100 p-2 flex items-center justify-center shrink-0 shadow-inner relative">
-                          <Image
-                            src={partner.logo_url}
-                            alt={partner.name}
-                            fill
-                            className="object-contain p-2"
-                            sizes="48px"
-                          />
+                          <MobilePartnerLogo url={partner.logo_url} name={partner.name} />
                         </div>
                         <h4 className="font-bold text-slate-900 leading-tight line-clamp-2">
                           {partner.name}
@@ -485,6 +479,28 @@ interface SortableRowProps {
   isSuperAdmin: boolean;
 }
 
+// 🛡️ Enterprise-Grade Hostname Validation Utility
+const isAllowedHost = (url: string) => {
+  if (!url) return false;
+  try {
+    const parsedUrl = new URL(url);
+    const host = parsedUrl.hostname;
+    const allowedHosts = [
+      "images.unsplash.com",
+      "api.dicebear.com",
+      "livinginsider.com",
+      "pgimgs.com",
+      "wikimedia.org",
+      "freepik.com"
+    ];
+    
+    return allowedHosts.some(allowed => host === allowed || host.endsWith("." + allowed)) || 
+           host.includes("supabase.co");
+  } catch {
+    return false;
+  }
+};
+
 function SortablePartnerRow({ 
   partner, 
   isSelected, 
@@ -494,6 +510,9 @@ function SortablePartnerRow({
   isSearchActive,
   isSuperAdmin
 }: SortableRowProps) {
+  const [imgError, setImgError] = useState(false);
+  const isSafe = isAllowedHost(partner.logo_url);
+  const finalSrc = (!imgError && isSafe) ? partner.logo_url : "/images/v-link-svg-png-logo.svg";
   const {
     attributes,
     listeners,
@@ -548,10 +567,14 @@ function SortablePartnerRow({
       <TableCell className="px-6">
         <div className="h-10 w-24 relative bg-slate-50 rounded-lg border border-slate-100 p-1 flex items-center justify-center shadow-inner group-hover:bg-white transition-colors">
           <Image
-            src={partner.logo_url}
+            src={finalSrc}
             alt={partner.name}
             fill
-            className="object-contain p-1"
+            className={cn(
+              "object-contain p-1",
+              (imgError || !isSafe) && "opacity-20 grayscale"
+            )}
+            onError={() => setImgError(true)}
             sizes="96px"
           />
         </div>
@@ -613,5 +636,25 @@ function SortablePartnerRow({
         </TableCell>
       )}
     </TableRow>
+  );
+}
+
+function MobilePartnerLogo({ url, name }: { url: string; name: string }) {
+  const [imgError, setImgError] = useState(false);
+  const isSafe = isAllowedHost(url);
+  const finalSrc = (!imgError && isSafe) ? url : "/images/v-link-svg-png-logo.svg";
+
+  return (
+    <Image
+      src={finalSrc}
+      alt={name}
+      fill
+      className={cn(
+        "object-contain p-2",
+        (imgError || !isSafe) && "opacity-20 grayscale"
+      )}
+      onError={() => setImgError(true)}
+      sizes="48px"
+    />
   );
 }

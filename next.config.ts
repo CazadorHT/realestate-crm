@@ -38,6 +38,22 @@ const nextConfig: NextConfig = {
           protocol: "https",
           hostname: "api.dicebear.com",
         },
+        {
+          protocol: "https",
+          hostname: "**.livinginsider.com",
+        },
+        {
+          protocol: "https",
+          hostname: "**.pgimgs.com",
+        },
+        {
+          protocol: "https",
+          hostname: "**.wikimedia.org",
+        },
+        {
+          protocol: "https",
+          hostname: "**.freepik.com",
+        },
       ];
     })(),
   },

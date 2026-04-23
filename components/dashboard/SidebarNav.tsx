@@ -478,7 +478,7 @@ export function SidebarNav({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "hidden flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-xl sm:flex shadow-sm z-100 h-screen sticky top-0",
+          "hidden flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-xl sm:flex shadow-sm z-105 h-screen sticky top-0",
           hasMounted ? "transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)" : "transition-none",
           isCollapsed ? "w-20" : "w-72",
         )}
@@ -610,7 +610,7 @@ export function SidebarNav({
                         )}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="right">{group.title}</TooltipContent>
+                    <TooltipContent className=" z-150 " side="right">{group.title}</TooltipContent>
                   </Tooltip>
 
                   {isOpen && (
