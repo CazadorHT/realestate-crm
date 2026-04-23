@@ -4,6 +4,7 @@ import { generateText, generateEmbedding } from "@/lib/ai/gemini";
 import { craftPropertyDescriptionPrompt } from "./ai-prompts";
 import { PROPERTY_IMAGES_BUCKET } from "@/features/properties/logic/images";
 import sharp from "sharp";
+import { logger } from "../logger";
 
 /**
  * 💡 Elite Helper: Calculate AI Cost in THB (Estimated)
@@ -95,7 +96,11 @@ export const processPropertyCreated = inngest.createFunction(
         // 🛡️ HARDENING: Check Content-Length to prevent OOM crashes on huge images
         const contentLength = response.headers.get("content-length");
         if (contentLength && parseInt(contentLength) > 10 * 1024 * 1024) {
-          console.warn("[INNGESET] Image too large to process (>10MB). Skipping vision.");
+          logger.warn("Image too large to process (>10MB). Skipping vision.", { 
+            source: "inngest", 
+            propertyId,
+            contentLength 
+          });
           return null;
         }
 
@@ -114,7 +119,7 @@ export const processPropertyCreated = inngest.createFunction(
           },
         };
       } catch (e) {
-        console.error("Image optimization failed:", e);
+        logger.error("Image optimization failed", e, { source: "inngest", propertyId });
         return null;
       }
     });
@@ -165,7 +170,7 @@ export const processPropertyCreated = inngest.createFunction(
         const vector = await generateEmbedding(textToEmbed);
         return vector;
       } catch (error) {
-        console.error("Embedding generation failed:", error);
+        logger.error("Embedding generation failed", error, { source: "inngest", propertyId });
         return null;
       }
     });
@@ -216,7 +221,9 @@ export const processPropertyCreated = inngest.createFunction(
           metadata: { vision_enabled: aiResult.vision_enabled }
         });
 
-      if (error) console.error("Failed to log usage:", error.message);
+      if (error) {
+        logger.error("Failed to log AI usage", error, { source: "inngest", propertyId });
+      }
       return { status: "logged", costThb };
     });
 

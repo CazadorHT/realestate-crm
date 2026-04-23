@@ -5,6 +5,7 @@ import { requireAuthContext } from "@/lib/authz";
 import { CoBrokerFormValues, CoBrokerSchema, CoBroker } from "./schema";
 import { revalidatePath } from "next/cache";
 import { logActivityAction } from "@/features/audit/actions";
+import { logger } from "@/lib/logger";
 
 // --- Types ---
 export interface CoBrokerDocumentInput {
@@ -43,7 +44,7 @@ export async function getCoBrokersAction(query?: string, area?: string): Promise
     if (error) throw error;
     return { success: true, data: data as unknown as CoBroker[] };
   } catch (error: unknown) {
-    console.error("Error fetching co-brokers:", error);
+    logger.error("getCoBrokersAction failed", error, { source: "co-brokers-actions" });
     return {
       success: false,
       error: (error as Error).message || "ล้มเหลวในการดึงข้อมูลคู่ค้า",
@@ -77,7 +78,7 @@ export async function createCoBrokerAction(values: CoBrokerFormValues) {
     revalidatePath("/protected/co-brokers");
     return { success: true, data };
   } catch (error: unknown) {
-    console.error("Error creating co-broker:", error);
+    logger.error("createCoBrokerAction failed", error, { source: "co-brokers-actions", values });
     return {
       success: false,
       error: (error as Error).message || "ไม่สามารถเพิ่มข้อมูลคู่ค้าได้",
@@ -111,7 +112,7 @@ export async function updateCoBrokerAction(
     revalidatePath("/protected/co-brokers");
     return { success: true, data };
   } catch (error: unknown) {
-    console.error("Error updating co-broker:", error);
+    logger.error("updateCoBrokerAction failed", error, { source: "co-brokers-actions", id, values });
     return {
       success: false,
       error: (error as Error).message || "ไม่สามารถอัปเดตข้อมูลได้",
@@ -141,7 +142,7 @@ export async function deleteCoBrokerAction(id: string) {
     revalidatePath("/protected/co-brokers");
     return { success: true };
   } catch (error: unknown) {
-    console.error("Error deleting co-broker:", error);
+    logger.error("deleteCoBrokerAction failed", error, { source: "co-brokers-actions", id });
     return { success: false, error: (error as Error).message || "ไม่สามารถลบข้อมูลได้" };
   }
 }
@@ -165,7 +166,7 @@ export async function restoreCoBrokerAction(id: string) {
     revalidatePath("/protected/co-brokers");
     return { success: true };
   } catch (error: unknown) {
-    console.error("Error restoring co-broker:", error);
+    logger.error("restoreCoBrokerAction failed", error, { source: "co-brokers-actions", id });
     return {
       success: false,
       error: (error as Error).message || "ไม่สามารถกู้คืนข้อมูลได้",
@@ -195,7 +196,7 @@ export async function permanentlyDeleteCoBrokerAction(id: string) {
     revalidatePath("/protected/co-brokers");
     return { success: true };
   } catch (error: unknown) {
-    console.error("Error permanent deleting co-broker:", error);
+    logger.error("permanentlyDeleteCoBrokerAction failed", error, { source: "co-brokers-actions", id });
     return {
       success: false,
       error: (error as Error).message || "ไม่สามารถลบข้อมูลถาวรได้",
@@ -276,7 +277,7 @@ export async function getCoBrokerPerformanceAction(id: string) {
       },
     };
   } catch (error: unknown) {
-    console.error("Error fetching co-broker performance:", error);
+    logger.error("getCoBrokerPerformanceAction failed", error, { source: "co-brokers-actions", id });
     return { success: false, error: (error as Error).message };
   }
 }
@@ -307,7 +308,7 @@ export async function addCoBrokerDocumentAction(input: CoBrokerDocumentInput) {
 
     return { success: true, data: doc };
   } catch (error: unknown) {
-    console.error("Error adding document:", error);
+    logger.error("addCoBrokerDocumentAction failed", error, { source: "co-brokers-actions", input });
     return {
       success: false,
       error: (error as Error).message || "ล้มเหลวในการบันทึกเอกสาร",
@@ -329,7 +330,7 @@ export async function getCoBrokerDocumentsAction(id: string) {
     if (error) throw error;
     return { success: true, data };
   } catch (error: unknown) {
-    console.error("Error fetching documents:", error);
+    logger.error("getCoBrokerDocumentsAction failed", error, { source: "co-brokers-actions", id });
     return { success: false, error: (error as Error).message };
   }
 }
@@ -357,7 +358,7 @@ export async function deleteCoBrokerDocumentAction(
 
     return { success: true };
   } catch (error: unknown) {
-    console.error("Error deleting document:", error);
+    logger.error("deleteCoBrokerDocumentAction failed", error, { source: "co-brokers-actions", docId });
     return { success: false, error: (error as Error).message || "ไม่สามารถลบเอกสารได้" };
   }
 }
@@ -396,7 +397,7 @@ export async function bulkDeleteCoBrokersAction(ids: string[]) {
     revalidatePath("/protected/co-brokers");
     return { success: true };
   } catch (error: unknown) {
-    console.error("Bulk delete error:", error);
+    logger.error("bulkDeleteCoBrokersAction failed", error, { source: "co-brokers-actions", ids });
     return {
       success: false,
       error: (error as Error).message || "ไม่สามารถลบข้อมูลแบบกลุ่มได้",
@@ -431,7 +432,7 @@ export async function bulkRestoreCoBrokersAction(ids: string[]) {
     revalidatePath("/protected/co-brokers");
     return { success: true };
   } catch (error: unknown) {
-    console.error("Bulk restore error:", error);
+    logger.error("bulkRestoreCoBrokersAction failed", error, { source: "co-brokers-actions", ids });
     return {
       success: false,
       error: (error as Error).message || "ไม่สามารถกู้คืนข้อมูลแบบกลุ่มได้",
@@ -470,7 +471,7 @@ export async function bulkUpdateCoBrokerGroupAction(
     revalidatePath("/protected/co-brokers");
     return { success: true };
   } catch (error: unknown) {
-    console.error("Bulk update group error:", error);
+    logger.error("bulkUpdateCoBrokerGroupAction failed", error, { source: "co-brokers-actions", ids, groupName });
     return {
       success: false,
       error: (error as Error).message || "ไม่สามารถเปลี่ยนกลุ่มข้อมูลแบบกลุ่มได้",
@@ -495,7 +496,7 @@ export async function getTrashCoBrokersAction(): Promise<{ success: boolean; dat
     if (error) throw error;
     return { success: true, data: data as unknown as CoBroker[] };
   } catch (error: unknown) {
-    console.error("Error fetching trash co-brokers:", error);
+    logger.error("getTrashCoBrokersAction failed", error, { source: "co-brokers-actions" });
     return { success: false, error: (error as Error).message };
   }
 }
@@ -525,7 +526,7 @@ export async function getCoBrokerDealsAction(id: string) {
     if (error) throw error;
     return { success: true, data };
   } catch (error: unknown) {
-    console.error("Error fetching co-broker deals:", error);
+    logger.error("getCoBrokerDealsAction failed", error, { source: "co-brokers-actions", id });
     return { success: false, error: (error as Error).message };
   }
 }

@@ -1,222 +1,162 @@
-// lib/audit.ts
-import type { Database, Json } from "@/lib/database.types";
-import type { AuthContext } from "@/lib/authz";
-
-export type AuditAction =
-  | "property.create"
-  | "property.update"
-  | "property.status.update"
-  | "property.delete"
-  | "property.trash"
-  | "property.restore"
-  | "property.permanent_delete"
-  | "property.bulk_delete"
-  | "property.bulk_trash"
-  | "property.bulk_restore"
-  | "property.bulk_hard_delete"
-  | "property.bulk_move"
-  | "lead.create"
-  | "lead.update"
-  | "lead.delete"
-  | "lead.bulk_delete"
-  | "lead.transfer"
-  | "lead_activity.create"
-  | "lead_activity.update"
-  | "lead_activity.delete"
-  | "owner.create"
-  | "owner.update"
-  | "owner.delete"
-  | "owner.bulk_delete"
-  | "owner.bulk_move"
-  | "profile.update"
-  | "profile.avatar.upload"
-  | "user.delete"
-  | "user.role.update"
-  | "deal.create"
-  | "deal.update"
-  | "deal.delete"
-  | "deal.bulk_delete"
-  | "rental_contract.create"
-  | "rental_contract.update"
-  | "rental_contract.delete"
-  | "rental_contract.bulk_delete"
-  | "feature.bulk_delete"
-  | "blog.bulk_delete"
-  | "faq.create"
-  | "faq.update"
-  | "faq.trash"
-  | "faq.restore"
-  | "faq.permanent_delete"
-  | "faq.bulk_delete"
-  | "faq.bulk_trash"
-  | "faq.empty_trash"
-  | "service.create"
-  | "service.update"
-  | "service.trash"
-  | "service.restore"
-  | "service.permanent_delete"
-  | "service.bulk_trash"
-  | "service.empty_trash"
-  | "service.bulk_delete"
-  | "partner.bulk_delete"
-  | "popular_area.create"
-  | "popular_area.update"
-  | "popular_area.delete"
-  | "popular_area.bulk_delete"
-  | "popular_area.bulk_translate"
-  | "popular_area.reorder"
-  | "popular_area.upload_image"
-  | "lead.pdpa_update"
-  | "property.syndication.update"
-  | "property.social_post"
-  | "document.bulk_delete"
-  | "team.create"
-  | "team.update"
-  | "team.delete"
-  | "tenant.create"
-  | "tenant.update"
-  | "tenant.delete"
-  | "member.add"
-  | "member.remove"
-  | "member.transfer"
-  | "property.transfer_branch"
-  | "owner.transfer_branch"
-  | "property.ai_refresh"
-  | "property.bulk_ai_approve"
-  | "property.export"
-  | "commission.export_pdf"
-  | "commission.send_line"
-  | "finance.commission_ready"
-  | "finance.adjustment_create"
-  | "finance.commission_paid"
-  | "finance.wht_generate";
-
-type AuditInsert = Database["public"]["Tables"]["audit_logs"]["Insert"];
-
-import type { SupabaseClient } from "@supabase/supabase-js";
-
-import { type UserRole } from "./auth-shared";
+import { createClient } from "./supabase/server";
+import { logger } from "./logger";
+import * as Sentry from "@sentry/nextjs";
 
 /**
- * 🛡️ Minimal context required for auditing
- * Permits usage in both standard AuthContext (Web) and custom bot contexts.
+ * 🛡️ Minimal Context for backward compatibility
  */
 export interface MinimalAuditContext {
-  supabase: SupabaseClient<Database>;
-  user: { id: string };
-  role?: UserRole; // Using strict UserRole instead of any
+  supabase: any;
+  user: any;
+  role?: string;
   tenantId?: string;
 }
 
-export async function logAudit(
-  ctx: MinimalAuditContext,
-  input: {
-    action: AuditAction;
-    entity: string;
-    entityId?: string | null;
-    summary?: string;
-    metadata?: Record<string, unknown>;
-  },
-) {
-  const row: AuditInsert = {
-    user_id: ctx.user.id,
-    action: input.action,
-    entity: input.entity,
-    entity_id: input.entityId ?? null,
-    metadata: {
-      ...(input.metadata ?? {}),
-      ...(input.summary ? { summary: input.summary } : {}),
-    } as Json,
-    tenant_id: ctx.tenantId && ctx.tenantId !== "ALL" ? ctx.tenantId : null,
-  };
+export type AuditAction = 
+  | "CREATE" 
+  | "UPDATE" 
+  | "DELETE" 
+  | "LOGIN" 
+  | "EXPORT" 
+  | "SYNC"
+  | "REORDER"
+  | "PAYOUT"
+  | "READY_TO_PAY"
+  | "VOID"
+  | string; // Allow legacy string actions
 
-  // สำคัญ: audit log “ต้องไม่ทำให้ flow หลักพัง”
-  const { error } = await ctx.supabase.from("audit_logs").insert(row);
-  if (error) {
-    console.error("[audit_logs] insert failed:", error.message, {
-      action: input.action,
-      entity: input.entity,
-      entityId: input.entityId,
-    });
-  }
-}
+export type AuditEntity = 
+  | "PROPERTY" 
+  | "PARTNER" 
+  | "LEAD" 
+  | "DEAL" 
+  | "USER" 
+  | "SETTING"
+  | "FINANCE"
+  | "COMMISSION"
+  | "WALLET"
+  | string; // Allow legacy string entities
 
-/**
- * Audit Metadata Type for summary generation
- */
-export interface AuditLogMetadata {
-  email?: string;
-  fullName?: string;
-  full_name?: string;
-  name?: string;
-  title?: string;
-  role?: string;
-  count?: number;
+interface AuditLogOptions {
+  action: AuditAction;
+  entity: AuditEntity;
+  entityId?: string;
+  metadata?: Record<string, any>;
+  tenantId?: string;
+  userId?: string;
   summary?: string;
 }
 
 /**
- * Generates a human-readable summary for an audit log entry.
- * Hardened to provide fallbacks for missing metadata.
+ * 🛡️ Expert Audit Logger: Records critical business actions in DB and Sentry.
  */
-export function getReadableSummary(log: {
-  action: string;
-  entity: string;
-  metadata: unknown;
-}): string {
-  const meta = (log.metadata || {}) as AuditLogMetadata;
-  const action = log.action;
+export async function recordAuditLog(options: AuditLogOptions) {
+  const { action, entity, entityId, metadata = {}, tenantId, userId } = options;
 
-  // 0. Explicit Summary (Priority)
-  if (meta.summary) return meta.summary;
+  try {
+    const supabase = await createClient();
+    
+    // 1. Resolve Identity (If not provided)
+    let finalUserId = userId;
+    let finalTenantId = tenantId;
 
-  switch (action) {
-    case "member.transfer":
-      return `ย้ายพนักงาน ${meta.email || ""} ไปยังสาขาใหม่`;
-    case "lead.transfer":
-      return `ส่งต่อลูกค้าคุณ ${meta.fullName || "N/A"} ให้สาขาอื่นดูแล`;
-    case "member.add":
-      return `เพิ่มพนักงาน ${meta.email || ""} เข้าสู่สาขา (Role: ${meta.role || "N/A"})`;
-    case "member.remove":
-      return `ลบพนักงานออกจากสาขา`;
-    case "tenant.create":
-      return `สร้างสาขาใหม่: ${meta.name || "N/A"}`;
-    case "tenant.update":
-      return `แก้ไขข้อมูลสาขา: ${meta.name || "N/A"}`;
-    case "tenant.delete":
-      return `ลบสาขาออกจากระบบ`;
-    case "property.create":
-      return `เพิ่มทรัพย์สินใหม่: ${meta.title || "N/A"}`;
-    case "property.update":
-      return `อัปเดตข้อมูลทรัพย์สิน`;
-    case "property.bulk_ai_approve":
-      return `ยืนยันข้อมูล AI ทั้งหมด (${meta.count || 0} รายการ)`;
-    case "property.trash":
-      return `ย้ายทรัพย์สินลงถังขยะ`;
-    case "property.restore":
-      return `กู้คืนทรัพย์สินจากถังขยะ`;
-    case "property.permanent_delete":
-      return `ลบทรัพย์สินอย่างถาวร`;
-    case "lead.create":
-      return `เพิ่มลีดใหม่: ${meta.full_name || "N/A"}`;
-    case "lead.update":
-      return `อัปเดตข้อมูลลีด`;
-    case "deal.create":
-      return `สร้างดีลใหม่`;
-    case "auth.login":
-      return `เข้าสู่ระบบ`;
-    case "property.export":
-      return `ส่งออกรายงานทรัพย์สิน (${meta.count || 0} รายการ)`;
-    case "co_broker.create":
-      return `เพิ่มคู่ค้าใหม่: ${meta.name || "N/A"}`;
-    case "co_broker.update":
-      return `อัปเดตข้อมูลคู่ค้า: ${meta.name || "N/A"}`;
-    case "co_broker.delete":
-      return `ลบคู่ค้าออกจากระบบ`;
-    default:
-      if (action.includes("delete")) return `ลบข้อมูล (${log.entity})`;
-      if (action.includes("create")) return `สร้างข้อมูลใหม่ (${log.entity})`;
-      if (action.includes("status.update")) return `อัปเดตสถานะ (${log.entity})`;
-      return action;
+    if (!finalUserId || !finalTenantId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        finalUserId = finalUserId || user.id;
+      }
+    }
+
+    // 2. Record to Database (audit_logs table)
+    const { error } = await supabase.from("audit_logs").insert({
+      action,
+      entity,
+      entity_id: entityId,
+      metadata,
+      tenant_id: finalTenantId,
+      user_id: finalUserId,
+    });
+
+    if (error) {
+      logger.error("Failed to record audit log in DB", error, { source: "audit-logger", options });
+    }
+
+    // 3. Record to Sentry as Breadcrumb
+    Sentry.addBreadcrumb({
+      category: "audit",
+      message: `${action} ${entity} (${entityId || "N/A"})`,
+      level: "info",
+      data: {
+        ...metadata,
+        user_id: finalUserId,
+        tenant_id: finalTenantId,
+      },
+    });
+
+    // 4. Structured Logging
+    logger.info(`Audit Log: ${action} ${entity}`, {
+      source: "audit-logger",
+      action,
+      entity,
+      entityId,
+      userId: finalUserId,
+    });
+
+  } catch (err) {
+    logger.error("Audit logger critical failure", err, { source: "audit-logger" });
   }
+}
+
+/**
+ * 🛡️ Legacy Bridge: Backward compatibility for existing code
+ */
+export async function logAudit(
+  ctx: MinimalAuditContext,
+  data: {
+    action: string;
+    entity: string;
+    entityId?: string | null;
+    summary?: string;
+    metadata?: any;
+  }
+) {
+  return recordAuditLog({
+    action: data.action,
+    entity: data.entity,
+    entityId: data.entityId || undefined,
+    metadata: {
+      ...data.metadata,
+      summary: data.summary,
+    },
+    userId: ctx.user?.id,
+  });
+}
+
+/**
+ * 💬 Human-readable summary for Dashboard UI
+ */
+export function getReadableSummary(log: { action: string; entity: string; metadata?: any }): string {
+  const { action, entity, metadata = {} } = log;
+
+  const dictionary: Record<string, string> = {
+    "property.create": `เพิ่มทรัพย์สินใหม่: ${metadata.title || "N/A"}`,
+    "property.update": `แก้ไขข้อมูลทรัพย์สิน: ${metadata.title || "N/A"}`,
+    "property.delete": "ลบทรัพย์สินออกจากระบบ",
+    "property.trash": "ย้ายทรัพย์สินลงถังขยะ",
+    "property.restore": "กู้คืนทรัพย์สินจากถังขยะ",
+    "member.transfer": `ย้ายพนักงาน ${metadata.email || ""} ไปยังสาขาใหม่`,
+    "deal.create": "สร้างดีลใหม่",
+    "deal.update": "อัปเดตสถานะดีล",
+    "payout.ready": "อนุมัติยอดคอมมิชชันเตรียมโอน",
+    "payout.paid": "ยืนยันการโอนเงินเรียบร้อย",
+  };
+
+  if (dictionary[action]) return dictionary[action];
+
+  // Fallback for custom actions
+  if (action.endsWith(".create")) return `สร้างข้อมูลใหม่ (${entity})`;
+  if (action.endsWith(".delete")) return `ลบข้อมูล (${entity})`;
+  if (action.endsWith(".update")) return `อัปเดตข้อมูล (${entity})`;
+
+  return action;
 }

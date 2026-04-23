@@ -8,6 +8,8 @@ import { getTemplateConfig } from "@/features/line/utils";
 import { headers } from "next/headers";
 
 import { parseUserAgent } from "./utils";
+import { logger } from "@/lib/logger";
+import * as Sentry from "@sentry/nextjs";
 
 export async function logActivityAction(
   action: string,
@@ -37,12 +39,33 @@ export async function logActivityAction(
     if (!user && action !== "LOGIN_FAILURE") return;
 
     const adminClient = createAdminClient();
-    await adminClient.from("audit_logs").insert({
-      user_id: user?.id || null, // No longer needs 'as any' since types are regenerated
+    const { error: dbError } = await adminClient.from("audit_logs").insert({
+      user_id: user?.id || null, 
       action,
       entity,
       entity_id: entityId || null,
       metadata: enrichedMetadata as Json,
+    });
+
+    if (dbError) {
+      logger.error("Audit log DB insert failed", dbError, { source: "audit-actions", action, entity });
+    }
+
+    // 🛡️ Sentry Integration: Add breadcrumb for every important action
+    Sentry.addBreadcrumb({
+      category: "activity",
+      message: `${action} ${entity}`,
+      level: "info",
+      data: { entityId, userId: user?.id },
+    });
+
+    // 🛡️ Structured Logging: Info level for traceability
+    logger.info(`Activity: ${action} ${entity}`, {
+      source: "audit-actions",
+      action,
+      entity,
+      entityId,
+      userId: user?.id,
     });
 
     if (action === "LOGIN") {
@@ -221,7 +244,7 @@ export async function logActivityAction(
       });
     }
   } catch (error) {
-    console.error("Failed to log activity:", error);
+    logger.error("logActivityAction critical failure", error, { source: "audit-actions" });
   }
 }
 

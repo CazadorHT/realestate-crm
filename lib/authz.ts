@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { type UserRole, isAdmin, isStaff } from "./auth-shared";
 import { cookies } from "next/headers";
 import { mapDbError } from "./db-error";
+import * as Sentry from "@sentry/nextjs";
 export { type UserRole, isAdmin, isStaff };
 
 export type AuthContext = {
@@ -67,6 +68,12 @@ export const getAuthContextOrNull = cache(async (
   
   // 🛡️ Zombie Session Protection: Verify user exists and JWT is still valid
   if (error || !data?.user) return null;
+
+  // 🛡️ Server-side Identity Linking
+  Sentry.setUser({
+    id: data.user.id,
+    email: data.user.email,
+  });
 
   const role = await getRole(supabase, data.user);
   if (!role) return null; // 🛡️ Mission Critical: No profile = No access

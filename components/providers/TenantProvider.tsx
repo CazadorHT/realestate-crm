@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { setActiveTenantCookieAction } from "@/lib/actions/tenant-context";
+import * as Sentry from "@sentry/nextjs";
 
 type Tenant = {
   id: string;
@@ -51,8 +52,15 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
       } = await supabase.auth.getUser();
       if (!user) {
         setIsLoading(false);
+        Sentry.setUser(null); // 🛡️ ล้างข้อมูลเมื่อ Logout
         return;
       }
+
+      // 🛡️ Identity Linking: เชื่อมต่อตัวตนกับ Sentry
+      Sentry.setUser({
+        id: user.id,
+        email: user.email,
+      });
 
       // 1. Fetch all tenants for this user regardless of mode (needed for fallback)
       const { data: memberData, error } = await supabase

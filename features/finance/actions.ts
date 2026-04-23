@@ -8,9 +8,11 @@ import {
   assertStaff,
   assertAdmin,
   authzFail,
+  UserRole,
 } from "@/lib/authz";
 import { mapDbError } from "@/lib/db-error";
-import { logAudit } from "@/lib/audit";
+import { recordAuditLog } from "@/lib/audit";
+import { logger } from "@/lib/logger";
 import {
   PayoutStatusUpdateResult,
   BulkPayoutResult,
@@ -21,9 +23,10 @@ import {
   AgentWalletStats,
   AgentWalletHistory
 } from "./types";
-import { Database } from "@/lib/database.types";
+import { Database, Json } from "@/lib/database.types";
 import { getCommissionRulesAction } from "@/features/dashboard/actions/commission-actions";
 import { FinanceMath } from "@/lib/finance/precision";
+import { SupabaseClient, User } from "@supabase/supabase-js";
 
 /**
  * Marks multiple commissions as READY_TO_PAY using high-performance RPC.
@@ -56,16 +59,17 @@ export async function bulkMarkAsReadyToPayAction(
     if (error) throw new Error(mapDbError(error));
 
     // 🛡️ Audit Hardening: Log the bulk action
-    await logAudit(
-      { supabase, user, role },
-      {
-        action: "finance.commission_ready",
-        entity: "deal_commissions",
-        entityId: "BULK_UPDATE",
+    // 🛡️ Audit Hardening: Log the bulk action
+    await recordAuditLog({
+      action: "READY_TO_PAY",
+      entity: "COMMISSION",
+      entityId: "BULK_UPDATE",
+      metadata: { 
         summary: `อนุมัติรอจ่ายแบบกลุ่มสำเร็จ ${data?.updated_count || 0} รายการ`,
-        metadata: { commissionIds, updated_count: data?.updated_count },
+        commissionIds, 
+        updated_count: data?.updated_count 
       },
-    );
+    });
 
     revalidatePath("/protected/finance/payouts");
     return {
@@ -74,7 +78,7 @@ export async function bulkMarkAsReadyToPayAction(
       message: `อนุมัติรอจ่ายสำเร็จ ${data?.updated_count || 0} รายการ`,
     };
   } catch (error: unknown) {
-    console.error("bulkMarkAsReady Error:", error);
+    logger.error("bulkMarkAsReady Error", error, { source: "finance-actions" });
     return {
       success: false,
       error: (error as Error).message,
@@ -106,16 +110,16 @@ export async function markAsReadyToPayAction(
 
     if (error) throw new Error(mapDbError(error));
 
-    await logAudit(
-      { supabase, user, role },
-      {
-        action: "finance.commission_ready",
-        entity: "deal_commissions",
-        entityId: commissionId,
+    await recordAuditLog({
+      action: "READY_TO_PAY",
+      entity: "COMMISSION",
+      entityId: commissionId,
+      metadata: { 
         summary: `อนุมัติยอดคอมมิชชัน ${FinanceMath.format(data.amount)} บ. เตรียมโอนเงิน`,
-        metadata: { commissionId, amount: data.amount },
+        commissionId, 
+        amount: data.amount 
       },
-    );
+    });
 
     revalidatePath("/protected/finance/payouts");
     return {
@@ -123,7 +127,7 @@ export async function markAsReadyToPayAction(
       message: "อนุมัติรายการเตรียมโอนเงินเรียบร้อยแล้ว",
     };
   } catch (error: unknown) {
-    console.error("markAsReadyToPay Error:", error);
+    logger.error("markAsReadyToPay Error", error, { source: "finance-actions" });
     return { success: false, error: (error as Error).message };
   }
 }
@@ -166,21 +170,20 @@ export async function createCommissionAdjustmentAction(payload: {
 
     if (error) throw new Error(mapDbError(error));
 
-    await logAudit(
-      { supabase, user, role },
-      {
-        action: "finance.adjustment_create",
-        entity: "deal_commissions",
-        entityId: payload.commission_id,
+    await recordAuditLog({
+      action: "UPDATE",
+      entity: "COMMISSION",
+      entityId: payload.commission_id,
+      metadata: { 
         summary: `เพิ่มรายการปรับปรุง: ${payload.description} (${payload.amount} บ.)`,
-        metadata: payload,
+        ...payload 
       },
-    );
+    });
 
     revalidatePath("/protected/finance/payouts");
     return { success: true, data };
   } catch (error: unknown) {
-    console.error("createAdjustment Error:", error);
+    logger.error("createAdjustment Error", error, { source: "finance-actions", payload });
     return {
       success: false,
       error: "ไม่สามารถบันทึกรายการปรับปรุงได้: " + (error as Error).message,
@@ -304,32 +307,29 @@ export async function recalculatePayoutTotalsAction(
     if (updateErr) throw new Error(mapDbError(updateErr));
 
     // 🛡️ 🏛️ Forensic Audit: Log the full transition snapshot
-    await logAudit(
-      { supabase, user, role },
-      {
-        action: "finance.commission_ready",
-        entity: "deal_commissions",
-        entityId: commissionId,
+    await recordAuditLog({
+      action: "UPDATE",
+      entity: "COMMISSION",
+      entityId: commissionId,
+      metadata: {
         summary: `คำนวณยอดเงินใหม่ (WHT: ${(taxRate * 100).toFixed(1)}%, Net: ${FinanceMath.format(newNetTransfer)} บ.)`,
-        metadata: {
-          commissionId,
-          taxRate,
-          before: { amount: oldAmount, net: oldNet },
-          after: {
-            amount: newAmount.toNumber(),
-            net: newNetTransfer.toNumber(),
-          },
-          deal_snapshot: {
-            commission_amount: current.deal?.commission_amount,
-          },
+        commissionId,
+        taxRate,
+        before: { amount: oldAmount, net: oldNet },
+        after: {
+          amount: newAmount.toNumber(),
+          net: newNetTransfer.toNumber(),
+        },
+        deal_snapshot: {
+          commission_amount: current.deal?.commission_amount,
         },
       },
-    );
+    });
 
     revalidatePath("/protected/finance/payouts");
     return { success: true, message: "คำนวณยอดเงินใหม่เรียบร้อยแล้ว" };
   } catch (error: unknown) {
-    console.error("recalculate Error:", error);
+    logger.error("recalculate Error", error, { source: "finance-actions", commissionId });
     return { success: false, error: (error as Error).message };
   }
 }
@@ -415,16 +415,16 @@ export async function markAsPaidAction(
 
     if (updateErr) throw new Error(mapDbError(updateErr));
 
-    await logAudit(
-      { supabase, user, role },
-      {
-        action: "finance.commission_paid",
-        entity: "deal_commissions",
-        entityId: commissionId,
+    await recordAuditLog({
+      action: "PAYOUT",
+      entity: "COMMISSION",
+      entityId: commissionId,
+      metadata: { 
         summary: `ยืนยันการโอนเงินสุทธิ ${FinanceMath.format(netTransfer)} บ. (Ref: ${payload.payment_reference})`,
-        metadata: { ...payload, netAmount: netTransfer.toNumber() },
+        ...payload, 
+        netAmount: netTransfer.toNumber() 
       },
-    );
+    });
 
     revalidatePath("/protected/finance/payouts");
     revalidatePath("/protected/wallet");
@@ -456,7 +456,7 @@ export async function markAsPaidAction(
       message: "บันทึกการโอนเงินสุทธิสำเร็จ และส่งแจ้งเตือนเรียบร้อยแล้ว",
     };
   } catch (error: unknown) {
-    console.error("markAsPaid Error:", error);
+    logger.error("markAsPaid Error", error, { source: "finance-actions", commissionId });
     return { success: false, error: (error as Error).message };
   }
 }
@@ -495,7 +495,7 @@ export async function getSignedSlipUrlAction(slipUrl: string) {
 
     return { success: true, url: data.signedUrl };
   } catch (error: unknown) {
-    console.error("getSignedSlipUrl Error:", error);
+    logger.error("getSignedSlipUrl Error", error, { source: "finance-actions", slipUrl });
     return { success: false, error: (error as Error).message };
   }
 }
@@ -617,7 +617,7 @@ export async function getPayoutQueueAction(filters?: {
       pageSize,
     };
   } catch (error: unknown) {
-    console.error("getPayoutQueue Error:", error);
+    logger.error("getPayoutQueue Error", error, { source: "finance-actions", filters });
     return {
       success: false,
       error: (error as Error).message,
@@ -677,7 +677,7 @@ export async function getPayoutStatsAction() {
       } 
     };
   } catch (error) {
-    console.error("getPayoutStats Error:", error);
+    logger.error("getPayoutStats Error", error, { source: "finance-actions" });
     return { success: false, error: (error as Error).message };
   }
 }
@@ -742,7 +742,7 @@ export async function getWhtCertificateDataAction(commissionId: string) {
       },
     };
   } catch (error: unknown) {
-    console.error("getWhtData Error:", error);
+    logger.error("getWhtData Error", error, { source: "finance-actions", commissionId });
     return { success: false, error: (error as Error).message };
   }
 }
@@ -797,7 +797,7 @@ export async function getCommissionAuditTrailAction(commissionId: string) {
       ),
     };
   } catch (error: unknown) {
-    console.error("getCommissionAuditTrail Error:", error);
+    logger.error("getCommissionAuditTrail Error", error, { source: "finance-actions", commissionId });
     return { success: false, error: (error as Error).message };
   }
 }
@@ -862,6 +862,7 @@ export async function getAgentWalletStatsAction(): Promise<{
       },
     };
   } catch (error: unknown) {
+    logger.error("getAgentWalletStatsAction failed", error, { source: "finance-actions" });
     return { success: false, error: (error as Error).message };
   }
 }
@@ -875,6 +876,7 @@ export async function generateWhtPdfAction(commissionId: string) {
     const { renderToBuffer } = await import("@react-pdf/renderer");
     const { WhtCertificateTemplate } =
       await import("./components/WhtCertificateTemplate");
+    const React = await import("react");
 
     // 1. Fetch data for the certificate
     const res = await getWhtCertificateDataAction(commissionId);
@@ -889,17 +891,13 @@ export async function generateWhtPdfAction(commissionId: string) {
     const buffer = await renderToBuffer(element as React.ReactElement<any>);
 
     // 3. Log Audit
-    const { supabase, user, role } = await requireAuthContext();
-    await logAudit(
-      { supabase, user, role },
-      {
-        action: "finance.wht_generate",
-        entity: "deal_commissions",
-        entityId: commissionId,
-        summary: `ออกใบรับรองหักภาษี ณ ที่จ่าย (50 ทวิ) สำหรับรายการ ID: ${commissionId.slice(0, 8)}`,
-        metadata: { commissionId },
-      },
-    );
+    await recordAuditLog({
+      action: "PAYOUT",
+      entity: "FINANCE",
+      entityId: commissionId,
+      summary: `ออกใบรับรองหักภาษี ณ ที่จ่าย (50 ทวิ) สำหรับรายการ ID: ${commissionId.slice(0, 8)}`,
+      metadata: { commissionId },
+    });
 
     // 4. Return as Base64 for client-side download
     return {
@@ -908,7 +906,10 @@ export async function generateWhtPdfAction(commissionId: string) {
       content: buffer.toString("base64"),
     };
   } catch (error: unknown) {
-    console.error("generateWhtPdf Error:", error);
+    logger.error("generateWhtPdf Error", error, { source: "finance-actions", commissionId });
     return { success: false, error: (error as Error).message };
   }
 }
+
+
+
