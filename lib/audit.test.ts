@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getReadableSummary } from './audit';
+import { getReadableSummary } from './audit-utils';
 
 describe('Audit Utitilies (Human-readable Summaries)', () => {
   describe('getReadableSummary Formatting', () => {

@@ -16,7 +16,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Eye } from "lucide-react";
 import Link from "next/link";
-import { getReadableSummary } from "@/lib/audit";
+import { getReadableSummary } from "@/lib/audit-utils";
 
 interface AuditLogTableProps {
   data: AuditLogWithUser[];

@@ -3,7 +3,8 @@ import { Bot, InlineKeyboard, webhookCallback } from "grammy";
 import { redis } from "@/lib/redis";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
-import { logAudit, type MinimalAuditContext } from "@/lib/audit";
+import { logAudit } from "@/lib/audit";
+import { type MinimalAuditContext } from "@/lib/audit-utils";
 import { 
   formatPropertyDetail, 
   buildPropertyKeyboard, 
