@@ -22,11 +22,17 @@
     "properties": "Properties",
     "search": "Search",
     "about": "About Us",
-    "contact": "Contact",
+    "contact": "Contact Us",
     "blog": "Blog",
     "services": "Services",
     "rent": "Rent",
     "sale": "Sale"
+  },
+  "error_boundary": {
+    "title": "Oops! Something went wrong",
+    "description": "We're unable to load this page right now. Our team has been notified and is working on a fix.",
+    "retry": "Try Again",
+    "view_all": "View All Properties"
   },
   "footer": {
     "company_desc": "Committed to elevating the Thai real estate industry with sincerity and professionalism.",

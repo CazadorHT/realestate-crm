@@ -17,14 +17,20 @@
   },
   "breadcrumb": {
     "home": "首页",
-    "properties": "房源列表",
+    "properties": "房产信息",
     "search": "搜索",
     "about": "关于我们",
     "contact": "联系我们",
-    "blog": "博客",
-    "services": "服务",
-    "rent": "出租",
-    "sale": "出售"
+    "blog": "博客文章",
+    "services": "我们的服务",
+    "rent": "租房",
+    "sale": "买房"
+  },
+  "error_boundary": {
+    "title": "抱歉！出错了",
+    "description": "目前无法加载此页面。我们的团队已收到通知并正在修复中。",
+    "retry": "重试",
+    "view_all": "查看所有房产"
   },
   "footer": {
     "company_desc": "致力于以真诚和专业的态度提升泰国房地产行业水平。",
