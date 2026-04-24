@@ -51,8 +51,7 @@ import {
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { PropertyTypeBadge } from "./PropertyTypeBadge";
 import { PropertyRowActions } from "./PropertyRowActions";
-import { formatDistanceToNow } from "date-fns";
-import { th } from "date-fns/locale";
+import { formatDistanceToNowThai } from "@/lib/utils";
 import Link from "next/link";
 import { PropertyPrice } from "./PropertyPrice";
 import { PropertiesEmptyState } from "./PropertiesEmptyState";
@@ -613,10 +612,7 @@ export function PropertiesTable({
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                           <span className="text-[11px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1 py-0.5 rounded border border-slate-100 shrink-0">
                             <Clock className="h-2.5 w-2.5" />
-                            {formatDistanceToNow(new Date(property.created_at), {
-                              addSuffix: true,
-                              locale: th,
-                            })}
+                            {formatDistanceToNowThai(property.created_at)}
                           </span>
                           {showBranch && property.tenant_name && (
                             <span className="text-[11px] text-blue-600 font-bold flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 max-w-[100px] truncate shrink-0" title={property.tenant_name}>
@@ -700,7 +696,7 @@ export function PropertiesTable({
                   {/* UPDATED */}
                   <TableCell className="px-2">
                     <div className="text-[11px] text-slate-500 line-clamp-1 opacity-80 max-w-[80px] truncate" title={new Date(property.updated_at).toLocaleString("th-TH")}>
-                      {formatDistanceToNow(new Date(property.updated_at), { addSuffix: true, locale: th })}
+                      {formatDistanceToNowThai(property.updated_at)}
                     </div>
                   </TableCell>
 
@@ -922,10 +918,7 @@ export function PropertiesTable({
                   <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-50 mt-1">
                     <span className="text-[10px] min-[400px]:text-[11px] text-slate-400 font-medium">
                       อัปเดต{" "}
-                      {formatDistanceToNow(new Date(property.updated_at), {
-                        addSuffix: true,
-                        locale: th,
-                      })}
+                      {formatDistanceToNowThai(property.updated_at)}
                     </span>
                     <div className="flex items-center gap-1">
                       <Button

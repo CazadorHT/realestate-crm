@@ -49,10 +49,16 @@ async function ServiceDetail({ params }: PageProps) {
   const title = getLocaleValue(service, "title", language);
   const description = getLocaleValue(service, "description", language);
   const content = getLocaleValue(service, "content", language);
-  const isContactForPrice = service.price_range === "สอบถามราคา";
-  const displayPrice = isContactForPrice
+  const localizedPrice = getLocaleValue(service, "price_range", language);
+
+  // If we are NOT in Thai, and the value is still the default Thai string or empty,
+  // we use the translation key for "Contact for price".
+  const isThaiFallback = language !== "th" && 
+    (localizedPrice.includes("สอบถามราคา") || !localizedPrice);
+
+  const displayPrice = isThaiFallback
     ? t("common.contact_for_price")
-    : service.price_range;
+    : localizedPrice;
 
   // Gallery splitting
   const gallery = service.gallery_images || [];

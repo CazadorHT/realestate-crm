@@ -40,6 +40,8 @@ export const formSchema = z.object({
   cover_image: z.string().optional(),
   gallery_images: z.array(z.string()).optional(),
   price_range: z.string().optional(),
+  price_range_en: z.string().optional(),
+  price_range_cn: z.string().optional(),
   contact_link: z.string().optional(),
   sort_order: z.coerce.number().default(0),
   is_active: z.boolean().default(true),
@@ -80,6 +82,8 @@ export function ServiceForm({
       cover_image: initialData?.cover_image || "",
       gallery_images: initialData?.gallery_images || [],
       price_range: initialData?.price_range || "",
+      price_range_en: initialData?.price_range_en || "",
+      price_range_cn: initialData?.price_range_cn || "",
       contact_link: initialData?.contact_link || "",
       sort_order: initialData?.sort_order || 0,
       is_active: initialData?.is_active ?? true,
@@ -107,6 +111,7 @@ export function ServiceForm({
     const title = form.getValues("title");
     const description = form.getValues("description");
     const content = form.getValues("content");
+    const priceRange = form.getValues("price_range");
 
     if (!title || title.trim() === "") {
       toast.error("กรุณากรอกชื่อบริการภาษาไทยก่อนกดแปลครับ");
@@ -133,6 +138,12 @@ export function ServiceForm({
         form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
       }
 
+      if (priceRange && priceRange.trim() !== "") {
+        const priceRes = await translateTextAction(priceRange, "plain");
+        form.setValue("price_range_en", priceRes.en, { shouldDirty: true });
+        form.setValue("price_range_cn", priceRes.cn, { shouldDirty: true });
+      }
+
       toast.success("แปลข้อมูลบริการเรียบร้อยแล้ว ✨", { id: toastId });
     } catch (error: any) {
       toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
@@ -147,6 +158,8 @@ export function ServiceForm({
       const finalValues = {
         ...values,
         price_range: values.price_range?.trim() || "สอบถามราคา",
+        price_range_en: values.price_range_en?.trim() || "Contact for price",
+        price_range_cn: values.price_range_cn?.trim() || "询价",
       };
 
       const res = isNew 

@@ -3,10 +3,8 @@
 import { Bell, Layers, CheckCheck, Trash2, ExternalLink, UserPlus, Building2, Bell as BellIcon, Info, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, formatDistanceToNowThai } from "@/lib/utils";
 import { useNotifications } from "@/hooks/use-notifications";
-import { formatDistanceToNow } from "date-fns";
-import { th } from "date-fns/locale";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 
 const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
@@ -97,10 +95,7 @@ export function NotificationBell() {
             {stackedNotifications.slice(0, 15).map((n) => {
               const config = TYPE_CONFIG[n.type || "INFO"] || TYPE_CONFIG.INFO;
               const IconComp = config.icon;
-              const timeAgo = formatDistanceToNow(new Date(n.created_at), {
-                addSuffix: true,
-                locale: th,
-              });
+              const timeAgo = formatDistanceToNowThai(n.created_at);
 
               const content = (
                 <div

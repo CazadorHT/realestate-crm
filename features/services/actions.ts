@@ -21,6 +21,8 @@ export type ServiceRow = {
   cover_image: string | null;
   gallery_images: string[] | null;
   price_range: string | null;
+  price_range_en: string | null;
+  price_range_cn: string | null;
   contact_link: string | null;
   is_active: boolean;
   sort_order: number;
@@ -45,6 +47,8 @@ const serviceSchema = z.object({
   cover_image: z.string().optional().nullable(),
   gallery_images: z.array(z.string()).optional().nullable(),
   price_range: z.string().optional().nullable(),
+  price_range_en: z.string().optional().nullable(),
+  price_range_cn: z.string().optional().nullable(),
   contact_link: z.string().optional().nullable(),
   is_active: z.boolean().optional().default(true),
   sort_order: z.number().optional().default(0),
@@ -94,7 +98,7 @@ export async function getServices(
 
   let query = supabase
     .from("services")
-    .select("id, slug, title, title_en, title_cn, description, description_en, description_cn, cover_image, price_range, is_active, sort_order, created_at, updated_at, tenant_id", { count: "exact" })
+    .select("id, slug, title, title_en, title_cn, description, description_en, description_cn, content, content_en, content_cn, cover_image, gallery_images, price_range, price_range_en, price_range_cn, contact_link, is_active, sort_order, created_at, updated_at, tenant_id", { count: "exact" })
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
@@ -138,7 +142,7 @@ export async function getServiceBySlug(slug: string) {
   
   let query = supabase
     .from("services")
-    .select("id, slug, title, title_en, title_cn, description, description_en, description_cn, content, content_en, content_cn, cover_image, gallery_images, price_range, contact_link, is_active, sort_order, created_at, updated_at, tenant_id")
+    .select("id, slug, title, title_en, title_cn, description, description_en, description_cn, content, content_en, content_cn, cover_image, gallery_images, price_range, price_range_en, price_range_cn, contact_link, is_active, sort_order, created_at, updated_at, tenant_id")
     .eq("slug", slug);
 
   // For specific service detail, we usually want the one that is active
@@ -207,7 +211,7 @@ export async function updateService(input: UpdateServiceInput) {
     // 1. Fetch original for Delta Audit
     const { data: oldData } = await ctx.supabase
       .from("services")
-      .select("id, slug, title, title_en, title_cn, description, description_en, description_cn, content, content_en, content_cn, cover_image, gallery_images, price_range, contact_link, is_active, sort_order, created_at, updated_at, tenant_id")
+      .select("id, slug, title, title_en, title_cn, description, description_en, description_cn, content, content_en, content_cn, cover_image, gallery_images, price_range, price_range_en, price_range_cn, contact_link, is_active, sort_order, created_at, updated_at, tenant_id")
       .eq("id", id)
       .single();
 

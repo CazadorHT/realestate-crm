@@ -163,11 +163,11 @@ export function ServiceInfoSection({
               <FormItem>
                 <FormLabel className="text-sm font-bold text-slate-700 flex items-center gap-2">
                   <DollarSign className="h-4 w-4 text-slate-400" />
-                  ช่วงราคา
+                  ช่วงราคา (ไทย)
                 </FormLabel>
                 <FormControl>
                    <Input
-                    placeholder="เช่น 5,000 - 10,000 บาท หรือ 'เริ่มต้นที่ 5,000 บาท'"
+                    placeholder="เช่น 5,000 - 10,000 บาท หรือหากว่างจะขึ้น 'สอบถามราคา' อัตโนมัติ"
                     className="h-11 bg-slate-50/50 border-slate-200 focus:bg-white focus:border-blue-400 rounded-xl"
                     {...field}
                   />
@@ -176,6 +176,47 @@ export function ServiceInfoSection({
               </FormItem>
             )}
           />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="price_range_en"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Languages className="w-3 h-3" /> ช่วงราคา (English)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      className="h-10 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm"
+                      placeholder="e.g. 5,000 - 10,000 THB"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="price_range_cn"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Languages className="w-3 h-3" /> ช่วงราคา (Chinese)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      className="h-10 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm"
+                      placeholder="例如 5,000 - 10,000 泰铢"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+          </div>
         </div>
 
         <FormField

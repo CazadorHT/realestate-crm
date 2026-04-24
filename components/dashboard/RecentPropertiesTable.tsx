@@ -14,8 +14,7 @@ import {
   Building2,
   Sparkles,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-import { th } from "date-fns/locale";
+import { formatDistanceToNowThai } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -163,7 +162,7 @@ export function RecentPropertiesTable({
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                           <span className="text-[11px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1 py-0.5 rounded border border-slate-100 shrink-0">
                             <Clock className="h-2.5 w-2.5" />
-                            {formatDistanceToNow(new Date(property.created_at), { addSuffix: true, locale: th })}
+                            {formatDistanceToNowThai(property.created_at)}
                           </span>
                           {property.tenant_name && (
                             <span className="text-[11px] text-blue-600 font-bold flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 max-w-[100px] truncate shrink-0" title={property.tenant_name}>
@@ -222,7 +221,7 @@ export function RecentPropertiesTable({
                   </TableCell>
                   <TableCell className="px-2 py-4">
                     <div className="text-[11px] text-slate-500 line-clamp-1 opacity-80 max-w-[80px] truncate" title={new Date(property.updated_at).toLocaleString("th-TH")}>
-                      {formatDistanceToNow(new Date(property.updated_at), { addSuffix: true, locale: th })}
+                      {formatDistanceToNowThai(property.updated_at)}
                     </div>
                   </TableCell>
                   <TableCell className="px-2 py-4">
@@ -402,7 +401,7 @@ export function RecentPropertiesTable({
 
                     <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 mt-auto">
                       <span className="text-[10px] text-slate-400 font-bold tracking-tight lowercase">
-                        {formatDistanceToNow(new Date(property.updated_at), { addSuffix: true, locale: th })}
+                        {formatDistanceToNowThai(property.updated_at)}
                       </span>
                     </div>
                   </div>

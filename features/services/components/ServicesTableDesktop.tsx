@@ -10,14 +10,14 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Edit, 
-  Trash2, 
-  Eye, 
-  EyeOff, 
+import {
+  Edit,
+  Trash2,
+  Eye,
+  EyeOff,
   Loader2,
-  RefreshCcw, 
-  TrendingUp, 
+  RefreshCcw,
+  TrendingUp,
   MoreVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -86,7 +86,9 @@ export function ServicesTableDesktop({
                     <Loader2 className="w-8 h-8 text-slate-200 animate-spin" />
                   </div>
                   <p className="text-sm font-medium">
-                    {isTrashView ? "ไม่พบข้อมูลในถังขยะ" : "ยังไม่มีข้อมูลบริการ"}
+                    {isTrashView
+                      ? "ไม่พบข้อมูลในถังขยะ"
+                      : "ยังไม่มีข้อมูลบริการ"}
                   </p>
                 </div>
               </TableCell>
@@ -119,32 +121,45 @@ export function ServicesTableDesktop({
                       <div className="font-bold text-slate-900 leading-tight truncate">
                         {service.title}
                       </div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5 truncate bg-slate-50 w-fit px-1.5 rounded">
-                        /{service.slug}
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="text-[10px] text-slate-400 font-mono truncate bg-slate-50 w-fit px-1.5 rounded">
+                          /{service.slug}
+                        </div>
+                        {service.gallery_images &&
+                          service.gallery_images.length > 0 && (
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] h-4 px-1 border-slate-200 text-slate-400 bg-slate-50/50"
+                            >
+                              +{service.gallery_images.length} imgs
+                            </Badge>
+                          )}
                       </div>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
                   <span className="text-sm text-slate-600 font-bold">
-                    {service.price_range || "-"}
+                    {service.price_range || "สอบถามราคา"}
                   </span>
                 </TableCell>
                 <TableCell className="text-center">
-                   <div className="flex flex-col items-center">
-                      <div className={cn(
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={cn(
                         "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold transition-all",
-                        ((service as any).view_count || 0) > 100 
-                          ? "bg-green-50 text-green-600 border border-green-100" 
-                          : "text-slate-400"
-                      )}>
-                         <Eye className="w-3.5 h-3.5" />
-                         {(service as any).view_count || 0}
-                         {((service as any).view_count || 0) > 100 && (
-                           <TrendingUp className="w-3 h-3 ml-0.5" />
-                         )}
-                      </div>
-                   </div>
+                        ((service as any).view_count || 0) > 100
+                          ? "bg-green-50 text-green-600 border border-green-100"
+                          : "text-slate-400",
+                      )}
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      {(service as any).view_count || 0}
+                      {((service as any).view_count || 0) > 100 && (
+                        <TrendingUp className="w-3 h-3 ml-0.5" />
+                      )}
+                    </div>
+                  </div>
                 </TableCell>
                 <TableCell className="text-center">
                   {service.is_active ? (
@@ -174,7 +189,12 @@ export function ServicesTableDesktop({
                         disabled={isPending}
                         title="กู้คืนข้อมูล"
                       >
-                        <RefreshCcw className={cn("h-4.5 w-4.5", isPending && "animate-spin")} />
+                        <RefreshCcw
+                          className={cn(
+                            "h-4.5 w-4.5",
+                            isPending && "animate-spin",
+                          )}
+                        />
                       </Button>
                       <Button
                         variant="ghost"

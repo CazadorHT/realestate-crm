@@ -23,7 +23,7 @@ import { FaLine } from "react-icons/fa";
 import { animate } from "framer-motion";
 
 function ServicesContent() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -115,10 +115,14 @@ function ServicesContent() {
           </div>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-8 tracking-tight leading-[1.1] animate-in fade-in-0 gap-2 slide-in-from-bottom-6 duration-1000">
             <span className="block">
-              {t("services.hero_title").split(" ")[0]}
+              {t("services.hero_title").includes(" ") 
+                ? t("services.hero_title").split(" ")[0] 
+                : ""}
             </span>
             <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-400 via-purple-300 to-indigo-400">
-              {t("services.hero_title").split(" ").slice(1).join(" ")}
+              {t("services.hero_title").includes(" ")
+                ? t("services.hero_title").split(" ").slice(1).join(" ")
+                : t("services.hero_title")}
             </span>
           </h1>
           <p className="text-lg md:text-2xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed font-light animate-in fade-in-0 slide-in-from-bottom-8 duration-1000">
@@ -216,7 +220,11 @@ function ServicesContent() {
                     <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
                     <div className="absolute bottom-6 left-6 right-6">
                       <h4 className="text-2xl font-bold text-white mb-2 shadow-black/50 drop-shadow-md">
-                        {service.title}
+                        {language === "en" && service.title_en
+                          ? service.title_en
+                          : language === "cn" && service.title_cn
+                          ? service.title_cn
+                          : service.title}
                       </h4>
                       {service.price_range && (
                         <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 backdrop-blur-sm text-yellow-300 border border-white/10 text-xs font-semibold">
@@ -228,8 +236,12 @@ function ServicesContent() {
 
                   <div className="p-8 flex flex-col flex-1">
                     <p className="text-slate-600 line-clamp-2 mb-8 flex-1 text-sm leading-relaxed font-light">
-                      {service.description ||
-                        "Learn more about our premium service offerings tailored for your success."}
+                      {language === "en" && service.description_en
+                        ? service.description_en
+                        : language === "cn" && service.description_cn
+                        ? service.description_cn
+                        : service.description ||
+                          t("common.premium_service_fallback")}
                     </p>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center text-blue-600 font-bold group-hover:gap-2 transition-all">
@@ -262,7 +274,7 @@ function ServicesContent() {
               <div className="space-y-6">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 text-blue-400 text-xs font-bold border border-blue-500/20">
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>CERTIFIED PROFESSIONALS</span>
+                  <span className="uppercase">{t("common.certified_professionals")}</span>
                 </div>
                 <h2 className="text-3xl md:text-5xl font-bold text-white tracking-tight leading-tight">
                   {t("contact.sidebar_quick_title")}

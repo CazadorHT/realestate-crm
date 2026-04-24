@@ -3045,6 +3045,8 @@ export type Database = {
           id: string
           is_active: boolean
           price_range: string | null
+          price_range_cn: string | null
+          price_range_en: string | null
           slug: string
           sort_order: number
           tenant_id: string | null
@@ -3069,6 +3071,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           price_range?: string | null
+          price_range_cn?: string | null
+          price_range_en?: string | null
           slug: string
           sort_order?: number
           tenant_id?: string | null
@@ -3093,6 +3097,8 @@ export type Database = {
           id?: string
           is_active?: boolean
           price_range?: string | null
+          price_range_cn?: string | null
+          price_range_en?: string | null
           slug?: string
           sort_order?: number
           tenant_id?: string | null

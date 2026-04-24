@@ -123,19 +123,26 @@ export function ServicesTable({ services }: ServicesTableProps) {
                           </div>
                         )}
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <div className="font-semibold text-slate-900">
                           {service.title}
                         </div>
-                        <div className="text-xs text-slate-500 font-mono">
-                          /{service.slug}
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs text-slate-500 font-mono">
+                            /{service.slug}
+                          </div>
+                          {service.gallery_images && service.gallery_images.length > 0 && (
+                            <Badge variant="outline" className="text-[9px] h-4 px-1 bg-slate-50 border-slate-200 text-slate-400">
+                              +{service.gallery_images.length} imgs
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-slate-600 font-medium">
-                      {service.price_range || "-"}
+                      {service.price_range || "สอบถามราคา"}
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
