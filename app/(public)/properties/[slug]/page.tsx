@@ -118,7 +118,7 @@ export default async function PublicPropertyDetailPage(props: {
           </div>
 
           {/* Right Sidebar */}
-          <aside className="relative flex flex-col md:flex-row xl:flex-col gap-6 md:items-stretch w-full">
+          <aside className="relative flex flex-col lg:flex-row xl:flex-col gap-6 md:items-stretch w-full">
             <PropertySuitability listingType={data.listing_type || "SALE"} price={data.price} rentalPrice={data.rental_price} propertyType={data.property_type} />
             <div className="flex-1 xl:flex-none min-w-0 w-full flex flex-col xl:sticky xl:top-24 self-start">
               <AgentSidebar
