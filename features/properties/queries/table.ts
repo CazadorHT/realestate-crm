@@ -361,6 +361,7 @@ export async function getPropertiesTableData(params: {
       agent_name: null,
       tenant_id: p.tenant_id,
       tenant_name: p.tenants?.name || null,
+      province: p.province,
     };
   });
 

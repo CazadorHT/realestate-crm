@@ -19,6 +19,7 @@ import "aos/dist/aos.css";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { getProvinceName } from "@/lib/utils/provinces";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 type FilterType =
   | "ALL"
@@ -147,6 +148,25 @@ function PropertyListingContent() {
   
   // Local state for type filter if not in URL, but prioritized by URL
   const [localFilter, setLocalFilter] = useState<FilterType>("ALL");
+
+  // Fetch popular areas for localization support
+  const [popularAreas, setPopularAreas] = useState<any[]>([]);
+  useEffect(() => {
+    fetch("/api/public/popular-areas")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setPopularAreas(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const getLocalizedArea = (name: string) => {
+    const area = popularAreas.find((a) => a.popular_area === name);
+    if (area) {
+      return getLocaleValue(area, "popular_area", language);
+    }
+    return getProvinceName(name, language);
+  };
   
   const filter = useMemo(() => {
     if (!urlType) return localFilter;
@@ -279,6 +299,17 @@ function PropertyListingContent() {
     });
     return counts;
   }, [properties, areaFilter, provinceFilter]);
+
+  const sortedFilterTypes = useMemo(() => {
+    const types = Object.keys(FILTER_LABELS) as FilterType[];
+    const allType = types.find((t) => t === "ALL");
+    const otherTypes = types.filter((t) => t !== "ALL");
+
+    // Sort other types by count descending
+    otherTypes.sort((a, b) => (typeCounts[b] || 0) - (typeCounts[a] || 0));
+
+    return allType ? [allType, ...otherTypes] : otherTypes;
+  }, [typeCounts, FILTER_LABELS]);
 
   const filteredProperties = useMemo(() => {
     let items = properties.filter((item) => matchesFilter(item, filter));
@@ -417,10 +448,10 @@ function PropertyListingContent() {
 
               {(areaFilter || provinceFilter) && (
                 <div className="flex items-center gap-3 text-sm">
-                  <span className="text-slate-500 font-medium whitespace-nowrap">Area :</span>
+                  <span className="text-slate-500 font-medium whitespace-nowrap">{t("search.location")} :</span>
                   <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 font-semibold text-slate-700 shadow-xs">
                     {[
-                      areaFilter ? getProvinceName(areaFilter, language) : null,
+                      areaFilter ? getLocalizedArea(areaFilter) : null,
                       provinceFilter
                         ? getProvinceName(provinceFilter, language)
                         : null,
@@ -434,7 +465,7 @@ function PropertyListingContent() {
                         document.getElementById("latest-properties")?.scrollIntoView({ behavior: "smooth" });
                       }}
                       className="ml-1 -mr-1 rounded-full p-0.5 hover:bg-rose-400 hover:text-white duration-300 transition-colors"
-                      title="Clear"
+                      title={t("common.clear")}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -471,7 +502,7 @@ function PropertyListingContent() {
                   onMouseUp={handleMouseUp}
                   onMouseMove={handleMouseMove}
                 >
-                  {(Object.keys(FILTER_LABELS) as FilterType[]).map((type) => {
+                  {sortedFilterTypes.map((type) => {
                     const active = filter === type;
                     const count = typeCounts[type];
                     const isDisabled = count === 0 && type !== "ALL";

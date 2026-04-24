@@ -226,9 +226,13 @@ function ServicesContent() {
                           ? service.title_cn
                           : service.title}
                       </h4>
-                      {service.price_range && (
+                      { (language === "en" ? service.price_range_en : language === "cn" ? service.price_range_cn : service.price_range) && (
                         <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 backdrop-blur-sm text-yellow-300 border border-white/10 text-xs font-semibold">
-                          {service.price_range}
+                          {language === "en" && service.price_range_en
+                            ? service.price_range_en
+                            : language === "cn" && service.price_range_cn
+                            ? service.price_range_cn
+                            : service.price_range}
                         </span>
                       )}
                     </div>

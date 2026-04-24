@@ -338,7 +338,7 @@ export function PropertyForm({
 
     const { checkDuplicateProperties } = await import("./check-duplicate");
     const matches = await checkDuplicateProperties({
-      address_line1: values.address_line1,
+      address_line1: values.address_line1 || undefined,
       district: values.district,
       province: values.province,
       postal_code: values.postal_code,

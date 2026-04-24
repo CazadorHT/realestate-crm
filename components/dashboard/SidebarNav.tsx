@@ -462,7 +462,7 @@ export function SidebarNav({
       </TooltipTrigger>
       <TooltipContent 
         side="right" 
-        className="bg-slate-900 text-white border-none p-4 rounded-2xl shadow-2xl z-150 max-w-[240px] animate-in fade-in slide-in-from-left-2 duration-200"
+        className="bg-slate-900 text-white border-none p-4 rounded-2xl shadow-2xl z-210 max-w-[240px] animate-in fade-in slide-in-from-left-2 duration-200"
       >
         <div className="font-semibold text-sm mb-1 text-blue-400">{item.title}</div>
         <div className="text-xs text-slate-300 leading-relaxed font-semibold">
@@ -478,7 +478,7 @@ export function SidebarNav({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "hidden flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-xl sm:flex shadow-sm z-105 h-screen sticky top-0",
+          "hidden flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-xl sm:flex shadow-sm z-200 h-screen sticky top-0",
           hasMounted ? "transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)" : "transition-none",
           isCollapsed ? "w-20" : "w-72",
         )}
@@ -556,7 +556,7 @@ export function SidebarNav({
                   />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right">แดชบอร์ด</TooltipContent>
+              <TooltipContent side="right" className="z-210">แดชบอร์ด</TooltipContent>
             </Tooltip>
           ) : (
             <Link
@@ -610,7 +610,7 @@ export function SidebarNav({
                         )}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent className=" z-150 " side="right">{group.title}</TooltipContent>
+                    <TooltipContent className="z-210" side="right">{group.title}</TooltipContent>
                   </Tooltip>
 
                   {isOpen && (

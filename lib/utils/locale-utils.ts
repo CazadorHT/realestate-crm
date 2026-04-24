@@ -28,7 +28,7 @@ export function getLocaleValue<T extends Record<string, any>>(
   const localizedField = `${field}_${locale}`;
   const localizedValue = data[localizedField];
 
-  // Return localized value if it exists and is not empty, otherwise fallback to base
+  // 1. Return localized value if it exists
   if (
     localizedValue &&
     typeof localizedValue === "string" &&
@@ -37,5 +37,19 @@ export function getLocaleValue<T extends Record<string, any>>(
     return localizedValue;
   }
 
+  // 2. Fallback to English if current locale is not English
+  if (locale !== "en") {
+    const englishField = `${field}_en`;
+    const englishValue = data[englishField];
+    if (
+      englishValue &&
+      typeof englishValue === "string" &&
+      englishValue.trim() !== ""
+    ) {
+      return englishValue;
+    }
+  }
+
+  // 3. Last resort: Return base value (Thai)
   return baseValue;
 }

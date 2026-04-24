@@ -59,6 +59,15 @@ export async function getSystemStatus() {
     app: {
       url_configured: !!process.env.NEXT_PUBLIC_APP_URL,
     },
+    telegram: {
+      configured: !!(
+        process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_ADMIN_GROUP_ID
+      ),
+      missing: [
+        !process.env.TELEGRAM_BOT_TOKEN && "Bot Token",
+        !process.env.TELEGRAM_ADMIN_GROUP_ID && "Admin Group ID",
+      ].filter(Boolean) as string[],
+    },
   };
 
   return status;

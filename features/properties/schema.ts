@@ -73,14 +73,14 @@ export const PropertySchema = z
 
     currency: z.string().default("THB"),
 
-    address_line1: z.string().trim().min(1, "กรุณากรอกที่อยู่ หรือชื่อโครงการ"),
+    address_line1: z.string().trim().optional().nullable(),
     address_line1_en: z.string().trim().optional(),
     address_line1_cn: z.string().trim().optional(),
     province: z.string().min(1, "กรุณาเลือกจังหวัด"),
     district: z.string().min(1, "กรุณาเลือกจังหวัดเขต / อำเภอ"),
     subdistrict: z.string().min(1, "กรุณาเลือกจังหวัดแขวง / ตำบล"),
     postal_code: z.string().optional(),
-    google_maps_link: z.string().trim().min(1, "กรุณาใส่ลิงก์ Google Maps "),
+    google_maps_link: z.string().trim().optional().nullable(),
     popular_area: z.string().optional().nullable(),
     popular_area_en: z.string().optional().nullable(),
     popular_area_cn: z.string().optional().nullable(),

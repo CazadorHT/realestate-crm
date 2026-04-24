@@ -76,6 +76,20 @@ export const PROVINCES: Record<string, { en: string; cn: string }> = {
   ยะลา: { en: "Yala", cn: "惹拉府" },
   นราธิวาส: { en: "Narathiwat", cn: "那拉提瓦府" },
   บึงกาฬ: { en: "Bueng Kan", cn: "汶干府" },
+  // Popular Areas / Districts
+  "พระราม 9": { en: "Rama 9", cn: "拉玛九" },
+  อ่อนนุช: { en: "On Nut", cn: "翁นุ" },
+  บางนา: { en: "Bangna", cn: "邦纳" },
+  ลาดพร้าว: { en: "Lat Phrao", cn: "叻พร้าว" },
+  สุขุมวิท: { en: "Sukhumvit", cn: "素坤逸" },
+  อารีย์: { en: "Ari", cn: "阿里" },
+  พญาไท: { en: "Phaya Thai", cn: "披耶泰" },
+  "สามย่าน": { en: "Sam Yan", cn: "三燕" },
+  "สีลม": { en: "Silom", cn: "是隆" },
+  "สาทร": { en: "Sathon", cn: "沙吞" },
+  "ทองหล่อ": { en: "Thong Lo", cn: "通罗" },
+  "เอกมัย": { en: "Ekkamai", cn: "伊卡迈" },
+  "ห้วยขวาง": { en: "Huai Khwang", cn: "辉煌" },
 };
 
 /**

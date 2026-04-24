@@ -40,12 +40,20 @@ import { SocialStatusBadges } from "@/components/properties/SocialStatusBadges";
 import { PropertyStatus } from "@/features/properties/types";
 import { cn } from "@/lib/utils";
 
-type PropertyWithRelations = any;
+import { PropertyTableData } from "@/features/properties/types";
+
+// Using PropertyTableData as the base type for consistency
+export type PropertyWithRelations = PropertyTableData & {
+  images?: { url?: string; image_url?: string }[] | null;
+  province?: string | null;
+};
 
 export function RecentPropertiesTable({
   properties,
+  showBranch = false,
 }: {
   properties: PropertyWithRelations[];
+  showBranch?: boolean;
 }) {
   return (
     <div className="space-y-6 mt-10">
@@ -86,6 +94,7 @@ export function RecentPropertiesTable({
                 <TableHead className="px-2 py-4 font-bold text-slate-700 w-[110px] text-[11px]">Update</TableHead>
                 <TableHead className="px-2 py-4 font-bold text-slate-700 w-[120px] text-[11px]">สถานะ</TableHead>
                 <TableHead className="px-2 py-4 font-bold text-slate-700 w-[100px] text-[11px]">Social</TableHead>
+                {showBranch && <TableHead className="px-2 py-4 font-bold text-slate-700 w-[100px] text-[11px]">สาขา</TableHead>}
                 <TableHead className="px-2 py-4 text-right font-bold text-slate-700 pr-6 w-[120px] text-[11px]">จัดการ</TableHead>
               </TableRow>
             </TableHeader>
@@ -105,9 +114,7 @@ export function RecentPropertiesTable({
                           </div>
                         )}
                         {(() => {
-                          const imagesArr = (property.images as any[]) || [];
-                          const coverImg = imagesArr.find((img: any) => img.is_cover) || imagesArr[0];
-                          const imageUrl = coverImg?.url || coverImg?.image_url;
+                          const imageUrl = property.image_url || (property.images && (property.images as any[])[0]?.url) || (property.images && (property.images as any[])[0]?.image_url);
 
                           return imageUrl ? (
                             <Dialog>
@@ -157,7 +164,9 @@ export function RecentPropertiesTable({
                           </span>
                         </Link>
                         <span className="text-[11px] text-slate-500 line-clamp-1 opacity-90 leading-tight">
-                          {property.popular_area || property.description || "-"}
+                          {[property.popular_area, property.province]
+                            .filter(Boolean)
+                            .join(" • ") || property.description || "-"}
                         </span>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                           <span className="text-[11px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1 py-0.5 rounded border border-slate-100 shrink-0">
@@ -185,7 +194,9 @@ export function RecentPropertiesTable({
                   <TableCell className="px-2 py-4">
                     <div className="flex flex-col gap-0.5">
                       <div className="font-medium text-[11px] text-slate-700 line-clamp-1">
-                        {property.popular_area || property.district || "-"}
+                        {[property.popular_area, property.district]
+                          .filter(Boolean)
+                          .join(", ") || "-"}
                       </div>
                       <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
                         {property.size_sqm ? <span className="shrink-0">{property.size_sqm} m²</span> : null}
@@ -239,6 +250,13 @@ export function RecentPropertiesTable({
                       tiktokAt={property.posted_to_tiktok_at}
                     />
                   </TableCell>
+                  {showBranch && (
+                    <TableCell className="px-2 py-4">
+                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 line-clamp-1 max-w-[90px]" title={property.tenant_name || ""}>
+                        {property.tenant_name || "N/A"}
+                      </span>
+                    </TableCell>
+                  )}
                   <TableCell className="px-2 py-4 text-right pr-6">
                     <div className="flex justify-end items-center gap-0.5">
                       <Button
@@ -311,9 +329,7 @@ export function RecentPropertiesTable({
                     </div>
                   )}
                   {(() => {
-                    const imagesArr = (property.images as any[]) || [];
-                    const coverImg = imagesArr.find((img: any) => img.is_cover) || imagesArr[0];
-                    const imageUrl = coverImg?.url || coverImg?.image_url;
+                    const imageUrl = property.image_url || (property.images && (property.images as any[])[0]?.url) || (property.images && (property.images as any[])[0]?.image_url);
 
                     return imageUrl ? (
                       <Image
@@ -356,7 +372,9 @@ export function RecentPropertiesTable({
                     <div className="flex items-center gap-1 text-[10px] min-[400px]:text-xs text-slate-500 font-medium">
                       <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
                       <span className="truncate">
-                        {property.popular_area || property.district || "-"}
+                        {[property.popular_area, property.province]
+                          .filter(Boolean)
+                          .join(" • ") || property.district || "-"}
                       </span>
                     </div>
                   </div>
@@ -403,6 +421,11 @@ export function RecentPropertiesTable({
                       <span className="text-[10px] text-slate-400 font-bold tracking-tight lowercase">
                         {formatDistanceToNowThai(property.updated_at)}
                       </span>
+                      {showBranch && (
+                        <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 truncate max-w-[80px]">
+                          {property.tenant_name || "N/A"}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

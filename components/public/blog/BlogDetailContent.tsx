@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { User } from "lucide-react";
+import { User, ChevronDown, ChevronUp } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import { ContactAgentDialog } from "@/components/public/ContactAgentDialog";
 import { ShareButtons } from "@/components/public/ShareButtons";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 interface BlogDetailContentProps {
   post: {
@@ -41,6 +43,26 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
   const [sanitizedContent, setSanitizedContent] = useState<string>(
     content || "",
   );
+
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isTooLong, setIsTooLong] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState("");
+  const MAX_HEIGHT = 800;
+
+  useEffect(() => {
+    setCurrentUrl(window.location.href);
+  }, []);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      const height = contentRef.current.scrollHeight;
+      if (height > MAX_HEIGHT) {
+        setIsTooLong(true);
+      } else {
+        setIsTooLong(false);
+      }
+    }
+  }, [sanitizedContent]);
 
   useEffect(() => {
     if (!content) {
@@ -94,14 +116,61 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
       )}
 
       {/* Main Content Render */}
-      <div
-        ref={contentRef}
-        className="prose prose-base md:prose-lg max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline text-slate-600"
-        dangerouslySetInnerHTML={{
-          __html: sanitizedContent,
-        }}
-        itemProp="articleBody"
-      />
+      <div className="relative">
+        <div
+          ref={contentRef}
+          className={cn(
+            "prose prose-base md:prose-lg max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline text-slate-600 transition-all duration-700 ease-in-out overflow-hidden",
+            !isExpanded && isTooLong ? "max-h-[800px]" : "max-h-none"
+          )}
+          dangerouslySetInnerHTML={{
+            __html: sanitizedContent,
+          }}
+          itemProp="articleBody"
+        />
+
+        {/* Gradient Overlay for collapsed state */}
+        {!isExpanded && isTooLong && (
+          <div className="absolute bottom-0 left-0 right-0 h-40 bg-linear-to-t from-white via-white/80 to-transparent pointer-events-none z-10" />
+        )}
+      </div>
+
+      {/* Read More / Show Less Button */}
+      {isTooLong && (
+        <div className="relative z-20 flex justify-center -mt-6 mb-4">
+          <Button
+            variant="outline"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="group px-8 py-6 rounded-full bg-white hover:bg-blue-600 hover:text-white border-blue-200 hover:border-blue-600 shadow-lg hover:shadow-blue-200/50 transition-all duration-300 font-bold flex items-center gap-2"
+          >
+            {isExpanded ? (
+              <>
+                {t("common.show_less")}
+                <ChevronUp className="h-4 w-4 transition-transform group-hover:-translate-y-1" />
+              </>
+            ) : (
+              <>
+                {t("common.read_more")}
+                <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-1" />
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Share Buttons */}
+      <div className="mt-12 pt-8 border-t">
+        <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
+          {t("blog.share_title")}
+        </h4>
+        <div className="max-w-md">
+          <ShareButtons
+            url={currentUrl}
+            title={title}
+          />
+        </div>
+      </div>
 
       {/* Tags */}
       {post.tags && post.tags.length > 0 && (

@@ -279,7 +279,7 @@ export function AddressSection({ form }: AddressSectionProps) {
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <SignpostBig className="w-4 h-4 text-blue-500" />
-                  ที่อยู่ / โครงการ <span className="text-red-500">*</span>
+                  ที่อยู่ / โครงการ
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -357,7 +357,7 @@ export function AddressSection({ form }: AddressSectionProps) {
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <MapIcon className="w-4 h-4 text-blue-500" />
-                  Google Maps Link <span className="text-red-500">*</span>
+                  Google Maps Link
                 </FormLabel>
                 <FormControl>
                   <Input

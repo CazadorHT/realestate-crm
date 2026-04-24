@@ -607,7 +607,9 @@ export function PropertiesTable({
                           </span>
                         </Link>
                         <span className="text-[11px] text-slate-500 line-clamp-1 opacity-90 leading-tight">
-                          {property.popular_area || property.description || "-"}
+                          {[property.popular_area, property.province]
+                            .filter(Boolean)
+                            .join(" • ") || property.description || "-"}
                         </span>
                         <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                           <span className="text-[11px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1 py-0.5 rounded border border-slate-100 shrink-0">

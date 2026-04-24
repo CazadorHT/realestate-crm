@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Share2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { ShareButtons } from "@/components/public/ShareButtons";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
@@ -19,6 +20,11 @@ export function BlogDetailSidebar({
   relatedPosts,
 }: BlogDetailSidebarProps) {
   const { t, language } = useLanguage();
+  const [currentUrl, setCurrentUrl] = useState("");
+
+  useEffect(() => {
+    setCurrentUrl(window.location.href);
+  }, []);
 
   return (
     <aside className="lg:col-span-3">
@@ -30,11 +36,7 @@ export function BlogDetailSidebar({
             {t("blog.share_title")}
           </h3>
           <ShareButtons
-            url={
-              typeof window !== "undefined"
-                ? window.location.href
-                : `${siteConfig.url}/blog/${slug}`
-            }
+            url={currentUrl || `${siteConfig.url}/blog/${slug}`}
             title={title}
             propertyId={slug}
             propertyTitle={title}
@@ -90,3 +92,4 @@ export function BlogDetailSidebar({
     </aside>
   );
 }
+

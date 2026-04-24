@@ -276,7 +276,9 @@
       "subtitle-2": "for House, Condo, Office, Buy · Sell · Rent",
       "description": "Collection of quality properties in high-potential areas near transit and amenities.",
       "explore": "Explore this area",
-      "no_data": "Sorry, no featured locations available for this province yet."
+      "no_data": "Sorry, no featured locations available for this province yet.",
+      "next_label": "NEXT",
+      "switch_to": "Switch to"
     },
     "hot_deals": {
       "title": "Flash Sale & Hot Deals",

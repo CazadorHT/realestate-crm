@@ -18,6 +18,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { PopularAreaItem } from "@/features/public-data/popular-areas";
+import { cn } from "@/lib/utils";
 
 type Province = { id: string; display: string };
 
@@ -40,6 +41,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
 
   // Dynamic provinces state
   const [provinces, setProvinces] = useState<Province[]>(initialProvinces || []);
+  const [isNextHovered, setIsNextHovered] = useState(false);
   const [activeProvIndex, setActiveProvIndex] = useState(() => {
     if (!initialProvinces) return 0;
     const bkkIndex = initialProvinces.findIndex(
@@ -284,17 +286,27 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                           <TooltipTrigger asChild>
                             <button
                               onClick={() => setActiveProvIndex(nextProvIndex)}
-                              onMouseEnter={() => prefetchProvince(provinces[nextProvIndex]?.id)}
+                              onMouseEnter={() => {
+                                prefetchProvince(provinces[nextProvIndex]?.id);
+                                setIsNextHovered(true);
+                              }}
+                              onMouseLeave={() => setIsNextHovered(false)}
                               className="absolute -top-4 md:-top-7 left-0 flex items-center gap-2 group/sup cursor-pointer"
                             >
-                              <span className="text-[10px] md:text-xs font-black tracking-[0.3em] text-blue-400/40 uppercase transition-all duration-500 group-hover/sup:text-blue-500 group-hover/sup:tracking-[0.5em] group-hover/sup:scale-110 origin-left italic">
-                                NEXT: {nextDisplay}
+                              <span className={cn(
+                                "text-[10px] md:text-xs font-black tracking-[0.3em] text-blue-400/40 uppercase transition-all duration-500 origin-left italic",
+                                isNextHovered ? "text-blue-500 tracking-[0.5em] scale-110" : "group-hover/sup:text-blue-500 group-hover/sup:tracking-[0.5em] group-hover/sup:scale-110"
+                              )}>
+                                {t("home.popular_areas.next_label")}: {nextDisplay}
                               </span>
-                              <div className="h-px w-0 bg-blue-400/20 group-hover/sup:w-12 transition-all duration-700" />
+                              <div className={cn(
+                                "h-px w-0 bg-blue-400/20 transition-all duration-700",
+                                isNextHovered ? "w-12" : "group-hover/sup:w-12"
+                              )} />
                             </button>
                           </TooltipTrigger>
                           <TooltipContent className="bg-slate-900 text-white border-none shadow-xl">
-                            <p className="text-xs font-bold font-heading">Switch to {nextDisplay}</p>
+                            <p className="text-xs font-bold font-heading">{t("home.popular_areas.switch_to")} {nextDisplay}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
@@ -316,7 +328,11 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
 
                         <button
                           onClick={() => setActiveProvIndex(nextProvIndex)}
-                          onMouseEnter={() => prefetchProvince(provinces[nextProvIndex]?.id)}
+                          onMouseEnter={() => {
+                            prefetchProvince(provinces[nextProvIndex]?.id);
+                            setIsNextHovered(true);
+                          }}
+                          onMouseLeave={() => setIsNextHovered(false)}
                           disabled={isLoading}
                           className="p-1.5 xs:p-2 rounded-lg xs:rounded-xl bg-slate-100 hover:bg-blue-600 text-blue-400 hover:text-white transition-all! group-active:scale-90 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -518,15 +534,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                     {/* ชื่อทำเล: ขยับขึ้นเสมอในมือถือ และขยับเมื่อ Hover ใน Desktop */}
                     <div className="transform transition-transform! duration-500! -translate-y-10 lg:translate-y-0 lg:group-hover:-translate-y-10">
                       <h3 className="text-white text-xl sm:text-2xl font-semibold tracking-tight drop-shadow-lg">
-                        {getLocaleValue(
-                          {
-                            name: it.popular_area,
-                            name_en: it.popular_area_en,
-                            name_cn: it.popular_area_cn,
-                          },
-                          "name",
-                          language,
-                        )}
+                        {getLocaleValue(it, "popular_area", language)}
                       </h3>
                     </div>
                     {/* แถวข้อมูล: แสดงเลยในมือถือ และแสดงเมื่อ Hover ใน Desktop */}
