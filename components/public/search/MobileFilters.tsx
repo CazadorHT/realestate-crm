@@ -196,7 +196,6 @@ export function MobileFilters({
         <MagicAiSearch 
           keyword={keyword} 
           setKeyword={setKeyword} 
-          setBulkFilters={setBulkFilters}
         />
       </div>
       {/* Sort by */}

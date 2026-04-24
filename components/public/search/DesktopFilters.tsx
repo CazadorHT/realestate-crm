@@ -148,7 +148,6 @@ export function DesktopFilters({
           <MagicAiSearch 
             keyword={keyword} 
             setKeyword={setKeyword} 
-            setBulkFilters={setBulkFilters}
           />
         </div>
 
