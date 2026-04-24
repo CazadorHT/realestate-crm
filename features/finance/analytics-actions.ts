@@ -41,36 +41,58 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
     assertAdminOrManager(role);
 
     const targetYear = year || new Date().getFullYear();
+    const tId = currentTenantId && currentTenantId !== "ALL" ? currentTenantId : undefined;
+
+    // 🛡️ Phase 1: High-Performance SQL Aggregation (Primary)
+    const { data: rpcData, error: rpcErr } = await supabase.rpc("get_financial_analytics_v1", {
+      p_year: targetYear,
+      p_tenant_id: tId
+    });
+
+    if (!rpcErr && rpcData) {
+      console.log(`[getFinancialAnalyticsAction] RPC Success for year ${targetYear}`);
+      return { success: true, data: rpcData as FinancialAnalyticsData };
+    }
+
+    // 🛡️ Phase 2: Manual JS Fallback (If RPC is missing or fails)
+    console.warn("[getFinancialAnalyticsAction] RPC Failed or Missing, falling back to manual aggregation:", rpcErr);
+    
     const startDate = `${targetYear}-01-01`;
     const endDate = `${targetYear}-12-31`;
 
     // 1. Fetch Revenue (Deals)
-    const { data: dealsData, error: dealsErr } = await supabase
+    let dealsQuery = supabase
       .from("deals")
       .select("commission_amount, closed_at")
       .not("commission_amount", "is", null)
       .gte("closed_at", startDate)
       .lte("closed_at", endDate)
-      .eq("status", "CLOSED_WIN"); // Only closed deals generate revenue
-
+      .eq("status", "CLOSED_WIN");
+    
+    if (tId) dealsQuery = dealsQuery.eq("tenant_id", tId);
+    const { data: dealsData, error: dealsErr } = await dealsQuery;
     if (dealsErr) throw dealsErr;
 
     // 2. Fetch Payouts (Agent Shares)
-    const { data: payoutsData, error: payoutsErr } = await supabase
+    let payoutsQuery = supabase
       .from("deal_commissions")
       .select("amount, created_at, status")
       .gte("created_at", startDate)
       .lte("created_at", endDate);
-
+    
+    if (tId) payoutsQuery = payoutsQuery.eq("tenant_id", tId);
+    const { data: payoutsData, error: payoutsErr } = await payoutsQuery;
     if (payoutsErr) throw payoutsErr;
 
     // 3. Fetch Adjustments
-    const { data: adjustmentsData, error: adjErr } = await supabase
+    let adjQuery = supabase
       .from("commission_adjustments")
       .select("amount, created_at")
       .gte("created_at", startDate)
       .lte("created_at", endDate);
-
+    
+    if (tId) adjQuery = adjQuery.eq("tenant_id", tId);
+    const { data: adjustmentsData, error: adjErr } = await adjQuery;
     if (adjErr) throw adjErr;
 
     // --- High-Precision Calculation Engine ---
@@ -78,14 +100,10 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
     const totalPayouts = (payoutsData || []).reduce((acc: number, p: { amount: number | null }) => acc + (p.amount || 0), 0);
     const totalAdjustments = (adjustmentsData || []).reduce((acc: number, a: { amount: number | null }) => acc + (a.amount || 0), 0);
     
-    // Profit Splitting Logic
-    // Realized: Deals where status is CLOSED and all payouts are PAID
-    // Accrued: Deals where status is CLOSED/WON but some payouts are not PAID
-    let realizedProfit = 0;
-    let accruedProfit = 0;
+    let realizedProfitTotal = 0;
+    let accruedProfitTotal = 0;
 
-    // We correlate by month for trends
-    const months = Array.from({ length: 12 }, (_, i) => {
+    const monthlyTrends = Array.from({ length: 12 }, (_, i) => {
       const monthStr = `${targetYear}-${(i + 1).toString().padStart(2, "0")}`;
       
       const monRevenue = (dealsData || [])
@@ -100,15 +118,13 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
         .filter((a) => (a.created_at as string)?.startsWith(monthStr))
         .reduce((acc: number, a: { amount: number | null }) => acc + (a.amount || 0), 0);
 
-      // Simple split for now: Based on payout status in that month
       const monPaidPayouts = (payoutsData || [])
         .filter((p) => (p.created_at as string)?.startsWith(monthStr) && p.status === "PAID")
         .reduce((acc: number, p: { amount: number | null }) => acc + (p.amount || 0), 0);
       
       const monPendingPayouts = monPayouts - monPaidPayouts;
-      
-      const monRealized = monRevenue > 0 ? (monRevenue - monPaidPayouts + monAdjustmentsView) : 0;
-      const monAccrued = monPendingPayouts > 0 ? (0 - monPendingPayouts) : 0; // Negative accrued expenses
+      const monRealized = monRevenue - monPaidPayouts + monAdjustmentsView;
+      const monAccrued = -monPendingPayouts;
 
       return {
         month: monthStr,
@@ -119,8 +135,8 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
       };
     });
 
-    realizedProfit = months.reduce((acc: number, m: { realizedProfit: number }) => acc + m.realizedProfit, 0);
-    accruedProfit = months.reduce((acc: number, m: { accruedProfit: number }) => acc + m.accruedProfit, 0);
+    realizedProfitTotal = monthlyTrends.reduce((acc: number, m) => acc + m.realizedProfit, 0);
+    accruedProfitTotal = monthlyTrends.reduce((acc: number, m) => acc + m.accruedProfit, 0);
 
     return {
       success: true,
@@ -129,11 +145,11 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
           totalRevenue,
           totalPayouts,
           totalAdjustments,
-          realizedProfit,
-          accruedProfit,
-          netProfit: realizedProfit + accruedProfit
+          realizedProfit: realizedProfitTotal,
+          accruedProfit: accruedProfitTotal,
+          netProfit: realizedProfitTotal + accruedProfitTotal
         },
-        monthlyTrends: months
+        monthlyTrends
       }
     };
 
@@ -298,8 +314,7 @@ export async function getAvailableFinancialYearsAction(): Promise<{ success: boo
     const { supabase, role } = await requireAuthContext();
     assertAdminOrManager(role);
 
-    // Using unknown cast for RPC as it might not be in the generated types yet
-    const { data: dealYears, error: dealErr } = await (supabase.rpc as unknown as (name: string) => Promise<{ data: number[] | null; error: unknown }>)("get_distinct_finance_years");
+    const { data: dealYears, error: dealErr } = await supabase.rpc("get_distinct_finance_years");
 
     if (dealErr) {
        const err = dealErr as { code?: string; message?: string };
@@ -326,7 +341,7 @@ export async function getAvailableFinancialYearsAction(): Promise<{ success: boo
        };
     }
 
-    return { success: true, data: (dealYears || []) as number[] };
+    return { success: true, data: (dealYears as unknown as number[]) || [] };
 
   } catch (error: unknown) {
     console.error("[getAvailableFinancialYearsAction] Error:", error);

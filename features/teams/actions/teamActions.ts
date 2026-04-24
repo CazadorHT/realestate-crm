@@ -68,11 +68,17 @@ export async function getTeamsAction() {
       };
     }
 
-    if (!data || data.length === 0) {
-      return { success: true, data: [], message: "ยังไม่มีข้อมูลทีมในระบบ" };
-    }
+    type TeamQueryResult = {
+      id: string;
+      name: string;
+      created_at: string;
+      tenant_id: string | null;
+      manager_id: string | null;
+      manager: { full_name: string | null; avatar_url: string | null } | null;
+      members: { id: string; full_name: string | null; avatar_url: string | null }[];
+    };
 
-    const formattedData: TeamWithManager[] = data.map((team: any) => ({
+    const formattedData: TeamWithManager[] = (data as unknown as TeamQueryResult[]).map((team) => ({
       ...team,
       agent_count: team.members?.length || 0,
       member_previews: team.members?.slice(0, 5) || [],

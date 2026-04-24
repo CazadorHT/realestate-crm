@@ -3618,6 +3618,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_distinct_finance_years: { Args: never; Returns: Json }
       get_documents_stats: {
         Args: {
           p_owner_ids?: string[]
@@ -3629,6 +3630,10 @@ export type Database = {
           total_count: number
           total_size_bytes: number
         }[]
+      }
+      get_financial_analytics_v1: {
+        Args: { p_tenant_id?: string; p_year: number }
+        Returns: Json
       }
       get_isolation_setting: { Args: { setting_key: string }; Returns: boolean }
       get_popular_areas_with_counts: {
