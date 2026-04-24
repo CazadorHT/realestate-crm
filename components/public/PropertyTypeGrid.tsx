@@ -55,7 +55,7 @@ export function PropertyTypeCard({
   const { t } = useLanguage();
   return (
     <Link href={href}>
-      <div className="group relative bg-white rounded-2xl py-6 px-4 shadow-lg border border-slate-100 hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden">
+      <div className="group relative bg-white rounded-2xl py-6 px-4 shadow-lg border border-slate-100  transition-all duration-300 hover:-translate-y-2 overflow-hidden">
         {/* Gradient Background on Hover */}
         <div
           className={`absolute inset-0 bg-linear-to-br ${gradient} opacity-0 group-hover:opacity-5 transition-opacity`}
@@ -200,7 +200,7 @@ export function PropertyTypeGrid({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
 
-      <div className="max-w-screen-2xl mx-auto relative z-10 px-4 md:px-6 lg:px-8">
+      <div className="max-w-screen-2xl mx-auto relative z-10 px-4 md:px-6 lg:px-8  ">
         {/* SEO-Optimized Section Header */}
         <div className="text-center mb-10" data-aos="fade-up">
           <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
@@ -223,7 +223,7 @@ export function PropertyTypeGrid({
         </div>
 
         {/* PropertyTypeCard wrapper - Mobile: horizontal scroll, Desktop: grid */}
-        <div className="flex md:grid md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-2 md:gap-4 overflow-x-auto pb-6  snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex md:grid  md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8  gap-2 md:gap-4 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0  xl:px-4">
           {isLoading
             ? Array.from({ length: 8 }).map((_, idx) => (
                 <div
@@ -238,7 +238,7 @@ export function PropertyTypeGrid({
                   key={idx}
                   data-aos="fade-up"
                   data-aos-delay={idx * 50}
-                  className="shrink-0 w-[160px] md:w-auto snap-center"
+                  className="shrink-0 w-[160px] md:w-auto snap-center "
                 >
                   <PropertyTypeCard {...type} />
                 </div>
