@@ -16,7 +16,7 @@ type LeadItem = {
 
 type Props = {
   value: string | null;
-  onChange: (value: string | null, picked?: LeadItem | null) => void;
+  onChangeAction: (value: string | null, picked?: LeadItem | null) => void;
   placeholder?: string;
 };
 
@@ -38,7 +38,7 @@ function getInitials(name: string) {
 
 export function LeadCombobox({
   value,
-  onChange,
+  onChangeAction,
   placeholder = "เลือกลูกค้า...",
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -123,13 +123,13 @@ export function LeadCombobox({
   }
 
   const handleSelect = (item: LeadItem) => {
-    onChange(item.id, item);
+    onChangeAction(item.id, item);
     setOpen(false);
   };
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(null, null);
+    onChangeAction(null, null);
   };
 
   // --- Trigger Button ---

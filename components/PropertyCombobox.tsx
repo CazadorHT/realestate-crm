@@ -47,7 +47,7 @@ export type PropertyPickItem = {
 
 type Props = {
   value: string | null;
-  onChange: (value: string | null, picked?: PropertyPickItem | null) => void;
+  onChangeAction: (value: string | null, picked?: PropertyPickItem | null) => void;
   placeholder?: string;
   className?: string;
   initialProperty?: {
@@ -152,20 +152,70 @@ function PriceDisplay({ item }: { item: PropertyPickItem }) {
 function StatusBadge({ status }: { status: string | null }) {
   if (!status) return null;
 
-  const config: Record<string, { label: string; dot: string; bg: string; text: string }> = {
-    ACTIVE: { label: "ว่าง", dot: "bg-emerald-500", bg: "bg-emerald-50", text: "text-emerald-700" },
-    RESERVED: { label: "จองแล้ว", dot: "bg-amber-500", bg: "bg-amber-50", text: "text-amber-700" },
-    UNDER_OFFER: { label: "ติดมัดจำ", dot: "bg-orange-500", bg: "bg-orange-50", text: "text-orange-700" },
-    SOLD: { label: "ขายแล้ว", dot: "bg-slate-400", bg: "bg-slate-100", text: "text-slate-600" },
-    RENTED: { label: "เช่าแล้ว", dot: "bg-slate-400", bg: "bg-slate-100", text: "text-slate-600" },
-    DRAFT: { label: "ฉบับร่าง", dot: "bg-slate-300", bg: "bg-slate-100", text: "text-slate-500" },
-    ARCHIVED: { label: "เก็บถาวร", dot: "bg-rose-400", bg: "bg-rose-50", text: "text-rose-700" },
+  const config: Record<
+    string,
+    { label: string; dot: string; bg: string; text: string }
+  > = {
+    ACTIVE: {
+      label: "ว่าง",
+      dot: "bg-emerald-500",
+      bg: "bg-emerald-50",
+      text: "text-emerald-700",
+    },
+    RESERVED: {
+      label: "จองแล้ว",
+      dot: "bg-amber-500",
+      bg: "bg-amber-50",
+      text: "text-amber-700",
+    },
+    UNDER_OFFER: {
+      label: "ติดมัดจำ",
+      dot: "bg-orange-500",
+      bg: "bg-orange-50",
+      text: "text-orange-700",
+    },
+    SOLD: {
+      label: "ขายแล้ว",
+      dot: "bg-slate-400",
+      bg: "bg-slate-100",
+      text: "text-slate-600",
+    },
+    RENTED: {
+      label: "เช่าแล้ว",
+      dot: "bg-slate-400",
+      bg: "bg-slate-100",
+      text: "text-slate-600",
+    },
+    DRAFT: {
+      label: "ฉบับร่าง",
+      dot: "bg-slate-300",
+      bg: "bg-slate-100",
+      text: "text-slate-500",
+    },
+    ARCHIVED: {
+      label: "เก็บถาวร",
+      dot: "bg-rose-400",
+      bg: "bg-rose-50",
+      text: "text-rose-700",
+    },
   };
 
-  const matched = config[status] || { label: status, dot: "bg-slate-400", bg: "bg-slate-50", text: "text-slate-600" };
+  const matched = config[status] || {
+    label: status,
+    dot: "bg-slate-400",
+    bg: "bg-slate-50",
+    text: "text-slate-600",
+  };
 
   return (
-    <div className={cn("inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border font-semibold text-[10px] tracking-wide", matched.bg, matched.text, "border-current/10")}>
+    <div
+      className={cn(
+        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg border font-semibold text-[10px] tracking-wide",
+        matched.bg,
+        matched.text,
+        "border-current/10",
+      )}
+    >
       <div className={cn("h-1.5 w-1.5 rounded-full shadow-sm", matched.dot)} />
       {matched.label}
     </div>
@@ -174,7 +224,7 @@ function StatusBadge({ status }: { status: string | null }) {
 
 export function PropertyCombobox({
   value,
-  onChange,
+  onChangeAction,
   placeholder = "เลือกทรัพย์...",
   className,
   initialProperty,
@@ -230,11 +280,11 @@ export function PropertyCombobox({
     const loadInitial = async () => {
       setIsLoading(true);
       try {
-        const res = await searchPropertiesAction({ 
-          q: "", 
+        const res = await searchPropertiesAction({
+          q: "",
           listing_type: undefined,
           property_type: undefined,
-          status: undefined
+          status: undefined,
         });
         if (res.success) {
           setItems(res.data.properties || []);
@@ -248,13 +298,13 @@ export function PropertyCombobox({
   }, [open]);
 
   const handleSelect = (item: PropertyPickItem) => {
-    onChange(item.id, item);
+    onChangeAction(item.id, item);
     setOpen(false);
   };
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(null, null);
+    onChangeAction(null, null);
   };
 
   // --- Trigger Button ---
@@ -329,7 +379,12 @@ export function PropertyCombobox({
         ) : null}
         <ChevronsUpDown className="h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors" />
       </div>
-      <input type="hidden" name={name} value={value ?? ""} required={required} />
+      <input
+        type="hidden"
+        name={name}
+        value={value ?? ""}
+        required={required}
+      />
     </button>
   );
 
@@ -377,9 +432,27 @@ export function PropertyCombobox({
                 counts={counts?.listing_type}
                 options={[
                   { id: null, label: "ประกาศทั้งหมด", icon: Search },
-                  { id: "SALE", label: "ขาย", ids: ["SALE", "SALE_RENT", "SALE_AND_RENT"], color: "bg-blue-500", icon: Tag },
-                  { id: "RENT", label: "เช่า", ids: ["RENT", "SALE_RENT", "SALE_AND_RENT"], color: "bg-emerald-500", icon: Key },
-                  { id: "SALE_AND_RENT", label: "ขาย/เช่า", ids: ["SALE_RENT", "SALE_AND_RENT"], color: "bg-indigo-500", icon: Repeat },
+                  {
+                    id: "SALE",
+                    label: "ขาย",
+                    ids: ["SALE", "SALE_RENT", "SALE_AND_RENT"],
+                    color: "bg-blue-500",
+                    icon: Tag,
+                  },
+                  {
+                    id: "RENT",
+                    label: "เช่า",
+                    ids: ["RENT", "SALE_RENT", "SALE_AND_RENT"],
+                    color: "bg-emerald-500",
+                    icon: Key,
+                  },
+                  {
+                    id: "SALE_AND_RENT",
+                    label: "ขาย/เช่า",
+                    ids: ["SALE_RENT", "SALE_AND_RENT"],
+                    color: "bg-indigo-500",
+                    icon: Repeat,
+                  },
                 ]}
                 onSelect={setListingType}
               />
@@ -398,7 +471,11 @@ export function PropertyCombobox({
                   { id: "VILLA", label: "วิลล่า", icon: Home },
                   { id: "POOL_VILLA", label: "พูลวิลล่า", icon: Home },
                   { id: "LAND", label: "ที่ดิน", icon: Map },
-                  { id: "COMMERCIAL_BUILDING", label: "อาคารพาณิชย์", icon: Store },
+                  {
+                    id: "COMMERCIAL_BUILDING",
+                    label: "อาคารพาณิชย์",
+                    icon: Store,
+                  },
                   { id: "OFFICE_BUILDING", label: "ออฟฟิศ", icon: Briefcase },
                   { id: "WAREHOUSE", label: "โกดัง", icon: Box },
                   { id: "OTHER", label: "อื่นๆ", icon: CircleEllipsis },
@@ -414,15 +491,38 @@ export function PropertyCombobox({
                 counts={counts?.status}
                 options={[
                   { id: null, label: "สถานะทั้งหมด", icon: Search },
-                  { id: ["ACTIVE"], label: "ว่าง", color: "bg-emerald-500", ids: ["ACTIVE"], icon: CheckCircle2 },
-                  { id: ["RESERVED", "UNDER_OFFER"], label: "จอง/มัดจำ", color: "bg-amber-500", ids: ["RESERVED", "UNDER_OFFER"], icon: Clock },
-                  { id: ["SOLD", "RENTED"], label: "ปิดแล้ว", color: "bg-slate-400", ids: ["SOLD", "RENTED"], icon: XCircle },
+                  {
+                    id: ["ACTIVE"],
+                    label: "ว่าง",
+                    color: "bg-emerald-500",
+                    ids: ["ACTIVE"],
+                    icon: CheckCircle2,
+                  },
+                  {
+                    id: ["RESERVED", "UNDER_OFFER"],
+                    label: "จอง/มัดจำ",
+                    color: "bg-amber-500",
+                    ids: ["RESERVED", "UNDER_OFFER"],
+                    icon: Clock,
+                  },
+                  {
+                    id: ["SOLD", "RENTED"],
+                    label: "ปิดแล้ว",
+                    color: "bg-slate-400",
+                    ids: ["SOLD", "RENTED"],
+                    icon: XCircle,
+                  },
                 ]}
                 onSelect={setStatus}
                 renderLabel={(val) => {
                   if (!val) return "สถานะทั้งหมด";
-                  if (JSON.stringify(val) === JSON.stringify(["ACTIVE"])) return "สถานะ: ว่าง";
-                  if (JSON.stringify(val) === JSON.stringify(["RESERVED", "UNDER_OFFER"])) return "สถานะ: จองแล้ว";
+                  if (JSON.stringify(val) === JSON.stringify(["ACTIVE"]))
+                    return "สถานะ: ว่าง";
+                  if (
+                    JSON.stringify(val) ===
+                    JSON.stringify(["RESERVED", "UNDER_OFFER"])
+                  )
+                    return "สถานะ: จองแล้ว";
                   return "สถานะ: ปิดแล้ว";
                 }}
               />
@@ -523,17 +623,17 @@ export function PropertyCombobox({
                           <span className="shrink-0 flex items-center">
                             <MapPin className="h-3 w-3" />
                           </span>
-                        {item.status && (
-                          <div className="shrink-0">
-                            <StatusBadge status={item.status} />
-                          </div>
-                        )}
-                        <span className="truncate">
-                          {item.popular_area ||
-                            item.district ||
-                            item.province}
-                        </span>
-                      </div>
+                          {item.status && (
+                            <div className="shrink-0">
+                              <StatusBadge status={item.status} />
+                            </div>
+                          )}
+                          <span className="truncate">
+                            {item.popular_area ||
+                              item.district ||
+                              item.province}
+                          </span>
+                        </div>
                       )}
                     </div>
                   </button>
@@ -564,7 +664,13 @@ function FilterSelector<T>({
   label: string;
   description?: string;
   value: T;
-  options: { id: T; label: string; color?: string; ids?: string[]; icon?: React.ComponentType<{ className?: string }> }[];
+  options: {
+    id: T;
+    label: string;
+    color?: string;
+    ids?: string[];
+    icon?: React.ComponentType<{ className?: string }>;
+  }[];
   onSelect: (val: T) => void;
   renderLabel?: (val: T) => string;
   counts?: Record<string, number>;
@@ -596,11 +702,13 @@ function FilterSelector<T>({
             isActive
               ? "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-100 hover:bg-blue-700 hover:text-white"
               : "bg-white text-slate-600 hover:bg-slate-200 hover:text-slate-700",
-            className
+            className,
           )}
         >
           <span>{currentLabel}</span>
-          <ChevronsUpDown className={cn("h-3 w-3 opacity-50", isActive && "opacity-100")} />
+          <ChevronsUpDown
+            className={cn("h-3 w-3 opacity-50", isActive && "opacity-100")}
+          />
         </Button>
       }
     >
@@ -613,12 +721,18 @@ function FilterSelector<T>({
           if (counts) {
             if (opt.id === null) {
               // "All" option: show total sum of all items in this category
-              count = Object.values(counts).reduce((a: number, b: number) => a + b, 0);
+              count = Object.values(counts).reduce(
+                (a: number, b: number) => a + b,
+                0,
+              );
             } else {
-              count = (effectiveIds as string[]).reduce((sum: number, id: string) => sum + (counts[id] || 0), 0);
+              count = (effectiveIds as string[]).reduce(
+                (sum: number, id: string) => sum + (counts[id] || 0),
+                0,
+              );
             }
           }
-          
+
           const hasData = count === undefined || count > 0 || opt.id === null;
 
           return (
@@ -639,30 +753,39 @@ function FilterSelector<T>({
               )}
             >
               <div className="flex items-center gap-3">
-                <div className={cn(
-                  "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
-                  selected ? "bg-blue-600/10" : "bg-slate-100"
-                )}>
+                <div
+                  className={cn(
+                    "h-10 w-10 rounded-xl flex items-center justify-center transition-all",
+                    selected ? "bg-blue-600/10" : "bg-slate-100",
+                  )}
+                >
                   {opt.icon ? (
-                    <opt.icon className={cn(
-                      "h-5 w-5",
-                      selected ? "text-blue-600" : "text-slate-400"
-                    )} />
+                    <opt.icon
+                      className={cn(
+                        "h-5 w-5",
+                        selected ? "text-blue-600" : "text-slate-400",
+                      )}
+                    />
                   ) : (
-                    <div className={cn(
-                      "h-2 w-2 rounded-full",
-                      opt.color || (selected ? "bg-blue-600" : "bg-slate-300")
-                    )} />
+                    <div
+                      className={cn(
+                        "h-2 w-2 rounded-full",
+                        opt.color ||
+                          (selected ? "bg-blue-600" : "bg-slate-300"),
+                      )}
+                    />
                   )}
                 </div>
 
                 <div className="flex flex-col items-start leading-none">
                   <span className="text-sm font-bold">{opt.label}</span>
                   {count !== undefined && (
-                    <span className={cn(
-                      "text-[10px] font-bold uppercase tracking-widest mt-1",
-                      selected ? "text-blue-500" : "text-emerald-400"
-                    )}>
+                    <span
+                      className={cn(
+                        "text-[10px] font-bold uppercase tracking-widest mt-1",
+                        selected ? "text-blue-500" : "text-emerald-400",
+                      )}
+                    >
                       {count} รายการ
                     </span>
                   )}

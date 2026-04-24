@@ -7,7 +7,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { ResponsiveDialog, DialogClose, DrawerClose } from "@/components/ui/responsive-dialog";
+import {
+  ResponsiveDialog,
+  DialogClose,
+  DrawerClose,
+} from "@/components/ui/responsive-dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -292,8 +296,10 @@ export function AdvancedFilters({
       title="ตัวกรองขั้นสูง"
       description="ปรับแต่งการค้นหาตามความต้องการของคุณ"
       trigger={
-        <Button variant={activeFilterCount > 0 ? "default" : "outline"}
-          className="hover:bg-blue-500! hover:text-white">
+        <Button
+          variant={activeFilterCount > 0 ? "default" : "outline"}
+          className="hover:bg-blue-500! hover:text-white"
+        >
           <SlidersHorizontal className="h-4 w-4 mr-2" />
           ตัวกรอง
           {activeFilterCount > 0 && (
@@ -324,242 +330,90 @@ export function AdvancedFilters({
       }
     >
       <div className="flex-1 h-[calc(80vh-200px)] overflow-y-auto px-0 py-0 space-y-8">
-          <Accordion
-            type="multiple"
-            defaultValue={[
-              "sort",
-              "status",
-              "type",
-              "listing",
-              "amenities",
-              "location",
-            ]}
-            className="w-full space-y-4"
+        <Accordion
+          type="multiple"
+          defaultValue={[
+            "sort",
+            "status",
+            "type",
+            "listing",
+            "amenities",
+            "location",
+          ]}
+          className="w-full space-y-4"
+        >
+          {/* Sort By Accordion */}
+          <AccordionItem
+            value="sort"
+            className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
           >
-            {/* Sort By Accordion */}
-            <AccordionItem
-              value="sort"
-              className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
-            >
-              <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
-                <div className="flex items-center gap-2">
-                  <ArrowUpDown className="h-4 w-4 text-slate-500" />
-                  <span>เรียงตาม</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-6">
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: "created_at-desc", label: "ใหม่ล่าสุด" },
-                    { id: "created_at-asc", label: "เก่าสุด" },
-                    { id: "price-desc", label: "ราคาสูงสุด" },
-                    { id: "price-asc", label: "ราคาต่ำสุด" },
-                  ].map((opt) => {
-                    const isActive =
-                      `${filters.sortBy}-${filters.sortOrder}` === opt.id;
-                    return (
-                      <button
-                        key={opt.id}
-                        onClick={() => {
-                          const [sortBy, sortOrder] = opt.id.split("-");
-                          setFilters((prev: any) => ({
-                            ...prev,
-                            sortBy,
-                            sortOrder,
-                          }));
-                        }}
-                        className={`flex items-center justify-center px-4 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
-                          isActive
-                            ? "bg-slate-900 border-slate-900 text-white shadow-md"
-                            : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-            {/* Property Status Accordion */}
-            <AccordionItem
-              value="status"
-              className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
-            >
-              <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
-                สถานะประกาศ
-              </AccordionTrigger>
-              <AccordionContent className="pb-6">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() =>
-                      setFilters((prev: any) => ({ ...prev, status: "ALL" }))
-                    }
-                    className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
-                      filters.status === "ALL"
-                        ? "bg-slate-900 border-slate-900 text-white shadow-md"
-                        : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                    }`}
-                  >
-                    <span>ทั้งหมดสถานะ</span>
-                    {filterMetadata.length > 0 && (
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                        <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                            filters.status === "ALL"
-                              ? "bg-white/20"
-                              : "bg-slate-100"
-                          }`}
-                        >
-                          {filterMetadata.length}
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                  {PROPERTY_STATUS_ORDER.map((s) => {
-                    const count = statusCounts[s] || 0;
-                    const isActive = filters.status === s;
-                    const isAvailable = count > 0;
-                    return (
-                      <button
-                        key={s}
-                        disabled={!isAvailable}
-                        onClick={() =>
-                          setFilters((prev: any) => ({ ...prev, status: s }))
-                        }
-                        className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
-                          isActive
-                            ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                            : isAvailable
-                              ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                              : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
-                        }`}
-                      >
-                        <span className="truncate mr-1">
-                          {PROPERTY_STATUS_LABELS[s]}
-                        </span>
-                        {isAvailable && (
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                            <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                                isActive ? "bg-white/20" : "bg-slate-100"
-                              }`}
-                            >
-                              {count}
-                            </span>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-            {/* Property Type Accordion */}
-            <AccordionItem
-              value="type"
-              className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
-            >
-              <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
-                ประเภททรัพย์
-              </AccordionTrigger>
-              <AccordionContent className="pb-6">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() =>
-                      setFilters((prev: any) => ({ ...prev, type: "ALL" }))
-                    }
-                    className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-medium text-xs ${
-                      filters.type === "ALL"
-                        ? "bg-slate-900 border-slate-900 text-white shadow-md"
-                        : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                    }`}
-                  >
-                    <span>ทั้งหมด</span>
-                    {filterMetadata.length > 0 && (
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                        <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                            filters.type === "ALL"
-                              ? "bg-white/20"
-                              : "bg-slate-100"
-                          }`}
-                        >
-                          {filterMetadata.length}
-                        </span>
-                      </div>
-                    )}
-                  </button>
-                  {PROPERTY_TYPE_ORDER.map((t) => {
-                    const count = typeCounts[t] || 0;
-                    const isActive = filters.type === t;
-                    const isAvailable = count > 0;
-                    return (
-                      <button
-                        key={t}
-                        disabled={!isAvailable}
-                        onClick={() =>
-                          setFilters((prev: any) => ({ ...prev, type: t }))
-                        }
-                        className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
-                          isActive
-                            ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                            : isAvailable
-                              ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                              : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
-                        }`}
-                      >
-                        <span className="truncate mr-1">
-                          {PROPERTY_TYPE_LABELS[t]}
-                        </span>
-                        {isAvailable && (
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                            <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                                isActive ? "bg-white/20" : "bg-slate-100"
-                              }`}
-                            >
-                              {count}
-                            </span>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Listing Type Accordion */}
-            <AccordionItem
-              value="listing"
-              className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
-            >
-              <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
-                รูปแบบรายการ
-              </AccordionTrigger>
-              <AccordionContent className="pb-6">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() =>
-                      setFilters((prev: any) => ({ ...prev, listing: "ALL" }))
-                    }
-                    className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
-                      filters.listing === "ALL"
-                        ? "bg-slate-900 border-slate-900 text-white shadow-md"
-                        : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                    }`}
-                  >
-                    <span>ทั้งหมดรายการ</span>
+            <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
+              <div className="flex items-center gap-2">
+                <ArrowUpDown className="h-4 w-4 text-slate-500" />
+                <span>เรียงตาม</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-6">
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: "created_at-desc", label: "ใหม่ล่าสุด" },
+                  { id: "created_at-asc", label: "เก่าสุด" },
+                  { id: "price-desc", label: "ราคาสูงสุด" },
+                  { id: "price-asc", label: "ราคาต่ำสุด" },
+                ].map((opt) => {
+                  const isActive =
+                    `${filters.sortBy}-${filters.sortOrder}` === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      onClick={() => {
+                        const [sortBy, sortOrder] = opt.id.split("-");
+                        setFilters((prev: any) => ({
+                          ...prev,
+                          sortBy,
+                          sortOrder,
+                        }));
+                      }}
+                      className={`flex items-center justify-center px-4 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                        isActive
+                          ? "bg-slate-900 border-slate-900 text-white shadow-md"
+                          : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+          {/* Property Status Accordion */}
+          <AccordionItem
+            value="status"
+            className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
+          >
+            <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
+              สถานะประกาศ
+            </AccordionTrigger>
+            <AccordionContent className="pb-6">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() =>
+                    setFilters((prev: any) => ({ ...prev, status: "ALL" }))
+                  }
+                  className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                    filters.status === "ALL"
+                      ? "bg-slate-900 border-slate-900 text-white shadow-md"
+                      : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>ทั้งหมดสถานะ</span>
+                  {filterMetadata.length > 0 && (
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                       <span
                         className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                          filters.listing === "ALL"
+                          filters.status === "ALL"
                             ? "bg-white/20"
                             : "bg-slate-100"
                         }`}
@@ -567,658 +421,818 @@ export function AdvancedFilters({
                         {filterMetadata.length}
                       </span>
                     </div>
-                  </button>
-                  {LISTING_TYPE_ORDER.slice(0, 3).map((t) => {
-                    const count =
-                      t === "SALE"
-                        ? listingCounts.SALE + listingCounts.SALE_AND_RENT
-                        : t === "RENT"
-                          ? listingCounts.RENT + listingCounts.SALE_AND_RENT
-                          : listingCounts[t];
-                    const isActive = filters.listing === t;
-                    const isAvailable = count > 0;
-                    return (
-                      <button
-                        key={t}
-                        disabled={!isAvailable}
-                        onClick={() =>
-                          setFilters((prev: any) => ({ ...prev, listing: t }))
-                        }
-                        className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
-                          isActive
-                            ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                            : isAvailable
-                              ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                              : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
-                        }`}
-                      >
-                        <span className="truncate mr-1">
-                          {LISTING_TYPE_LABELS[t]}
-                        </span>
-                        {isAvailable && (
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                            <span
-                              className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                                isActive ? "bg-white/20" : "bg-slate-100"
-                              }`}
-                            >
-                              {count}
-                            </span>
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Price & Rooms Accordion */}
-            <AccordionItem
-              value="amenities"
-              className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
-            >
-              <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
-                ราคา & ขนาด
-              </AccordionTrigger>
-              <AccordionContent className="pb-6 space-y-6">
-                <div className="space-y-6">
-                  {/* Sale Price Section */}
-                  <div className="space-y-3">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      ช่วงราคาขาย (บาท)
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { min: "0", max: "3000000", label: "< 3 ล้าน" },
-                        { min: "3000000", max: "7000000", label: "3 - 7 ล้าน" },
-                        {
-                          min: "7000000",
-                          max: "15000000",
-                          label: "7 - 15 ล้าน",
-                        },
-                        { min: "15000000", max: "", label: "> 15 ล้าน" },
-                      ].map((preset, idx) => {
-                        const count = salePriceCounts[idx] || 0;
-                        const isActive =
-                          filters.listing !== "RENT" &&
-                          filters.minPrice === preset.min &&
-                          filters.maxPrice === preset.max;
-                        const isAvailable = count > 0;
-
-                        return (
-                          <button
-                            key={preset.label}
-                            disabled={!isAvailable}
-                            onClick={() => {
-                              if (isActive) {
-                                setFilters((prev: any) => ({
-                                  ...prev,
-                                  minPrice: "",
-                                  maxPrice: "",
-                                }));
-                              } else {
-                                setFilters((prev: any) => ({
-                                  ...prev,
-                                  listing: "SALE",
-                                  minPrice: preset.min,
-                                  maxPrice: preset.max,
-                                }));
-                              }
-                            }}
-                            className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
-                              isActive
-                                ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                                : isAvailable
-                                  ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                                  : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
-                            }`}
-                          >
-                            <span className="truncate mr-1">
-                              {preset.label}
-                            </span>
-                            {isAvailable && (
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                                <span
-                                  className={`text-[9px] px-1.5 py-0.5 rounded-md ${
-                                    isActive ? "bg-white/20" : "bg-slate-100"
-                                  }`}
-                                >
-                                  {count}
-                                </span>
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Rent Price Section */}
-                  <div className="space-y-3">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      ช่วงราคาเช่า (บาท / เดือน)
-                    </span>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { min: "0", max: "15000", label: "< 15,000" },
-                        {
-                          min: "15000",
-                          max: "50000",
-                          label: "1.5 - 5 หมื่น",
-                        },
-                        {
-                          min: "50000",
-                          max: "150000",
-                          label: "5 หมื่น - 1.5 แสน",
-                        },
-                        { min: "150000", max: "", label: "> 1.5 แสน" },
-                      ].map((preset, idx) => {
-                        const count = rentPriceCounts[idx] || 0;
-                        const isActive =
-                          filters.listing === "RENT" &&
-                          filters.minPrice === preset.min &&
-                          filters.maxPrice === preset.max;
-                        const isAvailable = count > 0;
-
-                        return (
-                          <button
-                            key={preset.label}
-                            disabled={!isAvailable}
-                            onClick={() => {
-                              if (isActive) {
-                                setFilters((prev: any) => ({
-                                  ...prev,
-                                  minPrice: "",
-                                  maxPrice: "",
-                                }));
-                              } else {
-                                setFilters((prev: any) => ({
-                                  ...prev,
-                                  listing: "RENT",
-                                  minPrice: preset.min,
-                                  maxPrice: preset.max,
-                                }));
-                              }
-                            }}
-                            className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
-                              isActive
-                                ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                                : isAvailable
-                                  ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                                  : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
-                            }`}
-                          >
-                            <span className="truncate mr-1">
-                              {preset.label}
-                            </span>
-                            {isAvailable && (
-                              <div className="flex items-center gap-1.5 shrink-0">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                                <span
-                                  className={`text-[9px] px-1.5 py-0.5 rounded-md ${
-                                    isActive ? "bg-white/20" : "bg-slate-100"
-                                  }`}
-                                >
-                                  {count}
-                                </span>
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      ห้องนอน
-                    </span>
-                    <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                      <button
-                        onClick={() =>
-                          setFilters((prev: any) => ({
-                            ...prev,
-                            bedrooms: "",
-                          }))
-                        }
-                        className={`flex items-center justify-between h-10 min-w-24 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 ${
-                          !filters.bedrooms
-                            ? "bg-slate-900 border-slate-900 text-white shadow-md"
-                            : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        <span className="mr-2">ทั้งหมด</span>
-                        {filterMetadata.length > 0 && (
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                            <span
-                              className={`text-[9px] px-1.5 py-0.5 rounded-md ${
-                                !filters.bedrooms
-                                  ? "bg-white/20"
-                                  : "bg-slate-100"
-                              }`}
-                            >
-                              {filterMetadata.length}
-                            </span>
-                          </div>
-                        )}
-                      </button>
-                      {["1", "2", "3", "4+"].map((val) => {
-                        const countKey = val === "4+" ? "4" : val;
-                        const count = bedroomCounts[countKey] || 0;
-                        const isActive = filters.bedrooms === val;
-                        const isAvailable = count > 0;
-                        return (
-                          <button
-                            key={val}
-                            disabled={!isAvailable}
-                            onClick={() =>
-                              setFilters((prev: any) => ({
-                                ...prev,
-                                bedrooms: val,
-                              }))
-                            }
-                            className={`flex items-center justify-between h-10 min-w-16 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 ${
-                              isActive
-                                ? "bg-blue-600 border-blue-600 text-white shadow-md font-bold"
-                                : isAvailable
-                                  ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                                  : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
-                            }`}
-                          >
-                            <span className="mr-2">{val}</span>
-                            {isAvailable && (
-                              <div className="flex items-center gap-1 shrink-0">
-                                <span className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                                <span
-                                  className={`text-[8px] px-1 py-0.5 rounded-md ${
-                                    isActive ? "bg-white/20" : "bg-slate-100"
-                                  }`}
-                                >
-                                  {count}
-                                </span>
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      ห้องน้ำ
-                    </span>
-                    <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
-                      <button
-                        onClick={() =>
-                          setFilters((prev: any) => ({
-                            ...prev,
-                            bathrooms: "",
-                          }))
-                        }
-                        className={`flex items-center justify-between h-10 min-w-24 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 ${
-                          !filters.bathrooms
-                            ? "bg-slate-900 border-slate-900 text-white shadow-md"
-                            : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                        }`}
-                      >
-                        <span className="mr-2">ทั้งหมด</span>
-                        {filterMetadata.length > 0 && (
-                          <div className="flex items-center gap-1.5 shrink-0">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                            <span
-                              className={`text-[9px] px-1.5 py-0.5 rounded-md ${
-                                !filters.bathrooms
-                                  ? "bg-white/20"
-                                  : "bg-slate-100"
-                              }`}
-                            >
-                              {filterMetadata.length}
-                            </span>
-                          </div>
-                        )}
-                      </button>
-                      {["1", "2", "3", "4+"].map((val) => {
-                        const countKey = val === "4+" ? "4" : val;
-                        const count = bathroomCounts[countKey] || 0;
-                        const isActive = filters.bathrooms === val;
-                        const isAvailable = count > 0;
-                        return (
-                          <button
-                            key={val}
-                            disabled={!isAvailable}
-                            onClick={() =>
-                              setFilters((prev: any) => ({
-                                ...prev,
-                                bathrooms: val,
-                              }))
-                            }
-                            className={`flex items-center justify-between h-10 min-w-16 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 ${
-                              isActive
-                                ? "bg-blue-600 border-blue-600 text-white shadow-md font-bold"
-                                : isAvailable
-                                  ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                                  : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
-                            }`}
-                          >
-                            <span className="mr-2">{val}</span>
-                            {isAvailable && (
-                              <div className="flex items-center gap-1 shrink-0">
-                                <span className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                                <span
-                                  className={`text-[8px] px-1 py-0.5 rounded-md ${
-                                    isActive ? "bg-white/20" : "bg-slate-100"
-                                  }`}
-                                >
-                                  {count}
-                                </span>
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3 pt-2">
-                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      ความต้องการพิเศษ
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        {
-                          id: "nearTransit",
-                          label: "ใกล้รถไฟฟ้า",
-                          icon: "🚈",
-                        },
-                        {
-                          id: "petFriendly",
-                          label: "เลี้ยงสัตว์ได้",
-                          icon: "🐾",
-                        },
-                        {
-                          id: "fullyFurnished",
-                          label: "ตกแต่งครบ",
-                          icon: "🛋️",
-                        },
-                      ].map((item) => {
-                        const isActive =
-                          filters[item.id as keyof Filters] === "true";
-                        const count =
-                          amenityCounts[
-                            item.id as keyof typeof amenityCounts
-                          ] || 0;
-                        const isAvailable = count > 0;
-
-                        return (
-                          <button
-                            key={item.id}
-                            disabled={!isAvailable}
-                            onClick={() =>
-                              setFilters((prev: any) => ({
-                                ...prev,
-                                [item.id]: isActive ? "" : "true",
-                              }))
-                            }
-                            className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all font-bold text-xs min-w-[140px] ${
-                              isActive
-                                ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                                : isAvailable
-                                  ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                                  : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span>{item.icon}</span>
-                              <span className="truncate">{item.label}</span>
-                            </div>
-                            {isAvailable && (
-                              <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                                <span
-                                  className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                                    isActive ? "bg-white/20" : "bg-slate-100"
-                                  }`}
-                                >
-                                  {count}
-                                </span>
-                              </div>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Location Accordion */}
-            <AccordionItem
-              value="location"
-              className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
-            >
-              <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-900">จังหวัด & ทำเล</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="pb-6 space-y-6">
-                {/* Provinces */}
-                <div className="space-y-3">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    จังหวัด
-                  </span>
-                  <div className="flex flex-wrap gap-2">
+                  )}
+                </button>
+                {PROPERTY_STATUS_ORDER.map((s) => {
+                  const count = statusCounts[s] || 0;
+                  const isActive = filters.status === s;
+                  const isAvailable = count > 0;
+                  return (
                     <button
+                      key={s}
+                      disabled={!isAvailable}
                       onClick={() =>
-                        setFilters((prev: any) => ({
-                          ...prev,
-                          province: "",
-                          popular_area: "",
-                        }))
+                        setFilters((prev: any) => ({ ...prev, status: s }))
                       }
-                      className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold border-2 transition-all min-w-[140px] ${
-                        !filters.province
-                          ? "bg-slate-900 border-slate-900 text-white shadow-md"
-                          : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                      className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                        isActive
+                          ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                          : isAvailable
+                            ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                            : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
                       }`}
                     >
-                      <span>ทุกจังหวัด</span>
-                      {filterMetadata.length > 0 && (
+                      <span className="truncate mr-1">
+                        {PROPERTY_STATUS_LABELS[s]}
+                      </span>
+                      {isAvailable && (
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                           <span
                             className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                              !filters.province
-                                ? "bg-white/20"
-                                : "bg-slate-100/80"
+                              isActive ? "bg-white/20" : "bg-slate-100"
                             }`}
                           >
-                            {filterMetadata.length}
+                            {count}
                           </span>
                         </div>
                       )}
                     </button>
-                    {availableProvinces
-                      .slice(0, showAllProvinces ? undefined : ITEMS_LIMIT)
-                      .map((p) => {
-                        const isActive = filters.province === p.name;
-                        return (
-                          <button
-                            key={p.name}
-                            onClick={() =>
-                              setFilters((prev: any) => ({
-                                ...prev,
-                                province: p.name,
-                                popular_area: "",
-                              }))
-                            }
-                            className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold border-2 transition-all min-w-[140px] ${
-                              isActive
-                                ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                                : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
-                            }`}
-                          >
-                            <span className="truncate mr-2">{p.name}</span>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
-                              <span
-                                className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                                  isActive ? "bg-white/20" : "bg-slate-100/80"
-                                }`}
-                              >
-                                {p.count}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    {availableProvinces.length > ITEMS_LIMIT && (
-                      <button
-                        onClick={() => setShowAllProvinces(!showAllProvinces)}
-                        className="px-4 py-2.5 rounded-xl text-xs font-bold border-2 border-dashed border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500 transition-all"
+                  );
+                })}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+          {/* Property Type Accordion */}
+          <AccordionItem
+            value="type"
+            className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
+          >
+            <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
+              ประเภททรัพย์
+            </AccordionTrigger>
+            <AccordionContent className="pb-6">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() =>
+                    setFilters((prev: any) => ({ ...prev, type: "ALL" }))
+                  }
+                  className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-medium text-xs ${
+                    filters.type === "ALL"
+                      ? "bg-slate-900 border-slate-900 text-white shadow-md"
+                      : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>ทั้งหมด</span>
+                  {filterMetadata.length > 0 && (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                      <span
+                        className={`text-[10px] px-1.5 py-0.5 rounded-md ${
+                          filters.type === "ALL"
+                            ? "bg-white/20"
+                            : "bg-slate-100"
+                        }`}
                       >
-                        {showAllProvinces
-                          ? "แสดงน้อยลง"
-                          : `+${availableProvinces.length - ITEMS_LIMIT} เพิ่มเติม`}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Areas (Districts) */}
-                <div className="space-y-3">
-                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    ทำเล
-                  </span>
-                  <div className="flex flex-wrap gap-2">
+                        {filterMetadata.length}
+                      </span>
+                    </div>
+                  )}
+                </button>
+                {PROPERTY_TYPE_ORDER.map((t) => {
+                  const count = typeCounts[t] || 0;
+                  const isActive = filters.type === t;
+                  const isAvailable = count > 0;
+                  return (
                     <button
+                      key={t}
+                      disabled={!isAvailable}
                       onClick={() =>
-                        setFilters((prev: any) => ({
-                          ...prev,
-                          popular_area: "",
-                        }))
+                        setFilters((prev: any) => ({ ...prev, type: t }))
                       }
-                      className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold border-2 transition-all min-w-[140px] ${
-                        !filters.popular_area
-                          ? "bg-slate-900 border-slate-900 text-white shadow-md"
-                          : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                      className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                        isActive
+                          ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                          : isAvailable
+                            ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                            : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
                       }`}
                     >
-                      <span>ทุกย่านทำเล</span>
-                      {filterMetadata.length > 0 && (
+                      <span className="truncate mr-1">
+                        {PROPERTY_TYPE_LABELS[t]}
+                      </span>
+                      {isAvailable && (
                         <div className="flex items-center gap-1.5 shrink-0">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                           <span
                             className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                              !filters.popular_area
-                                ? "bg-white/20"
-                                : "bg-slate-100/80"
+                              isActive ? "bg-white/20" : "bg-slate-100"
                             }`}
                           >
-                            {filterMetadata.length}
+                            {count}
                           </span>
                         </div>
                       )}
                     </button>
-                    {availableAreas
-                      .slice(0, showAllAreas ? undefined : ITEMS_LIMIT)
-                      .map((a) => {
-                        const isActive = filters.popular_area === a.name;
-                        return (
-                          <button
-                            key={a.name}
-                            onClick={() =>
-                              setFilters((prev: any) => ({
-                                ...prev,
-                                popular_area: a.name,
-                              }))
-                            }
-                            className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold border-2 transition-all min-w-[140px] ${
-                              isActive
-                                ? "bg-blue-600 border-blue-600 text-white shadow-md"
-                                : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                  );
+                })}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Listing Type Accordion */}
+          <AccordionItem
+            value="listing"
+            className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
+          >
+            <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
+              รูปแบบรายการ
+            </AccordionTrigger>
+            <AccordionContent className="pb-6">
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() =>
+                    setFilters((prev: any) => ({ ...prev, listing: "ALL" }))
+                  }
+                  className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                    filters.listing === "ALL"
+                      ? "bg-slate-900 border-slate-900 text-white shadow-md"
+                      : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <span>ทั้งหมดรายการ</span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                    <span
+                      className={`text-[10px] px-1.5 py-0.5 rounded-md ${
+                        filters.listing === "ALL"
+                          ? "bg-white/20"
+                          : "bg-slate-100"
+                      }`}
+                    >
+                      {filterMetadata.length}
+                    </span>
+                  </div>
+                </button>
+                {LISTING_TYPE_ORDER.slice(0, 3).map((t) => {
+                  const count =
+                    t === "SALE"
+                      ? listingCounts.SALE + listingCounts.SALE_AND_RENT
+                      : t === "RENT"
+                        ? listingCounts.RENT + listingCounts.SALE_AND_RENT
+                        : listingCounts[t];
+                  const isActive = filters.listing === t;
+                  const isAvailable = count > 0;
+                  return (
+                    <button
+                      key={t}
+                      disabled={!isAvailable}
+                      onClick={() =>
+                        setFilters((prev: any) => ({ ...prev, listing: t }))
+                      }
+                      className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                        isActive
+                          ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                          : isAvailable
+                            ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                            : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
+                      }`}
+                    >
+                      <span className="truncate mr-1">
+                        {LISTING_TYPE_LABELS[t]}
+                      </span>
+                      {isAvailable && (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded-md ${
+                              isActive ? "bg-white/20" : "bg-slate-100"
                             }`}
                           >
-                            <span className="truncate mr-2">{a.name}</span>
+                            {count}
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Price & Rooms Accordion */}
+          <AccordionItem
+            value="amenities"
+            className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
+          >
+            <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
+              ราคา & ขนาด
+            </AccordionTrigger>
+            <AccordionContent className="pb-6 space-y-6">
+              <div className="space-y-6">
+                {/* Sale Price Section */}
+                <div className="space-y-3">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    ช่วงราคาขาย (บาท)
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { min: "0", max: "3000000", label: "< 3 ล้าน" },
+                      { min: "3000000", max: "7000000", label: "3 - 7 ล้าน" },
+                      {
+                        min: "7000000",
+                        max: "15000000",
+                        label: "7 - 15 ล้าน",
+                      },
+                      { min: "15000000", max: "", label: "> 15 ล้าน" },
+                    ].map((preset, idx) => {
+                      const count = salePriceCounts[idx] || 0;
+                      const isActive =
+                        filters.listing !== "RENT" &&
+                        filters.minPrice === preset.min &&
+                        filters.maxPrice === preset.max;
+                      const isAvailable = count > 0;
+
+                      return (
+                        <button
+                          key={preset.label}
+                          disabled={!isAvailable}
+                          onClick={() => {
+                            if (isActive) {
+                              setFilters((prev: any) => ({
+                                ...prev,
+                                minPrice: "",
+                                maxPrice: "",
+                              }));
+                            } else {
+                              setFilters((prev: any) => ({
+                                ...prev,
+                                listing: "SALE",
+                                minPrice: preset.min,
+                                maxPrice: preset.max,
+                              }));
+                            }
+                          }}
+                          className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                            isActive
+                              ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                              : isAvailable
+                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                                : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
+                          }`}
+                        >
+                          <span className="truncate mr-1">{preset.label}</span>
+                          {isAvailable && (
                             <div className="flex items-center gap-1.5 shrink-0">
                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
                               <span
-                                className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                                  isActive ? "bg-white/20" : "bg-slate-100/80"
+                                className={`text-[9px] px-1.5 py-0.5 rounded-md ${
+                                  isActive ? "bg-white/20" : "bg-slate-100"
                                 }`}
                               >
-                                {a.count}
+                                {count}
                               </span>
                             </div>
-                          </button>
-                        );
-                      })}
-                    {availableAreas.length > ITEMS_LIMIT && (
-                      <button
-                        onClick={() => setShowAllAreas(!showAllAreas)}
-                        className="px-4 py-2.5 rounded-xl text-xs font-bold border-2 border-dashed border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500 transition-all"
-                      >
-                        {showAllAreas
-                          ? "แสดงน้อยลง"
-                          : `+${availableAreas.length - ITEMS_LIMIT} เพิ่มเติม`}
-                      </button>
-                    )}
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
 
-          {/* ✨ Sentinel AI Verification Section */}
-          <div className="pt-2 px-1">
-            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block px-1">
-              Sentinel AI Status
-            </label>
-            <button
-              onClick={() => setFilters((prev: any) => ({ 
-                ...prev, 
-                needsAiReview: prev.needsAiReview === "true" ? "" : "true" 
-              }))}
-              className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all group ${
-                filters.needsAiReview === "true"
-                  ? "bg-indigo-50 border-indigo-200 shadow-sm"
-                  : "bg-white border-slate-100 hover:border-slate-200 shadow-xs"
-              }`}
-            >
-              <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-xl transition-all duration-300 ${
-                  filters.needsAiReview === "true" ? "bg-indigo-600 text-white rotate-12 scale-110 shadow-lg shadow-indigo-200" : "bg-slate-100 text-slate-400"
-                }`}>
-                  <SlidersHorizontal className="h-4 w-4" />
-                </div>
-                <div className="text-left">
-                  <p className={`text-sm font-bold ${
-                    filters.needsAiReview === "true" ? "text-indigo-900" : "text-slate-700"
-                  }`}>
-                    ✨ ตรวจร่าง AI
-                  </p>
-                  <p className="text-[10px] text-slate-400 font-medium leading-tight">แสดงเฉพาะรายการที่ AI ช่วยสรุปเนื้อหาให้ (รอคุณตรวจสอบ)</p>
+                {/* Rent Price Section */}
+                <div className="space-y-3">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    ช่วงราคาเช่า (บาท / เดือน)
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      { min: "0", max: "15000", label: "< 15,000" },
+                      {
+                        min: "15000",
+                        max: "50000",
+                        label: "1.5 - 5 หมื่น",
+                      },
+                      {
+                        min: "50000",
+                        max: "150000",
+                        label: "5 หมื่น - 1.5 แสน",
+                      },
+                      { min: "150000", max: "", label: "> 1.5 แสน" },
+                    ].map((preset, idx) => {
+                      const count = rentPriceCounts[idx] || 0;
+                      const isActive =
+                        filters.listing === "RENT" &&
+                        filters.minPrice === preset.min &&
+                        filters.maxPrice === preset.max;
+                      const isAvailable = count > 0;
+
+                      return (
+                        <button
+                          key={preset.label}
+                          disabled={!isAvailable}
+                          onClick={() => {
+                            if (isActive) {
+                              setFilters((prev: any) => ({
+                                ...prev,
+                                minPrice: "",
+                                maxPrice: "",
+                              }));
+                            } else {
+                              setFilters((prev: any) => ({
+                                ...prev,
+                                listing: "RENT",
+                                minPrice: preset.min,
+                                maxPrice: preset.max,
+                              }));
+                            }
+                          }}
+                          className={`flex items-center justify-between px-3 py-3 rounded-xl border-2 transition-all font-bold text-xs ${
+                            isActive
+                              ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                              : isAvailable
+                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                                : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
+                          }`}
+                        >
+                          <span className="truncate mr-1">{preset.label}</span>
+                          {isAvailable && (
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                              <span
+                                className={`text-[9px] px-1.5 py-0.5 rounded-md ${
+                                  isActive ? "bg-white/20" : "bg-slate-100"
+                                }`}
+                              >
+                                {count}
+                              </span>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
-              {amenityCounts.needsAiReview > 0 && (
-                <span className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                  filters.needsAiReview === "true" ? "bg-indigo-600 text-white ring-2 ring-indigo-200" : "bg-slate-100 text-slate-600"
-                }`}>
-                  {amenityCounts.needsAiReview}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
 
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    ห้องนอน
+                  </span>
+                  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    <button
+                      onClick={() =>
+                        setFilters((prev: any) => ({
+                          ...prev,
+                          bedrooms: "",
+                        }))
+                      }
+                      className={`flex items-center justify-between h-10 min-w-24 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 ${
+                        !filters.bedrooms
+                          ? "bg-slate-900 border-slate-900 text-white shadow-md"
+                          : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="mr-2">ทั้งหมด</span>
+                      {filterMetadata.length > 0 && (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                          <span
+                            className={`text-[9px] px-1.5 py-0.5 rounded-md ${
+                              !filters.bedrooms ? "bg-white/20" : "bg-slate-100"
+                            }`}
+                          >
+                            {filterMetadata.length}
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                    {["1", "2", "3", "4+"].map((val) => {
+                      const countKey = val === "4+" ? "4" : val;
+                      const count = bedroomCounts[countKey] || 0;
+                      const isActive = filters.bedrooms === val;
+                      const isAvailable = count > 0;
+                      return (
+                        <button
+                          key={val}
+                          disabled={!isAvailable}
+                          onClick={() =>
+                            setFilters((prev: any) => ({
+                              ...prev,
+                              bedrooms: val,
+                            }))
+                          }
+                          className={`flex items-center justify-between h-10 min-w-16 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 ${
+                            isActive
+                              ? "bg-blue-600 border-blue-600 text-white shadow-md font-bold"
+                              : isAvailable
+                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                                : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
+                          }`}
+                        >
+                          <span className="mr-2">{val}</span>
+                          {isAvailable && (
+                            <div className="flex items-center gap-1 shrink-0">
+                              <span className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                              <span
+                                className={`text-[8px] px-1 py-0.5 rounded-md ${
+                                  isActive ? "bg-white/20" : "bg-slate-100"
+                                }`}
+                              >
+                                {count}
+                              </span>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    ห้องน้ำ
+                  </span>
+                  <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    <button
+                      onClick={() =>
+                        setFilters((prev: any) => ({
+                          ...prev,
+                          bathrooms: "",
+                        }))
+                      }
+                      className={`flex items-center justify-between h-10 min-w-24 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 ${
+                        !filters.bathrooms
+                          ? "bg-slate-900 border-slate-900 text-white shadow-md"
+                          : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                      }`}
+                    >
+                      <span className="mr-2">ทั้งหมด</span>
+                      {filterMetadata.length > 0 && (
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                          <span
+                            className={`text-[9px] px-1.5 py-0.5 rounded-md ${
+                              !filters.bathrooms
+                                ? "bg-white/20"
+                                : "bg-slate-100"
+                            }`}
+                          >
+                            {filterMetadata.length}
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                    {["1", "2", "3", "4+"].map((val) => {
+                      const countKey = val === "4+" ? "4" : val;
+                      const count = bathroomCounts[countKey] || 0;
+                      const isActive = filters.bathrooms === val;
+                      const isAvailable = count > 0;
+                      return (
+                        <button
+                          key={val}
+                          disabled={!isAvailable}
+                          onClick={() =>
+                            setFilters((prev: any) => ({
+                              ...prev,
+                              bathrooms: val,
+                            }))
+                          }
+                          className={`flex items-center justify-between h-10 min-w-16 px-3 rounded-xl border-2 transition-all font-bold text-xs shrink-0 ${
+                            isActive
+                              ? "bg-blue-600 border-blue-600 text-white shadow-md font-bold"
+                              : isAvailable
+                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                                : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
+                          }`}
+                        >
+                          <span className="mr-2">{val}</span>
+                          {isAvailable && (
+                            <div className="flex items-center gap-1 shrink-0">
+                              <span className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                              <span
+                                className={`text-[8px] px-1 py-0.5 rounded-md ${
+                                  isActive ? "bg-white/20" : "bg-slate-100"
+                                }`}
+                              >
+                                {count}
+                              </span>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="space-y-3 pt-2">
+                  <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                    ความต้องการพิเศษ
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      {
+                        id: "nearTransit",
+                        label: "ใกล้รถไฟฟ้า",
+                        icon: "🚈",
+                      },
+                      {
+                        id: "petFriendly",
+                        label: "เลี้ยงสัตว์ได้",
+                        icon: "🐾",
+                      },
+                      {
+                        id: "fullyFurnished",
+                        label: "ตกแต่งครบ",
+                        icon: "🛋️",
+                      },
+                    ].map((item) => {
+                      const isActive =
+                        filters[item.id as keyof Filters] === "true";
+                      const count =
+                        amenityCounts[item.id as keyof typeof amenityCounts] ||
+                        0;
+                      const isAvailable = count > 0;
+
+                      return (
+                        <button
+                          key={item.id}
+                          disabled={!isAvailable}
+                          onClick={() =>
+                            setFilters((prev: any) => ({
+                              ...prev,
+                              [item.id]: isActive ? "" : "true",
+                            }))
+                          }
+                          className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all font-bold text-xs min-w-[140px] ${
+                            isActive
+                              ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                              : isAvailable
+                                ? "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                                : "bg-slate-50 border-slate-50 text-slate-300 cursor-not-allowed"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span>{item.icon}</span>
+                            <span className="truncate">{item.label}</span>
+                          </div>
+                          {isAvailable && (
+                            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                              <span
+                                className={`text-[10px] px-1.5 py-0.5 rounded-md ${
+                                  isActive ? "bg-white/20" : "bg-slate-100"
+                                }`}
+                              >
+                                {count}
+                              </span>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+
+          {/* Location Accordion */}
+          <AccordionItem
+            value="location"
+            className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
+          >
+            <AccordionTrigger className="hover:no-underline font-bold py-4 text-slate-900">
+              <div className="flex items-center gap-2">
+                <span className="text-slate-900">จังหวัด & ทำเล</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="pb-6 space-y-6">
+              {/* Provinces */}
+              <div className="space-y-3">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  จังหวัด
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() =>
+                      setFilters((prev: any) => ({
+                        ...prev,
+                        province: "",
+                        popular_area: "",
+                      }))
+                    }
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold border-2 transition-all min-w-[140px] ${
+                      !filters.province
+                        ? "bg-slate-900 border-slate-900 text-white shadow-md"
+                        : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>ทุกจังหวัด</span>
+                    {filterMetadata.length > 0 && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                        <span
+                          className={`text-[10px] px-1.5 py-0.5 rounded-md ${
+                            !filters.province
+                              ? "bg-white/20"
+                              : "bg-slate-100/80"
+                          }`}
+                        >
+                          {filterMetadata.length}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                  {availableProvinces
+                    .slice(0, showAllProvinces ? undefined : ITEMS_LIMIT)
+                    .map((p) => {
+                      const isActive = filters.province === p.name;
+                      return (
+                        <button
+                          key={p.name}
+                          onClick={() =>
+                            setFilters((prev: any) => ({
+                              ...prev,
+                              province: p.name,
+                              popular_area: "",
+                            }))
+                          }
+                          className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold border-2 transition-all min-w-[140px] ${
+                            isActive
+                              ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                              : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span className="truncate mr-2">{p.name}</span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded-md ${
+                                isActive ? "bg-white/20" : "bg-slate-100/80"
+                              }`}
+                            >
+                              {p.count}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  {availableProvinces.length > ITEMS_LIMIT && (
+                    <button
+                      onClick={() => setShowAllProvinces(!showAllProvinces)}
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold border-2 border-dashed border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500 transition-all"
+                    >
+                      {showAllProvinces
+                        ? "แสดงน้อยลง"
+                        : `+${availableProvinces.length - ITEMS_LIMIT} เพิ่มเติม`}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Areas (Districts) */}
+              <div className="space-y-3">
+                <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                  ทำเล
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() =>
+                      setFilters((prev: any) => ({
+                        ...prev,
+                        popular_area: "",
+                      }))
+                    }
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold border-2 transition-all min-w-[140px] ${
+                      !filters.popular_area
+                        ? "bg-slate-900 border-slate-900 text-white shadow-md"
+                        : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                    }`}
+                  >
+                    <span>ทุกย่านทำเล</span>
+                    {filterMetadata.length > 0 && (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                        <span
+                          className={`text-[10px] px-1.5 py-0.5 rounded-md ${
+                            !filters.popular_area
+                              ? "bg-white/20"
+                              : "bg-slate-100/80"
+                          }`}
+                        >
+                          {filterMetadata.length}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                  {availableAreas
+                    .slice(0, showAllAreas ? undefined : ITEMS_LIMIT)
+                    .map((a) => {
+                      const isActive = filters.popular_area === a.name;
+                      return (
+                        <button
+                          key={a.name}
+                          onClick={() =>
+                            setFilters((prev: any) => ({
+                              ...prev,
+                              popular_area: a.name,
+                            }))
+                          }
+                          className={`flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-bold border-2 transition-all min-w-[140px] ${
+                            isActive
+                              ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                              : "bg-white border-slate-100 text-slate-600 hover:border-slate-200 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span className="truncate mr-2">{a.name}</span>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse" />
+                            <span
+                              className={`text-[10px] px-1.5 py-0.5 rounded-md ${
+                                isActive ? "bg-white/20" : "bg-slate-100/80"
+                              }`}
+                            >
+                              {a.count}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  {availableAreas.length > ITEMS_LIMIT && (
+                    <button
+                      onClick={() => setShowAllAreas(!showAllAreas)}
+                      className="px-4 py-2.5 rounded-xl text-xs font-bold border-2 border-dashed border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-500 transition-all"
+                    >
+                      {showAllAreas
+                        ? "แสดงน้อยลง"
+                        : `+${availableAreas.length - ITEMS_LIMIT} เพิ่มเติม`}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+
+        {/* ✨ Sentinel AI Verification Section */}
+        <div className="pt-2 px-1">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block px-1">
+            Sentinel AI Status
+          </label>
+          <button
+            onClick={() =>
+              setFilters((prev: any) => ({
+                ...prev,
+                needsAiReview: prev.needsAiReview === "true" ? "" : "true",
+              }))
+            }
+            className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all group ${
+              filters.needsAiReview === "true"
+                ? "bg-indigo-50 border-indigo-200 shadow-sm"
+                : "bg-white border-slate-100 hover:border-slate-200 shadow-xs"
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={`p-2 rounded-xl transition-all duration-300 ${
+                  filters.needsAiReview === "true"
+                    ? "bg-indigo-600 text-white rotate-12 scale-110 shadow-lg shadow-indigo-200"
+                    : "bg-slate-100 text-slate-400"
+                }`}
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </div>
+              <div className="text-left">
+                <p
+                  className={`text-sm font-bold ${
+                    filters.needsAiReview === "true"
+                      ? "text-indigo-900"
+                      : "text-slate-700"
+                  }`}
+                >
+                  ✨ ตรวจร่าง AI
+                </p>
+                <p className="text-[10px] text-slate-400 font-medium leading-tight">
+                  แสดงเฉพาะรายการที่ AI ช่วยสรุปเนื้อหาให้ (รอคุณตรวจสอบ)
+                </p>
+              </div>
+            </div>
+            {amenityCounts.needsAiReview > 0 && (
+              <span
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                  filters.needsAiReview === "true"
+                    ? "bg-indigo-600 text-white ring-2 ring-indigo-200"
+                    : "bg-slate-100 text-slate-600"
+                }`}
+              >
+                {amenityCounts.needsAiReview}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
     </ResponsiveDialog>
   );
 }

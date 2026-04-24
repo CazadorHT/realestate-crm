@@ -166,7 +166,7 @@ export function LeadActivityForm({
         <div className="text-sm font-medium">เลือกทรัพย์ที่ต้องการติดต่อ</div>
         <PropertyCombobox
           value={form.watch("property_id")}
-          onChange={(val) => form.setValue("property_id", val)}
+          onChangeAction={(val) => form.setValue("property_id", val)}
           initialProperty={initialProperty}
           tenantId={tenantId}
         />

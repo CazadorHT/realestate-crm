@@ -116,7 +116,7 @@ export function DealForm({
                 <FormControl>
                   <PropertyCombobox
                     value={field.value}
-                    onChange={(id) => field.onChange(id)}
+                    onChangeAction={(id) => field.onChange(id)}
                     placeholder="ค้นหาตามชื่อทรัพย์ ย่าน หรือรหัส..."
                     className="max-w-full sm:max-w-2xl"
                       initialProperty={(() => {
@@ -258,7 +258,7 @@ export function DealForm({
                   <FormControl>
                     <LeadCombobox
                       value={field.value}
-                      onChange={(id) => field.onChange(id)}
+                      onChangeAction={(id) => field.onChange(id)}
                       placeholder="ค้นหาลีดด้วยชื่อ เบอร์โทร หรือไอดี..."
                     />
                   </FormControl>

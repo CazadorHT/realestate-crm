@@ -27,7 +27,7 @@ export type LeadPickItem = {
 
 type Props = {
   value: string | null;
-  onChange: (value: string | null, picked?: LeadPickItem | null) => void;
+  onChangeAction: (value: string | null, picked?: LeadPickItem | null) => void;
   placeholder?: string;
   className?: string;
   initialLead?: LeadPickItem | null;
@@ -38,7 +38,7 @@ type Props = {
 
 export function LeadCombobox({
   value,
-  onChange,
+  onChangeAction,
   placeholder = "เลือกลูกค้า...",
   className,
   initialLead,
@@ -98,13 +98,13 @@ export function LeadCombobox({
   }, [open, tenantId]);
 
   const handleSelect = (item: LeadPickItem) => {
-    onChange(item.id, item);
+    onChangeAction(item.id, item);
     setOpen(false);
   };
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onChange(null, null);
+    onChangeAction(null, null);
   };
 
   // --- Trigger Button ---

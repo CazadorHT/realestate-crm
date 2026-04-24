@@ -172,7 +172,7 @@ export function CreateEventDialog({
                 <LeadCombobox 
                   name="leadId"
                   value={leadId}
-                  onChange={setLeadId}
+                  onChangeAction={setLeadId}
                   required
                 />
               </div>
@@ -184,7 +184,7 @@ export function CreateEventDialog({
                 <PropertyCombobox
                   name="propertyId"
                   value={propertyId === "none" ? null : propertyId}
-                  onChange={(val) => setPropertyId(val || "none")}
+                  onChangeAction={(val) => setPropertyId(val || "none")}
                 />
               </div>
             </div>

@@ -10,7 +10,7 @@ export const depositLeadSchema = z.object({
 
 export const publicPropertyFilterSchema = z.object({
   q: z.string().optional(),
-  listingType: z.enum(["SALE", "RENT"]).optional(),
+  listingType: z.enum(["SALE", "RENT", "SALE_AND_RENT", "ALL"]).optional(),
   propertyType: z.string().optional(),
   minPrice: z.coerce.number().optional(),
   maxPrice: z.coerce.number().optional(),

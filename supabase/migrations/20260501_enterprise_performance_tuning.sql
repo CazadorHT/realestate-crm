@@ -155,6 +155,7 @@ BEGIN
       SELECT jsonb_build_object(
         'SALE', (SELECT count(*) FROM filtered_props WHERE listing_type IN ('SALE', 'SALE_AND_RENT')),
         'RENT', (SELECT count(*) FROM filtered_props WHERE listing_type IN ('RENT', 'SALE_AND_RENT')),
+        'SALE_AND_RENT', (SELECT count(*) FROM filtered_props WHERE listing_type = 'SALE_AND_RENT'),
         'ALL', (SELECT count(*) FROM filtered_props)
       )
     ),

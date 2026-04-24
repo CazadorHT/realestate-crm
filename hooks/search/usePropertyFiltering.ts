@@ -69,6 +69,8 @@ export function usePropertyFiltering(
         if (p.listing_type !== "SALE" && p.listing_type !== "SALE_AND_RENT") return false;
       } else if (listingType === "RENT") {
         if (p.listing_type !== "RENT" && p.listing_type !== "SALE_AND_RENT") return false;
+      } else if (listingType === "SALE_AND_RENT") {
+        if (p.listing_type !== "SALE_AND_RENT") return false;
       }
     }
 
@@ -157,6 +159,7 @@ export function usePropertyFiltering(
         listingTypeCounts.ALL++;
         if (p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT") listingTypeCounts.SALE++;
         if (p.listing_type === "RENT" || p.listing_type === "SALE_AND_RENT") listingTypeCounts.RENT++;
+        if (p.listing_type === "SALE_AND_RENT") listingTypeCounts.SALE_AND_RENT++;
       }
 
       // Quick Filters Facets

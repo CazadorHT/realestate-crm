@@ -191,6 +191,8 @@ export const getPublicProperties = cache(
         query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
       else if (options.listingType === "RENT")
         query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+      else if (options.listingType === "SALE_AND_RENT")
+        query = query.eq("listing_type", "SALE_AND_RENT");
     }
 
     // Price Filtering (Server-Side)

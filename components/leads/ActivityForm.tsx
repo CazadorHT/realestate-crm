@@ -44,7 +44,7 @@ export function ActivityForm({
 
       <PropertyCombobox
         value={(form.watch("property_id") as any) ?? null}
-        onChange={(val) => form.setValue("property_id", val as any)}
+        onChangeAction={(val) => form.setValue("property_id", val as any)}
       />
     </div>
       <Textarea placeholder="รายละเอียดกิจกรรม..." {...form.register("note")} />
