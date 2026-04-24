@@ -6,7 +6,6 @@ import { logAudit } from "@/lib/audit";
 import { Tables, TablesInsert, TablesUpdate } from "@/lib/database.types";
 import { validateManagerRole, validateTeamName } from "../utils";
 
-import { createAdminClient } from "@/lib/supabase/admin";
 
 export type TeamWithManager = Tables<"teams"> & {
   manager?: {
@@ -29,11 +28,10 @@ export async function getTeamsAction() {
     const ctx = await requireAuthContext();
     const tId = ctx.tenantId;
 
-    // ใช้ Admin Client เพื่อดึงข้อมูลรายชื่อทีมให้ครบถ้วน 100% (Bypass RLS)
-    // เนื่องจาก RLS ของ Teams อาจจะไม่ Sync กับ Metadata ในบางกรณี
-    const adminSupa = createAdminClient();
+    // Use safe user client from context to respect RLS
+    const { supabase } = ctx;
 
-    let query = adminSupa
+    let query = supabase
       .from("teams")
       .select(`
         id,
@@ -94,24 +92,24 @@ export async function getTeamManagementStatsAction() {
   try {
     const ctx = await requireAuthContext();
     const tId = ctx.tenantId;
-    const adminSupa = createAdminClient();
+    const { supabase } = ctx;
 
     // 1. จำนวนทีม
-    let teamsQuery = adminSupa.from("teams").select("id", { count: "exact", head: true });
+    let teamsQuery = supabase.from("teams").select("id", { count: "exact", head: true });
     if (tId && tId !== "ALL") teamsQuery = teamsQuery.eq("tenant_id", tId);
     const { count: teamCount } = await teamsQuery;
 
     // 2. จำนวนเอเจนท์ที่มีสังกัดทีม (ในสาขานี้)
-    let agentsQuery = adminSupa.from("profiles").select("id", { count: "exact", head: true }).not("team_id", "is", null);
+    let agentsQuery = supabase.from("profiles").select("id", { count: "exact", head: true }).not("team_id", "is", null);
     if (tId && tId !== "ALL") {
-        const { data: branchTeams } = await adminSupa.from("teams").select("id").eq("tenant_id", tId);
+        const { data: branchTeams } = await supabase.from("teams").select("id").eq("tenant_id", tId);
         const teamIds = branchTeams?.map(t => t.id) || [];
         agentsQuery = agentsQuery.in("team_id", teamIds);
     }
     const { count: agentCount } = await agentsQuery;
 
     // 3. จำนวน Lead ในระบบ (Scoped)
-    let leadsQuery = adminSupa.from("leads").select("id", { count: "exact", head: true });
+    let leadsQuery = supabase.from("leads").select("id", { count: "exact", head: true });
     if (tId && tId !== "ALL") leadsQuery = leadsQuery.eq("tenant_id", tId);
     const { count: leadCount } = await leadsQuery;
 
@@ -134,10 +132,10 @@ export async function getTeamManagementStatsAction() {
 export async function getTeamMembersAction(teamId: string) {
   try {
     const ctx = await requireAuthContext();
-    const adminSupa = createAdminClient();
+    const { supabase } = ctx;
 
     // 0. ดึงข้อมูลทีมเพื่อหา Manager ID
-    const { data: teamInfo } = await adminSupa
+    const { data: teamInfo } = await supabase
       .from("teams")
       .select("manager_id")
       .eq("id", teamId)
@@ -147,7 +145,7 @@ export async function getTeamMembersAction(teamId: string) {
 
     // 1. ดึงรายชื่อสมาชิกในทีม (Profiles where team_id = teamId) 
     // และรวมตัวหัวหน้าทีมเข้าไปด้วย (Profiles where id = leaderId)
-    const query = adminSupa
+    const query = supabase
       .from("profiles")
       .select(`
         id,
@@ -176,7 +174,7 @@ export async function getTeamMembersAction(teamId: string) {
 
     // 2. ดึงจำนวน Lead ที่แต่ละคนถือครอง (ใช้ Promise.all เพื่อความเร็ว)
     const formatted = await Promise.all(profiles.map(async (profile) => {
-      const { count } = await adminSupa
+      const { count } = await supabase
         .from("leads")
         .select("id", { count: "exact", head: true })
         .eq("assigned_to", profile.id);
@@ -204,7 +202,7 @@ export async function updateUserTeamAction(
 ) {
   try {
     const ctx = await requireAuthContext();
-    const adminSupa = createAdminClient();
+    const { supabase } = ctx;
 
     // 1) ต้องเป็น ADMIN เท่านั้นที่จัดการทีมได้ (อ้างอิงจาก UserRole type)
     if (ctx.role !== "ADMIN") {
@@ -213,7 +211,7 @@ export async function updateUserTeamAction(
 
     // 2) ตรวจสอบว่าทีมมีอยู่จริง (ในกรณีที่ย้ายเข้าทีม)
     if (teamId) {
-      const { data: team } = await adminSupa
+      const { data: team } = await supabase
         .from("teams")
         .select("id")
         .eq("id", teamId)
@@ -222,8 +220,8 @@ export async function updateUserTeamAction(
       if (!team) return { success: false, message: "ไม่พบทีมที่ระบุ" };
     }
 
-    // 3) อัปเดตข้อมูลผ่าน Admin Client เพื่อความชัวร์ (RLS Bypass)
-    const { error } = await adminSupa
+    // 3) อัปเดตข้อมูลผ่าน Safe Client (RLS Protected)
+    const { error } = await supabase
       .from("profiles")
       .update({ team_id: teamId })
       .eq("id", userId);

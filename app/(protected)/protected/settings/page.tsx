@@ -36,7 +36,6 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FaLine, FaTiktok } from "react-icons/fa";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { CheckCircle2, ChevronRight, Zap, Database } from "lucide-react";
 import { getLineBotInfo } from "@/lib/line";
 import { FaFacebook, FaMeta, FaUser } from "react-icons/fa6";
@@ -62,7 +61,6 @@ export default async function SettingsPage({
   const resolvedParams = await searchParams;
   await cookies(); // Force dynamic rendering
   const activeTab = (resolvedParams?.tab as string) || "general";
-  const supabase = createAdminClient();
 
   const allSettings = await getSiteSettings();
   const summary = await getSettingsSummaryAction();

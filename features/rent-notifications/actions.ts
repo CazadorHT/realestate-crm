@@ -1,6 +1,6 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import {
   rentNotificationRuleSchema,
@@ -15,7 +15,7 @@ export async function createRentNotificationRule(
 ) {
   try {
     const parsed = rentNotificationRuleSchema.parse(data);
-    const supabase = createAdminClient();
+    const supabase = await createClient();
 
     const { error } = await supabase.from("rent_notification_rules").insert({
       property_id: parsed.property_id,
@@ -42,7 +42,7 @@ export async function updateRentNotificationRule(
   tenantId?: string | null,
 ) {
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
     let query = supabase
       .from("rent_notification_rules")
       .update(data)
@@ -65,7 +65,7 @@ export async function updateRentNotificationRule(
 
 export async function deleteRentNotificationRule(id: string, tenantId?: string | null) {
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
     let query = supabase
       .from("rent_notification_rules")
       .delete()
@@ -96,7 +96,7 @@ export async function toggleRentNotificationRule(
 
 export async function deleteRentNotificationRules(ids: string[], tenantId?: string | null) {
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
     let query = supabase
       .from("rent_notification_rules")
       .delete()
@@ -119,7 +119,7 @@ export async function deleteRentNotificationRules(ids: string[], tenantId?: stri
 
 export async function toggleRentNotificationRules(ids: string[], isActive: boolean, tenantId?: string | null) {
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
     let query = supabase
       .from("rent_notification_rules")
       .update({ is_active: isActive })
@@ -142,7 +142,7 @@ export async function toggleRentNotificationRules(ids: string[], isActive: boole
 
 export async function testSendRentNotification(ruleId: string, tenantId?: string | null) {
   try {
-    const supabase = createAdminClient();
+    const supabase = await createClient();
     
     // 1. Fetch Rule with Security
     let ruleQuery = supabase

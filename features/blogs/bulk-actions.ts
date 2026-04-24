@@ -3,7 +3,6 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 export type BulkDeleteResult = {
   success: boolean;
@@ -29,10 +28,8 @@ export async function bulkDeleteBlogsAction(
       };
     }
 
-    // Use admin client for deletion (may have RLS)
-    const adminClient = createAdminClient();
-
-    const { error, count } = await adminClient
+    // Use safe user client to respect RLS
+    const { error, count } = await supabase
       .from("blog_posts")
       .delete({ count: "exact" })
       .in("id", ids);
