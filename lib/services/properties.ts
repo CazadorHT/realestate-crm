@@ -259,7 +259,7 @@ export const getPublicProperties = cache(
         p_listing_type: options.listingType || null
       };
 
-      const { data: facetData } = await supabase.rpc('get_public_property_facets', rpcParams);
+      const { data: facetData } = await supabase.rpc('get_public_property_facets_v2', rpcParams);
       facets = (facetData as unknown) as PropertyFacets | null;
     }
 

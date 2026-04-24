@@ -62,7 +62,7 @@ export async function getAnalyticsStats(
 
 
     // 3. New Enterprise RPC: Get consolidated trends, distributions, and metrics
-    const { data, error: summaryError } = await supabase.rpc("get_analytics_summary_v2", {
+    const { data, error: summaryError } = await supabase.rpc("get_analytics_summary_v3", {
       p_tenant_id: (tenantId === "ALL" ? null : tenantId) as string,
       p_days: days || 30,
       p_listing_type: (listingType || null) as string,

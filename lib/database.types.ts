@@ -3605,6 +3605,16 @@ export type Database = {
         }
         Returns: Json
       }
+      get_analytics_summary_v3: {
+        Args: {
+          p_area?: string
+          p_days?: number
+          p_listing_type?: string
+          p_property_type?: string
+          p_tenant_id: string
+        }
+        Returns: Json
+      }
       get_documents_stats: {
         Args: {
           p_owner_ids?: string[]
@@ -3651,6 +3661,15 @@ export type Database = {
         }[]
       }
       get_public_property_facets: {
+        Args: {
+          p_listing_type?: string
+          p_property_type?: string
+          p_province?: string
+          p_q?: string
+        }
+        Returns: Json
+      }
+      get_public_property_facets_v2: {
         Args: {
           p_listing_type?: string
           p_property_type?: string
