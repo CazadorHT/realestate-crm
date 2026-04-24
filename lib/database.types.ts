@@ -1289,6 +1289,7 @@ export type Database = {
         Row: {
           ai_score: number | null
           ai_status_label: string | null
+          ai_summary_content: string | null
           allow_airbnb: boolean | null
           assigned_to: string | null
           budget_max: number | null
@@ -1337,6 +1338,7 @@ export type Database = {
         Insert: {
           ai_score?: number | null
           ai_status_label?: string | null
+          ai_summary_content?: string | null
           allow_airbnb?: boolean | null
           assigned_to?: string | null
           budget_max?: number | null
@@ -1385,6 +1387,7 @@ export type Database = {
         Update: {
           ai_score?: number | null
           ai_status_label?: string | null
+          ai_summary_content?: string | null
           allow_airbnb?: boolean | null
           assigned_to?: string | null
           budget_max?: number | null

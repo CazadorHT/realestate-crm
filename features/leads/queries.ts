@@ -196,7 +196,7 @@ export async function getLeadWithActivitiesQuery(
     let query = supabase
       .from("leads")
         .select(`
-                id, full_name, email, phone, stage, source, budget, budget_max, rental_budget, rental_budget_max, property_id, property_type_preference, location_preference, note, created_at, updated_at, tenant_id, created_by, assigned_to,
+                id, full_name, email, phone, stage, source, budget, budget_max, rental_budget, rental_budget_max, property_id, property_type_preference, location_preference, note, ai_summary_content, created_at, updated_at, tenant_id, created_by, assigned_to,
                 lead_activities (
                 id, lead_id, property_id, activity_type, note, created_by, created_at,
                 properties ( id, title )

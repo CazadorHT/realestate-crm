@@ -52,6 +52,15 @@ export async function generateLeadSummary(leadId: string): Promise<string> {
 
   try {
     const result = await generateText(prompt, modelName);
+    const summaryText = result.text;
+
+    // 🛡️ Implement "Analyze Once, Read Many" - Save to DB for Instant Render
+    const { createClient } = await import("@/lib/supabase/server");
+    const supabase = await createClient();
+    await supabase
+      .from("leads")
+      .update({ ai_summary_content: summaryText })
+      .eq("id", leadId);
 
     await logAiUsage({
       model: modelName,
@@ -61,7 +70,7 @@ export async function generateLeadSummary(leadId: string): Promise<string> {
       completionTokens: result.usage?.completionTokens,
     });
 
-    return result.text;
+    return summaryText;
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "สรุปข้อมูลด้วย AI ผิดพลาด";
     console.error("AI Lead Summary Error:", error);

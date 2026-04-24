@@ -9,10 +9,11 @@ import { toast } from "sonner";
 
 interface LeadSummaryCardProps {
   leadId: string;
+  initialSummary?: string | null;
 }
 
-export function LeadSummaryCard({ leadId }: LeadSummaryCardProps) {
-  const [summary, setSummary] = useState<string | null>(null);
+export function LeadSummaryCard({ leadId, initialSummary }: LeadSummaryCardProps) {
+  const [summary, setSummary] = useState<string | null>(initialSummary || null);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerate = async () => {

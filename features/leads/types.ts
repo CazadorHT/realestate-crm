@@ -30,6 +30,7 @@ export type LeadWithJoins = Omit<LeadRow, "preferences"> & {
     name: string;
   } | null;
   preferences: LeadPreferences | null;
+  ai_summary_content?: string | null;
 };
 
 // ใช้สำหรับแสดง leads พร้อมกับ activities

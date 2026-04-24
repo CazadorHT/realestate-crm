@@ -171,7 +171,10 @@ export default async function LeadDetailPage({
           />
         </div>
         <div className="lg:col-span-2">
-          <LeadSummaryCard leadId={id} />
+          <LeadSummaryCard 
+            leadId={id} 
+            initialSummary={lead.ai_summary_content}
+          />
         </div>
       </div>
 
@@ -179,6 +182,7 @@ export default async function LeadDetailPage({
       <LeadSmartMatch 
         leadId={id} 
         leadName={lead.full_name ?? "ลูกค้า"} 
+        initialSummary={lead.ai_summary_content ?? undefined}
       />
 
       {/* Top Row - Contact & Requirements (2 columns) */}
