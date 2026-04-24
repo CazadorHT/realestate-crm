@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 export type RecommendedProperty = {
   id: string;
   title: string;
+  title_en?: string | null;
+  title_cn?: string | null;
   property_type: string | null;
   listing_type: string | null;
   province: string | null;
@@ -39,6 +41,8 @@ export async function getRecommendedProperties(
       `
       id,
       title,
+      title_en,
+      title_cn,
       property_type,
       listing_type,
       province,
@@ -89,7 +93,7 @@ export async function getRecommendedProperties(
   }
 
   interface RecommendedRow {
-    id: string; title: string; property_type: string | null; listing_type: string | null;
+    id: string; title: string; title_en: string | null; title_cn: string | null; property_type: string | null; listing_type: string | null;
     province: string | null; popular_area: string | null; price: number | null;
     original_price: number | null; rental_price: number | null;
     original_rental_price: number | null; price_per_sqm: number | null;
@@ -110,6 +114,8 @@ export async function getRecommendedProperties(
     return {
       id: prop.id,
       title: prop.title,
+      title_en: prop.title_en,
+      title_cn: prop.title_cn,
       property_type: prop.property_type,
       listing_type: prop.listing_type,
       province: prop.province,

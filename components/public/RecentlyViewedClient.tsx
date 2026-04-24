@@ -124,6 +124,8 @@ function convertToRecentProperty(
   return {
     id: prop.id,
     title: prop.title,
+    title_en: prop.title_en,
+    title_cn: prop.title_cn,
     image_url: prop.image_url,
     price: prop.price,
     original_price: prop.original_price,
@@ -571,7 +573,7 @@ export function RecentlyViewedClient({
                 itemScope
                 itemType="https://schema.org/RealEstateListing"
               >
-                <meta itemProp="name" content={item.title} />
+                <meta itemProp="name" content={getLocaleValue(item, "title", language)} />
                 <meta
                   itemProp="url"
                   content={
@@ -585,8 +587,8 @@ export function RecentlyViewedClient({
                 )}
                 <meta
                   itemProp="description"
-                  content={`${t("common.sale")}/${t("common.rent")} ${item.title} ${item.popular_area || ""} ${
-                    item.province || ""
+                  content={`${t("common.sale")}/${t("common.rent")} ${getLocaleValue(item, "title", language)} ${getLocaleValue(item, "popular_area", language) || ""} ${
+                    getProvinceName(item.province || "", language) || ""
                   } ${item.price_text}`}
                 />
                 {/* Image Section */}
@@ -594,7 +596,7 @@ export function RecentlyViewedClient({
                   {item.image_url ? (
                     <Image
                       src={item.image_url}
-                      alt={item.title}
+                      alt={getLocaleValue(item, "title", language)}
                       fill
                       sizes="300px"
                       className="object-cover  group-hover:scale-110 transition-transform duration-700!"
@@ -670,7 +672,7 @@ export function RecentlyViewedClient({
                   <div className="absolute top-3 right-3 z-10">
                     <FavoriteButton
                       propertyId={item.id}
-                      propertyTitle={item.title}
+                      propertyTitle={getLocaleValue(item, "title", language)}
                       className="bg-white/70 backdrop-blur-sm rounded-full p-2 hover:bg-white/80"
                     />
                   </div>
@@ -679,7 +681,7 @@ export function RecentlyViewedClient({
                 {/* Content Section */}
                 <div className="p-4 md:p-5">
                   <h3 className="font-bold text-slate-900 truncate mb-2 group-hover:text-blue-600 transition-colors">
-                    {item.title}
+                    {getLocaleValue(item, "title", language)}
                   </h3>
 
                   {/* Property Type & Listing Type Badges */}

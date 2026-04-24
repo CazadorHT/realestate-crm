@@ -204,11 +204,10 @@ export function PropertyTypeGrid({
         {/* SEO-Optimized Section Header */}
         <div className="text-center mb-10" data-aos="fade-up">
           <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
-            {t("nav.properties")}{" "}
+            {t("home.property_types.title")}{" "}
             <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
               {t("home.property_types.description")}
-            </span>{" "}
-            {language === "th" ? "" : t("common.all")}
+            </span>
           </h2>
           <p
             className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto"
@@ -217,7 +216,7 @@ export function PropertyTypeGrid({
           >
             {t("property_listing.title")}{" "}
             <span className="font-semibold text-blue-600">
-              {language === "th" ? "" : "Buy · Sell · Rent"}
+              {t("common.rent_buy")}
             </span>{" "}
             {t("common.verified_100")}
           </p>

@@ -257,17 +257,17 @@
 
     "stats": {
       "properties_label": "优质房源",
-      "properties_sub": "Verified Properties",
+      "properties_sub": "经过核实的房源",
       "customers_label": "已服务家庭",
-      "customers_sub": "Happy Customers",
+      "customers_sub": "满意的客户",
       "satisfaction_label": "客户满意度",
-      "satisfaction_sub": "Success Rate",
+      "satisfaction_sub": "成功率",
       "support_label": "24/7 专业支持",
-      "support_sub": "Premium Support"
+      "support_sub": "优质服务"
     },
     "partners": {
       "title": "领先房地产合作伙伴",
-      "subtitle": "Trusted Marketing Network",
+      "subtitle": "值得信赖的营销网络",
       "banks": "领先银行",
       "developers": "开发商",
       "description": "房产合作伙伴、银行及领先开发商网络。",
