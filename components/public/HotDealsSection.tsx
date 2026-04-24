@@ -63,7 +63,8 @@ export function HotDealsSection() {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("Failed to fetch");
-        const data = await res.json();
+        const json = await res.json();
+        const data = json.properties || [];
 
         if (Array.isArray(data) && data.length > 0) {
           setProperties(data);
