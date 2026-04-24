@@ -80,72 +80,70 @@ export default async function PublicPropertyDetailPage(props: {
       <PropertyHeader property={data} features={features as any} />
 
       <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8 mt-4 lg:mt-8">
-        <div className="max-w-screen-2xl mx-auto">
-          {/* 2. Gallery */}
-          <section className="mb-6 md:mb-10">
-            <PropertyGallery
-              images={data.images as any}
-              title={getLocaleValue(data, "title", language)}
+        {/* 2. Gallery */}
+        <section className="mb-6 md:mb-10">
+          <PropertyGallery
+            images={data.images as any}
+            title={getLocaleValue(data, "title", language)}
+            propertyId={data.id}
+            imageAlt={`${getLocaleValue(data, "title", language)} ${t("seo.in")} ${data.district || ""}, ${data.province || ""}`}
+            isHot={!!data.is_hot_deal}
+            verified={!!data.verified}
+            petFriendly={!!data.is_pet_friendly}
+          />
+        </section>
+
+        <RecentPropertyTracker property={{ ...data, features: features as any, image_url: data.images.find(i => i.is_cover)?.image_url || null } as any} />
+
+        {/* 3. Main Grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-6 md:gap-10 lg:gap-16 mb-6 md:mb-10">
+          {/* Left Content */}
+          <div className="space-y-6 md:space-y-10">
+            <PropertySpecs {...data} type={data.property_type} parking={data.parking_slots} sizeSqm={data.size_sqm} landSize={data.land_size_sqwah} />
+            <PropertyBadgesSection property={data} />
+            <PropertyDescription property={data} />
+            <NearbyPlaces
               propertyId={data.id}
-              imageAlt={`${getLocaleValue(data, "title", language)} ${t("seo.in")} ${data.district || ""}, ${data.province || ""}`}
-              isHot={!!data.is_hot_deal}
-              verified={!!data.verified}
-              petFriendly={!!data.is_pet_friendly}
+              propertyTitle={data.title}
+              location={data.popular_area || undefined}
+              data={(data.nearby_places as any) || []}
+              transits={(data.nearby_transits as any) || []}
             />
-          </section>
-
-          <RecentPropertyTracker property={{ ...data, features: features as any, image_url: data.images.find(i => i.is_cover)?.image_url || null } as any} />
-
-          {/* 3. Main Grid */}
-          <div className="grid grid-cols-1 xl:grid-cols-[2fr_1fr] gap-6 md:gap-10 lg:gap-16 mb-6 md:mb-10">
-            {/* Left Content */}
-            <div className="space-y-6 md:space-y-10">
-              <PropertySpecs {...data} type={data.property_type} parking={data.parking_slots} sizeSqm={data.size_sqm} landSize={data.land_size_sqwah} />
-              <PropertyBadgesSection property={data} />
-              <PropertyDescription property={data} />
-              <NearbyPlaces
-                propertyId={data.id}
-                propertyTitle={data.title}
-                location={data.popular_area || undefined}
-                data={(data.nearby_places as any) || []}
-                transits={(data.nearby_transits as any) || []}
-              />
-              <hr className="border-slate-100" />
-              <PropertyAmenities features={features as any} />
-              <hr className="border-slate-100" />
-              <Suspense fallback={<MapSkeleton />}>
-                <PropertyMapSection propertyId={data.id} propertyTitle={data.title} googleMapsLink={data.google_maps_link} language={language as any} />
-              </Suspense>
-            </div>
-
-            {/* Right Sidebar */}
-            <aside className="relative flex flex-col md:flex-row xl:flex-col gap-6 md:items-stretch w-full">
-              <PropertySuitability listingType={data.listing_type || "SALE"} price={data.price} rentalPrice={data.rental_price} propertyType={data.property_type} />
-              <div className="flex-1 xl:flex-none min-w-0 w-full flex flex-col xl:sticky xl:top-24 self-start">
-                <AgentSidebar
-                  agentName={agent?.full_name}
-                  agentImage={getPublicAvatarUrl(agent?.avatar_url || "")}
-                  agentPhone={agent?.phone}
-                  agentLine={agent?.line_id}
-                  isVerified={true}
-                  propertyId={data.id}
-                  propertyTitle={data.title}
-                  property={data}
-                  shareUrl={shareUrl}
-                />
-              </div>
-            </aside>
+            <hr className="border-slate-100" />
+            <PropertyAmenities features={features as any} />
+            <hr className="border-slate-100" />
+            <Suspense fallback={<MapSkeleton />}>
+              <PropertyMapSection propertyId={data.id} propertyTitle={data.title} googleMapsLink={data.google_maps_link} language={language as any} />
+            </Suspense>
           </div>
 
-          <Suspense fallback={<SimilarPropertiesSkeleton />}>
-            <SimilarPropertiesSection
-              currentPropertyId={data.id}
-              propertyType={data.property_type}
-              province={data.province || undefined}
-              compareData={{ price: data.listing_type === "RENT" ? data.rental_price : data.price, size: data.size_sqm, date: data.created_at }}
-            />
-          </Suspense>
+          {/* Right Sidebar */}
+          <aside className="relative flex flex-col md:flex-row xl:flex-col gap-6 md:items-stretch w-full">
+            <PropertySuitability listingType={data.listing_type || "SALE"} price={data.price} rentalPrice={data.rental_price} propertyType={data.property_type} />
+            <div className="flex-1 xl:flex-none min-w-0 w-full flex flex-col xl:sticky xl:top-24 self-start">
+              <AgentSidebar
+                agentName={agent?.full_name}
+                agentImage={getPublicAvatarUrl(agent?.avatar_url || "")}
+                agentPhone={agent?.phone}
+                agentLine={agent?.line_id}
+                isVerified={true}
+                propertyId={data.id}
+                propertyTitle={data.title}
+                property={data}
+                shareUrl={shareUrl}
+              />
+            </div>
+          </aside>
         </div>
+
+        <Suspense fallback={<SimilarPropertiesSkeleton />}>
+          <SimilarPropertiesSection
+            currentPropertyId={data.id}
+            propertyType={data.property_type}
+            province={data.province || undefined}
+            compareData={{ price: data.listing_type === "RENT" ? data.rental_price : data.price, size: data.size_sqm, date: data.created_at }}
+          />
+        </Suspense>
       </div>
 
       <MobilePropertyActions

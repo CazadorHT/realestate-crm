@@ -459,7 +459,7 @@ export function PropertyHeader({
 
             <div className="flex flex-col  lg:items-start  gap-4 lg:gap-0">
               {/* Property Type */}
-              <div className="flex lg:flex-row flex-col gap-4 w-full justify-between items-end">
+              <div className="flex lg:flex-row flex-col gap-4 w-full justify-between lg:items-end items-start">
                 <div className="space-y-3 grow min-w-0 w-full xl:max-w-[1000px] ">
                   <div className="flex items-center gap-1 md:gap-2 overflow-x-auto no-scrollbar flex-nowrap py-1">
                     <Badge
