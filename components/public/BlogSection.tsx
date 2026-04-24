@@ -27,7 +27,13 @@ export function BlogSection() {
       const supabase = createClient();
       const { data } = await supabase
         .from("blog_posts")
-        .select("*")
+        .select(`
+          id, slug, title, title_en, title_cn, excerpt, excerpt_en, excerpt_cn, cover_image, category, published_at,
+          profiles:author_id (
+            full_name,
+            avatar_url
+          )
+        `)
         .eq("is_published", true)
         .order("published_at", { ascending: false })
         .limit(4);

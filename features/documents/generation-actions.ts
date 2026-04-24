@@ -23,18 +23,20 @@ import { z } from "zod";
 import { mapDbError } from "@/lib/db-error";
 
 // Schema for document additional data (shared overrides)
-const additionalDataSchema = z.object({
-  language: z.enum(["th", "en", "cn"]).optional().default("th"),
-  client_name_override: z.string().optional(),
-  client_email_override: z.string().email().optional().or(z.literal("")),
-  client_line_override: z.string().optional(),
-  payment_period: z.string().optional(),
-  payment_method: z.string().optional(),
-  account_name: z.string().optional(),
-  slip_url: z.string().optional(),
-  reservation_fee: z.string().optional(),
-  booking_amount: z.string().optional(),
-}).passthrough();
+const additionalDataSchema = z
+  .object({
+    language: z.enum(["th", "en", "cn"]).optional().default("th"),
+    client_name_override: z.string().optional(),
+    client_email_override: z.string().email().optional().or(z.literal("")),
+    client_line_override: z.string().optional(),
+    payment_period: z.string().optional(),
+    payment_method: z.string().optional(),
+    account_name: z.string().optional(),
+    slip_url: z.string().optional(),
+    reservation_fee: z.string().optional(),
+    booking_amount: z.string().optional(),
+  })
+  .passthrough();
 
 /**
  * Convert an image URL or Storage path to a Base64 Data URL.
@@ -42,7 +44,9 @@ const additionalDataSchema = z.object({
  */
 async function getImageBase64(
   imageUrl: string,
-  supabase?: ReturnType<typeof createClient> extends Promise<infer T> ? T : never,
+  supabase?: ReturnType<typeof createClient> extends Promise<infer T>
+    ? T
+    : never,
 ): Promise<string> {
   if (!imageUrl) return "";
 
@@ -103,8 +107,10 @@ export async function generateDocumentFromTemplateAction(
 ) {
   try {
     // Validate UUIDs
-    if (!z.string().uuid().safeParse(templateId).success) throw new Error("ID เทมเพลตไม่ถูกต้อง");
-    if (!z.string().uuid().safeParse(ownerId).success) throw new Error("ID ข้อมูลเจ้าของไม่ถูกต้อง");
+    if (!z.string().uuid().safeParse(templateId).success)
+      throw new Error("ID เทมเพลตไม่ถูกต้อง");
+    if (!z.string().uuid().safeParse(ownerId).success)
+      throw new Error("ID ข้อมูลเจ้าของไม่ถูกต้อง");
 
     const { supabase, role, tenantId } = await requireAuthContext();
     assertStaff(role);
@@ -113,7 +119,7 @@ export async function generateDocumentFromTemplateAction(
     // 1. Fetch Template
     const { data: template, error: tError } = await supabase
       .from("contract_templates")
-      .select("*")
+      .select("id, name, type, content, is_active")
       .eq("id", templateId)
       .single();
 
@@ -153,7 +159,7 @@ export async function generateDocumentFromTemplateAction(
     if (ownerType === "LEAD") {
       const { data: lead, error: lError } = await supabase
         .from("leads")
-        .select("*")
+        .select("id, full_name, email, phone, line_id, tenant_id")
         .eq("id", ownerId)
         .single();
       if (lError) throw new Error(mapDbError(lError));
@@ -163,7 +169,7 @@ export async function generateDocumentFromTemplateAction(
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
         .from("properties")
-        .select("*")
+        .select("id, title, title_en, title_cn, price, rental_price, tenant_id")
         .eq("id", ownerId)
         .single();
       if (pError) throw new Error(mapDbError(pError));
@@ -173,7 +179,7 @@ export async function generateDocumentFromTemplateAction(
     } else if (ownerType === "DEAL") {
       const { data: deal, error: dError } = await supabase
         .from("deals")
-        .select("*, lead:leads(*), property:properties(*)")
+        .select("id, deal_type, transaction_date, tenant_id, lead:leads(id, full_name, email, phone, line_id), property:properties(id, title, title_en, title_cn, price, rental_price)")
         .eq("id", ownerId)
         .single();
       if (dError) throw new Error(mapDbError(dError));
@@ -201,14 +207,13 @@ export async function generateDocumentFromTemplateAction(
 
         // Ensure payment_period has a fallback (e.g. from transaction date)
         contextData.deal.payment_period =
-          validData.payment_period ||
-          formatDate(deal.transaction_date, lang);
+          validData.payment_period || formatDate(deal.transaction_date, lang);
 
         // Try to fetch rental contract if it exists for more details
         if (isRent) {
           const { data: contract } = await supabase
             .from("rental_contracts")
-            .select("*")
+            .select("id, deposit_amount, advance_payment_amount, lease_term_months, start_date")
             .eq("deal_id", ownerId)
             .maybeSingle();
 
@@ -232,7 +237,7 @@ export async function generateDocumentFromTemplateAction(
     } else if (ownerType === "RENTAL_CONTRACT") {
       const { data: contract, error: cError } = await supabase
         .from("rental_contracts")
-        .select("*")
+        .select("id, tenant_id, contract_number, start_date, end_date, rent_price, deposit_amount")
         .eq("id", ownerId)
         .single();
       if (cError) throw new Error(mapDbError(cError));
@@ -291,9 +296,10 @@ export async function generateDocumentFromTemplateAction(
     // Use an ASCII-safe string for Supabase storage key to avoid "Invalid key" errors
     const storageFileName = `generated_${template.type.toLowerCase()}_${timestamp}.html`;
     const finalTenantId = ownerTenantId || tenantId;
-    const storagePath = finalTenantId && finalTenantId !== "ALL"
-      ? `${finalTenantId}/generated/${ownerType}/${ownerId}/${storageFileName}`
-      : `generated/${ownerType}/${ownerId}/${storageFileName}`;
+    const storagePath =
+      finalTenantId && finalTenantId !== "ALL"
+        ? `${finalTenantId}/generated/${ownerType}/${ownerId}/${storageFileName}`
+        : `generated/${ownerType}/${ownerId}/${storageFileName}`;
 
     // Add UTF-8 meta tag and print styles for A4
     const finalHtmlContent = `
@@ -409,7 +415,8 @@ export async function generateDocumentFromTemplateAction(
         upsert: false,
       });
 
-    if (uploadError) throw new Error(`ไม่สามารถอัปโหลดไฟล์ได้: ${mapDbError(uploadError)} `);
+    if (uploadError)
+      throw new Error(`ไม่สามารถอัปโหลดไฟล์ได้: ${mapDbError(uploadError)} `);
 
     // 5. Create Document Metadata
     const docRes = await createDocumentRecordAction({
@@ -423,14 +430,25 @@ export async function generateDocumentFromTemplateAction(
       tenant_id: ownerTenantId,
     });
 
-    if (!docRes.success) throw new Error(docRes.message || "บันทึกข้อมูลเข้าฐานข้อมูลไม่สำเร็จ");
+    if (!docRes.success)
+      throw new Error(docRes.message || "บันทึกข้อมูลเข้าฐานข้อมูลไม่สำเร็จ");
 
     revalidatePath("/protected/documents");
     return { success: true, data: docRes.data };
   } catch (error: unknown) {
-    if (error instanceof z.ZodError) return { success: false, message: "ข้อมูลนำเข้าไม่ถูกต้อง: " + error.issues[0].message };
+    if (error instanceof z.ZodError)
+      return {
+        success: false,
+        message: "ข้อมูลนำเข้าไม่ถูกต้อง: " + error.issues[0].message,
+      };
     console.error("Document Generation Error:", error);
-    return { success: false, message: error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างเอกสาร" };
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "เกิดข้อผิดพลาดในการสร้างเอกสาร",
+    };
   }
 }
 
@@ -443,7 +461,8 @@ export async function generateDocxDocumentFromTemplateAction(
 ) {
   try {
     // Validate Input
-    if (!z.string().uuid().safeParse(ownerId).success) throw new Error("ID ข้อมูลเจ้าของไม่ถูกต้อง");
+    if (!z.string().uuid().safeParse(ownerId).success)
+      throw new Error("ID ข้อมูลเจ้าของไม่ถูกต้อง");
     const validData = additionalDataSchema.parse(additionalData);
 
     const { supabase, role, tenantId } = await requireAuthContext();
@@ -455,7 +474,8 @@ export async function generateDocxDocumentFromTemplateAction(
       .from("documents")
       .download(docxStoragePath);
 
-    if (fileError) throw new Error(`ไม่สามารถโหลดเทมเพลตได้: ${mapDbError(fileError)}`);
+    if (fileError)
+      throw new Error(`ไม่สามารถโหลดเทมเพลตได้: ${mapDbError(fileError)}`);
     if (!fileData) throw new Error("ไม่พบไฟล์เทมเพลต");
 
     const templateBuffer = Buffer.from(await fileData.arrayBuffer());
@@ -474,7 +494,7 @@ export async function generateDocxDocumentFromTemplateAction(
     if (ownerType === "LEAD") {
       const { data: lead, error: lError } = await supabase
         .from("leads")
-        .select("*")
+        .select("id, full_name, email, phone, line_id, tenant_id")
         .eq("id", ownerId)
         .single();
       if (lError) throw new Error(mapDbError(lError));
@@ -484,7 +504,7 @@ export async function generateDocxDocumentFromTemplateAction(
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
         .from("properties")
-        .select("*")
+        .select("id, title, title_en, title_cn, price, rental_price, tenant_id")
         .eq("id", ownerId)
         .single();
       if (pError) throw new Error(mapDbError(pError));
@@ -494,7 +514,7 @@ export async function generateDocxDocumentFromTemplateAction(
     } else if (ownerType === "DEAL") {
       const { data: deal, error: dError } = await supabase
         .from("deals")
-        .select("*, lead:leads(*), property:properties(*)")
+        .select("id, deal_type, transaction_date, tenant_id, lead:leads(id, full_name, email, phone, line_id), property:properties(id, title, title_en, title_cn, price, rental_price)")
         .eq("id", ownerId)
         .single();
       if (dError) throw new Error(mapDbError(dError));
@@ -516,13 +536,12 @@ export async function generateDocxDocumentFromTemplateAction(
             ? amountToThaiWords(price)
             : amountToEnglishWords(price);
         contextData.deal.payment_period =
-          validData.payment_period ||
-          formatDate(deal.transaction_date, lang);
+          validData.payment_period || formatDate(deal.transaction_date, lang);
 
         if (isRent) {
           const { data: contract } = await supabase
             .from("rental_contracts")
-            .select("*")
+            .select("id, deposit_amount, advance_payment_amount, lease_term_months, start_date")
             .eq("deal_id", ownerId)
             .maybeSingle();
           if (contract) {
@@ -543,7 +562,7 @@ export async function generateDocxDocumentFromTemplateAction(
     } else if (ownerType === "RENTAL_CONTRACT") {
       const { data: contract, error: cError } = await supabase
         .from("rental_contracts")
-        .select("*")
+        .select("id, tenant_id, contract_number, start_date, end_date, rent_price, deposit_amount")
         .eq("id", ownerId)
         .single();
       if (cError) throw new Error(mapDbError(cError));
@@ -585,35 +604,51 @@ export async function generateDocxDocumentFromTemplateAction(
     } catch (error: unknown) {
       console.error("Docxtemplater parsing error:", error);
       let errorMsg = "รูปแบบตัวแปร(Tag) ในไฟล์ DOCX ไม่ถูกต้อง";
-      const err = error as { properties?: { errors?: { properties?: { explanation?: string }; message?: string }[] } };
+      const err = error as {
+        properties?: {
+          errors?: {
+            properties?: { explanation?: string };
+            message?: string;
+          }[];
+        };
+      };
       if (err.properties && err.properties.errors instanceof Array) {
-        const errorDetails = err.properties.errors.map((e) => e.properties?.explanation || e.message).join(", ");
+        const errorDetails = err.properties.errors
+          .map((e) => e.properties?.explanation || e.message)
+          .join(", ");
         errorMsg += ` รายละเอียด: ${errorDetails}`;
       }
       throw new Error(errorMsg);
     }
 
-    const buf = doc.getZip().generate({ type: "nodebuffer", compression: "DEFLATE" });
+    const buf = doc
+      .getZip()
+      .generate({ type: "nodebuffer", compression: "DEFLATE" });
 
     // 4. Save to Storage
     const timestamp = new Date().getTime();
-    const safeTemplateName = (options?.templateName || "custom_contract").replace(/[^a-zA-Z0-9ก-๙]/g, "_");
+    const safeTemplateName = (
+      options?.templateName || "custom_contract"
+    ).replace(/[^a-zA-Z0-9ก-๙]/g, "_");
     const displayFileName = `${safeTemplateName}_${timestamp}.docx`;
     const storageFileName = `generated_${timestamp}.docx`;
     const finalTenantId = ownerTenantId || tenantId;
-    const finalStoragePath = finalTenantId && finalTenantId !== "ALL"
-      ? `${finalTenantId}/generated/${ownerType}/${ownerId}/${storageFileName}`
-      : `generated/${ownerType}/${ownerId}/${storageFileName}`;
+    const finalStoragePath =
+      finalTenantId && finalTenantId !== "ALL"
+        ? `${finalTenantId}/generated/${ownerType}/${ownerId}/${storageFileName}`
+        : `generated/${ownerType}/${ownerId}/${storageFileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from("documents")
       .upload(finalStoragePath, buf, {
-        contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        contentType:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         cacheControl: "3600",
         upsert: false,
       });
 
-    if (uploadError) throw new Error(`อัปโหลดไฟล์ไม่สำเร็จ: ${mapDbError(uploadError)}`);
+    if (uploadError)
+      throw new Error(`อัปโหลดไฟล์ไม่สำเร็จ: ${mapDbError(uploadError)}`);
 
     // 5. Create DB Record
     const docRes = await createDocumentRecordAction({
@@ -622,18 +657,30 @@ export async function generateDocxDocumentFromTemplateAction(
       document_type: "OTHER",
       file_name: displayFileName,
       storage_path: finalStoragePath,
-      mime_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      mime_type:
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       version: 1,
       tenant_id: ownerTenantId,
     });
 
-    if (!docRes.success) throw new Error(docRes.message || "บันทึกข้อมูลเข้าฐานข้อมูลไม่สำเร็จ");
+    if (!docRes.success)
+      throw new Error(docRes.message || "บันทึกข้อมูลเข้าฐานข้อมูลไม่สำเร็จ");
 
     revalidatePath("/protected/documents");
     return { success: true, data: docRes.data };
   } catch (error: unknown) {
-    if (error instanceof z.ZodError) return { success: false, message: "ข้อมูลนำเข้าไม่ถูกต้อง: " + error.issues[0].message };
+    if (error instanceof z.ZodError)
+      return {
+        success: false,
+        message: "ข้อมูลนำเข้าไม่ถูกต้อง: " + error.issues[0].message,
+      };
     console.error("DOCX Generation Error:", error);
-    return { success: false, message: error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างไฟล์ DOCX" };
+    return {
+      success: false,
+      message:
+        error instanceof Error
+          ? error.message
+          : "เกิดข้อผิดพลาดในการสร้างไฟล์ DOCX",
+    };
   }
 }

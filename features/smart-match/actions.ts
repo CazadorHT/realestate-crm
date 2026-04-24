@@ -3,7 +3,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
-import { generateEmbedding, constructLeadRequirementText } from "@/lib/ai/gemini";
+import {
+  generateEmbedding,
+  constructLeadRequirementText,
+} from "@/lib/ai/gemini";
 import { notifyAgentOfSmartMatch } from "@/lib/line/messaging";
 import { SearchCriteria, PropertyMatch } from "./types";
 import { calculateMatchScore } from "./matching";
@@ -35,7 +38,8 @@ export async function updatePropertyEmbeddingAction(propertyId: string) {
       .single();
 
     if (fetchErr || !property) throw new Error("Property not found");
-    if (!property.ai_summary_content) return { success: false, message: "No AI content to vectorize" };
+    if (!property.ai_summary_content)
+      return { success: false, message: "No AI content to vectorize" };
 
     const vector = await generateEmbedding(property.ai_summary_content);
     if (!vector) throw new Error("Failed to generate embedding");
@@ -66,7 +70,7 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
     // 1. Fetch Lead Requirements
     const { data: lead, error: leadErr } = await supabase
       .from("leads")
-      .select("*")
+      .select("id, full_name, email, phone, line_id, budget_max, budget_min, preferred_property_types, assigned_to, tenant_id")
       .eq("id", leadId)
       .eq("tenant_id", tenantId || "")
       .single();
@@ -84,7 +88,9 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
       .maybeSingle();
 
     // Heuristic: If no session, assume BUY if budget is high, otherwise RENT
-    const leadPurpose = session?.purpose || (lead.budget_max && lead.budget_max > 200000 ? "BUY" : "RENT");
+    const leadPurpose =
+      session?.purpose ||
+      (lead.budget_max && lead.budget_max > 200000 ? "BUY" : "RENT");
 
     // 3. Vectorize Requirements (Free/Cheap Embedding)
     const requirementText = constructLeadRequirementText(lead);
@@ -92,50 +98,63 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
     if (!vector) throw new Error("Failed to generate lead embedding");
 
     // Persist embedding for future quick matches
-    await supabase.from("leads").update({ embedding: vector } as any).eq("id", leadId);
+    await supabase
+      .from("leads")
+      .update({ embedding: vector } as any)
+      .eq("id", leadId);
 
     // 3. Search Candidates via pgvector RPC
     // We fetch more than we need to allow for re-scoring/filtering
-    const { data: candidates, error: matchErr } = await supabase.rpc("match_properties" as any, {
-      query_embedding: vector as any,
-      match_threshold: 0.3, // Lower threshold for candidate pool
-      match_count: 20,
-      p_tenant_id: tenantId
-    });
+    const { data: candidates, error: matchErr } = await supabase.rpc(
+      "match_properties" as any,
+      {
+        query_embedding: vector as any,
+        match_threshold: 0.3, // Lower threshold for candidate pool
+        match_count: 20,
+        p_tenant_id: tenantId,
+      },
+    );
 
     if (matchErr) throw new Error(matchErr.message);
 
     // 4. Hybrid Re-scoring (Zero-Cost Local Logic)
     // Score = (70% Semantic Similarity) + (30% Hard Criteria Match)
-    const processedMatches = ((candidates as any) || []).map((m: any) => {
-      let filterScore = 0;
-      const totalFilterPoints = 3; // price, type, listing_type
-      
-      // Filter 1: Price (Simple within 15% budget)
-      const propPrice = m.listing_type === "RENT" ? m.rental_price : m.price;
-      if (lead.budget_max && propPrice <= lead.budget_max * 1.15) filterScore += 1;
-      
-      // Filter 2: Listing Type Match (using resolved leadPurpose)
-      const isListingMatch = 
-        (leadPurpose === "BUY" && (m.listing_type === "SALE" || m.listing_type === "SALE_AND_RENT")) ||
-        (leadPurpose === "RENT" && (m.listing_type === "RENT" || m.listing_type === "SALE_AND_RENT"));
-      if (isListingMatch) filterScore += 1;
+    const processedMatches = ((candidates as any) || [])
+      .map((m: any) => {
+        let filterScore = 0;
+        const totalFilterPoints = 3; // price, type, listing_type
 
-      // Filter 3: Property Type Match
-      if (lead.preferred_property_types?.includes(m.property_type)) filterScore += 1;
+        // Filter 1: Price (Simple within 15% budget)
+        const propPrice = m.listing_type === "RENT" ? m.rental_price : m.price;
+        if (lead.budget_max && propPrice <= lead.budget_max * 1.15)
+          filterScore += 1;
 
-      const filterWeight = (filterScore / totalFilterPoints) * 30;
-      const vectorWeight = m.similarity * 70;
-      const finalScore = Math.round(vectorWeight + filterWeight);
+        // Filter 2: Listing Type Match (using resolved leadPurpose)
+        const isListingMatch =
+          (leadPurpose === "BUY" &&
+            (m.listing_type === "SALE" ||
+              m.listing_type === "SALE_AND_RENT")) ||
+          (leadPurpose === "RENT" &&
+            (m.listing_type === "RENT" || m.listing_type === "SALE_AND_RENT"));
+        if (isListingMatch) filterScore += 1;
 
-      return {
-        ...m,
-        match_score: finalScore,
-        match_reasons: m.similarity > 0.8 ? ["Semantic Strong Match"] : ["Filter Match"]
-      };
-    })
-    .sort((a: any, b: any) => b.match_score - a.match_score)
-    .slice(0, 10);
+        // Filter 3: Property Type Match
+        if (lead.preferred_property_types?.includes(m.property_type))
+          filterScore += 1;
+
+        const filterWeight = (filterScore / totalFilterPoints) * 30;
+        const vectorWeight = m.similarity * 70;
+        const finalScore = Math.round(vectorWeight + filterWeight);
+
+        return {
+          ...m,
+          match_score: finalScore,
+          match_reasons:
+            m.similarity > 0.8 ? ["Semantic Strong Match"] : ["Filter Match"],
+        };
+      })
+      .sort((a: any, b: any) => b.match_score - a.match_score)
+      .slice(0, 10);
 
     // 5. Automation: Notify if strong match (Zero-Cost notification)
     if (notifyAgent && processedMatches.length > 0) {
@@ -159,11 +178,11 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
       }
     }
 
-    return { 
-      success: true, 
-      matches: processedMatches, 
-      requirementSummary: requirementText, 
-      error: null 
+    return {
+      success: true,
+      matches: processedMatches,
+      requirementSummary: requirementText,
+      error: null,
     };
   } catch (error: any) {
     console.error("runSmartMatchAction error:", error);
@@ -189,15 +208,18 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
       near_transit: criteria.nearTransit,
       preferred_property_type: criteria.propertyType,
     })
-    .select()
+    .select("id, lead_id, property_id, match_score")
     .single();
 
-  if (sessionError) console.error("Error creating search session:", sessionError);
+  if (sessionError)
+    console.error("Error creating search session:", sessionError);
 
   // 2. Fetch properties
   let query = supabase
     .from("properties")
-    .select("id, slug, title, title_en, title_cn, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(*)")
+    .select(
+      "id, slug, title, title_en, title_cn, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(*)",
+    )
     .eq("status", "ACTIVE")
     .is("deleted_at", null);
 
@@ -213,16 +235,28 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   }
 
   const { data: properties, error: propertiesError } = await query.limit(100);
-  if (propertiesError) throw new Error(mapDbError(propertiesError) || "Failed to fetch properties");
+  if (propertiesError)
+    throw new Error(
+      mapDbError(propertiesError) || "Failed to fetch properties",
+    );
 
   // 3. Post-query Budget Filter
   let filteredProperties = properties || [];
   if (criteria.budgetMin !== undefined || criteria.budgetMax !== undefined) {
     filteredProperties = filteredProperties.filter((p: any) => {
-      let price = criteria.purpose === "RENT" ? p.rental_price || p.original_rental_price : p.price || p.original_price;
+      let price =
+        criteria.purpose === "RENT"
+          ? p.rental_price || p.original_rental_price
+          : p.price || p.original_price;
       if (price === null || price === undefined) return false;
-      const minCheck = criteria.budgetMin === undefined || criteria.budgetMin === 0 || price >= criteria.budgetMin;
-      const maxCheck = criteria.budgetMax === undefined || criteria.budgetMax >= 999999999 || price <= criteria.budgetMax;
+      const minCheck =
+        criteria.budgetMin === undefined ||
+        criteria.budgetMin === 0 ||
+        price >= criteria.budgetMin;
+      const maxCheck =
+        criteria.budgetMax === undefined ||
+        criteria.budgetMax >= 999999999 ||
+        price <= criteria.budgetMax;
       return minCheck && maxCheck;
     });
   }
@@ -231,8 +265,13 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   const results: PropertyMatch[] = (filteredProperties || [])
     .map((p: any) => {
       const prop = p as unknown as PropertyWithImages;
-      const { score, reasons, scoreBreakdown } = calculateMatchScore(prop, criteria);
-      const imageUrl = prop.property_images?.[0]?.image_url || "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80";
+      const { score, reasons, scoreBreakdown } = calculateMatchScore(
+        prop,
+        criteria,
+      );
+      const imageUrl =
+        prop.property_images?.[0]?.image_url ||
+        "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80";
 
       // Commute Time Heuristic (Legendary)
       let commuteTime = 35;
@@ -242,7 +281,10 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
       if (commuteTime < 10) commuteTime = 10;
 
       // Price Formatting Logic (Office aware)
-      let primaryPrice = criteria.purpose === "RENT" ? prop.rental_price || prop.original_rental_price : prop.price || prop.original_price;
+      let primaryPrice =
+        criteria.purpose === "RENT"
+          ? prop.rental_price || prop.original_rental_price
+          : prop.price || prop.original_price;
       let secondaryPrice: number | undefined;
       let isSqmPrice = false;
 
@@ -251,17 +293,34 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
         primaryPrice = officePrice.totalPrice ?? null;
         secondaryPrice = officePrice.sqmPrice || undefined;
       } else if (prop.property_type === "OFFICE_BUILDING" && !primaryPrice) {
-        const sqmPrice = criteria.purpose === "RENT" ? prop.rent_price_per_sqm : prop.price_per_sqm;
-        if (sqmPrice) { primaryPrice = sqmPrice; isSqmPrice = true; }
+        const sqmPrice =
+          criteria.purpose === "RENT"
+            ? prop.rent_price_per_sqm
+            : prop.price_per_sqm;
+        if (sqmPrice) {
+          primaryPrice = sqmPrice;
+          isSqmPrice = true;
+        }
       }
 
       if (!primaryPrice) {
-         primaryPrice = criteria.purpose === "RENT" ? prop.price || prop.original_price : prop.rental_price || prop.original_rental_price;
+        primaryPrice =
+          criteria.purpose === "RENT"
+            ? prop.price || prop.original_price
+            : prop.rental_price || prop.original_rental_price;
       }
 
       let originalDisplayPrice: number | undefined;
-      const rawOriginal = criteria.purpose === "RENT" ? prop.original_rental_price : prop.original_price;
-      if (prop.property_type !== "OFFICE_BUILDING" && rawOriginal && primaryPrice && rawOriginal > primaryPrice) {
+      const rawOriginal =
+        criteria.purpose === "RENT"
+          ? prop.original_rental_price
+          : prop.original_price;
+      if (
+        prop.property_type !== "OFFICE_BUILDING" &&
+        rawOriginal &&
+        primaryPrice &&
+        rawOriginal > primaryPrice
+      ) {
         originalDisplayPrice = rawOriginal;
       }
 
@@ -332,7 +391,7 @@ export async function createLeadFromMatchAction(data: {
       stage: "NEW",
       note: `Auto-generated from Smart Match Wizard. SessionID: ${data.sessionId}\nLine ID: ${data.lineId || "-"}`,
     })
-    .select()
+    .select("id")
     .single();
 
   if (leadError) throw new Error(mapDbError(leadError));

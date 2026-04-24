@@ -19,7 +19,7 @@ export const onLeadCreated = inngest.createFunction(
     const lead = await step.run("fetch-lead-details", async () => {
       const { data, error } = await supabase
         .from("leads")
-        .select("*")
+        .select("id, full_name, email, phone, line_id, assigned_to, tenant_id")
         .eq("id", leadId)
         .single();
 

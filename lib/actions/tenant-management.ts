@@ -17,7 +17,7 @@ export async function getTenantCountAction() {
   const adminSupabase = createAdminClient();
   const { count, error } = await adminSupabase
     .from("tenants")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("is_deleted", false);
 
   if (error) {
@@ -43,7 +43,7 @@ export async function createInitialTenantAction(
       name: validated.name,
       slug: validated.slug,
     })
-    .select()
+    .select("id, name, slug")
     .single();
 
   if (tError || !tenant) {
@@ -152,7 +152,7 @@ export async function createTenantAction(
       name: validated.name,
       slug: validated.slug,
     })
-    .select()
+    .select("id, name, slug")
     .single();
 
   if (error || !data) {
@@ -391,7 +391,7 @@ export async function createTenantInvitationAction(
       role: validated.role,
       invited_by: ctx.user.id,
     })
-    .select()
+    .select("id")
     .single();
 
   if (error) {
@@ -450,7 +450,7 @@ export async function getTenantInvitationsAction(tenantId: string) {
   const adminSupabase = createAdminClient();
   const { data, error } = await adminSupabase
     .from("tenant_invitations")
-    .select("*")
+    .select("id, tenant_id, email, role, status, invited_by, created_at")
     .eq("tenant_id", tenantId)
     .eq("status", "PENDING");
 
@@ -519,7 +519,7 @@ export async function updateTenantAction(
       slug: validated.slug,
     })
     .eq("id", id)
-    .select()
+    .select("id, name, slug")
     .single();
 
   if (error || !data) {
@@ -586,7 +586,7 @@ export async function acceptInvitationAction(tenantId: string) {
   // 1. Find the pending invitation
   const { data: inv, error: fError } = await adminSupabase
     .from("tenant_invitations")
-    .select("*")
+    .select("id, tenant_id, email, role, status, invited_by, created_at")
     .eq("tenant_id", tenantId)
     .eq("email", ctx.user.email!)
     .eq("status", "PENDING")
@@ -648,7 +648,7 @@ export async function getBranchStatsAction(tenantId: string) {
     // 1. Members count
     const { count: memberCount, error: mError } = await adminSupabase
       .from("tenant_members")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenantId);
 
     if (mError) throw mError;
@@ -656,7 +656,7 @@ export async function getBranchStatsAction(tenantId: string) {
     // 2. Pending invitations count
     const { count: inviteCount, error: iError } = await adminSupabase
       .from("tenant_invitations")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenantId)
       .eq("status", "PENDING");
 
@@ -665,7 +665,7 @@ export async function getBranchStatsAction(tenantId: string) {
     // 3. Properties count
     const { count: propertyCount, error: pError } = await adminSupabase
       .from("properties")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenantId);
 
     if (pError) throw pError;

@@ -165,7 +165,7 @@ export async function createCommissionAdjustmentAction(payload: {
         created_by: user.id,
         tenant_id: tenantId,
       })
-      .select()
+      .select("id")
       .single();
 
     if (error) throw new Error(mapDbError(error));
@@ -410,7 +410,7 @@ export async function markAsPaidAction(
       })
       .eq("id", commissionId)
       .neq("status", "PAID") // 🛡️ ATOMIC PROTECTION: Prevent double payment at SQL level
-      .select()
+      .select("id, paid_at")
       .single();
 
     if (updateErr) throw new Error(mapDbError(updateErr));

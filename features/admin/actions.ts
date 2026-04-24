@@ -21,7 +21,7 @@ export async function getAdminUsersAction() {
   // Fetch profiles
   let query = supabase
     .from("profiles")
-    .select("*");
+    .select("id, email, full_name, phone, role, created_at, avatar_url");
 
   if (tenantId && tenantId !== "ALL") {
     // Join tenant_members to filter by branch

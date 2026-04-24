@@ -32,7 +32,8 @@ export async function sendDirectReplyAction(
       .eq("tenant_id", tenantId!)
       .single();
 
-    if (leadError || !lead) throw new Error("ไม่พบข้อมูลลูกค้า หรือคุณไม่มีสิทธิ์เข้าถึง");
+    if (leadError || !lead)
+      throw new Error("ไม่พบข้อมูลลูกค้า หรือคุณไม่มีสิทธิ์เข้าถึง");
 
     // 2. Platform specific sending
     if (lead.source === "LINE" && lead.line_id) {
@@ -52,12 +53,19 @@ export async function sendDirectReplyAction(
         const errText = await res.text();
         throw new Error(`LINE API Error: ${errText}`);
       }
-    } else if (lead.source === "FACEBOOK" && (lead.facebook_psid || lead.facebook_psid === null)) {
+    } else if (
+      lead.source === "FACEBOOK" &&
+      (lead.facebook_psid || lead.facebook_psid === null)
+    ) {
       const psid = lead.facebook_psid || "MOCK_PSID";
       const res = await sendMetaMessage(psid, content, "FACEBOOK");
       if (!res.success) throw new Error(`Facebook API Error: ${res.error}`);
     } else if (lead.source === "INSTAGRAM" && lead.instagram_sid) {
-      const res = await sendMetaMessage(lead.instagram_sid, content, "INSTAGRAM");
+      const res = await sendMetaMessage(
+        lead.instagram_sid,
+        content,
+        "INSTAGRAM",
+      );
       if (!res.success) throw new Error(`Instagram API Error: ${res.error}`);
     } else if (lead.source === "WHATSAPP" && lead.phone) {
       const res = await sendWhatsAppMessage(lead.phone, content);
@@ -146,8 +154,10 @@ export async function getLeadMessagesAction(
     const adminSupabase = createAdminClient();
     const { data, error } = await adminSupabase
       .from("omni_messages")
-      .select("*")
-      .or(`lead_id.eq.${leadId},and(lead_id.is.null,source.eq.${lead.source},created_at.gte.${lead.created_at})`)
+      .select("id, lead_id, source, content, direction, payload, external_message_id, is_read, tenant_id, created_at")
+      .or(
+        `lead_id.eq.${leadId},and(lead_id.is.null,source.eq.${lead.source},created_at.gte.${lead.created_at})`,
+      )
       .order("created_at", { ascending: false })
       .range(offset, offset + limit);
 
@@ -155,15 +165,15 @@ export async function getLeadMessagesAction(
 
     const messages = (data as OmniMessage[]) || [];
     const hasMore = messages.length > limit;
-    
+
     // If we fetched one extra to check hasMore, remove it
     const finalMessages = hasMore ? messages.slice(0, limit) : messages;
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       messages: finalMessages,
       data: finalMessages,
-      hasMore
+      hasMore,
     };
   } catch (err: unknown) {
     console.error("[getLeadMessagesAction] Error:", err);
@@ -214,7 +224,11 @@ export async function updateLeadCategoryAction(
     return { success: true };
   } catch (err: unknown) {
     console.error("[updateLeadCategoryAction] Error:", err);
-    return { success: false, error: err instanceof z.ZodError ? "Invalid category" : (err as Error).message };
+    return {
+      success: false,
+      error:
+        err instanceof z.ZodError ? "Invalid category" : (err as Error).message,
+    };
   }
 }
 

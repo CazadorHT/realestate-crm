@@ -33,7 +33,20 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
 
     const { data: property, error: propErr } = await supabase
       .from("properties")
-      .select("*")
+      .select(`
+        id, title, title_en, title_cn, description, description_en, description_cn,
+        property_type, listing_type, price, original_price, rental_price, original_rental_price,
+        currency, address_line1, address_line1_en, address_line1_cn,
+        subdistrict, district, province, postal_code, bedrooms, bathrooms,
+        size_sqm, land_size_sqwah, total_units, sold_units, floor, orientation,
+        parking_slots, is_fully_furnished, is_pet_friendly,
+        status, view_count, is_hot_deal, is_exclusive,
+        created_at, updated_at,
+        tenant_id, created_by, owner_id, co_agent_sale_commission_percent,
+        popular_area, popular_area_en, popular_area_cn, property_source,
+        ai_summary_content, ai_reviewed_at,
+        ai_reviewed_by, version, images, nearby_places, nearby_transits
+      `)
       .eq("id", id)
       .eq("tenant_id", tenantId)
       .single();
@@ -46,7 +59,7 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       role,
     });
 
-    return property;
+    return property as unknown as PropertyRow;
   } catch (error) {
     console.error("getPropertyById → error:", error);
     throw error;
@@ -66,7 +79,18 @@ export async function getPropertyWithImages(
   const { data, error } = await supabase
     .from("properties")
     .select(`
-      *,
+      id, title, title_en, title_cn, description, description_en, description_cn,
+      property_type, listing_type, price, original_price, rental_price, original_rental_price,
+      currency, address_line1, address_line1_en, address_line1_cn,
+      subdistrict, district, province, postal_code, bedrooms, bathrooms,
+      size_sqm, land_size_sqwah, total_units, sold_units, floor, orientation,
+      parking_slots, is_fully_furnished, is_pet_friendly,
+      status, view_count, is_hot_deal, is_exclusive,
+      created_at, updated_at,
+      tenant_id, created_by, owner_id, co_agent_sale_commission_percent,
+      popular_area, popular_area_en, popular_area_cn, property_source,
+      ai_summary_content, ai_reviewed_at,
+      ai_reviewed_by, version, images, nearby_places, nearby_transits,
       property_agents (
         agent_id
       ),
@@ -76,8 +100,7 @@ export async function getPropertyWithImages(
       reviewer:profiles!properties_ai_reviewed_by_fkey (
         full_name
       )
-    `,
-    )
+    `)
     .eq("id", id)
     .eq("tenant_id", tenantId)
     .single();
@@ -214,7 +237,7 @@ export async function getGlobalPropertiesTableDataAction(params: {
 
   let query = supabase
     .from("properties")
-    .select("*, tenants(name)", {
+    .select("id, title, price, original_price, rental_price, original_rental_price, status, property_type, listing_type, images, created_at, tenant_id, tenants(name)", {
       count: "exact",
     })
     .is("deleted_at", null)

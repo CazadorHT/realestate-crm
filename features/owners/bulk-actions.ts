@@ -93,7 +93,7 @@ export async function bulkMoveOwnersToTenantAction(
       })
       .in("id", ids)
       .is("tenant_id", null)
-      .select();
+      .select("id");
 
     if (error) throw error;
 

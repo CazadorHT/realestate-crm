@@ -11,7 +11,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function check() {
   console.log('--- Fetching all teams ---');
-  const { data: teams, error } = await supabase.from('teams').select('*');
+  const { data: teams, error } = await supabase.from('teams').select('id');
   console.log('Teams count:', teams?.length);
   // console.log('Teams data:', JSON.stringify(teams, null, 2));
   

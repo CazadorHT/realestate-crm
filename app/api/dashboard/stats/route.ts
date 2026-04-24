@@ -47,18 +47,18 @@ export async function GET(request: Request) {
   // Fetch leads
   const { count: leadsThisMonth } = await supabase
     .from("leads")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .gte("created_at", startDate.toISOString())
     .lte("created_at", endDate.toISOString());
 
   const { count: leadsTotal } = await supabase
     .from("leads")
-    .select("*", { count: "exact", head: true });
+    .select("id", { count: "exact", head: true });
 
   // Fetch deals
   const { count: dealsWon } = await supabase
     .from("deals")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("status", "CLOSED_WIN")
     .gte("updated_at", startDate.toISOString())
     .lte("updated_at", endDate.toISOString());

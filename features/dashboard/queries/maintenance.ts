@@ -27,12 +27,12 @@ export async function getSetupProgress(tenantId?: string | null): Promise<{
         applyTenantFilter(
           supabase
             .from("tenant_members")
-            .select("*", { count: "exact", head: true }),
+            .select("id", { count: "exact", head: true }),
         ),
         applyTenantFilter(
           supabase
             .from("properties")
-            .select("*", { count: "exact", head: true })
+            .select("id", { count: "exact", head: true })
             .is("deleted_at", null),
         ),
         tenantId && tenantId !== "ALL"
@@ -44,7 +44,7 @@ export async function getSetupProgress(tenantId?: string | null): Promise<{
         getSiteSettings(),
         supabase
           .from("profiles")
-          .select("*", { count: "exact", head: true })
+          .select("id", { count: "exact", head: true })
           .not("line_id", "is", null),
       ]);
 

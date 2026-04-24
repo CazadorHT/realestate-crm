@@ -61,7 +61,7 @@ export async function getBudgetRanges(
 
   let query = supabase
     .from("smart_match_budget_ranges")
-    .select("*")
+    .select("id, purpose, label, label_en, label_cn, min_value, max_value, sort_order, is_active")
     .order("sort_order", { ascending: true });
 
   if (purpose) {
@@ -85,7 +85,7 @@ export async function getActiveBudgetRanges(
 
   const { data, error } = await supabase
     .from("smart_match_budget_ranges")
-    .select("*")
+    .select("id, purpose, label, label_en, label_cn, min_value, max_value, sort_order, is_active")
     .eq("purpose", purpose)
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
@@ -165,7 +165,7 @@ export async function getPropertyTypes(): Promise<PropertyTypeOption[]> {
 
   const { data, error } = await supabase
     .from("smart_match_property_types")
-    .select("*")
+    .select("id, label, label_en, label_cn, value, sort_order, is_active")
     .order("sort_order", { ascending: true });
 
   if (error) {
@@ -181,7 +181,7 @@ export async function getActivePropertyTypes(): Promise<PropertyTypeOption[]> {
 
   const { data, error } = await supabase
     .from("smart_match_property_types")
-    .select("*")
+    .select("id, label, label_en, label_cn, value, sort_order, is_active")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
@@ -260,7 +260,7 @@ export async function getOfficeSizes(): Promise<OfficeSizeOption[]> {
 
   const { data, error } = await supabase
     .from("smart_match_office_sizes")
-    .select("*")
+    .select("id, label, label_en, label_cn, min_sqm, max_sqm, sort_order, is_active")
     .order("sort_order", { ascending: true });
 
   if (error) {
@@ -276,7 +276,7 @@ export async function getActiveOfficeSizes(): Promise<OfficeSizeOption[]> {
 
   const { data, error } = await supabase
     .from("smart_match_office_sizes")
-    .select("*")
+    .select("id, label, label_en, label_cn, min_sqm, max_sqm, sort_order, is_active")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 

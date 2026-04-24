@@ -17,7 +17,7 @@ export async function getTemplatesAction() {
 
   const { data, error } = await supabase
     .from("contract_templates")
-    .select("*")
+    .select("id, name, content, description, type, is_active, created_at")
     .eq("is_active", true)
     .order("created_at", { ascending: false });
 
@@ -43,7 +43,7 @@ export async function createTemplateAction(input: CreateTemplateInput) {
         ...validated,
         created_by: user.id,
       } as Database["public"]["Tables"]["contract_templates"]["Insert"])
-      .select()
+      .select("id")
       .single();
 
     if (error) throw new Error(error.message);
@@ -71,7 +71,7 @@ export async function updateTemplateAction(
       .from("contract_templates")
       .update(validated)
       .eq("id", id)
-      .select()
+      .select("id")
       .single();
 
     if (error) throw new Error(error.message);

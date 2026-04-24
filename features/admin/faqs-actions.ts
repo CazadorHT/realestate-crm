@@ -47,7 +47,7 @@ export async function getFaqs(page = 1, pageSize = 10, isTrash = false, search =
 
   let query = supabase
     .from("faqs")
-    .select("*", { count: "exact" });
+    .select("id, question, question_en, question_cn, answer, answer_en, answer_cn, category, sort_order, is_active, created_at, updated_at", { count: "exact" });
 
   if (isTrash) {
     query = query.not("deleted_at", "is", null);
@@ -105,7 +105,7 @@ export async function getFaq(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("faqs")
-    .select("*")
+    .select("id, question, question_en, question_cn, answer, answer_en, answer_cn, category, sort_order, is_active, created_at, updated_at")
     .eq("id", id)
     .single();
 
@@ -122,7 +122,7 @@ export async function createFaq(input: CreateFaqInput) {
     const { data: faq, error } = await supabase
       .from("faqs")
       .insert([validated])
-      .select()
+      .select("id, question")
       .single();
 
     if (error) throw error;

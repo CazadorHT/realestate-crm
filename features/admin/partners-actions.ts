@@ -47,7 +47,7 @@ export async function getPartners(params?: {
   try {
     let query = supabase
       .from("partners")
-      .select("*", { count: "exact" });
+      .select("id, name, logo_url, website_url, sort_order, is_active, created_at, updated_at", { count: "exact" });
 
     if (search) {
       query = query.ilike("name", `%${search}%`);
@@ -108,7 +108,7 @@ export async function getPartner(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("partners")
-    .select("*")
+    .select("id, name, logo_url, website_url, sort_order, is_active, created_at, updated_at")
     .eq("id", id)
     .single();
 
@@ -249,16 +249,16 @@ export async function getPartnersDashboardStats() {
 
   const { count: totalPartners } = await supabase
     .from("partners")
-    .select("*", { count: "exact", head: true });
+    .select("id", { count: "exact", head: true });
 
   const { count: activePartners } = await supabase
     .from("partners")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("is_active", true);
 
   const { count: inactivePartners } = await supabase
     .from("partners")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .eq("is_active", false);
 
   return {

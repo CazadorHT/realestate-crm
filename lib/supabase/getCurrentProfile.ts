@@ -24,7 +24,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   // ตารางนี้เราสร้างเองเพื่อเก็บข้อมูลที่แก้ได้ เช่น ชื่อที่เปลี่ยนใหม่, รูปโปรไฟล์ที่อัพโหลดเอง
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("*")
+    .select("id, full_name, email, avatar_url, role, phone, line_id, line_user_id, facebook_url, facebook_psid, whatsapp_id, wechat_id, team_id, other_contact, notification_preferences, created_at, updated_at, tax_id, tax_address, bank_code, bank_account_no, bank_account_name, telegram_id, default_tax_rate")
     .eq("id", user.id)
     .single();
 

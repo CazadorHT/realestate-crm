@@ -8,7 +8,7 @@ export async function getLineTemplates() {
   const supabase = createAdminClient();
   const { data, error } = await supabase
     .from("line_templates")
-    .select("*")
+    .select("key, label, is_active, config")
     .order("key");
 
   if (error) {

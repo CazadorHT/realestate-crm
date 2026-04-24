@@ -50,7 +50,7 @@ export async function PropertyRelatedDealsSection({
     if (relatedDeal) {
       const { data: contractData } = await supabase
         .from("rental_contracts")
-        .select("*")
+        .select("id, deal_id, start_date, end_date, rent_price, deposit_amount, lease_term_months, status")
         .eq("deal_id", relatedDeal.id)
         .single();
       relatedContract = contractData ?? null;

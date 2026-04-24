@@ -39,7 +39,7 @@ export function BranchOnboardingDialog({ isOpen, onClose }: BranchOnboardingDial
   const [step, setStep] = useState<1 | 2>(1);
   const [isProcessing, setIsProcessing] = useState(false);
   const [newBranch, setNewBranch] = useState({ name: "", slug: "" });
-  const [createdTenant, setCreatedTenant] = useState<TenantRow | null>(null);
+  const [createdTenant, setCreatedTenant] = useState<{ id: string; name: string; slug: string } | null>(null);
   const [slugError, setSlugError] = useState<string | null>(null);
 
   const handleCreateBranch = async (e: React.FormEvent) => {

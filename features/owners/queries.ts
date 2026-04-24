@@ -9,7 +9,10 @@ export async function getOwnerById(id: string): Promise<Owner | null> {
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
 
-  let query = supabase.from("owners").select("*").eq("id", id);
+  let query = supabase
+    .from("owners")
+    .select("id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by")
+    .eq("id", id);
 
   if (isMultiTenant && tenantId) {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
@@ -36,7 +39,7 @@ export async function getOwners() {
     .from("owners")
     .select(
       `
-      *,
+      id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by,
       properties:properties(count)
     `,
     );
@@ -69,7 +72,7 @@ export async function getOwnerProperties(ownerId: string) {
 
   let query = supabase
     .from("properties")
-    .select("*")
+    .select("id, title, slug, property_type, listing_type, price, original_price, rental_price, original_rental_price, status, popular_area, created_at, tenant_id")
     .eq("owner_id", ownerId);
 
   if (isMultiTenant && tenantId) {
@@ -108,7 +111,7 @@ export async function getOwnersQuery({
 
   let query = supabase
     .from("owners")
-    .select("*, properties:properties(count), tenants(name)", {
+    .select("id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by, properties:properties(count), tenants(name)", {
       count: "exact",
     });
 
@@ -165,7 +168,7 @@ export async function getOwnersDashboardStatsQuery(allBranches = false) {
   // 1. Total Owners
   let ownersQuery = supabase
     .from("owners")
-    .select("*", { count: "exact", head: true });
+    .select("id", { count: "exact", head: true });
 
   if (!isMultiTenant) {
     // Single-tenant: show all (no filter)
@@ -189,7 +192,7 @@ export async function getOwnersDashboardStatsQuery(allBranches = false) {
 
   let newOwnersQuery = supabase
     .from("owners")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .gte("created_at", startOfMonth);
 
   if (isMultiTenant) {

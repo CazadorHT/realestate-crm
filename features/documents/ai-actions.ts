@@ -21,7 +21,7 @@ export async function analyzeDocumentAction(
     // 1. Fetch document metadata
     let query = supabase
       .from("documents")
-      .select("*")
+      .select("id, file_name, storage_path, mime_type, size_bytes, tenant_id")
       .eq("id", documentId);
 
     if (tenantId && tenantId !== "ALL") {

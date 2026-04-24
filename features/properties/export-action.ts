@@ -94,7 +94,7 @@ export async function exportPropertiesAction(
 
   let query = supabase
     .from("properties")
-    .select("*")
+    .select("id, title, property_type, listing_type, status, price, rental_price, bedrooms, bathrooms, size_sqm, district, subdistrict, province, near_transit, is_pet_friendly, created_at, tenant_id")
     .is("deleted_at", null);
 
   if (ids && ids.length > 0) {

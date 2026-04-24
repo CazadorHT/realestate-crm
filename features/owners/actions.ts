@@ -45,7 +45,10 @@ export async function getOwnersAction(allBranches = false) {
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
 
-    let query = ctx.supabase.from("owners").select("*").order("full_name");
+    let query = ctx.supabase
+      .from("owners")
+      .select("id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by")
+      .order("full_name");
 
     const config = await getSystemConfig();
     const isMultiTenant = config.multi_tenant_enabled;
@@ -90,7 +93,7 @@ export async function getOwnerByIdAction(id: string) {
 
   let query = ctx.supabase
     .from("owners")
-    .select("*")
+    .select("id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by")
     .eq("id", id);
 
   if (isMultiTenant && ctx.tenantId) {
@@ -234,7 +237,7 @@ export async function deleteOwnerAction(id: string) {
     // 🔗 DATA INTEGRITY: Check for linked properties
     const { count, error: countErr } = await ctx.supabase
       .from("properties")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("owner_id", id);
 
     if (countErr) throw countErr;
@@ -279,7 +282,7 @@ export async function getOwnersWithPropertyCountAction() {
 
   let query = ctx.supabase
     .from("owners")
-    .select("*")
+    .select("id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by")
     .order("full_name");
   if (isMultiTenant && ctx.tenantId && ctx.tenantId !== "ALL") {
     query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);

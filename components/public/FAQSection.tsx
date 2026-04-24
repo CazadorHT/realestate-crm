@@ -37,7 +37,7 @@ export function FAQSection() {
       const supabase = createClient();
       const { data } = await supabase
         .from("faqs")
-        .select("*")
+        .select("id, question, question_en, question_cn, answer, answer_en, answer_cn, category, view_count")
         .eq("is_active", true)
         .order("sort_order", { ascending: true })
         .limit(5);

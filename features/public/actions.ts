@@ -39,7 +39,7 @@ export async function createDepositLeadAction(data: DepositLeadInput) {
 Type: ${data.propertyType}
 Details: ${data.details || "-"}`,
     })
-    .select()
+    .select("id")
     .single();
 
   if (leadError) {
@@ -388,7 +388,7 @@ export async function submitInquiryAction(
         source: "WEBSITE",
         stage: "NEW",
       })
-      .select()
+      .select("id")
       .single();
 
     if (error) {

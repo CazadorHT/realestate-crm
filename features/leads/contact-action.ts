@@ -130,7 +130,7 @@ export async function submitContactFormAction(
         ai_status_label: validatedFields.data.ai_status_label,
         last_viewed_at: new Date().toISOString(),
       })
-      .select()
+      .select("id, tenant_id")
       .single();
 
     if (error) {

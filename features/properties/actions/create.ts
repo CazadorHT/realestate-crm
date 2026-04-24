@@ -111,7 +111,7 @@ export async function createPropertyAction(
         meta_keywords: mergedKeywords,
         structured_data: seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
       })
-      .select()
+      .select("id")
       .single();
 
     if (error) {
@@ -249,7 +249,7 @@ export async function duplicatePropertyAction(
 
     const { data: src, error: srcErr } = await supabase
       .from("properties")
-      .select("*, property_images(image_url, is_cover)")
+      .select("id, title, property_type, listing_type, status, price, rental_price, bedrooms, bathrooms, size_sqm, district, subdistrict, province, near_transit, is_pet_friendly, is_corner_unit, is_renovated, is_fully_furnished, floor, has_city_view, has_pool_view, has_garden_view, is_selling_with_tenant, is_tax_registered, is_foreigner_quota, google_maps_link, address_line1, postal_code, description, meta_title, meta_description, meta_keywords, tenant_id, property_images(image_url, is_cover)")
       .eq("id", id)
       .eq("tenant_id", tenantId)
       .single();

@@ -54,8 +54,11 @@ export default async function UserDetailPage({
 
   // 2. Fetch User Data, Memberships, and Config
   const [profileRes, membershipsRes, config] = await Promise.all([
-    supabase.from("profiles").select("*").eq("id", id).single(),
-    supabase.from("tenant_members").select("role, tenant:tenants(id, name)").eq("profile_id", id),
+    supabase.from("profiles").select("id, full_name, email, phone, avatar_url, role, line_id, facebook_url, whatsapp_id, wechat_id, created_at").eq("id", id).single(),
+    supabase
+      .from("tenant_members")
+      .select("role, tenant:tenants(id, name)")
+      .eq("profile_id", id),
     getSystemConfig(),
   ]);
 
@@ -64,7 +67,8 @@ export default async function UserDetailPage({
   }
 
   const profile = profileRes.data;
-  const memberships = (membershipsRes.data as unknown as TenantMembership[]) || [];
+  const memberships =
+    (membershipsRes.data as unknown as TenantMembership[]) || [];
   const isMultiTenant = config.multi_tenant_enabled;
   const score = calculateProfileScore(profile);
 
@@ -99,30 +103,34 @@ export default async function UserDetailPage({
               },
             ]}
           />
-          
+
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white/40 backdrop-blur-xl border border-white/40 p-8 rounded-3xl shadow-xl shadow-slate-200/50">
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                 <div className="p-2.5 rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/20">
-                    <Shield className="h-6 w-6" />
-                 </div>
-                 <div className="h-10 w-[2px] bg-slate-200 rounded-full mx-1" />
-                 <div className="space-y-0.5">
-                    <h1 className="text-3xl font-semibold tracking-tight bg-linear-to-br from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                      USER COMMAND CENTER
-                    </h1>
-                    <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] pl-0.5">
-                      Identity & Access Management
-                    </p>
-                 </div>
+                <div className="p-2.5 rounded-2xl bg-slate-900 text-white shadow-lg shadow-slate-900/20">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <div className="h-10 w-[2px] bg-slate-200 rounded-full mx-1" />
+                <div className="space-y-0.5">
+                  <h1 className="text-3xl font-semibold tracking-tight bg-linear-to-br from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                    USER COMMAND CENTER
+                  </h1>
+                  <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em] pl-0.5">
+                    Identity & Access Management
+                  </p>
+                </div>
               </div>
               <p className="text-slate-500 font-medium max-w-xl leading-relaxed italic">
-                กำลังตรวจสอบข้อมูลของ <span className="text-slate-900 font-bold not-italic">{profile.full_name || "ไม่ทราบชื่อ"}</span> คุณสามารถจัดการสิทธิ์และความปลอดภัยได้จากหน้านี้
+                กำลังตรวจสอบข้อมูลของ{" "}
+                <span className="text-slate-900 font-bold not-italic">
+                  {profile.full_name || "ไม่ทราบชื่อ"}
+                </span>{" "}
+                คุณสามารถจัดการสิทธิ์และความปลอดภัยได้จากหน้านี้
               </p>
             </div>
 
             <div className="flex items-center gap-3">
-               <ProfileCompleteness score={score} />
+              <ProfileCompleteness score={score} />
             </div>
           </div>
         </div>
@@ -133,11 +141,11 @@ export default async function UserDetailPage({
             <Card className="relative group rounded-3xl overflow-hidden bg-white/70 backdrop-blur-md border border-white/40 shadow-2xl shadow-slate-200/50">
               <div className="h-32 bg-linear-to-br from-slate-900 via-slate-800 to-indigo-950 relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-4 opacity-10">
-                   <Zap className="h-24 w-24 text-white" />
+                  <Zap className="h-24 w-24 text-white" />
                 </div>
                 <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10" />
               </div>
-              
+
               <CardContent className="px-6 pb-8 text-center relative">
                 <div className="-mt-16 mb-6 flex justify-center">
                   <div className="relative">
@@ -161,10 +169,10 @@ export default async function UserDetailPage({
                       {profile.full_name || "ไม่ระบุชื่อ"}
                     </h2>
                     <div className="flex items-center justify-center gap-2 mt-1">
-                       <UserRoleBadge role={profile.role} />
-                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-                         ID: {profile.id.slice(0, 8)}
-                       </span>
+                      <UserRoleBadge role={profile.role} />
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">
+                        ID: {profile.id.slice(0, 8)}
+                      </span>
                     </div>
                   </div>
 
@@ -205,22 +213,27 @@ export default async function UserDetailPage({
 
             {/* Admin Quick Actions */}
             <Card className="rounded-3xl border border-white/40 bg-white/60 backdrop-blur-md shadow-xl shadow-slate-200/40 overflow-hidden">
-               <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
-                  <div className="flex items-center gap-2">
-                     <Settings className="h-4 w-4 text-slate-600" />
-                     <CardTitle className="text-sm font-bold text-slate-900">แผงควบคุมแอดมิน</CardTitle>
-                  </div>
-               </CardHeader>
-               <CardContent className="p-4 space-y-3">
-                  <Button className="w-full h-11 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold flex items-center gap-2 shadow-lg shadow-slate-900/20 transition-all active:scale-95">
-                     <Activity className="h-4 w-4" />
-                     <span>ปรับปรุงข้อมูลเชิงลึก</span>
-                  </Button>
-                  <Button variant="outline" className="w-full h-11 rounded-xl border-slate-200 font-semibold text-rose-600 hover:bg-rose-50 hover:border-rose-100 transition-all active:scale-95">
-                     <ShieldAlert className="h-4 w-4 mr-2" />
-                     ระงับการใช้งานชั่วคราว
-                  </Button>
-               </CardContent>
+              <CardHeader className="pb-3 border-b border-slate-100 bg-slate-50/50">
+                <div className="flex items-center gap-2">
+                  <Settings className="h-4 w-4 text-slate-600" />
+                  <CardTitle className="text-sm font-bold text-slate-900">
+                    แผงควบคุมแอดมิน
+                  </CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 space-y-3">
+                <Button className="w-full h-11 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold flex items-center gap-2 shadow-lg shadow-slate-900/20 transition-all active:scale-95">
+                  <Activity className="h-4 w-4" />
+                  <span>ปรับปรุงข้อมูลเชิงลึก</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full h-11 rounded-xl border-slate-200 font-semibold text-rose-600 hover:bg-rose-50 hover:border-rose-100 transition-all active:scale-95"
+                >
+                  <ShieldAlert className="h-4 w-4 mr-2" />
+                  ระงับการใช้งานชั่วคราว
+                </Button>
+              </CardContent>
             </Card>
           </div>
 
@@ -228,36 +241,45 @@ export default async function UserDetailPage({
           <div className="lg:col-span-8 space-y-8">
             {/* Branch Management Section */}
             <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-white/60 shadow-xl shadow-slate-200/40 overflow-hidden">
-               <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                     <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
-                        <Building2 className="h-5 w-5" />
-                     </div>
-                     <div>
-                        <h3 className="text-xl font-bold text-slate-900 tracking-tight">การสังกัดสาขาและทีม</h3>
-                        <p className="text-sm text-slate-500 font-medium">Branch Membership & Assignments</p>
-                     </div>
+              <div className="p-8 border-b border-slate-50 bg-slate-50/30 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
+                    <Building2 className="h-5 w-5" />
                   </div>
-                  {!isMultiTenant && (
-                     <div className="px-4 py-2 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100 flex items-center gap-2">
-                        <ShieldAlert className="h-4 w-4" />
-                        <span className="text-[10px] font-bold uppercase tracking-widest">ระบบสาขาปิดอยู่</span>
-                     </div>
-                  )}
-               </div>
-               <div className="p-8">
-                  {isMultiTenant ? (
-                     <TenantMembershipCard memberships={memberships} />
-                  ) : (
-                     <div className="flex flex-col items-center justify-center p-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
-                        <Building2 className="h-12 w-12 text-slate-200 mb-4" />
-                        <h4 className="font-semibold text-slate-500">ปิดระบบสาขาอยู่</h4>
-                        <p className="text-sm text-slate-400 max-w-xs mt-1">
-                           ขณะนี้ระบบทำงานในโหมดสาขาเดียว จึงไม่มีการจัดการข้อมูลสาขาแยกส่วน
-                        </p>
-                     </div>
-                  )}
-               </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                      การสังกัดสาขาและทีม
+                    </h3>
+                    <p className="text-sm text-slate-500 font-medium">
+                      Branch Membership & Assignments
+                    </p>
+                  </div>
+                </div>
+                {!isMultiTenant && (
+                  <div className="px-4 py-2 bg-amber-50 text-amber-600 rounded-2xl border border-amber-100 flex items-center gap-2">
+                    <ShieldAlert className="h-4 w-4" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">
+                      ระบบสาขาปิดอยู่
+                    </span>
+                  </div>
+                )}
+              </div>
+              <div className="p-8">
+                {isMultiTenant ? (
+                  <TenantMembershipCard memberships={memberships} />
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-center">
+                    <Building2 className="h-12 w-12 text-slate-200 mb-4" />
+                    <h4 className="font-semibold text-slate-500">
+                      ปิดระบบสาขาอยู่
+                    </h4>
+                    <p className="text-sm text-slate-400 max-w-xs mt-1">
+                      ขณะนี้ระบบทำงานในโหมดสาขาเดียว
+                      จึงไม่มีการจัดการข้อมูลสาขาแยกส่วน
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Social Information - Elite Refinement */}
@@ -265,16 +287,28 @@ export default async function UserDetailPage({
               <CardHeader className="p-8 border-b border-slate-50 bg-slate-50/30">
                 <div className="flex items-center gap-2">
                   <Globe className="h-5 w-5 text-blue-600" />
-                  <CardTitle className="text-xl font-bold">ข้อมูลการติดต่อ (Social)</CardTitle>
+                  <CardTitle className="text-xl font-bold">
+                    ข้อมูลการติดต่อ (Social)
+                  </CardTitle>
                 </div>
-                <CardDescription className="font-medium">ช่องทางสำหรับการสื่อสารและการประสานงานทีม</CardDescription>
+                <CardDescription className="font-medium">
+                  ช่องทางสำหรับการสื่อสารและการประสานงานทีม
+                </CardDescription>
               </CardHeader>
               <CardContent className="p-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {[
                     { label: "Line ID", value: profile.line_id, icon: "LINE" },
-                    { label: "Facebook", value: profile.facebook_url, icon: "FB" },
-                    { label: "WhatsApp", value: profile.whatsapp_id, icon: "WA" },
+                    {
+                      label: "Facebook",
+                      value: profile.facebook_url,
+                      icon: "FB",
+                    },
+                    {
+                      label: "WhatsApp",
+                      value: profile.whatsapp_id,
+                      icon: "WA",
+                    },
                     { label: "WeChat", value: profile.wechat_id, icon: "WC" },
                   ].map((social) => (
                     <div
@@ -300,24 +334,32 @@ export default async function UserDetailPage({
 
             {/* Account Status Footer */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-               <div className="p-6 rounded-3xl bg-emerald-50/50 border border-emerald-100 flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-emerald-600">
-                     <UserCheck className="h-6 w-6" />
-                  </div>
-                  <div>
-                     <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest leading-none mb-1">Account Status</p>
-                     <p className="text-xl font-bold text-emerald-900">Active & Ready</p>
-                  </div>
-               </div>
-               <div className="p-6 rounded-3xl bg-blue-50/50 border border-blue-100 flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-600">
-                     <Shield className="h-6 w-6" />
-                  </div>
-                  <div>
-                     <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest leading-none mb-1">Verification</p>
-                     <p className="text-xl font-bold text-blue-900">Verified Identity</p>
-                  </div>
-               </div>
+              <div className="p-6 rounded-3xl bg-emerald-50/50 border border-emerald-100 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-emerald-600">
+                  <UserCheck className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest leading-none mb-1">
+                    Account Status
+                  </p>
+                  <p className="text-xl font-bold text-emerald-900">
+                    Active & Ready
+                  </p>
+                </div>
+              </div>
+              <div className="p-6 rounded-3xl bg-blue-50/50 border border-blue-100 flex items-center gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-blue-600">
+                  <Shield className="h-6 w-6" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest leading-none mb-1">
+                    Verification
+                  </p>
+                  <p className="text-xl font-bold text-blue-900">
+                    Verified Identity
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -388,7 +388,7 @@ export async function getPropertyAuditLogsAction(
     // 🛡️ [HARDENING] Fetch audit logs without direct join to avoid schema cache issues with partitioned tables
     let query = supabase
       .from("audit_logs")
-      .select("*", { count: "exact" })
+      .select("id, user_id, action, entity, entity_id, metadata, tenant_id, created_at", { count: "exact" })
       .eq("entity_id", propertyId)
       .eq("entity", "properties");
 

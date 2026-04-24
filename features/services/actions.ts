@@ -94,7 +94,7 @@ export async function getServices(
 
   let query = supabase
     .from("services")
-    .select("*", { count: "exact" })
+    .select("id, slug, title, title_en, title_cn, description, description_en, description_cn, cover_image, price_range, is_active, sort_order, created_at, updated_at, tenant_id", { count: "exact" })
     .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
@@ -138,7 +138,7 @@ export async function getServiceBySlug(slug: string) {
   
   let query = supabase
     .from("services")
-    .select("*")
+    .select("id, slug, title, title_en, title_cn, description, description_en, description_cn, content, content_en, content_cn, cover_image, gallery_images, price_range, contact_link, is_active, sort_order, created_at, updated_at, tenant_id")
     .eq("slug", slug);
 
   // For specific service detail, we usually want the one that is active
@@ -207,7 +207,7 @@ export async function updateService(input: UpdateServiceInput) {
     // 1. Fetch original for Delta Audit
     const { data: oldData } = await ctx.supabase
       .from("services")
-      .select("*")
+      .select("id, slug, title, title_en, title_cn, description, description_en, description_cn, content, content_en, content_cn, cover_image, gallery_images, price_range, contact_link, is_active, sort_order, created_at, updated_at, tenant_id")
       .eq("id", id)
       .single();
 
@@ -512,7 +512,7 @@ export async function cleanupOrphanedServiceImagesAction() {
     // Get pending cleanup tasks
     const { data: logs } = await ctx.supabase
       .from("maintenance_logs")
-      .select("*")
+      .select("id, details, status, updated_at")
       .eq("status", "pending")
       .eq("action", "delete_storage_failed")
       .limit(50);

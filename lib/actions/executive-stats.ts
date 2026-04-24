@@ -33,7 +33,7 @@ export async function getExecutiveStatsAction(params: ExecutiveStatsParams = {})
       // Base query for leads
       let leadQuery = supabase
         .from("leads")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("tenant_id", tenant.id);
 
       // Base query for won deals

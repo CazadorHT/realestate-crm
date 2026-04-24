@@ -212,11 +212,11 @@ bot.command("report", async (ctx) => {
   const [newLeadsResult, activePropsResult] = await Promise.all([
     supabase
       .from("leads")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .gte("created_at", startOfDay.toISOString()),
     supabase
       .from("properties")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("status", "ACTIVE")
   ]);
 
@@ -251,8 +251,8 @@ bot.command("stats_monthly", async (ctx) => {
   startOfMonth.setHours(0, 0, 0, 0);
 
   const [leadsRes, soldRes, topAgentRes] = await Promise.all([
-    supabase.from("leads").select("*", { count: "exact", head: true }).gte("created_at", startOfMonth.toISOString()),
-    supabase.from("properties").select("*", { count: "exact", head: true }).eq("status", "SOLD").gte("updated_at", startOfMonth.toISOString()),
+    supabase.from("leads").select("id", { count: "exact", head: true }).gte("created_at", startOfMonth.toISOString()),
+    supabase.from("properties").select("id", { count: "exact", head: true }).eq("status", "SOLD").gte("updated_at", startOfMonth.toISOString()),
     supabase.from("deal_commissions").select("agent_id, profiles(full_name)").eq("status", "PAID").gte("paid_at", startOfMonth.toISOString())
   ]);
 

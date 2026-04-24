@@ -67,7 +67,7 @@ export const requestLeadTransferAction = createSafeAction(
         note: data.note,
         status: "PENDING",
       })
-      .select()
+      .select("id")
       .single();
 
     if (error) throw error;

@@ -75,9 +75,9 @@ export async function getSettingsSummaryAction() {
   const supabase = await createClient();
 
   const [usersCount, branchesCount, teamsCount] = await Promise.all([
-    supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("tenants").select("*", { count: "exact", head: true }).or("is_deleted.is.null,is_deleted.eq.false"),
-    supabase.from("teams").select("*", { count: "exact", head: true }),
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase.from("tenants").select("id", { count: "exact", head: true }).or("is_deleted.is.null,is_deleted.eq.false"),
+    supabase.from("teams").select("id", { count: "exact", head: true }),
   ]);
 
   return {

@@ -25,7 +25,7 @@ export async function getCoBrokersAction(query?: string, area?: string): Promise
 
     let dbQuery = supabase
       .from("co_brokers")
-      .select("*")
+      .select("id, name, company_name, phone, email, line_id, broker_group, specialized_areas, is_active, created_at, updated_at, tenant_id, created_by")
       .eq("tenant_id", tenantId!)
       .is("deleted_at", null);
 
@@ -67,7 +67,7 @@ export async function createCoBrokerAction(values: CoBrokerFormValues) {
         tenant_id: tenantId!,
         created_by: user.id,
       })
-      .select()
+      .select("id, name, company_name, phone, email, line_id")
       .single();
 
     if (error) throw error;
@@ -101,7 +101,7 @@ export async function updateCoBrokerAction(
       .update(values)
       .eq("id", id)
       .eq("tenant_id", tenantId!)
-      .select()
+      .select("id, name, company_name, phone, email, line_id")
       .single();
 
     if (error) throw error;
@@ -216,14 +216,14 @@ export async function getCoBrokerPerformanceAction(id: string) {
       // 1. Get total listings count
       supabase
         .from("properties")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("co_broker_id", id)
         .eq("tenant_id", tenantId!),
 
       // 2. Get active listings count
       supabase
         .from("properties")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("co_broker_id", id)
         .eq("status", "ACTIVE")
         .eq("tenant_id", tenantId!),
@@ -231,7 +231,7 @@ export async function getCoBrokerPerformanceAction(id: string) {
       // 3. Get sold/rented listings count
       supabase
         .from("properties")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("co_broker_id", id)
         .or("status.eq.SOLD,status.eq.RENTED")
         .eq("tenant_id", tenantId!),
@@ -296,7 +296,7 @@ export async function addCoBrokerDocumentAction(input: CoBrokerDocumentInput) {
         tenant_id: tenantId!,
         created_by: user.id,
       })
-      .select()
+      .select("id, co_broker_id, file_name, file_url")
       .single();
 
     if (error) throw error;
@@ -322,7 +322,7 @@ export async function getCoBrokerDocumentsAction(id: string) {
 
     const { data, error } = await supabase
       .from("co_broker_documents")
-      .select("*")
+      .select("id, co_broker_id, file_name, file_url, file_type, file_size, created_at")
       .eq("co_broker_id", id)
       .eq("tenant_id", tenantId!)
       .order("created_at", { ascending: false });
@@ -488,7 +488,7 @@ export async function getTrashCoBrokersAction(): Promise<{ success: boolean; dat
 
     const { data, error } = await supabase
       .from("co_brokers")
-      .select("*")
+      .select("id, name, company_name, phone, email, line_id, broker_group, specialized_areas, is_active, created_at, deleted_at, tenant_id")
       .eq("tenant_id", tenantId!)
       .not("deleted_at", "is", null)
       .order("deleted_at", { ascending: false });

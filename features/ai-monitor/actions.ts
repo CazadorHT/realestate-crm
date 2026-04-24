@@ -114,11 +114,11 @@ export async function getAiUsageStats(): Promise<AiUsageStats> {
     const [rpmRes, rpdRes] = await Promise.all([
       client
         .from("ai_usage_logs")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .gte("created_at", oneMinuteAgo),
       client
         .from("ai_usage_logs")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .gte("created_at", twentyFourHoursAgo),
     ]);
 

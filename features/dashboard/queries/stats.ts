@@ -67,14 +67,14 @@ export async function getDashboardStats(tenantId?: string | null): Promise<Dashb
     const { count: leadsCurrent } = await applyTenantFilter(
       supabase
         .from("leads")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .gte("created_at", startOfMonth),
     );
 
     const { count: leadsLast } = await applyTenantFilter(
       supabase
         .from("leads")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .gte("created_at", startOfLastMonth)
         .lte("created_at", endOfLastMonth),
     );
@@ -82,7 +82,7 @@ export async function getDashboardStats(tenantId?: string | null): Promise<Dashb
     const { count: leadsTotal } = await applyTenantFilter(
       supabase
         .from("leads")
-        .select("*", { count: "exact", head: true }),
+        .select("id", { count: "exact", head: true }),
     );
 
     const leadsChangePercent =
@@ -93,7 +93,7 @@ export async function getDashboardStats(tenantId?: string | null): Promise<Dashb
     const { count: totalSold } = await applyTenantFilter(
       supabase
         .from("properties")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .is("deleted_at", null)
         .eq("status", "SOLD"),
     );
@@ -112,7 +112,7 @@ export async function getDashboardStats(tenantId?: string | null): Promise<Dashb
     const { count: dealsWonLast } = await applyTenantFilter(
       supabase
         .from("properties")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .in("status", ["SOLD", "RENTED"])
         .is("deleted_at", null)
         .gte("updated_at", startOfLastMonth)
@@ -243,14 +243,14 @@ export async function getFunnelStats(tenantId?: string | null): Promise<FunnelDa
     const { count: dealClosedCount } = await applyTenantFilter(
       supabase
         .from("deals")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("status", "CLOSED_WIN"),
     );
 
     const { count: propertySoldOrRentedCount } = await applyTenantFilter(
       supabase
         .from("properties")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .is("deleted_at", null)
         .in("status", ["SOLD", "RENTED"]),
     );

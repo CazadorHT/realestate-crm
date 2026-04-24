@@ -178,7 +178,7 @@ export async function getTeamMembersAction(teamId: string) {
     const formatted = await Promise.all(profiles.map(async (profile) => {
       const { count } = await adminSupa
         .from("leads")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("assigned_to", profile.id);
       
       return {
@@ -286,7 +286,7 @@ export async function createTeamAction(name: string, managerId?: string) {
         manager_id: managerId || null,
         tenant_id: ctx.tenantId && ctx.tenantId !== "ALL" ? ctx.tenantId : null,
       })
-      .select()
+      .select("id, name, created_at, manager_id, tenant_id")
       .single();
 
     if (error) {

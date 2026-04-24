@@ -22,7 +22,7 @@ export async function getDocumentsByOwner(
 
   let query = supabase
     .from("documents")
-    .select("*, tenant:tenants(id, name)")
+    .select("id, owner_id, owner_type, document_type, file_name, storage_path, mime_type, size_bytes, version, parent_id, created_at, tenant_id, tenant:tenants(id, name)")
     .eq("owner_id", ownerId)
     .eq("owner_type", ownerType);
 
@@ -69,7 +69,7 @@ export async function getAllDocuments(
 
   let query = supabase
     .from("documents")
-    .select("*, tenant:tenants(id, name)", { count: "exact" });
+    .select("id, owner_id, owner_type, document_type, file_name, storage_path, mime_type, size_bytes, version, parent_id, created_at, tenant_id, tenant:tenants(id, name)", { count: "exact" });
 
   if (tenantId && tenantId !== "ALL") {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
@@ -104,7 +104,15 @@ export async function getAllDocuments(
   }
 
   // --- Optimization: Calculate Global Total Size (Enterprise Scalability via RPC) ---
-  const { data: statsData, error: statsError } = await (supabase.rpc as unknown as (name: string, args: Record<string, unknown>) => Promise<{ data: { total_size_bytes: number; total_count: number }[] | null; error: unknown }>)("get_documents_stats", {
+  const { data: statsData, error: statsError } = await (
+    supabase.rpc as unknown as (
+      name: string,
+      args: Record<string, unknown>,
+    ) => Promise<{
+      data: { total_size_bytes: number; total_count: number }[] | null;
+      error: unknown;
+    }>
+  )("get_documents_stats", {
     p_tenant_id: tenantId && tenantId !== "ALL" ? tenantId : null,
     p_search: search || null,
     p_type_filter: typeFilter || "ALL",
@@ -112,21 +120,28 @@ export async function getAllDocuments(
   });
 
   if (statsError) {
-    const err = statsError as { message?: string; code?: string; details?: string; hint?: string };
+    const err = statsError as {
+      message?: string;
+      code?: string;
+      details?: string;
+      hint?: string;
+    };
     // Hardening: Provide detailed diagnostic info instead of empty object
     console.error("Fetch Document Stats Error (RPC failed, falling back):", {
       message: err.message,
       code: err.code,
       details: err.details,
-      hint: err.hint
+      hint: err.hint,
     });
     // Silent fallback to avoid crashing display if RPC isn't deployed yet
   }
 
   // Type safe extraction from RPC table result
   const stats = (statsData || [])[0] || {};
-  const globalTotalSize = (stats as { total_size_bytes?: number }).total_size_bytes || 0;
-  const globalTotalCount = (stats as { total_count?: number }).total_count ?? count ?? 0;
+  const globalTotalSize =
+    (stats as { total_size_bytes?: number }).total_size_bytes || 0;
+  const globalTotalCount =
+    (stats as { total_count?: number }).total_count ?? count ?? 0;
 
   // Use RPC count if available, otherwise fallback to standard count
   const finalTotalCount = Number(globalTotalCount);
@@ -164,13 +179,17 @@ export async function getAllDocuments(
     ownerIdsByType.DEAL.size > 0
       ? supabase
           .from("deals")
-          .select("id, property:properties(title), lead:leads(id, full_name, email)")
+          .select(
+            "id, property:properties(title), lead:leads(id, full_name, email)",
+          )
           .in("id", Array.from(ownerIdsByType.DEAL))
       : Promise.resolve({ data: [] }),
     ownerIdsByType.RENTAL_CONTRACT.size > 0
       ? supabase
           .from("rental_contracts")
-          .select("id, deal:deals(id, property:properties(title), lead:leads(id, full_name, email))")
+          .select(
+            "id, deal:deals(id, property:properties(title), lead:leads(id, full_name, email))",
+          )
           .in("id", Array.from(ownerIdsByType.RENTAL_CONTRACT))
       : Promise.resolve({ data: [] }),
   ]);
@@ -231,12 +250,13 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
       .insert({
         ...validated,
         size_bytes: validated.size_bytes || 0,
-        tenant_id: tenantId && tenantId !== "ALL" ? tenantId : validated.tenant_id,
+        tenant_id:
+          tenantId && tenantId !== "ALL" ? tenantId : validated.tenant_id,
         version: finalVersion,
         created_by: user.id,
         is_encrypted: false, // Phase 3 item
       })
-      .select()
+      .select("id, title, storage_path")
       .single();
 
     if (error) throw new Error(mapDbError(error));
@@ -262,9 +282,14 @@ export async function getDocumentSignedUrl(
   assertStaff(role);
 
   // Verify document existence/access first
-  const { data: doc, error: docErr } = await (tenantId && tenantId !== "ALL"
-    ? supabase.from("documents").select("id").eq("storage_path", storagePath).eq("tenant_id", tenantId)
-    : supabase.from("documents").select("id").eq("storage_path", storagePath)
+  const { data: doc, error: docErr } = await (
+    tenantId && tenantId !== "ALL"
+      ? supabase
+          .from("documents")
+          .select("id")
+          .eq("storage_path", storagePath)
+          .eq("tenant_id", tenantId)
+      : supabase.from("documents").select("id").eq("storage_path", storagePath)
   ).single();
 
   if (docErr || !doc) return null;
@@ -345,14 +370,16 @@ export async function getDocumentVersionsAction(documentId: string) {
     // Here we fetch all docs for the owner and find those connected to the root.
     let vQuery = supabase
       .from("documents")
-      .select("*")
+      .select("id, parent_id, owner_id, version, created_at")
       .eq("owner_id", currentDoc.owner_id as string); // TypeScript cast for safety
 
     if (tenantId && tenantId !== "ALL") {
       vQuery = vQuery.eq("tenant_id", tenantId);
     }
 
-    const { data: allDocs, error: vError } = await vQuery.order("version", { ascending: false });
+    const { data: allDocs, error: vError } = await vQuery.order("version", {
+      ascending: false,
+    });
 
     if (vError) throw new Error(mapDbError(vError));
 
@@ -396,15 +423,21 @@ export async function deleteDocumentAction(id: string, storagePath: string) {
       console.error("Storage Delete Error (non-fatal):", storageError);
 
     const { error: dbError } = await (tenantId && tenantId !== "ALL"
-      ? supabase.from("documents").delete().eq("id", id).eq("tenant_id", tenantId)
-      : supabase.from("documents").delete().eq("id", id)
-    );
+      ? supabase
+          .from("documents")
+          .delete()
+          .eq("id", id)
+          .eq("tenant_id", tenantId)
+      : supabase.from("documents").delete().eq("id", id));
 
     if (dbError) throw new Error(mapDbError(dbError));
 
     return { success: true };
   } catch (error: unknown) {
-    const msg = error instanceof Error ? mapDbError(error) : "เกิดข้อผิดพลาดในการลบเอกสาร";
+    const msg =
+      error instanceof Error
+        ? mapDbError(error)
+        : "เกิดข้อผิดพลาดในการลบเอกสาร";
     return { success: false, message: msg };
   }
 }
@@ -417,12 +450,21 @@ export async function downloadDocumentAction(storagePath: string) {
     const { supabase, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
-    const { data: doc, error: docErr } = await (tenantId && tenantId !== "ALL"
-      ? supabase.from("documents").select("id").eq("storage_path", storagePath).eq("tenant_id", tenantId)
-      : supabase.from("documents").select("id").eq("storage_path", storagePath)
+    const { data: doc, error: docErr } = await (
+      tenantId && tenantId !== "ALL"
+        ? supabase
+            .from("documents")
+            .select("id")
+            .eq("storage_path", storagePath)
+            .eq("tenant_id", tenantId)
+        : supabase
+            .from("documents")
+            .select("id")
+            .eq("storage_path", storagePath)
     ).single();
 
-    if (docErr || !doc) throw new Error("ไม่พบเอกสาร หรือคุณไม่มีสิทธิ์เข้าถึง");
+    if (docErr || !doc)
+      throw new Error("ไม่พบเอกสาร หรือคุณไม่มีสิทธิ์เข้าถึง");
 
     const { data, error } = await supabase.storage
       .from("documents")
@@ -453,9 +495,7 @@ export async function searchOwnerAction(
     const isInitialFetch = !q;
 
     if (type === "LEAD") {
-      let qry = supabase
-        .from("leads")
-        .select("id, full_name, email");
+      let qry = supabase.from("leads").select("id, full_name, email");
 
       if (!isInitialFetch) {
         qry = qry.or(`full_name.ilike.%${q}%,email.ilike.%${q}%`);
@@ -501,7 +541,9 @@ export async function searchOwnerAction(
         .select("id, leads(full_name), properties(title)");
 
       if (!isInitialFetch) {
-        qry = qry.or(`leads.full_name.ilike.%${q}%,properties.title.ilike.%${q}%`);
+        qry = qry.or(
+          `leads.full_name.ilike.%${q}%,properties.title.ilike.%${q}%`,
+        );
       }
 
       if (tenantId && tenantId !== "ALL") {
@@ -534,7 +576,10 @@ export async function searchOwnerAction(
       const { data, error } = await qry.limit(10);
       if (error) throw error;
       return (data || []).map((c) => {
-        const deal = (c.deals as unknown as { leads: { full_name: string } | null; properties: { title: string } | null } | null);
+        const deal = c.deals as unknown as {
+          leads: { full_name: string } | null;
+          properties: { title: string } | null;
+        } | null;
         return {
           id: c.id,
           label: `Contract: ${deal?.leads?.full_name || "N/A"} - ${deal?.properties?.title || "N/A"}`,

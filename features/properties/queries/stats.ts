@@ -152,7 +152,7 @@ export async function getPropertiesFastCountQuery(allBranches?: string): Promise
 
   let query = supabase
     .from("properties")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .is("deleted_at", null);
 
   if (isMultiTenant) {

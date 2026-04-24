@@ -6,7 +6,7 @@ export async function getRentNotificationRules() {
     .from("rent_notification_rules")
     .select(
       `
-      *,
+      id, property_id, line_group_id, notification_day, notification_hour, language, is_active, last_sent_at, created_at, tenant_id,
       properties (id, title),
       line_groups (group_id, group_name, picture_url)
     `,
@@ -25,7 +25,7 @@ export async function getLineGroups() {
   // Fetch only active groups or all? Let's fetch all for now or active.
   const { data, error } = await supabase
     .from("line_groups")
-    .select("*")
+    .select("group_id, group_name, picture_url, is_active")
     .eq("is_active", true)
     .order("updated_at", { ascending: false });
 

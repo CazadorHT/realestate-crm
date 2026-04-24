@@ -13,7 +13,6 @@ type Partner = {
   name: string;
   logo_url: string;
   website_url?: string;
-  category?: "developer" | "bank";
 };
 
 export function PartnerSection() {
@@ -29,12 +28,12 @@ export function PartnerSection() {
         const supabase = createClient();
         const { data } = await supabase
           .from("partners")
-          .select("*")
+          .select("id, name, logo_url, website_url")
           .eq("is_active", true)
           .order("sort_order", { ascending: true });
 
         if (data) {
-          setPartners(data as Partner[]);
+          setPartners(data as unknown as Partner[]);
         }
       } catch (error) {
         console.error("Error fetching partners:", error);

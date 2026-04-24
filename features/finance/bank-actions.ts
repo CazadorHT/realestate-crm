@@ -10,7 +10,7 @@ export async function getBanksAction() {
     const { supabase } = await requireAuthContext();
     const { data, error } = await supabase
       .from("ref_banks")
-      .select("*")
+      .select("code, name_th, name_en, logo_url")
       .eq("is_active", true)
       .order("name_th", { ascending: true });
 
@@ -18,9 +18,9 @@ export async function getBanksAction() {
     return { success: true, data };
   } catch (error: unknown) {
     console.error("Error fetching banks:", error);
-    return { 
-      success: false, 
-      error: (error as Error).message || "ไม่สามารถดึงข้อมูลธนาคารได้" 
+    return {
+      success: false,
+      error: (error as Error).message || "ไม่สามารถดึงข้อมูลธนาคารได้",
     };
   }
 }

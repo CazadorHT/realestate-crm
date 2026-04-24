@@ -80,7 +80,7 @@ function Step5FeaturesComponent() {
         const supabase = createClient();
         const { data, error } = await supabase
           .from("features")
-          .select("*")
+          .select("id, name, icon_key, category")
           .order("category", { ascending: true })
           .order("name", { ascending: true });
 
@@ -103,7 +103,7 @@ function Step5FeaturesComponent() {
       const supabase = createClient();
       const { data, error } = await supabase
         .from("features")
-        .select("*")
+        .select("id, name, icon_key, category")
         .order("category", { ascending: true })
         .order("name", { ascending: true });
 

@@ -25,7 +25,7 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
     const tenantId = "tenant-123";
     const scoped = getScopedRevenueClient(mockSupabase as any, tenantId);
     
-    scoped.deals().select("*");
+    scoped.deals().select("id");
     
     const dealsBuilder = mockSupabase.from("deals");
     expect(mockSupabase.from).toHaveBeenCalledWith("deals");
@@ -101,7 +101,7 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
   it("should NOT inject tenant_id if tenantId is 'ALL' (System Admin mode)", () => {
     const scoped = getScopedRevenueClient(mockSupabase as any, "ALL");
     
-    scoped.deals().select("*");
+    scoped.deals().select("id");
     
     const dealsBuilder = mockSupabase.from("deals");
     expect(dealsBuilder.eq).not.toHaveBeenCalled();

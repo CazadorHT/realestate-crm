@@ -11,14 +11,11 @@ import {
 const OWNER_COLUMNS: ExcelColumn[] = [
   { key: "full_name", header: "ชื่อ-นามสกุล", width: 25 },
   { key: "phone", header: "เบอร์โทร", width: 15 },
-  { key: "email", header: "อีเมล", width: 25 },
   { key: "line_id", header: "Line ID", width: 15 },
-  { key: "address", header: "ที่อยู่", width: 40 },
-  { key: "id_card_number", header: "เลขบัตร ปชช.", width: 18 },
-  { key: "tax_id", header: "เลขประจำตัวผู้เสียภาษี", width: 18 },
-  { key: "bank_name", header: "ธนาคาร", width: 15 },
-  { key: "bank_account_number", header: "เลขบัญชี", width: 18 },
-  { key: "note", header: "หมายเหตุ", width: 30 },
+  { key: "company_name", header: "บริษัท", width: 25 },
+  { key: "owner_type", header: "ประเภทเจ้าของ", width: 15 },
+  { key: "facebook_url", header: "Facebook", width: 25 },
+  { key: "other_contact", header: "การติดต่ออื่นๆ", width: 30 },
   {
     key: "created_at",
     header: "สร้างเมื่อ",
@@ -33,7 +30,7 @@ export async function exportOwnersAction(ids?: string[]) {
 
   let query = supabase
     .from("owners")
-    .select("*")
+    .select("id, full_name, phone, line_id, company_name, owner_type, facebook_url, other_contact, created_at, tenant_id")
     .order("created_at", { ascending: false });
 
   if (ids && ids.length > 0) {

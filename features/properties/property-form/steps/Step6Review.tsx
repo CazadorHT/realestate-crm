@@ -6,16 +6,68 @@ import { type PropertyFormValues } from "@/features/properties/schema";
 import dynamic from "next/dynamic";
 
 // --- Dynamic Preview Components (Bundle Optimization) ---
-const PropertyGallery = dynamic(() => import("@/components/public/PropertyGallery").then(m => m.PropertyGallery), { ssr: false });
-const PropertySpecs = dynamic(() => import("@/components/public/PropertySpecs").then(m => m.PropertySpecs), { ssr: false });
-const NearbyPlaces = dynamic(() => import("@/components/public/NearbyPlaces").then(m => m.NearbyPlaces), { ssr: false });
-const PropertySuitability = dynamic(() => import("@/components/public/PropertySuitability").then(m => m.PropertySuitability), { ssr: false });
-const PropertyHeader = dynamic(() => import("@/components/public/property-detail/PropertyHeader").then(m => m.PropertyHeader), { ssr: false });
-const PropertyBadgesSection = dynamic(() => import("@/components/public/property-detail/PropertyBadgesSection").then(m => m.PropertyBadgesSection), { ssr: false });
-const PropertyDescription = dynamic(() => import("@/components/public/property-detail/PropertyDescription").then(m => m.PropertyDescription), { ssr: false });
-const PropertyAmenities = dynamic(() => import("@/components/public/property-detail/PropertyAmenities").then(m => m.PropertyAmenities), { ssr: false });
-const PropertyMapSection = dynamic(() => import("@/components/public/property-detail/PropertyMapSection").then(m => m.PropertyMapSection), { ssr: false });
-const AgentSidebar = dynamic(() => import("@/components/public/AgentSidebar").then(m => m.AgentSidebar), { ssr: false });
+const PropertyGallery = dynamic(
+  () =>
+    import("@/components/public/PropertyGallery").then(
+      (m) => m.PropertyGallery,
+    ),
+  { ssr: false },
+);
+const PropertySpecs = dynamic(
+  () =>
+    import("@/components/public/PropertySpecs").then((m) => m.PropertySpecs),
+  { ssr: false },
+);
+const NearbyPlaces = dynamic(
+  () => import("@/components/public/NearbyPlaces").then((m) => m.NearbyPlaces),
+  { ssr: false },
+);
+const PropertySuitability = dynamic(
+  () =>
+    import("@/components/public/PropertySuitability").then(
+      (m) => m.PropertySuitability,
+    ),
+  { ssr: false },
+);
+const PropertyHeader = dynamic(
+  () =>
+    import("@/components/public/property-detail/PropertyHeader").then(
+      (m) => m.PropertyHeader,
+    ),
+  { ssr: false },
+);
+const PropertyBadgesSection = dynamic(
+  () =>
+    import("@/components/public/property-detail/PropertyBadgesSection").then(
+      (m) => m.PropertyBadgesSection,
+    ),
+  { ssr: false },
+);
+const PropertyDescription = dynamic(
+  () =>
+    import("@/components/public/property-detail/PropertyDescription").then(
+      (m) => m.PropertyDescription,
+    ),
+  { ssr: false },
+);
+const PropertyAmenities = dynamic(
+  () =>
+    import("@/components/public/property-detail/PropertyAmenities").then(
+      (m) => m.PropertyAmenities,
+    ),
+  { ssr: false },
+);
+const PropertyMapSection = dynamic(
+  () =>
+    import("@/components/public/property-detail/PropertyMapSection").then(
+      (m) => m.PropertyMapSection,
+    ),
+  { ssr: false },
+);
+const AgentSidebar = dynamic(
+  () => import("@/components/public/AgentSidebar").then((m) => m.AgentSidebar),
+  { ssr: false },
+);
 const SmartEditor = dynamic(
   () => import("../components/SmartEditor").then((m) => m.SmartEditor),
   {
@@ -23,7 +75,7 @@ const SmartEditor = dynamic(
     loading: () => (
       <div className="h-[600px] w-full bg-slate-50 animate-pulse rounded-xl border border-slate-200" />
     ),
-  }
+  },
 );
 import { Button } from "@/components/ui/button";
 import { generatePropertyDescription } from "../utils/description-generator";
@@ -92,7 +144,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
       if (values.feature_ids && values.feature_ids.length > 0) {
         const { data } = await supabase
           .from("features")
-          .select("*")
+          .select("id, name, icon_key, category")
           .in("id", values.feature_ids);
         if (data) setActiveFeatures(data);
       } else {

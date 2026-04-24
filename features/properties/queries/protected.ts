@@ -21,7 +21,18 @@ export async function getProtectedPropertyWithImagesById(
     .from("properties")
     .select(
       `
-      *,
+      id, title, title_en, title_cn, description, description_en, description_cn,
+      property_type, listing_type, price, original_price, rental_price, original_rental_price,
+      currency, address_line1, address_line1_en, address_line1_cn,
+      subdistrict, district, province, postal_code, bedrooms, bathrooms,
+      size_sqm, land_size_sqwah, total_units, sold_units, floor, orientation,
+      parking_slots, is_fully_furnished, is_pet_friendly,
+      status, view_count, is_hot_deal, is_exclusive,
+      created_at, updated_at,
+      tenant_id, created_by, owner_id, co_agent_sale_commission_percent,
+      popular_area, popular_area_en, popular_area_cn, property_source,
+      ai_summary_content, ai_reviewed_at,
+      ai_reviewed_by, version, images, nearby_places, nearby_transits,
       property_images (
         id,
         property_id,
@@ -46,7 +57,7 @@ export async function getProtectedPropertyWithImagesById(
 
   if (data.property_images) {
     data.property_images.sort(
-      (a, b) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
+      (a: { sort_order: number | null }, b: { sort_order: number | null }) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
     );
   }
 

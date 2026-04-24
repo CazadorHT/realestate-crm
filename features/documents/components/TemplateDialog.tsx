@@ -150,7 +150,7 @@ export function TemplateDialog({
         if (targetOwnerType === "LEAD" || initialOwnerType === "LEAD") {
           const { data } = await supabase
             .from("leads")
-            .select("*")
+            .select("id, full_name, email, line_id")
             .eq("id", finalId)
             .single();
           if (data) {
@@ -161,7 +161,7 @@ export function TemplateDialog({
         } else if (targetOwnerType === "DEAL" || initialOwnerType === "DEAL") {
           const { data } = await supabase
             .from("deals")
-            .select("*, leads(*)")
+            .select("id, leads(id, full_name, email, line_id)")
             .eq("id", finalId)
             .single();
           if (data && data.leads) {

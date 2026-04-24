@@ -72,7 +72,7 @@ export async function getAuditLogs({
   const to = from + pageSize - 1;
 
   // 1. Build Query with Filters
-  let query = supabase.from("audit_logs").select("*", { count: "exact" });
+  let query = supabase.from("audit_logs").select("id, user_id, action, entity, entity_id, metadata, tenant_id, created_at", { count: "exact" });
 
   if (tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);

@@ -381,8 +381,8 @@ async function runRentNotifications(startTime: number) {
       .from("rent_notification_rules")
       .select(
         `
-        *,
-        properties (*),
+        id, property_id, line_group_id, notification_day, notification_hour, language, is_active, last_sent_at, created_at, tenant_id,
+        properties (id, title, property_type, listing_type, status, price, rental_price, bedrooms, bathrooms, size_sqm),
         line_groups (group_id, group_name),
         rent_notification_history (status, created_at, retry_count)
       `,
@@ -448,7 +448,7 @@ async function runRentNotifications(startTime: number) {
 
           const { data: activeContract } = await supabase
             .from("rental_contracts")
-            .select("*, deal:deals!inner(property_id)")
+            .select("id, deal_id, tenant_id, start_date, end_date, rent_price, status, created_at, deal:deals!inner(property_id)")
             .eq("deal.property_id", rule.property_id)
             .eq("status", "ACTIVE")
             .gte("end_date", todayStr)

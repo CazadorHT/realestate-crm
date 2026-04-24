@@ -51,7 +51,7 @@ export default async function AdminPopularAreasPage({ searchParams }: PageProps)
   const supabase = await createClient();
   const { count: propertiesCount } = await supabase
     .from("properties")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .not("popular_area", "is", null);
 
   const totalProperties = propertiesCount || 0;

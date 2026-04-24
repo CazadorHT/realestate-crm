@@ -21,7 +21,7 @@ export async function getFeatures(): Promise<FeatureRow[]> {
 
     const { data, error } = await supabase
       .from("features")
-      .select("*")
+      .select("id, name, name_en, name_cn, icon_key, category, created_at")
       .order("category", { ascending: true })
       .order("name", { ascending: true });
 

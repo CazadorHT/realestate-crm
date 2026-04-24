@@ -32,7 +32,7 @@ export const createPropertySafe = createSafeAction(
         listing_type: "SALE",
         property_type: "CONDO",
       })
-      .select()
+      .select("id, title, price")
       .single();
 
     if (error) throw new Error(error.message);

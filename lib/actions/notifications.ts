@@ -54,7 +54,7 @@ export async function getNotificationsAction(tenantId?: string) {
 
   let query = supabase
     .from("notifications")
-    .select("*")
+    .select("id, user_id, tenant_id, type, title, message, link, is_read, created_at")
     .eq("user_id", user.id);
 
   // If tenantId is provided, filter by it OR get global notifications (where tenant_id is null)

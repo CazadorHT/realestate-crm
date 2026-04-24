@@ -148,9 +148,9 @@ export async function testSendRentNotification(ruleId: string, tenantId?: string
     let ruleQuery = supabase
       .from("rent_notification_rules")
       .select(`
-        *,
+        id, property_id, line_group_id, notification_day, notification_hour, language, is_active, last_sent_at, created_at, tenant_id,
         properties (
-          *,
+          id, title, property_type, listing_type, status, price, rental_price, bedrooms, bathrooms, size_sqm,
           property_images (image_url, is_cover, sort_order)
         ),
         line_groups (group_id)
@@ -168,7 +168,7 @@ export async function testSendRentNotification(ruleId: string, tenantId?: string
     // 2. Precise Contract Check (Matching Cron Logic)
     const { data: activeContract, error: contractError } = await supabase
       .from("rental_contracts")
-      .select("*, deal:deals!inner(property_id)")
+      .select("id, deal_id, tenant_id, start_date, end_date, rent_price, status, created_at, deal:deals!inner(property_id)")
       .eq("deal.property_id", rule.property_id)
       .eq("status", "ACTIVE")
       .gte("end_date", new Date().toISOString().split("T")[0])

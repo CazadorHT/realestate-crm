@@ -613,7 +613,7 @@ async function handleInteractiveCommand(
     const profile = await getLineProfile(userId);
     const { data: lead } = await supabase
       .from("leads")
-      .select("*")
+      .select("id, full_name, phone, note, tenant_id")
       .eq("line_id", userId)
       .maybeSingle();
 

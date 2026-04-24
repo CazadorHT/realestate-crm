@@ -7,7 +7,7 @@ export async function RecentPropertiesSection({ tenantId }: { tenantId?: string 
   const supabase = await createClient();
   let query = supabase
     .from("properties")
-    .select("*")
+    .select("id, title, price, status, property_type, listing_type, created_at, tenant_id")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .limit(5);

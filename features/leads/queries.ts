@@ -43,7 +43,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   let query = supabase
     .from("leads")
-    .select("*, property:properties(id, title), tenants(id, name)", { count: "exact" });
+    .select("id, full_name, email, phone, stage, source, budget, rental_budget, property_id, property:properties(id, title), tenants(id, name), created_at, updated_at, tenant_id, assigned_to", { count: "exact" });
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -145,7 +145,7 @@ export async function getLeadsForKanbanQuery() {
 
   let query = supabase
     .from("leads")
-    .select("*, tenants(id, name)");
+    .select("id, full_name, stage, source, budget, rental_budget, created_at, updated_at, tenant_id, tenants(id, name)");
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -168,7 +168,7 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
 
   let query = supabase
     .from("leads")
-    .select("*")
+    .select("id, full_name, email, phone, stage, source, budget, budget_max, rental_budget, rental_budget_max, property_id, property_type_preference, location_preference, note, created_at, updated_at, tenant_id, created_by, assigned_to")
     .eq("id", id);
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
@@ -195,15 +195,13 @@ export async function getLeadWithActivitiesQuery(
 
     let query = supabase
       .from("leads")
-      .select(
-        `
-                *,
+        .select(`
+                id, full_name, email, phone, stage, source, budget, budget_max, rental_budget, rental_budget_max, property_id, property_type_preference, location_preference, note, created_at, updated_at, tenant_id, created_by, assigned_to,
                 lead_activities (
                 id, lead_id, property_id, activity_type, note, created_by, created_at,
                 properties ( id, title )
                 )
-            `,
-      )
+            `)
       .eq("id", id);
 
     if (isMultiTenant && tenantId && tenantId !== "ALL") {
@@ -290,7 +288,7 @@ export async function getLeadsDashboardStatsQuery() {
   // 1. Total Count
   let totalQuery = supabase
     .from("leads")
-    .select("*", { count: "exact", head: true });
+    .select("id", { count: "exact", head: true });
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     totalQuery = totalQuery.eq("tenant_id", tenantId);
@@ -300,7 +298,7 @@ export async function getLeadsDashboardStatsQuery() {
   // 2. Active Count (Not closed)
   let activeQuery = supabase
     .from("leads")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .neq("stage", "CLOSED");
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
@@ -318,7 +316,7 @@ export async function getLeadsDashboardStatsQuery() {
 
   let newQuery = supabase
     .from("leads")
-    .select("*", { count: "exact", head: true })
+    .select("id", { count: "exact", head: true })
     .gte("created_at", startOfMonth);
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {

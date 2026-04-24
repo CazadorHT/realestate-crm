@@ -103,7 +103,7 @@ export async function createBlogPostAction(
       author_id, // 🏗️ RELATIONAL
       structured_data: structuredData, // ⚡ AUTOMATED
       requires_ai_review: validated.requires_ai_review,
-    }).select().single();
+    }).select("id, slug").single();
 
     if (error) throw error;
 
@@ -290,7 +290,7 @@ export async function getDeletedBlogPostsAction(): Promise<ActionResponse<BlogPo
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("blog_posts")
-      .select("*, profiles(full_name, avatar_url)")
+      .select("id, title, title_en, title_cn, slug, content, content_en, content_cn, excerpt, excerpt_en, excerpt_cn, category, cover_image, is_published, published_at, tags, author_id, view_count, created_at, updated_at, deleted_at, profiles(full_name, avatar_url)")
       .not("deleted_at", "is", null)
       .order("deleted_at", { ascending: false });
 
@@ -516,7 +516,7 @@ export async function getCategoriesAction(): Promise<ActionResponse<Database["pu
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("blog_categories")
-      .select("*")
+      .select("id, name, name_en, name_cn, slug, created_at")
       .order("name", { ascending: true });
 
     if (error) throw error;
@@ -567,7 +567,7 @@ export async function createCategoryAction(
         name_cn: validated.name_cn, 
         slug 
       })
-      .select()
+      .select("id, name, slug")
       .single();
 
     if (error) throw error;

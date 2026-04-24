@@ -139,7 +139,7 @@ export async function createDealAction(input: CreateDealInput) {
         ...insertData,
         created_by: user.id,
       })
-      .select()
+      .select("id")
       .single();
 
     if (error) throw new Error(error.message);

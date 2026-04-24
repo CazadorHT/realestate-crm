@@ -33,7 +33,7 @@ async function checkProperty() {
 
   const { data: images, error: iError } = await supabase
     .from('property_images')
-    .select('*')
+    .select('id')
     .eq('property_id', property.id);
 
   if (iError) {

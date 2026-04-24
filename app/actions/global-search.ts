@@ -49,8 +49,8 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
   }
 
   // Helper to build a base query with tenant scoping
-  function getBaseQuery(table: "properties" | "leads" | "deals" | "owners") {
-    let q = supabase.from(table).select();
+  function getBaseQuery(table: "properties" | "leads" | "deals" | "owners", columns: string) {
+    let q = supabase.from(table).select(columns);
     if (!isAllTenants && tenantId) {
       q = q.eq("tenant_id", tenantId);
     }
@@ -61,7 +61,7 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
   const [propertiesRes, leadsRes, dealsRes, agentsRes, ownersRes] = await Promise.all([
     // 1. Properties - Expanded with more columns and REF priority
     (() => {
-      let q = getBaseQuery("properties").select("id, title, popular_area, district, province, property_type, address_line1");
+      let q = getBaseQuery("properties", "id, title, popular_area, district, province, property_type, address_line1");
       
       if (isUUID) {
         return q.eq("id", cleanQuery);
@@ -92,7 +92,7 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
 
     // 2. Leads - Search by name, phone, email and partial ID
     (() => {
-      let q = getBaseQuery("leads").select("id, full_name, phone, email");
+      let q = getBaseQuery("leads", "id, full_name, phone, email");
       if (isUUID) return q.eq("id", cleanQuery);
       
       let conditions = [
@@ -115,8 +115,8 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
 
     // 3. Deals - Search by deal ID
     (isUUID 
-      ? getBaseQuery("deals").select("id, property:properties(title), lead:leads(full_name)").eq("id", cleanQuery)
-      : getBaseQuery("deals").select("id, property:properties(title), lead:leads(full_name)")
+      ? getBaseQuery("deals", "id, property:properties(title), lead:leads(full_name)").eq("id", cleanQuery)
+      : getBaseQuery("deals", "id, property:properties(title), lead:leads(full_name)")
           .or(`id.ilike.%${cleanQuery}%`)
     ).limit(5),
 
@@ -128,8 +128,8 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
 
     // 5. Owners
     (isUUID 
-      ? getBaseQuery("owners").select("id, full_name, phone, company_name").eq("id", cleanQuery)
-      : getBaseQuery("owners").select("id, full_name, phone, company_name")
+      ? getBaseQuery("owners", "id, full_name, phone, company_name").eq("id", cleanQuery)
+      : getBaseQuery("owners", "id, full_name, phone, company_name")
           .or(`full_name.ilike.%${cleanQuery}%,phone.ilike.%${cleanQuery}%,company_name.ilike.%${cleanQuery}%`)
     ).limit(5),
   ]);

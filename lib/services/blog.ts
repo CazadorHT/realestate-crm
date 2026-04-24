@@ -16,7 +16,7 @@ export async function getBlogPosts(category?: string, limit = 10, offset = 0): P
   let query = supabase
     .from("blog_posts")
     .select(`
-      *,
+      id, slug, title, title_en, title_cn, excerpt, excerpt_en, excerpt_cn, cover_image, category, published_at,
       profiles:author_id (
         full_name,
         avatar_url
@@ -51,7 +51,7 @@ export async function getAllBlogPosts(page = 1, pageSize = 10): Promise<{ posts:
   const { data, error, count } = await supabase
     .from("blog_posts")
     .select(`
-      *,
+      id, slug, title, title_en, title_cn, excerpt, excerpt_en, excerpt_cn, cover_image, category, published_at, is_published, created_at,
       profiles:author_id (
         full_name,
         avatar_url
@@ -77,7 +77,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
   const { data, error } = await supabase
     .from("blog_posts")
     .select(`
-      *,
+      id, slug, title, title_en, title_cn, excerpt, excerpt_en, excerpt_cn, content, content_en, content_cn, cover_image, category, published_at,
       profiles:author_id (
         full_name,
         avatar_url
@@ -107,7 +107,7 @@ export async function getRelatedPosts(
   const { data, error } = await supabase
     .from("blog_posts")
     .select(`
-      *,
+      id, slug, title, title_en, title_cn, excerpt, excerpt_en, excerpt_cn, cover_image, category, published_at,
       profiles:author_id (
         full_name,
         avatar_url

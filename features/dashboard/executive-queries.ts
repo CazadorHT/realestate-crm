@@ -333,20 +333,20 @@ export async function getSetupProgress(
     // 2. Check Employees
     const { count: memberCount } = await supabase
       .from("tenant_members")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenantId);
 
     // 3. Check Properties
     const { count: propertyCount } = await supabase
       .from("properties")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenantId)
       .is("deleted_at", null);
 
     // 4. Check LINE connection
     const { count: lineCount } = await supabase
       .from("line_groups")
-      .select("*", { count: "exact", head: true })
+      .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenantId);
 
     const profileCompleted = !!(tenant?.logo_url && tenant?.name);
