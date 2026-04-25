@@ -57,6 +57,7 @@ export type PropertyCardProps = {
   images?: (string | { url: string })[] | null;
   location?: string | null;
   size_sqm?: number | null;
+  land_size_sqwah?: number | null;
   parking_slots?: number | null;
   floor?: number | null;
   price_per_sqm?: number | null;
