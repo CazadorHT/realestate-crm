@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Phone } from "lucide-react";
 import { SiGooglemessages } from "react-icons/si";
@@ -35,9 +36,11 @@ export function MobilePropertyActions({
   property,
 }: MobilePropertyActionsProps) {
   const { t, language } = useLanguage();
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] xl:hidden animate-in slide-in-from-bottom-full duration-500
-    ">
+    <div
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 p-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_20px_-5px_rgba(0,0,0,0.1)] xl:hidden"
+    >
       <div className="flex items-center gap-2 sm:gap-4 max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto ">
         {/* Agent Info (Mini) */}
         <div className="flex items-center gap-2 shrink-0 md:mr-12 lg:mr-20">
