@@ -1097,62 +1097,62 @@
     "assistant_name": "AI Assistant"
   },
   "auth": {
-    "back_to_home": "Back to Home",
+    "back_to_home": "กลับสู่หน้าหลัก",
     "success": {
-      "password_updated": "Password updated successfully"
+      "password_updated": "เปลี่ยนรหัสผ่านสำเร็จ"
     },
     "login": {
-      "title": "Login",
-      "subtitle": "Login to manage your business",
-      "email_label": "Email",
-      "password_label": "Password",
-      "password_placeholder": "Enter your password",
-      "forgot_password": "Forgot Password?",
-      "submit_btn": "Login",
-      "logging_in": "Logging in...",
-      "no_account": "Don't have an account?",
-      "register": "Register",
-      "or_continue_with": "Or continue with"
+      "title": "เข้าสู่ระบบ",
+      "subtitle": "เข้าสู่ระบบเพื่อจัดการธุรกิจของคุณ",
+      "email_label": "อีเมล",
+      "password_label": "รหัสผ่าน",
+      "password_placeholder": "กรอกรหัสผ่านของคุณ",
+      "forgot_password": "ลืมรหัสผ่าน?",
+      "submit_btn": "เข้าสู่ระบบ",
+      "logging_in": "กำลังเข้าสู่ระบบ...",
+      "no_account": "ยังไม่มีบัญชี?",
+      "register": "สมัครสมาชิก",
+      "or_continue_with": "หรือดำเนินการต่อด้วย"
     },
     "signup": {
-      "title": "Sign Up",
-      "subtitle": "Start managing your real estate business",
-      "email_label": "Email",
-      "password_label": "Password",
-      "confirm_password_label": "Confirm Password",
-      "password_placeholder": "Minimum 6 characters",
-      "confirm_password_placeholder": "Confirm your password",
-      "submit_btn": "Sign Up",
-      "signing_up": "Signing up...",
-      "have_account": "Already have an account?",
-      "login": "Login"
+      "title": "สมัครสมาชิก",
+      "subtitle": "เริ่มจัดการธุรกิจอสังหาริมทรัพย์ของคุณ",
+      "email_label": "อีเมล",
+      "password_label": "รหัสผ่าน",
+      "confirm_password_label": "ยืนยันรหัสผ่าน",
+      "password_placeholder": "ขั้นต่ำ 6 ตัวอักษร",
+      "confirm_password_placeholder": "ยืนยันรหัสผ่านของคุณ",
+      "submit_btn": "สมัครสมาชิก",
+      "signing_up": "กำลังสมัครสมาชิก...",
+      "have_account": "มีบัญชีอยู่แล้ว?",
+      "login": "เข้าสู่ระบบ"
     },
     "forgot_password": {
-      "title": "Forgot Password",
-      "subtitle": "Enter your email to receive a reset link",
-      "email_label": "Email",
-      "submit_btn": "Send Reset Link",
-      "sending": "Sending...",
-      "back_to_login": "Back to Login",
-      "success_title": "Email Sent",
-      "success_desc": "We have sent a password reset link to your email. Please check your inbox."
+      "title": "ลืมรหัสผ่าน",
+      "subtitle": "กรอกอีเมลเพื่อรับลิงก์รีเซ็ตรหัสผ่าน",
+      "email_label": "อีเมล",
+      "submit_btn": "ส่งลิงก์รีเซ็ตรหัสผ่าน",
+      "sending": "กำลังส่ง...",
+      "back_to_login": "กลับไปหน้าเข้าสู่ระบบ",
+      "success_title": "ส่งอีเมลเรียบร้อย",
+      "success_desc": "เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลของคุณแล้ว กรุณาตรวจสอบกล่องจดหมาย"
     },
     "reset_password": {
-      "title": "Reset Password",
-      "subtitle": "Please set a new password for your account",
-      "new_password_label": "New Password",
-      "new_password_placeholder": "Enter new password",
-      "confirm_password_label": "Confirm New Password",
-      "confirm_password_placeholder": "Confirm new password",
-      "submit_btn": "Reset Password",
-      "resetting": "Resetting..."
+      "title": "ตั้งรหัสผ่านใหม่",
+      "subtitle": "กรุณาตั้งรหัสผ่านใหม่สำหรับบัญชีของคุณ",
+      "new_password_label": "รหัสผ่านใหม่",
+      "new_password_placeholder": "กรอกรหัสผ่านใหม่",
+      "confirm_password_label": "ยืนยันรหัสผ่านใหม่",
+      "confirm_password_placeholder": "ยืนยันรหัสผ่านใหม่อีกครั้ง",
+      "submit_btn": "ตั้งรหัสผ่านใหม่",
+      "resetting": "กำลังตั้งค่ารหัสผ่าน..."
     },
     "pending": {
-      "title": "Registration Successful",
-      "subtitle": "Awaiting Admin Approval",
-      "description": "Your account has been created successfully but is currently pending review and access assignment by an administrator.",
-      "notice": "We will notify you once your account has been approved.",
-      "back_to_login": "Back to Login"
+      "title": "สมัครสมาชิกสำเร็จ",
+      "subtitle": "กรุณารอการอนุมัติจากผู้ดูแลระบบ",
+      "description": "บัญชีของคุณถูกสร้างเรียบร้อยแล้ว แต่อยู่ในระหว่างการรอตรวจสอบและกำหนดสิทธิ์การเข้าถึงจากผู้ดูแลระบบ",
+      "notice": "เราจะแจ้งให้คุณทราบเมื่อบัญชีของคุณได้รับการอนุมัติเรียบร้อยแล้ว",
+      "back_to_login": "กลับไปหน้าเข้าสู่ระบบ"
     }
   },
   "recently_viewed": {

@@ -1098,6 +1098,72 @@
     "clear": "清空",
     "compare_btn": "开始对比"
   },
+ "chat": {
+    "welcome_message": "你好！正在寻找任何特定区域的房子或公寓？或者需要抵押贷款方面的建议？随时提问！🏠",
+    "input_placeholder": "输入消息...",
+    "error_message": "抱歉，连接出现错误。请稍后再试。",
+    "online_status": "在线",
+    "assistant_name": "AI 助手"
+  },
+  "auth": {
+    "back_to_home": "กลับสู่หน้าหลัก",
+    "success": {
+      "password_updated": "เปลี่ยนรหัสผ่านสำเร็จ"
+    },
+    "login": {
+      "title": "เข้าสู่ระบบ",
+      "subtitle": "เข้าสู่ระบบเพื่อจัดการธุรกิจของคุณ",
+      "email_label": "อีเมล",
+      "password_label": "รหัสผ่าน",
+      "password_placeholder": "กรอกรหัสผ่านของคุณ",
+      "forgot_password": "ลืมรหัสผ่าน?",
+      "submit_btn": "เข้าสู่ระบบ",
+      "logging_in": "กำลังเข้าสู่ระบบ...",
+      "no_account": "ยังไม่มีบัญชี?",
+      "register": "สมัครสมาชิก",
+      "or_continue_with": "หรือดำเนินการต่อด้วย"
+    },
+    "signup": {
+      "title": "สมัครสมาชิก",
+      "subtitle": "เริ่มจัดการธุรกิจอสังหาริมทรัพย์ของคุณ",
+      "email_label": "อีเมล",
+      "password_label": "รหัสผ่าน",
+      "confirm_password_label": "ยืนยันรหัสผ่าน",
+      "password_placeholder": "ขั้นต่ำ 6 ตัวอักษร",
+      "confirm_password_placeholder": "ยืนยันรหัสผ่านของคุณ",
+      "submit_btn": "สมัครสมาชิก",
+      "signing_up": "กำลังสมัครสมาชิก...",
+      "have_account": "มีบัญชีอยู่แล้ว?",
+      "login": "เข้าสู่ระบบ"
+    },
+    "forgot_password": {
+      "title": "ลืมรหัสผ่าน",
+      "subtitle": "กรอกอีเมลเพื่อรับลิงก์รีเซ็ตรหัสผ่าน",
+      "email_label": "อีเมล",
+      "submit_btn": "ส่งลิงก์รีเซ็ตรหัสผ่าน",
+      "sending": "กำลังส่ง...",
+      "back_to_login": "กลับไปหน้าเข้าสู่ระบบ",
+      "success_title": "ส่งอีเมลเรียบร้อย",
+      "success_desc": "เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลของคุณแล้ว กรุณาตรวจสอบกล่องจดหมาย"
+    },
+    "reset_password": {
+      "title": "ตั้งรหัสผ่านใหม่",
+      "subtitle": "กรุณาตั้งรหัสผ่านใหม่สำหรับบัญชีของคุณ",
+      "new_password_label": "รหัสผ่านใหม่",
+      "new_password_placeholder": "กรอกรหัสผ่านใหม่",
+      "confirm_password_label": "ยืนยันรหัสผ่านใหม่",
+      "confirm_password_placeholder": "ยืนยันรหัสผ่านใหม่อีกครั้ง",
+      "submit_btn": "ตั้งรหัสผ่านใหม่",
+      "resetting": "กำลังตั้งค่ารหัสผ่าน..."
+    },
+    "pending": {
+      "title": "สมัครสมาชิกสำเร็จ",
+      "subtitle": "กรุณารอการอนุมัติจากผู้ดูแลระบบ",
+      "description": "บัญชีของคุณถูกสร้างเรียบร้อยแล้ว แต่อยู่ในระหว่างการรอตรวจสอบและกำหนดสิทธิ์การเข้าถึงจากผู้ดูแลระบบ",
+      "notice": "เราจะแจ้งให้คุณทราบเมื่อบัญชีของคุณได้รับการอนุมัติเรียบร้อยแล้ว",
+      "back_to_login": "กลับไปหน้าเข้าสู่ระบบ"
+    }
+  },
   "recently_viewed": {
     "title_recommended": "推荐",
     "title_recent": "最近浏览",
