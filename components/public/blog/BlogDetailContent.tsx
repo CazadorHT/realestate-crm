@@ -188,8 +188,8 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
       )}
 
       {/* Author Bio */}
-      <div className="mt-10 md:mt-12 pt-8 border-t">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4 p-5 sm:p-6 bg-linear-to-br from-slate-50 to-blue-50/30 rounded-2xl border border-slate-200">
+      <div className="mt-10 md:my-12 pt-8 border-t border-slate-200 ">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-4  p-5 sm:p-6 bg-linear-to-br from-slate-50 to-blue-50/30 rounded-2xl border border-slate-200">
           <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white shadow-md shrink-0">
             {author.avatar ? (
               <Image

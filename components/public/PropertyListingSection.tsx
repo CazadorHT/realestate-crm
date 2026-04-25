@@ -67,7 +67,7 @@ type ApiProperty = {
 
 type ApiResponse = {
   properties: ApiProperty[];
-  facets: any | null;
+  facets: Record<string, any> | null;
 };
 
 function matchesFilter(item: ApiProperty, filter: FilterType) {
@@ -86,6 +86,12 @@ function matchesFilter(item: ApiProperty, filter: FilterType) {
   }
 }
 
+type PopularArea = {
+  popular_area: string;
+  popular_area_en?: string;
+  popular_area_cn?: string;
+  province?: string;
+};
 
 // Inside component:
 export function PropertyListingSection() {
@@ -141,7 +147,7 @@ function PropertyListingContent() {
   const [localFilter, setLocalFilter] = useState<FilterType>("ALL");
 
   // Fetch popular areas for localization support
-  const [popularAreas, setPopularAreas] = useState<any[]>([]);
+  const [popularAreas, setPopularAreas] = useState<PopularArea[]>([]);
   useEffect(() => {
     fetch("/api/public/popular-areas")
       .then((res) => res.json())
@@ -239,7 +245,8 @@ function PropertyListingContent() {
         setProperties(Array.isArray(propertiesArray) ? propertiesArray : []);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
-        setError(t("common.loading"));
+        // Use a proper error message translation if available, or fallback
+        setError(t("common.error_loading") || "Failed to load properties. Please try again.");
       } finally {
         setIsLoading(false);
       }
@@ -247,7 +254,7 @@ function PropertyListingContent() {
 
     loadProperties();
     return () => controller.abort();
-  }, [reloadKey]);
+  }, [reloadKey, t]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<FilterType, number> = {
@@ -419,7 +426,7 @@ function PropertyListingContent() {
                 <Button
                   asChild
                   variant="outline"
-                  className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base rounded-2xl"
+                  className="h-10 md:h-11 px-4 md:px-6 text-sm md:text-base rounded-2xl hover:bg-slate-50 hover:border-blue-200 transition-all duration-300"
                 >
                   <Link href="/properties">
                     {t("common.more")}
@@ -474,7 +481,7 @@ function PropertyListingContent() {
                 <div
                   id="filter-scroll-container"
                   ref={scrollContainerRef}
-                  className={`flex mx-10 gap-2 overflow-x-auto whitespace-nowrap py-1 scroll-smooth snap-x snap-mandatory px-8 sm:px-10 md:px-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing ${
+                  className={`flex mx-10 gap-2 overflow-x-auto whitespace-nowrap py-2 scroll-smooth snap-x snap-mandatory px-8 sm:px-10 md:px-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] cursor-grab active:cursor-grabbing ${
                     isDragging ? "snap-none scroll-auto" : ""
                   }`}
                   role="tablist"
@@ -508,18 +515,18 @@ function PropertyListingContent() {
                         }}
                         role="tab"
                         aria-selected={active}
-                        className={`shrink-0 snap-start px-3 py-1.5 sm:px-4 sm:py-2 rounded-full border text-xs sm:text-sm font-semibold transition-all duration-300 pointer-events-auto ${
+                        className={`shrink-0 snap-start px-4 py-2 sm:px-5 sm:py-2.5 rounded-full border text-xs sm:text-sm font-semibold transition-all duration-300 pointer-events-auto shadow-xs active:scale-95 ${
                           active
-                            ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                            ? "bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-600/20"
                             : isDisabled
                               ? "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-60 grayscale"
-                              : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600"
+                              : "bg-white text-slate-600 border-slate-200 hover:border-blue-500 hover:text-blue-600 hover:shadow-sm"
                         }`}
                       >
                         {FILTER_LABELS[type]}
                         {!isDisabled && type !== "ALL" && (
-                          <span className="ml-1.5 opacity-60 font-semibold text-[0.7rem] ">
-                            ({count})
+                          <span className={`ml-1.5 font-bold text-[0.7rem] ${active ? "text-blue-100" : "text-blue-500/60"}`}>
+                            {count}
                           </span>
                         )}
                       </button>
