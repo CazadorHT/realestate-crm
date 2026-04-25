@@ -16,6 +16,7 @@ export type CompareProperty = {
   description: string | null;
   province: string | null;
   size_sqm: number | null;
+  land_size_sqwah: number | null;
   floor: number | null;
   parking_slots: number | null;
   updated_at: string;

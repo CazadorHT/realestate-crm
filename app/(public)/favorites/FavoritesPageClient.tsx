@@ -52,7 +52,7 @@ export default function FavoritesPageClient() {
       if (!res.ok) throw new Error("Failed to fetch");
 
       const data = await res.json();
-      const loadedProperties = Array.isArray(data) ? data : [];
+      const loadedProperties = data.properties || (Array.isArray(data) ? data : []);
 
       setFavorites(loadedProperties);
     } catch (error) {

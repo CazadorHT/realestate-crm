@@ -66,6 +66,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
   // Calculation for max value to highlight Winner
   const isNumericCompare = [
     "property_size",
+    "land_size_sqwah",
     "bedrooms",
     "bathrooms",
     "parking_slots",
@@ -76,6 +77,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
     maxValue = Math.max(
       ...properties.map((p) => {
         if (row.key === "property_size") return p.size_sqm || 0;
+        if (row.key === "land_size_sqwah") return p.land_size_sqwah || 0;
         if (row.key === "bedrooms") return p.bedrooms || 0;
         if (row.key === "bathrooms") return p.bathrooms || 0;
         if (row.key === "parking_slots") return p.parking_slots || 0;
@@ -140,13 +142,13 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
         idx % 2 === 0 ? "bg-slate-50/50" : "bg-white/50"
       }`}
       style={{
-        gridTemplateColumns: `150px repeat(${properties.length}, 1fr)`,
+        gridTemplateColumns: `160px repeat(${properties.length}, 1fr)`,
       }}
     >
       <div className="p-2 md:p-4 text-xs md:text-sm font-semibold text-slate-600 flex flex-col items-start gap-1 md:gap-2">
-        <div className="flex items-center gap-1 md:gap-2">
-          <row.icon className="h-3 w-3 md:h-4 md:w-4 text-slate-400 shrink-0" />
-          <span className="truncate">
+        <div className="flex items-center gap-1.5 md:gap-2 w-full">
+          <row.icon className="h-3.5 w-3.5 md:h-4 md:w-4 text-slate-400 shrink-0" />
+          <span className="leading-tight">
             {t(`compare_page.labels.${row.key}`)}
           </span>
         </div>
@@ -172,6 +174,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
         // Check overlap Winner
         let val = 0;
         if (row.key === "property_size") val = p.size_sqm || 0;
+        if (row.key === "land_size_sqwah") val = p.land_size_sqwah || 0;
         if (row.key === "bedrooms") val = p.bedrooms || 0;
         if (row.key === "bathrooms") val = p.bathrooms || 0;
         if (row.key === "parking_slots") val = p.parking_slots || 0;
@@ -181,7 +184,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
         return (
           <div
             key={p.id}
-            className={`p-2 md:p-4 text-xs md:text-sm text-slate-700 leading-relaxed transition-colors duration-500 ${
+            className={`p-2 md:p-4 text-xs md:text-sm text-slate-700 leading-relaxed transition-colors duration-500  ${
               isWinner ? "bg-green-50/60 font-medium" : ""
             }`}
           >
@@ -198,11 +201,11 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
               )
             ) : row.key === "features" ? (
               p.features && p.features.length > 0 ? (
-                <div className="flex flex-wrap gap-1 md:gap-1.5">
+                <div className="flex flex-wrap gap-1.5">
                   {p.features.map((f) => (
                     <div
                       key={f.id}
-                      className="text-[10px] md:text-xs px-1.5 md:px-2 py-0.5 md:py-1 bg-slate-100 rounded text-slate-600 whitespace-nowrap"
+                      className="text-[10px] md:text-xs px-2 py-1 bg-slate-50 border border-slate-100 rounded text-slate-600 w-fit"
                     >
                       {getLocalizedField<string>(f, "name", language)}
                     </div>
@@ -232,6 +235,14 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
               p.size_sqm ? (
                 <span className={isWinner ? "text-green-700 font-bold" : ""}>
                   {p.size_sqm} {t("compare_page.values.sqm")}
+                </span>
+              ) : (
+                "-"
+              )
+            ) : row.key === "land_size_sqwah" ? (
+              p.land_size_sqwah ? (
+                <span className={isWinner ? "text-green-700 font-bold" : ""}>
+                  {p.land_size_sqwah} {t("compare_page.values.sqwa")}
                 </span>
               ) : (
                 "-"
@@ -280,7 +291,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
               <div
                 className={`${
                   isExpanded ? "" : "line-clamp-6"
-                } text-[10px] md:text-xs prose prose-slate prose-compact dark:prose-invert max-w-none transition-all duration-300`}
+                } text-[10px] md:text-xs text-slate-600 prose prose-slate prose-compact max-w-none transition-all duration-300`}
                 dangerouslySetInnerHTML={{
                   __html: DOMPurify.sanitize(
                     getLocalizedField<string>(p, "description", language) ||

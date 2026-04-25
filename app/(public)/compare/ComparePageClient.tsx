@@ -59,7 +59,8 @@ function ComparePageContent() {
         });
         if (!res.ok) throw new Error("Failed to load");
         const data = await res.json();
-        setProperties(Array.isArray(data) ? data : []);
+        const results = data.properties || (Array.isArray(data) ? data : []);
+        setProperties(results);
       } catch (err) {
         console.error(err);
       } finally {
