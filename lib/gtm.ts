@@ -71,4 +71,5 @@ export const GTM_EVENTS = {
   LEAD_FORM_SUCCESS: "lead_form_success", // ส่งฟอร์มสำเร็จ
   LEAD_FORM_ERROR: "lead_form_error", // เกิดข้อผิดพลาดในการส่งฟอร์ม
   VIEW_ITEM_LIST: "view_item_list", // ดูรายการทรัพย์ (Search Results)
+  SECTION_DWELL_TIME: "section_dwell_time", // ระยะเวลาที่ผู้ใช้อยู่ในแต่ละ Section (วินาที)
 };

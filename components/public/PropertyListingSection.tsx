@@ -21,6 +21,7 @@ import { siteConfig } from "@/lib/site-config";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { PropertyListingSkeleton } from "./PropertyListingSkeleton";
+import { useSectionTracking } from "@/hooks/use-section-tracking";
 
 type FilterType =
   | "ALL"
@@ -145,6 +146,13 @@ function PropertyListingContent() {
   
   // Local state for type filter if not in URL, but prioritized by URL
   const [localFilter, setLocalFilter] = useState<FilterType>("ALL");
+
+  // Track user interest duration for this section
+  useSectionTracking({
+    sectionId: "latest-properties",
+    category: localFilter !== "ALL" ? localFilter : undefined,
+    threshold: 3, // At least 3 seconds
+  });
 
   // Fetch popular areas for localization support
   const [popularAreas, setPopularAreas] = useState<PopularArea[]>([]);

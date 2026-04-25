@@ -8,6 +8,8 @@ import { PropertyCard, PropertyCardProps } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { FaFire, FaFireBurner } from "react-icons/fa6";
+import { getTopInterest, useSectionTracking } from "@/hooks/use-section-tracking";
+import { useMemo } from "react";
 
 type ApiProperty = PropertyCardProps;
 
@@ -18,6 +20,26 @@ export function HotDealsSection() {
   const [isMounted, setIsMounted] = useState(false);
   const [isEmpty, setIsEmpty] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // 1. Track Dwell Time for Analytics
+  useSectionTracking({
+    sectionId: "hot-deals-section",
+    category: "HOT_DEALS",
+  });
+
+  // 2. Dynamic Personalization Logic
+  const topInterest = getTopInterest();
+
+  const displayProperties = useMemo(() => {
+    if (!topInterest) return properties;
+    
+    // Sort properties to bring the user's top interest to the front
+    return [...properties].sort((a, b) => {
+      const aMatch = a.property_type === topInterest ? 1 : 0;
+      const bMatch = b.property_type === topInterest ? 1 : 0;
+      return bMatch - aMatch;
+    });
+  }, [properties, topInterest]);
 
   // Touch handling refs for directional swipe detection
   const touchStartX = useRef(0);
@@ -85,7 +107,7 @@ export function HotDealsSection() {
   if (isEmpty && !isLoading) return null;
 
   return (
-    <section className="py-10 md:py-16 relative overflow-hidden bg-slate-800">
+    <section id="hot-deals-section" className="py-10 md:py-16 relative overflow-hidden bg-slate-800">
       {/* === ANIMATED PREMIUM BACKGROUND === */}
 
       {/* Moving Gradient Blobs */}
@@ -229,7 +251,7 @@ export function HotDealsSection() {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {properties.slice(0, 4).map((property, index) => (
+            {displayProperties.slice(0, 4).map((property, index) => (
               <div
                 key={property.id}
                 className="w-[85vw] max-w-[340px] sm:max-w-[360px] md:w-auto md:max-w-none snap-start shrink-0 relative group"
