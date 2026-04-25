@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+
 
 export const runtime = "edge";
 
@@ -18,73 +18,45 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get("type") || "Property";
     const location = searchParams.get("location") || "";
 
-    // 1. Fetch Property Image from Supabase if ID is provided
+    // 1. Fetch Property Image (Minimal Inline Client)
     let imageUrl = null;
     if (id) {
-      // Use centralized Admin Client to bypass RLS securely
-      const supabase = createAdminClient();
+      const { createClient } = await import("@supabase/supabase-js");
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        { auth: { persistSession: false } }
+      );
 
-      // Get the cover image or the first image
       const { data: images } = await supabase
         .from("property_images")
-        .select("image_url, storage_path, is_cover")
+        .select("image_url, storage_path")
         .eq("property_id", id)
         .order("is_cover", { ascending: false })
-        .order("sort_order", { ascending: true })
         .limit(1);
 
-      if (images && images.length > 0) {
+      if (images?.[0]) {
         imageUrl = images[0].image_url;
-        
-        // Ensure absolute URL + Optimization (Resize for OG 1200x630)
-        // This prevents the Edge Runtime from crashing on 10MB images
         if (imageUrl && !imageUrl.startsWith("http") && images[0].storage_path) {
-          const { data: { publicUrl } } = supabase.storage
+          imageUrl = supabase.storage
             .from("property-images")
             .getPublicUrl(images[0].storage_path, {
-              transform: {
-                width: 1200,
-                height: 630,
-                quality: 80,
-              }
-            });
-          imageUrl = publicUrl;
+              transform: { width: 1200, height: 630, quality: 80 }
+            }).data.publicUrl;
         }
       }
     }
 
-    // 2. Format Price (re-add symbols)
-    let displayPrice = rawPrice;
-    if (rawPrice && !rawPrice.includes("฿")) {
-      // Re-add ฿ if it was removed for URL safety
-      displayPrice = `฿ ${rawPrice}`;
-    }
+    // 2. Format Price
+    const displayPrice = rawPrice && !rawPrice.includes("฿") ? `฿ ${rawPrice}` : rawPrice;
 
-    // 3. Robust Font Loading (with Multiple Fallbacks)
+    // 3. Ultra-light Font Loading (CDN Only)
     if (!cachedFont) {
-      // Try local host first (fastest)
-      const host = req.headers.get("host");
-      const localFontUrl = `https://${host}/fonts/Kanit-Bold.ttf`;
-      
       try {
-        const fontRes = await fetch(localFontUrl);
-        if (fontRes.ok) {
-          cachedFont = await fontRes.arrayBuffer();
-        } else {
-          // Fallback 1: Direct File Reference
-          const fileRes = await fetch(new URL("../../../../public/fonts/Kanit-Bold.ttf", import.meta.url));
-          if (fileRes.ok) {
-            cachedFont = await fileRes.arrayBuffer();
-          } else {
-            // Fallback 2: Stable CDN (Google Fonts directly)
-            const googleFontRes = await fetch("https://fonts.gstatic.com/s/kanit/v15/n0felmS_IDxbg6sRRC631X8.ttf");
-            if (googleFontRes.ok) {
-              cachedFont = await googleFontRes.arrayBuffer();
-            }
-          }
-        }
+        const fontRes = await fetch("https://fonts.gstatic.com/s/kanit/v15/n0felmS_IDxbg6sRRC631X8.ttf");
+        if (fontRes.ok) cachedFont = await fontRes.arrayBuffer();
       } catch (e) {
-        console.error("Font fetch failed:", e);
+        console.error("Font error:", e);
       }
     }
 

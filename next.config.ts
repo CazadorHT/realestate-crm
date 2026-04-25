@@ -101,11 +101,9 @@ export default withSentryConfig(nextConfig, {
     disable: false,
   },
 
-  // Automatically annotate React components to show their full name in breadcrumbs and session replay
-  reactComponentAnnotation: {
-    enabled: true,
-  },
-
-  // Enables automatic instrumentation of Vercel Cron Monitors.
+  // Note: Some of these options might not work with Turbopack yet, 
+  // but we keep them for standard Webpack builds/Production.
+  reactComponentAnnotation: { enabled: true },
   automaticVercelMonitors: true,
+  disableLogger: true,
 });
