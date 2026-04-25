@@ -31,6 +31,7 @@ export function FAQSection() {
   const { t, language } = useLanguage();
   const [faqs, setFaqs] = useState<FAQ[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     async function fetchFAQs() {
@@ -46,6 +47,7 @@ export function FAQSection() {
         setFaqs(data as FAQ[]);
       }
       setLoading(false);
+      setIsMounted(true);
     }
     fetchFAQs();
   }, []);
@@ -92,8 +94,7 @@ export function FAQSection() {
       />
       <div
         className="max-w-7xl px-4 md:px-6 lg:px-8 mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-12 items-start"
-        data-aos="fade-up"
-        data-aos-delay="100"
+        {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "100" } : {})}
       >
         <div className="text-left mb-8 md:mb-12 lg:mb-16 w-full">
           <div className="inline-flex items-center gap-2 px-3 md:px-4 py-1.5 md:py-2 rounded-full bg-white/5 border border-white/10 text-blue-400 text-xs md:text-sm font-medium mb-4 md:mb-6 backdrop-blur-sm">
@@ -155,8 +156,7 @@ export function FAQSection() {
                     key={faq.id}
                     value={faq.id}
                     className="border-none group"
-                    data-aos="fade-up"
-                    data-aos-delay={index * 100}
+                    {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (index * 100).toString() } : {})}
                   >
                     {/* Question Bubble (Left) */}
                     <div className="flex justify-start mb-2">

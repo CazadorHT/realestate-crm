@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useState, useEffect } from "react";
 
 const STEP_TONES = {
   blue: {
@@ -48,6 +49,8 @@ type StepItem = {
 
 export function HowItWorksSection() {
   const { t } = useLanguage();
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
 
   const STEPS: StepItem[] = [
     {
@@ -107,7 +110,7 @@ export function HowItWorksSection() {
         {/* SEO-Optimized Header */}
         <div
           className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
-          data-aos="fade-up"
+          {...(isMounted ? { "data-aos": "fade-up" } : {})}
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-blue-50 to-purple-50 border border-blue-100">
             <Sparkles className="w-4 h-4 text-blue-600" />
@@ -160,8 +163,7 @@ export function HowItWorksSection() {
                 <div
                   key={idx}
                   className="relative group shrink-0 w-[85vw] md:w-full snap-center"
-                  data-aos="fade-up"
-                  data-aos-delay={idx * 100}
+                  {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (idx * 100).toString() } : {})}
                   id={`step-${idx + 1}`}
                 >
                   <div className="bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 shadow-lg border border-slate-200 hover:border-slate-300 hover:shadow-2xl transition-all hover:-translate-y-2 duration-500 relative overflow-hidden">
@@ -214,8 +216,7 @@ export function HowItWorksSection() {
         {/* Bottom CTA */}
         <div
           className="mt-10 md:mt-16 text-center"
-          data-aos="fade-up"
-          data-aos-delay="300"
+          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "300" } : {})}
         >
           <p className="text-sm md:text-base text-slate-600 mb-3 md:mb-4">
             {t("home.how_it_works.ready_q")}

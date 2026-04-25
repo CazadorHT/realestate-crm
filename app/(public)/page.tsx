@@ -6,6 +6,9 @@ import { getServerTranslations } from "@/lib/i18n";
 import { HotDealsSkeleton } from "@/components/public/HotDealsSkeleton";
 import { MortgageCalculatorSkeleton } from "@/components/public/MortgageCalculatorSkeleton";
 import { RecentlyViewedSkeleton } from "@/components/public/RecentlyViewedSkeleton";
+import { PopularAreasSkeleton } from "@/components/public/PopularAreasSkeleton";
+import { SectionSkeleton } from "@/components/public/SectionSkeleton";
+import { PropertyCardSkeleton } from "@/components/public/PropertyCardSkeleton";
 import { 
   getPopularAreasAction, 
   getPublicProvincesAction 
@@ -16,6 +19,7 @@ import { HeroSection } from "@/components/public/HeroSection";
 import { PropertyTypeGrid } from "@/components/public/PropertyTypeGrid";
 import { StatsBand } from "@/components/public/StatsBand";
 import { PartnerSection } from "@/components/public/PartnerSection";
+import { PropertyListingSkeleton } from "@/components/public/PropertyListingSkeleton";
 
 // Lazy loaded components (Scroll-driven or heavy)
 const HotDealsSection = dynamic(
@@ -25,11 +29,12 @@ const HotDealsSection = dynamic(
 
 const PopularAreasSection = dynamic(
   () => import("@/components/public/PopularAreasSection").then((mod) => mod.PopularAreasSection),
-  // PopularAreasSection has internal loading but we can provide a small shimmer if needed
+  { loading: () => <PopularAreasSkeleton /> }
 );
 
-const PropertyListingSection = dynamic(() =>
-  import("@/components/public/PropertyListingSection").then((mod) => mod.PropertyListingSection)
+const PropertyListingSection = dynamic(
+  () => import("@/components/public/PropertyListingSection").then((mod) => mod.PropertyListingSection),
+  { loading: () => <PropertyListingSkeleton /> }
 );
 
 const RecentlyViewedSection = dynamic(
@@ -42,13 +47,40 @@ const MortgageCalculatorSection = dynamic(
   { loading: () => <MortgageCalculatorSkeleton /> }
 );
 
-const TrustSection = dynamic(() => import("@/components/public/TrustSection").then((mod) => mod.TrustSection));
-const HowItWorksSection = dynamic(() => import("@/components/public/HowItWorksSection").then((mod) => mod.HowItWorksSection));
-const DepositPropertySection = dynamic(() => import("@/components/public/DepositPropertySection").then((mod) => mod.DepositPropertySection));
-const TestimonialsSection = dynamic(() => import("@/components/public/TestimonialsSection").then((mod) => mod.TestimonialsSection));
-const CTASection = dynamic(() => import("@/components/public/CTASection").then((mod) => mod.CTASection));
-const BlogSection = dynamic(() => import("@/components/public/BlogSection").then((mod) => mod.BlogSection));
-const FAQSection = dynamic(() => import("@/components/public/FAQSection").then((mod) => mod.FAQSection));
+const TrustSection = dynamic(
+  () => import("@/components/public/TrustSection").then((mod) => mod.TrustSection),
+  { loading: () => <SectionSkeleton /> }
+);
+
+const HowItWorksSection = dynamic(
+  () => import("@/components/public/HowItWorksSection").then((mod) => mod.HowItWorksSection),
+  { loading: () => <SectionSkeleton /> }
+);
+
+const DepositPropertySection = dynamic(
+  () => import("@/components/public/DepositPropertySection").then((mod) => mod.DepositPropertySection),
+  { loading: () => <SectionSkeleton /> }
+);
+
+const TestimonialsSection = dynamic(
+  () => import("@/components/public/TestimonialsSection").then((mod) => mod.TestimonialsSection),
+  { loading: () => <SectionSkeleton /> }
+);
+
+const CTASection = dynamic(
+  () => import("@/components/public/CTASection").then((mod) => mod.CTASection),
+  { loading: () => <div className="h-[400px] w-full bg-slate-50 animate-pulse" /> }
+);
+
+const BlogSection = dynamic(
+  () => import("@/components/public/BlogSection").then((mod) => mod.BlogSection),
+  { loading: () => <SectionSkeleton /> }
+);
+
+const FAQSection = dynamic(
+  () => import("@/components/public/FAQSection").then((mod) => mod.FAQSection),
+  { loading: () => <SectionSkeleton /> }
+);
 
 // S-Tier Scaling: Static generation with one-day revalidation (The Long-Cache Hardening)
 export const revalidate = 86400;
@@ -146,7 +178,7 @@ export default async function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50 overflow-x-hidden">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50 overflow-x-hidden scroll-smooth">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
@@ -154,27 +186,69 @@ export default async function LandingPage() {
       
       {/* ABOVE THE FOLD: Static for maximum First Impression */}
       <HeroSection />
-      <PropertyTypeGrid />
-      <StatsBand />
-      <PartnerSection />
+      
+      <div className="min-h-[400px]">
+        <PropertyTypeGrid />
+      </div>
+      
+      <div className="min-h-[100px]">
+        <StatsBand />
+      </div>
+      
+      <div className="min-h-[200px]">
+        <PartnerSection />
+      </div>
       
       {/* STRATEGIC CONVERSION: Hot Deals comes first based on Urgency & Conversion Insight */}
-      <HotDealsSection />
+      <div className="min-h-[600px]">
+        <HotDealsSection />
+      </div>
       
       {/* NAVIGATION & SEO: Popular Areas for Bot Crawling & Layout Flow */}
-      <PopularAreasSection initialItems={popularAreas} initialProvinces={provinces} />
+      <div className="min-h-[400px]">
+        <PopularAreasSection initialItems={popularAreas} initialProvinces={provinces} />
+      </div>
       
       {/* BELOW THE FOLD: Dynamic / Lazy */}
-      <PropertyListingSection />
-      <MortgageCalculatorSection />
-      <RecentlyViewedSection />
-      <TrustSection />
-      <HowItWorksSection />
-      <TestimonialsSection />
-      <BlogSection />
-      <FAQSection />
-      <DepositPropertySection />
-      <CTASection />
+      <div className="min-h-[800px]">
+        <PropertyListingSection />
+      </div>
+      
+      <div className="min-h-[400px]">
+        <MortgageCalculatorSection />
+      </div>
+      
+      <div className="min-h-[500px]">
+        <RecentlyViewedSection />
+      </div>
+      
+      <div className="min-h-[600px]">
+        <TrustSection />
+      </div>
+      
+      <div className="min-h-[600px]">
+        <HowItWorksSection />
+      </div>
+      
+      <div className="min-h-[600px]">
+        <TestimonialsSection />
+      </div>
+      
+      <div className="min-h-[600px]">
+        <BlogSection />
+      </div>
+      
+      <div className="min-h-[500px]">
+        <FAQSection />
+      </div>
+      
+      <div className="min-h-[600px]">
+        <DepositPropertySection />
+      </div>
+      
+      <div className="min-h-[400px]">
+        <CTASection />
+      </div>
     </div>
   );
 }

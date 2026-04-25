@@ -5,9 +5,12 @@ import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { useState, useEffect } from "react";
 
 export function TestimonialsSection() {
   const { t } = useLanguage();
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
   const settings = useSiteConfig();
   const siteName = settings.site_name || siteConfig.name;
 
@@ -91,7 +94,7 @@ export function TestimonialsSection() {
         {/* SEO-Optimized Header */}
         <div
           className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
-          data-aos="fade-up"
+          {...(isMounted ? { "data-aos": "fade-up" } : {})}
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200/50">
             <Award className="w-4 h-4 text-amber-600" />
@@ -136,8 +139,7 @@ export function TestimonialsSection() {
             <div
               key={idx}
               className="group relative shrink-0 w-[85vw] md:w-full snap-center"
-              data-aos="fade-up"
-              data-aos-delay={idx * 100}
+              {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (idx * 100).toString() } : {})}
             >
               <div className="relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 shadow-lg border border-slate-200 hover:border-amber-200 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
                 {/* Quote Icon Background */}
@@ -203,8 +205,7 @@ export function TestimonialsSection() {
         {/* Bottom Trust Signal */}
         <div
           className="mt-10 md:mt-16 text-center"
-          data-aos="fade-up"
-          data-aos-delay="400"
+          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "400" } : {})}
         >
           <div className="inline-flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 bg-linear-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl md:rounded-2xl">
             <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-green-600" />

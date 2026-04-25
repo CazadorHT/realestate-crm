@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Home, Key, CheckCircle, User, Phone, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,8 @@ export function DepositPropertySection({ className }: { className?: string }) {
   const siteName = settings.site_name || siteConfig.name;
   const [isSuccess, setIsSuccess] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
 
   // Schema.org Service for SEO
   const schemaData = {
@@ -61,7 +63,7 @@ export function DepositPropertySection({ className }: { className?: string }) {
         {/* Header */}
         <div
           className="text-center space-y-4 md:space-y-6 mb-12 md:mb-20"
-          data-aos="fade-up"
+          {...(isMounted ? { "data-aos": "fade-up" } : {})}
         >
           <div className="inline-flex items-center rounded-full border border-blue-200/60 bg-white/80 backdrop-blur-sm px-4 py-2 text-[11px] md:text-sm font-bold uppercase tracking-widest shadow-sm">
             <Key className="mr-2 h-3.5 w-3.5 text-blue-600" />
@@ -95,8 +97,7 @@ export function DepositPropertySection({ className }: { className?: string }) {
         {/* Steps Row */}
         <div
           className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-8 mb-8 md:mb-16"
-          data-aos="fade-up"
-          data-aos-delay="100"
+          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "100" } : {})}
         >
           {[
             { step: 1, text: t("deposit.step1"), icon: User, color: "blue" },
@@ -140,8 +141,7 @@ export function DepositPropertySection({ className }: { className?: string }) {
         {/* CTA Card */}
         <div
           className="relative max-w-xl mx-auto"
-          data-aos="fade-up"
-          data-aos-delay="200"
+          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "200" } : {})}
         >
           <div className="absolute inset-0 bg-linear-to-r from-blue-500 to-indigo-600 rounded-3xl blur-xl opacity-20 scale-[1.02]" />
           <div className="relative bg-white rounded-3xl p-8 md:p-10 shadow-xl border border-slate-100 text-center space-y-5">

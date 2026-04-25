@@ -34,6 +34,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
   const router = useRouter();
   const [items, setItems] = useState<PopularAreaItem[]>(initialItems || []);
   const [isLoading, setIsLoading] = useState(!initialItems);
+  const [isMounted, setIsMounted] = useState(false);
   const [hasError, setHasError] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const isFirstMount = useRef(true);
@@ -82,22 +83,15 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
     const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
     const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
 
-    // Determine direction on first significant move (threshold: 5px)
     if (isHorizontalSwipe.current === null && (dx > 5 || dy > 5)) {
       isHorizontalSwipe.current = dx > dy;
     }
-
-    // If vertical swipe: let browser handle scrolling naturally
-    if (isHorizontalSwipe.current === false) {
-      scrollContainerRef.current.style.overflowX = "hidden";
-    }
+    
+    // Do NOT modify overflowX here, as it triggers layout shifts.
+    // Instead, rely on the browser's touch-action or standard scroll behavior.
   };
 
   const handleTouchEnd = () => {
-    // Re-enable horizontal scroll after touch ends
-    if (scrollContainerRef.current) {
-      scrollContainerRef.current.style.overflowX = "auto";
-    }
     isHorizontalSwipe.current = null;
   };
 
@@ -124,6 +118,8 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
     }
 
     fetchProvinces();
+    setIsMounted(true);
+    AOS.init({ once: true });
   }, [initialProvinces]);
 
   // Handle data fetching for province changes
@@ -145,7 +141,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
         setItems(areaCache.current[activeProvince]);
         setIsLoading(false);
         setHasError(false);
-        setTimeout(() => AOS.refresh(), 100);
+        AOS.refresh();
         return;
       }
 
@@ -170,7 +166,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
         
         setItems(data);
         setHasError(false);
-        setTimeout(() => AOS.refresh(), 100);
+        AOS.refresh();
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
         setHasError(true);
@@ -226,8 +222,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
         <div className="flex flex-col md:flex-row md:items-end md:justify-between px-4 ">
           <div
             className="space-y-4 px-4 md:px-0 flex-1"
-            data-aos="fade-right"
-            suppressHydrationWarning
+            {...(isMounted ? { "data-aos": "fade-right" } : {})}
           >
             {/* Animated Badge with Glass Effect */}
             <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 backdrop-blur-md px-4 py-2 text-sm font-bold border border-blue-200/50 shadow-[0_4px_12px_rgba(59,130,246,0.1)] hover:shadow-[0_4px_20px_rgba(59,130,246,0.2)] transition-all! duration-300! group cursor-default">
@@ -512,9 +507,8 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                     });
                     router.push(`/?${qp.toString()}#latest-properties`);
                   }}
-                  data-aos="fade-up"
-                  data-aos-delay={index * 100}
-                  className="group w-[220px] sm:w-[260px] relative isolate shrink-0 rounded-xl sm:rounded-4xl overflow-hidden bg-slate-900 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all! duration-500 text-left snap-start "
+                  {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (index * 100).toString() } : {})}
+                  className="group w-[220px] sm:w-[260px] relative isolate shrink-0 rounded-xl sm:rounded-4xl overflow-hidden bg-slate-900 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all! duration-500! text-left snap-start"
                 >
                   {/* Image & Overlays */}
                   <div className="absolute inset-0 -z-10">

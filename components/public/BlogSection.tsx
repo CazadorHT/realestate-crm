@@ -21,6 +21,7 @@ export function BlogSection() {
   const { t, language } = useLanguage();
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     async function fetchPosts() {
@@ -42,6 +43,7 @@ export function BlogSection() {
         setPosts(data as BlogPost[]);
       }
       setLoading(false);
+      setIsMounted(true);
     }
     fetchPosts();
   }, []);
@@ -73,7 +75,7 @@ export function BlogSection() {
     <section
       id="blog"
       className="py-10 md:py-12 px-4 md:px-6 lg:px-8 bg-slate-50 relative overflow-hidden z-0"
-      data-aos="fade-up"
+      {...(isMounted ? { "data-aos": "fade-up" } : {})}
     >
       <SectionBackground pattern="icons" intensity="low" />
       {/* Schema.org Structured Data */}
@@ -173,8 +175,7 @@ export function BlogSection() {
                 return (
                   <div
                     key={post.id}
-                    data-aos="fade-up"
-                    data-aos-delay={index * 100}
+                    {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (index * 100).toString() } : {})}
                     itemScope
                     itemType="https://schema.org/BlogPosting"
                     className="w-[260px] flex-none md:w-full lg:flex-1 snap-center shrink-0 mr-4 md:mr-0 h-full"

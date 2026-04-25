@@ -3,9 +3,12 @@
 import { Shield, CheckCircle2, Clock, Star, Award } from "lucide-react";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useState, useEffect } from "react";
 
 export function TrustSection() {
   const { t } = useLanguage();
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
   // Schema.org Service + AggregateRating for SEO
   const schemaData = {
     "@context": "https://schema.org",
@@ -70,7 +73,7 @@ export function TrustSection() {
         {/* SEO-Optimized Header */}
         <div
           className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
-          data-aos="fade-up"
+          {...(isMounted ? { "data-aos": "fade-up" } : {})}
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100">
             <Award className="w-4 h-4 text-blue-600" />
@@ -102,8 +105,7 @@ export function TrustSection() {
             <div
               key={index}
               className="group relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all! duration-500! hover:-translate-y-2! overflow-hidden shrink-0 w-[85vw] md:w-full snap-center"
-              data-aos="fade-up"
-              data-aos-delay={index * 100}
+              {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (index * 100).toString() } : {})}
             >
               {/* Gradient Background on Hover */}
               <div
@@ -138,8 +140,7 @@ export function TrustSection() {
         {/* Enhanced Trust Badge */}
         <div
           className="mt-10 md:mt-16 flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4"
-          data-aos="fade-up"
-          data-aos-delay="300"
+          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "300" } : {})}
         >
           <div className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200/50 rounded-full">
             <div className="flex items-center gap-1">

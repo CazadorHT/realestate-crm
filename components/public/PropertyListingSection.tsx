@@ -20,6 +20,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { PropertyListingSkeleton } from "./PropertyListingSkeleton";
 
 type FilterType =
   | "ALL"
@@ -85,22 +86,11 @@ function matchesFilter(item: ApiProperty, filter: FilterType) {
   }
 }
 
+
 // Inside component:
 export function PropertyListingSection() {
   return (
-    <Suspense
-      fallback={
-        <section className="py-8 md:py-12 px-4 md:px-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {[1, 2, 3, 4].map((i) => (
-                <PropertyCardSkeleton key={i} />
-              ))}
-            </div>
-          </div>
-        </section>
-      }
-    >
+    <Suspense fallback={<PropertyListingSkeleton />}>
       <PropertyListingContent />
     </Suspense>
   );
@@ -110,24 +100,25 @@ function PropertyListingContent() {
   const { t, language } = useLanguage();
   const [properties, setProperties] = useState<ApiProperty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   const [reloadKey, setReloadKey] = useState(0);
 
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // 1. Instant Navigation Detection (shows loader in the first frame of URL change)
+  // 1. Navigation Detection
   const [activeParams, setActiveParams] = useState(searchParams.toString());
-  const isNavigating = searchParams.toString() !== activeParams;
-
+  
   useEffect(() => {
-    if (isNavigating) {
-      const timer = setTimeout(() => {
-        setActiveParams(searchParams.toString());
-      }, 600);
-      return () => clearTimeout(timer);
-    }
-  }, [isNavigating, searchParams]);
+    setActiveParams(searchParams.toString());
+  }, [searchParams]);
+
+  const isNavigating = searchParams.toString() !== activeParams;
 
   const FILTER_LABELS: Record<FilterType, string> = {
     ALL: `${t("common.all")}`,
@@ -224,20 +215,6 @@ function PropertyListingContent() {
   };
   // -- End Drag Logic --
 
-  // Initialize AOS
-  useEffect(() => {
-    // Delay AOS init to prevent hydration mismatch
-    const timer = setTimeout(() => {
-      AOS.init({
-        duration: 600,
-        easing: "ease-out-cubic",
-        once: false,
-        mirror: false,
-      });
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   // 3. Main Data Fetch
   useEffect(() => {
@@ -329,6 +306,13 @@ function PropertyListingContent() {
         new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
     );
   }, [filter, properties, areaFilter, provinceFilter]);
+  
+  // Refresh AOS when properties load or change
+  useEffect(() => {
+    if (!isLoading) {
+      AOS.refresh();
+    }
+  }, [isLoading, filteredProperties.length]);
 
   const visibleProperties = useMemo(
     () => filteredProperties.slice(0, MAX_VISIBLE),
@@ -390,9 +374,8 @@ function PropertyListingContent() {
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 md:gap-6 mb-8 md:mb-10 ">
           {/* SEO-Optimized Header */}
           <div
-            className="space-y-3 "
-            data-aos="fade-right"
-            suppressHydrationWarning
+            className="space-y-3"
+            {...(isMounted ? { "data-aos": "fade-right" } : {})}
           >
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
@@ -428,8 +411,7 @@ function PropertyListingContent() {
           {/* Right Side: Filters & Navigation */}
           <div
             className="w-full lg:w-auto flex flex-col items-start lg:items-end gap-3 md:gap-4 text-sm"
-            data-aos="fade-left"
-            suppressHydrationWarning
+            {...(isMounted ? { "data-aos": "fade-left" } : {})}
           >
             {/* Upper Action Row: See More & Active Filters */}
             <div className="flex flex-row flex-wrap items-center justify-start lg:justify-end gap-3 md:gap-4 w-full">
@@ -502,7 +484,12 @@ function PropertyListingContent() {
                   onMouseUp={handleMouseUp}
                   onMouseMove={handleMouseMove}
                 >
-                  {sortedFilterTypes.map((type) => {
+                  {(isLoading && properties.length === 0) ? (
+                    // Button Skeletons
+                    Array.from({ length: 8 }).map((_, i) => (
+                      <div key={i} className="shrink-0 h-9 w-24 bg-slate-100 animate-pulse rounded-full" />
+                    ))
+                  ) : sortedFilterTypes.map((type) => {
                     const active = filter === type;
                     const count = typeCounts[type];
                     const isDisabled = count === 0 && type !== "ALL";
@@ -608,28 +595,21 @@ function PropertyListingContent() {
               </div>
             </div>
           ) : (isLoading || isNavigating) ? (
-            <div className="relative min-h-[400px] md:min-h-[600px]">
-              {/* Centered Loading Overlay */}
-              <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/50 backdrop-blur-[1px] rounded-3xl">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="relative h-12 w-12">
-                    <div className="absolute inset-0 rounded-full border-4 border-slate-200" />
-                    <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-blue-600 animate-spin" />
-                  </div>
-                  <span className="text-blue-600 font-semibold animate-pulse">
-                    {t("common.loading")}
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-4">
+            <div className="relative min-h-[400px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-4 opacity-50">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <PropertyCardSkeleton key={index} />
                 ))}
               </div>
-              {/* Button skeleton */}
-              <div className="flex justify-center mt-4">
-                <div className="h-10 w-48 bg-slate-200 rounded-2xl animate-pulse"></div>
+              
+              {/* Centered Loading Overlay - Subtle and non-blocking */}
+              <div className="absolute inset-0 z-10 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-3 bg-white/80 backdrop-blur-sm p-6 rounded-3xl shadow-xl border border-slate-100">
+                  <div className="h-10 w-10 border-4 border-blue-600/20 border-t-blue-600 rounded-full animate-spin" />
+                  <span className="text-blue-600 font-bold text-sm tracking-wide">
+                    {t("common.loading")}
+                  </span>
+                </div>
               </div>
             </div>
           ) : filteredProperties.length === 0 ? (

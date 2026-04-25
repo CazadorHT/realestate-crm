@@ -5,11 +5,14 @@ import { Search, MessageCircle, TrendingUp, Users, Award } from "lucide-react";
 import Link from "next/link";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useState, useEffect } from "react";
 
 import { siteConfig } from "@/lib/site-config";
 
 export function CTASection() {
   const { t } = useLanguage();
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
 
   // Schema.org Action for SEO
   const schemaData = {
@@ -59,7 +62,7 @@ export function CTASection() {
         {/* Trust Stats */}
         <div
           className="flex flex-wrap justify-center gap-3 md:gap-6 mb-6 md:mb-8"
-          data-aos="fade-up"
+          {...(isMounted ? { "data-aos": "fade-up" } : {})}
         >
           {STATS.map((stat, idx) => (
             <div
@@ -78,8 +81,7 @@ export function CTASection() {
 
         <h2
           className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight"
-          data-aos="fade-up"
-          data-aos-delay="100"
+          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "100" } : {})}
         >
           <span className="text-slate-900">{t("home.hero.title_main")}</span>
           <br />
@@ -92,8 +94,7 @@ export function CTASection() {
 
         <p
           className="text-base md:text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto"
-          data-aos="fade-up"
-          data-aos-delay="200"
+          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "200" } : {})}
         >
           {t("home.hero.description")}
           <span className="font-semibold text-slate-900">
@@ -104,8 +105,7 @@ export function CTASection() {
 
         <div
           className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-2 md:pt-4"
-          data-aos="fade-up"
-          data-aos-delay="300"
+          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "300" } : {})}
         >
           <Link href="/properties">
             <Button
@@ -137,7 +137,7 @@ export function CTASection() {
         {/* Small trust message */}
         <p
           className="text-xs md:text-sm text-slate-500 pt-2 md:pt-4"
-          data-aos="fade-up"
+          {...(isMounted ? { "data-aos": "fade-up" } : {})}
         >
           {t("home.cta.trust_message")}
         </p>
