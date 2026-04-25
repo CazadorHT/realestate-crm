@@ -1,6 +1,4 @@
 "use server";
-
-import { createAdminClient } from "@/lib/supabase/admin";
 import { headers } from "next/headers";
 import { getFingerprintFromHeaders } from "@/lib/redis";
 import { createClient } from "@/lib/supabase/server";
@@ -41,7 +39,7 @@ export async function incrementPropertyView(propertyId: string) {
     // Ignore auth errors for public tracking
   }
 
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   // 3. Call the secure database function with identity parameters
   const { data, error } = await supabase.rpc("increment_property_view", {
@@ -56,27 +54,19 @@ export async function incrementPropertyView(propertyId: string) {
   }
 
   // 4. 🔥 Trigger Proactive AI Agent if threshold reached
-  // Based on database.types.ts, the return is an array of objects
-  const results = data as unknown as IncrementViewResult[];
-  const result = results?.[0];
+  // The RPC now returns { success, trigger_proactive_agent, tenant_id }
+  const result = (data as any)?.[0];
   
   if (result?.trigger_proactive_agent) {
     const { inngest } = await import("@/lib/inngest/client");
     
-    // Get tenant_id for the property to ensure branch isolation
-    const { data: prop } = await supabase
-      .from("properties")
-      .select("tenant_id")
-      .eq("id", propertyId)
-      .single();
-
     await inngest.send({
       name: "property.proactive_trigger",
       data: {
         propertyId,
         visitorId,
         userId,
-        tenantId: prop?.tenant_id
+        tenantId: result.tenant_id // 🛡️ Zero-Admin: Got from RPC directly
       }
     });
   }

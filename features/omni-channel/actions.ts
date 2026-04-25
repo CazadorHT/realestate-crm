@@ -1,6 +1,4 @@
-"use server";
-
-import { createAdminClient } from "@/lib/supabase/admin";
+ "use server";
 import { requireAuthContext, authzFail } from "@/lib/authz";
 import { LINE_MESSAGING_API, lineConfig } from "@/lib/line-config";
 import { saveOmniMessage } from "@/lib/line";
@@ -8,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import { sendMetaMessage, sendWhatsAppMessage } from "@/lib/meta";
 import { OmniMessage } from "./types";
 import { Database } from "@/lib/database.types";
+import { decrypt } from "@/lib/crypto";
 
 export type ActionResponse<T = unknown> = {
   success: boolean;
@@ -35,8 +34,13 @@ export async function sendDirectReplyAction(
     if (leadError || !lead)
       throw new Error("ไม่พบข้อมูลลูกค้า หรือคุณไม่มีสิทธิ์เข้าถึง");
 
-    // 2. Platform specific sending
-    if (lead.source === "LINE" && lead.line_id) {
+    // 2. Platform specific sending (Decrypt identifiers just-in-time for API calls)
+    const lineId = decrypt(lead.line_id);
+    const fbPsid = decrypt(lead.facebook_psid);
+    const igSid = decrypt(lead.instagram_sid);
+    const phone = decrypt(lead.phone);
+
+    if (lead.source === "LINE" && lineId) {
       const res = await fetch(`${LINE_MESSAGING_API}/push`, {
         method: "POST",
         headers: {
@@ -44,7 +48,7 @@ export async function sendDirectReplyAction(
           Authorization: `Bearer ${lineConfig.channelAccessToken}`,
         },
         body: JSON.stringify({
-          to: lead.line_id,
+          to: lineId,
           messages: [{ type: "text", text: content }],
         }),
       });
@@ -55,20 +59,20 @@ export async function sendDirectReplyAction(
       }
     } else if (
       lead.source === "FACEBOOK" &&
-      (lead.facebook_psid || lead.facebook_psid === null)
+      (fbPsid || fbPsid === null)
     ) {
-      const psid = lead.facebook_psid || "MOCK_PSID";
+      const psid = fbPsid || "MOCK_PSID";
       const res = await sendMetaMessage(psid, content, "FACEBOOK");
       if (!res.success) throw new Error(`Facebook API Error: ${res.error}`);
-    } else if (lead.source === "INSTAGRAM" && lead.instagram_sid) {
+    } else if (lead.source === "INSTAGRAM" && igSid) {
       const res = await sendMetaMessage(
-        lead.instagram_sid,
+        igSid,
         content,
         "INSTAGRAM",
       );
       if (!res.success) throw new Error(`Instagram API Error: ${res.error}`);
-    } else if (lead.source === "WHATSAPP" && lead.phone) {
-      const res = await sendWhatsAppMessage(lead.phone, content);
+    } else if (lead.source === "WHATSAPP" && phone) {
+      const res = await sendWhatsAppMessage(phone, content);
       if (!res.success) throw new Error(`WhatsApp API Error: ${res.error}`);
     }
 
@@ -151,15 +155,14 @@ export async function getLeadMessagesAction(
     if (!lead) throw new Error("ไม่พบข้อมูลลูกค้า");
 
     // 2. Fetch messages ordered by newest first for better performance & visibility
-    const adminSupabase = createAdminClient();
-    const { data, error } = await adminSupabase
-      .from("omni_messages")
-      .select("id, lead_id, source, content, direction, payload, external_message_id, is_read, tenant_id, created_at")
-      .or(
-        `lead_id.eq.${leadId},and(lead_id.is.null,source.eq.${lead.source},created_at.gte.${lead.created_at})`,
-      )
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit);
+    // 🛡️ [PHASE 1] Use Security Definer RPC for complex cross-tenant message fetching
+    const { data, error } = await supabase.rpc("get_lead_messages", {
+      p_lead_id: leadId,
+      p_source: lead.source as string, // Cast since we already verified lead exists
+      p_lead_created_at: lead.created_at,
+      p_offset: offset,
+      p_limit: limit + 1, // Fetch one extra to check hasMore
+    });
 
     if (error) throw error;
 

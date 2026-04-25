@@ -21,10 +21,6 @@ const mockSupabase: any = {
   then: vi.fn().mockImplementation((resolve: (val: any) => void) => resolve({ data: [], error: null, count: 0 })),
 };
 
-vi.mock('@/lib/supabase/admin', () => ({
-  createAdminClient: vi.fn(() => mockSupabase),
-}));
-
 vi.mock('@/lib/authz', () => ({
   requireAuthContext: vi.fn(),
   assertStaff: vi.fn(),
@@ -39,6 +35,12 @@ vi.mock('@/lib/authz', () => ({
       this.name = 'AuthzError';
     }
   }
+}));
+
+vi.mock('@/lib/inngest/client', () => ({
+  inngest: {
+    send: vi.fn().mockResolvedValue({}),
+  },
 }));
 
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn().mockResolvedValue(null) }));
@@ -64,6 +66,7 @@ describe('Property Actions - Hardened Deletion & Atomic Integrity', () => {
   };
 
   it('should verify Transaction Integrity: DO NOT delete storage if DB fails', async () => {
+    const { inngest } = await import('@/lib/inngest/client');
     (requireAuthContext as any).mockResolvedValue({
       supabase: mockSupabase,
       user: { id: 'admin-1', app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: '' },
@@ -72,8 +75,6 @@ describe('Property Actions - Hardened Deletion & Atomic Integrity', () => {
     });
     (isAdmin as any).mockReturnValue(true);
 
-    // Sequence of awaited calls in delete.ts:
-    // 1. Single (check owner) -> 2. Select (deals) -> 3. Select (images) -> 4. Update (leads) -> ... -> Main Delete
     mockSupabase.single.mockResolvedValueOnce({ data: { id: 'p1', created_by: 'admin-1' }, error: null });
 
     mockSupabase.then
@@ -92,11 +93,12 @@ describe('Property Actions - Hardened Deletion & Atomic Integrity', () => {
     expect(result.success).toBe(false);
     expect(result.message).toContain('ลบไม่สำเร็จ');
     
-    // ⚖️ CRITICAL: If DB delete fails, storage must remain intact
-    expect(mockStorage.remove).not.toHaveBeenCalled();
+    // ⚖️ CRITICAL: If DB delete fails, storage cleanup must NOT be triggered
+    expect(inngest.send).not.toHaveBeenCalled();
   });
 
-  it('should allow deletion and cleanup storage ONLY after DB success', async () => {
+  it('should allow deletion and trigger storage cleanup ONLY after DB success', async () => {
+    const { inngest } = await import('@/lib/inngest/client');
     (requireAuthContext as any).mockResolvedValue({
       supabase: mockSupabase,
       user: { id: 'admin-1', app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: '' },
@@ -116,7 +118,12 @@ describe('Property Actions - Hardened Deletion & Atomic Integrity', () => {
     const result = await deletePropertyAction(getMockFormData('p1'));
 
     expect(result.success).toBe(true);
-    // ✅ Storage remove only called on total success
-    expect(mockStorage.remove).toHaveBeenCalledWith(['img.jpg']);
+    // ✅ Storage cleanup triggered in background via Inngest
+    expect(inngest.send).toHaveBeenCalledWith(expect.objectContaining({
+      name: 'storage.cleanup.requested',
+      data: expect.objectContaining({
+        paths: ['img.jpg']
+      })
+    }));
   });
 });

@@ -22,7 +22,7 @@ interface Message {
     original_price: number | null;
     original_rental_price: number | null;
     listing_type?: string | null;
-    slug: string;
+    slug: string | null;
   }>;
 }
 

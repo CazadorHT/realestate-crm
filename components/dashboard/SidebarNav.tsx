@@ -462,7 +462,7 @@ export function SidebarNav({
       </TooltipTrigger>
       <TooltipContent 
         side="right" 
-        className="bg-slate-900 text-white border-none p-4 rounded-2xl shadow-2xl z-210 max-w-[240px] animate-in fade-in slide-in-from-left-2 duration-200"
+        className="bg-slate-900 text-white border-none p-4 rounded-2xl shadow-2xl z-45 max-w-[240px] animate-in fade-in slide-in-from-left-2 duration-200"
       >
         <div className="font-semibold text-sm mb-1 text-blue-400">{item.title}</div>
         <div className="text-xs text-slate-300 leading-relaxed font-semibold">
@@ -478,7 +478,7 @@ export function SidebarNav({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "hidden flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-xl sm:flex shadow-sm z-200 h-screen sticky top-0",
+          "hidden flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-xl sm:flex shadow-sm z-40 h-screen sticky top-0",
           hasMounted ? "transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)" : "transition-none",
           isCollapsed ? "w-20" : "w-72",
         )}
@@ -514,7 +514,7 @@ export function SidebarNav({
           <button
             onClick={toggleCollapse}
             className={cn(
-              "absolute -right-4 top-14 h-8 w-8 rounded-full border border-slate-200 bg-white items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 z-110 hover:scale-110 active:scale-90 group/toggle",
+              "absolute -right-4 top-14 h-8 w-8 rounded-full border border-slate-200 bg-white items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 z-41 hover:scale-110 active:scale-90 group/toggle",
               isHovered
                 ? "opacity-100 translate-x-0"
                 : "opacity-0 -translate-x-2 pointer-events-none",
@@ -556,7 +556,7 @@ export function SidebarNav({
                   />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="z-210">แดชบอร์ด</TooltipContent>
+              <TooltipContent side="right" className="z-45">แดชบอร์ด</TooltipContent>
             </Tooltip>
           ) : (
             <Link
@@ -610,7 +610,7 @@ export function SidebarNav({
                         )}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent className="z-210" side="right">{group.title}</TooltipContent>
+                    <TooltipContent className="z-45" side="right">{group.title}</TooltipContent>
                   </Tooltip>
 
                   {isOpen && (

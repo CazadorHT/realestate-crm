@@ -1,6 +1,4 @@
-"use server";
-
-import { createAdminClient } from "@/lib/supabase/admin";
+ "use server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { sendLineNotification } from "@/lib/line";
@@ -103,38 +101,42 @@ export async function submitContactFormAction(
 
   const { name, phone, email, lineId, subject, message } = validatedFields.data;
 
-  try {
-    const supabase = createAdminClient();
+  const { encrypt, generateBlindIndex } = await import("@/lib/crypto");
+  const { createClient } = await import("@/lib/supabase/server");
 
-    // Insert into leads table
-    const { data: lead, error } = await supabase
-      .from("leads")
-      .insert({
-        full_name: name,
-        phone: phone,
-        email: email,
-        source: "WEBSITE", // Generic website source
-        stage: "NEW", // Initial stage
-        note: `Contact Form Subject: ${subject || "N/A"}\nLine ID: ${lineId || "N/A"}\nMessage: ${message}`,
-        lead_type: "INDIVIDUAL",
-        // Marketing & AI
-        utm_source: validatedFields.data.utm_source,
-        utm_medium: validatedFields.data.utm_medium,
-        utm_campaign: validatedFields.data.utm_campaign,
-        utm_content: validatedFields.data.utm_content,
-        utm_term: validatedFields.data.utm_term,
-        referral_url: validatedFields.data.referral_url,
-        ai_score: validatedFields.data.ai_score
+  try {
+    const supabase = await createClient();
+
+    // 🛡️ [PHASE 1 & 4] Secure Lead Submission (Zero-Admin + Encryption)
+    // We use the Security Definer RPC to handle the insert without adminClient
+    const { data: leadId, error: rpcError } = await supabase.rpc(
+      "submit_public_lead",
+      {
+        p_full_name: encrypt(name) || "Unknown",
+        p_full_name_hash: generateBlindIndex(name),
+        p_phone: encrypt(phone),
+        p_phone_hash: generateBlindIndex(phone),
+        p_email: encrypt(email),
+        p_email_hash: generateBlindIndex(email),
+        p_line_id: encrypt(lineId),
+        p_line_id_hash: generateBlindIndex(lineId),
+        p_source: "WEBSITE",
+        p_note: `Contact Form Subject: ${subject || "N/A"}\nMessage: ${message}`,
+        p_utm_source: validatedFields.data.utm_source,
+        p_utm_medium: validatedFields.data.utm_medium,
+        p_utm_campaign: validatedFields.data.utm_campaign,
+        p_utm_content: validatedFields.data.utm_content,
+        p_utm_term: validatedFields.data.utm_term,
+        p_referral_url: validatedFields.data.referral_url,
+        p_ai_score: validatedFields.data.ai_score
           ? parseInt(validatedFields.data.ai_score)
           : 0,
-        ai_status_label: validatedFields.data.ai_status_label,
-        last_viewed_at: new Date().toISOString(),
-      })
-      .select("id, tenant_id")
-      .single();
+        p_ai_status_label: validatedFields.data.ai_status_label,
+      },
+    );
 
-    if (error) {
-      console.error("Database Error:", error);
+    if (rpcError || !leadId) {
+      console.error("RPC Submission Error:", rpcError);
       return {
         success: false,
         message: "ระบบเกิดข้อผิดพลาด กรุณาลองใหม่ภายหลัง",
@@ -153,7 +155,7 @@ export async function submitContactFormAction(
     const { inngest } = await import("@/lib/inngest/client");
     await inngest.send({
       name: "lead.created",
-      data: { leadId: lead.id, tenantId: lead.tenant_id }
+      data: { leadId: leadId } // tenant_id will be resolved in background if needed
     });
 
     // Intelligence: Get Hot Lead Threshold
@@ -237,7 +239,7 @@ export async function submitContactFormAction(
     }
 
     // CRM Button
-    if (lead?.id) {
+    if (leadId) {
       footerRows.push({
         type: "box",
         layout: "vertical",
@@ -258,7 +260,7 @@ export async function submitContactFormAction(
         action: {
           type: "uri",
           label: "CRM",
-          uri: `${siteConfig.url}/protected/leads/${lead.id}`,
+          uri: `${siteConfig.url}/protected/leads/${leadId}`,
         },
       });
     }
@@ -438,7 +440,7 @@ export async function submitContactFormAction(
       success: true,
       message: "ขอบคุณที่สนใจครับ เราจะติดต่อกลับโดยเร็วที่สุด",
       data: {
-        id: lead.id,
+        id: leadId,
         aiScore: aiScoreInt,
         isHotLead: isHotLead,
         utmSource: validatedFields.data.utm_source || "Direct",

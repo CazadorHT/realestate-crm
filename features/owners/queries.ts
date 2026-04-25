@@ -11,7 +11,7 @@ export async function getOwnerById(id: string): Promise<Owner | null> {
 
   let query = supabase
     .from("owners")
-    .select("id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by")
+    .select("id, full_name, full_name_hash, phone, phone_hash, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by")
     .eq("id", id);
 
   if (isMultiTenant && tenantId) {
@@ -39,7 +39,7 @@ export async function getOwners() {
     .from("owners")
     .select(
       `
-      id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by,
+      id, full_name, full_name_hash, phone, phone_hash, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by,
       properties:properties(count)
     `,
     );
@@ -111,7 +111,7 @@ export async function getOwnersQuery({
 
   let query = supabase
     .from("owners")
-    .select("id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by, properties:properties(count), tenants(name)", {
+    .select("id, full_name, full_name_hash, phone, phone_hash, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by, properties:properties(count), tenants(name)", {
       count: "exact",
     });
 

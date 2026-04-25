@@ -49,6 +49,10 @@ describe('Lead Mapper - leadRowToFormValues', () => {
     utm_term: null,
     referral_url: null,
     ai_summary_content: null,
+    full_name_hash: null,
+    phone_hash: null,
+    email_hash: null,
+    line_id_hash: null,
   };
 
   it('should map a full lead row to form values correctly', () => {

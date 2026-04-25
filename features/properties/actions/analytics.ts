@@ -1,5 +1,5 @@
 "use server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Increments the view count for a specific property.
@@ -8,29 +8,16 @@ import { createAdminClient } from "@/lib/supabase/admin";
 export async function incrementPropertyView(propertyId: string) {
   if (!propertyId) return;
 
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   try {
-    // We use rpc for atomic increment if available,
-    // but a simple select + update is fine for this scale
-    // since we use admin client to bypass RLS for this specific update.
+    // 🛡️ [PHASE 1] Use Security Definer RPC for atomic increment
+    // This allows public users to increment without having UPDATE permission on the table.
+    const { data: newCount, error } = await supabase.rpc("increment_property_view", {
+      p_id: propertyId
+    });
 
-    const { data: current, error: fetchError } = await supabase
-      .from("properties")
-      .select("view_count")
-      .eq("id", propertyId)
-      .single();
-
-    if (fetchError) throw fetchError;
-
-    const newCount = (current?.view_count || 0) + 1;
-
-    const { error: updateError } = await supabase
-      .from("properties")
-      .update({ view_count: newCount })
-      .eq("id", propertyId);
-
-    if (updateError) throw updateError;
+    if (error) throw error;
 
     return { success: true, count: newCount };
   } catch (error) {
@@ -41,17 +28,14 @@ export async function incrementPropertyView(propertyId: string) {
 
 /**
  * Resets view count for ALL properties to 0.
- * Restricted to admins via RLS or by being a server action.
- * Using Admin client to ensure it can override existing values.
+ * Restricted to admins via RPC check.
  */
 export async function resetAllPropertyViews() {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   try {
-    const { error } = await supabase
-      .from("properties")
-      .update({ view_count: 0 })
-      .neq("view_count", 0); // Only update those with views > 0 for efficiency
+    // 🛡️ [PHASE 1] Use Security Definer RPC for admin-only reset
+    const { error } = await supabase.rpc("reset_all_property_views");
 
     if (error) throw error;
 

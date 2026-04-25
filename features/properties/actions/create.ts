@@ -20,6 +20,7 @@ import {
 import { generateKeywords, prepareSEOData } from "../logic/seo";
 import { FormSchema } from "../schema";
 import { mapDbError } from "@/lib/db-error";
+import { encrypt, generateBlindIndex } from "@/lib/crypto";
 
 /**
  * Create property with images
@@ -101,6 +102,11 @@ export async function createPropertyAction(
       .from("properties")
       .insert({
         ...propertyData,
+        co_agent_name: encrypt(propertyData.co_agent_name),
+        co_agent_name_hash: generateBlindIndex(propertyData.co_agent_name),
+        co_agent_phone: encrypt(propertyData.co_agent_phone),
+        co_agent_phone_hash: generateBlindIndex(propertyData.co_agent_phone),
+        co_agent_contact_id: encrypt(propertyData.co_agent_contact_id),
         tenant_id: tenantId,
         original_price: propertyData.original_price, // Force include
         original_rental_price: propertyData.original_rental_price,
@@ -139,9 +145,10 @@ export async function createPropertyAction(
         sort_order: index,
       }));
 
-      const { error: imagesError } = await supabase
+      const { data: insertedImages, error: imagesError } = await supabase
         .from("property_images")
-        .insert(imageRows);
+        .insert(imageRows)
+        .select("id, storage_path");
 
       if (imagesError) {
         console.error("Images insertion error:", imagesError);
@@ -154,6 +161,18 @@ export async function createPropertyAction(
           .eq("tenant_id", tenantId);
 
         return { success: false, message: "Failed to attach images" };
+      }
+
+      // 🛡️ [PHASE 3] Trigger Malware Scan for each image
+      if (insertedImages && insertedImages.length > 0) {
+        const scanEvents = insertedImages.map((img) => ({
+          name: "app/property.image.created",
+          data: {
+            imageId: img.id,
+            storagePath: img.storage_path,
+          },
+        }));
+        await inngest.send(scanEvents);
       }
     }
     await finalizeUploadSession({

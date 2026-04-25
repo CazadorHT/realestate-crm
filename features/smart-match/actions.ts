@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import {
   generateEmbedding,
@@ -100,33 +99,43 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
     // Persist embedding for future quick matches
     await supabase
       .from("leads")
-      .update({ embedding: vector } as any)
+      .update({ embedding: `[${vector.join(",")}]` })
       .eq("id", leadId);
 
-    // 3. Search Candidates via pgvector RPC
-    // We fetch more than we need to allow for re-scoring/filtering
+    // 🛡️ [PHASE 1] Use Hardened Security Definer RPC for candidate search
+    type HardenedMatchResult = {
+      id: string;
+      title: string;
+      slug: string;
+      property_type: Database["public"]["Enums"]["property_type"];
+      listing_type: Database["public"]["Enums"]["listing_type"];
+      price: number | null;
+      rental_price: number | null;
+      similarity: number;
+    };
+
     const { data: candidates, error: matchErr } = await supabase.rpc(
-      "match_properties" as any,
+      "match_properties_hardened",
       {
-        query_embedding: vector as any,
-        match_threshold: 0.3, // Lower threshold for candidate pool
+        query_embedding: `[${vector.join(",")}]`, // Convert number[] to vector string format
+        match_threshold: 0.3, 
         match_count: 20,
         p_tenant_id: tenantId,
-      },
+      }
     );
 
     if (matchErr) throw new Error(matchErr.message);
 
     // 4. Hybrid Re-scoring (Zero-Cost Local Logic)
     // Score = (70% Semantic Similarity) + (30% Hard Criteria Match)
-    const processedMatches = ((candidates as any) || [])
-      .map((m: any) => {
+    const processedMatches = ((candidates as unknown as HardenedMatchResult[]) || [])
+      .map((m) => {
         let filterScore = 0;
         const totalFilterPoints = 3; // price, type, listing_type
 
         // Filter 1: Price (Simple within 15% budget)
         const propPrice = m.listing_type === "RENT" ? m.rental_price : m.price;
-        if (lead.budget_max && propPrice <= lead.budget_max * 1.15)
+        if (lead.budget_max && propPrice && propPrice <= lead.budget_max * 1.15)
           filterScore += 1;
 
         // Filter 2: Listing Type Match (using resolved leadPurpose)
@@ -153,7 +162,7 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
             m.similarity > 0.8 ? ["Semantic Strong Match"] : ["Filter Match"],
         };
       })
-      .sort((a: any, b: any) => b.match_score - a.match_score)
+      .sort((a, b) => b.match_score - a.match_score)
       .slice(0, 10);
 
     // 5. Automation: Notify if strong match (Zero-Cost notification)
@@ -377,37 +386,31 @@ export async function createLeadFromMatchAction(data: {
   email?: string;
   lineId?: string;
 }) {
-  const supabase = await createAdminClient();
+  const supabase = await createClient();
 
-  // 1. Create Lead
-  const { data: lead, error: leadError } = await supabase
-    .from("leads")
-    .insert({
-      full_name: data.fullName,
-      phone: data.phone,
-      email: data.email,
-      lead_type: "INDIVIDUAL",
-      source: "WEBSITE",
-      stage: "NEW",
-      note: `Auto-generated from Smart Match Wizard. SessionID: ${data.sessionId}\nLine ID: ${data.lineId || "-"}`,
-    })
-    .select("id")
-    .single();
+  const { encrypt, generateBlindIndex } = await import("@/lib/crypto");
 
-  if (leadError) throw new Error(mapDbError(leadError));
+  // 🛡️ [PHASE 4] Encrypt PII and Generate Blind Index for Search
+  const { data: leadId, error } = await supabase.rpc(
+    "create_lead_from_match",
+    {
+      p_session_id: data.sessionId,
+      p_property_id: data.propertyId,
+      p_full_name: encrypt(data.fullName) || "Unknown",
+      p_full_name_hash: generateBlindIndex(data.fullName),
+      p_phone: encrypt(data.phone),
+      p_phone_hash: generateBlindIndex(data.phone),
+      p_email: encrypt(data.email),
+      p_email_hash: generateBlindIndex(data.email),
+      p_line_id: encrypt(data.lineId),
+      p_line_id_hash: generateBlindIndex(data.lineId),
+    },
+  );
 
-  // 2. Link with search session
-  await supabase
-    .from("property_search_sessions")
-    .update({ lead_id: lead.id, converted_at: new Date().toISOString() })
-    .eq("id", data.sessionId);
+  if (error) {
+    console.error("Error creating lead from match via RPC:", error);
+    throw new Error(mapDbError(error));
+  }
 
-  // 3. Create Activity
-  await supabase.from("lead_activities").insert({
-    lead_id: lead.id,
-    activity_type: "SYSTEM",
-    note: `บันทึกความสนใจทรัพย์สินผ่าน Smart Match Wizard. รหัสทรัพย์: ${data.propertyId}`,
-  });
-
-  return { success: true, leadId: lead.id };
+  return { success: true, leadId };
 }

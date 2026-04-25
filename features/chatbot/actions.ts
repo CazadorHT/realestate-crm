@@ -252,6 +252,20 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
         });
 
         // 3. Send functionResponse back to Model
+        interface ChatbotProperty {
+          id: string;
+          title: string;
+          price: number | null;
+          rental_price: number | null;
+          location: string | null;
+          slug: string | null;
+          image_url: string | null;
+          listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
+          original_price: number | null;
+          original_rental_price: number | null;
+          features: Array<{ id: string; name: string; icon_key: string }>;
+        }
+
         const functionResponse = {
           functionResponse: {
             name: "search_properties",
@@ -260,14 +274,14 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
               content: {
                 found: results.length > 0,
                 count: results.length,
-                properties: results.map((p: any) => ({
+                properties: (results as unknown as ChatbotProperty[]).map((p) => ({
                   id: p.id,
                   title: p.title,
                   price: p.price,
                   rental_price: p.rental_price,
                   location: p.location,
                   url: `/properties/${p.slug}`,
-                  top_features: p.features.slice(0, 3).map((f: { name: string }) => f.name),
+                  top_features: p.features.slice(0, 3).map((f) => f.name),
                 })),
                 suggestion:
                   results.length === 0
@@ -294,7 +308,7 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
         return {
           text: finalText,
           searchCriteria: propertyQuery,
-          properties: results.map((p: any) => ({
+          properties: (results as unknown as ChatbotProperty[]).map((p) => ({
             id: p.id,
             title: p.title,
             image: p.image_url,
@@ -302,11 +316,7 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
             rental_price: p.rental_price,
             original_price: p.original_price,
             original_rental_price: p.original_rental_price,
-            listing_type: p.listing_type as
-              | "SALE"
-              | "RENT"
-              | "SALE_AND_RENT"
-              | null,
+            listing_type: p.listing_type,
             slug: p.slug,
           })),
         };

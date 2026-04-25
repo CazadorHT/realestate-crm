@@ -1,5 +1,6 @@
+"use server";
 import { cache } from "react";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { PropertyDetail } from "../types";
 
@@ -12,10 +13,9 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
  * - Request Memoization for Edge performance
  */
 export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<PropertyDetail | null> => {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   // 🛡️ Security Seal: Explicitly select ONLY public-facing columns.
-  // This must match the whitelist strategy in lib/services/properties.ts
   const publicColumns = `
     id, title, title_en, title_cn, slug, status, listing_type, property_type,
     price, rental_price, original_price, original_rental_price,
@@ -61,9 +61,9 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
   if (error || !rawData) return null;
 
   // Selective Data Masking & Mapping
-  const data: PropertyDetail = {
+  const data = {
     ...rawData,
-  } as PropertyDetail;
+  } as unknown as PropertyDetail;
 
   // Popular Area Translations (Cached-ready logic)
   if (data.popular_area) {
@@ -80,26 +80,18 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
   }
 
   // Image Normalization (Centralized via image-utils helper logic)
-  data.images = ((rawData.images as any[]) || []).map((img: any) => {
-    const url = img.url || img.image_url;
+  interface RawImage { url?: string; image_url?: string; storage_path?: string; id?: string; is_cover?: boolean; sort_order?: number; }
+  
+  data.images = ((rawData.images as RawImage[]) || []).map((img) => {
+    const finalUrl = img.url || img.image_url || (img.storage_path ? getPublicImageUrl(img.storage_path) : "/images/hero-realestate.png");
     
-    // Resolve Absolute URLs
-    if (url && url.startsWith("http")) {
-      return { ...img, image_url: url };
-    }
-
-    // Resolve Storage Paths
-    if (img.storage_path) {
-      return {
-        ...img,
-        image_url: getPublicImageUrl(img.storage_path),
-      };
-    }
-
-    // Fallback to standard Hero placeholder
     return {
-      ...img,
-      image_url: url || "/images/hero-realestate.png",
+      id: img.id || null,
+      url: finalUrl,
+      image_url: finalUrl,
+      storage_path: img.storage_path || null,
+      is_cover: img.is_cover || false,
+      sort_order: img.sort_order || 0
     };
   });
 

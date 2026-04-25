@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { Database, Json } from "@/lib/database.types";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { 
@@ -80,7 +80,7 @@ export interface ChatbotSearchOptions {
 export async function searchPropertiesForChatbot(
   options: ChatbotSearchOptions = {},
 ) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   let query = supabase
     .from("properties")

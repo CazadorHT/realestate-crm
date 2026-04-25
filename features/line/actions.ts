@@ -1,11 +1,11 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { LineTemplate, LineTemplateConfig } from "./types";
 import { revalidatePath } from "next/cache";
 
 export async function getLineTemplates() {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from("line_templates")
     .select("key, label, is_active, config")
@@ -23,7 +23,7 @@ export async function updateLineTemplate(
   key: string,
   updates: { is_active?: boolean; config?: LineTemplateConfig },
 ) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { error } = await supabase
     .from("line_templates")
     .update(updates)

@@ -17,12 +17,24 @@ import { logAudit } from "@/lib/audit";
 import { UserRole } from "@/lib/authz";
 import { Database } from "@/lib/database.types";
 import { mapDbError } from "@/lib/db-error";
+import { encrypt, decrypt, generateBlindIndex } from "@/lib/crypto";
 
 export const createLeadAction = createSafeAction(
   leadFormSchema,
   async (data, { supabase, userId, tenantId }) => {
     const payload: LeadInsert = {
       ...data,
+      full_name: encrypt(data.full_name) || "Unknown",
+      full_name_hash: generateBlindIndex(data.full_name),
+      phone: encrypt(data.phone),
+      phone_hash: generateBlindIndex(data.phone),
+      email: encrypt(data.email),
+      email_hash: generateBlindIndex(data.email),
+      line_id: encrypt(data.preferences?.["line_id"] as string),
+      line_id_hash: generateBlindIndex(data.preferences?.["line_id"] as string),
+      facebook_psid: encrypt(data.preferences?.["facebook_psid"] as string),
+      instagram_sid: encrypt(data.preferences?.["instagram_sid"] as string),
+      note: encrypt(data.note),
       tenant_id: tenantId,
       nationality: Array.isArray(data.nationality)
         ? data.nationality.join(", ")
@@ -64,6 +76,17 @@ export const updateLeadAction = createSafeAction(
 
     const payload: LeadUpdate = {
       ...updateData,
+      full_name: encrypt(updateData.full_name) || "Unknown",
+      full_name_hash: generateBlindIndex(updateData.full_name),
+      phone: encrypt(updateData.phone),
+      phone_hash: generateBlindIndex(updateData.phone),
+      email: encrypt(updateData.email),
+      email_hash: generateBlindIndex(updateData.email),
+      line_id: encrypt(updateData.preferences?.["line_id"] as string),
+      line_id_hash: generateBlindIndex(updateData.preferences?.["line_id"] as string),
+      facebook_psid: encrypt(updateData.preferences?.["facebook_psid"] as string),
+      instagram_sid: encrypt(updateData.preferences?.["instagram_sid"] as string),
+      note: encrypt(updateData.note),
       nationality: Array.isArray(updateData.nationality)
         ? updateData.nationality.join(", ")
         : updateData.nationality,
@@ -508,14 +531,27 @@ export const searchLeadsAction = createSafeAction(
       }
 
       if (queryTerm) {
-        sb = sb.or(`full_name.ilike.%${queryTerm}%,phone.ilike.%${queryTerm}%`);
+        const hash = generateBlindIndex(queryTerm);
+        if (hash) {
+          // Search by blind index for exact matches (fast & secure)
+          sb = sb.or(`full_name_hash.eq.${hash},phone_hash.eq.${hash},email_hash.eq.${hash}`);
+        } else {
+          // Fallback if hashing fails (should not happen for strings)
+          sb = sb.or(`full_name.ilike.%${queryTerm}%,phone.ilike.%${queryTerm}%`);
+        }
       }
 
       sb = sb.order("updated_at", { ascending: false }).limit(20);
 
       const { data, error } = await sb;
       if (error) throw error;
-      return data || [];
+      
+      return (data || []).map(lead => ({
+        ...lead,
+        full_name: decrypt(lead.full_name) || "Unknown",
+        phone: decrypt(lead.phone),
+        email: decrypt(lead.email)
+      }));
     } catch (error: unknown) {
       const err = error as { message?: string };
       console.error("Search lead error:", err);

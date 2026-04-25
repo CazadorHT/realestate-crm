@@ -1,6 +1,7 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { mapDbError } from "@/lib/db-error";
+import { decrypt } from "@/lib/crypto";
 import type { LeadRow, LeadWithActivities, LeadWithJoins } from "./types";
 import type { Database } from "@/lib/database.types";
 
@@ -43,7 +44,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   let query = supabase
     .from("leads")
-    .select("id, full_name, email, phone, stage, source, budget, rental_budget, property_id, property:properties(id, title), tenants(id, name), created_at, updated_at, tenant_id, assigned_to", { count: "exact" });
+    .select("id, full_name, email, phone, stage, source, budget, rental_budget, property_id, property:properties(id, title), tenants(id, name), created_at, updated_at, tenant_id, assigned_to, note", { count: "exact" });
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -86,9 +87,13 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     }
   }
 
-  // attach counts to leads (non-breaking addition)
+  // attach counts to leads and decrypt PII
   const leadsWithCounts = leads.map((l) => ({
     ...l,
+    full_name: decrypt(l.full_name) || "Unknown",
+    email: decrypt(l.email),
+    phone: decrypt(l.phone),
+    note: decrypt(l.note),
     deals_count: dealsCountMap[l.id] ?? 0,
   }));
 
@@ -157,7 +162,11 @@ export async function getLeadsForKanbanQuery() {
 
   if (error) throw new Error(mapDbError(error));
 
-  return (data ?? []) as unknown as LeadWithJoins[];
+  const results = (data ?? []) as unknown as LeadWithJoins[];
+  return results.map(l => ({
+    ...l,
+    full_name: decrypt(l.full_name) || "Unknown",
+  }));
 }
 // ใช้สำหรับแสดง leads รายเดียว
 export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null> {
@@ -181,7 +190,18 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
     if (error && "code" in error && error.code === "PGRST116") return null;
     throw new Error(error.message);
   }
-  return data as unknown as LeadWithJoins;
+  
+  const lead = data as unknown as LeadWithJoins;
+  return {
+    ...lead,
+    full_name: decrypt(lead.full_name) || "Unknown",
+    email: decrypt(lead.email),
+    phone: decrypt(lead.phone),
+    note: decrypt(lead.note),
+    line_id: decrypt(lead.line_id),
+    facebook_psid: decrypt(lead.facebook_psid),
+    instagram_sid: decrypt(lead.instagram_sid),
+  };
 }
 // ใช้สำหรับแสดง leads พร้อมกับ activities
 export async function getLeadWithActivitiesQuery(
@@ -221,7 +241,16 @@ export async function getLeadWithActivitiesQuery(
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
 
-    return lead;
+    return {
+      ...lead,
+      full_name: decrypt(lead.full_name) || "Unknown",
+      email: decrypt(lead.email),
+      phone: decrypt(lead.phone),
+      note: decrypt(lead.note),
+      line_id: decrypt(lead.line_id),
+      facebook_psid: decrypt(lead.facebook_psid),
+      instagram_sid: decrypt(lead.instagram_sid),
+    };
   } catch (error) {
     console.error("getLeadWithActivitiesQuery error:", error);
     return null;

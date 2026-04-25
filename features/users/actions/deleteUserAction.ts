@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { requireAuthContext } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { inngest } from "@/lib/inngest/client";
+import { mapDbError } from "@/lib/db-error";
 
 export type DeleteUserResult = {
   success: boolean;
@@ -11,7 +12,7 @@ export type DeleteUserResult = {
 };
 
 /**
- * ลบบัญชีผู้ใช้ (เฉพาะ AGENT เท่านั้น)
+ * ลบบัญชีผู้ใช้ (Zero-Admin Pattern: Background Deletion)
  */
 export async function deleteUserAction(
   userId: string,
@@ -19,7 +20,7 @@ export async function deleteUserAction(
   try {
     const ctx = await requireAuthContext();
 
-    // 1) Check Admin Role
+    // 1) Check Admin Role (Authorize the request)
     if (ctx.role !== "ADMIN") {
       return { success: false, message: "ไม่มีสิทธิ์ในการดำเนินการนี้" };
     }
@@ -29,39 +30,56 @@ export async function deleteUserAction(
       return { success: false, message: "ไม่สามารถลบบัญชีของตัวเองได้" };
     }
 
-    // 3) Check target user role (Optional: prevent deleting other admins if business rule requires)
-    const { data: targetUser } = await ctx.supabase
+    // 1. Double check the user exists before deletion
+    const targetUser = await ctx.supabase
       .from("profiles")
-      .select("role")
+      .select("id, full_name, email, role")
       .eq("id", userId)
-      .single();
+      .single()
+      .then(res => res.data);
 
-    if (targetUser?.role === "ADMIN") {
+    if (!targetUser) {
+      return { success: false, message: "ไม่พบข้อมูลผู้ใช้" };
+    }
+
+    if (targetUser.role === "ADMIN") {
       return { success: false, message: "ไม่สามารถลบบัญชี ADMIN ได้" };
     }
 
-    // 4) Delete user from AUTH (this will cascade to PROFILES)
-    const adminClient = createAdminClient();
-    const { error } = await adminClient.auth.admin.deleteUser(userId);
-
-    if (error) {
-      console.error("Delete user error:", error);
-      return {
-        success: false,
-        message: "เกิดข้อผิดพลาดในการลบผู้ใช้จากระบบ Auth",
-      };
+    // 4) 🛡️ [ZERO-ADMIN] Dispatch background deletion event
+    // Instead of using adminClient here, we send a request to Inngest.
+    try {
+      await inngest.send({
+        name: "user.delete.requested",
+        data: {
+          userId,
+          adminId: ctx.user.id,
+          reason: "Admin manual deletion via Dashboard"
+        }
+      });
+    } catch (inngestErr) {
+      console.error("Failed to send deletion event:", inngestErr);
+      return { success: false, message: "ระบบแจ้งลบล้มเหลว กรุณาลองใหม่ภายหลัง" };
     }
 
+    // 5) Audit Log
     await logAudit(ctx, {
-      action: "user.delete",
+      action: "user.delete.requested",
       entity: "profiles",
       entityId: userId,
-      metadata: {},
+      metadata: {
+        email: targetUser.email,
+        name: targetUser.full_name
+      },
     });
 
     revalidatePath("/protected/settings/users");
-    return { success: true };
-  } catch (err) {
-    return { success: false, message: "Unauthorized" };
+    return { 
+        success: true, 
+        message: "ระบบกำลังดำเนินการลบผู้ใช้ในเบื้องหลัง ข้อมูลจะหายไปในครู่เดียว" 
+    };
+  } catch (err: any) {
+    console.error("[deleteUserAction] Error:", err);
+    return { success: false, message: err.message || "Unauthorized" };
   }
 }

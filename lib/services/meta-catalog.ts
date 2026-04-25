@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { Database } from "../database.types";
 
 /**
@@ -8,7 +8,7 @@ import { Database } from "../database.types";
  * Ref: https://developers.facebook.com/docs/marketing-api/catalog/reference/
  */
 export async function generateMetaCatalogFeed() {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   // Fetch active properties
   const { data: properties, error } = await supabase

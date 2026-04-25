@@ -1,6 +1,5 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { createAdminClient } from "@/lib/supabase/admin";
 import {
   requireAuthContext,
   assertAuthenticated,
@@ -98,21 +97,21 @@ export async function deletePropertyAction(formData: FormData) {
       throw error;
     }
 
-    // 4) ATOMIC CLEANUP: Delete from storage ONLY after successful DB deletion
+    // 4) 🛡️ [ZERO-ADMIN] ATOMIC CLEANUP: Delete from storage in background
     if (images && images.length > 0) {
       const pathsToRemove = images
         .map((img) => img.storage_path)
         .filter((path): path is string => !!path);
 
       if (pathsToRemove.length > 0) {
-        const adminSupabase = createAdminClient();
-        const { error: storageError } = await adminSupabase.storage
-          .from(PROPERTY_IMAGES_BUCKET)
-          .remove(pathsToRemove);
-
-        if (storageError) {
-          console.error("Failed to cleanup images during post-delete cleanup", storageError);
-        }
+        const { inngest } = await import("@/lib/inngest/client");
+        await inngest.send({
+          name: "storage.cleanup.requested",
+          data: {
+            bucket: PROPERTY_IMAGES_BUCKET,
+            paths: pathsToRemove
+          }
+        });
       }
     }
 

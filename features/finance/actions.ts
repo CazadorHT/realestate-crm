@@ -11,7 +11,7 @@ import {
   UserRole,
 } from "@/lib/authz";
 import { mapDbError } from "@/lib/db-error";
-import { recordAuditLog } from "@/lib/audit";
+import { logAudit } from "@/lib/audit";
 import { logger } from "@/lib/logger";
 import {
   PayoutStatusUpdateResult,
@@ -59,9 +59,8 @@ export async function bulkMarkAsReadyToPayAction(
     if (error) throw new Error(mapDbError(error));
 
     // 🛡️ Audit Hardening: Log the bulk action
-    // 🛡️ Audit Hardening: Log the bulk action
-    await recordAuditLog({
-      action: "READY_TO_PAY",
+    await logAudit({ supabase, user, role }, {
+      action: "finance.bulk_mark_ready",
       entity: "COMMISSION",
       entityId: "BULK_UPDATE",
       metadata: { 
@@ -110,8 +109,8 @@ export async function markAsReadyToPayAction(
 
     if (error) throw new Error(mapDbError(error));
 
-    await recordAuditLog({
-      action: "READY_TO_PAY",
+    await logAudit({ supabase, user, role }, {
+      action: "finance.mark_ready",
       entity: "COMMISSION",
       entityId: commissionId,
       metadata: { 
@@ -170,8 +169,8 @@ export async function createCommissionAdjustmentAction(payload: {
 
     if (error) throw new Error(mapDbError(error));
 
-    await recordAuditLog({
-      action: "UPDATE",
+    await logAudit({ supabase, user, role }, {
+      action: "finance.adjustment_created",
       entity: "COMMISSION",
       entityId: payload.commission_id,
       metadata: { 
@@ -198,7 +197,7 @@ export async function createCommissionAdjustmentAction(payload: {
 export async function recalculatePayoutTotalsAction(
   commissionId: string,
   previewOnly: boolean = false,
-): Promise<{ success: boolean; message?: string; data?: any; error?: string }> {
+): Promise<{ success: boolean; message?: string; data?: RecalculatePreview | null; error?: string }> {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
@@ -307,8 +306,8 @@ export async function recalculatePayoutTotalsAction(
     if (updateErr) throw new Error(mapDbError(updateErr));
 
     // 🛡️ 🏛️ Forensic Audit: Log the full transition snapshot
-    await recordAuditLog({
-      action: "UPDATE",
+    await logAudit({ supabase, user, role }, {
+      action: "finance.recalculate",
       entity: "COMMISSION",
       entityId: commissionId,
       metadata: {
@@ -415,8 +414,8 @@ export async function markAsPaidAction(
 
     if (updateErr) throw new Error(mapDbError(updateErr));
 
-    await recordAuditLog({
-      action: "PAYOUT",
+    await logAudit({ supabase, user, role }, {
+      action: "finance.commission_paid",
       entity: "COMMISSION",
       entityId: commissionId,
       metadata: { 
@@ -563,7 +562,7 @@ export async function getPayoutQueueAction(filters?: {
 
     const { data, error, count } = mainResult as {
       data: JoinedPayout[] | null;
-      error: any;
+      error: unknown;
       count: number | null;
     };
 
@@ -779,22 +778,29 @@ export async function getCommissionAuditTrailAction(commissionId: string) {
 
     if (error) throw new Error(mapDbError(error));
 
+    interface AuditLogRecord {
+      id: string;
+      action: string;
+      metadata: Json;
+      created_at: string;
+      profiles: { full_name: string } | { full_name: string }[] | null;
+    }
+
     return {
       success: true,
-      data: (data as any[] || []).map(
-        (log) => ({
+      data: ((data as unknown as AuditLogRecord[]) || []).map((log) => {
+        const profile = Array.isArray(log.profiles) ? log.profiles[0] : log.profiles;
+        return {
           id: log.id,
           action: log.action,
           summary:
             (log.metadata as { summary?: string } | null)?.summary ||
             log.action,
           created_at: log.created_at,
-          user_full_name:
-            (log.profiles as { full_name: string } | null)?.full_name ||
-            "System",
+          user_full_name: profile?.full_name || "System",
           metadata: log.metadata,
-        }),
-      ),
+        };
+      }),
     };
   } catch (error: unknown) {
     logger.error("getCommissionAuditTrail Error", error, { source: "finance-actions", commissionId });
@@ -873,6 +879,9 @@ export async function getAgentWalletStatsAction(): Promise<{
  */
 export async function generateWhtPdfAction(commissionId: string) {
   try {
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
     const { renderToBuffer } = await import("@react-pdf/renderer");
     const { WhtCertificateTemplate } =
       await import("./components/WhtCertificateTemplate");
@@ -891,12 +900,14 @@ export async function generateWhtPdfAction(commissionId: string) {
     const buffer = await renderToBuffer(element as React.ReactElement<any>);
 
     // 3. Log Audit
-    await recordAuditLog({
-      action: "PAYOUT",
+    await logAudit({ supabase, user, role }, {
+      action: "finance.wht_pdf_generated",
       entity: "FINANCE",
       entityId: commissionId,
-      summary: `ออกใบรับรองหักภาษี ณ ที่จ่าย (50 ทวิ) สำหรับรายการ ID: ${commissionId.slice(0, 8)}`,
-      metadata: { commissionId },
+      metadata: { 
+        summary: `ออกใบรับรองหักภาษี ณ ที่จ่าย (50 ทวิ) สำหรับรายการ ID: ${commissionId.slice(0, 8)}`,
+        commissionId 
+      },
     });
 
     // 4. Return as Base64 for client-side download

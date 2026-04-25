@@ -30,12 +30,14 @@ describe('Team Actions - Enterprise Model', () => {
     update: vi.fn().mockReturnThis(),
     delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    rpc: vi.fn().mockReturnThis(),
     neq: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(), // Added for getTeamManagementStatsAction
     not: vi.fn().mockReturnThis(), // Added for stats
     order: vi.fn().mockReturnThis(),
     single: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn(),
+    then: vi.fn().mockImplementation((resolve: any) => resolve({ data: [], error: null, count: 0 })),
     // Default success response for 'await query'
     data: [],
     error: null,
@@ -65,7 +67,6 @@ describe('Team Actions - Enterprise Model', () => {
       const result = await getTeamsAction();
 
       expect(result.success).toBe(true);
-      expect(createAdminClient).toHaveBeenCalled();
       expect(mockSupabase.from).toHaveBeenCalledWith('teams');
       expect(mockSupabase.eq).toHaveBeenCalledWith('tenant_id', tenantId);
     });
@@ -159,15 +160,14 @@ describe('Team Actions - Enterprise Model', () => {
         user: { id: 'user-1' },
       });
 
-      mockSupabase.error = null;
+      mockSupabase.then.mockImplementationOnce((resolve: any) => resolve({ data: null, error: null }));
 
       const result = await deleteTeamAction('team-1');
 
       expect(result.success).toBe(true);
-      expect(mockSupabase.from).toHaveBeenCalledWith('profiles');
-      expect(mockSupabase.eq).toHaveBeenCalledWith('team_id', 'team-1');
-      expect(mockSupabase.from).toHaveBeenCalledWith('teams');
-      expect(mockSupabase.eq).toHaveBeenCalledWith('tenant_id', tenantId);
+      expect(mockSupabase.rpc).toHaveBeenCalledWith('hard_delete_team', {
+        p_team_id: 'team-1'
+      });
     });
   });
 });

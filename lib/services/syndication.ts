@@ -1,11 +1,11 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 /**
  * Generates an XML feed for LivingInsider
  * Based on their standard XML format requirement.
  */
 export async function generateLivingInsiderXML() {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   // Fetch active properties joined with syndication status
   const { data: properties, error } = await supabase

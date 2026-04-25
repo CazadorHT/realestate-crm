@@ -48,6 +48,29 @@ export const propertyProactiveTriggerEvent = eventType("property.proactive_trigg
   }>(),
 });
 
+export const propertyCreatedEvent = eventType("property.created", {
+  schema: staticSchema<{
+    propertyId: string;
+    userId: string;
+    tenantId?: string;
+  }>(),
+});
+
+export const userDeleteRequestedEvent = eventType("user.delete.requested", {
+  schema: staticSchema<{
+    userId: string;
+    adminId: string;
+    reason?: string;
+  }>(),
+});
+
+export const storageCleanupRequestedEvent = eventType("storage.cleanup.requested", {
+  schema: staticSchema<{
+    bucket: string;
+    paths: string[];
+  }>(),
+});
+
 // 🔥 Create Inngest Client
 export const inngest = new Inngest({ 
   id: "real-estate-crm",
@@ -56,5 +79,8 @@ export const inngest = new Inngest({
     "auth.login": authLoginEvent,
     "finance.commission_paid": financeCommissionPaidEvent,
     "property.proactive_trigger": propertyProactiveTriggerEvent,
+    "property.created": propertyCreatedEvent,
+    "user.delete.requested": userDeleteRequestedEvent,
+    "storage.cleanup.requested": storageCleanupRequestedEvent,
   }
 });

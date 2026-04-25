@@ -35,12 +35,13 @@ async function testCrypto() {
 
     // 3. Test Security Monitoring (Tamper Proof)
     console.log("\nTesting Tamper Proofing...");
+    if (!encrypted) throw new Error("Encryption failed");
     const tampered = encrypted.slice(0, -4) + "beef"; // Change last 4 chars
     try {
       decrypt(tampered);
       console.log("❌ FAIL: Tampered data was decrypted!");
     } catch (err) {
-      console.log("✅ Tamper Detection: PASSED (Decryption failed as expected)");
+      console.log("✅ PASS: Tampered data rejected (GCM Tag check works)");
     }
 
     // 4. Test Key Mismatch

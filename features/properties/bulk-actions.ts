@@ -3,7 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff, isAdmin } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { PROPERTY_IMAGES_BUCKET } from "./logic/images";
 import { mapDbError } from "@/lib/db-error";
@@ -74,20 +73,10 @@ export async function bulkDeletePropertiesAction(
       };
     }
 
-    // Soft Delete: อัปเดต deleted_at
-    let updateQuery = supabase
-      .from("properties")
-      .update({ 
-        deleted_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .in("id", safeIds);
-
-    if (role !== "ADMIN" && tenantId) {
-      updateQuery = updateQuery.eq("tenant_id", tenantId);
-    }
-    
-    const { error, count } = await updateQuery;
+    // 🛡️ [PHASE 1] Use Security Definer RPC for atomic bulk trash
+    const { error, count } = await supabase.rpc("bulk_trash_properties", {
+      p_ids: safeIds
+    });
 
     if (error) throw error;
 
@@ -233,30 +222,24 @@ export async function bulkPermanentDeletePropertiesAction(
       .map(img => img.storage_path)
       .filter((p): p is string => !!p);
 
-    // 3.2 Delete Junctions
-    await supabase.from("property_images").delete().in("property_id", safeIds);
-    await supabase.from("property_features").delete().in("property_id", safeIds);
-    await supabase.from("property_agents").delete().in("property_id", safeIds);
-    await supabase.from("property_matches").delete().in("property_id", safeIds);
-
-    // 3.3 Delete Main Records
-    const { error, count } = await supabase
-      .from("properties")
-      .delete()
-      .in("id", safeIds);
+    // 🛡️ [PHASE 1] Use Security Definer RPC for atomic bulk hard delete
+    // This handles deleting junctions (images, features, etc.) and main records in one transaction.
+    const { error, count } = await supabase.rpc("bulk_hard_delete_properties", {
+      p_ids: safeIds
+    });
 
     if (error) throw error;
 
-    // 3.4 Cleanup Storage after successful DB deletion
+    // 3.4 🛡️ [ZERO-ADMIN] Cleanup Storage in background
     if (storagePaths.length > 0) {
-      const adminSupabase = createAdminClient();
-      const { error: storageError } = await adminSupabase.storage
-        .from(PROPERTY_IMAGES_BUCKET)
-        .remove(storagePaths);
-      
-      if (storageError) {
-        console.error("Bulk storage cleanup failed:", storageError);
-      }
+      const { inngest } = await import("@/lib/inngest/client");
+      await inngest.send({
+        name: "storage.cleanup.requested",
+        data: {
+          bucket: PROPERTY_IMAGES_BUCKET,
+          paths: storagePaths
+        }
+      });
     }
 
     await logAudit(

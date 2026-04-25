@@ -5,7 +5,6 @@ import {
   assertAuthenticated,
   assertStaff,
 } from "@/lib/authz";
-import { createAdminClient } from "@/lib/supabase/admin";
 import type {
   PropertyRow,
   PropertyWithImages,
@@ -21,6 +20,7 @@ import { getCoverImage } from "@/lib/property-hardened-utils";
 import { getRecommendedProperties } from "../queries";
 import { mapDbError } from "@/lib/db-error";
 import { Database } from "@/lib/database.types";
+import { decrypt } from "@/lib/crypto";
 
 /**
  * Get property by ID with images
@@ -43,6 +43,7 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
         status, view_count, is_hot_deal, is_exclusive,
         created_at, updated_at,
         tenant_id, created_by, owner_id, co_agent_sale_commission_percent,
+        co_agent_name, co_agent_phone, co_agent_contact_id,
         popular_area, popular_area_en, popular_area_cn, property_source,
         ai_summary_content, ai_reviewed_at,
         ai_reviewed_by, version, images, nearby_places, nearby_transits
@@ -59,7 +60,13 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       role,
     });
 
-    return property as unknown as PropertyRow;
+    const p = property as unknown as PropertyRow;
+    return {
+      ...p,
+      co_agent_name: decrypt(p.co_agent_name),
+      co_agent_phone: decrypt(p.co_agent_phone),
+      co_agent_contact_id: decrypt(p.co_agent_contact_id),
+    };
   } catch (error) {
     console.error("getPropertyById → error:", error);
     throw error;
@@ -88,6 +95,7 @@ export async function getPropertyWithImages(
       status, view_count, is_hot_deal, is_exclusive,
       created_at, updated_at,
       tenant_id, created_by, owner_id, co_agent_sale_commission_percent,
+      co_agent_name, co_agent_phone, co_agent_contact_id,
       popular_area, popular_area_en, popular_area_cn, property_source,
       ai_summary_content, ai_reviewed_at,
       ai_reviewed_by, version, images, nearby_places, nearby_transits,
@@ -116,7 +124,12 @@ export async function getPropertyWithImages(
     );
   }
 
-  return property;
+  return {
+    ...property,
+    co_agent_name: decrypt(property.co_agent_name),
+    co_agent_phone: decrypt(property.co_agent_phone),
+    co_agent_contact_id: decrypt(property.co_agent_contact_id),
+  };
 }
 
 /**

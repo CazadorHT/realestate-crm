@@ -1,6 +1,5 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { Json } from "@/lib/database.types";
 import { sendLineNotification } from "@/lib/line";
@@ -40,45 +39,45 @@ export async function logActivityAction(
       userAgent: parseUserAgent(userAgent),
     };
 
-    const adminClient = createAdminClient();
+    // 🛡️ [PHASE 1] Use Security Definer RPC for logging to avoid adminClient bypass
+    const { error: dbError } = await supabase.rpc("log_system_activity", {
+      p_action: action,
+      p_entity: entity,
+      p_entity_id: entityId || null,
+      p_metadata: enrichedMetadata as Json,
+      p_email: action === "LOGIN" || action === "LOGIN_FAILURE" ? email : null
+    });
 
-    // [SECURITY] Allow anonymous logging ONLY for login actions (where user might not be in session yet) or specific public actions
-    if (!user && action !== "LOGIN_FAILURE" && action !== "LOGIN") return;
+    if (dbError) {
+      logger.error("Audit log RPC failed", dbError, { source: "audit-actions", action, entity });
+    }
 
-    // 🕵️ Resolve User Identity (Fallback to email for LOGIN)
+    // 🕵️ Resolve User Identity for Notifications (Use secure RPC to avoid adminClient)
+    type ProfileSummary = {
+      id: string;
+      role: string;
+      avatar_url: string | null;
+    };
+    let profile: ProfileSummary | null = null;
     let effectiveUserId = user?.id;
-    let profile: any = null;
 
     if (action === "LOGIN" || action === "LOGIN_FAILURE") {
-      const { data: p } = await adminClient
-        .from("profiles")
-        .select("id, role, avatar_url")
-        .eq("email", email.toLowerCase())
-        .single();
+      const { data: p } = await supabase.rpc("get_profile_by_email", {
+        p_email: email
+      });
       
       if (p) {
-        effectiveUserId = p.id;
-        profile = p;
+        profile = p as ProfileSummary;
+        effectiveUserId = profile.id;
       }
     } else if (user) {
-      const { data: p } = await adminClient
+      // Authenticated user can read their own profile usually
+      const { data: p } = await supabase
         .from("profiles")
         .select("id, role, avatar_url")
         .eq("id", user.id)
         .single();
-      profile = p;
-    }
-
-    const { error: dbError } = await adminClient.from("audit_logs").insert({
-      user_id: effectiveUserId || null, 
-      action,
-      entity,
-      entity_id: entityId || null,
-      metadata: enrichedMetadata as Json,
-    });
-
-    if (dbError) {
-      logger.error("Audit log DB insert failed", dbError, { source: "audit-actions", action, entity });
+      profile = p as ProfileSummary;
     }
 
     // 🛡️ Sentry Integration: Add breadcrumb for every important action

@@ -402,27 +402,13 @@ export async function deleteTeamAction(id: string) {
       return { success: false, message: "ไม่มีสิทธิ์ในการดำเนินการนี้" };
     }
 
-    // 1) เคลียร์ team_id ใน profiles ก่อน (ถ้ามี)
-    let profileQuery = ctx.supabase
-      .from("profiles")
-      .update({ team_id: null })
-      .eq("team_id", id);
-
-    // Note: Since profiles might not have tenant_id column, we rely on RLS 
-    // or just the team_id match. But we should be careful.
-    await profileQuery;
-
-    // 2) ลบทีม
-    let deleteQuery = ctx.supabase.from("teams").delete().eq("id", id);
-
-    if (ctx.tenantId && ctx.tenantId !== "ALL") {
-      deleteQuery = deleteQuery.eq("tenant_id", ctx.tenantId);
-    }
-
-    const { error } = await deleteQuery;
+    // 🛡️ [PHASE 1] Use Security Definer RPC for atomic team deletion
+    const { error } = await ctx.supabase.rpc("hard_delete_team", {
+      p_team_id: id
+    });
 
     if (error) {
-      console.error("Error deleting team:", error);
+      console.error("Error deleting team via RPC:", error);
       return { success: false, message: "ไม่สามารถลบทีมได้" };
     }
 

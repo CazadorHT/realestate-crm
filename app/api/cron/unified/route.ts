@@ -295,7 +295,7 @@ async function runContractExpiryCheck() {
         }
 
         try {
-          await sendLineNotification(flexMessage);
+          await sendLineNotification(flexMessage as any);
           notifications.push({
             contract_id: contract.id,
             property: propertyTitle,

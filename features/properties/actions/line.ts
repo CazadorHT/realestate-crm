@@ -84,7 +84,7 @@ export async function postPropertyToLineAction(
     );
 
     // 4. ส่ง Broadcast ไปยังทุกคน
-    const broadcastRes = await broadcastLineMessage(flexMessage);
+    const broadcastRes = await broadcastLineMessage(flexMessage as any);
 
     if (!broadcastRes.success) {
       return { 

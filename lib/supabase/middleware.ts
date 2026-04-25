@@ -40,12 +40,36 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes logic
+  // 1. Auth Protection (Basic Login)
   if (request.nextUrl.pathname.startsWith("/protected") && !user) {
     return { 
       response: NextResponse.redirect(new URL("/auth/login", request.url)), 
       user: null 
     };
+  }
+
+  // 2. 🛡️ [PHASE 2] Administrative MFA Enforcement (AAL2)
+  // Protect ADMIN and MANAGER roles with Mandatory MFA
+  const role = user?.app_metadata?.role as string | undefined;
+  if (user && (role === "ADMIN" || role === "MANAGER")) {
+    const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    
+    // Check if user is currently AAL1 but should be AAL2
+    if (!aalError && aal.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+      const isMfaPage = request.nextUrl.pathname.startsWith("/auth/mfa");
+      
+      if (!isMfaPage) {
+        // 🛡️ [HARDENING] Check for existing factors to decide redirect
+        const { data: factors } = await supabase.auth.mfa.listFactors();
+        const hasFactors = (factors?.all?.length || 0) > 0;
+        
+        const path = hasFactors ? "/auth/mfa/verify" : "/auth/mfa/enroll";
+        return {
+          response: NextResponse.redirect(new URL(path, request.url)),
+          user
+        };
+      }
+    }
   }
 
   return { response, user };

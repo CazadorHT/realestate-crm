@@ -11,7 +11,6 @@ import { z } from "zod";
 
 import { generateBlogPost, refineBlogContent } from "./services/ai-service";
 import { uploadBlogImage } from "./services/storage-service";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { generateBlogSlug, ensureUniqueSlug, generateBlogJsonLd } from "./blog-utils";
 import { Database } from "@/lib/database.types";
 

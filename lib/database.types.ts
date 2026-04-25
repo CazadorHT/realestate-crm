@@ -1298,9 +1298,11 @@ export type Database = {
           created_at: string
           created_by: string | null
           email: string | null
+          email_hash: string | null
           embedding: string | null
           facebook_psid: string | null
           full_name: string
+          full_name_hash: string | null
           has_pets: boolean | null
           id: string
           instagram_sid: string | null
@@ -1308,6 +1310,7 @@ export type Database = {
           last_viewed_at: string | null
           lead_type: Database["public"]["Enums"]["lead_type"]
           line_id: string | null
+          line_id_hash: string | null
           max_size_sqm: number | null
           min_bathrooms: number | null
           min_bedrooms: number | null
@@ -1318,6 +1321,7 @@ export type Database = {
           num_occupants: number | null
           pdpa_consent: boolean | null
           phone: string | null
+          phone_hash: string | null
           preferences: Json | null
           preferred_locations: string[] | null
           preferred_property_types:
@@ -1347,9 +1351,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          email_hash?: string | null
           embedding?: string | null
           facebook_psid?: string | null
           full_name: string
+          full_name_hash?: string | null
           has_pets?: boolean | null
           id?: string
           instagram_sid?: string | null
@@ -1357,6 +1363,7 @@ export type Database = {
           last_viewed_at?: string | null
           lead_type?: Database["public"]["Enums"]["lead_type"]
           line_id?: string | null
+          line_id_hash?: string | null
           max_size_sqm?: number | null
           min_bathrooms?: number | null
           min_bedrooms?: number | null
@@ -1367,6 +1374,7 @@ export type Database = {
           num_occupants?: number | null
           pdpa_consent?: boolean | null
           phone?: string | null
+          phone_hash?: string | null
           preferences?: Json | null
           preferred_locations?: string[] | null
           preferred_property_types?:
@@ -1396,9 +1404,11 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           email?: string | null
+          email_hash?: string | null
           embedding?: string | null
           facebook_psid?: string | null
           full_name?: string
+          full_name_hash?: string | null
           has_pets?: boolean | null
           id?: string
           instagram_sid?: string | null
@@ -1406,6 +1416,7 @@ export type Database = {
           last_viewed_at?: string | null
           lead_type?: Database["public"]["Enums"]["lead_type"]
           line_id?: string | null
+          line_id_hash?: string | null
           max_size_sqm?: number | null
           min_bathrooms?: number | null
           min_bedrooms?: number | null
@@ -1416,6 +1427,7 @@ export type Database = {
           num_occupants?: number | null
           pdpa_consent?: boolean | null
           phone?: string | null
+          phone_hash?: string | null
           preferences?: Json | null
           preferred_locations?: string[] | null
           preferred_property_types?:
@@ -1678,11 +1690,13 @@ export type Database = {
           created_by: string | null
           facebook_url: string | null
           full_name: string
+          full_name_hash: string | null
           id: string
           line_id: string | null
           other_contact: string | null
           owner_type: string | null
           phone: string | null
+          phone_hash: string | null
           tenant_id: string | null
           updated_at: string
         }
@@ -1692,11 +1706,13 @@ export type Database = {
           created_by?: string | null
           facebook_url?: string | null
           full_name: string
+          full_name_hash?: string | null
           id?: string
           line_id?: string | null
           other_contact?: string | null
           owner_type?: string | null
           phone?: string | null
+          phone_hash?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
@@ -1706,11 +1722,13 @@ export type Database = {
           created_by?: string | null
           facebook_url?: string | null
           full_name?: string
+          full_name_hash?: string | null
           id?: string
           line_id?: string | null
           other_contact?: string | null
           owner_type?: string | null
           phone?: string | null
+          phone_hash?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
@@ -1957,7 +1975,9 @@ export type Database = {
           co_agent_contact_channel: string | null
           co_agent_contact_id: string | null
           co_agent_name: string | null
+          co_agent_name_hash: string | null
           co_agent_phone: string | null
+          co_agent_phone_hash: string | null
           co_agent_rent_commission_months: number | null
           co_agent_sale_commission_percent: number | null
           co_broker_id: string | null
@@ -2091,7 +2111,9 @@ export type Database = {
           co_agent_contact_channel?: string | null
           co_agent_contact_id?: string | null
           co_agent_name?: string | null
+          co_agent_name_hash?: string | null
           co_agent_phone?: string | null
+          co_agent_phone_hash?: string | null
           co_agent_rent_commission_months?: number | null
           co_agent_sale_commission_percent?: number | null
           co_broker_id?: string | null
@@ -2225,7 +2247,9 @@ export type Database = {
           co_agent_contact_channel?: string | null
           co_agent_contact_id?: string | null
           co_agent_name?: string | null
+          co_agent_name_hash?: string | null
           co_agent_phone?: string | null
+          co_agent_phone_hash?: string | null
           co_agent_rent_commission_months?: number | null
           co_agent_sale_commission_percent?: number | null
           co_broker_id?: string | null
@@ -2500,6 +2524,8 @@ export type Database = {
           image_url: string
           is_cover: boolean
           property_id: string
+          scan_result: Json | null
+          scan_status: string | null
           sort_order: number
           storage_path: string | null
         }
@@ -2509,6 +2535,8 @@ export type Database = {
           image_url: string
           is_cover?: boolean
           property_id: string
+          scan_result?: Json | null
+          scan_status?: string | null
           sort_order?: number
           storage_path?: string | null
         }
@@ -2518,6 +2546,8 @@ export type Database = {
           image_url?: string
           is_cover?: boolean
           property_id?: string
+          scan_result?: Json | null
+          scan_status?: string | null
           sort_order?: number
           storage_path?: string | null
         }
@@ -3572,8 +3602,16 @@ export type Database = {
       }
     }
     Functions: {
+      accept_tenant_invitation: {
+        Args: { p_tenant_id: string }
+        Returns: undefined
+      }
       bulk_delete_deals_atomic: {
         Args: { p_deal_ids: string[]; p_tenant_id: string }
+        Returns: number
+      }
+      bulk_hard_delete_properties: {
+        Args: { p_ids: string[] }
         Returns: number
       }
       bulk_mark_commissions_as_ready_to_pay: {
@@ -3585,7 +3623,39 @@ export type Database = {
         }
         Returns: Json
       }
+      bulk_trash_properties: { Args: { p_ids: string[] }; Returns: number }
       check_is_staff_for_audit: { Args: never; Returns: boolean }
+      create_lead_from_match:
+        | {
+            Args: {
+              p_email?: string
+              p_full_name: string
+              p_line_id?: string
+              p_phone: string
+              p_property_id: string
+              p_session_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_email?: string
+              p_email_hash?: string
+              p_full_name: string
+              p_full_name_hash?: string
+              p_line_id?: string
+              p_line_id_hash?: string
+              p_phone: string
+              p_phone_hash?: string
+              p_property_id: string
+              p_session_id: string
+            }
+            Returns: string
+          }
+      decline_tenant_invitation: {
+        Args: { p_tenant_id: string }
+        Returns: undefined
+      }
       fn_check_hot_deal: {
         Args: {
           p_keywords: string[]
@@ -3642,6 +3712,33 @@ export type Database = {
         Returns: Json
       }
       get_isolation_setting: { Args: { setting_key: string }; Returns: boolean }
+      get_lead_messages: {
+        Args: {
+          p_lead_created_at: string
+          p_lead_id: string
+          p_limit?: number
+          p_offset?: number
+          p_source: string
+        }
+        Returns: {
+          content: string | null
+          created_at: string | null
+          direction: string | null
+          external_message_id: string | null
+          id: string
+          is_read: boolean | null
+          lead_id: string | null
+          payload: Json | null
+          source: Database["public"]["Enums"]["lead_source"]
+          tenant_id: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "omni_messages"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_popular_areas_with_counts: {
         Args: { target_tenant_id?: string }
         Returns: {
@@ -3657,6 +3754,14 @@ export type Database = {
           province: string
           slug: string
           sort_order: number
+        }[]
+      }
+      get_profile_by_email: {
+        Args: { p_email: string }
+        Returns: {
+          avatar_url: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
         }[]
       }
       get_properties_without_notification_rules: {
@@ -3693,22 +3798,26 @@ export type Database = {
         Returns: Json
       }
       get_user_tenants: { Args: never; Returns: string[] }
+      hard_delete_team: { Args: { p_team_id: string }; Returns: undefined }
       increment_blog_post_view: {
         Args: { post_id: string }
         Returns: undefined
       }
       increment_faq_view: { Args: { faq_id: string }; Returns: undefined }
-      increment_property_view: {
-        Args: {
-          p_property_id: string
-          p_user_id?: string
-          p_visitor_id?: string
-        }
-        Returns: {
-          success: boolean
-          trigger_proactive_agent: boolean
-        }[]
-      }
+      increment_property_view:
+        | { Args: { p_id: string }; Returns: number }
+        | {
+            Args: {
+              p_property_id: string
+              p_user_id?: string
+              p_visitor_id?: string
+            }
+            Returns: {
+              success: boolean
+              tenant_id: string
+              trigger_proactive_agent: boolean
+            }[]
+          }
       increment_service_view: {
         Args: {
           p_ip_hash?: string
@@ -3726,6 +3835,8 @@ export type Database = {
       }
       is_staff: { Args: never; Returns: boolean }
       is_system_admin: { Args: never; Returns: boolean }
+      is_team_manager: { Args: { p_team_id: string }; Returns: boolean }
+      is_team_member: { Args: { p_team_id: string }; Returns: boolean }
       is_tenant_admin: { Args: { target_tenant_id: string }; Returns: boolean }
       is_tenant_manager: {
         Args: { target_tenant_id: string }
@@ -3733,6 +3844,29 @@ export type Database = {
       }
       is_tenant_member: { Args: { target_tenant_id: string }; Returns: boolean }
       is_tenant_staff: { Args: { target_tenant_id: string }; Returns: boolean }
+      log_ai_usage: {
+        Args: {
+          p_completion_tokens?: number
+          p_cost_thb?: number
+          p_error_message?: string
+          p_feature: string
+          p_model: string
+          p_prompt_tokens?: number
+          p_status: string
+        }
+        Returns: undefined
+      }
+      log_system_activity: {
+        Args: {
+          p_action: string
+          p_email?: string
+          p_entity: string
+          p_entity_id?: string
+          p_metadata?: Json
+          p_tenant_id?: string
+        }
+        Returns: undefined
+      }
       match_properties: {
         Args: {
           match_count: number
@@ -3751,6 +3885,26 @@ export type Database = {
           title: string
         }[]
       }
+      match_properties_hardened: {
+        Args: {
+          match_count: number
+          match_threshold: number
+          p_tenant_id?: string
+          query_embedding: string
+        }
+        Returns: {
+          id: string
+          listing_type: Database["public"]["Enums"]["listing_type"]
+          price: number
+          property_type: Database["public"]["Enums"]["property_type"]
+          rental_price: number
+          similarity: number
+          slug: string
+          title: string
+        }[]
+      }
+      prune_ai_logs: { Args: { p_days_to_keep: number }; Returns: undefined }
+      reset_all_property_views: { Args: never; Returns: undefined }
       search_leads_globally: {
         Args: { search_email: string; search_phone: string }
         Returns: {
@@ -3762,6 +3916,53 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      submit_public_lead:
+        | {
+            Args: {
+              p_ai_score?: number
+              p_ai_status_label?: string
+              p_email?: string
+              p_email_hash?: string
+              p_full_name: string
+              p_full_name_hash?: string
+              p_line_id?: string
+              p_line_id_hash?: string
+              p_note?: string
+              p_phone?: string
+              p_phone_hash?: string
+              p_referral_url?: string
+              p_source?: string
+              p_utm_campaign?: string
+              p_utm_content?: string
+              p_utm_medium?: string
+              p_utm_source?: string
+              p_utm_term?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_full_name: string
+              p_full_name_hash?: string
+              p_line_id?: string
+              p_line_id_hash?: string
+              p_note?: string
+              p_phone?: string
+              p_phone_hash?: string
+              p_source?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_full_name: string
+              p_line_id?: string
+              p_note?: string
+              p_phone?: string
+              p_source?: string
+            }
+            Returns: string
+          }
       swap_property_stock_atomic: {
         Args: {
           p_new_deal_type: string
@@ -3815,7 +4016,9 @@ export type Database = {
           co_agent_contact_channel: string | null
           co_agent_contact_id: string | null
           co_agent_name: string | null
+          co_agent_name_hash: string | null
           co_agent_phone: string | null
+          co_agent_phone_hash: string | null
           co_agent_rent_commission_months: number | null
           co_agent_sale_commission_percent: number | null
           co_broker_id: string | null
@@ -3965,7 +4168,9 @@ export type Database = {
           co_agent_contact_channel: string | null
           co_agent_contact_id: string | null
           co_agent_name: string | null
+          co_agent_name_hash: string | null
           co_agent_phone: string | null
+          co_agent_phone_hash: string | null
           co_agent_rent_commission_months: number | null
           co_agent_sale_commission_percent: number | null
           co_broker_id: string | null

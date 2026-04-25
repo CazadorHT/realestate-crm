@@ -13,6 +13,7 @@ import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { z } from "zod";
+import { encrypt, decrypt, generateBlindIndex } from "@/lib/crypto";
 
 const ownerSchema = z.object({
   full_name: z.string().min(1, "กรุณากรอกชื่อเจ้าของ"),
@@ -76,7 +77,14 @@ export async function getOwnersAction(allBranches = false) {
       return [];
     }
 
-    return owners ?? [];
+    return (owners ?? []).map((o) => ({
+      ...o,
+      full_name: decrypt(o.full_name) || "Unknown",
+      phone: decrypt(o.phone),
+      line_id: decrypt(o.line_id),
+      facebook_url: decrypt(o.facebook_url),
+      other_contact: decrypt(o.other_contact),
+    }));
   } catch (err) {
     // ถ้าไม่ได้ login ให้ return [] ไปก่อน (เพราะหน้า protected ปกติก็กันไว้แล้ว)
     console.error("getOwnersAction auth error:", err);
@@ -112,7 +120,14 @@ export async function getOwnerByIdAction(id: string) {
     role: ctx.role,
   });
 
-  return owner;
+  return {
+    ...owner,
+    full_name: decrypt(owner.full_name) || "Unknown",
+    phone: decrypt(owner.phone),
+    line_id: decrypt(owner.line_id),
+    facebook_url: decrypt(owner.facebook_url),
+    other_contact: decrypt(owner.other_contact),
+  };
 }
 
 export async function createOwnerAction(input: CreateOwnerInput) {
@@ -126,6 +141,13 @@ export async function createOwnerAction(input: CreateOwnerInput) {
       .from("owners")
       .insert({
         ...validated,
+        full_name: encrypt(validated.full_name) || "Unknown",
+        full_name_hash: generateBlindIndex(validated.full_name),
+        phone: encrypt(validated.phone),
+        phone_hash: generateBlindIndex(validated.phone),
+        line_id: encrypt(validated.line_id),
+        facebook_url: encrypt(validated.facebook_url),
+        other_contact: encrypt(validated.other_contact),
         created_by: ctx.user.id,
         tenant_id: ctx.tenantId,
         updated_at: new Date().toISOString(),
@@ -163,7 +185,6 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
     assertStaff(ctx.role);
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
-    // 1) Verify presence and branch isolation
     const { data: existing, error: findError } = await ctx.supabase
       .from("owners")
       .select("id, tenant_id")
@@ -183,6 +204,13 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
       .from("owners")
       .update({
         ...validated,
+        full_name: encrypt(validated.full_name) || "Unknown",
+        full_name_hash: generateBlindIndex(validated.full_name),
+        phone: encrypt(validated.phone),
+        phone_hash: generateBlindIndex(validated.phone),
+        line_id: encrypt(validated.line_id),
+        facebook_url: encrypt(validated.facebook_url),
+        other_contact: encrypt(validated.other_contact),
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
@@ -218,7 +246,6 @@ export async function deleteOwnerAction(id: string) {
     assertStaff(ctx.role);
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
-    // 1) Verify presence and branch isolation
     const { data: existing, error: findError } = await ctx.supabase
       .from("owners")
       .select("id, tenant_id")
@@ -234,7 +261,6 @@ export async function deleteOwnerAction(id: string) {
       return { success: false, message: "คุณไม่มีสิทธิ์ลบข้อมูลของสาขาอื่น" };
     }
 
-    // 🔗 DATA INTEGRITY: Check for linked properties
     const { count, error: countErr } = await ctx.supabase
       .from("properties")
       .select("id", { count: "exact", head: true })
@@ -307,8 +333,25 @@ export async function getOwnersWithPropertyCountAction() {
 
   if (countsError) {
     console.error("Error fetching property counts:", countsError);
-    return owners.map((o) => ({ ...o, property_count: 0 }));
+    return owners.map((o) => ({
+      ...o,
+      full_name: decrypt(o.full_name) || "Unknown",
+      phone: decrypt(o.phone),
+      line_id: decrypt(o.line_id),
+      facebook_url: decrypt(o.facebook_url),
+      other_contact: decrypt(o.other_contact),
+      property_count: 0,
+    }));
   }
 
-  return calculatePropertyCounts(owners, propertyCounts ?? []);
+  const decryptedOwners = owners.map((o) => ({
+    ...o,
+    full_name: decrypt(o.full_name) || "Unknown",
+    phone: decrypt(o.phone),
+    line_id: decrypt(o.line_id),
+    facebook_url: decrypt(o.facebook_url),
+    other_contact: decrypt(o.other_contact),
+  }));
+
+  return calculatePropertyCounts(decryptedOwners, propertyCounts ?? []);
 }

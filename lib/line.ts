@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { Json } from "@/lib/database.types";
 
 const LINE_MESSAGING_API = "https://api.line.me/v2/bot/message/push";
 
@@ -131,9 +132,9 @@ export async function broadcastLineMessage(
     }
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("LINE Broadcast Exception:", error);
-    return { success: false, message: error.message };
+    return { success: false, message: (error as Error).message };
   }
 }
 
@@ -194,7 +195,7 @@ export async function saveOmniMessage(data: {
     | "OTHER";
   external_message_id?: string;
   content: string;
-  payload?: any;
+  payload?: Json;
   direction: "INCOMING" | "OUTGOING";
   tenant_id?: string;
 }) {

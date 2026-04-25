@@ -16,108 +16,116 @@ vi.mock('@/lib/authz', () => ({
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn().mockResolvedValue(null) }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 
-vi.mock('@/lib/supabase/admin', () => ({
-  createAdminClient: vi.fn(() => ({
-    storage: {
-      from: vi.fn().mockReturnThis(),
-      remove: vi.fn().mockResolvedValue({ data: [], error: null }),
-    }
-  })),
+vi.mock('@/lib/inngest/client', () => ({
+  inngest: {
+    send: vi.fn().mockResolvedValue({}),
+  },
 }));
 
-describe('Property Bulk Actions - Hardened Security & Isolation', () => {
-  const mockTenantId = 't1';
-  const mockUserId = 'u1';
-
-  // 🛡️ Dedicated Local Mock to prevent pollution
-  const mockSupabase: any = {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    in: vi.fn().mockReturnThis(),
-    single: vi.fn(),
-    storage: {
-      from: vi.fn().mockReturnThis(),
-      remove: vi.fn().mockResolvedValue({ data: [], error: null }),
-    },
-    then: vi.fn().mockImplementation((resolve: any) => resolve({ data: [], error: null, count: 0 })),
-  };
-
+describe('Property Bulk Actions - Isolated & Hardened', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    mockSupabase.from.mockReturnValue(mockSupabase);
-    mockSupabase.select.mockReturnValue(mockSupabase);
-    mockSupabase.update.mockReturnValue(mockSupabase);
-    mockSupabase.delete.mockReturnValue(mockSupabase);
-    mockSupabase.eq.mockReturnValue(mockSupabase);
-    mockSupabase.in.mockReturnValue(mockSupabase);
-    mockSupabase.then.mockImplementation((resolve: any) => resolve({ data: [], error: null, count: 0 }));
-
-    vi.mocked(requireAuthContext).mockResolvedValue({
-      supabase: mockSupabase,
-      user: { id: mockUserId, app_metadata: {}, user_metadata: {}, aud: 'authenticated', created_at: '' } as any,
-      role: 'AGENT',
-      tenantId: mockTenantId,
-    });
-    vi.mocked(isAdmin).mockReturnValue(false);
   });
+
+  const createLocalSupabase = () => {
+    const mock: any = {
+      from: vi.fn().mockReturnThis(),
+      select: vi.fn().mockReturnThis(),
+      insert: vi.fn().mockReturnThis(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      rpc: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      then: vi.fn().mockImplementation((resolve: any) => resolve({ data: [], error: null, count: 0 })),
+    };
+    return mock;
+  };
 
   describe('bulkDeletePropertiesAction', () => {
     it('should filter out restricted statuses and only soft-delete safe properties', async () => {
+      const supabase = createLocalSupabase();
       const ids = ['p1', 'p2', 'p3'];
 
-      mockSupabase.then
+      (requireAuthContext as any).mockResolvedValue({
+        supabase,
+        user: { id: 'u1' },
+        role: 'AGENT',
+        tenantId: 't1',
+      });
+
+      supabase.then
         .mockImplementationOnce((resolve: any) => resolve({ 
           data: [{ id: 'p1', status: 'ACTIVE' }, { id: 'p2', status: 'SOLD' }], 
           error: null 
-        })) // status query
+        })) // 1. properties status query
         .mockImplementationOnce((resolve: any) => resolve({ 
           data: [{ property_id: 'p3' }], 
           error: null 
-        })) // deals query
-        .mockImplementationOnce((resolve: any) => resolve({ count: 1, error: null })); // final update
+        })); // 2. deals query
+      
+      supabase.rpc.mockResolvedValueOnce({ count: 1, error: null });
 
       const result = await bulkDeletePropertiesAction(ids);
 
       expect(result.success).toBe(true);
-      expect(result.count).toBe(1);
-      
-      // ✅ Verify isolation
-      expect(mockSupabase.eq).toHaveBeenCalledWith('tenant_id', mockTenantId);
-      expect(mockSupabase.in).toHaveBeenCalledWith('id', ['p1']);
+      expect(supabase.rpc).toHaveBeenCalledWith('bulk_trash_properties', {
+        p_ids: ['p1']
+      });
     });
   });
 
   describe('bulkPermanentDeletePropertiesAction', () => {
     it('should verify ownership and trigger storage cleanup for safe properties', async () => {
+      const { inngest } = await import('@/lib/inngest/client');
+      const supabase = createLocalSupabase();
       const ids = ['p1'];
 
-      mockSupabase.then
-        .mockImplementationOnce((resolve: any) => resolve({ data: [{ id: 'p1' }], error: null })) // verify query
-        .mockImplementationOnce((resolve: any) => resolve({ data: [{ id: 'p1', status: 'ACTIVE' }], error: null })) // status check
-        .mockImplementationOnce((resolve: any) => resolve({ data: [], error: null })) // deals check
-        .mockImplementationOnce((resolve: any) => resolve({ data: [{ storage_path: 'img.jpg' }], error: null })) // images fetch
-        .mockImplementation((resolve: any) => resolve({ count: 1, error: null })); // deletes
+      (requireAuthContext as any).mockResolvedValue({
+        supabase,
+        user: { id: 'u1' },
+        role: 'AGENT',
+        tenantId: 't1',
+      });
+
+      supabase.then
+        .mockImplementationOnce((resolve: any) => resolve({ data: [{ id: 'p1' }], error: null })) // 1. verify query
+        .mockImplementationOnce((resolve: any) => resolve({ data: [{ id: 'p1', status: 'ACTIVE' }], error: null })) // 2. status check
+        .mockImplementationOnce((resolve: any) => resolve({ data: [], error: null })) // 3. deals check
+        .mockImplementationOnce((resolve: any) => resolve({ data: [{ storage_path: 'img.jpg' }], error: null })); // 4. images fetch
+      
+      supabase.rpc.mockResolvedValueOnce({ count: 1, error: null });
 
       const result = await bulkPermanentDeletePropertiesAction(ids);
 
       expect(result.success).toBe(true);
-      expect(mockSupabase.from).toHaveBeenCalledWith('property_images');
+      expect(supabase.rpc).toHaveBeenCalledWith('bulk_hard_delete_properties', {
+        p_ids: ['p1']
+      });
+      
+      expect(inngest.send).toHaveBeenCalledWith(expect.objectContaining({
+        name: 'storage.cleanup.requested'
+      }));
     });
   });
 
   describe('bulkRestorePropertiesAction', () => {
     it('should enforce tenant isolation during bulk restore', async () => {
-      mockSupabase.then.mockImplementation((resolve: any) => resolve({ count: 1, error: null }));
+      const supabase = createLocalSupabase();
+      (requireAuthContext as any).mockResolvedValue({
+        supabase,
+        user: { id: 'u1' },
+        role: 'AGENT',
+        tenantId: 't1',
+      });
+
+      supabase.then.mockImplementation((resolve: any) => resolve({ count: 1, error: null }));
 
       const result = await bulkRestorePropertiesAction(['p1']);
 
       expect(result.success).toBe(true);
-      expect(mockSupabase.eq).toHaveBeenCalledWith('tenant_id', mockTenantId);
+      expect(supabase.eq).toHaveBeenCalledWith('tenant_id', 't1');
     });
   });
 });

@@ -31,6 +31,7 @@ import {
   sendPriceDropNotification,
 } from "../logic/notifications";
 import { mapDbError } from "@/lib/db-error";
+import { encrypt, generateBlindIndex } from "@/lib/crypto";
 
 /**
  * Update property with images
@@ -170,6 +171,10 @@ export async function updatePropertyAction(
       p_data: {
         ...propertyData,
         ...auditUpdates,
+        co_agent_name: encrypt(propertyData.co_agent_name),
+        co_agent_name_hash: generateBlindIndex(propertyData.co_agent_name),
+        co_agent_phone: encrypt(propertyData.co_agent_phone),
+        co_agent_phone_hash: generateBlindIndex(propertyData.co_agent_phone),
         slug: seoData.slug,
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,
@@ -257,6 +262,23 @@ export async function updatePropertyAction(
     // 6) POST-UPDATE SIDE EFFECTS
     if (images !== undefined) {
       await finalizeUploadSession({ supabase, userId: user.id, sessionId, propertyId: id, usedPaths: images });
+
+      // 🛡️ [PHASE 3] Trigger Malware Scan for all images associated with this property
+      const { data: currentImages } = await supabase
+        .from("property_images")
+        .select("id, storage_path")
+        .eq("property_id", id);
+      
+      if (currentImages && currentImages.length > 0) {
+        const scanEvents = currentImages.map((img) => ({
+          name: "app/property.image.created",
+          data: {
+            imageId: img.id,
+            storagePath: img.storage_path,
+          },
+        }));
+        await inngest.send(scanEvents);
+      }
     }
 
     // Notifications

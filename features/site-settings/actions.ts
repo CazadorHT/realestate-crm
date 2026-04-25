@@ -38,6 +38,7 @@ export async function decryptValue(key: string, value: unknown): Promise<unknown
 
   try {
     const decrypted = decrypt(value);
+    if (decrypted === null) return value;
     // If it was originally a JSON object, parse it
     try {
       return JSON.parse(decrypted);

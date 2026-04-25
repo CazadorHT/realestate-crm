@@ -1,8 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
-import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { revalidatePath } from "next/cache";
 
 export type AiLogInput = {
@@ -33,8 +31,7 @@ export async function calculateAiCost(model: string, promptTokens: number, compl
 }
 
 export async function logAiUsage(input: AiLogInput) {
-  const adminClient = createAdminClient();
-  const user = await getCurrentProfile();
+  const supabase = await createClient();
 
   let costThb = 0;
   if (
@@ -46,19 +43,18 @@ export async function logAiUsage(input: AiLogInput) {
   }
 
   try {
-    const { error } = await adminClient.from("ai_usage_logs").insert({
-      model: input.model,
-      feature: input.feature,
-      status: input.status,
-      error_message: input.errorMessage,
-      user_id: user?.id || null,
-      prompt_tokens: input.promptTokens || 0,
-      completion_tokens: input.completionTokens || 0,
-      cost_thb: costThb,
+    const { error } = await supabase.rpc("log_ai_usage", {
+      p_model: input.model,
+      p_feature: input.feature,
+      p_status: input.status,
+      p_error_message: input.errorMessage || null,
+      p_prompt_tokens: input.promptTokens || 0,
+      p_completion_tokens: input.completionTokens || 0,
+      p_cost_thb: costThb,
     });
 
     if (error) {
-      console.error("[logAiUsage] Insert Error:", error);
+      console.error("[logAiUsage] RPC Error:", error);
     }
 
     if (Math.random() < 0.1) {
@@ -71,14 +67,10 @@ export async function logAiUsage(input: AiLogInput) {
 
 export async function pruneAiLogs(daysToKeep: number = 30) {
   try {
-    const adminClient = createAdminClient();
-    const dateThreshold = new Date();
-    dateThreshold.setDate(dateThreshold.getDate() - daysToKeep);
-
-    const { error } = await adminClient
-      .from("ai_usage_logs")
-      .delete()
-      .lt("created_at", dateThreshold.toISOString());
+    const supabase = await createClient();
+    const { error } = await supabase.rpc("prune_ai_logs", {
+      p_days_to_keep: daysToKeep
+    });
 
     if (error) {
       console.error("[pruneAiLogs] Error:", error);
@@ -101,9 +93,7 @@ export type AiUsageStats = {
 
 export async function getAiUsageStats(): Promise<AiUsageStats> {
   try {
-    const user = await getCurrentProfile();
-    const client =
-      user?.role === "ADMIN" ? createAdminClient() : await createClient();
+    const supabase = await createClient();
 
     const now = new Date();
     const oneMinuteAgo = new Date(now.getTime() - 60 * 1000).toISOString();
@@ -112,11 +102,11 @@ export async function getAiUsageStats(): Promise<AiUsageStats> {
     ).toISOString();
 
     const [rpmRes, rpdRes] = await Promise.all([
-      client
+      supabase
         .from("ai_usage_logs")
         .select("id", { count: "exact", head: true })
         .gte("created_at", oneMinuteAgo),
-      client
+      supabase
         .from("ai_usage_logs")
         .select("id", { count: "exact", head: true })
         .gte("created_at", twentyFourHoursAgo),
@@ -169,13 +159,11 @@ export type AiLogRecord = {
 
 export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
   try {
-    const user = await getCurrentProfile();
-    if (!user) return [];
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const role = user?.app_metadata?.role;
 
-    const client =
-      user.role === "ADMIN" ? createAdminClient() : await createClient();
-
-    let query = client.from("ai_usage_logs").select(`
+    let query = supabase.from("ai_usage_logs").select(`
       id,
       created_at,
       model,
@@ -188,8 +176,8 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
       user_id
     `);
 
-    if (user.role !== "ADMIN") {
-      query = query.eq("user_id", user.id);
+    if (role !== "ADMIN") {
+      query = query.eq("user_id", user?.id);
     }
 
     const { data, error } = await query
@@ -211,7 +199,7 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
           .filter((id): id is string => !!id),
       ),
     );
-    const { data: profiles, error: profilesError } = await client
+    const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
       .select("id, full_name, email")
       .in("id", userIds as string[]);
@@ -245,27 +233,16 @@ export type AiDashboardStats = {
 
 export async function getAiDashboardStats(): Promise<AiDashboardStats> {
   try {
-    const user = await getCurrentProfile();
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const role = user?.app_metadata?.role;
 
-    if (!user) {
-      return {
-        totalRequests: 0,
-        successRate: 0,
-        chatbotUsage: 0,
-        blogUsage: 0,
-        totalCostThb: 0,
-      };
-    }
-
-    const client =
-      user.role === "ADMIN" ? createAdminClient() : await createClient();
-
-    let query = client
+    let query = supabase
       .from("ai_usage_logs")
       .select("feature, status, cost_thb");
 
-    if (user.role !== "ADMIN") {
-      query = query.eq("user_id", user.id);
+    if (role !== "ADMIN") {
+      query = query.eq("user_id", user?.id);
     }
 
     const { data, error } = await query;

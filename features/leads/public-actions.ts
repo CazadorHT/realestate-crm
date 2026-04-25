@@ -1,50 +1,43 @@
 "use server";
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
 export async function subscribeToLineAction(
   lineId: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
+    const supabase = await createClient();
     if (!lineId || !lineId.trim()) {
       return { success: false, message: "กรุณากรอก Line ID" };
     }
 
-    const supabase = createAdminClient();
+    const { encrypt, generateBlindIndex } = await import("@/lib/crypto");
+    const trimmedLineId = lineId.trim();
 
-    // Check if this Line ID already exists to avoid duplicates (Optional but good practice)
-    // For now, we'll just insert a new lead or maybe Upsert?
-    // Let's just Insert for simplicity, sales can merge later.
-
-    const { error } = await supabase.from("leads").insert({
-      full_name: `Line Contact: ${lineId}`,
-      line_id: lineId.trim(),
-      source: "WEBSITE", // Main source is Website
-      stage: "NEW",
-      note: "Subscribe via Footer Newsletter",
-      lead_type: "INDIVIDUAL",
+    // 🛡️ [PHASE 1] Use Security Definer RPC for public lead capture
+    const { data: leadId, error } = await supabase.rpc("submit_public_lead", {
+      p_full_name: encrypt(`Line Contact: ${trimmedLineId}`) || "Unknown",
+      p_full_name_hash: generateBlindIndex(`Line Contact: ${trimmedLineId}`),
+      p_line_id: encrypt(trimmedLineId),
+      p_line_id_hash: generateBlindIndex(trimmedLineId),
+      p_source: "WEBSITE",
+      p_note: "Subscribe via Footer Newsletter"
     });
 
     if (error) {
-      console.error("Error creating line lead:", error);
+      console.error("Error creating line lead via RPC:", error);
       return { success: false, message: "เกิดข้อผิดพลาดในการบันทึกข้อมูล" };
     }
 
     revalidatePath("/protected/leads"); // Update CRM list
 
-    // 🤖 Trigger AI Smart Match Infrastructure (If lead ID was returned)
-    const { data: leadIdRes } = await supabase
-      .from("leads")
-      .select("id")
-      .eq("line_id", lineId.trim())
-      .single();
-
-    if (leadIdRes) {
+    // 🤖 Trigger AI Smart Match Infrastructure
+    if (leadId) {
       const { inngest } = await import("@/lib/inngest/client");
       await inngest.send({
         name: "lead.created",
-        data: { leadId: leadIdRes.id }
+        data: { leadId }
       });
     }
 

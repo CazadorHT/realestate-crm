@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { DepositLeadInput, LeadState } from "./types";
 import { depositLeadSchema, inquiryLeadSchema } from "./schema";
 import { sendLineNotification } from "@/lib/line";

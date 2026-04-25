@@ -26,7 +26,7 @@ vi.mock("@/lib/authz", () => ({
 }));
 
 vi.mock("@/lib/audit", () => ({
-  logAudit: vi.fn(),
+  logAudit: vi.fn().mockResolvedValue({}),
 }));
 
 vi.mock("next/cache", () => ({

@@ -5,6 +5,9 @@ import { craftPropertyDescriptionPrompt } from "./ai-prompts";
 import { PROPERTY_IMAGES_BUCKET } from "@/features/properties/logic/images";
 import sharp from "sharp";
 import { logger } from "../logger";
+export * from "./functions/malware-scanner";
+export * from "./functions/user-management";
+export * from "./functions/storage";
 
 /**
  * 💡 Elite Helper: Calculate AI Cost in THB (Estimated)

@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { LineTemplateConfig } from "./types";
 
 const DEFAULT_CONFIGS: Record<string, LineTemplateConfig> = {
@@ -24,7 +24,7 @@ const DEFAULT_CONFIGS: Record<string, LineTemplateConfig> = {
 export async function getTemplateConfig(
   key: string,
 ): Promise<{ config: LineTemplateConfig; isActive: boolean }> {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
   const { data } = await supabase
     .from("line_templates")
     .select("config, is_active")
