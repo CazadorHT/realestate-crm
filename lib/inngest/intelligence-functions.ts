@@ -65,10 +65,22 @@ export const onUserLogin = inngest.createFunction(
 
     // 🕵️ Step 1: Notify User (Private)
     await step.run("notify-user-private", async () => {
+      let effectiveProfileId = userId;
+      if (!effectiveProfileId && email) {
+        const { data: p } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", email)
+          .single();
+        if (p) effectiveProfileId = p.id;
+      }
+
+      if (!effectiveProfileId) return;
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("telegram_id")
-        .eq("id", userId)
+        .eq("id", effectiveProfileId)
         .single();
 
       if (profile?.telegram_id) {
@@ -78,27 +90,6 @@ export const onUserLogin = inngest.createFunction(
           { chatId: profile.telegram_id },
         );
       }
-    });
-
-    // 🕵️ Step 2: Notify Admin Hub (Global Audit)
-    await step.run("notify-admin-summary", async () => {
-      const ip = metadata?.ip || "unknown";
-      const userAgent = metadata?.userAgent || "unknown";
-
-      const message = `
-🔐 <b>Security Alert: User Login</b>
-━━━━━━━━━━━━━━━━━━
-<b>📧 User:</b> <code>${email}</code>
-<b>👤 Role:</b> <code>${role}</code>
-<b>🌐 IP:</b> <code>${ip}</code>
-<b>📱 Device:</b> <code>${userAgent}</code>
-
-<b>⏰ Time:</b> ${new Date().toLocaleString("th-TH", { timeZone: "Asia/Bangkok" })}
-━━━━━━━━━━━━━━━━━━
-<i>VC Connect SRE Infrastructure</i>
-      `.trim();
-
-      await sendAdminNotification(message, { parseMode: "HTML" });
     });
 
     return { status: "security_logged" };

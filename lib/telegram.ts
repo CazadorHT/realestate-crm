@@ -30,11 +30,16 @@ export async function sendAdminNotification(
   }
 
   try {
+    console.log(`[TELEGRAM] Attempting to send message to ${targetId}`);
     await telegramBot.api.sendMessage(targetId, message, {
       parse_mode: options.parseMode || "HTML",
       reply_markup: options.replyMarkup,
     });
-  } catch (error) {
-    console.error("[TELEGRAM] Failed to send admin notification:", error);
+    console.log(`[TELEGRAM] Message sent successfully to ${targetId}`);
+  } catch (error: any) {
+    console.error("[TELEGRAM] Failed to send admin notification:", error.message || error);
+    if (error.parameters?.retry_after) {
+      console.warn(`[TELEGRAM] Rate limited. Retry after ${error.parameters.retry_after}s`);
+    }
   }
 }

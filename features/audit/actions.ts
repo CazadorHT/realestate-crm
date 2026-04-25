@@ -28,6 +28,11 @@ export async function logActivityAction(
     const ip = reqHeaders.get("x-forwarded-for")?.split(",")[0] || reqHeaders.get("x-real-ip") || "unknown";
     const userAgent = reqHeaders.get("user-agent") || "unknown";
 
+    const email =
+      metadata && typeof metadata === "object" && "email" in metadata
+        ? (metadata as Record<string, unknown>).email
+        : user?.email || "anonymous";
+
     // Prepare metadata with system info
     const enrichedMetadata = {
       ...(typeof metadata === "object" ? metadata : {}),
@@ -35,12 +40,37 @@ export async function logActivityAction(
       userAgent: parseUserAgent(userAgent),
     };
 
-    // [SECURITY] Allow anonymous logging ONLY for login failures or specific public actions
-    if (!user && action !== "LOGIN_FAILURE") return;
-
     const adminClient = createAdminClient();
+
+    // [SECURITY] Allow anonymous logging ONLY for login actions (where user might not be in session yet) or specific public actions
+    if (!user && action !== "LOGIN_FAILURE" && action !== "LOGIN") return;
+
+    // 🕵️ Resolve User Identity (Fallback to email for LOGIN)
+    let effectiveUserId = user?.id;
+    let profile: any = null;
+
+    if (action === "LOGIN" || action === "LOGIN_FAILURE") {
+      const { data: p } = await adminClient
+        .from("profiles")
+        .select("id, role, avatar_url")
+        .eq("email", email.toLowerCase())
+        .single();
+      
+      if (p) {
+        effectiveUserId = p.id;
+        profile = p;
+      }
+    } else if (user) {
+      const { data: p } = await adminClient
+        .from("profiles")
+        .select("id, role, avatar_url")
+        .eq("id", user.id)
+        .single();
+      profile = p;
+    }
+
     const { error: dbError } = await adminClient.from("audit_logs").insert({
-      user_id: user?.id || null, 
+      user_id: effectiveUserId || null, 
       action,
       entity,
       entity_id: entityId || null,
@@ -56,7 +86,7 @@ export async function logActivityAction(
       category: "activity",
       message: `${action} ${entity}`,
       level: "info",
-      data: { entityId, userId: user?.id },
+      data: { entityId, userId: effectiveUserId },
     });
 
     // 🛡️ Structured Logging: Info level for traceability
@@ -65,22 +95,12 @@ export async function logActivityAction(
       action,
       entity,
       entityId,
-      userId: user?.id,
+      userId: effectiveUserId,
     });
 
     if (action === "LOGIN") {
-      const email =
-        metadata && typeof metadata === "object" && "email" in metadata
-          ? (metadata as Record<string, unknown>).email
-          : user?.email || "anonymous";
-
-      // Fetch Profile for Role and Avatar (Only if user exists)
-      const { data: profile } = user ? await adminClient
-        .from("profiles")
-        .select("role, avatar_url")
-        .eq("id", user.id)
-        .single() : { data: null };
-
+      console.log(`[AUDIT] Detected LOGIN action for: ${email}`);
+      
       const templateConfig = await getTemplateConfig("LOGIN");
       const headerIcon = "🔐";
 
@@ -232,16 +252,47 @@ export async function logActivityAction(
       });
 
       // 🛡️ S-Tier Telegram Security Alert (Hybrid Model)
-      const { inngest } = await import("@/lib/inngest/client");
-      await inngest.send({
-        name: "auth.login",
-        data: {
-          userId: user?.id,
-          email: email,
-          role: profile?.role || "USER",
-          metadata: enrichedMetadata
-        }
-      });
+      try {
+        const { inngest } = await import("@/lib/inngest/client");
+        await inngest.send({
+          name: "auth.login",
+          data: {
+            userId: effectiveUserId,
+            email: email,
+            role: profile?.role || "USER",
+            metadata: enrichedMetadata
+          }
+        });
+      } catch (inngestErr) {
+        logger.error("[AUDIT] Inngest event send failed:", inngestErr);
+      }
+
+      // 🔐 Enterprise Telegram Notification (Admin Hub)
+      try {
+        const { sendAdminNotification } = await import("@/lib/telegram");
+        const time = new Date().toLocaleString("th-TH", {
+          timeZone: "Asia/Bangkok",
+          dateStyle: "medium",
+          timeStyle: "short",
+        });
+
+        const message = `
+🔐 <b>แจ้งเตือนการเข้าสู่ระบบ (Login Alert)</b>
+━━━━━━━━━━━━━━━━━━
+<b>📧 ผู้ใช้งาน:</b> <code>${email}</code>
+<b>👤 บทบาท:</b> <code>${profile?.role || "USER"}</code>
+<b>📱 อุปกรณ์:</b> <code>${parseUserAgent(userAgent)}</code>
+<b>🌐 พิกัด:</b> <code>${enrichedMetadata.ip}</code>
+
+<b>⏰ เวลา:</b> ${time}
+━━━━━━━━━━━━━━━━━━
+<i>ระบบรักษาความปลอดภัย VC Connect</i>
+        `.trim();
+
+        await sendAdminNotification(message);
+      } catch (tgErr) {
+        logger.error("[AUDIT] Telegram Notification failed:", tgErr);
+      }
     }
   } catch (error) {
     logger.error("logActivityAction critical failure", error, { source: "audit-actions" });
@@ -249,7 +300,6 @@ export async function logActivityAction(
 }
 
 export async function notifySignupAction(email: string) {
-  console.log("[NOTIFY] Starting notifySignupAction for:", email);
   try {
     const templateConfig = await getTemplateConfig("SIGNUP");
     const headerIcon = "👤";
