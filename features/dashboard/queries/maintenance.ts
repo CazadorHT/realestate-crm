@@ -22,7 +22,7 @@ export async function getSetupProgress(tenantId?: string | null): Promise<{
 
     const { getSiteSettings } = await import("@/features/site-settings/actions");
 
-    const [staffRes, propRes, tenantRes, settings, profilesWithLine] =
+    const [staffRes, propRes, tenantRes, settings, profilesWithLine, invitationRes] =
       await Promise.all([
         applyTenantFilter(
           supabase
@@ -38,24 +38,31 @@ export async function getSetupProgress(tenantId?: string | null): Promise<{
         tenantId && tenantId !== "ALL"
           ? supabase
               .from("tenants")
-              .select("logo_url", { count: "exact" })
+              .select("name, logo_url", { count: "exact" })
               .eq("id", tenantId)
-          : supabase.from("tenants").select("logo_url", { count: "exact" }),
+          : supabase.from("tenants").select("name, logo_url", { count: "exact" }),
         getSiteSettings(),
         supabase
-          .from("profiles")
+          .from("tenant_members")
+          .select("id, profiles!inner(line_user_id, line_id)", { count: "exact", head: true })
+          .eq("tenant_id", tenantId || "")
+          .or("line_user_id.not.is.null,line_id.not.is.null", { foreignTable: "profiles" }),
+        supabase
+          .from("tenant_invitations")
           .select("id", { count: "exact", head: true })
-          .not("line_id", "is", null),
+          .eq("tenant_id", tenantId || "")
+          .eq("status", "PENDING"),
       ]);
 
     const isLineConnected =
       !!settings.line_id ||
-      !!process.env.LINE_CHANNEL_ACCESS_TOKEN ||
       (profilesWithLine.count || 0) > 0;
 
+    const invitationCount = invitationRes.count || 0;
+
     return {
-      hasBranchProfile: !!tenantRes.data?.[0]?.logo_url,
-      hasStaff: (staffRes.count || 0) > 0,
+      hasBranchProfile: !!(tenantRes.data?.[0]?.name || tenantRes.data?.[0]?.logo_url),
+      hasStaff: (staffRes.count || 0) > 1 || (invitationCount || 0) > 0,
       hasProperty: (propRes.count || 0) > 0,
       isLineConnected,
       isLineSkipped: !!settings.onboarding_line_skipped,

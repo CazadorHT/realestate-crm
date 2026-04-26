@@ -49,7 +49,7 @@ export function BranchMemberList({
           <h3 className="text-2xl font-semibold text-slate-800 flex items-center gap-2.5">
             <Users2 size={24} className="text-indigo-600" />
             รายชื่อพนักงาน{" "}
-            <span className="text-slate-400 font-normal">(Branch Members)</span>
+            <span className="text-slate-400 font-normal hidden sm:block">(Branch Members)</span>
           </h3>
           <p className="text-[13px] text-slate-500 mt-1 font-medium">
             จัดการรายชื่อและสิทธิ์การเข้าถึงทรัพย์ในสาขานี้
@@ -60,7 +60,7 @@ export function BranchMemberList({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="ค้นหาพนักงาน (Search)..."
-            className="pl-10 h-11 rounded-2xl bg-white border-slate-200 focus-visible:ring-indigo-500 transition-all shadow-sm font-semibold"
+            className="pl-10 h-11 text-sm! font-normal rounded-2xl bg-white border-slate-200 focus-visible:ring-indigo-500 transition-all shadow-sm"
             value={memberSearch}
             onChange={(e) => setMemberSearch(e.target.value)}
           />
@@ -145,7 +145,7 @@ export function BranchMemberList({
         {filteredMembers.length === 0 && (
           <div className="flex flex-col items-center justify-center py-20 text-slate-300 bg-slate-50/50 rounded-[32px] border border-dashed border-slate-200">
             <Users2 className="h-16 w-16 mb-4 opacity-10" />
-            <p className="text-[13px] font-semibold italic">
+            <p className="text-[13px] font-semibold italic px-4">
               ไม่พบรายชื่อพนักงานที่ระบุ (No members found)
             </p>
           </div>

@@ -12,6 +12,7 @@ import {
   cancelTenantInvitationAction,
   getBranchStatsAction,
   updateTenantAction,
+  createTenantInvitationAction,
 } from "@/lib/actions/tenant-management";
 import { Database } from "@/lib/database.types";
 import { toast } from "sonner";
@@ -59,15 +60,31 @@ type TenantBranch = {
   memberCount: number;
 };
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-type TenantMember = Database["public"]["Tables"]["tenant_members"]["Row"] & {
+type TenantMember = {
+  id: string;
+  profile_id: string;
+  role: string | null;
   profiles: {
     id: string;
     full_name: string | null;
     email: string | null;
     avatar_url: string | null;
   } | null;
+  created_at?: string;
+  tenant_id?: string;
 };
-type TenantInvitation = Database["public"]["Tables"]["tenant_invitations"]["Row"];
+
+type TenantInvitation = {
+  id: string;
+  email: string | null;
+  role: string | null;
+  status: string | null;
+  created_at: string;
+  expires_at?: string;
+  invited_by?: string | null;
+  tenant_id?: string;
+  token?: string | null;
+};
 type BranchRole = "OWNER" | "ADMIN" | "MANAGER" | "AGENT" | "VIEWER";
 
 export default function BranchDetailPage({
@@ -91,7 +108,17 @@ export default function BranchDetailPage({
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; type: "MEMBER" | "INVITE"; data: any }>({
+  const [transferMember, setTransferMember] = useState<{
+    profileId: string;
+    name: string;
+    role: string;
+    avatarUrl?: string | null;
+  } | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<{ 
+    open: boolean; 
+    type: "MEMBER" | "INVITE"; 
+    data: TenantMember | TenantInvitation | null 
+  }>({
     open: false,
     type: "MEMBER",
     data: null,
@@ -141,29 +168,42 @@ export default function BranchDetailPage({
     }
   };
 
-  const handleAddMember = async (data: { email: string; role: string }) => {
-    const res = await addTenantMemberAction({
-      tenantId: id,
-      email: data.email,
-      role: data.role as BranchRole,
-    });
+  const handleAddMember = async (data: { email: string; role: string }, isExisting: boolean) => {
+    let res;
+    
+    if (isExisting) {
+      // 1. Add existing user directly
+      res = await addTenantMemberAction({
+        tenantId: id,
+        email: data.email,
+        role: data.role as BranchRole,
+      });
+    } else {
+      // 2. Create invitation for new user
+      res = await createTenantInvitationAction({
+        tenantId: id,
+        email: data.email,
+        role: data.role as "ADMIN" | "MANAGER" | "AGENT" | "VIEWER",
+      });
+    }
+
     if (res.success) {
-      toast.success("เพิ่มสมาชิกเรียบร้อย");
+      toast.success(isExisting ? "เพิ่มสมาชิกเรียบร้อย" : "ส่งคำเชิญเรียบร้อย (พนักงานยังไม่มีบัญชี)");
       setAddOpen(false);
       fetchData();
       refreshTenants();
     } else {
-      toast.error(res.error || "ไม่สามารถเพิ่มสมาชิกได้");
+      toast.error(res.error || "ไม่สามารถดำเนินการได้");
     }
   };
 
   const handleTransferMember = async (targetTenantId: string) => {
-    if (!deleteConfirm.data) return;
+    if (!transferMember) return;
     const res = await transferTenantMemberAction({
-      profileId: deleteConfirm.data.profileId,
+      profileId: transferMember.profileId,
       fromTenantId: id,
       toTenantId: targetTenantId,
-      role: deleteConfirm.data.role as BranchRole,
+      role: transferMember.role as BranchRole,
     });
     if (res.success) {
       toast.success("ย้ายสาขาเรียบร้อย");
@@ -180,14 +220,16 @@ export default function BranchDetailPage({
     if (!data) return;
 
     if (type === "MEMBER") {
-      const res = await removeTenantMemberAction(id, data.profile_id);
+      const member = data as TenantMember;
+      const res = await removeTenantMemberAction(id, member.profile_id);
       if (res.success) {
         toast.success("ลบสมาชิกเรียบร้อย");
         fetchData();
         refreshTenants();
       } else toast.error(res.error || "ล้มเหลว");
     } else {
-      const res = await cancelTenantInvitationAction(data.id);
+      const invite = data as TenantInvitation;
+      const res = await cancelTenantInvitationAction(invite.id);
       if (res.success) {
         toast.success("ยกเลิกคำเชิญเรียบร้อย");
         fetchData();
@@ -230,7 +272,7 @@ export default function BranchDetailPage({
       {isLoading ? (
         <BranchDetailSkeleton />
       ) : (
-        <div className="p-8 pt-4 space-y-10">
+        <div className="pt-4 space-y-10">
           <BranchStatsDashboard 
             memberCount={stats.memberCount} 
             inviteCount={stats.inviteCount} 
@@ -246,7 +288,12 @@ export default function BranchDetailPage({
               <BranchMemberList 
                 members={members} 
                 onTransfer={(m) => {
-                  setDeleteConfirm({ open: false, type: "MEMBER", data: { profileId: m.profile_id, role: m.role, name: m.profiles?.full_name, avatarUrl: m.profiles?.avatar_url } });
+                  setTransferMember({ 
+                    profileId: m.profile_id, 
+                    role: m.role || "AGENT", 
+                    name: m.profiles?.full_name || "ไม่ระบุชื่อ", 
+                    avatarUrl: m.profiles?.avatar_url 
+                  });
                   setTransferOpen(true);
                 }}
                 onRemove={(m) => setDeleteConfirm({ open: true, type: "MEMBER", data: m })}
@@ -283,7 +330,7 @@ export default function BranchDetailPage({
       <TransferMemberDialog 
         open={transferOpen} 
         onOpenChange={setTransferOpen}
-        member={deleteConfirm.data}
+        member={transferMember}
         branches={branches}
         currentBranchName={branch?.name || ""}
         onTransfer={handleTransferMember}
@@ -295,8 +342,8 @@ export default function BranchDetailPage({
         title={deleteConfirm.type === "MEMBER" ? "ลบพนักงานออกจากสาขา" : "ยกเลิกคำเชิญพนักงาน"}
         description={
             deleteConfirm.type === "MEMBER" 
-            ? `คุณแน่ใจหรือไม่ว่าต้องการลบ ${deleteConfirm.data?.profiles?.full_name} ออกจากสาขานี้?` 
-            : `คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำเชิญของ ${deleteConfirm.data?.email}?`
+            ? `คุณแน่ใจหรือไม่ว่าต้องการลบ ${(deleteConfirm.data as TenantMember)?.profiles?.full_name} ออกจากสาขานี้?` 
+            : `คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำเชิญของ ${(deleteConfirm.data as TenantInvitation)?.email}?`
         }
         onConfirm={handleConfirmDelete}
       />

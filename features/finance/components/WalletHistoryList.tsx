@@ -4,13 +4,13 @@ import { History, Building2, Calendar } from "lucide-react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/utils";
 
 interface WalletHistoryListProps {
   history: any[];
-  formatCurrency: (amt: number) => string;
 }
 
-export function WalletHistoryList({ history, formatCurrency }: WalletHistoryListProps) {
+export function WalletHistoryList({ history }: WalletHistoryListProps) {
   return (
     <section className="space-y-4">
       <div className="flex items-center justify-between">

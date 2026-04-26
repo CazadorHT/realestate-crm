@@ -25,6 +25,8 @@ import {
   ShieldCheck,
   CheckCircle2,
   Send,
+  ChevronDown,
+  Search,
 } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 import {
@@ -70,6 +72,7 @@ interface ProfileInfoFormProps {
   bank_code?: string | null;
   bank_account_no?: string | null;
   bank_account_name?: string | null;
+  other_bank_name?: string | null;
   telegram_id: string | null;
   score: number;
 }
@@ -89,6 +92,7 @@ export function ProfileInfoForm({
   bank_code,
   bank_account_no,
   bank_account_name,
+  other_bank_name,
   telegram_id,
   score,
 }: ProfileInfoFormProps) {
@@ -114,11 +118,14 @@ export function ProfileInfoForm({
       bank_code: bank_code || "",
       bank_account_no: bank_account_no || "",
       bank_account_name: bank_account_name || "",
+      other_bank_name: other_bank_name || "",
       telegram_id: telegram_id || "",
     },
   });
 
   const [banks, setBanks] = useState<any[]>([]);
+  const [isBankPickerOpen, setIsBankPickerOpen] = useState(false);
+  const [bankSearch, setBankSearch] = useState("");
 
   useEffect(() => {
     async function fetchBanks() {
@@ -678,28 +685,121 @@ export function ProfileInfoForm({
                     <FormLabel className="text-[13px] font-medium text-slate-600">
                       ธนาคารที่รับเงิน
                     </FormLabel>
-                    <FormDescription className="text-[11px] text-slate-400">เลือกธนาคารมาตรฐานเพื่อความถูกต้องในการโอนเงิน</FormDescription>
+                    <FormDescription className="text-[11px] text-slate-400">เลือกธนาคารมาตรฐาน หรือเลือก "อื่นๆ" หากไม่มีในรายการ</FormDescription>
                   </div>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
-                      <div className="relative">
-                        <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500 z-10" />
-                        <SelectTrigger className="pl-10.5 h-11 rounded-xl border-indigo-50 focus:ring-indigo-500/20 font-normal shadow-none transition-all">
-                          <SelectValue placeholder="เลือกธนาคาร..." />
-                        </SelectTrigger>
-                      </div>
-                    </FormControl>
-                    <SelectContent className="rounded-2xl border-slate-100 shadow-2xl">
-                      {banks.map((bank) => (
-                        <SelectItem key={bank.code} value={bank.code} className="py-3 rounded-xl font-medium">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900">{bank.name_th}</span>
-                            <span className="text-[10px] text-slate-400 uppercase">{bank.code}</span>
+                  <FormControl>
+                    <div className="space-y-3">
+                      <ResponsiveDialog
+                        open={isBankPickerOpen}
+                        onOpenChange={setIsBankPickerOpen}
+                        title="เลือกธนาคาร"
+                        trigger={
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full justify-between h-11 rounded-xl border-indigo-50 focus:ring-indigo-500/20 font-normal shadow-none transition-all px-3.5 text-slate-600"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Globe className="h-4 w-4 text-indigo-500" />
+                              <span className="truncate">
+                                {field.value 
+                                  ? banks.find(b => b.code === field.value)?.name_th || field.value
+                                  : "เลือกธนาคาร..."}
+                              </span>
+                            </div>
+                            <ChevronDown className="h-4 w-4 opacity-50" />
+                          </Button>
+                        }
+                      >
+                        <div className="flex flex-col h-full max-h-[60vh]">
+                          <div className="p-4 border-b border-slate-50">
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                              <Input
+                                placeholder="ค้นหาชื่อธนาคาร..."
+                                value={bankSearch}
+                                onChange={(e) => setBankSearch(e.target.value)}
+                                className="pl-9 h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-500/20"
+                              />
+                            </div>
                           </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                          <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
+                            <div className="grid grid-cols-1 gap-1">
+                              {banks
+                                .filter(b => 
+                                  b.name_th.toLowerCase().includes(bankSearch.toLowerCase()) || 
+                                  b.code.toLowerCase().includes(bankSearch.toLowerCase())
+                                )
+                                .map((bank) => (
+                                  <button
+                                    key={bank.code}
+                                    type="button"
+                                    onClick={() => {
+                                      field.onChange(bank.code);
+                                      setIsBankPickerOpen(false);
+                                      if (bank.code !== 'OTHER') {
+                                        form.setValue("other_bank_name", "");
+                                      }
+                                    }}
+                                    className={cn(
+                                      "flex items-center justify-between p-3.5 rounded-xl hover:bg-slate-50 transition-colors text-left group",
+                                      field.value === bank.code && "bg-indigo-50/50 ring-1 ring-indigo-100"
+                                    )}
+                                  >
+                                    <div className="flex flex-col">
+                                      <span className={cn(
+                                        "text-sm font-bold text-slate-700",
+                                        field.value === bank.code && "text-indigo-600"
+                                      )}>
+                                        {bank.name_th}
+                                      </span>
+                                      <span className="text-[10px] text-slate-400 font-mono uppercase">
+                                        {bank.code}
+                                      </span>
+                                    </div>
+                                    {field.value === bank.code && (
+                                      <CheckCircle2 className="h-4 w-4 text-indigo-600" />
+                                    )}
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+                        </div>
+                      </ResponsiveDialog>
+
+                      {/* Conditional "Other Bank Name" Field */}
+                      <AnimatePresence>
+                        {field.value === 'OTHER' && (
+                          <m.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <FormField
+                              control={form.control}
+                              name="other_bank_name"
+                              render={({ field: otherField }) => (
+                                <FormItem className="pt-1">
+                                  <FormControl>
+                                    <Input
+                                      {...otherField}
+                                      placeholder="ระบุชื่อธนาคารของคุณ..."
+                                      className="h-11 rounded-xl border-orange-100 bg-orange-50/30 focus-visible:ring-orange-500/20 font-medium"
+                                    />
+                                  </FormControl>
+                                  <FormDescription className="text-[10px] text-orange-600 font-medium px-1">
+                                    โปรดระบุชื่อธนาคารให้ชัดเจนเพื่อป้องกันความผิดพลาด
+                                  </FormDescription>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+                          </m.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

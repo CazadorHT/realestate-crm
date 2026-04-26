@@ -13,6 +13,7 @@ export const profileSchema = z.object({
   bank_code: z.string().optional(),
   bank_account_no: z.string().optional(),
   bank_account_name: z.string().optional(),
+  other_bank_name: z.string().optional(),
   telegram_id: z
     .string()
     .optional()

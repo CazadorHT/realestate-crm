@@ -53,6 +53,7 @@ export async function updateProfileAction(
     const tax_address = formData.get("tax_address") as string | null;
     const telegram_id = formData.get("telegram_id") as string | null;
     const bank_code = formData.get("bank_code") as string | null;
+    const other_bank_name = formData.get("other_bank_name") as string | null;
     const bank_account_no = formData.get("bank_account_no") as string | null;
     const bank_account_name = formData.get("bank_account_name") as string | null;
 
@@ -68,6 +69,7 @@ export async function updateProfileAction(
 
     // 🏦 Fintech Bank Information
     if (bank_code !== null) updateData.bank_code = bank_code.trim();
+    if (other_bank_name !== null) updateData.other_bank_name = other_bank_name.trim();
     if (bank_account_no !== null) updateData.bank_account_no = bank_account_no.trim();
     if (bank_account_name !== null) updateData.bank_account_name = bank_account_name.trim();
 

@@ -2,6 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { CreditCard, TrendingUp } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
 
 interface WalletWealthCardsProps {
   stats: {
@@ -10,10 +11,9 @@ interface WalletWealthCardsProps {
     closedDealsCount: number;
     totalCommissionsCount: number;
   };
-  formatCurrency: (amt: number) => string;
 }
 
-export function WalletWealthCards({ stats, formatCurrency }: WalletWealthCardsProps) {
+export function WalletWealthCards({ stats }: WalletWealthCardsProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <div className="col-span-1 md:col-span-2 relative overflow-hidden bg-slate-900 rounded-4xl p-8 text-white shadow-2xl animate-in fade-in zoom-in-95 duration-700">

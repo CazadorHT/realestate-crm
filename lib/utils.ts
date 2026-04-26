@@ -38,6 +38,14 @@ export function formatPercent(val: number): string {
   return `${sign}${val.toFixed(1)}%`;
 }
 
+export function formatCurrency(amt: number): string {
+  return new Intl.NumberFormat("th-TH", {
+    style: "currency",
+    currency: "THB",
+    maximumFractionDigits: 0,
+  }).format(amt);
+}
+
 export function formatTimeAgo(dateString: string): string {
   const created = new Date(dateString);
   const diffMs = new Date().getTime() - created.getTime();

@@ -5,14 +5,6 @@ import { WalletWealthCards } from "@/features/finance/components/WalletWealthCar
 import { WalletHistoryList } from "@/features/finance/components/WalletHistoryList";
 import { WalletPortfolioStats } from "@/features/finance/components/WalletPortfolioStats";
 
-/** 🚀 WALLET PERFORMANCE CURRENCY FORMATTER */
-const formatCurrency = (amt: number) => {
-  return new Intl.NumberFormat("th-TH", {
-    style: "currency",
-    currency: "THB",
-    maximumFractionDigits: 0
-  }).format(amt);
-};
 
 export default async function AgentWalletPage() {
   await requireAuthContext();
@@ -44,19 +36,17 @@ export default async function AgentWalletPage() {
       />
 
       {/* 💰 Financial Wealth Overview */}
-      <WalletWealthCards stats={stats} formatCurrency={formatCurrency} />
+      <WalletWealthCards stats={stats} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
         {/* 📜 Payout & Commission History */}
         <WalletHistoryList 
             history={history} 
-            formatCurrency={formatCurrency} 
         />
         
         {/* 📊 Portfolio Distribution & Performance Stats */}
         <WalletPortfolioStats 
             history={history} 
-            formatCurrency={formatCurrency} 
         />
       </div>
     </div>

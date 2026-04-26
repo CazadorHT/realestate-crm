@@ -38,7 +38,8 @@ import {
   Phone,
   ShieldCheck,
   Wallet,
-  BadgeDollarSign
+  BadgeDollarSign,
+  Loader2
 } from "lucide-react";
 import { FaLine } from "react-icons/fa";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
@@ -68,6 +69,7 @@ export function SidebarNav({
   const [isCollapsed, setIsCollapsed] = useState(initialCollapsed);
   const [isHovered, setIsHovered] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
 
   // setCookie helper function
   const setSidebarCookie = (collapsed: boolean) => {
@@ -79,6 +81,11 @@ export function SidebarNav({
   useEffect(() => {
     setHasMounted(true);
   }, []);
+
+  // Clear loading state when pathname changes
+  useEffect(() => {
+    setNavigatingTo(null);
+  }, [pathname]);
 
   const toggleCollapse = () => {
     const newState = !isCollapsed;
@@ -427,6 +434,11 @@ export function SidebarNav({
       <TooltipTrigger asChild>
         <Link
           href={item.href}
+          onClick={() => {
+            if (item.href !== pathname && !item.href.startsWith("tel:")) {
+              setNavigatingTo(item.href);
+            }
+          }}
           className={cn(
             "flex h-11 items-center gap-3 rounded-xl px-4 transition-all duration-200 text-sm relative overflow-hidden group/nav",
             item.active
@@ -438,14 +450,18 @@ export function SidebarNav({
           {item.active && (
             <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full shadow-[0_0_10px_rgba(37,99,235,0.3)]" />
           )}
-          <item.icon
-            className={cn(
-              "h-4.5 w-4.5 transition-all duration-300",
-              item.active
-                ? "text-blue-600 scale-110"
-                : "text-slate-400 group-hover/nav:text-slate-600 group-hover/nav:rotate-3",
-            )}
-          />
+          {navigatingTo === item.href ? (
+            <Loader2 className="h-4.5 w-4.5 animate-spin text-blue-600" />
+          ) : (
+            <item.icon
+              className={cn(
+                "h-4.5 w-4.5 transition-all duration-300",
+                item.active
+                  ? "text-blue-600 scale-110"
+                  : "text-slate-400 group-hover/nav:text-slate-600 group-hover/nav:rotate-3",
+              )}
+            />
+          )}
           {isCollapsed && item.badge !== undefined && (
             <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-blue-500 border-2 border-white shadow-sm" />
           )}
@@ -542,18 +558,25 @@ export function SidebarNav({
                       ? "bg-blue-600/10 text-blue-700 shadow-[0_0_0_1px_rgba(37,99,235,0.1)]"
                       : "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
                   )}
+                  onClick={() => {
+                    if (pathname !== "/protected") setNavigatingTo("/protected");
+                  }}
                 >
                   {pathname === "/protected" && (
                     <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full" />
                   )}
-                  <BarChart3
-                    className={cn(
-                      "h-4.5 w-4.5 transition-all duration-300",
-                      pathname === "/protected"
-                        ? "text-blue-600 scale-110"
-                        : "text-slate-400 group-hover/dash:text-slate-600 group-hover/dash:rotate-6",
-                    )}
-                  />
+                  {navigatingTo === "/protected" ? (
+                    <Loader2 className="h-4.5 w-4.5 animate-spin text-blue-600" />
+                  ) : (
+                    <BarChart3
+                      className={cn(
+                        "h-4.5 w-4.5 transition-all duration-300",
+                        pathname === "/protected"
+                          ? "text-blue-600 scale-110"
+                          : "text-slate-400 group-hover/dash:text-slate-600 group-hover/dash:rotate-6",
+                      )}
+                    />
+                  )}
                 </Link>
               </TooltipTrigger>
               <TooltipContent side="right" className="z-45">แดชบอร์ด</TooltipContent>
@@ -567,18 +590,25 @@ export function SidebarNav({
                   ? "bg-blue-600/10 text-blue-700 shadow-[0_0_0_1px_rgba(37,99,235,0.1)]"
                   : "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
               )}
+              onClick={() => {
+                if (pathname !== "/protected") setNavigatingTo("/protected");
+              }}
             >
               {pathname === "/protected" && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full" />
               )}
-              <BarChart3
-                className={cn(
-                  "h-4.5 w-4.5 transition-all duration-300",
-                  pathname === "/protected"
-                    ? "text-blue-600 scale-110"
-                    : "text-slate-400 group-hover/dash:text-slate-600 group-hover/dash:rotate-6",
-                )}
-              />
+              {navigatingTo === "/protected" ? (
+                <Loader2 className="h-4.5 w-4.5 animate-spin text-blue-600" />
+              ) : (
+                <BarChart3
+                  className={cn(
+                    "h-4.5 w-4.5 transition-all duration-300",
+                    pathname === "/protected"
+                      ? "text-blue-600 scale-110"
+                      : "text-slate-400 group-hover/dash:text-slate-600 group-hover/dash:rotate-6",
+                  )}
+                />
+              )}
               แดชบอร์ด
             </Link>
           )}

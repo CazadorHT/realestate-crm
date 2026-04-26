@@ -3,13 +3,13 @@
 import { Award, ArrowUpRight, TrendingUp, Download } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { formatCurrency } from "@/lib/utils";
 
 interface WalletPortfolioStatsProps {
   history: any[];
-  formatCurrency: (amt: number) => string;
 }
 
-export function WalletPortfolioStats({ history, formatCurrency }: WalletPortfolioStatsProps) {
+export function WalletPortfolioStats({ history }: WalletPortfolioStatsProps) {
   const maxDeal = Math.max(...history.map((h: any) => h.net_amount || 0), 0);
   const totalWht = history.reduce((acc: number, h: any) => acc + Number(h.wht_amount || 0), 0);
 

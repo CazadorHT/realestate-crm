@@ -343,16 +343,29 @@ export async function getSetupProgress(
       .eq("tenant_id", tenantId)
       .is("deleted_at", null);
 
-    // 4. Check LINE connection
+    // 4. Check LINE connection (either groups or any member has line_id)
     const { count: lineCount } = await supabase
       .from("line_groups")
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenantId);
 
-    const profileCompleted = !!(tenant?.logo_url && tenant?.name);
-    const firstAgentAdded = (memberCount || 0) > 1;
+    const { count: lineMemberCount } = await supabase
+      .from("tenant_members")
+      .select("id, profiles!inner(line_user_id, line_id)", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .or("line_user_id.not.is.null,line_id.not.is.null", { foreignTable: "profiles" });
+
+    // 5. Check Invitations (counts as progress for adding staff)
+    const { count: invitationCount } = await supabase
+      .from("tenant_invitations")
+      .select("id", { count: "exact", head: true })
+      .eq("tenant_id", tenantId)
+      .eq("status", "PENDING");
+
+    const profileCompleted = !!tenant?.name;
+    const firstAgentAdded = (memberCount || 0) > 1 || (invitationCount || 0) > 0;
     const firstPropertyAdded = (propertyCount || 0) > 0;
-    const lineConnected = (lineCount || 0) > 0;
+    const lineConnected = (lineCount || 0) > 0 || (lineMemberCount || 0) > 0;
 
     const completedCount = [
       profileCompleted,

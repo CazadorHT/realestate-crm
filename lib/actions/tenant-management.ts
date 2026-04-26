@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertAdmin, AuthzError, UserRole } from "@/lib/authz";
+import { Database } from "@/lib/database.types";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "@/lib/audit";
@@ -110,8 +111,8 @@ export async function migrateDataToTenantAction(tenantId: string) {
     for (const table of tablesToMigrate) {
       // We only update rows that are currently NOT assigned to any tenant
       const { error } = await ctx.supabase
-        .from(table as any)
-        .update({ tenant_id: tenantId } as any)
+        .from(table as Extract<keyof Database["public"]["Tables"], string>)
+        .update({ tenant_id: tenantId } as never)
         .is("tenant_id", null);
 
       if (error) {
@@ -182,10 +183,13 @@ export async function getTenantsAction() {
     return { error: mapDbError(error) };
   }
 
-  const branches = (data || []).map((t) => ({
-    ...t,
-    memberCount: (t.tenant_members as any)?.[0]?.count || 0,
-  }));
+  const branches = (data || []).map((t) => {
+    const memberCountData = t.tenant_members as unknown as { count: number }[];
+    return {
+      ...t,
+      memberCount: memberCountData?.[0]?.count || 0,
+    };
+  });
 
   return { data: branches };
 }

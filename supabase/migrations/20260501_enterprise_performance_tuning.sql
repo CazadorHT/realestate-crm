@@ -44,8 +44,8 @@ BEGIN
         JOIN public.properties p ON l.property_id = p.id
         WHERE (p_tenant_id IS NULL OR l.tenant_id = p_tenant_id)
           AND l.created_at >= v_start_date
-          AND (p_listing_type IS NULL OR p_listing_type = 'all' OR p.listing_type = p_listing_type)
-          AND (p_property_type IS NULL OR p_property_type = 'ALL' OR p.property_type = p_property_type)
+          AND (p_listing_type IS NULL OR p_listing_type = 'all' OR p.listing_type = p_listing_type::public.listing_type)
+          AND (p_property_type IS NULL OR p_property_type = 'ALL' OR p.property_type = p_property_type::public.property_type)
           AND (p_area IS NULL OR p_area = 'all' OR p.popular_area = p_area)
     ),
     filtered_leads AS (
@@ -86,6 +86,14 @@ BEGIN
                 FROM filtered_views WHERE listing_type IS NOT NULL
                 GROUP BY 1 ORDER BY 2 DESC
             ) lt
+        ),
+
+        'property_type_distribution', (
+            SELECT jsonb_agg(pt) FROM (
+                SELECT property_type as label, COUNT(*) as value
+                FROM filtered_views WHERE property_type IS NOT NULL
+                GROUP BY 1 ORDER BY 2 DESC
+            ) pt
         ),
 
         'agent_performance', (

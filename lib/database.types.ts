@@ -493,6 +493,7 @@ export type Database = {
           line_id: string | null
           name: string
           notes: string | null
+          other_bank_name: string | null
           phone: string | null
           property_types: string[] | null
           rating: number | null
@@ -520,6 +521,7 @@ export type Database = {
           line_id?: string | null
           name: string
           notes?: string | null
+          other_bank_name?: string | null
           phone?: string | null
           property_types?: string[] | null
           rating?: number | null
@@ -547,6 +549,7 @@ export type Database = {
           line_id?: string | null
           name?: string
           notes?: string | null
+          other_bank_name?: string | null
           phone?: string | null
           property_types?: string[] | null
           rating?: number | null
@@ -1879,6 +1882,7 @@ export type Database = {
           line_id: string | null
           line_user_id: string | null
           notification_preferences: Json | null
+          other_bank_name: string | null
           other_contact: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
@@ -1905,6 +1909,7 @@ export type Database = {
           line_id?: string | null
           line_user_id?: string | null
           notification_preferences?: Json | null
+          other_bank_name?: string | null
           other_contact?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
@@ -1931,6 +1936,7 @@ export type Database = {
           line_id?: string | null
           line_user_id?: string | null
           notification_preferences?: Json | null
+          other_bank_name?: string | null
           other_contact?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
