@@ -1,5 +1,6 @@
 "use client";
 import { useMemo, useTransition, useState } from "react";
+
 import Image from "next/image";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -27,7 +28,8 @@ import {
   Trash2, 
   RotateCcw,
   ShieldAlert,
-  Image as ImageIcon 
+  Image as ImageIcon, 
+  Loader2
 } from "lucide-react";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
@@ -100,6 +102,7 @@ function BlogsTableSkeleton() {
  * Mobile Action Drawer Component
  */
 function MobileActionDrawer({ post, isTrash }: { post: BlogPost, isTrash?: boolean }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
 
@@ -161,16 +164,21 @@ function MobileActionDrawer({ post, isTrash }: { post: BlogPost, isTrash?: boole
                 เปิดดูหน้าเว็บ
               </Link>
             </Button>
-            <Button 
+             <Button 
               variant="outline" 
-              className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-slate-600"
-              asChild
-              onClick={() => setOpen(false)}
+              className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-slate-600 relative overflow-hidden"
+              onClick={() => {
+                setIsBusy(true);
+                router.push(`/protected/blogs/${post.id}`);
+              }}
+              disabled={isBusy}
             >
-              <Link href={`/protected/blogs/${post.id}`}>
+              {isBusy ? (
+                <Loader2 className="h-5 w-5 animate-spin text-amber-500" />
+              ) : (
                 <Pencil className="h-5 w-5 text-amber-500" />
-                แก้ไขเนื้อหา 
-              </Link>
+              )}
+              แก้ไขเนื้อหา 
             </Button>
             <div className="col-span-2 pt-2 border-t border-slate-100">
               <DeleteBlogPostButton 
@@ -197,7 +205,8 @@ export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) 
   const now = new Date();
   const allIds = useMemo(() => posts.map((p) => p.id), [posts]);
   
-  const {
+    const [navigatingId, setNavigatingId] = useState<string | null>(null);
+    const {
     toggleSelect,
     toggleSelectAll,
     clearSelection,
@@ -266,8 +275,19 @@ export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) 
         <p className="text-slate-500 max-w-sm mb-8 font-medium">
           เริ่มสร้างเนื้อหาแรกของคุณ เพื่อดึงดูดผู้ใช้งานและเพิ่มประสิทธิภาพด้าน SEO ให้กับเว็บไซต์
         </p>
-        <Button asChild className="rounded-xl h-11 px-8 font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100">
-          <Link href="/protected/blogs/new">สร้างบทความแรกของคุณ</Link>
+        <Button 
+          className="rounded-xl h-11 px-8 font-bold bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-100"
+          onClick={() => {
+            setNavigatingId("new-blog");
+            router.push("/protected/blogs/new");
+          }}
+          disabled={navigatingId === "new-blog"}
+        >
+          {navigatingId === "new-blog" ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            "สร้างบทความแรกของคุณ"
+          )}
         </Button>
       </div>
     );
@@ -408,11 +428,20 @@ export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) 
                       </TableCell>
                       <TableCell className="max-w-[300px]">
                         <div className="flex flex-col gap-0.5">
-                          <Link href={`/protected/blogs/${post.id}`}>
+                          <div 
+                            onClick={() => {
+                              setNavigatingId(post.id);
+                              router.push(`/protected/blogs/${post.id}`);
+                            }}
+                            className="cursor-pointer relative"
+                          >
+                            {navigatingId === post.id && (
+                              <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-1" />
+                            )}
                             <span className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
                               {post.title}
                             </span>
-                          </Link>
+                          </div>
                           <span className="text-[10px] font-mono text-slate-400 tracking-tight truncate">
                             /{post.slug}
                           </span>
@@ -496,11 +525,40 @@ export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) 
                             </>
                           ) : (
                             <>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" asChild title="Public Preview">
-                                <Link href={`/blog/${post.slug}`} target="_blank"><Eye className="h-4 w-4" /></Link>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg" 
+                                title="Public Preview"
+                                onClick={() => {
+                                  setNavigatingId(`preview-${post.id}`);
+                                  window.open(`/blog/${post.slug}`, "_blank");
+                                  setNavigatingId(null);
+                                }}
+                                disabled={navigatingId === `preview-${post.id}`}
+                              >
+                                {navigatingId === `preview-${post.id}` ? (
+                                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                                ) : (
+                                  <Eye className="h-4 w-4" />
+                                )}
                               </Button>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg" asChild title="Edit Content">
-                                <Link href={`/protected/blogs/${post.id}`}><Pencil className="h-4 w-4" /></Link>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg" 
+                                title="Edit Content"
+                                onClick={() => {
+                                  setNavigatingId(`edit-${post.id}`);
+                                  router.push(`/protected/blogs/${post.id}`);
+                                }}
+                                disabled={navigatingId === `edit-${post.id}`}
+                              >
+                                {navigatingId === `edit-${post.id}` ? (
+                                  <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
+                                ) : (
+                                  <Pencil className="h-4 w-4" />
+                                )}
                               </Button>
                               <DeleteBlogPostButton id={post.id} />
                             </>
@@ -553,11 +611,20 @@ export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) 
                           onCheckedChange={() => toggleSelect(post.id)}
                           className="mt-1 rounded-md border-slate-300 shadow-none"
                         />
-                        <Link href={`/protected/blogs/${post.id}`} className="block">
+                        <div 
+                          onClick={() => {
+                            setNavigatingId(`m-${post.id}`);
+                            router.push(`/protected/blogs/${post.id}`);
+                          }}
+                          className="block cursor-pointer relative"
+                        >
+                          {navigatingId === `m-${post.id}` && (
+                            <Loader2 className="h-4 w-4 animate-spin text-blue-600 absolute -left-6 top-0.5" />
+                          )}
                           <h4 className="font-extrabold text-slate-900 line-clamp-2 leading-tight">
                             {post.title}
                           </h4>
-                        </Link>
+                        </div>
                       </div>
                       <div className="flex flex-wrap items-center gap-2 mt-2">
                         {/* Status Badge - Now in Flow */}

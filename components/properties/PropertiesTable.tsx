@@ -188,6 +188,7 @@ export function PropertiesTable({
 
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const [isTransitionPending, startTransition] = useTransition();
 
   const handleSelectAllGlobal = async () => {
@@ -598,14 +599,20 @@ export function PropertiesTable({
                         )}
                       </div>
                       <div className="flex flex-col gap-1 min-w-0 ">
-                        <Link
-                          href={`/protected/properties/${property.id}`}
-                          className="block font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm leading-snug "
+                        <div
+                          onClick={() => {
+                            setNavigatingId(property.id);
+                            router.push(`/protected/properties/${property.id}`);
+                          }}
+                          className="block font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm leading-snug cursor-pointer relative"
                         >
+                          {navigatingId === property.id && (
+                            <Loader2 className="h-4 w-4 animate-spin text-blue-600 absolute -left-6 top-1/2 -translate-y-1/2" />
+                          )}
                           <span className="line-clamp-2 overflow-hidden w-[310px] ">
                             {property.title || "ไม่ระบุชื่อ"}
                           </span>
-                        </Link>
+                        </div>
                         <span className="text-[11px] text-slate-500 line-clamp-1 opacity-90 leading-tight">
                           {[property.popular_area, property.province]
                             .filter(Boolean)
@@ -706,9 +713,18 @@ export function PropertiesTable({
                   <TableCell className="px-2">
                     {property.status === "SOLD" || property.status === "RENTED" ? (
                       property.closed_lead_name ? (
-                        <Link href={`/protected/leads?stage=CLOSED`} className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 max-w-[80px] truncate">
+                        <div 
+                          onClick={() => {
+                            setNavigatingId(`lead-${property.id}`);
+                            router.push(`/protected/leads?stage=CLOSED`);
+                          }}
+                          className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 max-w-[80px] truncate cursor-pointer relative"
+                        >
+                          {navigatingId === `lead-${property.id}` && (
+                            <Loader2 className="h-3 w-3 animate-spin text-emerald-600 mr-1" />
+                          )}
                           <span className="truncate">คุณ {property.closed_lead_name}</span>
-                        </Link>
+                        </div>
                       ) : (
                         <span className="text-[11px] text-slate-400 italic">ปิดดีล</span>
                       )
@@ -741,15 +757,37 @@ export function PropertiesTable({
                   {/* ACTIONS */}
                   <TableCell className="text-right px-2 pr-4">
                     <div className="flex justify-end items-center gap-0.5">
-                      <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-blue-700 hover:bg-blue-50">
-                        <Link href={`/protected/properties/${property.id}`}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-slate-400 hover:text-blue-700 hover:bg-blue-50"
+                        onClick={() => {
+                          setNavigatingId(`view-${property.id}`);
+                          router.push(`/protected/properties/${property.id}`);
+                        }}
+                        disabled={navigatingId === `view-${property.id}`}
+                      >
+                        {navigatingId === `view-${property.id}` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
                           <Eye className="h-3.5 w-3.5" />
-                        </Link>
+                        )}
                       </Button>
-                      <Button asChild variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-amber-700 hover:bg-amber-50">
-                        <Link href={`/protected/properties/${property.id}/edit`}>
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-7 w-7 text-slate-400 hover:text-amber-700 hover:bg-amber-50"
+                        onClick={() => {
+                          setNavigatingId(`edit-${property.id}`);
+                          router.push(`/protected/properties/${property.id}/edit`);
+                        }}
+                        disabled={navigatingId === `edit-${property.id}`}
+                      >
+                        {navigatingId === `edit-${property.id}` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
                           <Edit3 className="h-3.5 w-3.5" />
-                        </Link>
+                        )}
                       </Button>
                       <DuplicatePropertyButton id={property.id} className="h-7 w-7 text-slate-400 hover:text-purple-600 hover:bg-purple-50" />
                       <PropertyRowActions id={property.id} title={property.title} status={property.status} tenantId={property.tenant_id} isAdmin={isAdmin} isMultiTenant={isMultiTenant} className="h-7 w-7" />
@@ -774,6 +812,11 @@ export function PropertiesTable({
                     : "border-slate-200",
                 )}
               >
+                {navigatingId === `card-${property.id}` && (
+                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-50 animate-in fade-in duration-200">
+                    <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                  </div>
+                )}
                 <div 
                   className="absolute top-0 left-0 p-3 min-[400px]:p-4 z-30 cursor-pointer group/check"
                   onClick={(e) => {
@@ -803,9 +846,12 @@ export function PropertiesTable({
                   </div>
                 </div>
 
-                <Link
-                  href={`/protected/properties/${property.id}`}
-                  className="block relative aspect-16/10 overflow-hidden"
+                <div
+                  onClick={() => {
+                    setNavigatingId(`card-${property.id}`);
+                    router.push(`/protected/properties/${property.id}`);
+                  }}
+                  className="block relative aspect-16/10 overflow-hidden cursor-pointer"
                 >
                   {property.requires_ai_review && (
                     <div className="absolute bottom-2.5 right-2.5 z-30 p-1.5 bg-white shadow-md rounded-full flex items-center justify-center border border-amber-200" title="รอยืนยันข้อมูล AI">
@@ -842,18 +888,21 @@ export function PropertiesTable({
                       className="h-5 text-[11px] min-[400px]:text-[11px] px-1.5 min-[400px]:px-2 font-bold shadow-md backdrop-blur-sm"
                     />
                   </div>
-                </Link>
+                </div>
 
                 {/* Property Details */}
                 <div className="p-3 min-[400px]:p-4 space-y-2.5 min-[400px]:space-y-3">
                   <div className="space-y-1">
                     <div className="flex justify-between items-start gap-2 min-w-0">
-                      <Link
-                        href={`/protected/properties/${property.id}`}
-                        className="font-bold text-slate-900 text-sm min-[400px]:text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors"
+                      <div
+                        onClick={() => {
+                          setNavigatingId(`card-${property.id}`);
+                          router.push(`/protected/properties/${property.id}`);
+                        }}
+                        className="font-bold text-slate-900 text-sm min-[400px]:text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors cursor-pointer"
                       >
                         {property.title || "ไม่ระบุชื่อ"}
-                      </Link>
+                      </div>
                     </div>
                     <div className="flex items-center gap-1 text-[10px] min-[400px]:text-xs text-slate-500">
                       <MapPin className="h-3 w-3 min-[400px]:h-3.5 min-[400px]:w-3.5 shrink-0 text-slate-400" />
@@ -924,26 +973,36 @@ export function PropertiesTable({
                     </span>
                     <div className="flex items-center gap-1">
                       <Button
-                        asChild
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                        onClick={() => {
+                          setNavigatingId(`view-m-${property.id}`);
+                          router.push(`/protected/properties/${property.id}`);
+                        }}
+                        disabled={navigatingId === `view-m-${property.id}`}
                       >
-                        <Link href={`/protected/properties/${property.id}`}>
+                        {navigatingId === `view-m-${property.id}` ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                        ) : (
                           <Eye className="h-4 w-4" />
-                        </Link>
+                        )}
                       </Button>
                       <Button
-                        asChild
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
+                        onClick={() => {
+                          setNavigatingId(`edit-m-${property.id}`);
+                          router.push(`/protected/properties/${property.id}/edit`);
+                        }}
+                        disabled={navigatingId === `edit-m-${property.id}`}
                       >
-                        <Link
-                          href={`/protected/properties/${property.id}/edit`}
-                        >
+                        {navigatingId === `edit-m-${property.id}` ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
+                        ) : (
                           <Edit3 className="h-4 w-4" />
-                        </Link>
+                        )}
                       </Button>
                     </div>
                   </div>

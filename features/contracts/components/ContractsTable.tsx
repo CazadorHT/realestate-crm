@@ -85,6 +85,7 @@ export function ContractsTable({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
 
   const handleSuccessFeedback = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -244,12 +245,18 @@ export function ContractsTable({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Link
-                        href={`/protected/deals/${contract.deal_id}`}
-                        className="text-blue-600 hover:underline font-medium line-clamp-1"
+                      <div
+                        onClick={() => {
+                          setNavigatingId(`deal-${contract.deal_id}`);
+                          router.push(`/protected/deals/${contract.deal_id}`);
+                        }}
+                        className="text-blue-600 hover:underline font-medium line-clamp-1 cursor-pointer relative"
                       >
+                        {navigatingId === `deal-${contract.deal_id}` && (
+                          <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-1" />
+                        )}
                         {propertyTitle}
-                      </Link>
+                      </div>
                       <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
                         <Calendar className="h-3 w-3" />
                         Deal: {contract.deal_id.slice(0, 8)}...
@@ -325,12 +332,20 @@ export function ContractsTable({
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link
-                          href={`/protected/deals/${contract.deal_id}?tab=contract`}
-                        >
-                          ดูรายละเอียด <ArrowUpRight className="ml-1 h-3 w-3" />
-                        </Link>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => {
+                          setNavigatingId(`view-${contract.id}`);
+                          router.push(`/protected/deals/${contract.deal_id}?tab=contract`);
+                        }}
+                        disabled={navigatingId === `view-${contract.id}`}
+                      >
+                        {navigatingId === `view-${contract.id}` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <>ดูรายละเอียด <ArrowUpRight className="ml-1 h-3 w-3" /></>
+                        )}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -426,12 +441,18 @@ export function ContractsTable({
                             </span>
                           )}
                       </div>
-                      <Link
-                        href={`/protected/deals/${contract.deal_id}`}
-                        className="block font-bold text-slate-800 text-sm leading-tight hover:text-blue-600 transition-colors line-clamp-2"
+                      <div
+                        onClick={() => {
+                          setNavigatingId(`m-deal-${contract.deal_id}`);
+                          router.push(`/protected/deals/${contract.deal_id}`);
+                        }}
+                        className="block font-bold text-slate-800 text-sm leading-tight hover:text-blue-600 transition-colors line-clamp-2 cursor-pointer relative"
                       >
+                        {navigatingId === `m-deal-${contract.deal_id}` && (
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-600 absolute -left-6 top-0.5" />
+                        )}
                         {propertyTitle}
-                      </Link>
+                      </div>
                     </div>
                   </div>
 
@@ -502,18 +523,24 @@ export function ContractsTable({
                         <Users className="h-3 w-3 text-slate-400" />
                       </div>
                     </div>
-                    <Button
+                     <Button
                       variant="outline"
                       size="sm"
-                      asChild
                       className="h-9 rounded-xl text-xs font-bold border-slate-200 hover:bg-slate-50 hover:text-blue-600 transition-all"
+                      onClick={() => {
+                        setNavigatingId(`m-view-${contract.id}`);
+                        router.push(`/protected/deals/${contract.deal_id}?tab=contract`);
+                      }}
+                      disabled={navigatingId === `m-view-${contract.id}`}
                     >
-                      <Link
-                        href={`/protected/deals/${contract.deal_id}?tab=contract`}
-                      >
-                        ดูรายละเอียด{" "}
-                        <ArrowUpRight className="ml-1.5 h-3.5 w-3.5" />
-                      </Link>
+                      {navigatingId === `m-view-${contract.id}` ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <>
+                          ดูรายละเอียด{" "}
+                          <ArrowUpRight className="ml-1.5 h-3.5 w-3.5" />
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>

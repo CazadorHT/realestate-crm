@@ -8,7 +8,8 @@ import {
   UserCircle, 
   Briefcase, 
   FileText,
-  Command as CommandIcon 
+  Command as CommandIcon, 
+  Loader2
 } from "lucide-react";
 import {
   Command,
@@ -33,6 +34,7 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<SearchResult[]>([]);
   const [loading, setLoading] = React.useState(false);
+  const [navigatingUrl, setNavigatingUrl] = React.useState<string | null>(null);
   const router = useRouter();
   const [debouncedQuery] = useDebounce(query, 300);
 
@@ -69,9 +71,20 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
   }, [debouncedQuery]);
 
   const onSelect = (url: string) => {
-    setOpen(false);
+    setNavigatingUrl(url);
     router.push(url);
+    // Note: Open stays true until router actually navigates, 
+    // or we can close it, but then we lose the loading state visibility.
+    // Let's close it after a short delay or just let it be.
+    // Actually, usually we close it immediately.
+    // But since the user wants to see "loading", we should keep it open 
+    // or show something.
+    // Let's close it after navigation starts.
   };
+
+  React.useEffect(() => {
+    if (!open) setNavigatingUrl(null);
+  }, [open]);
 
   const properties = results.filter((r) => r.type === "property");
   const leads = results.filter((r) => r.type === "lead");
@@ -191,7 +204,11 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                     className="rounded-xl px-4 py-3.5 mb-1.5 cursor-pointer hover:bg-white hover:shadow-sm border border-transparent hover:border-blue-100 group transition-all"
                   >
                     <div className="h-11 w-11 rounded-lg bg-blue-50 flex items-center justify-center mr-4 shrink-0 group-hover:bg-blue-600 transition-colors">
-                      <Building2 className="h-5 w-5 text-blue-500 group-hover:text-white transition-colors" />
+                      {navigatingUrl === item.url ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-blue-500 group-hover:text-white" />
+                      ) : (
+                        <Building2 className="h-5 w-5 text-blue-500 group-hover:text-white transition-colors" />
+                      )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="font-bold text-slate-800 text-sm truncate group-hover:text-blue-700 transition-colors">{item.title}</span>
@@ -225,7 +242,11 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                     className="rounded-xl px-4 py-3.5 mb-1.5 cursor-pointer hover:bg-white hover:shadow-sm border border-transparent hover:border-emerald-100 group transition-all"
                   >
                     <div className="h-11 w-11 rounded-lg bg-emerald-50 flex items-center justify-center mr-4 shrink-0 group-hover:bg-emerald-600 transition-colors">
-                      <UserCircle className="h-5 w-5 text-emerald-500 group-hover:text-white transition-colors" />
+                      {navigatingUrl === item.url ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-emerald-500 group-hover:text-white" />
+                      ) : (
+                        <UserCircle className="h-5 w-5 text-emerald-500 group-hover:text-white transition-colors" />
+                      )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="font-bold text-slate-800 text-sm truncate group-hover:text-emerald-700 transition-colors">{item.title}</span>
@@ -259,7 +280,11 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                     className="rounded-xl px-4 py-3.5 mb-1.5 cursor-pointer hover:bg-white hover:shadow-sm border border-transparent hover:border-purple-100 group transition-all"
                   >
                     <div className="h-11 w-11 rounded-lg bg-purple-50 flex items-center justify-center mr-4 shrink-0 group-hover:bg-purple-600 transition-colors">
-                      <FileText className="h-5 w-5 text-purple-500 group-hover:text-white transition-colors" />
+                      {navigatingUrl === item.url ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-purple-500 group-hover:text-white" />
+                      ) : (
+                        <FileText className="h-5 w-5 text-purple-500 group-hover:text-white transition-colors" />
+                      )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="font-bold text-slate-800 text-sm truncate group-hover:text-purple-700 transition-colors">{item.title}</span>
@@ -293,7 +318,11 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                     className="rounded-xl px-4 py-3.5 mb-1.5 cursor-pointer hover:bg-white hover:shadow-sm border border-transparent hover:border-indigo-100 group transition-all"
                   >
                     <div className="h-11 w-11 rounded-lg bg-indigo-50 flex items-center justify-center mr-4 shrink-0 group-hover:bg-indigo-600 transition-colors">
-                      <Briefcase className="h-5 w-5 text-indigo-500 group-hover:text-white transition-colors" />
+                      {navigatingUrl === item.url ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-indigo-500 group-hover:text-white" />
+                      ) : (
+                        <Briefcase className="h-5 w-5 text-indigo-500 group-hover:text-white transition-colors" />
+                      )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="font-bold text-slate-800 text-sm truncate group-hover:text-indigo-700 transition-colors">{item.title}</span>
@@ -327,7 +356,11 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                     className="rounded-xl px-4 py-3.5 mb-1.5 cursor-pointer hover:bg-white hover:shadow-sm border border-transparent hover:border-amber-100 group transition-all"
                   >
                     <div className="h-11 w-11 rounded-lg bg-amber-50 flex items-center justify-center mr-4 shrink-0 group-hover:bg-amber-600 transition-colors">
-                      <UserCircle className="h-5 w-5 text-amber-500 group-hover:text-white transition-colors" />
+                      {navigatingUrl === item.url ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-amber-500 group-hover:text-white" />
+                      ) : (
+                        <UserCircle className="h-5 w-5 text-amber-500 group-hover:text-white transition-colors" />
+                      )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="font-bold text-slate-800 text-sm truncate group-hover:text-amber-700 transition-colors">{item.title}</span>

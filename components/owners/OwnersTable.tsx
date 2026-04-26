@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useTransition, useState } from "react";
+import { useMemo, useTransition, useState, } from "react";
 import { differenceInHours } from "date-fns";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -79,8 +80,10 @@ export function OwnersTable({
 
   const [isPending, startTransition] = useTransition();
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const searchParams = useSearchParams();
   const currentPage = Number(searchParams.get("page")) || 1;
+  const router = useRouter();
 
   const handleSelectAllGlobal = async () => {
     setIsGlobalLoading(true);
@@ -310,12 +313,18 @@ export function OwnersTable({
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <div className="font-medium text-blue-700">
-                        <Link
-                          className="underline"
-                          href={`/protected/owners/${owner.id}`}
+                        <div
+                          className="underline cursor-pointer relative inline-block"
+                          onClick={() => {
+                            setNavigatingId(owner.id);
+                            router.push(`/protected/owners/${owner.id}`);
+                          }}
                         >
+                          {navigatingId === owner.id && (
+                            <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-1" />
+                          )}
                           {owner.full_name}
-                        </Link>
+                        </div>
                       </div>
                       {owner.created_at &&
                         differenceInHours(
@@ -471,12 +480,18 @@ export function OwnersTable({
                       {/* Name and Basic Info */}
                       <div className="mt-4">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <Link
-                            href={`/protected/owners/${owner.id}`}
-                            className="text-base font-semibold text-slate-900 hover:text-blue-700 hover:underline transition-colors line-clamp-1"
+                          <div
+                            onClick={() => {
+                              setNavigatingId(`m-${owner.id}`);
+                              router.push(`/protected/owners/${owner.id}`);
+                            }}
+                            className="text-base font-semibold text-slate-900 hover:text-blue-700 hover:underline transition-colors line-clamp-1 cursor-pointer relative"
                           >
+                            {navigatingId === `m-${owner.id}` && (
+                              <Loader2 className="h-4 w-4 animate-spin text-blue-600 absolute -left-6 top-0.5" />
+                            )}
                             {owner.full_name}
-                          </Link>
+                          </div>
                           {isItemNew && (
                             <Badge className="h-4.5 px-2 text-[10px] bg-amber-500 hover:bg-amber-600 border-0 font-semibold tracking-tighter shrink-0 animate-pulse">
                               NEW

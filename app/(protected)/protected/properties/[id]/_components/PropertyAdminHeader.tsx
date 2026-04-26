@@ -2,8 +2,10 @@
 
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { Edit, Eye } from "lucide-react";
+ import Link from "next/link";
+import { Edit, Eye, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { QuickShareButton } from "@/features/properties/components/QuickShareButton";
 import { FacebookPostButton } from "@/features/properties/components/FacebookPostButton";
 import { InstagramPostButton } from "@/features/properties/components/InstagramPostButton";
@@ -20,7 +22,9 @@ interface PropertyAdminHeaderProps {
   images: PropertyImage[];
 }
 
-export function PropertyAdminHeader({ property, images }: PropertyAdminHeaderProps) {
+ export function PropertyAdminHeader({ property, images }: PropertyAdminHeaderProps) {
+  const router = useRouter();
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   return (
     <>
       {/* 1. Admin Breadcrumb & Edit Button */}
@@ -35,31 +39,41 @@ export function PropertyAdminHeader({ property, images }: PropertyAdminHeaderPro
           />
         </div>
         <div className="flex items-center gap-3 lg:gap-4">
-          <Button
+           <Button
             variant="outline"
             size="sm"
-            asChild
             className="flex-1 lg:flex-none rounded-full bg-white text-slate-600 hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+            onClick={() => {
+              setNavigatingId("view");
+              window.open(`/properties/${property.slug || property.id}`, "_blank");
+              setNavigatingId(null);
+            }}
+            disabled={navigatingId === "view"}
           >
-            <Link
-              href={`/properties/${property.slug || property.id}`}
-              target="_blank"
-            >
+            {navigatingId === "view" ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
               <Eye className="h-4 w-4 mr-2" />
-              ดูหน้าเว็บ
-            </Link>
+            )}
+            ดูหน้าเว็บ
           </Button>
 
-          <Button
+           <Button
             variant="outline"
             size="sm"
-            asChild
             className="flex-1 lg:flex-none rounded-full bg-white text-slate-600 hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+            onClick={() => {
+              setNavigatingId("edit");
+              router.push(`/protected/properties/${property.id}/edit`);
+            }}
+            disabled={navigatingId === "edit"}
           >
-            <Link href={`/protected/properties/${property.id}/edit`}>
+            {navigatingId === "edit" ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
               <Edit className="h-4 w-4 mr-2" />
-              แก้ไข
-            </Link>
+            )}
+            แก้ไข
           </Button>
         </div>
       </div>

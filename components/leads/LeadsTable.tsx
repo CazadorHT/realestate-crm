@@ -90,6 +90,7 @@ export function LeadsTable({
 
   const [isTransferDialogOpen, setIsTransferDialogOpen] = useState(false);
   const [isGlobalLoading, setIsGlobalLoading] = useState(false);
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const [isTransitionPending, startTransition] = useTransition();
 
   const handleSelectAllGlobal = async () => {
@@ -247,13 +248,21 @@ export function LeadsTable({
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1">
-                      <div className="font-medium text-blue-700">
-                        <Link
-                          className="underline"
-                          href={`/protected/leads/${l.id}`}
+                      <div className="font-medium text-blue-700 relative">
+                        {navigatingId === l.id && (
+                          <div className="absolute -left-6 top-1/2 -translate-y-1/2">
+                            <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                          </div>
+                        )}
+                        <div
+                          className="underline cursor-pointer hover:text-blue-900 transition-colors"
+                          onClick={() => {
+                            setNavigatingId(l.id);
+                            router.push(`/protected/leads/${l.id}`);
+                          }}
                         >
                           {l.full_name}
-                        </Link>
+                        </div>
                       </div>
                       {l.created_at &&
                         differenceInHours(new Date(), new Date(l.created_at)) <
@@ -281,13 +290,18 @@ export function LeadsTable({
                   {/* Property */}
                   <TableCell>
                     {(l as any).property ? (
-                      <Link
-                        href={`/properties/${(l as any).property.id}`}
-                        target="_blank"
-                        className="text-sm text-blue-600 hover:underline block max-w-[200px] truncate"
+                      <div
+                        onClick={() => {
+                          setNavigatingId(`prop-${(l as any).property.id}`);
+                          router.push(`/properties/${(l as any).property.id}`);
+                        }}
+                        className="text-sm text-blue-600 hover:underline cursor-pointer block max-w-[200px] truncate relative"
                       >
+                        {navigatingId === `prop-${(l as any).property.id}` && (
+                          <Loader2 className="h-3 w-3 animate-spin absolute -left-4 top-1" />
+                        )}
                         {(l as any).property.title}
-                      </Link>
+                      </div>
                     ) : (
                       <span className="text-muted-foreground">-</span>
                     )}
@@ -409,11 +423,16 @@ export function LeadsTable({
                     }}
                     className={cn(
                       "group relative flex flex-col h-full bg-white rounded-[32px] border transition-all duration-300",
-                      selected
+                         selected
                         ? "border-blue-500 shadow-[0_0_20px_-5px_rgba(59,130,246,0.3)] ring-2 ring-blue-500/20"
                         : "border-slate-200/60 hover:border-blue-200 hover:shadow-xl hover:shadow-slate-200/50",
                     )}
                   >
+                    {navigatingId === l.id && (
+                      <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-20 rounded-[32px] animate-in fade-in duration-200">
+                        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                      </div>
+                    )}
                     {/* Card Header: Selection & Identity */}
                     <div className="p-5 pb-3">
                       <div className="flex justify-between items-start gap-3">
@@ -434,12 +453,15 @@ export function LeadsTable({
 
                           <div className="flex flex-col min-w-0">
                             <div className="flex items-center gap-2">
-                              <Link
-                                href={`/protected/leads/${l.id}`}
-                                className="text-base font-semibold text-slate-900 hover:text-blue-700 hover:underline transition-colors line-clamp-1"
+                              <div
+                                onClick={() => {
+                                  setNavigatingId(l.id);
+                                  router.push(`/protected/leads/${l.id}`);
+                                }}
+                                className="text-base font-semibold text-slate-900 hover:text-blue-700 hover:underline transition-colors line-clamp-1 cursor-pointer"
                               >
                                 {l.full_name}
-                              </Link>
+                              </div>
                               {isNew && (
                                 <Badge className="h-4 px-1.5 text-[9px] bg-amber-500 hover:bg-amber-600 border-0 font-semibold uppercase tracking-tighter animate-pulse">
                                   NEW
@@ -551,16 +573,21 @@ export function LeadsTable({
 
                         {/* Property Link */}
                         {(l as any).property && (
-                          <Link
-                            href={`/properties/${(l as any).property.id}`}
-                            target="_blank"
-                            className="flex items-center gap-3 min-h-[46px] w-full px-4 rounded-2xl bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-semibold text-xs border border-slate-100 hover:border-blue-100"
+                          <div
+                            onClick={() => {
+                              setNavigatingId(`prop-${(l as any).property.id}`);
+                              router.push(`/properties/${(l as any).property.id}`);
+                            }}
+                            className="flex items-center gap-3 min-h-[46px] w-full px-4 rounded-2xl bg-slate-50 text-slate-600 hover:bg-blue-50 hover:text-blue-600 transition-all font-semibold text-xs border border-slate-100 hover:border-blue-100 cursor-pointer relative"
                           >
+                            {navigatingId === `prop-${(l as any).property.id}` && (
+                              <Loader2 className="h-3 w-3 animate-spin text-blue-600 mr-1" />
+                            )}
                             <FaBuilding className="h-3.5 w-3.5 shrink-0 opacity-40" />
                             <span className="truncate">
                               {(l as any).property.title}
                             </span>
-                          </Link>
+                          </div>
                         )}
                       </div>
 

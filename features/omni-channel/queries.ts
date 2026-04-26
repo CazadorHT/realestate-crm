@@ -1,6 +1,7 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { Conversation } from "./types";
+import { decrypt } from "@/lib/crypto";
 
 /**
  * Fetch initial conversations (leads with latest omni messages)
@@ -55,6 +56,11 @@ export async function getInboxConversationsQuery(): Promise<Conversation[]> {
     throw new Error(error.message);
   }
 
-  return (data as unknown as Conversation[]) || [];
+  return (data || []).map((conv) => ({
+    ...conv,
+    full_name: decrypt(conv.full_name) || "Unknown",
+    line_id: decrypt(conv.line_id),
+    note: decrypt(conv.note),
+  })) as unknown as Conversation[];
 }
     

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Calendar, ChevronDown, CheckCircle2 } from "lucide-react";
+import { Calendar, ChevronDown, CheckCircle2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ export function AnalyticsFilters() {
   const currentRange = searchParams.get("range") || "all";
   const currentListingType = searchParams.get("listingType") || "all";
   const [isOpen, setIsOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const activeRange = RANGES.find((r) => r.value === currentRange) || RANGES[0];
 
@@ -39,6 +40,7 @@ export function AnalyticsFilters() {
     }
     // Always reset to page 1 when filtering
     params.delete("page");
+    setIsNavigating(true);
     router.push(`?${params.toString()}`);
   };
 
@@ -52,9 +54,14 @@ export function AnalyticsFilters() {
           <Button
             variant="outline"
             className="w-full lg:w-[180px] h-12 bg-white border-slate-200 justify-between font-medium hover:bg-slate-50 hover:text-blue-600 transition-all rounded-xl shadow-sm"
+            disabled={isNavigating}
           >
             <div className="flex items-center gap-2 truncate">
-              <Calendar className="h-3.5 w-3.5 text-blue-500" />
+              {isNavigating ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
+              ) : (
+                <Calendar className="h-3.5 w-3.5 text-blue-500" />
+              )}
               <span className="truncate hidden md:block">{activeRange.label}</span>
             </div>
             <ChevronDown className="h-4 w-4 opacity-50 ml-2" />

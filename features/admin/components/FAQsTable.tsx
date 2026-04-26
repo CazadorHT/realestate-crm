@@ -61,6 +61,7 @@ export function FAQsTable({
   const [isEmptyTrashConfirm, setIsEmptyTrashConfirm] = useState(false);
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [navigatingTab, setNavigatingTab] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState(searchParams.get("q") || "");
   const [debouncedSearchValue] = useDebounce(searchValue, 500);
   
@@ -83,6 +84,8 @@ export function FAQsTable({
   };
 
   const handleTabChange = (value: string) => {
+    if (value === activeTab) return;
+    setNavigatingTab(value);
     const params = new URLSearchParams(searchParams.toString());
     params.set("view", value);
     params.set("page", "1");
@@ -195,14 +198,20 @@ export function FAQsTable({
           <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 h-12 rounded-2xl border border-slate-200">
             <TabsTrigger 
               value="active" 
-              className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold transition-all"
+              className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-blue-600 font-bold transition-all relative"
             >
+              {navigatingTab === "active" && (
+                <Loader2 className="absolute -left-1 h-3 w-3 animate-spin text-blue-600" />
+              )}
               ใช้งานปกติ ({activeCount})
             </TabsTrigger>
             <TabsTrigger 
               value="trash"
-              className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-rose-600 font-bold transition-all"
+              className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-rose-600 font-bold transition-all relative"
             >
+              {navigatingTab === "trash" && (
+                <Loader2 className="absolute -left-1 h-3 w-3 animate-spin text-rose-600" />
+              )}
               ถังขยะ ({trashCount})
             </TabsTrigger>
           </TabsList>

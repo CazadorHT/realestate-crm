@@ -1,12 +1,18 @@
+"use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { TopAgent } from "@/features/dashboard/queries";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 interface TopAgentsProps {
   data: TopAgent[];
 }
 
 export function TopAgents({ data }: TopAgentsProps) {
+  const router = useRouter();
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   return (
     <Card className="h-full shadow-lg border-none bg-white overflow-hidden relative group">
       {/* Subtle decorative background */}
@@ -33,8 +39,17 @@ export function TopAgents({ data }: TopAgentsProps) {
           {data.map((agent, index) => (
             <div
               key={agent.id}
-              className="flex items-center justify-between group/item p-2 -mx-1 sm:-mx-2 rounded-xl hover:bg-slate-50 transition-colors gap-2"
+              onClick={() => {
+                setNavigatingId(agent.id);
+                router.push(`/protected/settings/users/${agent.id}`);
+              }}
+              className="flex items-center justify-between group/item p-2 -mx-1 sm:-mx-2 rounded-xl hover:bg-slate-50 transition-colors gap-2 cursor-pointer relative"
             >
+              {navigatingId === agent.id && (
+                <div className="absolute -left-4 top-1/2 -translate-y-1/2">
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                </div>
+              )}
               <div className="flex items-center gap-2 sm:gap-4 min-w-0">
                 <div
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-black text-xs shadow-sm

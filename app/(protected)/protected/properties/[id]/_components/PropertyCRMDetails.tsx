@@ -22,8 +22,12 @@ interface PropertyCRMDetailsProps {
     id: string;
   } | null;
   commissionLabel: string;
-  tenantId: string | undefined;
+   tenantId: string | undefined;
 }
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 export function PropertyCRMDetails({
   property,
@@ -32,6 +36,9 @@ export function PropertyCRMDetails({
   commissionLabel,
   tenantId,
 }: PropertyCRMDetailsProps) {
+  const router = useRouter();
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
+  
   if (!relatedDeal) return null;
 
   return (
@@ -45,15 +52,20 @@ export function PropertyCRMDetails({
           />
           CRM ดีลสถานะสำเร็จ
         </h3>
-        <Button
+         <Button
           variant="outline"
           size="sm"
-          asChild
           className="w-full sm:w-auto rounded-xl"
+          onClick={() => {
+            setNavigatingId(relatedDeal.id);
+            router.push(`/protected/deals/${relatedDeal.id}`);
+          }}
+          disabled={navigatingId === relatedDeal.id}
         >
-          <Link href={`/protected/deals/${relatedDeal.id}`}>
-            ไปยังหน้า Deal
-          </Link>
+          {navigatingId === relatedDeal.id ? (
+            <Loader2 className="h-4 w-4 animate-spin text-blue-600 mr-2" />
+          ) : null}
+          ไปยังหน้า Deal
         </Button>
       </div>
 

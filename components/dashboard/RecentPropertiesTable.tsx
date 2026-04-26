@@ -13,7 +13,10 @@ import {
   Clock,
   Building2,
   Sparkles,
+  Loader2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { formatDistanceToNowThai } from "@/lib/utils";
 import {
   Dialog,
@@ -55,6 +58,8 @@ export function RecentPropertiesTable({
   properties: PropertyWithRelations[];
   showBranch?: boolean;
 }) {
+  const router = useRouter();
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   return (
     <div className="space-y-6 mt-10">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 sm:px-0">
@@ -73,10 +78,17 @@ export function RecentPropertiesTable({
         <Button
           variant="outline"
           size="sm"
-          asChild
           className="w-fit rounded-full font-semibold border-slate-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-all"
+          onClick={() => {
+            setNavigatingId("view-all");
+            router.push("/protected/properties");
+          }}
+          disabled={navigatingId === "view-all"}
         >
-          <Link href="/protected/properties">ดูทั้งหมด →</Link>
+          {navigatingId === "view-all" ? (
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+          ) : null}
+          ดูทั้งหมด →
         </Button>
       </div>
 
@@ -155,14 +167,22 @@ export function RecentPropertiesTable({
                       </div>
 
                       <div className="flex flex-col gap-1 min-w-0">
-                        <Link
-                          href={`/protected/properties/${property.id}`}
-                          className="block font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm leading-snug"
+                        <div
+                          onClick={() => {
+                            setNavigatingId(property.id);
+                            router.push(`/protected/properties/${property.id}`);
+                          }}
+                          className="block font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm leading-snug cursor-pointer relative"
                         >
+                          {navigatingId === property.id && (
+                            <div className="absolute -left-6 top-1/2 -translate-y-1/2">
+                              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                            </div>
+                          )}
                           <span className="line-clamp-2 overflow-hidden w-[310px]">
                             {property.title || "ไม่ระบุชื่อ"}
                           </span>
-                        </Link>
+                        </div>
                         <span className="text-[11px] text-slate-500 line-clamp-1 opacity-90 leading-tight">
                           {[property.popular_area, property.province]
                             .filter(Boolean)
@@ -260,25 +280,37 @@ export function RecentPropertiesTable({
                   <TableCell className="px-2 py-4 text-right pr-6">
                     <div className="flex justify-end items-center gap-0.5">
                       <Button
-                        asChild
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                        onClick={() => {
+                          setNavigatingId(`eye-${property.id}`);
+                          router.push(`/protected/properties/${property.id}`);
+                        }}
+                        disabled={navigatingId === `eye-${property.id}`}
                       >
-                        <Link href={`/protected/properties/${property.id}`}>
+                        {navigatingId === `eye-${property.id}` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
+                        ) : (
                           <Eye className="h-3.5 w-3.5" />
-                        </Link>
+                        )}
                       </Button>
 
                       <Button
-                        asChild
                         variant="ghost"
                         size="icon"
                         className="h-7 w-7 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
+                        onClick={() => {
+                          setNavigatingId(`edit-${property.id}`);
+                          router.push(`/protected/properties/${property.id}/edit`);
+                        }}
+                        disabled={navigatingId === `edit-${property.id}`}
                       >
-                        <Link href={`/protected/properties/${property.id}/edit`}>
+                        {navigatingId === `edit-${property.id}` ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-600" />
+                        ) : (
                           <Edit3 className="h-3.5 w-3.5" />
-                        </Link>
+                        )}
                       </Button>
 
                       <DuplicatePropertyButton
@@ -319,56 +351,72 @@ export function RecentPropertiesTable({
                   </div>
                 </div>
 
-                <Link
-                  href={`/protected/properties/${property.id}`}
-                  className="block relative aspect-16/10 overflow-hidden"
-                >
-                  {property.requires_ai_review && (
-                    <div className="absolute top-2.5 left-2.5 z-30 p-1.5 bg-white/90 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center border border-amber-200">
-                      <Sparkles className="h-4 w-4 text-amber-500" />
-                    </div>
-                  )}
-                  {(() => {
-                    const imageUrl = property.image_url || (property.images && (property.images as any[])[0]?.url) || (property.images && (property.images as any[])[0]?.image_url);
-
-                    return imageUrl ? (
-                      <Image
-                        src={imageUrl}
-                        alt={property.title || "Property"}
-                        fill
-                        className="object-cover transition-transform duration-700 group-hover:scale-110"
-                      />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center bg-slate-100">
-                        <ImageIcon className="h-10 w-10 text-slate-300" />
+                  <div
+                    onClick={() => {
+                      setNavigatingId(`m-img-${property.id}`);
+                      router.push(`/protected/properties/${property.id}`);
+                    }}
+                    className="block relative aspect-16/10 overflow-hidden cursor-pointer"
+                  >
+                    {navigatingId === `m-img-${property.id}` && (
+                      <div className="absolute inset-0 z-40 bg-white/20 backdrop-blur-[2px] flex items-center justify-center">
+                        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
                       </div>
-                    );
-                  })()}
+                    )}
+                    {property.requires_ai_review && (
+                      <div className="absolute top-2.5 left-2.5 z-30 p-1.5 bg-white/90 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center border border-amber-200">
+                        <Sparkles className="h-4 w-4 text-amber-500" />
+                      </div>
+                    )}
+                    {(() => {
+                      const imageUrl = property.image_url || (property.images && (property.images as any[])[0]?.url) || (property.images && (property.images as any[])[0]?.image_url);
 
-                  {/* Status Badges Overlay */}
-                  <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 overflow-hidden">
-                    <div className="flex items-center gap-1.5">
-                      <PropertyTypeBadge
-                        type={property.property_type}
-                        className="h-5 text-[10px] px-2 bg-white/95 backdrop-blur-sm shadow-sm border-none font-bold"
+                      return imageUrl ? (
+                        <Image
+                          src={imageUrl}
+                          alt={property.title || "Property"}
+                          fill
+                          className="object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center bg-slate-100">
+                          <ImageIcon className="h-10 w-10 text-slate-300" />
+                        </div>
+                      );
+                    })()}
+
+                    {/* Status Badges Overlay */}
+                    <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 overflow-hidden">
+                      <div className="flex items-center gap-1.5">
+                        <PropertyTypeBadge
+                          type={property.property_type}
+                          className="h-5 text-[10px] px-2 bg-white/95 backdrop-blur-sm shadow-sm border-none font-bold"
+                        />
+                      </div>
+                      <PropertyStatusBadge
+                        status={property.status}
+                        className="h-5 text-[10px] px-2 font-bold shadow-md backdrop-blur-sm"
                       />
                     </div>
-                    <PropertyStatusBadge
-                      status={property.status}
-                      className="h-5 text-[10px] px-2 font-bold shadow-md backdrop-blur-sm"
-                    />
                   </div>
-                </Link>
 
                 {/* Property Details */}
                 <div className="p-3 min-[400px]:p-4 space-y-3 flex-1 flex flex-col">
                   <div className="space-y-1">
-                    <Link
-                      href={`/protected/properties/${property.id}`}
-                      className="font-bold text-slate-900 text-sm min-[400px]:text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors"
+                    <div
+                      onClick={() => {
+                        setNavigatingId(`m-title-${property.id}`);
+                        router.push(`/protected/properties/${property.id}`);
+                      }}
+                      className="font-bold text-slate-900 text-sm min-[400px]:text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors cursor-pointer relative"
                     >
+                      {navigatingId === `m-title-${property.id}` && (
+                        <div className="absolute -left-5 top-1/2 -translate-y-1/2">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
+                        </div>
+                      )}
                       {property.title || "ไม่ระบุชื่อ"}
-                    </Link>
+                    </div>
                     <div className="flex items-center gap-1 text-[10px] min-[400px]:text-xs text-slate-500 font-medium">
                       <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
                       <span className="truncate">
@@ -444,11 +492,18 @@ export function RecentPropertiesTable({
                     </p>
                   </div>
                   <Button
-                    asChild
                     size="sm"
                     className="mt-2 rounded-xl bg-blue-600 font-bold shadow-md h-10 px-6"
+                    onClick={() => {
+                      setNavigatingId("new-prop");
+                      router.push("/protected/properties/new");
+                    }}
+                    disabled={navigatingId === "new-prop"}
                   >
-                    <Link href="/protected/properties/new">เพิ่มทรัพย์ใหม่</Link>
+                    {navigatingId === "new-prop" ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : null}
+                    เพิ่มทรัพย์ใหม่
                   </Button>
                 </div>
               </div>

@@ -85,17 +85,19 @@ export function CalendarGrid({
           }
 
           return (
-            <div className="flex items-center gap-1.5 w-full overflow-hidden px-1 py-0.5 group/event">
-              <div 
-                className="w-1.5 h-1.5 rounded-full shrink-0 shadow-sm" 
-                style={{ backgroundColor: eventInfo.event.backgroundColor }}
-              />
-              <span className="text-[10px] font-semibold text-slate-700 truncate">
-                {eventInfo.timeText}
-              </span>
-              <span className="text-[10px] text-slate-500 truncate hidden sm:inline">
+            <div className="flex flex-col w-full overflow-hidden px-1.5 py-1 group/event leading-tight">
+              <div className="flex items-center gap-1.5 mb-0.5">
+                <div 
+                  className="w-1.5 h-1.5 rounded-full shrink-0 shadow-sm" 
+                  style={{ backgroundColor: eventInfo.event.backgroundColor }}
+                />
+                <span className="text-[9px] font-bold text-slate-800 uppercase tracking-tight">
+                  {eventInfo.timeText}
+                </span>
+              </div>
+              <div className="text-[10px] text-slate-600 truncate font-medium">
                 {eventInfo.event.title}
-              </span>
+              </div>
             </div>
           );
         }}

@@ -17,7 +17,7 @@ export interface LeadPreferences {
   budget_flexible?: boolean;
   preferred_zones?: string[];
   pet_friendly_required?: boolean;
-  [key: string]: any; // Allow for extensibility while prioritizing known fields
+  [key: string]: unknown; // Allow for extensibility while prioritizing known fields
 }
 
 // --- Extended Feature Types ---

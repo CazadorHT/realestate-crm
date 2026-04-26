@@ -8,7 +8,7 @@ export interface OmniMessagePayload {
     pictureUrl?: string | null;
     name?: string | null;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface OmniMessage {
@@ -34,7 +34,7 @@ export interface Conversation {
   omni_messages: OmniMessage[];
   preferences: {
     category?: "CUSTOMER" | "AGENT" | "OWNER";
-  } | any;
+  } | Record<string, unknown>;
   tenants?: {
     id: string;
     name: string;

@@ -45,7 +45,9 @@ import {
   ListFilter,
   Check,
   Filter,
+  Loader2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -116,6 +118,8 @@ export function UsersTable({
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
+  const router = useRouter();
 
   const roleOptions = [
     {
@@ -449,7 +453,18 @@ export function UsersTable({
                         </TableCell>
                         <TableCell className="py-4 px-6 text-right">
                           <div className="flex items-center justify-end gap-2 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
-                            <Link href={`/protected/settings/users/${user.id}`}>
+                            <div
+                              onClick={() => {
+                                setNavigatingId(user.id);
+                                router.push(`/protected/settings/users/${user.id}`);
+                              }}
+                              className="cursor-pointer relative"
+                            >
+                              {navigatingId === user.id && (
+                                <div className="absolute -left-5 top-1/2 -translate-y-1/2">
+                                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                                </div>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -458,7 +473,7 @@ export function UsersTable({
                               >
                                 <Eye className="h-4 w-4" />
                               </Button>
-                            </Link>
+                            </div>
                             <UserRoleSelect
                               userId={user.id}
                               currentRole={user.role}
@@ -578,19 +593,25 @@ export function UsersTable({
                   </div>
 
                   <div className="space-y-3 pt-4 border-t border-slate-50 mt-2">
-                    <Link
-                      href={`/protected/settings/users/${user.id}`}
-                      className="block"
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full h-11 px-4 text-slate-600 border-slate-200 hover:bg-slate-50 rounded-xl flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all font-medium"
+                      onClick={() => {
+                        setNavigatingId(`m-${user.id}`);
+                        router.push(`/protected/settings/users/${user.id}`);
+                      }}
+                      disabled={navigatingId === `m-${user.id}`}
                     >
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full h-11 px-4 text-slate-600 border-slate-200 hover:bg-slate-50 rounded-xl flex items-center justify-center gap-2 shadow-sm active:scale-95 transition-all font-medium"
-                      >
-                        <Eye className="h-4 w-4" />
-                        <span>ดูรายละเอียด</span>
-                      </Button>
-                    </Link>
+                      {navigatingId === `m-${user.id}` ? (
+                        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                      ) : (
+                        <>
+                          <Eye className="h-4 w-4" />
+                          <span>ดูรายละเอียด</span>
+                        </>
+                      )}
+                    </Button>
 
                     <div className="flex items-center gap-2">
                       <UserRoleSelect

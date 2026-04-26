@@ -18,11 +18,17 @@ import { Eye } from "lucide-react";
 import Link from "next/link";
 import { getReadableSummary } from "@/lib/audit-utils";
 
+import { Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 interface AuditLogTableProps {
   data: AuditLogWithUser[];
 }
 
 export function AuditLogTable({ data }: AuditLogTableProps) {
+  const router = useRouter();
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   return (
     <div className="rounded-[32px] border border-slate-200 bg-white shadow-xl shadow-slate-200/50 overflow-hidden italic">
       {/* 🖥️ Desktop Table View */}
@@ -54,14 +60,20 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                     {format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}
                   </TableCell>
                   <TableCell className="px-6 py-4">
-                    <Link
-                      href={
-                        log.user?.id
-                          ? `/protected/settings/users/${log.user.id}`
-                          : "#"
-                      }
-                      className="flex items-center gap-3 w-fit group/user transition-all"
+                    <div
+                      onClick={() => {
+                        if (log.user?.id) {
+                          setNavigatingId(log.id);
+                          router.push(`/protected/settings/users/${log.user.id}`);
+                        }
+                      }}
+                      className="flex items-center gap-3 w-fit group/user transition-all cursor-pointer relative"
                     >
+                      {navigatingId === log.id && (
+                        <div className="absolute -left-5 top-1/2 -translate-y-1/2">
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                        </div>
+                      )}
                       <Avatar className="h-9 w-9 border-2 border-white shadow-sm ring-1 ring-slate-100 group-hover/user:ring-blue-200 transition-all">
                         <AvatarImage src={log.user?.avatar_url || ""} />
                         <AvatarFallback className="bg-slate-100 text-slate-400 text-[10px] font-semibold">
@@ -74,7 +86,7 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                           {log.user?.full_name || "Unknown"}
                         </span>
                       </div>
-                    </Link>
+                    </div>
                   </TableCell>
                   <TableCell className="px-6 py-4">
                     <FormatActionBadge action={log.action} />
@@ -127,7 +139,22 @@ export function AuditLogTable({ data }: AuditLogTableProps) {
                     <span className="text-xs font-semibold text-slate-400 uppercase tracking-widest text-[9px]">
                       {format(new Date(log.created_at), "dd/MM/yyyy HH:mm")}
                     </span>
-                    <span className="text-sm font-semibold text-slate-800">{log.user?.full_name || "Unknown"}</span>
+                    <span 
+                      onClick={() => {
+                        if (log.user?.id) {
+                          setNavigatingId(`m-${log.id}`);
+                          router.push(`/protected/settings/users/${log.user.id}`);
+                        }
+                      }}
+                      className="text-sm font-semibold text-slate-800 cursor-pointer hover:text-blue-600 transition-colors relative"
+                    >
+                      {navigatingId === `m-${log.id}` && (
+                        <div className="absolute -left-5 top-1/2 -translate-y-1/2">
+                          <Loader2 className="h-3 w-3 animate-spin text-blue-600" />
+                        </div>
+                      )}
+                      {log.user?.full_name || "Unknown"}
+                    </span>
                   </div>
                 </div>
                 <AuditLogDetailsDialog log={log} />

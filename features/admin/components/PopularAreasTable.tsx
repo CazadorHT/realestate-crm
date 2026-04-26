@@ -242,9 +242,10 @@ export function PopularAreasTable({
   const [totalCount, setTotalCount] = useState(initialTotal);
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
+   useEffect(() => {
     setData(initialData);
     setTotalCount(initialTotal);
+    setNavigatingSort(null);
   }, [initialData, initialTotal]);
 
   // Dialog & Active states
@@ -253,8 +254,9 @@ export function PopularAreasTable({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [isAllAcrossSelected, setIsAllAcrossSelected] = useState(false);
-  const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
+   const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [viewingAreaProperties, setViewingAreaProperties] = useState<PopularArea | null>(null);
+  const [navigatingSort, setNavigatingSort] = useState<string | null>(null);
 
   // Selection
   const allIds = useMemo(() => data.map((item) => item.id), [data]);
@@ -274,7 +276,8 @@ export function PopularAreasTable({
   }, [isAllSelected, page, search]);
 
   // Sorting
-  const toggleSort = (column: string) => {
+   const toggleSort = (column: string) => {
+    setNavigatingSort(column);
     const params = new URLSearchParams(searchParams);
     if (sortBy === column) {
       params.set("order", sortOrder === "asc" ? "desc" : "asc");
@@ -286,7 +289,8 @@ export function PopularAreasTable({
     router.push(`${pathname}?${params.toString()}`);
   };
 
-  const SortIcon = ({ column }: { column: string }) => {
+   const SortIcon = ({ column }: { column: string }) => {
+    if (navigatingSort === column) return <Loader2 className="ml-2 h-3 w-3 animate-spin text-blue-600" />;
     if (sortBy !== column) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30" />;
     return sortOrder === "asc" ? (
       <ChevronUp className="ml-2 h-3 w-3 text-indigo-600" />

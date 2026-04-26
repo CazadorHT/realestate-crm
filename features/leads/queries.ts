@@ -44,7 +44,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   let query = supabase
     .from("leads")
-    .select("id, full_name, email, phone, stage, source, budget, rental_budget, property_id, property:properties(id, title), tenants(id, name), created_at, updated_at, tenant_id, assigned_to, note", { count: "exact" });
+    .select("id, full_name, email, phone, stage, source, budget_min, budget_max, property_id, property:properties(id, title), tenants(id, name), created_at, updated_at, tenant_id, assigned_to, note", { count: "exact" });
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -69,7 +69,13 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   if (error) throw new Error(mapDbError(error));
 
-  const leads = (data || []) as unknown as LeadWithJoins[];
+  const leads = (data || []).map((l) => ({
+    ...l,
+    full_name: decrypt(l.full_name) || "Unknown",
+    phone: decrypt(l.phone),
+    email: decrypt(l.email),
+    note: decrypt(l.note),
+  })) as unknown as LeadWithJoins[];
   const leadIds = leads.map((l) => l.id);
 
   // fetch deals for these leads and compute counts client-side
@@ -150,7 +156,7 @@ export async function getLeadsForKanbanQuery() {
 
   let query = supabase
     .from("leads")
-    .select("id, full_name, stage, source, budget, rental_budget, created_at, updated_at, tenant_id, tenants(id, name)");
+    .select("id, full_name, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, tenants(id, name)");
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -162,11 +168,10 @@ export async function getLeadsForKanbanQuery() {
 
   if (error) throw new Error(mapDbError(error));
 
-  const results = (data ?? []) as unknown as LeadWithJoins[];
-  return results.map(l => ({
+  return (data || []).map(l => ({
     ...l,
     full_name: decrypt(l.full_name) || "Unknown",
-  }));
+  })) as unknown as LeadWithJoins[];
 }
 // ใช้สำหรับแสดง leads รายเดียว
 export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null> {
@@ -177,7 +182,7 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
 
   let query = supabase
     .from("leads")
-    .select("id, full_name, email, phone, stage, source, budget, budget_max, rental_budget, rental_budget_max, property_id, property_type_preference, location_preference, note, created_at, updated_at, tenant_id, created_by, assigned_to")
+    .select("id, full_name, email, phone, stage, source, budget_min, budget_max, property_id, preferred_property_types, preferred_locations, note, line_id, facebook_psid, instagram_sid, created_at, updated_at, tenant_id, created_by, assigned_to")
     .eq("id", id);
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
@@ -216,7 +221,7 @@ export async function getLeadWithActivitiesQuery(
     let query = supabase
       .from("leads")
         .select(`
-                id, full_name, email, phone, stage, source, budget, budget_max, rental_budget, rental_budget_max, property_id, property_type_preference, location_preference, note, ai_summary_content, created_at, updated_at, tenant_id, created_by, assigned_to,
+                id, full_name, email, phone, stage, source, budget_min, budget_max, property_id, preferred_property_types, preferred_locations, note, line_id, facebook_psid, instagram_sid, ai_summary_content, created_at, updated_at, tenant_id, created_by, assigned_to,
                 lead_activities (
                 id, lead_id, property_id, activity_type, note, created_by, created_at,
                 properties ( id, title )

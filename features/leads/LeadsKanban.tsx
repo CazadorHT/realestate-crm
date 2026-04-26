@@ -23,7 +23,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { UserCircle, Phone, Mail, DollarSign } from "lucide-react";
+import { UserCircle, Phone, Mail, DollarSign, Loader2 } from "lucide-react";
 import { LEAD_STAGES } from "@/lib/validations/lead";
 import { LEAD_STAGE_LABELS } from "./labels";
 import type { LeadWithJoins, LeadRow } from "./types";
@@ -38,6 +38,7 @@ interface KanbanProps {
 export function LeadsKanban({ initialLeads }: KanbanProps) {
   const [leads, setLeads] = React.useState<LeadWithJoins[]>(initialLeads);
   const [activeId, setActiveId] = React.useState<string | null>(null);
+  const [navigatingId, setNavigatingId] = React.useState<string | null>(null);
   const router = useRouter();
 
   const sensors = useSensors(
@@ -154,6 +155,8 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
             id={stage}
             title={LEAD_STAGE_LABELS[stage]}
             leads={leads.filter((l) => l.stage === stage)}
+            navigatingId={navigatingId}
+            onNavigate={setNavigatingId}
           />
         ))}
       </div>
@@ -168,10 +171,14 @@ const KanbanColumn = React.memo(function KanbanColumn({
   id,
   title,
   leads,
+  navigatingId,
+  onNavigate,
 }: {
   id: string;
   title: string;
   leads: LeadWithJoins[];
+  navigatingId: string | null;
+  onNavigate: (id: string) => void;
 }) {
   const { setNodeRef } = useSortable({ id });
 
@@ -196,7 +203,12 @@ const KanbanColumn = React.memo(function KanbanColumn({
           strategy={verticalListSortingStrategy}
         >
           {leads.map((lead) => (
-            <SortableLeadCard key={lead.id} lead={lead} />
+            <SortableLeadCard 
+              key={lead.id} 
+              lead={lead} 
+              navigatingId={navigatingId}
+              onNavigate={onNavigate}
+            />
           ))}
           {leads.length === 0 && (
             <div className="h-32 border-2 border-dashed rounded-lg flex flex-col items-center justify-center text-muted-foreground text-xs italic gap-2 bg-white/30">
@@ -214,8 +226,12 @@ const KanbanColumn = React.memo(function KanbanColumn({
 
 const SortableLeadCard = React.memo(function SortableLeadCard({
   lead,
+  navigatingId,
+  onNavigate,
 }: {
   lead: LeadWithJoins;
+  navigatingId: string | null;
+  onNavigate: (id: string) => void;
 }) {
   const {
     attributes,
@@ -234,7 +250,7 @@ const SortableLeadCard = React.memo(function SortableLeadCard({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <LeadCard lead={lead} />
+      <LeadCard lead={lead} navigatingId={navigatingId} onNavigate={onNavigate} />
     </div>
   );
 });
@@ -242,18 +258,27 @@ const SortableLeadCard = React.memo(function SortableLeadCard({
 const LeadCard = React.memo(function LeadCard({
   lead,
   isOverlay,
+  navigatingId,
+  onNavigate,
 }: {
   lead: LeadWithJoins;
   isOverlay?: boolean;
+  navigatingId?: string | null;
+  onNavigate?: (id: string) => void;
 }) {
   const router = useRouter();
 
   return (
     <Card
-      className={`group hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing shadow-sm ${
+      className={`group hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing shadow-sm relative overflow-hidden ${
         isOverlay ? "border-primary shadow-xl rotate-3" : ""
       }`}
     >
+      {navigatingId === lead.id && (
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 animate-in fade-in duration-200">
+          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+        </div>
+      )}
       <CardContent className="p-3 space-y-2">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2">
@@ -272,7 +297,10 @@ const LeadCard = React.memo(function LeadCard({
           </div>
           <button
             onMouseDown={(e) => e.stopPropagation()} // Prevent drag when clicking the view button
-            onClick={() => router.push(`/protected/leads/${lead.id}`)}
+            onClick={() => {
+              onNavigate?.(lead.id);
+              router.push(`/protected/leads/${lead.id}`);
+            }}
             className="opacity-0 group-hover:opacity-100 p-1  rounded transition-all"
             title="ดูรายละเอียด"
           >

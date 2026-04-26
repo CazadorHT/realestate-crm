@@ -1,8 +1,10 @@
+"use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, MessageCircle } from "lucide-react";
-import Link from "next/link";
+import { Phone, MessageCircle, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import type { FollowUpLead } from "@/features/dashboard/queries";
 
 interface FollowUpInsightsProps {
@@ -10,6 +12,8 @@ interface FollowUpInsightsProps {
 }
 
 export function FollowUpInsights({ leads = [] }: FollowUpInsightsProps) {
+  const router = useRouter();
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   return (
     <Card className="shadow-sm h-full border-orange-200 bg-orange-50/50">
       <CardHeader className="pb-2 px-4 sm:px-6">
@@ -45,11 +49,17 @@ export function FollowUpInsights({ leads = [] }: FollowUpInsightsProps) {
                   size="icon"
                   variant="ghost"
                   className="h-8 w-8 text-muted-foreground hover:text-primary"
-                  asChild
+                  onClick={() => {
+                    setNavigatingId(lead.id);
+                    router.push(`/protected/leads/${lead.id}`);
+                  }}
+                  disabled={navigatingId === lead.id}
                 >
-                  <Link href={`/protected/leads/${lead.id}`}>
+                  {navigatingId === lead.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                  ) : (
                     <MessageCircle className="h-4 w-4" />
-                  </Link>
+                  )}
                 </Button>
               </div>
             ))

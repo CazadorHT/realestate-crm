@@ -1,8 +1,9 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { differenceInHours } from "date-fns";
-import { Eye, Edit } from "lucide-react";
+import { Eye, Edit, Loader2 } from "lucide-react";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,8 @@ export function DealsTableRow({
   properties,
   onRefresh,
 }: DealsTableRowProps) {
+  const router = useRouter();
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const isNew =
     deal.created_at &&
     differenceInHours(new Date(), new Date(deal.created_at)) < 24;
@@ -52,12 +55,18 @@ export function DealsTableRow({
       </TableCell>
       <TableCell>
         <div className="flex flex-col gap-1 max-w-[300px]">
-          <Link
-            href={`/protected/properties/${deal.property_id}`}
-            className="font-medium text-[13px] text-blue-600 hover:text-blue-500 hover:underline transition-colors line-clamp-1 uppercase tracking-tight"
+          <div
+            onClick={() => {
+              setNavigatingId(`prop-${deal.property_id}`);
+              router.push(`/protected/properties/${deal.property_id}`);
+            }}
+            className="font-medium text-[13px] text-blue-600 hover:text-blue-500 hover:underline transition-colors line-clamp-1 uppercase tracking-tight cursor-pointer relative"
           >
+            {navigatingId === `prop-${deal.property_id}` && (
+              <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-1" />
+            )}
             {deal.property?.title || "-"}
-          </Link>
+          </div>
           <div className="flex items-center gap-1.5">
             {isNew && (
               <Badge className="h-4 px-1 text-[9px] bg-amber-500 hover:bg-amber-600 font-bold border-0 rounded-sm">
@@ -73,12 +82,18 @@ export function DealsTableRow({
         </div>
       </TableCell>
       <TableCell>
-        <Link
-          href={`/protected/leads/${deal.lead_id}`}
-          className="text-[11px] font-bold text-slate-600 hover:text-blue-600 hover:underline transition-colors line-clamp-1 uppercase tracking-tight"
+        <div
+          onClick={() => {
+            setNavigatingId(`lead-${deal.lead_id}`);
+            router.push(`/protected/leads/${deal.lead_id}`);
+          }}
+          className="text-[11px] font-bold text-slate-600 hover:text-blue-600 hover:underline transition-colors line-clamp-1 uppercase tracking-tight cursor-pointer relative"
         >
+          {navigatingId === `lead-${deal.lead_id}` && (
+            <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-0.5" />
+          )}
           {deal.lead?.full_name || "-"}
-        </Link>
+        </div>
       </TableCell>
       <TableCell className="font-bold text-slate-700 text-[11px]">
         <div className="flex flex-col items-start gap-0.5">
@@ -142,12 +157,18 @@ export function DealsTableRow({
           <Button
             variant="ghost"
             size="icon"
-            asChild
             className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
+            onClick={() => {
+              setNavigatingId(`view-${deal.id}`);
+              router.push(`/protected/deals/${deal.id}`);
+            }}
+            disabled={navigatingId === `view-${deal.id}`}
           >
-            <Link href={`/protected/deals/${deal.id}`}>
+            {navigatingId === `view-${deal.id}` ? (
+              <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+            ) : (
               <Eye className="h-4 w-4" />
-            </Link>
+            )}
           </Button>
 
           <DealFormDialog

@@ -9,11 +9,13 @@ import {
   Plus,
   Tag,
   MapPin,
-  TrendingDown,
   TrendingUp,
   ChevronLeft,
   ChevronRight,
+  Loader2,
+  TrendingDown,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +27,9 @@ interface OwnerPropertiesProps {
 const ITEMS_PER_PAGE = 5;
 
 export function OwnerProperties({ properties, ownerId }: OwnerPropertiesProps) {
+  const router = useRouter();
   const [currentPage, setCurrentPage] = useState(1);
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   const totalPages = Math.ceil(properties.length / ITEMS_PER_PAGE);
 
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -92,11 +96,19 @@ export function OwnerProperties({ properties, ownerId }: OwnerPropertiesProps) {
         {properties.length > 0 ? (
           <div className="divide-y divide-slate-100">
             {currentProperties.map((prop) => (
-              <Link
+              <div
                 key={prop.id}
-                href={`/protected/properties/${prop.id}`}
-                className="block p-4 hover:bg-slate-50 transition-colors group"
+                onClick={() => {
+                  setNavigatingId(prop.id);
+                  router.push(`/protected/properties/${prop.id}`);
+                }}
+                className="block p-4 hover:bg-slate-50 transition-colors group cursor-pointer relative"
               >
+                {navigatingId === prop.id && (
+                  <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 animate-in fade-in duration-200">
+                    <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
+                  </div>
+                )}
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
@@ -153,7 +165,7 @@ export function OwnerProperties({ properties, ownerId }: OwnerPropertiesProps) {
                       )}
                   </div>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         ) : (

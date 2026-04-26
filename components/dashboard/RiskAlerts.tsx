@@ -1,5 +1,8 @@
+"use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import type { RiskDeal } from "@/features/dashboard/queries";
 
 interface RiskAlertsProps {
@@ -7,6 +10,8 @@ interface RiskAlertsProps {
 }
 
 export function RiskAlerts({ deals = [] }: RiskAlertsProps) {
+  const router = useRouter();
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   return (
     <Card className="shadow-sm h-full border-red-200 bg-red-50/50">
       <CardHeader className="pb-2 px-4 sm:px-6">
@@ -23,10 +28,19 @@ export function RiskAlerts({ deals = [] }: RiskAlertsProps) {
             </p>
           ) : (
             deals.map((deal) => (
-              <div
+            <div
                 key={deal.id}
-                className="flex flex-col bg-white p-2 rounded border border-red-200 shadow-sm"
+                onClick={() => {
+                  setNavigatingId(deal.id);
+                  router.push(`/protected/deals/${deal.id}`);
+                }}
+                className="flex flex-col bg-white p-2 rounded border border-red-200 shadow-sm cursor-pointer relative group/item"
               >
+                {navigatingId === deal.id && (
+                  <div className="absolute -left-4 top-1/2 -translate-y-1/2">
+                    <Loader2 className="h-4 w-4 animate-spin text-red-600" />
+                  </div>
+                )}
                 <span className="text-sm font-medium truncate">
                   {deal.title}
                 </span>

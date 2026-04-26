@@ -11,7 +11,9 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Building2, Layers, MapPin, Tag, RefreshCcw } from "lucide-react";
+import { Eye, Building2, Layers, MapPin, Tag, RefreshCcw, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { InventoryProperty } from "../types";
@@ -58,6 +60,8 @@ const STATUS_COLORS = {
 
 // 🛡️ Performance Polish: Memoized to prevent re-renders during search typing
 export const InventoryTable = React.memo(({ data, isLoading, onReset }: InventoryTableProps) => {
+  const router = useRouter();
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   
   // 🛡️ Premium Table Skeleton
   const TableSkeleton = () => (
@@ -107,7 +111,19 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
               <TableSkeleton />
             ) : (
               data.map((item) => (
-                <TableRow key={item.id} className="group hover:bg-blue-50/30 transition-all border-b border-slate-50 last:border-0 min-h-20">
+                <TableRow 
+                  key={item.id} 
+                  className="group hover:bg-blue-50/30 transition-all border-b border-slate-50 last:border-0 min-h-20 cursor-pointer relative"
+                  onClick={() => {
+                    setNavigatingId(item.id);
+                    router.push(`/protected/properties/${item.id}`);
+                  }}
+                >
+                  {navigatingId === item.id && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center pl-2 z-10">
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    </div>
+                  )}
                   <TableCell className="px-6 whitespace-normal!">
                     <div className="flex items-center gap-4">
                       {/* Thumbnail with Overlays */}
@@ -178,10 +194,21 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right px-6">
-                    <Button asChild variant="ghost" size="icon" className="h-10 w-10 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all">
-                      <Link href={`/protected/properties/${item.id}`}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-10 w-10 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all relative"
+                      onClick={() => {
+                        setNavigatingId(item.id);
+                        router.push(`/protected/properties/${item.id}`);
+                      }}
+                      disabled={navigatingId === item.id}
+                    >
+                      {navigatingId === item.id ? (
+                        <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
+                      ) : (
                         <Eye className="h-5 w-5" />
-                      </Link>
+                      )}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -198,7 +225,18 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
         ) : (
           data.map((item) => (
             <div key={item.id} className="p-5 space-y-4 hover:bg-slate-50/50 transition-colors">
-              <Link href={`/protected/properties/${item.id}`} className="block space-y-4 group">
+              <div
+                onClick={() => {
+                  setNavigatingId(`m-${item.id}`);
+                  router.push(`/protected/properties/${item.id}`);
+                }}
+                className="block space-y-4 group cursor-pointer relative"
+              >
+                {navigatingId === `m-${item.id}` && (
+                  <div className="absolute inset-0 z-50 bg-white/20 backdrop-blur-[2px] flex items-center justify-center rounded-2xl">
+                    <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+                  </div>
+                )}
                 {/* 🎨 Aspect-Video Thumbnail (Elite Visual) */}
                 <div className="relative aspect-video w-full rounded-2xl bg-slate-100 overflow-hidden border border-slate-100 shadow-sm">
                   {item.main_image_url ? (
@@ -246,7 +284,7 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
                     </Badge>
                   </div>
                 </div>
-              </Link>
+              </div>
             </div>
           ))
         )}

@@ -54,7 +54,7 @@
 
   /* Event Styling */
   .fc-daygrid-event {
-    @apply rounded-md border-none px-0 py-0 shadow-none cursor-pointer overflow-hidden flex items-center w-full min-w-0;
+    @apply rounded-md border-none px-0 py-0 shadow-none cursor-pointer overflow-hidden flex flex-col w-full min-w-0;
     background: transparent !important;
   }
 

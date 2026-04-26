@@ -12,14 +12,18 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { formatThaiCurrency } from "@/lib/excel-export";
-import { Trophy, Users, ChevronRight } from "lucide-react";
+import { Trophy, Users, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 interface AgentPerformanceTableProps {
   agents: AgentKpiStats[];
 }
 
 export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
+  const router = useRouter();
+  const [navigatingId, setNavigatingId] = useState<string | null>(null);
   // Sort by revenue for leaderboard
   const sortedAgents = [...agents].sort(
     (a, b) => b.totalRevenue - a.totalRevenue,
@@ -63,8 +67,17 @@ export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
               {sortedAgents.map((agent, index) => (
                 <tr
                   key={agent.agentId}
-                  className="hover:bg-slate-50/80 transition-colors group cursor-pointer"
+                  className="hover:bg-slate-50/80 transition-colors group cursor-pointer relative"
+                  onClick={() => {
+                    setNavigatingId(agent.agentId);
+                    router.push(`/protected/settings/users/${agent.agentId}`);
+                  }}
                 >
+                  {navigatingId === agent.agentId && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center pl-2">
+                      <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                    </div>
+                  )}
                   <td className="px-6 py-4 text-center">
                     <RankBadge rank={index + 1} />
                   </td>
@@ -97,8 +110,17 @@ export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
           {sortedAgents.map((agent, index) => (
             <div
               key={agent.agentId}
-              className="p-4 sm:p-6 hover:bg-slate-50/50 active:bg-slate-50 transition-colors group"
+              className="p-4 sm:p-6 hover:bg-slate-50/50 active:bg-slate-50 transition-colors group cursor-pointer relative"
+              onClick={() => {
+                setNavigatingId(`m-${agent.agentId}`);
+                router.push(`/protected/settings/users/${agent.agentId}`);
+              }}
             >
+              {navigatingId === `m-${agent.agentId}` && (
+                <div className="absolute inset-0 z-10 bg-white/10 backdrop-blur-[1px] flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+                </div>
+              )}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <div className="relative">

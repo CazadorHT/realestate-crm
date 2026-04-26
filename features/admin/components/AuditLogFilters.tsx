@@ -13,7 +13,8 @@ import {
   User as UserIcon, 
   Layers, 
   Zap,
-  History as HistoryIcon
+  History as HistoryIcon,
+  Loader2
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
@@ -73,6 +74,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   // Initial State from URL
   const [filters, setFilters] = useState({
@@ -115,6 +117,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
     // Always reset to page 1 when filtering
     params.set("page", "1");
 
+    setIsNavigating(true);
     router.push(`/protected/admin/audit-logs?${params.toString()}`);
   };
 
@@ -161,6 +164,7 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
     setFilters(cleared);
     setDate(undefined);
     setIsMobileMenuOpen(false);
+    setIsNavigating(true);
     router.push("/protected/admin/audit-logs");
   };
 
@@ -303,7 +307,9 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
          <Button 
           className="w-full bg-slate-900 hover:bg-slate-800 text-white h-12 rounded-2xl font-semibold shadow-lg shadow-slate-200 transition-all active:scale-95"
           onClick={() => setIsMobileMenuOpen(false)}
+          disabled={isNavigating}
          >
+           {isNavigating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
            ดูผลลัพธ์ข้อมูลระบบ (Apply Filter)
          </Button>
       </div>
@@ -365,7 +371,9 @@ export function AuditLogFilters({ users, totalCount }: AuditLogFiltersProps) {
                   <Filter className="h-4 w-4" />
                 </div>
                 <span className="italic">กรองข้อมูลที่ต้องการตรวจสอบ</span>
-                {hasActiveFilters && (
+                {isNavigating ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                ) : hasActiveFilters && (
                   <Badge className="ml-1 h-5 w-5 flex items-center justify-center p-0 bg-blue-600 text-[10px] rounded-lg">
                     {activeFilterCount}
                   </Badge>

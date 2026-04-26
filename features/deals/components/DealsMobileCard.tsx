@@ -1,9 +1,10 @@
 "use client";
+import { useState } from "react";
 
 import Link from "next/link";
 import { format, differenceInHours, differenceInMonths } from "date-fns";
 import { th } from "date-fns/locale";
-import { Sparkles, Eye, Edit2, Home, Calendar, Wallet, Copy, MoreHorizontal, Trash2 } from "lucide-react";
+import { Sparkles, Eye, Edit2, Home, Calendar, Wallet, Copy, MoreHorizontal, Trash2, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,7 @@ export function DealsMobileCard({
   index,
 }: DealsMobileCardProps) {
   const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState(false);
   const refCode = deal.property_id.slice(0, 8);
 
   const statusLabelMap: Record<string, string> = {
@@ -51,6 +53,11 @@ export function DealsMobileCard({
         isSelected ? " ring-2 ring-blue-500 shadow-lg bg-blue-50/10" : "hover:shadow-md hover:border-blue-200"
       )}
     >
+      {isNavigating && (
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-50 animate-in fade-in duration-200">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      )}
       <CardContent className="p-0 flex flex-col">
         {/* 📸 Image Section (Top) */}
         <div className="relative aspect-6/3 w-full overflow-hidden bg-slate-100">
@@ -143,12 +150,15 @@ export function DealsMobileCard({
               <Copy className="h-3 w-3 opacity-40 group-hover:opacity-100 transition-opacity" />
             </button>
 
-            <Link
-              href={`/protected/deals/${deal.id}`}
-              className="font-semibold text-sm line-clamp-2! wrap-break-word text-slate-800 leading-[1.3] hover:text-blue-600 transition-colors block"
+            <div
+              onClick={() => {
+                setIsNavigating(true);
+                router.push(`/protected/deals/${deal.id}`);
+              }}
+              className="font-semibold text-sm line-clamp-2! wrap-break-word text-slate-800 leading-[1.3] hover:text-blue-600 transition-colors block cursor-pointer"
             >
               {deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}
-            </Link>
+            </div>
 
             <div className="flex items-center gap-2">
               {(!deal.transaction_date || deal.undetermined_date) ? (
@@ -205,17 +215,28 @@ export function DealsMobileCard({
               }
             >
               <div className="p-4 space-y-2">
-                <Link href={`/protected/deals/${deal.id}`} className="block w-full">
+                <div 
+                  onClick={() => {
+                    setIsNavigating(true);
+                    router.push(`/protected/deals/${deal.id}`);
+                  }} 
+                  className="block w-full"
+                >
                   <Button
                     variant="ghost"
                     className="w-full justify-start h-14 rounded-2xl px-5 gap-4 font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-600 transition-all border border-transparent hover:border-blue-100"
+                    disabled={isNavigating}
                   >
                     <div className="h-10 w-10 rounded-xl bg-blue-100/50 flex items-center justify-center">
-                      <Eye className="h-5 w-5" />
+                      {isNavigating ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : (
+                        <Eye className="h-5 w-5" />
+                      )}
                     </div>
                     ดูรายละเอียดดีล
                   </Button>
-                </Link>
+                </div>
 
                 <DealFormDialog
                   leadId={deal.lead_id}
