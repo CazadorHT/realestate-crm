@@ -261,7 +261,14 @@ export function AddRuleDialog({
         </div>
 
         <Form {...form}>
-          <form className="space-y-6 pb-6 px-6">
+          <form 
+            className="space-y-6 pb-6 px-6"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+                e.preventDefault();
+              }
+            }}
+          >
             <div className="max-h-[60vh] overflow-y-auto pr-4 -mr-4 no-scrollbar">
               <div className="space-y-6 pb-4">
                 {/* Step 1: Property Select */}

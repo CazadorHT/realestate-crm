@@ -189,7 +189,14 @@ export function CreateContractDialog() {
         </div>
 
         <Form {...form}>
-          <form className="space-y-8 pb-6 px-4">
+          <form 
+            className="space-y-8 pb-6 px-4"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+                e.preventDefault();
+              }
+            }}
+          >
             <div className="max-h-[60vh] overflow-y-auto pr-4 -mr-4 no-scrollbar">
               <div className="space-y-8 pb-4">
                 {currentStep === 1 && (

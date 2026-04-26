@@ -228,7 +228,15 @@ export function FAQForm({
       )}>
         <div className={cn("p-8 md:p-10", isStandalone && "p-0")}>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+            <form 
+              onSubmit={form.handleSubmit(onSubmit)} 
+              className="space-y-10"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
+                  e.preventDefault();
+                }
+              }}
+            >
               
               {/* STEP 1: Question Content */}
               {currentStep === 1 && (

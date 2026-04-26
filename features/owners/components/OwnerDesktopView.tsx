@@ -33,7 +33,15 @@ export function OwnerDesktopView({
   onSubmit,
 }: OwnerDesktopViewProps) {
   return (
-    <form className="space-y-8" onSubmit={onSubmit}>
+    <form 
+      className="space-y-8" 
+      onSubmit={onSubmit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+          e.preventDefault();
+        }
+      }}
+    >
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 font-medium flex items-center gap-2">
           <X className="h-4 w-4" /> {error}

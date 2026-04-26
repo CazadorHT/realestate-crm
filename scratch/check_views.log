@@ -1,0 +1,64 @@
+[dotenv@17.3.1] injecting env (27) from .env -- tip: ⚙️  override existing env vars with { override: true }
+Total views in log: 849
+Latest 5 views: [
+  {
+    "id": "5300a117-2c92-4991-aee2-ce1cb2703166",
+    "property_id": "eac200b7-2c7c-41e3-8c8c-a5388cbc41b4",
+    "tenant_id": "24c1eda5-2f6c-48c2-8dfa-3286fa1cbbdf",
+    "created_at": "2026-04-25T05:01:26.688597+00:00",
+    "visitor_id": "fp:49.49.239.16:Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Ap:en,th;q=0.9",
+    "user_id": null,
+    "properties": {
+      "title": "🏡 [FOR RENT] Villaggio 3 ศรีนครินทร์ – บางนา | บ้านสวยพร้อมอยู่ Pet Friendly! 🐶🐱",
+      "property_type": "HOUSE"
+    }
+  },
+  {
+    "id": "042daf2d-9bc5-4011-8176-c3a6e49c4a00",
+    "property_id": "9d4fe328-7cc1-498a-8a72-6cf1c1015116",
+    "tenant_id": "24c1eda5-2f6c-48c2-8dfa-3286fa1cbbdf",
+    "created_at": "2026-04-24T17:12:33.036523+00:00",
+    "visitor_id": "fp:::1:Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA:en,th;q=0.9",
+    "user_id": "d0f8f7d5-c1fb-4417-b4dc-0d1c650550c2",
+    "properties": {
+      "title": "🔥 ขายและเช่า! ที่ดิน + ตึกสวย ติดถนนพระราม 4 (🚝 MRT สามย่าน 300 ม.)",
+      "property_type": "LAND"
+    }
+  },
+  {
+    "id": "8c604dfe-1b3f-4b1a-a18d-49ea76800892",
+    "property_id": "9d4fe328-7cc1-498a-8a72-6cf1c1015116",
+    "tenant_id": "24c1eda5-2f6c-48c2-8dfa-3286fa1cbbdf",
+    "created_at": "2026-04-24T17:09:44.388242+00:00",
+    "visitor_id": "fp:::1:Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac O:en,th;q=0.9",
+    "user_id": "d0f8f7d5-c1fb-4417-b4dc-0d1c650550c2",
+    "properties": {
+      "title": "🔥 ขายและเช่า! ที่ดิน + ตึกสวย ติดถนนพระราม 4 (🚝 MRT สามย่าน 300 ม.)",
+      "property_type": "LAND"
+    }
+  },
+  {
+    "id": "a5def70e-a430-4a42-a521-db3d125ccbb3",
+    "property_id": "9d4fe328-7cc1-498a-8a72-6cf1c1015116",
+    "tenant_id": "24c1eda5-2f6c-48c2-8dfa-3286fa1cbbdf",
+    "created_at": "2026-04-24T17:09:43.849987+00:00",
+    "visitor_id": "fp:::1:Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac O:en,th;q=0.9",
+    "user_id": "d0f8f7d5-c1fb-4417-b4dc-0d1c650550c2",
+    "properties": {
+      "title": "🔥 ขายและเช่า! ที่ดิน + ตึกสวย ติดถนนพระราม 4 (🚝 MRT สามย่าน 300 ม.)",
+      "property_type": "LAND"
+    }
+  },
+  {
+    "id": "bd0a7e64-c6e1-4861-b389-74c297fc0934",
+    "property_id": "9d4fe328-7cc1-498a-8a72-6cf1c1015116",
+    "tenant_id": "24c1eda5-2f6c-48c2-8dfa-3286fa1cbbdf",
+    "created_at": "2026-04-24T17:09:16.761288+00:00",
+    "visitor_id": "fp:::1:Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac O:en,th;q=0.9",
+    "user_id": "d0f8f7d5-c1fb-4417-b4dc-0d1c650550c2",
+    "properties": {
+      "title": "🔥 ขายและเช่า! ที่ดิน + ตึกสวย ติดถนนพระราม 4 (🚝 MRT สามย่าน 300 ม.)",
+      "property_type": "LAND"
+    }
+  }
+]

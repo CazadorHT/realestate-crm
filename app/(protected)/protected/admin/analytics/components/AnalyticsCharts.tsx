@@ -16,7 +16,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AreaAnalytics, DistributionData } from "@/features/dashboard/queries";
-import { LISTING_TYPE_LABELS } from "@/features/properties/labels";
+import { LISTING_TYPE_LABELS, PROPERTY_TYPE_LABELS } from "@/features/properties/labels";
 
 // Custom Glassmorphism Tooltip
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -72,6 +72,13 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
     originalValue: item.label,
   }));
 
+  // Format data for Property Types
+  const propertyData = propertyTypeDist.map(item => ({
+    name: PROPERTY_TYPE_LABELS[item.label as keyof typeof PROPERTY_TYPE_LABELS] || item.label,
+    value: item.value,
+    originalValue: item.label,
+  }));
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Area Popularity Chart */}
@@ -119,7 +126,7 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
       <Card className="border-none shadow-soft bg-white/50 backdrop-blur-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-base font-semibold text-slate-800">สัดส่วนตามประเภทดีล</CardTitle>
-          <CardDescription className="text-xs text-slate-500">เปรียบเทึยบความสนใจ ขาย vs เช่า</CardDescription>
+          <CardDescription className="text-xs text-slate-500">เปรียบเทียบความสนใจ ขาย vs เช่า</CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] mt-4 flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
@@ -152,6 +159,49 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
                 formatter={(value) => <span className="text-xs font-medium text-slate-600">{value}</span>}
               />
             </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      {/* Property Type Distribution Chart */}
+      <Card className="border-none shadow-soft bg-white/50 backdrop-blur-sm lg:col-span-2">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold text-slate-800">สัดส่วนตามประเภททรัพย์สิน</CardTitle>
+          <CardDescription className="text-xs text-slate-500">วิเคราะห์ความต้องการแยกตามประเภท (คอนโด, บ้าน, ที่ดิน ฯลฯ)</CardDescription>
+        </CardHeader>
+        <CardContent className="h-[350px] mt-4">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={propertyData} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis 
+                dataKey="name" 
+                interval={0}
+                height={40}
+                tick={{ fontSize: 10, fontWeight: 500, fill: "#64748b" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <YAxis 
+                tick={{ fontSize: 11, fontWeight: 500, fill: "#64748b" }}
+                axisLine={false}
+                tickLine={false}
+              />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+              <Bar 
+                dataKey="value" 
+                radius={[4, 4, 0, 0]} 
+                barSize={40}
+                className="cursor-pointer"
+              >
+                {propertyData.map((entry, index) => (
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={COLORS[index % COLORS.length]}
+                    className="hover:fill-opacity-80 transition-all"
+                  />
+                ))}
+              </Bar>
+            </BarChart>
           </ResponsiveContainer>
         </CardContent>
       </Card>
