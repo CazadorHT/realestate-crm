@@ -1,4 +1,4 @@
-import type { Database } from "@/lib/database.types";
+import type { Database, Json } from "@/lib/database.types";
 import type { LeadActivityType } from "@/features/leads/labels";
 
 export type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
@@ -17,7 +17,7 @@ export interface LeadPreferences {
   budget_flexible?: boolean;
   preferred_zones?: string[];
   pet_friendly_required?: boolean;
-  [key: string]: unknown; // Allow for extensibility while prioritizing known fields
+  [key: string]: Json | undefined; // Use Json type for compatibility
 }
 
 // --- Extended Feature Types ---

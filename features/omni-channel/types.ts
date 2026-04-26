@@ -1,3 +1,5 @@
+import { Json } from "@/lib/database.types";
+
 export interface OmniMessagePayload {
   field?: "comments" | string;
   type?: "comment" | string;
@@ -8,7 +10,7 @@ export interface OmniMessagePayload {
     pictureUrl?: string | null;
     name?: string | null;
   };
-  [key: string]: unknown;
+  [key: string]: Json | undefined;
 }
 
 export interface OmniMessage {
@@ -34,7 +36,7 @@ export interface Conversation {
   omni_messages: OmniMessage[];
   preferences: {
     category?: "CUSTOMER" | "AGENT" | "OWNER";
-  } | Record<string, unknown>;
+  } | Record<string, Json | undefined>;
   tenants?: {
     id: string;
     name: string;

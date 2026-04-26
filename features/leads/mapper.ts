@@ -1,7 +1,7 @@
-import type { LeadPreferences, LeadRow } from "./types";
+import type { LeadPreferences, LeadRow, LeadWithJoins } from "./types";
 import type { LeadFormValues } from "./types";
 // แปลง row → form values แบบกัน null ช่วยให้หน้า edit ไม่พัง และทำให้แก้ schema
-export function leadRowToFormValues(row: LeadRow): LeadFormValues {
+export function leadRowToFormValues(row: LeadWithJoins | LeadRow): LeadFormValues {
   return {
     full_name: row.full_name,
     phone: row.phone ?? null,
