@@ -2,12 +2,14 @@ import { Heart, MessageCircle, Send, Bookmark, MoreHorizontal } from "lucide-rea
 import { Badge } from "@/components/ui/badge";
 import { MOCK_PROPERTY_DATA } from "./constants";
 
+import { type Language } from "@/lib/i18n";
+
 export function InstagramPostPreview({
   template,
   language = "th",
 }: {
   template: string;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }) {
   const renderContent = (text: string) => {
     if (!text)

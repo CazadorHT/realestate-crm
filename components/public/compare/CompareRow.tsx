@@ -27,7 +27,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
   const { t, language } = useLanguage();
   const [isExpanded, setIsExpanded] = useState(false);
   const locale =
-    language === "th" ? "th-TH" : language === "cn" ? "zh-CN" : "en-US";
+    language === "th" ? "th-TH" : language === "cn" ? "zh-CN" : language === "ru" ? "ru-RU" : "en-US";
 
   function CompareLocationCell({
     property,
@@ -368,7 +368,8 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                 {p.near_transit &&
                 (p.transit_station_name ||
                   p.transit_station_name_en ||
-                  p.transit_station_name_cn) ? (
+                  p.transit_station_name_cn ||
+                  p.transit_station_name_ru) ? (
                   <div className="flex flex-col items-start gap-1">
                     {(() => {
                       const type = p.transit_type as TransitType;

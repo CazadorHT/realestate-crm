@@ -12,25 +12,27 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { NumberInput } from "../NumberInput";
 import { SectionHeader } from "../SectionHeader";
 import { Banknote, Clock, Coins, Lock, Percent, Sparkles } from "lucide-react";
-import { UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
 import { getCommissionRulesAction } from "@/features/dashboard/actions/commission-actions";
 import { CommissionRuleSet } from "@/lib/finance/commissions";
 import { toast } from "sonner";
 
 interface CommissionSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   isReadOnly: boolean;
   showSale: boolean;
   showRent: boolean;
 }
 
 export function CommissionSection({
-  form,
+  form: formProp,
   isReadOnly,
   showSale,
   showRent,
 }: CommissionSectionProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   // Watch values for calculation
   const saleOriginal = form.watch("original_price");
   const salePrice = form.watch("price");

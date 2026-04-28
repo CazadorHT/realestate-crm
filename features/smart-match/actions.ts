@@ -227,7 +227,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   let query = supabase
     .from("properties")
     .select(
-      "id, slug, title, title_en, title_cn, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(*)",
+      "id, slug, title, title_en, title_cn, title_ru, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(*)",
     )
     .eq("status", "ACTIVE")
     .is("deleted_at", null);

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, AreaChart, Area, TooltipValueType
 } from "recharts";
 import { 
   TrendingUp, TrendingDown, DollarSign, PieChart, FileSpreadsheet, Loader2, ArrowLeft, Calendar, Clock, ShieldCheck
@@ -236,7 +236,10 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
                   />
                   <Tooltip 
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
-                    formatter={(v: any, name: string | undefined) => [FinanceMath.format(Number(v) || 0), name === "revenue" ? "รายรับ" : name === "realizedProfit" ? "รับจริง" : "ค้างรับ"]}
+                    formatter={(v: TooltipValueType | undefined, name: string | number | undefined) => [
+                      FinanceMath.format(Number(v || 0)), 
+                      name === "revenue" ? "รายรับ" : name === "realizedProfit" ? "รับจริง" : "ค้างรับ"
+                    ]}
                   />
                   <Bar dataKey="revenue" name="revenue" fill="url(#revGradient)" radius={[4, 4, 0, 0]} barSize={20} />
                   <Bar dataKey="realizedProfit" name="realizedProfit" stackId="a" fill="url(#realizedGradient)" barSize={20} />

@@ -48,7 +48,7 @@ export function craftPropertyDescriptionPrompt(property: any, hasImage: boolean 
 
   return `
     You are an elite real estate marketing expert and SEO specialist.
-    Based on the property data below, generate a professional, engaging, and persuasive property description in 3 languages: Thai, English, and Chinese (Simplified).
+    Based on the property data below, generate a professional, engaging, and persuasive property description in 4 languages: Thai, English, Chinese (Simplified), and Russian.
     
     ### PROPERTY DATA:
     ${context}
@@ -69,6 +69,7 @@ export function craftPropertyDescriptionPrompt(property: any, hasImage: boolean 
       "th": "Thai description...",
       "en": "English description...",
       "cn": "Chinese description...",
+      "ru": "Russian description...",
       "meta_title": "SEO Optimized Title",
       "meta_description": "SEO Optimized Description",
       "search_summary": "A concise, single-paragraph summary containing all key keywords (Location, Condo name, Distance to BTS/MRT, Features) for high-performance Full Text Search."

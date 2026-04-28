@@ -9,6 +9,7 @@ import {
   Legend,
   AreaChart,
   Area,
+  TooltipValueType,
 } from "recharts";
 import { formatThaiCurrency } from "@/lib/excel-export";
 import { MonthlyRevenue } from "../executive-queries";
@@ -75,7 +76,7 @@ export default function ExecutiveRevenueAreaChart({
             border: "none",
             boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
           }}
-          formatter={(val: number | string | undefined) => [
+          formatter={(val: TooltipValueType | undefined) => [
             formatThaiCurrency(Number(val || 0)),
             "",
           ]}

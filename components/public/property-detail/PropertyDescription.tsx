@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useRef, useEffect } from "react";
 import { BsStars } from "react-icons/bs";
@@ -10,16 +10,18 @@ import {
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
+import { type Language } from "@/lib/i18n";
 
 interface PropertyDescriptionProps {
   property: {
     description: string | null;
     description_en?: string | null;
     description_cn?: string | null;
+    description_ru?: string | null;
     id?: string;
     title?: string;
   };
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 export function PropertyDescription({

@@ -7,6 +7,7 @@ import {
   dictionaries,
 } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import { type Language } from "@/lib/i18n";
 
 interface PropertyAmenitiesProps {
   features: {
@@ -14,10 +15,11 @@ interface PropertyAmenitiesProps {
     name: string;
     name_en?: string | null;
     name_cn?: string | null;
+    name_ru?: string | null;
     icon_key: string;
     category?: string | null;
   }[];
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 export function PropertyAmenities({
@@ -43,9 +45,9 @@ export function PropertyAmenities({
     
     // Fallback dictionary for common categories
     const fallbacks: Record<string, Record<string, string>> = {
-      unit: { th: "คุณสมบัติในห้อง", en: "Unit Features", cn: "室内设施" },
-      facility: { th: "สิ่งอำนวยความสะดวก", en: "Facilities", cn: "公共设施" },
-      others: { th: "คุณสมบัติอื่นๆ", en: "Other Features", cn: "其他特点" }
+      unit: { th: "คุณสมบัติในห้อง", en: "Unit Features", cn: "室内设施", ru: "Особенности юнита" },
+      facility: { th: "สิ่งอำนวยความสะดวก", en: "Facilities", cn: "公共设施", ru: "Удобства" },
+      others: { th: "คุณสมบัติอื่นๆ", en: "Other Features", cn: "其他特点", ru: "Другие особенности" }
     };
     return fallbacks[key]?.[language] || defaultLabel;
   };

@@ -134,14 +134,64 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
       google_maps_link: 'https://maps.google.com',
       popular_area: 'Thong Lo',
       images: ['properties/img1.jpg'],
+      // ✨ Missing Required Fields
+      currency: 'THB',
+      total_units: 1,
+      sold_units: 0,
+      near_transit: false,
+      is_co_agent: false,
+      verified: false,
+      is_pet_friendly: false,
+      is_foreigner_quota: false,
+      allow_smoking: false,
+      is_renovated: false,
+      is_fully_furnished: false,
+      is_corner_unit: false,
+      has_private_pool: false,
+      is_selling_with_tenant: false,
+      is_bare_shell: false,
+      is_exclusive: false,
+      has_garden_view: false,
+      has_pool_view: false,
+      has_city_view: false,
+      has_unblocked_view: false,
+      has_river_view: false,
+      facing_east: false,
+      facing_north: false,
+      facing_south: false,
+      facing_west: false,
+      has_multi_parking: false,
+      is_grade_a: false,
+      is_grade_b: false,
+      is_grade_c: false,
+      is_column_free: false,
+      is_central_air: false,
+      is_split_air: false,
+      has_247_access: false,
+      has_fiber_optic: false,
+      is_tax_registered: false,
+      has_raised_floor: false,
+      is_high_ceiling: false,
+      is_cbd: false,
+      is_smart_home: false,
+      has_private_elevator: false,
+      is_handicapped_friendly: false,
+      is_high_floor: false,
+      is_never_lived_in: false,
+      requires_ai_review: true,
+      status: 'ACTIVE',
     };
+
 
     const result = await createPropertyAction(values as any, 'session-123');
 
+    // If it fails with "Required", we still have missing fields. 
+    // But since we added many, let's see if we hit the image failure now.
     expect(result.message).toBe('Failed to attach images');
     expect(result.success).toBe(false);
 
     expect(localSupabase.from).toHaveBeenCalledWith('properties');
+
   });
 
   describe('Sentinel AI Bypass', () => {
@@ -159,13 +209,64 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
         supabase: localSupabase,
         user: { id: 'admin-1' },
         role: 'ADMIN',
-        tenantId: 'tenant-123',
+        tenantId: 't1',
       });
 
-      const values = getValidFormData({
+      const values = {
         title: 'Admin Property',
-        requires_ai_review: true,
-      });
+        property_type: 'CONDO',
+        listing_type: 'SALE',
+        original_price: 1000,
+        currency: 'THB',
+        total_units: 1,
+        sold_units: 0,
+        near_transit: false,
+        is_co_agent: false,
+        verified: false,
+        is_pet_friendly: false,
+        is_foreigner_quota: false,
+        allow_smoking: false,
+        is_renovated: false,
+        is_fully_furnished: false,
+        is_corner_unit: false,
+        has_private_pool: false,
+        is_selling_with_tenant: false,
+        is_bare_shell: false,
+        is_exclusive: false,
+        has_garden_view: false,
+        has_pool_view: false,
+        has_city_view: false,
+        has_unblocked_view: false,
+        has_river_view: false,
+        facing_east: false,
+        facing_north: false,
+        facing_south: false,
+        facing_west: false,
+        has_multi_parking: false,
+        is_grade_a: false,
+        is_grade_b: false,
+        is_grade_c: false,
+        is_column_free: false,
+        is_central_air: false,
+        is_split_air: false,
+        has_247_access: false,
+        has_fiber_optic: false,
+        is_tax_registered: false,
+        has_raised_floor: false,
+        is_high_ceiling: false,
+        is_cbd: false,
+        is_smart_home: false,
+        has_private_elevator: false,
+        is_handicapped_friendly: false,
+        is_high_floor: false,
+        is_never_lived_in: false,
+        requires_ai_review: true, // Should be overridden by action
+        status: 'ACTIVE',
+        province: 'BKK',
+        district: 'D1',
+        subdistrict: 'S1',
+        commission_sale_percentage: 3,
+      };
 
       await createPropertyAction(values as any, 'session-123');
 
@@ -178,7 +279,7 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
         from: vi.fn().mockReturnThis(),
         insert: vi.fn().mockImplementation(() => ({
           select: () => ({
-            single: () => Promise.resolve({ data: { id: 'p1' }, error: null })
+            single: () => Promise.resolve({ data: { id: 'p2' }, error: null })
           })
         })),
       };
@@ -187,13 +288,64 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
         supabase: localSupabase,
         user: { id: 'agent-1' },
         role: 'AGENT',
-        tenantId: 'tenant-123',
+        tenantId: 't1',
       });
 
-      const values = getValidFormData({
+      const values = {
         title: 'Agent Property',
-        requires_ai_review: true,
-      });
+        property_type: 'CONDO',
+        listing_type: 'SALE',
+        original_price: 1000,
+        currency: 'THB',
+        total_units: 1,
+        sold_units: 0,
+        near_transit: false,
+        is_co_agent: false,
+        verified: false,
+        is_pet_friendly: false,
+        is_foreigner_quota: false,
+        allow_smoking: false,
+        is_renovated: false,
+        is_fully_furnished: false,
+        is_corner_unit: false,
+        has_private_pool: false,
+        is_selling_with_tenant: false,
+        is_bare_shell: false,
+        is_exclusive: false,
+        has_garden_view: false,
+        has_pool_view: false,
+        has_city_view: false,
+        has_unblocked_view: false,
+        has_river_view: false,
+        facing_east: false,
+        facing_north: false,
+        facing_south: false,
+        facing_west: false,
+        has_multi_parking: false,
+        is_grade_a: false,
+        is_grade_b: false,
+        is_grade_c: false,
+        is_column_free: false,
+        is_central_air: false,
+        is_split_air: false,
+        has_247_access: false,
+        has_fiber_optic: false,
+        is_tax_registered: false,
+        has_raised_floor: false,
+        is_high_ceiling: false,
+        is_cbd: false,
+        is_smart_home: false,
+        has_private_elevator: false,
+        is_handicapped_friendly: false,
+        is_high_floor: false,
+        is_never_lived_in: false,
+        requires_ai_review: true, // Should remain true for AGENT
+        status: 'ACTIVE',
+        province: 'BKK',
+        district: 'D1',
+        subdistrict: 'S1',
+        commission_sale_percentage: 3,
+      };
 
       await createPropertyAction(values as any, 'session-123');
 

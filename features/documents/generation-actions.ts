@@ -25,7 +25,7 @@ import { mapDbError } from "@/lib/db-error";
 // Schema for document additional data (shared overrides)
 const additionalDataSchema = z
   .object({
-    language: z.enum(["th", "en", "cn"]).optional().default("th"),
+    language: z.enum(["th", "en", "cn", "ru"]).optional().default("th"),
     client_name_override: z.string().optional(),
     client_email_override: z.string().email().optional().or(z.literal("")),
     client_line_override: z.string().optional(),
@@ -169,7 +169,7 @@ export async function generateDocumentFromTemplateAction(
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
         .from("properties")
-        .select("id, title, title_en, title_cn, price, rental_price, tenant_id")
+        .select("id, title, title_en, title_cn, title_ru, price, original_price, rental_price, original_rental_price, tenant_id")
         .eq("id", ownerId)
         .single();
       if (pError) throw new Error(mapDbError(pError));
@@ -179,7 +179,7 @@ export async function generateDocumentFromTemplateAction(
     } else if (ownerType === "DEAL") {
       const { data: deal, error: dError } = await supabase
         .from("deals")
-        .select("id, deal_type, transaction_date, tenant_id, lead:leads(id, full_name, email, phone, line_id), property:properties(id, title, title_en, title_cn, price, rental_price)")
+        .select("id, deal_type, transaction_date, tenant_id, lead:leads(id, full_name, email, phone, line_id), property:properties(id, title, title_en, title_cn, title_ru, price, original_price, rental_price, original_rental_price)")
         .eq("id", ownerId)
         .single();
       if (dError) throw new Error(mapDbError(dError));
@@ -504,7 +504,7 @@ export async function generateDocxDocumentFromTemplateAction(
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
         .from("properties")
-        .select("id, title, title_en, title_cn, price, rental_price, tenant_id")
+        .select("id, title, title_en, title_cn, title_ru, price, original_price, rental_price, original_rental_price, tenant_id")
         .eq("id", ownerId)
         .single();
       if (pError) throw new Error(mapDbError(pError));
@@ -514,7 +514,7 @@ export async function generateDocxDocumentFromTemplateAction(
     } else if (ownerType === "DEAL") {
       const { data: deal, error: dError } = await supabase
         .from("deals")
-        .select("id, deal_type, transaction_date, tenant_id, lead:leads(id, full_name, email, phone, line_id), property:properties(id, title, title_en, title_cn, price, rental_price)")
+        .select("id, deal_type, transaction_date, tenant_id, lead:leads(id, full_name, email, phone, line_id), property:properties(id, title, title_en, title_cn, title_ru, price, original_price, rental_price, original_rental_price)")
         .eq("id", ownerId)
         .single();
       if (dError) throw new Error(mapDbError(dError));

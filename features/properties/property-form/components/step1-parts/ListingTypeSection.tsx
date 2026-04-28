@@ -7,14 +7,16 @@ import {
   LISTING_TYPE_LABELS,
   LISTING_TYPE_ORDER,
 } from "@/features/properties/labels";
-import type { UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
 
 interface ListingTypeSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
 }
 
-export function ListingTypeSection({ form }: ListingTypeSectionProps) {
+export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   const listingTypeError = form.formState.errors.listing_type;
 
   return (

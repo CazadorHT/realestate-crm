@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import th from "@/i18n/locales/th.json";
 import en from "@/i18n/locales/en.json";
 import cn from "@/i18n/locales/cn.json";
+import ru from "@/i18n/locales/ru.json";
 
-export type Language = "th" | "en" | "cn";
+export type Language = "th" | "en" | "cn" | "ru";
 
 // Helper to access nested keys "nav.home"
 function getNestedValue(obj: any, path: string): string {
@@ -23,7 +24,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined,
 );
 
-export const dictionaries = { th, en, cn };
+export const dictionaries = { th, en, cn, ru };
 
 export function LanguageProvider({
   children,
@@ -50,14 +51,14 @@ export function LanguageProvider({
     const cookieLang = getCookie("app-language") as Language;
     if (
       cookieLang &&
-      ["th", "en", "cn"].includes(cookieLang) &&
+      ["th", "en", "cn", "ru"].includes(cookieLang) &&
       cookieLang !== language
     ) {
       setLanguageState(cookieLang);
     } else if (!cookieLang) {
       // Auto-detect browser language if no setting exists
       const browserLang = navigator.language.split("-")[0];
-      const supportedLangs: Language[] = ["th", "en", "cn"];
+      const supportedLangs: Language[] = ["th", "en", "cn", "ru"];
       if (supportedLangs.includes(browserLang as Language)) {
         setLanguage(browserLang as Language);
       }

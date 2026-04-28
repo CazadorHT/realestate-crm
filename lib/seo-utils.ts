@@ -34,25 +34,41 @@ export interface PropertyDataForSEO {
   title: string;
   title_en?: string;
   title_cn?: string;
+  title_ru?: string;
   property_type: PropertyType;
   listing_type: ListingType;
   bedrooms?: number;
   bathrooms?: number;
   size_sqm?: number;
   price?: number;
+  original_price?: number;
   rental_price?: number;
+  original_rental_price?: number;
   popular_area?: string;
   popular_area_en?: string;
+  popular_area_cn?: string;
+  popular_area_ru?: string;
   subdistrict?: string;
   subdistrict_en?: string;
+  subdistrict_cn?: string;
+  subdistrict_ru?: string;
   district?: string;
   district_en?: string;
+  district_cn?: string;
+  district_ru?: string;
   province?: string;
   province_en?: string;
+  province_cn?: string;
+  province_ru?: string;
   address_line1?: string;
   address_line1_en?: string;
+  address_line1_cn?: string;
+  address_line1_ru?: string;
   postal_code?: string;
   description?: string;
+  description_en?: string;
+  description_cn?: string;
+  description_ru?: string;
   // SEO Flags for Keyword-Rich Slugs
   is_pet_friendly?: boolean;
   is_corner_unit?: boolean;
@@ -64,17 +80,21 @@ export interface PropertyDataForSEO {
   near_transit?: boolean;
   transit_station_name?: string; // Legacy/Single field
   transit_station_name_en?: string;
+  transit_station_name_cn?: string;
+  transit_station_name_ru?: string;
   nearby_transits?: {
     type: string;
     station_name: string;
     station_name_en?: string | null;
     station_name_cn?: string | null;
+    station_name_ru?: string | null;
   }[]; // Full list from Step 3
   nearby_places?: {
     category: string;
     name: string;
     name_en?: string | null;
     name_cn?: string | null;
+    name_ru?: string | null;
   }[];
   features?: string[];
 }
@@ -84,43 +104,50 @@ export interface PropertyDataForSEO {
  */
 const SEO_LABELS: Record<string, Record<string, string>> = {
   // Property Types
-  HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "别墅" },
-  CONDO: { th: "คอนโด", en: "Condo", cn: "公寓" },
-  TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅" },
-  LAND: { th: "ที่ดิน", en: "Land", cn: "土地" },
+  HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "别墅", ru: "Дом" },
+  CONDO: { th: "คอนโด", en: "Condo", cn: "公寓", ru: "Кондо" },
+  TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅", ru: "Таунхаус" },
+  LAND: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" },
   OFFICE_BUILDING: {
     th: "อาคารสำนักงานออฟฟิศ",
     en: "Office Building",
     cn: "办公楼",
+    ru: "Офисное здание",
   },
   COMMERCIAL_BUILDING: {
     th: "อาคารพาณิชย์",
     en: "Commercial Building",
     cn: "商业建筑",
+    ru: "Коммерческое здание",
   },
-  WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库" },
-  OTHER: { th: "อื่นๆ", en: "Others", cn: "其他" },
+  VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅", ru: "Вилла" },
+  POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅", ru: "Пул Вилла" },
+  WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
+  OTHER: { th: "อื่นๆ", en: "Others", cn: "其他", ru: "Другое" },
 
   // SEO Flags
-  HOT_SALE: { th: "ราคาถูก-ลดราคาพิเศษ", en: "cheap-hot-sale", cn: "特价房源" },
-  NEAR_TRANSIT: { th: "ใกล้รถไฟฟ้า", en: "near-transit", cn: "靠近轻轨" },
-  PET_FRIENDLY: { th: "เลี้ยงสัตว์ได้", en: "pet-friendly", cn: "可养宠物" },
-  CORNER_UNIT: { th: "ห้องมุม", en: "corner-unit", cn: "边间" },
-  RENOVATED: { th: "รีโนเวทใหม่", en: "renovated", cn: "全新装修" },
+  HOT_SALE: { th: "ราคาถูก-ลดราคาพิเศษ", en: "cheap-hot-sale", cn: "特价房源", ru: "горячая-цена" },
+  NEAR_TRANSIT: { th: "ใกล้รถไฟฟ้า", en: "near-transit", cn: "靠近轻轨", ru: "у-метро" },
+  PET_FRIENDLY: { th: "เลี้ยงสัตว์ได้", en: "pet-friendly", cn: "可养宠物", ru: "можно-с-животными" },
+  CORNER_UNIT: { th: "ห้องมุม", en: "corner-unit", cn: "边间", ru: "угловой-юнит" },
+  RENOVATED: { th: "รีโนเวทใหม่", en: "renovated", cn: "全新装修", ru: "с-ремонтом" },
   FULLY_FURNISHED: {
     th: "แต่งครบ-พร้อมอยู่",
     en: "fully-furnished",
     cn: "家具齐全",
+    ru: "с-мебелью",
   },
   WITH_TENANT: {
     th: "พร้อมผู้เช่า-ลงทุนคุ้ม",
     en: "with-tenant",
     cn: "带租约",
+    ru: "с-арендатором",
   },
   FOREIGNER_QUOTA: {
     th: "ต่างชาติซื้อได้",
     en: "foreigner-quota",
     cn: "外籍配额",
+    ru: "иностранная-квота",
   },
 
   // Prepositions & Labels
@@ -128,26 +155,28 @@ const SEO_LABELS: Record<string, Record<string, string>> = {
     th: "ใกล้รถไฟฟ้าสถานี-",
     en: "near-transit-station-",
     cn: "靠近轻轨站-",
+    ru: "у-станции-",
   },
-  NEAR: { th: "ใกล้-", en: "near-", cn: "靠近-" },
-  FOR_RENT: { th: "ให้เช่า", en: "For Rent", cn: "出租" },
-  FOR_SALE: { th: "ขาย", en: "For Sale", cn: "出售" },
+  NEAR: { th: "ใกล้-", en: "near-", cn: "靠近-", ru: "рядом-" },
+  FOR_RENT: { th: "ให้เช่า", en: "For Rent", cn: "出租", ru: "Аренда" },
+  FOR_SALE: { th: "ขาย", en: "For Sale", cn: "出售", ru: "Продажа" },
+  FOR_SALE_RENT: { th: "ขายและเช่า", en: "For Sale & Rent", cn: "出售/出租", ru: "Продажа и Аренда" },
 
   // Units
-  BEDS: { th: "นอน", en: "BR", cn: "卧" },
-  BATHS: { th: "น้ำ", en: "BA", cn: "卫" },
-  SQM: { th: "ตรม", en: "sqm", cn: "sqm" },
+  BEDS: { th: "นอน", en: "BR", cn: "卧", ru: "Сп" },
+  BATHS: { th: "น้ำ", en: "BA", cn: "卫", ru: "Санузел" },
+  SQM: { th: "ตรม", en: "sqm", cn: "sqm", ru: "м2" },
 
   // Meta Description phrases
-  BEDROOMS_FULL: { th: "ห้องนอน", en: "Bedrooms", cn: "卧室" },
-  BATHROOMS_FULL: { th: "ห้องน้ำ", en: "Bathrooms", cn: "浴室" },
-  AREA_SIZE: { th: "พื้นที่", en: "Size", cn: "面积" },
-  SQM_FULL: { th: "ตร.ม.", en: "sqm", cn: "平方米" },
-  LOCATION: { th: "ทำเล", en: "Location", cn: "地点" },
-  PRICE: { th: "ราคา", en: "Price", cn: "价格" },
-  RENT: { th: "ค่าเช่า", en: "Rent", cn: "租金" },
-  CURRENCY: { th: "บาท", en: "THB", cn: "泰铢" },
-  PER_MONTH: { th: "/เดือน", en: "/month", cn: "/月" },
+  BEDROOMS_FULL: { th: "ห้องนอน", en: "Bedrooms", cn: "卧室", ru: "Спальни" },
+  BATHROOMS_FULL: { th: "ห้องน้ำ", en: "Bathrooms", cn: "浴室", ru: "Ванные" },
+  AREA_SIZE: { th: "พื้นที่", en: "Size", cn: "面积", ru: "Площадь" },
+  SQM_FULL: { th: "ตร.ม.", en: "sqm", cn: "平方米", ru: "кв.м" },
+  LOCATION: { th: "ทำเล", en: "Location", cn: "地点", ru: "Локация" },
+  PRICE: { th: "ราคา", en: "Price", cn: "价格", ru: "Цена" },
+  RENT: { th: "ค่าเช่า", en: "Rent", cn: "租金", ru: "Аренда" },
+  CURRENCY: { th: "บาท", en: "THB", cn: "泰铢", ru: "бат" },
+  PER_MONTH: { th: "/เดือน", en: "/month", cn: "/月", ru: "/мес" },
 
   // Meta Keywords
   KEYWORDS: {
@@ -158,6 +187,9 @@ const SEO_LABELS: Record<string, Record<string, string>> = {
     SALE_EN: "Property for Sale",
     RENT_EN: "Property for Rent",
     REAL_ESTATE_EN: "Real Estate Bangkok",
+    SALE_RU: "Продажа недвижимости",
+    RENT_RU: "Аренда недвижимости",
+    REAL_ESTATE_RU: "Недвижимость в Бангкоке",
   },
 
   // FAQ Labels
@@ -165,36 +197,43 @@ const SEO_LABELS: Record<string, Record<string, string>> = {
     th: "ราคาของ {title} คือเท่าไหร่?",
     en: "What is the price of {title}?",
     cn: "{title} 的价格是多少？",
+    ru: "Какая цена {title}?",
   },
   FAQ_A_PRICE: {
     th: "ราคาของ {title} คือ {price} {currency} ครับ ตั้งอยู่ในทำเล {location}",
     en: "The price of {title} is {price} {currency}, located in {location}.",
     cn: "{title} 的价格为 {price} {currency}，位于 {location}。",
+    ru: "Цена {title} составляет {price} {currency}, объект расположен в {location}.",
   },
   FAQ_Q_PET: {
     th: "{title} เลี้ยงสัตว์ได้ไหม?",
     en: "Is {title} pet friendly?",
     cn: "{title} 可以养宠物吗？",
+    ru: "Можно ли с животными в {title}?",
   },
   FAQ_A_PET_YES: {
     th: "ใช่ครับ {title} เป็นโครงการที่อนุญาตให้เลี้ยงสัตว์ได้ (Pet Friendly)",
     en: "Yes, {title} is a pet-friendly property.",
     cn: "是的，{title} 是一处宠物友好的房产。",
+    ru: "Да, в {title} разрешено проживание с животными (Pet Friendly).",
   },
   FAQ_A_PET_NO: {
     th: "ขออภัยครับ {title} ไม่อนุญาตให้เลี้ยงสัตว์ครับ",
     en: "Sorry, {title} does not allow pets.",
     cn: "抱歉，{title} 不允许携带宠物。",
+    ru: "К сожалению, в {title} не разрешено проживание с животными.",
   },
   FAQ_Q_TRANSIT: {
     th: "{title} ใกล้รถไฟฟ้าสถานีอะไร?",
     en: "Which transit station is near {title}?",
     cn: "哪个轻轨站靠近 {title}？",
+    ru: "Какая станция метро находится рядом с {title}?",
   },
   FAQ_A_TRANSIT: {
     th: "{title} ตั้งอยู่ใกล้กับ {station} ทำให้เดินทางสะดวกมากครับ",
     en: "{title} is located near {station}, making it very convenient for commuting.",
     cn: "{title} 靠近 {station}，交通非常便利。",
+    ru: "{title} находится рядом со станцией {station}, что очень удобно для поездок.",
   },
 };
 
@@ -396,24 +435,29 @@ export function generateMetaTitle(
   data: PropertyDataForSEO,
   language: string = "th",
 ): string {
-  const parts = [data.title];
+  const title = getLocalizedField<string>(data, "title", language) || data.title;
+  const parts = [title];
 
   if (data.listing_type === "RENT") {
     parts.push(
       SEO_LABELS.FOR_RENT[
-        language === "cn" ? "cn" : language === "en" ? "en" : "th"
+        language === "ru" ? "ru" : language === "cn" ? "cn" : language === "en" ? "en" : "th"
       ],
     );
   } else {
     parts.push(
       SEO_LABELS.FOR_SALE[
-        language === "cn" ? "cn" : language === "en" ? "en" : "th"
+        language === "ru" ? "ru" : language === "cn" ? "cn" : language === "en" ? "en" : "th"
       ],
     );
   }
 
   // Prioritize Popular Area (e.g., "Sukhumvit") > District > Province
-  const locationStr = data.popular_area || data.district || data.province || "";
+  const popular_area = getLocalizedField<string>(data, "popular_area", language) || data.popular_area;
+  const district = getLocalizedField<string>(data, "district", language) || data.district;
+  const province = getLocalizedField<string>(data, "province", language) || data.province;
+  
+  const locationStr = popular_area || district || province || "";
   if (locationStr) parts.push(locationStr);
 
   // If popular area is used, optionally add district for extra context if it's different and short
@@ -427,15 +471,15 @@ export function generateMetaTitle(
     }
   }
 
-  const title = parts.join(" | ");
+  const fullTitle = parts.join(" | ");
   const suffix = ` - ${siteConfig.name}`;
 
   // Truncate if too long (max 60)
-  if (title.length + suffix.length > 60) {
-    return title.slice(0, 60 - suffix.length - 3) + "..." + suffix;
+  if (fullTitle.length + suffix.length > 60) {
+    return fullTitle.slice(0, 60 - suffix.length - 3) + "..." + suffix;
   }
 
-  return title + suffix;
+  return fullTitle + suffix;
 }
 
 /**
@@ -445,11 +489,14 @@ export function generateMetaDescription(
   data: PropertyDataForSEO,
   language: string = "th",
 ): string {
-  const lang = (language === "cn" ? "cn" : language === "en" ? "en" : "th") as
+  const lang = (language === "ru" ? "ru" : language === "cn" ? "cn" : language === "en" ? "en" : "th") as
     | "th"
     | "en"
-    | "cn";
-  const parts = [data.title];
+    | "cn"
+    | "ru";
+  
+  const title = getLocalizedField<string>(data, "title", language) || data.title;
+  const parts = [title];
 
   if (data.bedrooms)
     parts.push(`${data.bedrooms} ${SEO_LABELS.BEDROOMS_FULL[lang]}`);
@@ -460,10 +507,14 @@ export function generateMetaDescription(
       `${SEO_LABELS.AREA_SIZE[lang]} ${data.size_sqm} ${SEO_LABELS.SQM_FULL[lang]}`,
     );
   // Location: [Popular Area], [District], [Province]
+  const popular_area = getLocalizedField<string>(data, "popular_area", language) || data.popular_area;
+  const district = getLocalizedField<string>(data, "district", language) || data.district;
+  const province = getLocalizedField<string>(data, "province", language) || data.province;
+
   const locationParts = [
-    data.popular_area,
-    data.district,
-    data.province,
+    popular_area,
+    district,
+    province,
   ].filter(Boolean);
   if (locationParts.length > 0) {
     parts.push(
@@ -478,10 +529,18 @@ export function generateMetaDescription(
     const label = ` ${SEO_LABELS.PRICE[lang]} `;
     const unit = ` ${SEO_LABELS.CURRENCY[lang]}`;
     description += `${label}${data.price.toLocaleString()}${unit}`;
+    if (data.original_price && data.original_price > data.price) {
+      const discountLabel = lang === "en" ? " (Reduced from " : lang === "cn" ? " (降价自 " : lang === "ru" ? " (Снижено с " : " (ลดจาก ";
+      description += `${discountLabel}${data.original_price.toLocaleString()}${unit})`;
+    }
   } else if (data.rental_price) {
     const label = ` ${SEO_LABELS.RENT[lang]} `;
     const unit = ` ${SEO_LABELS.CURRENCY[lang]}${SEO_LABELS.PER_MONTH[lang]}`;
     description += `${label}${data.rental_price.toLocaleString()}${unit}`;
+    if (data.original_rental_price && data.original_rental_price > data.rental_price) {
+      const discountLabel = lang === "en" ? " (Reduced from " : lang === "cn" ? " (降价自 " : lang === "ru" ? " (Снижено с " : " (ลดจาก ";
+      description += `${discountLabel}${data.original_rental_price.toLocaleString()}${unit})`;
+    }
   }
 
   // Truncate if too long (max 160)
@@ -503,8 +562,11 @@ export function generateMetaKeywords(
 
   if (data.property_type) keywords.add(data.property_type);
   if (data.listing_type) keywords.add(data.listing_type);
-  if (data.district) keywords.add(data.district);
-  if (data.province) keywords.add(data.province);
+  const district = getLocalizedField<string>(data, "district", language) || data.district;
+  const province = getLocalizedField<string>(data, "province", language) || data.province;
+  
+  if (district) keywords.add(district);
+  if (province) keywords.add(province);
   if (data.bedrooms)
     keywords.add(
       `${data.bedrooms} ${SEO_LABELS.BEDROOMS_FULL[language === "en" ? "en" : "th"]}`,
@@ -519,8 +581,9 @@ export function generateMetaKeywords(
       ? SEO_LABELS.FOR_RENT[language]
       : SEO_LABELS.FOR_SALE[language];
   // Prioritize Popular Area (Sukhumvit > Wattana)
+  const popular_area = getLocalizedField<string>(data, "popular_area", language) || data.popular_area;
   const locationPart =
-    data.popular_area || data.district || data.province || "";
+    popular_area || district || province || "";
   const locationEn =
     data.popular_area_en || data.district_en || data.province_en || "";
 
@@ -552,6 +615,10 @@ export function generateMetaKeywords(
     keywords.add("曼谷房产");
     keywords.add("泰国买房");
     keywords.add(`${typeLabel}出售`);
+  } else if (language === "ru") {
+    keywords.add("недвижимость бангкок");
+    keywords.add("купить квартиру в таиланде");
+    keywords.add(`${typeLabel} продажа`);
   } else {
     keywords.add("real estate bangkok");
     keywords.add("thailand property");
@@ -564,7 +631,9 @@ export function generateMetaKeywords(
       ? data.title_en
       : language === "cn"
         ? data.title_cn
-        : data.title;
+        : language === "ru"
+          ? data.title_ru
+          : data.title;
   (title || data.title).split(/[\s,.-]+/).forEach((word: string) => {
     if (word.length > 3) keywords.add(word);
   });
@@ -587,9 +656,17 @@ export function generateFAQSchema(
 
   // 1. Price FAQ
   if (data.price || data.rental_price) {
-    const priceText = data.price
+    let priceText = data.price
       ? `${data.price.toLocaleString()} ${SEO_LABELS.CURRENCY[language]}`
       : `${data.rental_price?.toLocaleString()} ${SEO_LABELS.CURRENCY[language]}${SEO_LABELS.PER_MONTH[language]}`;
+
+    if (data.price && data.original_price && data.original_price > data.price) {
+      const discountLabel = language === "en" ? " (Reduced from " : language === "cn" ? " (降价自 " : language === "ru" ? " (Снижено с " : " (ลดจาก ";
+      priceText += `${discountLabel}${data.original_price.toLocaleString()} ${SEO_LABELS.CURRENCY[language]})`;
+    } else if (data.rental_price && data.original_rental_price && data.original_rental_price > data.rental_price) {
+      const discountLabel = language === "en" ? " (Reduced from " : language === "cn" ? " (降价自 " : language === "ru" ? " (Снижено с " : " (ลดจาก ";
+      priceText += `${discountLabel}${data.original_rental_price.toLocaleString()} ${SEO_LABELS.CURRENCY[language]}${SEO_LABELS.PER_MONTH[language]})`;
+    }
 
     faqs.push({
       "@type": "Question",
@@ -647,7 +724,7 @@ export function generateBreadcrumbSchema(
   data: PropertyDataForSEO,
   language: string = "th",
 ): Record<string, any> {
-  const lang = (language === "cn" ? "cn" : language === "en" ? "en" : "th") as "th" | "en" | "cn";
+  const lang = (language === "ru" ? "ru" : language === "cn" ? "cn" : language === "en" ? "en" : "th") as "th" | "en" | "cn" | "ru";
   const title = getLocalizedField<string>(data, "title", language);
   
   const actionLabel = data.listing_type === "RENT" 
@@ -663,7 +740,7 @@ export function generateBreadcrumbSchema(
     {
       "@type": "ListItem",
       position: 1,
-      name: language === "en" ? "Home" : language === "cn" ? "首页" : "หน้าแรก",
+      name: language === "en" ? "Home" : language === "cn" ? "首页" : language === "ru" ? "Главная" : "หน้าแรก",
       item: `${siteConfig.url}/${language === "th" ? "" : language}`,
     },
   ];

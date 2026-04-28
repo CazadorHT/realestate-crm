@@ -19,10 +19,13 @@ interface BlogDetailContentProps {
     title: string;
     excerpt_en?: string | null;
     excerpt_cn?: string | null;
+    excerpt_ru?: string | null;
     content_en?: string | null;
     content_cn?: string | null;
+    content_ru?: string | null;
     title_en?: string | null;
     title_cn?: string | null;
+    title_ru?: string | null;
   };
   author: {
     name: string;

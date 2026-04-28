@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -36,6 +36,7 @@ import { MdRealEstateAgent } from "react-icons/md";
 import { Loader2, ChevronRight, ChevronLeft, X, Check } from "lucide-react";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { useLanguage } from "../providers/LanguageProvider";
+import { type Language } from "@/lib/i18n";
 
 interface ContactAgentDialogProps {
   propertyId?: string;
@@ -44,12 +45,13 @@ interface ContactAgentDialogProps {
     title: string;
     title_en?: string | null;
     title_cn?: string | null;
+    title_ru?: string | null;
   };
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   defaultMessage?: string;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 // â”€â”€ Submit Button â”€â”€
@@ -58,7 +60,7 @@ function SubmitButton({
   language: customLanguage,
 }: {
   compact?: boolean;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }) {
   const { pending } = useFormStatus();
   const { language: globalLanguage, t: globalT } = useLanguage();

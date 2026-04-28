@@ -4,12 +4,12 @@ import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { Shield, Lock, FileText, Info, Phone as PhoneIcon } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { format } from "date-fns";
-import { th, enUS, zhCN } from "date-fns/locale";
+import { th, enUS, zhCN, ru } from "date-fns/locale";
 
 export default function PrivacyPolicyPageClient() {
   const { t, language } = useLanguage();
   const lastUpdated = format(new Date(), "PPP", {
-    locale: language === "th" ? th : language === "cn" ? zhCN : enUS,
+    locale: language === "th" ? th : language === "cn" ? zhCN : language === "ru" ? ru : enUS,
   });
 
   return (

@@ -18,7 +18,7 @@ import { useState } from "react";
 import {
   useLanguage,
   dictionaries,
-  Language,
+  type Language,
 } from "@/components/providers/LanguageProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
@@ -37,9 +37,10 @@ interface AgentSidebarProps {
     title: string;
     title_en?: string | null;
     title_cn?: string | null;
+    title_ru?: string | null;
   };
   shareUrl: string;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 export function AgentSidebar({

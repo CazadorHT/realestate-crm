@@ -1,10 +1,11 @@
+import { type Language } from "@/lib/i18n";
 import { PropertyMapClient } from "./PropertyMapClient";
 
 interface PropertyMapSectionProps {
   googleMapsLink: string | null;
   propertyId?: string;
   propertyTitle?: string;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 /**

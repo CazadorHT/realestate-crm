@@ -12,6 +12,7 @@ export type BudgetRange = {
   label: string;
   label_en: string | null;
   label_cn: string | null;
+  label_ru: string | null;
   min_value: number;
   max_value: number;
   sort_order: number | null;
@@ -23,6 +24,7 @@ export type PropertyTypeOption = {
   label: string;
   label_en: string | null;
   label_cn: string | null;
+  label_ru: string | null;
   value: string;
   sort_order: number | null;
   is_active: boolean | null;
@@ -33,12 +35,15 @@ export type SmartMatchSettings = {
   wizard_title: string;
   wizard_title_en: string;
   wizard_title_cn: string;
+  wizard_title_ru: string;
   loading_text: string;
   loading_text_en: string;
   loading_text_cn: string;
+  loading_text_ru: string;
   pdpa_text: string;
   pdpa_text_en: string;
   pdpa_text_cn: string;
+  pdpa_text_ru: string;
 };
 
 export type OfficeSizeOption = {
@@ -46,6 +51,7 @@ export type OfficeSizeOption = {
   label: string;
   label_en: string | null;
   label_cn: string | null;
+  label_ru: string | null;
   min_sqm: number;
   max_sqm: number;
   sort_order: number | null;
@@ -61,7 +67,7 @@ export async function getBudgetRanges(
 
   let query = supabase
     .from("smart_match_budget_ranges")
-    .select("id, purpose, label, label_en, label_cn, min_value, max_value, sort_order, is_active")
+    .select("id, purpose, label, label_en, label_cn, label_ru, min_value, max_value, sort_order, is_active")
     .order("sort_order", { ascending: true });
 
   if (purpose) {
@@ -85,7 +91,7 @@ export async function getActiveBudgetRanges(
 
   const { data, error } = await supabase
     .from("smart_match_budget_ranges")
-    .select("id, purpose, label, label_en, label_cn, min_value, max_value, sort_order, is_active")
+    .select("id, purpose, label, label_en, label_cn, label_ru, min_value, max_value, sort_order, is_active")
     .eq("purpose", purpose)
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
@@ -165,7 +171,7 @@ export async function getPropertyTypes(): Promise<PropertyTypeOption[]> {
 
   const { data, error } = await supabase
     .from("smart_match_property_types")
-    .select("id, label, label_en, label_cn, value, sort_order, is_active")
+    .select("id, label, label_en, label_cn, label_ru, value, sort_order, is_active")
     .order("sort_order", { ascending: true });
 
   if (error) {
@@ -181,7 +187,7 @@ export async function getActivePropertyTypes(): Promise<PropertyTypeOption[]> {
 
   const { data, error } = await supabase
     .from("smart_match_property_types")
-    .select("id, label, label_en, label_cn, value, sort_order, is_active")
+    .select("id, label, label_en, label_cn, label_ru, value, sort_order, is_active")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
@@ -260,7 +266,7 @@ export async function getOfficeSizes(): Promise<OfficeSizeOption[]> {
 
   const { data, error } = await supabase
     .from("smart_match_office_sizes")
-    .select("id, label, label_en, label_cn, min_sqm, max_sqm, sort_order, is_active")
+    .select("id, label, label_en, label_cn, label_ru, min_sqm, max_sqm, sort_order, is_active")
     .order("sort_order", { ascending: true });
 
   if (error) {
@@ -276,7 +282,7 @@ export async function getActiveOfficeSizes(): Promise<OfficeSizeOption[]> {
 
   const { data, error } = await supabase
     .from("smart_match_office_sizes")
-    .select("id, label, label_en, label_cn, min_sqm, max_sqm, sort_order, is_active")
+    .select("id, label, label_en, label_cn, label_ru, min_sqm, max_sqm, sort_order, is_active")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
@@ -352,12 +358,15 @@ const DEFAULT_SETTINGS: SmartMatchSettings = {
   wizard_title: "วันนี้คุณกำลังมองหา...",
   wizard_title_en: "What are you looking for today?",
   wizard_title_cn: "您今天在寻找什么？",
+  wizard_title_ru: "Что вы ищете сегодня?",
   loading_text: "กำลังวิเคราะห์ข้อมูล...",
   loading_text_en: "Analyzing data...",
   loading_text_cn: "正在分析数据...",
+  loading_text_ru: "Анализ данных...",
   pdpa_text: "ข้อมูลของคุณจะถูกเก็บเป็นความลับตามนโยบาย PDPA",
   pdpa_text_en: "Your data will be kept confidential according to PDPA policy",
   pdpa_text_cn: "您的数据将根据 PDPA 政策保密",
+  pdpa_text_ru: "Ваши данные будут сохранены в тайне согласно политике PDPA",
 };
 
 export async function getSmartMatchSettings(): Promise<SmartMatchSettings> {

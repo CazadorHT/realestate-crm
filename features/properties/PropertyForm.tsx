@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { DuplicateMatch } from "@/lib/duplicate-detection";
 
 import { Button } from "@/components/ui/button";
 import { ExternalLink, List, Facebook, Instagram, Loader2, CheckCircle2, Sparkles, Clock, History } from "lucide-react";
@@ -112,6 +113,7 @@ const PREFETCH_MAP: Record<number, (() => Promise<any>) | undefined> = {
 import { usePropertyFormDraft } from "./hooks/usePropertyFormDraft";
 import { usePropertyFormData } from "./hooks/usePropertyFormData";
 import { Card } from "@/components/ui/card";
+import { FaFacebook } from "react-icons/fa6";
 
 type Props = {
   mode: "create" | "edit";
@@ -146,7 +148,7 @@ export function PropertyForm({
   const [currentStep, setCurrentStep] = React.useState(1);
 
   // Duplicate check state
-  const [duplicateMatches, setDuplicateMatches] = React.useState<any[]>([]);
+  const [duplicateMatches, setDuplicateMatches] = React.useState<DuplicateMatch[]>([]);
   const [showDuplicateDialog, setShowDuplicateDialog] = React.useState(false);
   const [pendingSubmit, setPendingSubmit] =
     React.useState<PropertyFormValues | null>(null);
@@ -155,6 +157,7 @@ export function PropertyForm({
   const [newArea, setNewArea] = React.useState("");
   const [newAreaEn, setNewAreaEn] = React.useState("");
   const [newAreaCn, setNewAreaCn] = React.useState("");
+  const [newAreaRu, setNewAreaRu] = React.useState("");
   const [isAddingArea, setIsAddingArea] = React.useState(false);
   const [isQuickInfoOpen, setIsQuickInfoOpen] = React.useState(mode === "edit");
   const [isActuallySubmitting, setIsActuallySubmitting] = React.useState(false);
@@ -164,7 +167,7 @@ export function PropertyForm({
   );
 
   const form = useForm<PropertyFormValues>({
-    resolver: zodResolver(FormSchema) as unknown as Resolver<any>,
+    resolver: zodResolver(FormSchema) as Resolver<PropertyFormValues>,
     mode: "onChange",
     defaultValues:
       mode === "edit" && defaultValues
@@ -250,6 +253,7 @@ export function PropertyForm({
         name: newArea,
         name_en: newAreaEn,
         name_cn: newAreaCn,
+        name_ru: newAreaRu,
         province: province,
       });
       if (res.success) {
@@ -258,6 +262,7 @@ export function PropertyForm({
         setNewArea("");
         setNewAreaEn("");
         setNewAreaCn("");
+        setNewAreaRu("");
         // Optional: close after add if needed
         // setIsQuickInfoOpen(false);
       } else {
@@ -538,29 +543,29 @@ export function PropertyForm({
       case 1:
         return (
           <Step1BasicInfo
-            form={form}
             mode={mode}
             popularAreas={popularAreas}
             isAddingArea={isAddingArea}
             newArea={newArea}
-            setNewArea={setNewArea}
+            setNewAreaAction={setNewArea}
             newAreaEn={newAreaEn}
-            setNewAreaEn={setNewAreaEn}
+            setNewAreaEnAction={setNewAreaEn}
             newAreaCn={newAreaCn}
-            setNewAreaCn={setNewAreaCn}
-            onAddArea={handleAddArea}
+            setNewAreaCnAction={setNewAreaCn}
+            newAreaRu={newAreaRu}
+            setNewAreaRuAction={setNewAreaRu}
+            onAddAreaAction={handleAddArea}
             isQuickInfoOpen={isQuickInfoOpen}
             setIsQuickInfoOpen={setIsQuickInfoOpen}
           />
         );
       case 2:
-        return <Step2Details form={form} mode={mode} />;
+        return <Step2Details mode={mode} />;
       case 3:
-        return <Step3Location form={form} mode={mode} />;
+        return <Step3Location mode={mode} />;
       case 4:
         return (
           <Step4Media
-            form={form}
             mode={mode}
             owners={owners}
             agents={agents}
@@ -577,9 +582,9 @@ export function PropertyForm({
       case 5:
         return <Step5Features />;
       case 6:
-        return <Step6Review form={form} mode={mode} />;
+        return <Step6Review mode={mode} />;
       case 7:
-        return <Step7Syndication form={form} mode={mode} />;
+        return <Step7Syndication mode={mode} />;
       default:
         return null;
     }
@@ -844,7 +849,7 @@ export function PropertyForm({
                   ) : shareStatus["FACEBOOK"]?.success ? (
                     <CheckCircle2 className="w-6 h-6" />
                   ) : (
-                    <Facebook className="w-6 h-6" />
+                    <FaFacebook className="w-6 h-6" />
                   )}
                   <span className="leading-tight">{shareStatus["FACEBOOK"]?.success ? "แชร์แล้ว" : "Facebook"}</span>
                   {shareStatus["FACEBOOK"]?.success && shareStatus["FACEBOOK"]?.url && (

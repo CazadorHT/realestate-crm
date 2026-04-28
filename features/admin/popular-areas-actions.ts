@@ -10,6 +10,25 @@ import { mapDbError } from "@/lib/db-error";
 import { Database } from "@/lib/database.types";
 import { logAudit } from "@/lib/audit";
 
+/** Row shape returned by the get_popular_areas_with_counts RPC.
+ *  Defined here because the Supabase generated types lag behind the DB schema
+ *  (name_ru was added after the last type generation). */
+interface PopularAreaRpcRow {
+  id: string;
+  name: string;
+  name_en: string | null;
+  name_cn: string | null;
+  name_ru: string | null;
+  slug: string | null;
+  image_url: string | null;
+  sort_order: number | null;
+  is_active: boolean | null;
+  featured: boolean | null;
+  province: string | null;
+  property_count: number | null;
+  created_at: string | null;
+}
+
 type PopularAreaInsert =
   Database["public"]["Tables"]["popular_areas"]["Insert"];
 type PopularAreaUpdate =
@@ -36,17 +55,18 @@ export async function getPopularAreas({
     const offset = (page - 1) * pageSize;
 
     // Use the Dynamic RPC for reading to support branch-specific property counting
+    // We skip .select() because the generated Supabase types don't include name_ru yet
+    // (needs `supabase gen types` re-run). Cast to PopularAreaRpcRow[] after execution.
     let query = supabase
       .rpc(
         "get_popular_areas_with_counts",
         { target_tenant_id: tenantId ?? undefined },
         { count: "exact" },
-      )
-      .select("id, name, name_en, name_cn, slug, image_url, sort_order, is_active, featured, province, property_count, created_at");
+      );
 
     if (search) {
       query = query.or(
-        `name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%`,
+        `name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%,name_ru.ilike.%${search}%`,
       );
     }
 
@@ -72,16 +92,19 @@ export async function getPopularAreas({
     }
 
     const {
-      data: areas,
+      data: rawAreas,
       count,
       error,
     } = await query.range(offset, offset + pageSize - 1);
 
     if (error) throw error;
 
+    // Cast to our explicit type since the RPC returns name_ru but generated types don't know
+    const areas = (rawAreas ?? []) as unknown as PopularAreaRpcRow[];
+
     return {
       success: true,
-      data: areas || [],
+      data: areas,
       totalCount: count || 0,
     };
   } catch (error: unknown) {
@@ -356,12 +379,12 @@ export async function bulkTranslatePopularAreasAction(
   try {
     let query = supabase
       .from("popular_areas")
-      .select("id, name, name_en, name_cn, slug, image_url, sort_order, is_active, featured, province");
+      .select("id, name, name_en, name_cn, name_ru, slug, image_url, sort_order, is_active, featured, province");
 
     if (selectAll) {
       if (search) {
         query = query.or(
-          `name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%`,
+          `name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%,name_ru.ilike.%${search}%`,
         );
       }
     } else if (ids && ids.length > 0) {
@@ -380,8 +403,10 @@ export async function bulkTranslatePopularAreasAction(
       (a) =>
         !a.name_en ||
         !a.name_cn ||
+        !a.name_ru ||
         a.name_en === a.name ||
-        a.name_cn === a.name,
+        a.name_cn === a.name ||
+        a.name_ru === a.name,
     );
 
     if (toTranslate.length === 0)
@@ -400,9 +425,9 @@ export async function bulkTranslatePopularAreasAction(
     const modelName = aiConfig.blog_generator_model || "gemini-2.0-flash";
 
     const prompt = `
-      Translate location names in Thailand from Thai to English and Chinese.
+      Translate location names in Thailand from Thai to English, Chinese, and Russian.
       Names: ${JSON.stringify(limitedItems.map((a) => ({ id: a.id, name: a.name })))}
-      Return strict JSON Array of objects: [{ "id": "uuid", "name_en": "...", "name_cn": "..." }]
+      Return strict JSON Array of objects: [{ "id": "uuid", "name_en": "...", "name_cn": "...", "name_ru": "..." }]
       Do not include any markers or explanation.
     `;
 
@@ -432,16 +457,17 @@ export async function bulkTranslatePopularAreasAction(
 
     // Filter out items that are missing essential fields
     const validUpdates: PopularAreaUpdate[] = (
-      translatedData as { id: string; name_en?: string; name_cn?: string }[]
-    )
-      .filter(
-        (item: { id: string; name_en?: string; name_cn?: string }) =>
-          item.id && (item.name_en || item.name_cn),
+        translatedData as { id: string; name_en?: string; name_cn?: string; name_ru?: string }[]
       )
-      .map((item: { id: string; name_en?: string; name_cn?: string }) => ({
+      .filter(
+        (item: { id: string; name_en?: string; name_cn?: string; name_ru?: string }) =>
+          item.id && (item.name_en || item.name_cn || item.name_ru),
+      )
+      .map((item: { id: string; name_en?: string; name_cn?: string; name_ru?: string }) => ({
         id: item.id,
         name_en: (item.name_en || "").trim() || null,
         name_cn: (item.name_cn || "").trim() || null,
+        name_ru: (item.name_ru || "").trim() || null,
       }));
 
     if (validUpdates.length === 0) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UseFormReturn, useWatch } from "react-hook-form";
+import { UseFormReturn, useWatch, FieldValues } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
 import { getCoBrokersAction } from "../actions";
 import {
@@ -21,13 +21,31 @@ import { Button } from "@/components/ui/button";
 import { CreateCoBrokerDialog } from "./CreateCoBrokerDialog";
 import { UserPlus, Search, Building2, Phone, Star } from "lucide-react";
 
+import { useFormContext } from "react-hook-form";
+
+interface CoBrokerBroker {
+  id: string;
+  name: string;
+  phone?: string | null;
+  line_id?: string | null;
+  company_name?: string | null;
+  rating?: number | null;
+}
+
 interface CoBrokerSelectProps {
-  form: UseFormReturn<any>;
+  /** Accepts any react-hook-form instance. Falls back to useFormContext if omitted. */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  form?: Pick<UseFormReturn<any>, "control" | "setValue">;
   fieldName?: string;
 }
 
-export const CoBrokerSelect = ({ form, fieldName = "co_broker_id" }: CoBrokerSelectProps) => {
-  const [brokers, setBrokers] = useState<any[]>([]);
+export const CoBrokerSelect = ({
+  form: formProp,
+  fieldName = "co_broker_id",
+}: CoBrokerSelectProps) => {
+  const formContext = useFormContext();
+  const form = formProp || formContext;
+  const [brokers, setBrokers] = useState<CoBrokerBroker[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddingNew, setIsAddingNew] = useState(false);
 
@@ -72,7 +90,7 @@ export const CoBrokerSelect = ({ form, fieldName = "co_broker_id" }: CoBrokerSel
             </FormLabel>
             <div className="flex flex-col sm:flex-row gap-3">
               <Select
-                value={field.value || "NONE"}
+                value={String(field.value || "NONE")}
                 onValueChange={handleSelect}
               >
                 <FormControl>

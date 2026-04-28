@@ -34,14 +34,19 @@ interface QuickShareButtonProps {
     cover_image_url?: string | null;
     title_en?: string | null;
     title_cn?: string | null;
+    title_ru?: string | null;
     description_en?: string | null;
     description_cn?: string | null;
+    description_ru?: string | null;
     popular_area_en?: string | null;
     popular_area_cn?: string | null;
+    popular_area_ru?: string | null;
     district_en?: string | null;
     district_cn?: string | null;
+    district_ru?: string | null;
     province_en?: string | null;
     province_cn?: string | null;
+    province_ru?: string | null;
   };
   className?: string;
 }
@@ -51,7 +56,7 @@ export function QuickShareButton({
   className,
 }: QuickShareButtonProps) {
   const [copied, setCopied] = useState(false);
-  const [lang, setLang] = useState<"th" | "en" | "cn">("th");
+  const [lang, setLang] = useState<"th" | "en" | "cn" | "ru">("th");
 
   const publicUrl = `${siteConfig.url}/properties/${property.id}`;
 
@@ -64,7 +69,8 @@ export function QuickShareButton({
   const L = {
     th: { intro: "📢 ฝากทรัพย์คุณภาพครับ ✨", price: "💰 ราคา:", sale: "ขาย", rent: "เช่า", month: "/เดือน", location: "📍 ทำเล:", area: "📐 พื้นที่:", sqm: "ตร.ม.", bed: "ห้องนอน", bath: "ห้องน้ำ", id: "🆔 รหัสทรัพย์:", link: "🔗 ดูรายละเอียดเพิ่มเติม:", from: "ลดจาก" },
     en: { intro: "📢 Premium Property for you ✨", price: "💰 Price:", sale: "Sale", rent: "Rent", month: "/mo", location: "📍 Location:", area: "📐 Area:", sqm: "sqm", bed: "Bedrooms", bath: "Bathrooms", id: "🆔 Property ID:", link: "🔗 View more details:", from: "Discount from" },
-    cn: { intro: "📢 为您推荐优质房产 ✨", price: "💰 价格:", sale: "出售", rent: "出租", month: "/月", location: "📍 地点:", area: "📐 面积:", sqm: "平方米", bed: "卧室", bath: "浴室", id: "🆔 房产编号:", link: "🔗 查看更多详情:", from: "原价" }
+    cn: { intro: "📢 为您推荐优质房产 ✨", price: "💰 价格:", sale: "出售", rent: "出租", month: "/月", location: "📍 地点:", area: "📐 面积:", sqm: "平方米", bed: "卧室", bath: "浴室", id: "🆔 房产编号:", link: "🔗 查看更多详情:", from: "原价" },
+    ru: { intro: "📢 Предлагаем качественную недвижимость ✨", price: "💰 Цена:", sale: "Продажа", rent: "Аренда", month: "/мес", location: "📍 Район:", area: "📐 Площадь:", sqm: "кв.м.", bed: "спальни", bath: "ванные", id: "🆔 ID объекта:", link: "🔗 Подробнее:", from: "Цена снижена с" }
   }[lang];
 
   // Location logic: Priority Neighborhood > Subdistrict > District
@@ -81,7 +87,7 @@ export function QuickShareButton({
   // Price logic
   const prices: string[] = [];
   const formatPriceVal = (val: number | null) =>
-    val ? val.toLocaleString() + " " + (lang === "en" ? "THB" : lang === "cn" ? "泰铢" : "บาท") : "-";
+    val ? val.toLocaleString() + " " + (lang === "en" ? "THB" : lang === "cn" ? "泰铢" : lang === "ru" ? "THB" : "บาท") : "-";
 
   if (property.listing_type === "SALE" || property.listing_type === "SALE_AND_RENT") {
     let p = `${L.price} ${L.sale} ${formatPriceVal(property.price ?? null)}`;
@@ -189,10 +195,11 @@ ${L.link} ${publicUrl}
             onValueChange={(v) => setLang(v as any)}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-3 bg-slate-100 p-1 rounded-lg">
+            <TabsList className="grid w-full grid-cols-4 bg-slate-100 p-1 rounded-lg">
               <TabsTrigger value="th" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">ไทย (TH)</TabsTrigger>
               <TabsTrigger value="en" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">EN</TabsTrigger>
               <TabsTrigger value="cn" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">CN</TabsTrigger>
+              <TabsTrigger value="ru" className="rounded-md data-[state=active]:bg-white data-[state=active]:shadow-sm text-[10px] py-1">RU</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>

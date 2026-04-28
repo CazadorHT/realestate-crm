@@ -431,7 +431,7 @@ async function handleWhatsAppWebhook(message: any, contact: any) {
 /**
  * Helper function to replace all smart tags in a template
  */
-function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any, lang: "th" | "en" | "cn" = "th") {
+function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any, lang: "th" | "en" | "cn" | "ru" = "th") {
   if (!text) return "";
   let rendered = text;
   const {
@@ -470,10 +470,10 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     .replace(
       /{{listing_type}}/g,
       propertyData.listing_type === "SALE"
-        ? (lang === "th" ? "ขาย" : "Sale")
+        ? (lang === "th" ? "ขาย" : lang === "en" ? "Sale" : lang === "ru" ? "Продажа" : "Sale")
         : propertyData.listing_type === "RENT"
-          ? (lang === "th" ? "ให้เช่า" : "Rent")
-          : (lang === "th" ? "ขาย/เช่า" : "Sale/Rent"),
+          ? (lang === "th" ? "ให้เช่า" : lang === "en" ? "Rent" : lang === "ru" ? "Аренда" : "Rent")
+          : (lang === "th" ? "ขาย/เช่า" : lang === "en" ? "Sale/Rent" : lang === "ru" ? "Продажа/Аренда" : "Sale/Rent"),
     )
     .replace(
       /{{location}}/g,
@@ -493,7 +493,7 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
         ? `${propertyData.transit_station_name} (${propertyData.transit_distance_meters || 0} ม.)`
         : "-",
     )
-    .replace(/{{verified}}/g, propertyData.verified ? (lang === "th" ? "✅ ตรวจสอบแล้ว" : "✅ Verified") : "")
+    .replace(/{{verified}}/g, propertyData.verified ? (lang === "th" ? "✅ ตรวจสอบแล้ว" : lang === "ru" ? "✅ Проверено" : "✅ Verified") : "")
     .replace(
       /{{exclusive}}/g,
       propertyData.is_exclusive ? "💎 Exclusive" : "",
@@ -510,9 +510,10 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
 /**
  * Detect language of a given text (Thai, Chinese, or English)
  */
-function detectLanguage(text: string): "th" | "en" | "cn" {
+function detectLanguage(text: string): "th" | "en" | "cn" | "ru" {
   if (/[ก-ฮ]/.test(text)) return "th";
   if (/[\u4e00-\u9fa5]/.test(text)) return "cn";
+  if (/[а-яА-Я]/.test(text)) return "ru";
   return "en";
 }
 
@@ -562,10 +563,10 @@ async function handleKeywordAutomation(
     const lang = detectLanguage(dmContent);
 
     // Price logic
-    const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : "售价";
-    const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : "租金";
-    const tBaht = lang === "th" ? "บาท" : lang === "en" ? "THB" : "泰铢";
-    const tPerMonth = lang === "th" ? "/เดือน" : lang === "en" ? "/mo" : "/月";
+    const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : lang === "ru" ? "Продажа" : "售价";
+    const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : lang === "ru" ? "Аренда" : "租金";
+    const tBaht = lang === "th" ? "บาท" : lang === "en" ? "THB" : lang === "ru" ? "ТНВ" : "泰铢";
+    const tPerMonth = lang === "th" ? "/เดือน" : lang === "en" ? "/mo" : lang === "ru" ? "/мес" : "/月";
 
     let priceText = "";
     if (propertyData.listing_type === "SALE_AND_RENT") {
@@ -605,7 +606,9 @@ async function handleKeywordAutomation(
           ? `🔥 ลดพิเศษ! ${price.toLocaleString()} บาท (จาก ${original.toLocaleString()} - ลด ${pct}%)`
           : lang === "en"
             ? `🔥 Hot Deal! ${price.toLocaleString()} THB (Was ${original.toLocaleString()} - ${pct}% OFF)`
-            : `🔥 特价! ${price.toLocaleString()} 泰铢 (原价 ${original.toLocaleString()} - 优惠 ${pct}%)`;
+            : lang === "ru"
+              ? `🔥 Горячее предложение! ${price.toLocaleString()} THB (Было ${original.toLocaleString()} - ${pct}% OFF)`
+              : `🔥 特价! ${price.toLocaleString()} 泰铢 (原价 ${original.toLocaleString()} - 优惠 ${pct}%)`;
       }
       return `${tSale}: ${price.toLocaleString()} ${tBaht}`;
     };
@@ -616,7 +619,9 @@ async function handleKeywordAutomation(
           ? `🔥 ดีลดี! เช่า ${price.toLocaleString()} บาท/เดือน (จาก ${original.toLocaleString()} - ลด ${pct}%)`
           : lang === "en"
             ? `🔥 Great Deal! Rent ${price.toLocaleString()} THB/mo (Was ${original.toLocaleString()} - ${pct}% OFF)`
-            : `🔥 优选! 租金 ${price.toLocaleString()} 泰铢/月 (原价 ${original.toLocaleString()} - 优惠 ${pct}%)`;
+            : lang === "ru"
+              ? `🔥 Отличное предложение! Аренда ${price.toLocaleString()} THB/mo (Было ${original.toLocaleString()} - ${pct}% OFF)`
+              : `🔥 优选! 租金 ${price.toLocaleString()} 泰铢/月 (原价 ${original.toLocaleString()} - 优惠 ${pct}%)`;
       }
       return `${tRent}: ${price.toLocaleString()} ${tBaht}${tPerMonth}`;
     };
@@ -629,17 +634,17 @@ async function handleKeywordAutomation(
       const parts = [];
       if (actualPrice) parts.push(formatSale(actualPrice, propertyData.original_price || undefined));
       if (actualRentPrice) parts.push(formatRent(actualRentPrice, propertyData.original_rental_price || undefined));
-      priceTag = parts.length > 0 ? parts.join("\n") : (lang === "th" ? "ติดต่อสอบถามราคา" : "Contact for Price");
+      priceTag = parts.length > 0 ? parts.join("\n") : (lang === "th" ? "ติดต่อสอบถามราคา" : lang === "ru" ? "Цена по запросу" : "Contact for Price");
     } else if (propertyData.listing_type === "RENT") {
       const finalPrice = actualRentPrice || actualPrice;
       priceTag = finalPrice 
         ? formatRent(finalPrice, propertyData.original_rental_price || undefined) 
-        : (lang === "th" ? "ติดต่อสอบถามราคาเช่า" : "Contact for Rent");
+        : (lang === "th" ? "ติดต่อสอบถามราคาเช่า" : lang === "ru" ? "Цена аренды по запросу" : "Contact for Rent");
     } else {
       const finalPrice = actualPrice || actualRentPrice;
       priceTag = finalPrice 
         ? formatSale(finalPrice, propertyData.original_price || undefined) 
-        : (lang === "th" ? "ติดต่อสอบถามราคาขาย" : "Contact for Sale");
+        : (lang === "th" ? "ติดต่อสอบถามราคาขาย" : lang === "ru" ? "Цена продажи по запросу" : "Contact for Sale");
     }
 
     const link = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
@@ -650,10 +655,10 @@ async function handleKeywordAutomation(
     const nearbyTransits = (propertyData.nearby_transits as any[])?.map((p: any) => `- ${p.name} (${p.distance || ""})`).join("\n") || "-";
 
     const detailsSummary = [
-      propertyData.bedrooms ? (lang === "th" ? `${propertyData.bedrooms} ห้องนอน` : lang === "en" ? `${propertyData.bedrooms} Bed` : `${propertyData.bedrooms} 卧室`) : null,
-      propertyData.bathrooms ? (lang === "th" ? `${propertyData.bathrooms} ห้องน้ำ` : lang === "en" ? `${propertyData.bathrooms} Bath` : `${propertyData.bathrooms} 浴室`) : null,
-      propertyData.size_sqm ? `${propertyData.size_sqm} ${lang === "th" ? "ตร.ม." : "Sqm"}` : null,
-      propertyData.floor ? (lang === "th" ? `ชั้น ${propertyData.floor}` : lang === "en" ? `Floor ${propertyData.floor}` : `${propertyData.floor} 层`) : null,
+      propertyData.bedrooms ? (lang === "th" ? `${propertyData.bedrooms} ห้องนอน` : lang === "en" ? `${propertyData.bedrooms} Bed` : lang === "ru" ? `${propertyData.bedrooms} Спальни` : `${propertyData.bedrooms} 卧室`) : null,
+      propertyData.bathrooms ? (lang === "th" ? `${propertyData.bathrooms} ห้องน้ำ` : lang === "en" ? `${propertyData.bathrooms} Bath` : lang === "ru" ? `${propertyData.bathrooms} Ванные` : `${propertyData.bathrooms} 浴室`) : null,
+      propertyData.size_sqm ? `${propertyData.size_sqm} ${lang === "th" ? "ตร.ม." : lang === "ru" ? "кв.м." : "Sqm"}` : null,
+      propertyData.floor ? (lang === "th" ? `ชั้น ${propertyData.floor}` : lang === "en" ? `Floor ${propertyData.floor}` : lang === "ru" ? `${propertyData.floor} этаж` : `${propertyData.floor} 层`) : null,
     ].filter(Boolean).join(" | ") || "-";
 
     const dynamicValues = {

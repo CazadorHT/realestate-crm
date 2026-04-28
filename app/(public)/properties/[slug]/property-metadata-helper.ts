@@ -86,6 +86,7 @@ export async function generatePropertyMetadataAsync(slug: string): Promise<Metad
         "th-TH": `${canonicalUrl}?lang=th`,
         "en-US": `${canonicalUrl}?lang=en`,
         "zh-CN": `${canonicalUrl}?lang=cn`,
+        "ru-RU": `${canonicalUrl}?lang=ru`,
         "x-default": canonicalUrl,
       },
     },
@@ -99,7 +100,7 @@ export async function generatePropertyMetadataAsync(slug: string): Promise<Metad
       url: canonicalUrl,
       type: "website",
       siteName: siteConfig.name,
-      locale: language === "th" ? "th_TH" : language === "cn" ? "zh_CN" : "en_US",
+      locale: language === "th" ? "th_TH" : language === "cn" ? "zh_CN" : language === "ru" ? "ru_RU" : "en_US",
     },
     twitter: {
       card: "summary_large_image",

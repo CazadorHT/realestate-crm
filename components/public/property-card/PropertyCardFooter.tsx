@@ -3,7 +3,7 @@ import React from "react";
 
 import { Clock } from "lucide-react";
 import { format } from "date-fns";
-import { th, enUS, zhCN } from "date-fns/locale";
+import { th, enUS, zhCN, ru } from "date-fns/locale";
 import { formatPrice, getOfficePrice } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -23,7 +23,7 @@ export function PropertyCardFooter({
     setMounted(true);
   }, []);
 
-  const dateLocale = language === "th" ? th : language === "cn" ? zhCN : enUS;
+  const dateLocale = language === "th" ? th : language === "cn" ? zhCN : language === "ru" ? ru : enUS;
   const prices = getEffectivePrice(property);
 
   if (variant === "minimal") {

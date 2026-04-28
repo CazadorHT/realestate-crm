@@ -33,14 +33,16 @@ import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "../../components/SectionHeader";
 import { Button } from "@/components/ui/button";
 import { useAITranslation } from "../../hooks/use-ai-translation";
-import type { UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
 
 interface AddressSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
 }
 
-export function AddressSection({ form }: AddressSectionProps) {
+export function AddressSection({ form: formProp }: AddressSectionProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   const {
     provinces,
     getDistricts,
@@ -316,7 +318,7 @@ export function AddressSection({ form }: AddressSectionProps) {
                   />
                 </FormControl>
                 <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                  ชื่อโครงการในภาษาอังกฤษ เพื่อรองรับกลุ่มชาวต่างชาติ
+                  ชื่อโครงการในภาษาอังกฤษ
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -342,7 +344,33 @@ export function AddressSection({ form }: AddressSectionProps) {
                   />
                 </FormControl>
                 <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                  ชื่อโครงการในภาษาจีน เพื่อรองรับกลุ่มชาวจีน
+                  ชื่อโครงการในภาษาจีน
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Address Russian */}
+          <FormField
+            control={form.control}
+            name="address_line1_ru"
+            render={({ field }) => (
+              <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
+                <FormLabel className="flex items-center gap-2 text-slate-500 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
+                  <Languages className="w-3.5 h-3.5" />
+                  Адрес (Russian)
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    placeholder="Название проекта / Адрес на русском..."
+                    className="h-11 rounded-lg border-slate-200 bg-slate-50/50 px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
+                  />
+                </FormControl>
+                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                  ชื่อโครงการในภาษารัสเซีย
                 </FormDescription>
                 <FormMessage />
               </FormItem>

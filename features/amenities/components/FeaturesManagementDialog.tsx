@@ -77,6 +77,7 @@ export function FeaturesManagementDialog({
       name: "",
       name_en: "",
       name_cn: "",
+      name_ru: "",
       category: "",
       icon_key: "box",
     },
@@ -114,7 +115,7 @@ export function FeaturesManagementDialog({
           setIsFormOpen(false);
           setEditingFeature(null);
         } else {
-          form.reset({ name: "", name_en: "", name_cn: "", category: values.category, icon_key: "box" });
+          form.reset({ name: "", name_en: "", name_cn: "", name_ru: "", category: values.category, icon_key: "box" });
         }
 
         loadData();
@@ -135,6 +136,7 @@ export function FeaturesManagementDialog({
       name: feature.name,
       name_en: feature.name_en || "",
       name_cn: feature.name_cn || "",
+      name_ru: feature.name_ru || "",
       category: feature.category || "",
       icon_key: feature.icon_key,
     });
@@ -147,6 +149,7 @@ export function FeaturesManagementDialog({
       name: "",
       name_en: "",
       name_cn: "",
+      name_ru: "",
       category: "",
       icon_key: "box",
     });
@@ -320,7 +323,7 @@ export function FeaturesManagementDialog({
                 )}
               />
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="name_en"
@@ -343,6 +346,20 @@ export function FeaturesManagementDialog({
                       <FormLabel>中文名称</FormLabel>
                       <FormControl>
                         <Input placeholder="游泳池" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="name_ru"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Русское название</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Бассейн" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

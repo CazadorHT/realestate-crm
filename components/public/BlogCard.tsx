@@ -7,7 +7,7 @@ import { Calendar, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
-import { th, enUS as en, zhCN as zh } from "date-fns/locale";
+import { th, enUS as en, zhCN as zh, ru } from "date-fns/locale";
 import { getLocalizedField } from "@/lib/i18n";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import type { Locale } from "date-fns";
@@ -17,7 +17,7 @@ interface BlogCardProps {
   className?: string;
 }
 
-const dateLocales: Record<string, Locale> = { th, en, zh };
+const dateLocales: Record<string, Locale> = { th, en, zh, ru };
 
 export function BlogCard({ post, className }: BlogCardProps) {
   const { language, t } = useLanguage();

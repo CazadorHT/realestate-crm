@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useState, useMemo } from "react";
-import { UseFormReturn } from "react-hook-form";
+import { UseFormReturn, useFormContext } from "react-hook-form";
 import { type PropertyFormValues } from "@/features/properties/schema";
 import dynamic from "next/dynamic";
 
@@ -100,7 +100,6 @@ import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { cn } from "@/lib/utils";
 
 interface Step6ReviewProps {
-  form: UseFormReturn<PropertyFormValues>;
   mode: "create" | "edit";
 }
 
@@ -119,11 +118,12 @@ type Profile = {
   line_id: string | null;
 };
 
-export function Step6Review({ form, mode }: Step6ReviewProps) {
+export function Step6Review({ mode }: Step6ReviewProps) {
+  const form = useFormContext<PropertyFormValues>();
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [activeFeatures, setActiveFeatures] = useState<Feature[]>([]);
   const [currentUser, setCurrentUser] = useState<Profile | null>(null);
-  const [previewLanguage, setPreviewLanguage] = useState<"th" | "en" | "cn">(
+  const [previewLanguage, setPreviewLanguage] = useState<"th" | "en" | "cn" | "ru">(
     "th",
   );
   const values = form.watch();
@@ -168,11 +168,11 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
       // 3. Load Popular Area Translations if missing
       if (
         values.popular_area &&
-        (!values.popular_area_en || !values.popular_area_cn)
+        (!values.popular_area_en || !values.popular_area_cn || !values.popular_area_ru)
       ) {
         const { data: areaData } = await supabase
           .from("popular_areas")
-          .select("name_en, name_cn")
+          .select("name_en, name_cn, name_ru")
           .eq("name", values.popular_area)
           .maybeSingle();
 
@@ -181,6 +181,8 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
             form.setValue("popular_area_en", areaData.name_en);
           if (!values.popular_area_cn)
             form.setValue("popular_area_cn", areaData.name_cn);
+          if (!values.popular_area_ru)
+            form.setValue("popular_area_ru", areaData.name_ru);
         }
       }
     }
@@ -190,7 +192,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
 
   // Transform images for Gallery (using real URLs from form)
   const images = useMemo(() => {
-    return (values.images || []).map((url, index) => {
+    return (values.images || []).map((url: string, index: number) => {
       // Ensure URL is public
       const publicUrl = url.startsWith("http") ? url : getPublicImageUrl(url);
 
@@ -225,17 +227,59 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
       : "-";
 
   const keySellingPoints = [
-    values.is_pet_friendly && { name: "เลี้ยงสัตว์ได้", icon: "dog" },
-    values.is_corner_unit && { name: "ห้องมุม", icon: "layout" },
-    values.is_renovated && { name: "รีโนเวทใหม่", icon: "sparkles" },
-    values.is_fully_furnished && { name: "ตกแต่งครบ", icon: "armchair" },
+    values.is_pet_friendly && {
+      name:
+        previewLanguage === "en"
+          ? "Pet Friendly"
+          : previewLanguage === "cn"
+            ? "允许携带宠物"
+            : previewLanguage === "ru"
+              ? "Можно с животными"
+              : "เลี้ยงสัตว์ได้",
+      icon: "dog",
+    },
+    values.is_corner_unit && {
+      name:
+        previewLanguage === "en"
+          ? "Corner Unit"
+          : previewLanguage === "cn"
+            ? "边间房"
+            : previewLanguage === "ru"
+              ? "Угловой юнит"
+              : "ห้องมุม",
+      icon: "layout",
+    },
+    values.is_renovated && {
+      name:
+        previewLanguage === "en"
+          ? "Recently Renovated"
+          : previewLanguage === "cn"
+            ? "新装修"
+            : previewLanguage === "ru"
+              ? "Недавний ремонт"
+              : "รีโนเวทใหม่",
+      icon: "sparkles",
+    },
+    values.is_fully_furnished && {
+      name:
+        previewLanguage === "en"
+          ? "Fully Furnished"
+          : previewLanguage === "cn"
+            ? "全家具"
+            : previewLanguage === "ru"
+              ? "Полностью меблирована"
+              : "ตกแต่งครบ",
+      icon: "armchair",
+    },
     (values.floor || 0) > 15 && {
       name:
         previewLanguage === "en"
           ? `High Floor (Fl. ${values.floor})`
           : previewLanguage === "cn"
             ? `高层 (第 ${values.floor} 层)`
-            : `วิวสวยชั้นสูง (ชั้น ${values.floor})`,
+            : previewLanguage === "ru"
+              ? `Высокий этаж (${values.floor}-й этаж)`
+              : `วิวสวยชั้นสูง (ชั้น ${values.floor})`,
       icon: "building-2",
     },
     values.has_city_view && {
@@ -244,7 +288,9 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           ? "City View"
           : previewLanguage === "cn"
             ? "城市景观"
-            : "วิวเมือง",
+            : previewLanguage === "ru"
+              ? "Вид на город"
+              : "วิวเมือง",
       icon: "building-2",
     },
     values.has_pool_view && {
@@ -253,7 +299,9 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           ? "Pool View"
           : previewLanguage === "cn"
             ? "泳池景观"
-            : "วิวสระว่ายน้ำ",
+            : previewLanguage === "ru"
+              ? "Вид на бассейн"
+              : "วิวสระว่ายน้ำ",
       icon: "waves",
     },
     values.has_garden_view && {
@@ -262,7 +310,9 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           ? "Garden View"
           : previewLanguage === "cn"
             ? "园景"
-            : "วิวสวน",
+            : previewLanguage === "ru"
+              ? "Вид на сад"
+              : "วิวสวน",
       icon: "trees",
     },
     values.is_selling_with_tenant && {
@@ -271,7 +321,9 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           ? "Sold with Tenant"
           : previewLanguage === "cn"
             ? "带租约出售"
-            : "ขายพร้อมผู้เช่า",
+            : previewLanguage === "ru"
+              ? "С арендатором"
+              : "ขายพร้อมผู้เช่า",
       icon: "users",
     },
     values.is_tax_registered && {
@@ -280,7 +332,9 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           ? "Tax Registered"
           : previewLanguage === "cn"
             ? "可开具发票"
-            : "จดทะเบียนบริษัทได้",
+            : previewLanguage === "ru"
+              ? "Зарегистрирован налог"
+              : "จดทะเบียนบริษัทได้",
       icon: "file-check",
     },
     values.is_foreigner_quota && {
@@ -289,7 +343,9 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           ? "Foreigner Quota"
           : previewLanguage === "cn"
             ? "外籍配额"
-            : "โควต้าต่างชาติ",
+            : previewLanguage === "ru"
+              ? "Квота для иностранцев"
+              : "โควต้าต่างชาติ",
       icon: "globe",
     },
     values.near_transit &&
@@ -299,7 +355,9 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
             ? `Near ${values.transit_station_name_en || values.transit_station_name}`
             : previewLanguage === "cn"
               ? `靠近 ${values.transit_station_name_cn || values.transit_station_name}`
-              : `ใกล้ ${values.transit_station_name}`,
+              : previewLanguage === "ru"
+                ? `Рядом с ${values.transit_station_name_ru || values.transit_station_name_en || values.transit_station_name}`
+                : `ใกล้ ${values.transit_station_name}`,
         icon: "map-pin",
       },
   ]
@@ -333,14 +391,18 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                 ? "ขั้นตอนที่ 6: ตรวจสอบหน้าประกาศ (Review & Publish)"
                 : previewLanguage === "en"
                   ? "Step 6: Review & Publish"
-                  : "第 6 步：查看并发布"}
+                  : previewLanguage === "cn"
+                    ? "第 6 步：查看并发布"
+                    : "Шаг 6: Просмотр и публикация"}
             </h3>
             <p className="text-[11px] sm:text-sm text-blue-600/80 leading-relaxed max-w-2xl">
               {previewLanguage === "th"
                 ? "นี่คือตัวอย่างหน้าประกาศของคุณที่จะแสดงให้ลูกค้าเห็นจริง กรุณาตรวจสอบความถูกต้องของข้อมูลทั้งหมด และสามารถเลือกดูพรีวิวในภาษาต่างๆ ได้ทางขวามือครับ"
                 : previewLanguage === "en"
                   ? "This is a preview of your listing as it will appear to customers. Please check all information for accuracy. You can preview in different languages using the buttons on the right."
-                  : "这是房源发布的实际预览。请检查所有信息的准确性。您可以使用右侧的按钮预览不同语言。"}
+                  : previewLanguage === "cn"
+                    ? "这是房源发布的实际预览。请检查所有信息的准确性。您可以使用右侧的按钮预览不同语言。"
+                    : "Это предварительный просмотр вашего объявления в том виде, в котором его увидят клиенты. Пожалуйста, проверьте точность всей информации. Вы можете просмотреть его на разных языках с помощью кнопок справа."}
             </p>
           </div>
         </div>
@@ -372,7 +434,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
           />
 
           <div className="flex w-full sm:w-auto overflow-x-auto no-scrollbar rounded-xl">
-            {(["th", "en", "cn"] as const).map((lang) => (
+            {(["th", "en", "cn", "ru"] as const).map((lang) => (
               <button
                 key={lang}
                 onClick={() => setPreviewLanguage(lang)}
@@ -391,7 +453,7 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                       : "text-slate-400",
                   )}
                 />
-                {lang === "th" ? "ไทย" : lang === "en" ? "English" : "中文"}
+                {lang === "th" ? "ไทย" : lang === "en" ? "English" : lang === "cn" ? "中文" : "Русский"}
               </button>
             ))}
           </div>
@@ -460,7 +522,9 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                         ? "Listing Details"
                         : previewLanguage === "cn"
                           ? "房源详情"
-                          : "รายละเอียดประกาศ"}
+                          : previewLanguage === "ru"
+                            ? "Описание объекта"
+                            : "รายละเอียดประกาศ"}
                     </h3>
                     <div className="flex gap-2">
                       {isEditingDesc ? (
@@ -516,6 +580,12 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                               className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent"
                             >
                               中文
+                            </TabsTrigger>
+                            <TabsTrigger
+                              value="ru"
+                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent"
+                            >
+                              Русский
                             </TabsTrigger>
                           </TabsList>
 
@@ -592,6 +662,22 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                             />
                           </div>
                         </TabsContent>
+                        <TabsContent
+                          value="ru"
+                          className="mt-0 focus-visible:outline-none"
+                        >
+                          <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+                            <SmartEditor
+                              value={values.description_ru || ""}
+                              onChange={(val) =>
+                                form.setValue("description_ru", val, {
+                                  shouldDirty: true,
+                                })
+                              }
+                              height={600}
+                            />
+                          </div>
+                        </TabsContent>
                       </Tabs>
                     </div>
                   ) : (
@@ -608,7 +694,9 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                       ? values.popular_area_en
                       : previewLanguage === "cn"
                         ? values.popular_area_cn
-                        : null) ||
+                        : previewLanguage === "ru"
+                          ? values.popular_area_ru
+                          : null) ||
                     values.popular_area ||
                     undefined
                   }
@@ -623,6 +711,8 @@ export function Step6Review({ form, mode }: Step6ReviewProps) {
                               values.transit_station_name_en || undefined,
                             station_name_cn:
                               values.transit_station_name_cn || undefined,
+                            station_name_ru:
+                              values.transit_station_name_ru || undefined,
                             distance_meters: values.transit_distance_meters,
                           } as any,
                         ]

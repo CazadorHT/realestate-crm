@@ -21,7 +21,7 @@ export async function getFeatures(): Promise<FeatureRow[]> {
 
     const { data, error } = await supabase
       .from("features")
-      .select("id, name, name_en, name_cn, icon_key, category, created_at")
+      .select("id, name, name_en, name_cn, name_ru, icon_key, category, created_at")
       .order("category", { ascending: true })
       .order("name", { ascending: true });
 
@@ -49,12 +49,13 @@ export async function createFeatureAction(
       };
     }
 
-    const { name, name_en, name_cn, icon_key, category } = parsed.data;
+    const { name, name_en, name_cn, name_ru, icon_key, category } = parsed.data;
 
     const { error } = await supabase.from("features").insert({
       name,
       name_en,
       name_cn,
+      name_ru,
       icon_key,
       category,
     });
@@ -85,7 +86,7 @@ export async function updateFeatureAction(
       };
     }
 
-    const { name, name_en, name_cn, icon_key, category } = parsed.data;
+    const { name, name_en, name_cn, name_ru, icon_key, category } = parsed.data;
 
     const { error } = await supabase
       .from("features")
@@ -93,6 +94,7 @@ export async function updateFeatureAction(
         name,
         name_en,
         name_cn,
+        name_ru,
         icon_key,
         category,
       })

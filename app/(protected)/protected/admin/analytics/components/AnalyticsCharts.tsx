@@ -12,6 +12,7 @@ import {
   PieChart,
   Pie,
   Legend,
+  PieSectorDataItem,
 } from "recharts";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -41,6 +42,10 @@ interface AnalyticsChartsProps {
   topAreas: AreaAnalytics[];
   listingTypeDist: DistributionData[];
   propertyTypeDist: DistributionData[];
+}
+
+interface ListingDataPoint {
+  originalValue: string;
 }
 
 export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }: AnalyticsChartsProps) {
@@ -139,7 +144,9 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
                 outerRadius={80}
                 paddingAngle={5}
                 dataKey="value"
-                onClick={(data) => updateFilters("listingType", data.originalValue)}
+                onClick={(data: PieSectorDataItem) => 
+                  updateFilters("listingType", (data.payload as ListingDataPoint).originalValue)
+                }
                 className="cursor-pointer"
               >
                 {listingData.map((entry, index) => (

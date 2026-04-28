@@ -178,6 +178,7 @@ function BudgetRangesTab({
     label: "",
     label_en: "",
     label_cn: "",
+    label_ru: "",
     min_value: 0,
     max_value: 999999999999,
     sort_order: 0,
@@ -194,6 +195,7 @@ function BudgetRangesTab({
       label: "",
       label_en: "",
       label_cn: "",
+      label_ru: "",
       min_value: 0,
       max_value: 999999999999,
       sort_order: data.length + 1,
@@ -209,6 +211,7 @@ function BudgetRangesTab({
       label: item.label,
       label_en: item.label_en || "",
       label_cn: item.label_cn || "",
+      label_ru: item.label_ru || "",
       min_value: item.min_value,
       max_value: item.max_value,
       sort_order: item.sort_order ?? 0,
@@ -373,6 +376,16 @@ function BudgetRangesTab({
                   placeholder="如：< 3 百万"
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Label (Russian)</Label>
+                <Input
+                  value={form.label_ru}
+                  onChange={(e) =>
+                    setForm({ ...form, label_ru: e.target.value })
+                  }
+                  placeholder="Например: < 3М"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -487,6 +500,7 @@ function PropertyTypesTab({
     label: "",
     label_en: "",
     label_cn: "",
+    label_ru: "",
     value: "",
     sort_order: 0,
     is_active: true,
@@ -498,6 +512,7 @@ function PropertyTypesTab({
       label: "",
       label_en: "",
       label_cn: "",
+      label_ru: "",
       value: "",
       sort_order: data.length + 1,
       is_active: true,
@@ -511,6 +526,7 @@ function PropertyTypesTab({
       label: item.label,
       label_en: item.label_en || "",
       label_cn: item.label_cn || "",
+      label_ru: item.label_ru || "",
       value: item.value,
       sort_order: item.sort_order ?? 0,
       is_active: item.is_active ?? true,
@@ -648,6 +664,16 @@ function PropertyTypesTab({
                   placeholder="如：🏠 别墅"
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Label (Russian)</Label>
+                <Input
+                  value={form.label_ru}
+                  onChange={(e) =>
+                    setForm({ ...form, label_ru: e.target.value })
+                  }
+                  placeholder="Например: 🏠 Дом"
+                />
+              </div>
             </div>
             <div className="space-y-2">
               <Label>Value (ค่า Enum)</Label>
@@ -726,6 +752,7 @@ function OfficeSizesTab({
     label: string;
     label_en: string;
     label_cn: string;
+    label_ru: string;
     min_sqm: number;
     max_sqm: number;
     sort_order: number | null;
@@ -734,6 +761,7 @@ function OfficeSizesTab({
     label: "",
     label_en: "",
     label_cn: "",
+    label_ru: "",
     min_sqm: 0,
     max_sqm: 0,
     sort_order: 0,
@@ -746,6 +774,7 @@ function OfficeSizesTab({
       label: "",
       label_en: "",
       label_cn: "",
+      label_ru: "",
       min_sqm: 0,
       max_sqm: 9999,
       sort_order: (data.length || 0) + 1,
@@ -760,6 +789,7 @@ function OfficeSizesTab({
       label: item.label,
       label_en: item.label_en || "",
       label_cn: item.label_cn || "",
+      label_ru: item.label_ru || "",
       min_sqm: item.min_sqm,
       max_sqm: item.max_sqm,
       sort_order: item.sort_order,
@@ -782,6 +812,7 @@ function OfficeSizesTab({
           label: form.label,
           label_en: form.label_en,
           label_cn: form.label_cn,
+          label_ru: form.label_ru,
           min_sqm: form.min_sqm,
           max_sqm: form.max_sqm,
           sort_order: form.sort_order,
@@ -795,6 +826,7 @@ function OfficeSizesTab({
           label: form.label,
           label_en: form.label_en,
           label_cn: form.label_cn,
+          label_ru: form.label_ru,
           min_sqm: form.min_sqm,
           max_sqm: form.max_sqm,
           sort_order: form.sort_order,
@@ -903,6 +935,16 @@ function OfficeSizesTab({
                     setForm({ ...form, label_cn: e.target.value })
                   }
                   placeholder="如：(S) < 40 平方米"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Label (Russian)</Label>
+                <Input
+                  value={form.label_ru}
+                  onChange={(e) =>
+                    setForm({ ...form, label_ru: e.target.value })
+                  }
+                  placeholder="Например: (S) < 40 кв.м."
                 />
               </div>
             </div>
@@ -1034,12 +1076,15 @@ function SettingsTab({
         updateSmartMatchSetting("wizard_title", form.wizard_title),
         updateSmartMatchSetting("wizard_title_en", form.wizard_title_en),
         updateSmartMatchSetting("wizard_title_cn", form.wizard_title_cn),
+        updateSmartMatchSetting("wizard_title_ru", form.wizard_title_ru),
         updateSmartMatchSetting("loading_text", form.loading_text),
         updateSmartMatchSetting("loading_text_en", form.loading_text_en),
         updateSmartMatchSetting("loading_text_cn", form.loading_text_cn),
+        updateSmartMatchSetting("loading_text_ru", form.loading_text_ru),
         updateSmartMatchSetting("pdpa_text", form.pdpa_text),
         updateSmartMatchSetting("pdpa_text_en", form.pdpa_text_en),
         updateSmartMatchSetting("pdpa_text_cn", form.pdpa_text_cn),
+        updateSmartMatchSetting("pdpa_text_ru", form.pdpa_text_ru),
       ]);
       onUpdate(form);
       toast.success("บันทึกเรียบร้อย");
@@ -1110,6 +1155,15 @@ function SettingsTab({
                   }
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Wizard Title (Russian)</Label>
+                <Input
+                  value={form.wizard_title_ru}
+                  onChange={(e) =>
+                    setForm({ ...form, wizard_title_ru: e.target.value })
+                  }
+                />
+              </div>
             </div>
           </div>
 
@@ -1142,6 +1196,15 @@ function SettingsTab({
                   }
                 />
               </div>
+              <div className="space-y-2">
+                <Label>Loading Text (Russian)</Label>
+                <Input
+                  value={form.loading_text_ru}
+                  onChange={(e) =>
+                    setForm({ ...form, loading_text_ru: e.target.value })
+                  }
+                />
+              </div>
             </div>
           </div>
 
@@ -1155,7 +1218,7 @@ function SettingsTab({
                 }
               />
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>PDPA Text (English)</Label>
                 <Input
@@ -1171,6 +1234,15 @@ function SettingsTab({
                   value={form.pdpa_text_cn}
                   onChange={(e) =>
                     setForm({ ...form, pdpa_text_cn: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>PDPA Text (Russian)</Label>
+                <Input
+                  value={form.pdpa_text_ru}
+                  onChange={(e) =>
+                    setForm({ ...form, pdpa_text_ru: e.target.value })
                   }
                 />
               </div>

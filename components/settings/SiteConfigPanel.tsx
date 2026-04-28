@@ -57,6 +57,7 @@ import { SiteAssetUploader } from "./SiteAssetUploader";
 import { cn } from "@/lib/utils";
 import { FaLine } from "react-icons/fa";
 import { Eye, EyeOff } from "lucide-react";
+import { FaFacebook } from "react-icons/fa6";
 
 type BrandingSettings = z.infer<typeof siteSettingsSchema>;
 
@@ -638,7 +639,7 @@ export function SiteConfigPanel() {
                       render={({ field }) => (
                         <FormItem>
                           <div className="flex items-center gap-2 mb-2">
-                            <Facebook className="h-4 w-4 text-blue-600" />
+                            <FaFacebook className="h-4 w-4 text-blue-600" />
                             <FormLabel className="m-0">Facebook URL</FormLabel>
                           </div>
                           <FormControl>

@@ -49,9 +49,11 @@ export function usePropertyFiltering(
       const match = p.title.toLowerCase().includes(k) || 
                    (p.title_en || "").toLowerCase().includes(k) ||
                    (p.title_cn || "").toLowerCase().includes(k) ||
+                   (p.title_ru || "").toLowerCase().includes(k) ||
                    (p.description || "").toLowerCase().includes(k) || 
                    (p.description_en || "").toLowerCase().includes(k) ||
                    (p.description_cn || "").toLowerCase().includes(k) ||
+                   (p.description_ru || "").toLowerCase().includes(k) ||
                    (p.popular_area || "").toLowerCase().includes(k) || 
                    (p.province || "").toLowerCase().includes(k) ||
                    (p.ai_summary_content || "").toLowerCase().includes(k);
@@ -120,7 +122,7 @@ export function usePropertyFiltering(
   const results = useMemo(() => {
     const filteredList: ApiProperty[] = [];
     const provinceMap = new Map<string, number>();
-    const areaMap = new Map<string, { count: number; name_en?: string | null; name_cn?: string | null }>();
+    const areaMap = new Map<string, { count: number; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }>();
     const typeCounts: Record<string, number> = {};
     const listingTypeCounts: Record<string, number> = { ALL: 0, SALE: 0, RENT: 0, SALE_AND_RENT: 0 };
     const quickCounts = { nearTrain: 0, petFriendly: 0, fullyFurnished: 0, isForeigner: 0, companyRegistered: 0, isHotDeal: 0 };
@@ -141,11 +143,12 @@ export function usePropertyFiltering(
 
       // Area Facets
       if (checkMatch(p, ["area"]) && p.popular_area) {
-        const existing = areaMap.get(p.popular_area) || { count: 0, name_en: null as string | null, name_cn: null as string | null };
+        const existing = areaMap.get(p.popular_area) || { count: 0, name_en: null as string | null, name_cn: null as string | null, name_ru: null as string | null };
         areaMap.set(p.popular_area, { 
           count: existing.count + 1, 
           name_en: p.popular_area_en || existing.name_en,
-          name_cn: p.popular_area_cn || existing.name_cn 
+          name_cn: p.popular_area_cn || existing.name_cn,
+          name_ru: p.popular_area_ru || existing.name_ru
         });
       }
 
@@ -201,7 +204,7 @@ export function usePropertyFiltering(
     return {
       filtered: filteredList,
       availableProvinces: Array.from(provinceMap.entries()).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
-      availableAreas: Array.from(areaMap.entries()).map(([name, val]) => ({ name, count: val.count, name_en: val.name_en, name_cn: val.name_cn })).sort((a, b) => a.name.localeCompare(b.name)),
+      availableAreas: Array.from(areaMap.entries()).map(([name, val]) => ({ name, count: val.count, name_en: val.name_en, name_cn: val.name_cn, name_ru: val.name_ru })).sort((a, b) => a.name.localeCompare(b.name)),
       availableTypes: typeCounts,
       availableListingTypes: listingTypeCounts,
       availableQuickFilters: quickCounts,
@@ -224,7 +227,8 @@ export function usePropertyFiltering(
       name,
       count: val.count,
       name_en: val.name_en,
-      name_cn: val.name_cn
+      name_cn: val.name_cn,
+      name_ru: val.name_ru
     })).sort((a, b) => a.name.localeCompare(b.name));
 
     return {

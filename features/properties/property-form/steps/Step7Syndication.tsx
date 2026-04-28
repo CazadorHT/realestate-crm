@@ -1,6 +1,6 @@
 "use client";
 import * as React from "react";
-import { UseFormReturn } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import { type PropertyFormValues } from "@/features/properties/schema";
 import {
   Facebook,
@@ -15,11 +15,11 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 interface Step7SyndicationProps {
-  form: UseFormReturn<PropertyFormValues>;
   mode: "create" | "edit";
 }
 
-export function Step7Syndication({ form, mode }: Step7SyndicationProps) {
+export function Step7Syndication({ mode }: Step7SyndicationProps) {
+  const form = useFormContext<PropertyFormValues>();
   const propertyId = form.getValues().id || "new";
 
   const platforms = [

@@ -24,17 +24,17 @@ import { SMART_TAGS } from "./constants";
 interface TemplateEditorCardProps {
   activePlatform: "facebook" | "instagram" | "line" | "tiktok";
   setActivePlatform: (platform: "facebook" | "instagram" | "line" | "tiktok") => void;
-  activeTab: "th" | "en" | "cn";
-  setActiveTab: (tab: "th" | "en" | "cn") => void;
+  activeTab: "th" | "en" | "cn" | "ru";
+  setActiveTab: (tab: "th" | "en" | "cn" | "ru") => void;
   templates: {
-    facebook: { th: string; en: string; cn: string };
-    instagram: { th: string; en: string; cn: string };
-    tiktok: { th: string; en: string; cn: string };
-    line: { th: string; en: string; cn: string };
+    facebook: { th: string; en: string; cn: string; ru: string };
+    instagram: { th: string; en: string; cn: string; ru: string };
+    tiktok: { th: string; en: string; cn: string; ru: string };
+    line: { th: string; en: string; cn: string; ru: string };
   };
   updateTemplate: (
     platform: "facebook" | "instagram" | "line" | "tiktok",
-    lang: "th" | "en" | "cn",
+    lang: "th" | "en" | "cn" | "ru",
     value: string,
   ) => void;
   handleAiGenerate: (
@@ -338,7 +338,7 @@ export function TemplateEditorCard({
             className="w-full"
           >
             <div className="px-4 sm:px-6 pt-4">
-              <TabsList className="grid w-full grid-cols-3 bg-slate-200/80 backdrop-blur-md p-1.5 rounded-xl border border-slate-300/50 shadow-inner h-12">
+              <TabsList className="grid w-full grid-cols-4 bg-slate-200/80 backdrop-blur-md p-1.5 rounded-xl border border-slate-300/50 shadow-inner h-12">
                 <TabsTrigger
                   value="th"
                   className={cn(
@@ -381,13 +381,27 @@ export function TemplateEditorCard({
                     <div className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 border border-white shadow-xs" title="Template exists" />
                   )}
                 </TabsTrigger>
+                <TabsTrigger
+                  value="ru"
+                  className={cn(
+                    "relative h-8 rounded-lg font-bold transition-all duration-300 gap-1.5 sm:gap-2 px-1 sm:px-4",
+                    "data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm",
+                    "text-slate-600 hover:text-slate-800 hover:bg-white/50"
+                  )}
+                >
+                  <span className="text-base sm:text-lg shrink-0">🇷🇺</span>
+                  <span className="text-[11px] sm:text-xs">RU</span>
+                  {templates[activePlatform].ru && (
+                    <div className="absolute top-0.5 right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 border border-white shadow-xs" title="Template exists" />
+                  )}
+                </TabsTrigger>
               </TabsList>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-x divide-slate-100">
               {/* Left Column: Editor */}
               <div className="">
-                {["th", "en", "cn"].map((lang) => (
+                {["th", "en", "cn", "ru"].map((lang) => (
                   <TabsContent key={lang} value={lang} className="m-0 max-h-[550px] overflow-y-auto no-scrollbar border-r border-slate-200/50">
                     <div className="p-6 space-y-4">
                       <div className="flex items-center justify-between mb-1">
@@ -425,11 +439,11 @@ export function TemplateEditorCard({
                       </div>
                       <Textarea
                         placeholder="🏠 {{title}}\n💰 {{price}}\n..."
-                        value={templates[activePlatform][lang as "th" | "en" | "cn"]}
+                        value={templates[activePlatform][lang as "th" | "en" | "cn" | "ru"]}
                         onChange={(e) =>
                           updateTemplate(
                             activePlatform,
-                            lang as "th" | "en" | "cn",
+                            lang as "th" | "en" | "cn" | "ru",
                             e.target.value,
                           )
                         }
@@ -439,13 +453,13 @@ export function TemplateEditorCard({
                         <div className="flex justify-between items-center px-1">
                           <div className="text-[11px] text-slate-400 italic">
                             {activePlatform === "instagram" && 
-                             templates[activePlatform][lang as "th" | "en" | "cn"].length > 2200 && (
+                             templates[activePlatform][lang as "th" | "en" | "cn" | "ru"].length > 2200 && (
                               <span className="text-red-500 font-bold flex items-center gap-1 animate-pulse">
                                 ⚠️ ยาวเกินกำหนด IG (จำกัด 2,200)
                               </span>
                             )}
                             {activePlatform === "tiktok" && 
-                             templates[activePlatform][lang as "th" | "en" | "cn"].length > 4000 && (
+                             templates[activePlatform][lang as "th" | "en" | "cn" | "ru"].length > 4000 && (
                               <span className="text-red-500 font-bold flex items-center gap-1 animate-pulse">
                                 ⚠️ ยาวเกินกำหนด TikTok (จำกัด 4,000)
                               </span>
@@ -453,12 +467,12 @@ export function TemplateEditorCard({
                           </div>
                           <div className={cn(
                             "text-[10px] font-bold px-2 py-0.5 rounded-full border bg-white shadow-xs",
-                            (activePlatform === "instagram" && templates[activePlatform][lang as "th" | "en" | "cn"].length > 2200) ||
-                            (activePlatform === "tiktok" && templates[activePlatform][lang as "th" | "en" | "cn"].length > 4000)
+                            (activePlatform === "instagram" && templates[activePlatform][lang as "th" | "en" | "cn" | "ru"].length > 2200) ||
+                            (activePlatform === "tiktok" && templates[activePlatform][lang as "th" | "en" | "cn" | "ru"].length > 4000)
                               ? "text-red-600 border-red-200 bg-red-50"
                               : "text-slate-500 border-slate-200"
                           )}>
-                            {templates[activePlatform][lang as "th" | "en" | "cn"].length.toLocaleString()} 
+                            {templates[activePlatform][lang as "th" | "en" | "cn" | "ru"].length.toLocaleString()} 
                             {activePlatform === "instagram" ? " / 2,200" : activePlatform === "tiktok" ? " / 4,000" : ""} ตัวอักษร
                           </div>
                         </div>

@@ -224,14 +224,18 @@ function ServicesContent() {
                           ? service.title_en
                           : language === "cn" && service.title_cn
                           ? service.title_cn
+                          : language === "ru" && service.title_ru
+                          ? service.title_ru
                           : service.title}
                       </h4>
-                      { (language === "en" ? service.price_range_en : language === "cn" ? service.price_range_cn : service.price_range) && (
+                      { (language === "en" ? service.price_range_en : language === "cn" ? service.price_range_cn : language === "ru" ? service.price_range_ru : service.price_range) && (
                         <span className="inline-block px-3 py-1 rounded-full bg-blue-500/20 backdrop-blur-sm text-yellow-300 border border-white/10 text-xs font-semibold">
                           {language === "en" && service.price_range_en
                             ? service.price_range_en
                             : language === "cn" && service.price_range_cn
                             ? service.price_range_cn
+                            : language === "ru" && service.price_range_ru
+                            ? service.price_range_ru
                             : service.price_range}
                         </span>
                       )}
@@ -244,6 +248,8 @@ function ServicesContent() {
                         ? service.description_en
                         : language === "cn" && service.description_cn
                         ? service.description_cn
+                        : language === "ru" && service.description_ru
+                        ? service.description_ru
                         : service.description ||
                           t("common.premium_service_fallback")}
                     </p>

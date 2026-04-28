@@ -1,11 +1,10 @@
-"use client";
-
 import Image from "next/image";
+import { type Language } from "@/lib/i18n";
 
 interface LinePreviewProps {
   images: string[];
   previewData: any;
-  lang: string;
+  lang: Language;
 }
 
 export function LinePreview({ images, previewData, lang }: LinePreviewProps) {
@@ -54,13 +53,15 @@ export function LinePreview({ images, previewData, lang }: LinePreviewProps) {
               <div className="flex flex-col items-center flex-1">
                 <span className="text-sm">🛌</span>
                 <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
-                  {previewData.bedrooms || "-"}{lang === "th" ? "นอน" : "Bed"}
+                  {previewData.bedrooms || "-"}
+                  {lang === "th" ? "นอน" : lang === "cn" ? "卧室" : lang === "ru" ? "спаль" : "Bed"}
                 </span>
               </div>
               <div className="flex flex-col items-center flex-1">
                 <span className="text-sm">🚿</span>
                 <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
-                  {previewData.bathrooms || "-"}{lang === "th" ? "น้ำ" : "Bath"}
+                  {previewData.bathrooms || "-"}
+                  {lang === "th" ? "น้ำ" : lang === "cn" ? "浴室" : lang === "ru" ? "ванн" : "Bath"}
                 </span>
               </div>
               <div className="flex flex-col items-center flex-1">
@@ -68,7 +69,7 @@ export function LinePreview({ images, previewData, lang }: LinePreviewProps) {
                   {previewData.size_sqm || "-"}
                 </span>
                 <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
-                  {lang === "th" ? "ตร.ม." : "sq.m."}
+                  {lang === "th" ? "ตร.ม." : lang === "cn" ? "平方米" : lang === "ru" ? "кв.м." : "sq.m."}
                 </span>
               </div>
             </div>
@@ -88,14 +89,14 @@ export function LinePreview({ images, previewData, lang }: LinePreviewProps) {
         {/* Footer (Exact Match) */}
         <div className="p-4 pt-0 space-y-2">
           <div className="w-full h-10 bg-[#1E3A5F] rounded-md flex items-center justify-center text-[12px] font-bold text-white">
-            {lang === "th" ? "🌐 ดูรายละเอียดเพิ่มเติม" : (lang === "cn" ? "🌐 查看更多" : "🌐 View Details")}
+            {lang === "th" ? "🌐 ดูรายละเอียดเพิ่มเติม" : (lang === "cn" ? "🌐 查看更多" : (lang === "ru" ? "🌐 Подробнее" : "🌐 View Details"))}
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="h-10 bg-[#F5F5F5] rounded-md flex items-center justify-center text-[11px] font-medium text-[#666666]">
-              {lang === "th" ? "❤️ สนใจ" : (lang === "cn" ? "❤️ 感兴趣" : "❤️ Interested")}
+              {lang === "th" ? "❤️ สนใจ" : (lang === "cn" ? "❤️ 感兴趣" : (lang === "ru" ? "❤️ Интересует" : "❤️ Interested"))}
             </div>
             <div className="h-10 bg-[#F5F5F5] rounded-md flex items-center justify-center text-[11px] font-medium text-[#666666]">
-              {lang === "th" ? "💬 ติดต่อเจ้าหน้าที่" : (lang === "cn" ? "💬 联系中介" : "💬 Contact Agent")}
+              {lang === "th" ? "💬 ติดต่อเจ้าหน้าที่" : (lang === "cn" ? "💬 联系中介" : (lang === "ru" ? "💬 Связаться" : "💬 Contact Agent"))}
             </div>
           </div>
         </div>

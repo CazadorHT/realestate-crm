@@ -126,6 +126,10 @@
     "view_all_images": "View all images",
     "certified_professionals": "CERTIFIED PROFESSIONALS",
     "premium_service_fallback": "Learn more about our premium service offerings tailored for your success.",
+    "floating": {
+      "messenger": "Messenger",
+      "line_chat": "Line Chat"
+    },
     "cookie_consent": {
       "title": "We use cookies",
       "description": "This website uses cookies to improve your experience and analyze website traffic. You can learn more in our",
@@ -812,7 +816,7 @@
     "can3": "Inquire about information for buying/selling",
     "section3_title": "3. Cautions About Information",
     "section3_alert_title": "Information Changes",
-    "section3_alert_p1": "Prices and property details may be changed by property owners, or they may đã be sold/rented already, without us being able to update information on the website immediately.",
+    "section3_alert_p1": "Prices and property details may be changed by property owners, or they may have been sold/rented already, without us being able to update information on the website immediately.",
     "section3_alert_p2": "*Users should check information with our staff again before deciding.",
     "section4_title": "4. Applicable Law",
     "section4_p1": "This agreement is under the enforcement of the laws of the Kingdom of Thailand. Any dispute resolution shall proceed according to Thai legal processes.",

@@ -142,7 +142,7 @@ function calculateAreaScore(property: PropertyRow, targetArea?: string): { point
 
 export function calculateMatchScore(
   property: PropertyRow,
-  criteria: SearchCriteria & { language?: "en" | "th" | "cn" },
+  criteria: SearchCriteria,
 ): { score: number; reasons: string[]; scoreBreakdown: ScoreBreakdown[] } {
   let score = 0;
   const reasons: string[] = [];

@@ -12,7 +12,7 @@ import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
 import { format } from "date-fns";
-import { th, enUS, zhCN } from "date-fns/locale";
+import { th, enUS, zhCN, ru } from "date-fns/locale";
 import { siteConfig } from "@/lib/site-config";
 
 import { BlogPost } from "@/lib/services/blog";
@@ -29,7 +29,7 @@ export function BlogSection() {
       const { data } = await supabase
         .from("blog_posts")
         .select(`
-          id, slug, title, title_en, title_cn, excerpt, excerpt_en, excerpt_cn, cover_image, category, published_at,
+          id, slug, title, title_en, title_cn, title_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, cover_image, category, published_at,
           profiles:author_id (
             full_name,
             avatar_url
@@ -241,7 +241,9 @@ export function BlogSection() {
                                         ? th
                                         : language === "cn"
                                           ? zhCN
-                                          : enUS,
+                                          : language === "ru"
+                                            ? ru
+                                            : enUS,
                                   })
                                 : ""}
                             </time>

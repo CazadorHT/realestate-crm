@@ -3,19 +3,19 @@
         "project": "VC Connect Asset",
         "description": "Snapshot of RPCs, Indices, Triggers, Enums, and Table Sizes",
         "environment": "Production/Staging",
-        "exported_at": "2026-04-20T16:36:03.247226+00:00",
+        "exported_at": "2026-04-27T01:58:12.098313+00:00",
         "report_name": "S-Tier System Audit"
     },
     "audit_data": [
         {
-            "name": "array_to_halfvec",
-            "details": "Args: integer[], integer, boolean",
+            "name": "accept_tenant_invitation",
+            "details": "Args: p_tenant_id uuid",
             "category": "1. RPC & FUNCTIONS",
-            "extra_info": "Owner: supabase_admin"
+            "extra_info": "Owner: postgres"
         },
         {
             "name": "array_to_halfvec",
-            "details": "Args: real[], integer, boolean",
+            "details": "Args: numeric[], integer, boolean",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
         },
@@ -27,6 +27,24 @@
         },
         {
             "name": "array_to_halfvec",
+            "details": "Args: real[], integer, boolean",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: supabase_admin"
+        },
+        {
+            "name": "array_to_halfvec",
+            "details": "Args: integer[], integer, boolean",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: supabase_admin"
+        },
+        {
+            "name": "array_to_sparsevec",
+            "details": "Args: integer[], integer, boolean",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: supabase_admin"
+        },
+        {
+            "name": "array_to_sparsevec",
             "details": "Args: numeric[], integer, boolean",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
@@ -39,31 +57,19 @@
         },
         {
             "name": "array_to_sparsevec",
-            "details": "Args: integer[], integer, boolean",
-            "category": "1. RPC & FUNCTIONS",
-            "extra_info": "Owner: supabase_admin"
-        },
-        {
-            "name": "array_to_sparsevec",
             "details": "Args: real[], integer, boolean",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
         },
         {
-            "name": "array_to_sparsevec",
-            "details": "Args: numeric[], integer, boolean",
-            "category": "1. RPC & FUNCTIONS",
-            "extra_info": "Owner: supabase_admin"
-        },
-        {
-            "name": "array_to_vector",
-            "details": "Args: numeric[], integer, boolean",
-            "category": "1. RPC & FUNCTIONS",
-            "extra_info": "Owner: supabase_admin"
-        },
-        {
             "name": "array_to_vector",
             "details": "Args: integer[], integer, boolean",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: supabase_admin"
+        },
+        {
+            "name": "array_to_vector",
+            "details": "Args: numeric[], integer, boolean",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
         },
@@ -93,13 +99,13 @@
         },
         {
             "name": "binary_quantize",
-            "details": "Args: vector",
+            "details": "Args: halfvec",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
         },
         {
             "name": "binary_quantize",
-            "details": "Args: halfvec",
+            "details": "Args: vector",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
         },
@@ -110,8 +116,20 @@
             "extra_info": "Owner: postgres"
         },
         {
+            "name": "bulk_hard_delete_properties",
+            "details": "Args: p_ids uuid[]",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
             "name": "bulk_mark_commissions_as_ready_to_pay",
             "details": "Args: p_commission_ids uuid[], p_tenant_id uuid, p_user_id uuid, p_user_full_name text",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "bulk_trash_properties",
+            "details": "Args: p_ids uuid[]",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: postgres"
         },
@@ -140,13 +158,61 @@
             "extra_info": "Owner: supabase_admin"
         },
         {
+            "name": "create_lead_from_match",
+            "details": "Args: p_session_id uuid, p_property_id uuid, p_full_name text, p_phone text, p_email text DEFAULT NULL::text, p_line_id text DEFAULT NULL::text",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "create_lead_from_match",
+            "details": "Args: p_session_id uuid, p_property_id uuid, p_full_name text, p_phone text, p_full_name_hash text DEFAULT NULL::text, p_phone_hash text DEFAULT NULL::text, p_email text DEFAULT NULL::text, p_email_hash text DEFAULT NULL::text, p_line_id text DEFAULT NULL::text, p_line_id_hash text DEFAULT NULL::text",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "decline_tenant_invitation",
+            "details": "Args: p_tenant_id uuid",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "fn_archive_record_before_delete",
+            "details": "Args: ",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
             "name": "fn_check_hot_deal",
             "details": "Args: p_price numeric, p_orig_price numeric, p_rental numeric, p_orig_rental numeric, p_keywords text[]",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: postgres"
         },
         {
+            "name": "fn_cleanup_old_archives",
+            "details": "Args: p_days_retention integer DEFAULT 90",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "fn_cleanup_property_ghost_records",
+            "details": "Args: ",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "fn_restore_property_from_archive",
+            "details": "Args: p_archive_id uuid",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
             "name": "fn_sync_hot_deal_flag",
+            "details": "Args: ",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "fn_sync_profile_role_to_auth",
             "details": "Args: ",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: postgres"
@@ -170,8 +236,26 @@
             "extra_info": "Owner: postgres"
         },
         {
+            "name": "get_analytics_summary_v3",
+            "details": "Args: p_tenant_id uuid, p_days integer DEFAULT 30, p_listing_type text DEFAULT NULL::text, p_property_type text DEFAULT NULL::text, p_area text DEFAULT NULL::text",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "get_distinct_finance_years",
+            "details": "Args: ",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
             "name": "get_documents_stats",
             "details": "Args: p_tenant_id uuid DEFAULT NULL::uuid, p_search text DEFAULT NULL::text, p_type_filter text DEFAULT NULL::text, p_owner_ids uuid[] DEFAULT NULL::uuid[]",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "get_financial_analytics_v1",
+            "details": "Args: p_year integer, p_tenant_id uuid DEFAULT NULL::uuid",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: postgres"
         },
@@ -182,8 +266,20 @@
             "extra_info": "Owner: postgres"
         },
         {
+            "name": "get_lead_messages",
+            "details": "Args: p_lead_id uuid, p_source text, p_lead_created_at timestamp with time zone, p_offset integer DEFAULT 0, p_limit integer DEFAULT 20",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
             "name": "get_popular_areas_with_counts",
             "details": "Args: target_tenant_id uuid DEFAULT NULL::uuid",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "get_profile_by_email",
+            "details": "Args: p_email text",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: postgres"
         },
@@ -201,6 +297,12 @@
         },
         {
             "name": "get_public_property_facets",
+            "details": "Args: p_q text DEFAULT NULL::text, p_province text DEFAULT NULL::text, p_property_type text DEFAULT NULL::text, p_listing_type text DEFAULT NULL::text",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "get_public_property_facets_v2",
             "details": "Args: p_q text DEFAULT NULL::text, p_province text DEFAULT NULL::text, p_property_type text DEFAULT NULL::text, p_listing_type text DEFAULT NULL::text",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: postgres"
@@ -476,6 +578,12 @@
             "extra_info": "Owner: postgres"
         },
         {
+            "name": "hard_delete_team",
+            "details": "Args: p_team_id uuid",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
             "name": "hnsw_bit_support",
             "details": "Args: internal",
             "category": "1. RPC & FUNCTIONS",
@@ -513,7 +621,13 @@
         },
         {
             "name": "increment_property_view",
-            "details": "Args: property_id uuid",
+            "details": "Args: p_property_id uuid, p_visitor_id text DEFAULT NULL::text, p_user_id uuid DEFAULT NULL::uuid",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "increment_property_view",
+            "details": "Args: p_id uuid",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: postgres"
         },
@@ -531,7 +645,7 @@
         },
         {
             "name": "inner_product",
-            "details": "Args: halfvec, halfvec",
+            "details": "Args: vector, vector",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
         },
@@ -543,7 +657,7 @@
         },
         {
             "name": "inner_product",
-            "details": "Args: vector, vector",
+            "details": "Args: halfvec, halfvec",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
         },
@@ -574,6 +688,18 @@
         {
             "name": "is_system_admin",
             "details": "Args: ",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "is_team_manager",
+            "details": "Args: p_team_id uuid",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "is_team_member",
+            "details": "Args: p_team_id uuid",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: postgres"
         },
@@ -627,12 +753,6 @@
         },
         {
             "name": "l1_distance",
-            "details": "Args: vector, vector",
-            "category": "1. RPC & FUNCTIONS",
-            "extra_info": "Owner: supabase_admin"
-        },
-        {
-            "name": "l1_distance",
             "details": "Args: halfvec, halfvec",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
@@ -644,13 +764,7 @@
             "extra_info": "Owner: supabase_admin"
         },
         {
-            "name": "l2_distance",
-            "details": "Args: halfvec, halfvec",
-            "category": "1. RPC & FUNCTIONS",
-            "extra_info": "Owner: supabase_admin"
-        },
-        {
-            "name": "l2_distance",
+            "name": "l1_distance",
             "details": "Args: vector, vector",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
@@ -662,8 +776,14 @@
             "extra_info": "Owner: supabase_admin"
         },
         {
-            "name": "l2_norm",
-            "details": "Args: sparsevec",
+            "name": "l2_distance",
+            "details": "Args: vector, vector",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: supabase_admin"
+        },
+        {
+            "name": "l2_distance",
+            "details": "Args: halfvec, halfvec",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
         },
@@ -674,8 +794,14 @@
             "extra_info": "Owner: supabase_admin"
         },
         {
-            "name": "l2_normalize",
+            "name": "l2_norm",
             "details": "Args: sparsevec",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: supabase_admin"
+        },
+        {
+            "name": "l2_normalize",
+            "details": "Args: halfvec",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
         },
@@ -687,9 +813,21 @@
         },
         {
             "name": "l2_normalize",
-            "details": "Args: halfvec",
+            "details": "Args: sparsevec",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
+        },
+        {
+            "name": "log_ai_usage",
+            "details": "Args: p_model text, p_feature text, p_status text, p_error_message text DEFAULT NULL::text, p_prompt_tokens integer DEFAULT 0, p_completion_tokens integer DEFAULT 0, p_cost_thb numeric DEFAULT 0",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "log_system_activity",
+            "details": "Args: p_action text, p_entity text, p_entity_id text DEFAULT NULL::text, p_metadata jsonb DEFAULT '{}'::jsonb, p_tenant_id uuid DEFAULT NULL::uuid, p_email text DEFAULT NULL::text",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
         },
         {
             "name": "match_properties",
@@ -698,7 +836,25 @@
             "extra_info": "Owner: postgres"
         },
         {
+            "name": "match_properties_hardened",
+            "details": "Args: query_embedding vector, match_threshold double precision, match_count integer, p_tenant_id uuid DEFAULT NULL::uuid",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "prune_ai_logs",
+            "details": "Args: p_days_to_keep integer",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
             "name": "rct_updated_at_trigger",
+            "details": "Args: ",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "reset_all_property_views",
             "details": "Args: ",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: postgres"
@@ -878,10 +1034,22 @@
             "extra_info": "Owner: supabase_admin"
         },
         {
-            "name": "subvector",
-            "details": "Args: halfvec, integer, integer",
+            "name": "submit_public_lead",
+            "details": "Args: p_full_name text, p_full_name_hash text DEFAULT NULL::text, p_line_id text DEFAULT NULL::text, p_line_id_hash text DEFAULT NULL::text, p_phone text DEFAULT NULL::text, p_phone_hash text DEFAULT NULL::text, p_email text DEFAULT NULL::text, p_email_hash text DEFAULT NULL::text, p_source text DEFAULT 'WEBSITE'::text, p_note text DEFAULT NULL::text, p_utm_source text DEFAULT NULL::text, p_utm_medium text DEFAULT NULL::text, p_utm_campaign text DEFAULT NULL::text, p_utm_content text DEFAULT NULL::text, p_utm_term text DEFAULT NULL::text, p_referral_url text DEFAULT NULL::text, p_ai_score integer DEFAULT 0, p_ai_status_label text DEFAULT NULL::text",
             "category": "1. RPC & FUNCTIONS",
-            "extra_info": "Owner: supabase_admin"
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "submit_public_lead",
+            "details": "Args: p_full_name text, p_full_name_hash text DEFAULT NULL::text, p_line_id text DEFAULT NULL::text, p_line_id_hash text DEFAULT NULL::text, p_phone text DEFAULT NULL::text, p_phone_hash text DEFAULT NULL::text, p_source text DEFAULT 'WEBSITE'::text, p_note text DEFAULT NULL::text",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
+        },
+        {
+            "name": "submit_public_lead",
+            "details": "Args: p_full_name text, p_line_id text DEFAULT NULL::text, p_phone text DEFAULT NULL::text, p_source text DEFAULT 'WEBSITE'::text, p_note text DEFAULT NULL::text",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: postgres"
         },
         {
             "name": "subvector",
@@ -890,14 +1058,20 @@
             "extra_info": "Owner: supabase_admin"
         },
         {
-            "name": "sum",
-            "details": "Args: vector",
+            "name": "subvector",
+            "details": "Args: halfvec, integer, integer",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
         },
         {
             "name": "sum",
             "details": "Args: halfvec",
+            "category": "1. RPC & FUNCTIONS",
+            "extra_info": "Owner: supabase_admin"
+        },
+        {
+            "name": "sum",
+            "details": "Args: vector",
             "category": "1. RPC & FUNCTIONS",
             "extra_info": "Owner: supabase_admin"
         },
@@ -1166,10 +1340,34 @@
             "extra_info": "CREATE UNIQUE INDEX audit_logs_2026_03_pkey ON public.audit_logs_2026_03 USING btree (id, created_at)"
         },
         {
+            "name": "audit_logs_2026_03_tenant_id_created_at_idx",
+            "details": "Table: audit_logs_2026_03",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX audit_logs_2026_03_tenant_id_created_at_idx ON public.audit_logs_2026_03 USING btree (tenant_id, created_at DESC)"
+        },
+        {
+            "name": "audit_logs_2026_03_tenant_id_created_at_idx1",
+            "details": "Table: audit_logs_2026_03",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX audit_logs_2026_03_tenant_id_created_at_idx1 ON public.audit_logs_2026_03 USING btree (tenant_id, created_at DESC)"
+        },
+        {
             "name": "audit_logs_2026_04_pkey",
             "details": "Table: audit_logs_2026_04",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE UNIQUE INDEX audit_logs_2026_04_pkey ON public.audit_logs_2026_04 USING btree (id, created_at)"
+        },
+        {
+            "name": "audit_logs_2026_04_tenant_id_created_at_idx",
+            "details": "Table: audit_logs_2026_04",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX audit_logs_2026_04_tenant_id_created_at_idx ON public.audit_logs_2026_04 USING btree (tenant_id, created_at DESC)"
+        },
+        {
+            "name": "audit_logs_2026_04_tenant_id_created_at_idx1",
+            "details": "Table: audit_logs_2026_04",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX audit_logs_2026_04_tenant_id_created_at_idx1 ON public.audit_logs_2026_04 USING btree (tenant_id, created_at DESC)"
         },
         {
             "name": "audit_logs_2026_05_pkey",
@@ -1178,16 +1376,52 @@
             "extra_info": "CREATE UNIQUE INDEX audit_logs_2026_05_pkey ON public.audit_logs_2026_05 USING btree (id, created_at)"
         },
         {
+            "name": "audit_logs_2026_05_tenant_id_created_at_idx",
+            "details": "Table: audit_logs_2026_05",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX audit_logs_2026_05_tenant_id_created_at_idx ON public.audit_logs_2026_05 USING btree (tenant_id, created_at DESC)"
+        },
+        {
+            "name": "audit_logs_2026_05_tenant_id_created_at_idx1",
+            "details": "Table: audit_logs_2026_05",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX audit_logs_2026_05_tenant_id_created_at_idx1 ON public.audit_logs_2026_05 USING btree (tenant_id, created_at DESC)"
+        },
+        {
             "name": "audit_logs_2026_06_pkey",
             "details": "Table: audit_logs_2026_06",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE UNIQUE INDEX audit_logs_2026_06_pkey ON public.audit_logs_2026_06 USING btree (id, created_at)"
         },
         {
+            "name": "audit_logs_2026_06_tenant_id_created_at_idx",
+            "details": "Table: audit_logs_2026_06",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX audit_logs_2026_06_tenant_id_created_at_idx ON public.audit_logs_2026_06 USING btree (tenant_id, created_at DESC)"
+        },
+        {
+            "name": "audit_logs_2026_06_tenant_id_created_at_idx1",
+            "details": "Table: audit_logs_2026_06",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX audit_logs_2026_06_tenant_id_created_at_idx1 ON public.audit_logs_2026_06 USING btree (tenant_id, created_at DESC)"
+        },
+        {
             "name": "audit_logs_history_pkey",
             "details": "Table: audit_logs_history",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE UNIQUE INDEX audit_logs_history_pkey ON public.audit_logs_history USING btree (id, created_at)"
+        },
+        {
+            "name": "audit_logs_history_tenant_id_created_at_idx",
+            "details": "Table: audit_logs_history",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX audit_logs_history_tenant_id_created_at_idx ON public.audit_logs_history USING btree (tenant_id, created_at DESC)"
+        },
+        {
+            "name": "audit_logs_history_tenant_id_created_at_idx1",
+            "details": "Table: audit_logs_history",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX audit_logs_history_tenant_id_created_at_idx1 ON public.audit_logs_history USING btree (tenant_id, created_at DESC)"
         },
         {
             "name": "audit_logs_pkey1",
@@ -1262,6 +1496,12 @@
             "extra_info": "CREATE UNIQUE INDEX deals_pkey ON public.deals USING btree (id)"
         },
         {
+            "name": "deleted_records_archive_pkey",
+            "details": "Table: deleted_records_archive",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE UNIQUE INDEX deleted_records_archive_pkey ON public.deleted_records_archive USING btree (id)"
+        },
+        {
             "name": "documents_pkey",
             "details": "Table: documents",
             "category": "2. INDICES (GIN/PARTIAL)",
@@ -1290,6 +1530,36 @@
             "details": "Table: features",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE UNIQUE INDEX features_pkey ON public.features USING btree (id)"
+        },
+        {
+            "name": "idx_ai_usage_logs_user",
+            "details": "Table: ai_usage_logs",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_ai_usage_logs_user ON public.ai_usage_logs USING btree (user_id, created_at DESC)"
+        },
+        {
+            "name": "idx_archive_original_id",
+            "details": "Table: deleted_records_archive",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_archive_original_id ON public.deleted_records_archive USING btree (original_id)"
+        },
+        {
+            "name": "idx_archive_search",
+            "details": "Table: deleted_records_archive",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_archive_search ON public.deleted_records_archive USING btree (entity_type, tenant_id, deleted_at DESC)"
+        },
+        {
+            "name": "idx_audit_logs_tenant_created",
+            "details": "Table: audit_logs",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_audit_logs_tenant_created ON ONLY public.audit_logs USING btree (tenant_id, created_at DESC)"
+        },
+        {
+            "name": "idx_audit_logs_tenant_date",
+            "details": "Table: audit_logs",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_audit_logs_tenant_date ON ONLY public.audit_logs USING btree (tenant_id, created_at DESC)"
         },
         {
             "name": "idx_blog_post_views_log_created_at",
@@ -1454,10 +1724,22 @@
             "extra_info": "CREATE INDEX idx_deals_property_id ON public.deals USING btree (property_id)"
         },
         {
+            "name": "idx_deals_property_lead",
+            "details": "Table: deals",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_deals_property_lead ON public.deals USING btree (property_id, lead_id)"
+        },
+        {
             "name": "idx_deals_status",
             "details": "Table: deals",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE INDEX idx_deals_status ON public.deals USING btree (status)"
+        },
+        {
+            "name": "idx_deals_tenant_status",
+            "details": "Table: deals",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_deals_tenant_status ON public.deals USING btree (tenant_id, status)"
         },
         {
             "name": "idx_documents_esign_status",
@@ -1526,6 +1808,12 @@
             "extra_info": "CREATE INDEX idx_leads_created_at ON public.leads USING btree (created_at DESC)"
         },
         {
+            "name": "idx_leads_email_hash",
+            "details": "Table: leads",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_leads_email_hash ON public.leads USING btree (email_hash)"
+        },
+        {
             "name": "idx_leads_embedding",
             "details": "Table: leads",
             "category": "2. INDICES (GIN/PARTIAL)",
@@ -1538,10 +1826,28 @@
             "extra_info": "CREATE INDEX idx_leads_facebook_psid ON public.leads USING btree (facebook_psid)"
         },
         {
+            "name": "idx_leads_full_name_hash",
+            "details": "Table: leads",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_leads_full_name_hash ON public.leads USING btree (full_name_hash)"
+        },
+        {
             "name": "idx_leads_instagram_sid",
             "details": "Table: leads",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE INDEX idx_leads_instagram_sid ON public.leads USING btree (instagram_sid)"
+        },
+        {
+            "name": "idx_leads_line_id_hash",
+            "details": "Table: leads",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_leads_line_id_hash ON public.leads USING btree (line_id_hash)"
+        },
+        {
+            "name": "idx_leads_phone_hash",
+            "details": "Table: leads",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_leads_phone_hash ON public.leads USING btree (phone_hash)"
         },
         {
             "name": "idx_leads_preferences_gin",
@@ -1556,10 +1862,22 @@
             "extra_info": "CREATE INDEX idx_leads_property_id ON public.leads USING btree (property_id)"
         },
         {
+            "name": "idx_leads_search_trgm",
+            "details": "Table: leads",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_leads_search_trgm ON public.leads USING gin (full_name gin_trgm_ops, phone gin_trgm_ops, email gin_trgm_ops)"
+        },
+        {
             "name": "idx_leads_stage",
             "details": "Table: leads",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE INDEX idx_leads_stage ON public.leads USING btree (stage)"
+        },
+        {
+            "name": "idx_leads_tenant_stage",
+            "details": "Table: leads",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_leads_tenant_stage ON public.leads USING btree (tenant_id, stage)"
         },
         {
             "name": "idx_line_groups_tenant_id",
@@ -1598,6 +1916,24 @@
             "extra_info": "CREATE INDEX idx_omni_messages_source ON public.omni_messages USING btree (source)"
         },
         {
+            "name": "idx_owners_full_name_hash",
+            "details": "Table: owners",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_owners_full_name_hash ON public.owners USING btree (full_name_hash)"
+        },
+        {
+            "name": "idx_owners_phone_hash",
+            "details": "Table: owners",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_owners_phone_hash ON public.owners USING btree (phone_hash)"
+        },
+        {
+            "name": "idx_owners_search_trgm",
+            "details": "Table: owners",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_owners_search_trgm ON public.owners USING gin (full_name gin_trgm_ops, phone gin_trgm_ops, company_name gin_trgm_ops)"
+        },
+        {
             "name": "idx_piu_property_id",
             "details": "Table: property_image_uploads",
             "category": "2. INDICES (GIN/PARTIAL)",
@@ -1626,6 +1962,18 @@
             "details": "Table: popular_areas",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE INDEX idx_popular_areas_province ON public.popular_areas USING btree (province)"
+        },
+        {
+            "name": "idx_proactive_triggers_lookup",
+            "details": "Table: proactive_agent_triggers",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_proactive_triggers_lookup ON public.proactive_agent_triggers USING btree (property_id, visitor_id, user_id)"
+        },
+        {
+            "name": "idx_profiles_telegram_id",
+            "details": "Table: profiles",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_profiles_telegram_id ON public.profiles USING btree (telegram_id)"
         },
         {
             "name": "idx_prop_area_slug",
@@ -1692,6 +2040,24 @@
             "details": "Table: properties",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE INDEX idx_properties_assigned_to ON public.properties USING btree (assigned_to)"
+        },
+        {
+            "name": "idx_properties_attributes",
+            "details": "Table: properties",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_properties_attributes ON public.properties USING btree (property_type, bedrooms, bathrooms)"
+        },
+        {
+            "name": "idx_properties_co_agent_name_hash",
+            "details": "Table: properties",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_properties_co_agent_name_hash ON public.properties USING btree (co_agent_name_hash)"
+        },
+        {
+            "name": "idx_properties_co_agent_phone_hash",
+            "details": "Table: properties",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_properties_co_agent_phone_hash ON public.properties USING btree (co_agent_phone_hash)"
         },
         {
             "name": "idx_properties_co_broker_id",
@@ -1766,6 +2132,12 @@
             "extra_info": "CREATE INDEX idx_properties_listing_type ON public.properties USING btree (listing_type)"
         },
         {
+            "name": "idx_properties_location",
+            "details": "Table: properties",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_properties_location ON public.properties USING btree (province, district, subdistrict)"
+        },
+        {
             "name": "idx_properties_meta_keywords_gin",
             "details": "Table: properties",
             "category": "2. INDICES (GIN/PARTIAL)",
@@ -1794,6 +2166,12 @@
             "details": "Table: properties",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE INDEX idx_properties_price_drop ON public.properties USING btree (price, original_price) WHERE (price < original_price)"
+        },
+        {
+            "name": "idx_properties_price_search",
+            "details": "Table: properties",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_properties_price_search ON public.properties USING btree (listing_type, price, rental_price) WHERE (deleted_at IS NULL)"
         },
         {
             "name": "idx_properties_property_type",
@@ -1862,6 +2240,12 @@
             "extra_info": "CREATE INDEX idx_properties_subdistrict_trgm ON public.properties USING gin (subdistrict gin_trgm_ops)"
         },
         {
+            "name": "idx_properties_tenant_status",
+            "details": "Table: properties",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_properties_tenant_status ON public.properties USING btree (tenant_id, status, deleted_at)"
+        },
+        {
             "name": "idx_properties_title_cn_trgm",
             "details": "Table: properties",
             "category": "2. INDICES (GIN/PARTIAL)",
@@ -1886,6 +2270,12 @@
             "extra_info": "CREATE INDEX idx_properties_titles_search ON public.properties USING gin (to_tsvector('simple'::regconfig, ((COALESCE(title_en, ''::text) || ' '::text) || COALESCE(title_cn, ''::text))))"
         },
         {
+            "name": "idx_property_images_scan_status",
+            "details": "Table: property_images",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_property_images_scan_status ON public.property_images USING btree (scan_status) WHERE (scan_status = 'PENDING'::text)"
+        },
+        {
             "name": "idx_property_views_log_created_at",
             "details": "Table: property_views_log",
             "category": "2. INDICES (GIN/PARTIAL)",
@@ -1898,10 +2288,28 @@
             "extra_info": "CREATE INDEX idx_property_views_log_property_id ON public.property_views_log USING btree (property_id)"
         },
         {
+            "name": "idx_property_views_log_tenant_date",
+            "details": "Table: property_views_log",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_property_views_log_tenant_date ON public.property_views_log USING btree (tenant_id, created_at DESC)"
+        },
+        {
             "name": "idx_property_views_log_tenant_id",
             "details": "Table: property_views_log",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE INDEX idx_property_views_log_tenant_id ON public.property_views_log USING btree (tenant_id)"
+        },
+        {
+            "name": "idx_property_views_log_user_id",
+            "details": "Table: property_views_log",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_property_views_log_user_id ON public.property_views_log USING btree (user_id)"
+        },
+        {
+            "name": "idx_property_views_log_visitor_id",
+            "details": "Table: property_views_log",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE INDEX idx_property_views_log_visitor_id ON public.property_views_log USING btree (visitor_id)"
         },
         {
             "name": "idx_rent_notification_history_rule_id",
@@ -2054,6 +2462,12 @@
             "extra_info": "CREATE UNIQUE INDEX popular_areas_pkey ON public.popular_areas USING btree (id)"
         },
         {
+            "name": "proactive_agent_triggers_pkey",
+            "details": "Table: proactive_agent_triggers",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE UNIQUE INDEX proactive_agent_triggers_pkey ON public.proactive_agent_triggers USING btree (id)"
+        },
+        {
             "name": "profiles_pkey",
             "details": "Table: profiles",
             "category": "2. INDICES (GIN/PARTIAL)",
@@ -2130,6 +2544,12 @@
             "details": "Table: property_views_log",
             "category": "2. INDICES (GIN/PARTIAL)",
             "extra_info": "CREATE UNIQUE INDEX property_views_log_pkey ON public.property_views_log USING btree (id)"
+        },
+        {
+            "name": "ref_banks_pkey",
+            "details": "Table: ref_banks",
+            "category": "2. INDICES (GIN/PARTIAL)",
+            "extra_info": "CREATE UNIQUE INDEX ref_banks_pkey ON public.ref_banks USING btree (code)"
         },
         {
             "name": "rent_notification_history_pkey",
@@ -2264,16 +2684,46 @@
             "extra_info": "Timing: BEFORE UPDATE"
         },
         {
+            "name": "trg_archive_deal_delete",
+            "details": "Table: deals",
+            "category": "3. TRIGGERS",
+            "extra_info": "Timing: BEFORE DELETE"
+        },
+        {
+            "name": "trg_archive_lead_delete",
+            "details": "Table: leads",
+            "category": "3. TRIGGERS",
+            "extra_info": "Timing: BEFORE DELETE"
+        },
+        {
+            "name": "trg_archive_property_delete",
+            "details": "Table: properties",
+            "category": "3. TRIGGERS",
+            "extra_info": "Timing: BEFORE DELETE"
+        },
+        {
+            "name": "trg_cleanup_property_ghosts",
+            "details": "Table: properties",
+            "category": "3. TRIGGERS",
+            "extra_info": "Timing: AFTER UPDATE"
+        },
+        {
             "name": "trg_increment_property_version",
             "details": "Table: properties",
             "category": "3. TRIGGERS",
             "extra_info": "Timing: BEFORE UPDATE"
         },
         {
-            "name": "trg_sync_property_images",
-            "details": "Table: property_images",
+            "name": "trg_sync_profile_role",
+            "details": "Table: profiles",
             "category": "3. TRIGGERS",
-            "extra_info": "Timing: AFTER DELETE"
+            "extra_info": "Timing: AFTER UPDATE"
+        },
+        {
+            "name": "trg_sync_profile_role",
+            "details": "Table: profiles",
+            "category": "3. TRIGGERS",
+            "extra_info": "Timing: AFTER INSERT"
         },
         {
             "name": "trg_sync_property_images",
@@ -2285,19 +2735,25 @@
             "name": "trg_sync_property_images",
             "details": "Table: property_images",
             "category": "3. TRIGGERS",
+            "extra_info": "Timing: AFTER DELETE"
+        },
+        {
+            "name": "trg_sync_property_images",
+            "details": "Table: property_images",
+            "category": "3. TRIGGERS",
             "extra_info": "Timing: AFTER UPDATE"
         },
         {
             "name": "trig_sync_hot_deal_flag",
             "details": "Table: properties",
             "category": "3. TRIGGERS",
-            "extra_info": "Timing: BEFORE UPDATE"
+            "extra_info": "Timing: BEFORE INSERT"
         },
         {
             "name": "trig_sync_hot_deal_flag",
             "details": "Table: properties",
             "category": "3. TRIGGERS",
-            "extra_info": "Timing: BEFORE INSERT"
+            "extra_info": "Timing: BEFORE UPDATE"
         },
         {
             "name": "trig_sync_property_ai_context",
@@ -2337,18 +2793,6 @@
         },
         {
             "name": "commission_role",
-            "details": "Value: CLOSING",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 2"
-        },
-        {
-            "name": "commission_role",
-            "details": "Value: LISTING",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 1"
-        },
-        {
-            "name": "commission_role",
             "details": "Value: TEAM_POOL",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 5"
@@ -2366,16 +2810,16 @@
             "extra_info": "Sort Order: 3"
         },
         {
-            "name": "commission_status",
-            "details": "Value: PENDING",
+            "name": "commission_role",
+            "details": "Value: CLOSING",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 1"
+            "extra_info": "Sort Order: 2"
         },
         {
-            "name": "commission_status",
-            "details": "Value: FAILED",
+            "name": "commission_role",
+            "details": "Value: LISTING",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 7"
+            "extra_info": "Sort Order: 1"
         },
         {
             "name": "commission_status",
@@ -2385,15 +2829,27 @@
         },
         {
             "name": "commission_status",
+            "details": "Value: FAILED",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 7"
+        },
+        {
+            "name": "commission_status",
             "details": "Value: READY_TO_PAY",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 5"
         },
         {
             "name": "commission_status",
-            "details": "Value: UNPAID",
+            "details": "Value: PENDING",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 4"
+            "extra_info": "Sort Order: 1"
+        },
+        {
+            "name": "commission_status",
+            "details": "Value: PAID",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 2"
         },
         {
             "name": "commission_status",
@@ -2403,7 +2859,25 @@
         },
         {
             "name": "commission_status",
-            "details": "Value: PAID",
+            "details": "Value: UNPAID",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 4"
+        },
+        {
+            "name": "deal_status",
+            "details": "Value: CLOSED_LOSS",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 5"
+        },
+        {
+            "name": "deal_status",
+            "details": "Value: CANCELLED",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 3"
+        },
+        {
+            "name": "deal_status",
+            "details": "Value: SIGNED",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 2"
         },
@@ -2420,50 +2894,14 @@
             "extra_info": "Sort Order: 4"
         },
         {
-            "name": "deal_status",
-            "details": "Value: CANCELLED",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 3"
-        },
-        {
-            "name": "deal_status",
-            "details": "Value: SIGNED",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 2"
-        },
-        {
-            "name": "deal_status",
-            "details": "Value: CLOSED_LOSS",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 5"
-        },
-        {
-            "name": "deal_type",
-            "details": "Value: RENT",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 1"
-        },
-        {
             "name": "deal_type",
             "details": "Value: SALE",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 2"
         },
         {
-            "name": "document_owner_type",
-            "details": "Value: RENTAL_CONTRACT",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 4"
-        },
-        {
-            "name": "document_owner_type",
-            "details": "Value: PROPERTY",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 2"
-        },
-        {
-            "name": "document_owner_type",
-            "details": "Value: LEAD",
+            "name": "deal_type",
+            "details": "Value: RENT",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 1"
         },
@@ -2474,14 +2912,20 @@
             "extra_info": "Sort Order: 3"
         },
         {
-            "name": "document_type",
-            "details": "Value: ID_CARD",
+            "name": "document_owner_type",
+            "details": "Value: RENTAL_CONTRACT",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 4"
+        },
+        {
+            "name": "document_owner_type",
+            "details": "Value: LEAD",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 1"
         },
         {
-            "name": "document_type",
-            "details": "Value: PASSPORT",
+            "name": "document_owner_type",
+            "details": "Value: PROPERTY",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 2"
         },
@@ -2490,6 +2934,12 @@
             "details": "Value: COMPANY_REGISTRATION",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 3"
+        },
+        {
+            "name": "document_type",
+            "details": "Value: ID_CARD",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 1"
         },
         {
             "name": "document_type",
@@ -2505,21 +2955,21 @@
         },
         {
             "name": "document_type",
+            "details": "Value: OTHER",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 7"
+        },
+        {
+            "name": "document_type",
             "details": "Value: RESERVATION_DOCUMENT",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 8"
         },
         {
             "name": "document_type",
-            "details": "Value: LEASE_CONTRACT",
+            "details": "Value: PASSPORT",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 4"
-        },
-        {
-            "name": "document_type",
-            "details": "Value: OTHER",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 7"
+            "extra_info": "Sort Order: 2"
         },
         {
             "name": "document_type",
@@ -2534,10 +2984,16 @@
             "extra_info": "Sort Order: 5"
         },
         {
-            "name": "esign_status",
-            "details": "Value: EXPIRED",
+            "name": "document_type",
+            "details": "Value: LEASE_CONTRACT",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 5"
+            "extra_info": "Sort Order: 4"
+        },
+        {
+            "name": "esign_status",
+            "details": "Value: DRAFT",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 1"
         },
         {
             "name": "esign_status",
@@ -2559,9 +3015,27 @@
         },
         {
             "name": "esign_status",
-            "details": "Value: DRAFT",
+            "details": "Value: EXPIRED",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 1"
+            "extra_info": "Sort Order: 5"
+        },
+        {
+            "name": "lead_activity_type",
+            "details": "Value: VIEWING",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 4"
+        },
+        {
+            "name": "lead_activity_type",
+            "details": "Value: FOLLOW_UP",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 5"
+        },
+        {
+            "name": "lead_activity_type",
+            "details": "Value: LINE_CHAT",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 2"
         },
         {
             "name": "lead_activity_type",
@@ -2571,9 +3045,9 @@
         },
         {
             "name": "lead_activity_type",
-            "details": "Value: VIEWING",
+            "details": "Value: EMAIL",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 4"
+            "extra_info": "Sort Order: 3"
         },
         {
             "name": "lead_activity_type",
@@ -2588,34 +3062,10 @@
             "extra_info": "Sort Order: 6"
         },
         {
-            "name": "lead_activity_type",
-            "details": "Value: LINE_CHAT",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 2"
-        },
-        {
-            "name": "lead_activity_type",
-            "details": "Value: EMAIL",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 3"
-        },
-        {
-            "name": "lead_activity_type",
-            "details": "Value: FOLLOW_UP",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 5"
-        },
-        {
             "name": "lead_source",
-            "details": "Value: FACEBOOK",
+            "details": "Value: OTHER",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 2"
-        },
-        {
-            "name": "lead_source",
-            "details": "Value: INSTAGRAM",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 7"
+            "extra_info": "Sort Order: 6"
         },
         {
             "name": "lead_source",
@@ -2625,15 +3075,9 @@
         },
         {
             "name": "lead_source",
-            "details": "Value: OTHER",
+            "details": "Value: WEBSITE",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 6"
-        },
-        {
-            "name": "lead_source",
-            "details": "Value: WHATSAPP",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 8"
+            "extra_info": "Sort Order: 4"
         },
         {
             "name": "lead_source",
@@ -2643,15 +3087,33 @@
         },
         {
             "name": "lead_source",
-            "details": "Value: WEBSITE",
+            "details": "Value: FACEBOOK",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 4"
+            "extra_info": "Sort Order: 2"
         },
         {
             "name": "lead_source",
             "details": "Value: PORTAL",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 1"
+        },
+        {
+            "name": "lead_source",
+            "details": "Value: WHATSAPP",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 8"
+        },
+        {
+            "name": "lead_source",
+            "details": "Value: INSTAGRAM",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 7"
+        },
+        {
+            "name": "lead_stage",
+            "details": "Value: CLOSED",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 5"
         },
         {
             "name": "lead_stage",
@@ -2667,21 +3129,21 @@
         },
         {
             "name": "lead_stage",
+            "details": "Value: NEW",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 1"
+        },
+        {
+            "name": "lead_stage",
             "details": "Value: VIEWED",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 3"
         },
         {
-            "name": "lead_stage",
-            "details": "Value: CLOSED",
+            "name": "lead_type",
+            "details": "Value: JURISTIC_PERSON",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 5"
-        },
-        {
-            "name": "lead_stage",
-            "details": "Value: NEW",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 1"
+            "extra_info": "Sort Order: 3"
         },
         {
             "name": "lead_type",
@@ -2696,22 +3158,10 @@
             "extra_info": "Sort Order: 2"
         },
         {
-            "name": "lead_type",
-            "details": "Value: JURISTIC_PERSON",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 3"
-        },
-        {
             "name": "listing_type",
             "details": "Value: SALE",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 1"
-        },
-        {
-            "name": "listing_type",
-            "details": "Value: SALE_AND_RENT",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 3"
         },
         {
             "name": "listing_type",
@@ -2720,26 +3170,8 @@
             "extra_info": "Sort Order: 2"
         },
         {
-            "name": "property_status",
-            "details": "Value: ACTIVE",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 2"
-        },
-        {
-            "name": "property_status",
-            "details": "Value: RESERVED",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 5"
-        },
-        {
-            "name": "property_status",
-            "details": "Value: DRAFT",
-            "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 1"
-        },
-        {
-            "name": "property_status",
-            "details": "Value: ARCHIVED",
+            "name": "listing_type",
+            "details": "Value: SALE_AND_RENT",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 3"
         },
@@ -2762,16 +3194,28 @@
             "extra_info": "Sort Order: 6"
         },
         {
-            "name": "property_type",
-            "details": "Value: OTHER",
+            "name": "property_status",
+            "details": "Value: RESERVED",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 5"
         },
         {
-            "name": "property_type",
-            "details": "Value: VILLA",
+            "name": "property_status",
+            "details": "Value: ARCHIVED",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 9"
+            "extra_info": "Sort Order: 3"
+        },
+        {
+            "name": "property_status",
+            "details": "Value: ACTIVE",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 2"
+        },
+        {
+            "name": "property_status",
+            "details": "Value: DRAFT",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 1"
         },
         {
             "name": "property_type",
@@ -2799,6 +3243,12 @@
         },
         {
             "name": "property_type",
+            "details": "Value: OTHER",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 5"
+        },
+        {
+            "name": "property_type",
             "details": "Value: LAND",
             "category": "4. ENUM TYPES",
             "extra_info": "Sort Order: 4"
@@ -2822,10 +3272,10 @@
             "extra_info": "Sort Order: 1"
         },
         {
-            "name": "user_role",
-            "details": "Value: AGENT",
+            "name": "property_type",
+            "details": "Value: VILLA",
             "category": "4. ENUM TYPES",
-            "extra_info": "Sort Order: 2"
+            "extra_info": "Sort Order: 9"
         },
         {
             "name": "user_role",
@@ -2846,40 +3296,46 @@
             "extra_info": "Sort Order: 3"
         },
         {
+            "name": "user_role",
+            "details": "Value: AGENT",
+            "category": "4. ENUM TYPES",
+            "extra_info": "Sort Order: 2"
+        },
+        {
             "name": "ai_usage_logs",
-            "details": "Total Size: 88 kB",
+            "details": "Total Size: 104 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 24 kB | Index: 32 kB"
+            "extra_info": "Table: 24 kB | Index: 48 kB"
         },
         {
             "name": "audit_logs_2026_03",
-            "details": "Total Size: 64 kB",
+            "details": "Total Size: 96 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 16 kB | Index: 16 kB"
+            "extra_info": "Table: 8192 bytes | Index: 48 kB"
         },
         {
             "name": "audit_logs_2026_04",
-            "details": "Total Size: 112 kB",
+            "details": "Total Size: 176 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 8192 bytes | Index: 16 kB"
+            "extra_info": "Table: 16 kB | Index: 48 kB"
         },
         {
             "name": "audit_logs_2026_05",
-            "details": "Total Size: 16 kB",
+            "details": "Total Size: 32 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 0 bytes | Index: 8192 bytes"
+            "extra_info": "Table: 0 bytes | Index: 24 kB"
         },
         {
             "name": "audit_logs_2026_06",
-            "details": "Total Size: 16 kB",
+            "details": "Total Size: 32 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 0 bytes | Index: 8192 bytes"
+            "extra_info": "Table: 0 bytes | Index: 24 kB"
         },
         {
             "name": "audit_logs_history",
-            "details": "Total Size: 88 kB",
+            "details": "Total Size: 120 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 8192 bytes | Index: 40 kB"
+            "extra_info": "Table: 8192 bytes | Index: 72 kB"
         },
         {
             "name": "blog_categories",
@@ -2931,9 +3387,15 @@
         },
         {
             "name": "deals",
-            "details": "Total Size: 120 kB",
+            "details": "Total Size: 152 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 8192 bytes | Index: 72 kB"
+            "extra_info": "Table: 8192 bytes | Index: 104 kB"
+        },
+        {
+            "name": "deleted_records_archive",
+            "details": "Total Size: 80 kB",
+            "category": "5. TABLE SIZES",
+            "extra_info": "Table: 8192 bytes | Index: 48 kB"
         },
         {
             "name": "documents",
@@ -2943,9 +3405,9 @@
         },
         {
             "name": "faqs",
-            "details": "Total Size: 104 kB",
+            "details": "Total Size: 112 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 16 kB | Index: 64 kB"
+            "extra_info": "Table: 16 kB | Index: 72 kB"
         },
         {
             "name": "features",
@@ -2967,9 +3429,9 @@
         },
         {
             "name": "leads",
-            "details": "Total Size: 232 kB",
+            "details": "Total Size: 560 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 48 kB | Index: 144 kB"
+            "extra_info": "Table: 96 kB | Index: 424 kB"
         },
         {
             "name": "line_groups",
@@ -3003,9 +3465,9 @@
         },
         {
             "name": "owners",
-            "details": "Total Size: 32 kB",
+            "details": "Total Size: 112 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 8192 bytes | Index: 16 kB"
+            "extra_info": "Table: 8192 bytes | Index: 96 kB"
         },
         {
             "name": "partners",
@@ -3020,16 +3482,22 @@
             "extra_info": "Table: 16 kB | Index: 48 kB"
         },
         {
-            "name": "profiles",
-            "details": "Total Size: 32 kB",
+            "name": "proactive_agent_triggers",
+            "details": "Total Size: 48 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 8192 bytes | Index: 16 kB"
+            "extra_info": "Table: 8192 bytes | Index: 32 kB"
+        },
+        {
+            "name": "profiles",
+            "details": "Total Size: 48 kB",
+            "category": "5. TABLE SIZES",
+            "extra_info": "Table: 8192 bytes | Index: 32 kB"
         },
         {
             "name": "properties",
-            "details": "Total Size: 3600 kB",
+            "details": "Total Size: 3856 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 88 kB | Index: 3248 kB"
+            "extra_info": "Table: 80 kB | Index: 3512 kB"
         },
         {
             "name": "property_agents",
@@ -3051,9 +3519,9 @@
         },
         {
             "name": "property_images",
-            "details": "Total Size: 152 kB",
+            "details": "Total Size: 168 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 96 kB | Index: 16 kB"
+            "extra_info": "Table: 96 kB | Index: 32 kB"
         },
         {
             "name": "property_matches",
@@ -3075,9 +3543,15 @@
         },
         {
             "name": "property_views_log",
-            "details": "Total Size: 216 kB",
+            "details": "Total Size: 304 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 88 kB | Index: 104 kB"
+            "extra_info": "Table: 96 kB | Index: 176 kB"
+        },
+        {
+            "name": "ref_banks",
+            "details": "Total Size: 32 kB",
+            "category": "5. TABLE SIZES",
+            "extra_info": "Table: 8192 bytes | Index: 16 kB"
         },
         {
             "name": "rent_notification_history",
@@ -3099,15 +3573,15 @@
         },
         {
             "name": "service_views_log",
-            "details": "Total Size: 32 kB",
+            "details": "Total Size: 64 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 0 bytes | Index: 24 kB"
+            "extra_info": "Table: 8192 bytes | Index: 48 kB"
         },
         {
             "name": "services",
-            "details": "Total Size: 120 kB",
+            "details": "Total Size: 128 kB",
             "category": "5. TABLE SIZES",
-            "extra_info": "Table: 24 kB | Index: 48 kB"
+            "extra_info": "Table: 32 kB | Index: 48 kB"
         },
         {
             "name": "site_settings",

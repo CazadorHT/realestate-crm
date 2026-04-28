@@ -71,7 +71,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { blogPostSchema } from "@/features/blog/schema";
-import { BlogPostInput, BlogPostRow } from "@/features/blog/types";
+import { BlogPostInput, BlogPostRow, BlogAiResult } from "@/features/blog/types";
 import {
   createBlogPostAction,
   updateBlogPostAction,
@@ -131,23 +131,29 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         published_at: initialData.published_at || undefined,
         title_en: initialData.title_en || "",
         title_cn: initialData.title_cn || "",
+        title_ru: initialData.title_ru || "",
         excerpt_en: initialData.excerpt_en || "",
         excerpt_cn: initialData.excerpt_cn || "",
+        excerpt_ru: initialData.excerpt_ru || "",
         content_en: initialData.content_en || "",
         content_cn: initialData.content_cn || "",
+        content_ru: initialData.content_ru || "",
         requires_ai_review: initialData.requires_ai_review || false,
       }
     : {
         title: "",
         title_en: "",
         title_cn: "",
+        title_ru: "",
         slug: "",
         excerpt: "",
         excerpt_en: "",
         excerpt_cn: "",
+        excerpt_ru: "",
         content: "",
         content_en: "",
         content_cn: "",
+        content_ru: "",
         category: "General",
         cover_image: "",
         tags: "",
@@ -157,7 +163,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
       };
 
   const form = useForm<BlogPostInput>({
-    resolver: zodResolver(blogPostSchema) as unknown as Resolver<any>,
+    resolver: zodResolver(blogPostSchema) as Resolver<BlogPostInput>,
     mode: "onChange",
     defaultValues,
   });
@@ -215,7 +221,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     }
   };
 
-  const handleAiGenerated = (data: any) => {
+  const handleAiGenerated = (data: BlogAiResult) => {
     if (!data) return;
 
     setValue("requires_ai_review", true, { shouldDirty: true });
@@ -251,7 +257,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
     setIsTranslating(true);
     const toastId = toast.loading(
-      "กำลังแปลเนื้อหาบทความเป็นภาษาอังกฤษและจีน...",
+      "กำลังแปลเนื้อหาบทความเป็นภาษาอังกฤษ จีน และรัสเซีย...",
     );
 
     try {
@@ -259,12 +265,14 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
       const titleRes = await translateTextAction(title, "plain");
       form.setValue("title_en", titleRes.en, { shouldDirty: true });
       form.setValue("title_cn", titleRes.cn, { shouldDirty: true });
+      form.setValue("title_ru", titleRes.ru, { shouldDirty: true });
 
       // 2. Translate Excerpt (Plain)
       if (excerpt && excerpt.trim() !== "") {
         const excerptRes = await translateTextAction(excerpt, "plain");
         form.setValue("excerpt_en", excerptRes.en, { shouldDirty: true });
         form.setValue("excerpt_cn", excerptRes.cn, { shouldDirty: true });
+        form.setValue("excerpt_ru", excerptRes.ru, { shouldDirty: true });
       }
 
       // 3. Translate Content (HTML)
@@ -272,6 +280,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         const contentRes = await translateTextAction(content, "html");
         form.setValue("content_en", contentRes.en, { shouldDirty: true });
         form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
+        form.setValue("content_ru", contentRes.ru, { shouldDirty: true });
       }
 
       toast.success("แปลเนื้อหาบทความเรียบร้อยแล้ว ✨", { id: toastId });

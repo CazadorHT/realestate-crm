@@ -68,6 +68,7 @@ export type PopularArea = {
   province?: string | null;
   name_en?: string | null;
   name_cn?: string | null;
+  name_ru?: string | null;
   created_at?: string | null;
   property_count?: number | null;
   featured?: boolean | null;
@@ -175,6 +176,9 @@ function SortableRow({
       </TableCell>
       <TableCell className="text-slate-600 px-6 font-medium text-sm">
         {item.name_cn || <span className="text-slate-300">-</span>}
+      </TableCell>
+      <TableCell className="text-slate-600 px-6 font-medium text-sm">
+        {item.name_ru || <span className="text-slate-300">-</span>}
       </TableCell>
       <TableCell className="px-6 text-center">
         <button
@@ -454,6 +458,7 @@ export function PopularAreasTable({
                 </TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษาอังกฤษ <span className="opacity-50 font-normal">(EN)</span></TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษาจีน <span className="opacity-50 font-normal">(CN)</span></TableHead>
+                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษารัสเซีย <span className="opacity-50 font-normal">(RU)</span></TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 text-center cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("property_count")}>
                   <div className="flex items-center justify-center">ทรัพย์ <span className="ml-1 opacity-50 font-normal">(Stock)</span> <SortIcon column="property_count" /></div>
                 </TableHead>

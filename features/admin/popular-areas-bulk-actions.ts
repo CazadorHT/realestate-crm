@@ -38,7 +38,7 @@ export async function bulkDeletePopularAreasAction(
     if (selectAll) {
       // If selectAll is true, we apply the same filters as the list view
       if (search) {
-        query = query.or(`name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%`);
+        query = query.or(`name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%,name_ru.ilike.%${search}%`);
       }
       // Note: We don't limit because we want to delete ALL matching items
     } else if (ids && ids.length > 0) {

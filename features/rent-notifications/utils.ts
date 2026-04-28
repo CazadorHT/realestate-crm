@@ -1,9 +1,10 @@
 import { FlexMessage } from "@line/bot-sdk";
 
-export function getLocaleDateFormat(lang: "th" | "en" | "cn") {
+export function getLocaleDateFormat(lang: "th" | "en" | "cn" | "ru") {
   switch (lang) {
     case "en": return "en-US";
     case "cn": return "zh-CN";
+    case "ru": return "ru-RU";
     default: return "th-TH";
   }
 }
@@ -13,14 +14,16 @@ export function getLocaleDateFormat(lang: "th" | "en" | "cn") {
  */
 export function getPropertyDisplayInfo(rule: any) {
   const property = rule.properties;
-  const lang = (rule.language as "th" | "en" | "cn") || "th";
+  const lang = (rule.language as "th" | "en" | "cn" | "ru") || "th";
 
   const propertyName =
     (lang === "en"
       ? property?.title_en
       : lang === "cn"
         ? property?.title_cn
-        : property?.title) ||
+        : lang === "ru"
+          ? property?.title_ru
+          : property?.title) ||
     property?.title ||
     "Property";
 
@@ -64,7 +67,7 @@ export function generateRentNotificationFlex({
   sizeSqm: string | number;
   monthYear: string;
   contractEndDate: string;
-  language?: "th" | "en" | "cn";
+  language?: "th" | "en" | "cn" | "ru";
   isTest?: boolean;
 }): FlexMessage {
   const t = {
@@ -91,6 +94,14 @@ export function generateRentNotificationFlex({
       contractEnds: "合同结束:",
       footer: "请在此群发送转账凭证，谢谢 🙏",
       specs: { bed: "卧室", bath: "浴室", sqm: "平方米" },
+    },
+    ru: {
+      alertTitle: "🔔 Напоминание об оплате аренды",
+      amountDue: "К оплате:",
+      forMonth: "За месяц:",
+      contractEnds: "Окончание договора:",
+      footer: "Пожалуйста, отправьте чек об оплате в эту группу. Спасибо 🙏",
+      specs: { bed: "спальни", bath: "ванные", sqm: "кв.м." },
     },
   };
 

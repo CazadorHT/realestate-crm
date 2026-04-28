@@ -296,7 +296,11 @@ async function prepareAreaTranslations(): Promise<AreaTranslations> {
   const map: AreaTranslations = {};
   for (const item of list) {
     if (item.name) {
-      map[item.name] = { en: item.name_en, cn: item.name_cn };
+      map[item.name] = { 
+        en: item.name_en, 
+        cn: item.name_cn, 
+        ru: item.name_ru 
+      };
     }
   }
   return map;
@@ -315,12 +319,13 @@ async function handlePostbackEvent(
 
   if (action === "lang") {
     const selectedLang = params.get("value") as BotLang;
-    if (["th", "en", "cn"].includes(selectedLang)) {
+    if (["th", "en", "cn", "ru"].includes(selectedLang)) {
       setUserLang(userId, selectedLang);
       const confirmTexts: Record<BotLang, string> = {
         th: "เปลี่ยนเป็นภาษาไทยแล้วค่ะ 🇹🇭",
         en: "Language changed to English 🇬🇧",
         cn: "已切换为中文 🇨🇳",
+        ru: "Язык изменен на русский 🇷🇺",
       };
       const { messages } = buildWelcomeFlex(selectedLang);
       await replyMessage(event.replyToken, [
@@ -386,6 +391,7 @@ async function handlePostbackEvent(
       th: `พบ ${properties.length} ทรัพย์ใน ${area}`,
       en: `Found ${properties.length} properties in ${area}`,
       cn: `在${area}找到${properties.length}个房产`,
+      ru: `Найдено объектов в ${area}: ${properties.length}`,
     };
 
     const flex = buildPropertyCarousel(
@@ -655,7 +661,7 @@ async function handleInteractiveCommand(
   // --- ภาษา:xx → Set language + send welcome ---
   if (text.startsWith("ภาษา:")) {
     const selectedLang = text.replace("ภาษา:", "").trim() as BotLang;
-    if (["th", "en", "cn"].includes(selectedLang)) {
+    if (["th", "en", "cn", "ru"].includes(selectedLang)) {
       setUserLang(userId, selectedLang);
 
       // Confirm + show welcome in new language
@@ -663,6 +669,7 @@ async function handleInteractiveCommand(
         th: "เปลี่ยนเป็นภาษาไทยแล้วค่ะ 🇹🇭",
         en: "Language changed to English 🇬🇧",
         cn: "已切换为中文 🇨🇳",
+        ru: "Язык изменен на русский 🇷🇺",
       };
 
       const { messages } = buildWelcomeFlex(selectedLang);
@@ -731,6 +738,7 @@ async function handleInteractiveCommand(
       th: `พบ ${properties.length} ทรัพย์ใน ${area}`,
       en: `Found ${properties.length} properties in ${area}`,
       cn: `在${area}找到${properties.length}个房产`,
+      ru: `Найдено объектов в ${area}: ${properties.length}`,
     };
 
     const flex = buildPropertyCarousel(
@@ -808,6 +816,7 @@ async function handleTextMessage(
       th: `ขออภัยค่ะ ไม่พบทรัพย์ที่ตรงกับ "${text}"\n\nลองพิมพ์ชื่อทำเล หรือประเภททรัพย์ เช่น "คอนโด บางนา"\nหรือพิมพ์ "เมนู" เพื่อดูตัวเลือกทั้งหมดค่ะ 😊`,
       en: `Sorry, no properties found matching "${text}"\n\nTry typing a location or type, e.g. "Condo Bangna"\nOr type "menu" to see all options 😊`,
       cn: `很抱歉，没有找到匹配"${text}"的房产\n\n请尝试输入地点或类型\n或输入"menu"查看所有选项 😊`,
+      ru: `Извините, объекты по запросу "${text}" не найдены\n\nПопробуйте ввести район или тип недвижимости, например "Condo Bangna"\nИли введите "menu", чтобы увидеть все варианты 😊`,
     };
     await replyText(replyToken, failTexts[lang]);
     return;
@@ -817,6 +826,7 @@ async function handleTextMessage(
     th: `พบ ${properties.length} ทรัพย์ที่ตรงกับ "${text}"`,
     en: `Found ${properties.length} matching "${text}"`,
     cn: `找到 ${properties.length} 个关于 "${text}" 的房产`,
+    ru: `Найдено объектов по запросу "${text}": ${properties.length}`,
   };
 
   const flex = buildPropertyCarousel(
@@ -879,6 +889,7 @@ async function handleAIResponse(
         th: `พบ ${aiResult.properties.length} ทรัพย์ที่น่าสนใจสำหรับคุณ`,
         en: `Found ${aiResult.properties.length} matching properties for you`,
         cn: `为您找到 ${aiResult.properties.length} 个匹配的房产`,
+        ru: `Найдено подходящих объектов для вас: ${aiResult.properties.length}`,
       };
 
       const flex = buildPropertyCarousel(

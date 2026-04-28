@@ -6,7 +6,7 @@ import { BookOpen } from "lucide-react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
 import { format } from "date-fns";
-import { th, enUS, zhCN } from "date-fns/locale";
+import { th, enUS, zhCN, ru } from "date-fns/locale";
 import type { BlogPost } from "@/lib/services/blog";
 
 interface BlogFeaturedPostProps {
@@ -128,7 +128,9 @@ export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
                                 ? th
                                 : language === "cn"
                                   ? zhCN
-                                  : enUS,
+                                  : language === "ru"
+                                    ? ru
+                                    : enUS,
                           })
                         : ""}
                     </time>

@@ -85,13 +85,16 @@ export async function createBlogPostAction(
       title: validated.title,
       title_en: validated.title_en || null,
       title_cn: validated.title_cn || null,
+      title_ru: validated.title_ru || null,
       slug: finalSlug,
       content: validated.content || "",
       content_en: validated.content_en || null,
       content_cn: validated.content_cn || null,
+      content_ru: validated.content_ru || null,
       excerpt: validated.excerpt || "",
       excerpt_en: validated.excerpt_en || null,
       excerpt_cn: validated.excerpt_cn || null,
+      excerpt_ru: validated.excerpt_ru || null,
       category: validated.category,
       cover_image: validated.cover_image || null,
       is_published: isPublishedFinal,
@@ -192,13 +195,16 @@ export async function updateBlogPostAction(
         title: validated.title,
         title_en: validated.title_en,
         title_cn: validated.title_cn,
+        title_ru: validated.title_ru,
         slug: finalSlug,
         content: validated.content,
         content_en: validated.content_en,
         content_cn: validated.content_cn,
+        content_ru: validated.content_ru,
         excerpt: validated.excerpt,
         excerpt_en: validated.excerpt_en,
         excerpt_cn: validated.excerpt_cn,
+        excerpt_ru: validated.excerpt_ru,
         category: validated.category,
         cover_image: validated.cover_image,
         is_published: isPublishedFinal,
@@ -289,7 +295,7 @@ export async function getDeletedBlogPostsAction(): Promise<ActionResponse<BlogPo
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("blog_posts")
-      .select("id, title, title_en, title_cn, slug, content, content_en, content_cn, excerpt, excerpt_en, excerpt_cn, category, cover_image, is_published, published_at, tags, author_id, view_count, created_at, updated_at, deleted_at, profiles(full_name, avatar_url)")
+      .select("id, title, title_en, title_cn, title_ru, slug, content, content_en, content_cn, content_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, category, cover_image, is_published, published_at, tags, author_id, view_count, created_at, updated_at, deleted_at, profiles(full_name, avatar_url)")
       .not("deleted_at", "is", null)
       .order("deleted_at", { ascending: false });
 
@@ -515,7 +521,7 @@ export async function getCategoriesAction(): Promise<ActionResponse<Database["pu
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("blog_categories")
-      .select("id, name, name_en, name_cn, slug, created_at")
+      .select("id, name, name_en, name_cn, name_ru, slug, created_at")
       .order("name", { ascending: true });
 
     if (error) throw error;
@@ -541,10 +547,11 @@ export async function createCategoryAction(
   name: string,
   name_en?: string,
   name_cn?: string,
+  name_ru?: string,
 ): Promise<ActionResponse> {
   try {
     // 🛡️ Zod Validation for Category
-    const validated = blogCategorySchema.parse({ name, name_en, name_cn });
+    const validated = blogCategorySchema.parse({ name, name_en, name_cn, name_ru });
     
     const supabase = await createClient();
     const user = await getCurrentProfile();
@@ -564,6 +571,7 @@ export async function createCategoryAction(
         name: validated.name, 
         name_en: validated.name_en, 
         name_cn: validated.name_cn, 
+        name_ru: validated.name_ru, 
         slug 
       })
       .select("id, name, slug")

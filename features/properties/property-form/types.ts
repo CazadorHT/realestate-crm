@@ -5,7 +5,7 @@ import type { PropertyFormValues } from "../schema";
  * Base props shared by all step components
  */
 export interface BaseStepProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>;
   mode: "create" | "edit";
 }
 
@@ -16,12 +16,14 @@ export interface Step1Props extends BaseStepProps {
   popularAreas: string[];
   isAddingArea: boolean;
   newArea: string;
-  setNewArea: (val: string) => void;
+  setNewAreaAction: (val: string) => void;
   newAreaEn: string;
-  setNewAreaEn: (val: string) => void;
+  setNewAreaEnAction: (val: string) => void;
   newAreaCn: string;
-  setNewAreaCn: (val: string) => void;
-  onAddArea: () => Promise<void>;
+  setNewAreaCnAction: (val: string) => void;
+  newAreaRu: string;
+  setNewAreaRuAction: (val: string) => void;
+  onAddAreaAction: () => Promise<void>;
   isQuickInfoOpen: boolean;
   setIsQuickInfoOpen: (val: boolean) => void;
 }
@@ -56,7 +58,7 @@ export interface Step4Props extends BaseStepProps {
   }>;
   uploadSessionId: string;
   persistImages: boolean;
-  refreshOwners?: () => Promise<any>;
+  refreshOwners?: () => Promise<Array<{ id: string; full_name: string; phone: string | null }>>;
   allBranches?: boolean;
   setAllBranches?: (val: boolean) => void;
   isMultiTenant?: boolean;
@@ -67,7 +69,7 @@ export interface Step4Props extends BaseStepProps {
  * Agent Multi-Select Section Props
  */
 export interface AgentMultiSelectProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>;
   agents: Array<{
     id: string;
     full_name: string | null;

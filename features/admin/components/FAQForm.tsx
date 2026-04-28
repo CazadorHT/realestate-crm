@@ -35,12 +35,14 @@ export const faqFormSchema = z.object({
   question: z.string().min(1, "กรุณาระบุคำถามหลัก"),
   question_en: z.string().optional().nullable().or(z.literal("")),
   question_cn: z.string().optional().nullable().or(z.literal("")),
+  question_ru: z.string().optional().nullable().or(z.literal("")),
   answer: z.string().min(1, "กรุณาสรุปคำตอบสำหรับลูกค้า"),
   answer_en: z.string().optional().nullable().or(z.literal("")),
   answer_cn: z.string().optional().nullable().or(z.literal("")),
+  answer_ru: z.string().optional().nullable().or(z.literal("")),
   category: z.string().optional().nullable().or(z.literal("")),
-  sort_order: z.coerce.number().default(0),
-  is_active: z.boolean().default(true),
+  sort_order: z.coerce.number(),
+  is_active: z.boolean(),
 });
 
 export type FAQFormValues = z.infer<typeof faqFormSchema>;
@@ -68,15 +70,17 @@ export function FAQForm({
   const [isTranslating, setIsTranslating] = useState(false);
 
   const form = useForm<FAQFormValues>({
-    resolver: zodResolver(faqFormSchema) as Resolver<FAQFormValues>,
+    resolver: zodResolver(faqFormSchema),
     mode: "onChange",
     defaultValues: {
       question: initialData?.question || "",
       question_en: initialData?.question_en || "",
       question_cn: initialData?.question_cn || "",
+      question_ru: initialData?.question_ru || "",
       answer: initialData?.answer || "",
       answer_en: initialData?.answer_en || "",
       answer_cn: initialData?.answer_cn || "",
+      answer_ru: initialData?.answer_ru || "",
       category: initialData?.category || "ทั่วไป",
       sort_order: initialData?.sort_order ?? 0,
       is_active: initialData?.is_active ?? true,
@@ -148,11 +152,13 @@ export function FAQForm({
       const questionRes = await translateTextAction(question, "plain");
       form.setValue("question_en", questionRes.en, { shouldDirty: true });
       form.setValue("question_cn", questionRes.cn, { shouldDirty: true });
+      form.setValue("question_ru", questionRes.ru, { shouldDirty: true });
 
       if (answer && answer.trim() !== "") {
         const answerRes = await translateTextAction(answer, "plain");
         form.setValue("answer_en", answerRes.en, { shouldDirty: true });
         form.setValue("answer_cn", answerRes.cn, { shouldDirty: true });
+        form.setValue("answer_ru", answerRes.ru, { shouldDirty: true });
       }
 
       toast.success("แปลข้อมูลสำเร็จแล้ว ✨", { id: toastId });

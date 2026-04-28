@@ -6,6 +6,7 @@ export type PopularAreaItem = {
   popular_area: string;
   popular_area_en: string | null;
   popular_area_cn: string | null;
+  popular_area_ru: string | null;
   province: string;
   count: number;
   cover: string | null;
@@ -108,7 +109,7 @@ export const getPopularAreasAction = unstable_cache(
 
       let areasQuery = client
         .from("popular_areas")
-        .select("name, name_en, name_cn, province");
+        .select("name, name_en, name_cn, name_ru, province");
 
       if (province && provinceMap[province]) {
         const names = provinceMap[province];
@@ -123,10 +124,10 @@ export const getPopularAreasAction = unstable_cache(
 
       const areaTranslations = new Map<
         string,
-        { en: string | null; cn: string | null }
+        { en: string | null; cn: string | null; ru: string | null }
       >();
       (validAreasData || []).forEach((a: any) => {
-        areaTranslations.set(a.name, { en: a.name_en, cn: a.name_cn });
+        areaTranslations.set(a.name, { en: a.name_en, cn: a.name_cn, ru: a.name_ru });
       });
 
       const validAreaNames = new Set(areaTranslations.keys());
@@ -148,6 +149,7 @@ export const getPopularAreasAction = unstable_cache(
             popular_area: area,
             popular_area_en: trans?.en ?? null,
             popular_area_cn: trans?.cn ?? null,
+            popular_area_ru: trans?.ru ?? null,
             province: prov,
             count: 1,
             cover,

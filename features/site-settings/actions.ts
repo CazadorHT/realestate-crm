@@ -84,15 +84,19 @@ const DEFAULT_SETTINGS: SiteSettings = {
   facebook_post_template: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
   facebook_post_template_en: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nMore details: {{link}}`,
   facebook_post_template_cn: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\n更多详情: {{link}}`,
+  facebook_post_template_ru: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nПодробнее: {{link}}`,
   instagram_post_template: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
   instagram_post_template_en: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nMore details: {{link}}`,
   instagram_post_template_cn: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\n更多详情: {{link}}`,
+  instagram_post_template_ru: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nПодробнее: {{link}}`,
   line_post_template: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nดูรายละเอียดเพิ่มเติมได้ที่: {{link}}`,
   line_post_template_en: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nMore details: {{link}}`,
   line_post_template_cn: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\n更多详情: {{link}}`,
+  line_post_template_ru: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n{{google_maps}}\n\nПодробнее: {{link}}`,
   tiktok_post_template: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n\n#RealEstate #Property {{link}}`,
   tiktok_post_template_en: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n\n#RealEstate #Property {{link}}`,
   tiktok_post_template_cn: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n\n#RealEstate #Property {{link}}`,
+  tiktok_post_template_ru: `🏠 {{title}}\n{{price_tag}}\n{{details}}\n{{description}}\n\n#RealEstate #Property {{link}}`,
   site_name: "VC Connect Asset",
   company_name: "VC Connect Asset Co., Ltd.",
   site_description: "Real Estate CRM & Listing Portal",
@@ -402,7 +406,7 @@ export async function updateSiteSettings(
 export async function generateSocialAutomationTemplatesAction(
   type: "SOCIAL_POST" | "KEYWORD_DM" | "LINE_POST" | "TIKTOK_POST",
   keyword?: string,
-  lang: "th" | "en" | "cn" = "th",
+  lang: "th" | "en" | "cn" | "ru" = "th",
 ): Promise<{ success: boolean; data?: string; message?: string }> {
   try {
     const { generateText } = await import("@/lib/ai/gemini");
@@ -415,7 +419,14 @@ export async function generateSocialAutomationTemplatesAction(
     if (type === "SOCIAL_POST") {
       const isInstagram = keyword === "instagram"; // We can reuse keyword field for platform hint
       const platformName = isInstagram ? "Instagram" : "Facebook";
-      const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";
+      const langName =
+        lang === "th"
+          ? "ภาษาไทย"
+          : lang === "en"
+            ? "English"
+            : lang === "ru"
+              ? "Russian"
+              : "Chinese";
       
       const igAdvice = isInstagram 
         ? "เน้นความสวยงาม ใช้ Hashtag ที่เกี่ยวข้อง (ไม่เกิน 30 อัน) และเขียนแคปชั่นให้น่าอ่านบนมือถือ"
@@ -443,7 +454,14 @@ export async function generateSocialAutomationTemplatesAction(
         4. ส่งกลับเฉพาะเนื้อหา Template เท่านั้น ไม่ต้องขยายความ
       `;
     } else if (type === "LINE_POST") {
-      const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";
+      const langName =
+        lang === "th"
+          ? "ภาษาไทย"
+          : lang === "en"
+            ? "English"
+            : lang === "ru"
+              ? "Russian"
+              : "Chinese";
       prompt = `
         คุณเป็นนักการตลาดอสังหาริมทรัพย์มืออาชีพ
         ช่วยเขียน Template สำหรับแสดงผลใน Line Flex Message (ส่วนข้อความรายละเอียด)
@@ -463,8 +481,15 @@ export async function generateSocialAutomationTemplatesAction(
         3. เน้นจุดเด่นของทรัพย์
         4. ส่งกลับเฉพาะเนื้อหา Template เท่านั้น ไม่ต้องขยายความ
       `;
-    } else if (type = "TIKTOK_POST") {
-      const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";
+    } else if (type === "TIKTOK_POST") {
+      const langName =
+        lang === "th"
+          ? "ภาษาไทย"
+          : lang === "en"
+            ? "English"
+            : lang === "ru"
+              ? "Russian"
+              : "Chinese";
       prompt = `
         คุณเป็นครีเอเตอร์ TikTok สายอสังหาริมทรัพย์ที่เก่งมาก
         ช่วยเขียน Caption สำหรับโพสต์ TikTok เพื่อดึงดูดคนดูคลิป (Photo Mode)
@@ -485,7 +510,14 @@ export async function generateSocialAutomationTemplatesAction(
         5. ส่งกลับเฉพาะเนื้อหา Caption เท่านั้น ไม่ต้องขยายความ
       `;
     } else {
-      const langName = lang === "th" ? "ภาษาไทย" : lang === "en" ? "English" : "Chinese";
+      const langName =
+        lang === "th"
+          ? "ภาษาไทย"
+          : lang === "en"
+            ? "English"
+            : lang === "ru"
+              ? "Russian"
+              : "Chinese";
       prompt = `
         คุณเป็นเอเจนท์อสังหาริมทรัพย์ที่บริการดีเยี่ยม
         ช่วยเขียนข้อความตอบกลับลูกค้าทาง Inbox (DM) เมื่อลูกค้าสนใจสอบถามข้อมูล

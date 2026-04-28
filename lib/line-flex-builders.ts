@@ -31,6 +31,7 @@ interface PropertyForFlex {
   title: string;
   title_en?: string | null;
   title_cn?: string | null;
+  title_ru?: string | null;
   price?: number | null;
   rental_price?: number | null;
   original_price?: number | null;
@@ -38,18 +39,23 @@ interface PropertyForFlex {
   property_type?: string | null;
   property_type_en?: string | null;
   property_type_cn?: string | null;
+  property_type_ru?: string | null;
   listing_type?: string | null;
   listing_type_en?: string | null;
   listing_type_cn?: string | null;
+  listing_type_ru?: string | null;
   popular_area?: string | null;
   popular_area_en?: string | null;
   popular_area_cn?: string | null;
+  popular_area_ru?: string | null;
   district?: string | null;
   district_en?: string | null;
   district_cn?: string | null;
+  district_ru?: string | null;
   province?: string | null;
   province_en?: string | null;
   province_cn?: string | null;
+  province_ru?: string | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
   size_sqm?: number | null;
@@ -61,23 +67,23 @@ interface PropertyForFlex {
  * Common locations dictionary for static translation when DB fields are empty.
  */
 export const LOCATION_MAP: Record<string, Record<BotLang, string>> = {
-  สนามบิน: { th: "สนามบิน", en: "Suvarnabhumi Airport", cn: "素万那普机场" },
-  บางนา: { th: "บางนา", en: "Bang Na", cn: "邦纳" },
-  วัฒนา: { th: "วัฒนา", en: "Watthana", cn: "瓦塔纳" },
-  คลองเตย: { th: "คลองเตย", en: "Khlong Toei", cn: "孔提" },
-  พระโขนง: { th: "พระโขนง", en: "Phra Khanong", cn: "帕卡隆" },
-  ห้วยขวาง: { th: "ห้วยขวาง", en: "Huai Khwang", cn: "辉煌" },
-  พญาไท: { th: "พญาไท", en: "Phaya Thai", cn: "琶亚泰" },
-  ราชเทวี: { th: "ราชเทวี", en: "Ratchathewi", cn: "拉差贴威" },
-  ปทุมวัน: { th: "ปทุมวัน", en: "Pathum Wan", cn: "巴吞旺" },
-  สวนหลวง: { th: "สวนหลวง", en: "Suan Luang", cn: "宣鑾" },
-  สาทร: { th: "สาทร", en: "Sathon", cn: "沙าทร" },
-  บางคอแหลม: { th: "บางคอแหลม", en: "Bang Kho Laem", cn: "邦科兰" },
-  ยานนาวา: { th: "ยานนาวา", en: "Yan Nawa", cn: "延纳瓦" },
-  ประเวศ: { th: "ประเวศ", en: "Prawet", cn: "普拉威" },
-  บางกะปิ: { th: "บางกะปิ", en: "Bang Kapi", cn: "邦甲必" },
-  ลาดพร้าว: { th: "ลาดพร้าว", en: "Lat Phrao", cn: "叻拋" },
-  จตุจักร: { th: "จตุจักร", en: "Chatuchak", cn: "恰图恰" },
+  สนามบิน: { th: "สนามบิน", en: "Suvarnabhumi Airport", cn: "素万那普机场", ru: "Аэропорт Суварнабхуми" },
+  บางนา: { th: "บางนา", en: "Bang Na", cn: "邦纳", ru: "Банг На" },
+  วัฒนา: { th: "วัฒนา", en: "Watthana", cn: "瓦塔纳", ru: "Ваттана" },
+  คลองเตย: { th: "คลองเตย", en: "Khlong Toei", cn: "孔提", ru: "Клонг Тей" },
+  พระโขนง: { th: "พระโขนง", en: "Phra Khanong", cn: "帕卡隆", ru: "Пхра Кханонг" },
+  ห้วยขวาง: { th: "ห้วยขวาง", en: "Huai Khwang", cn: "辉煌", ru: "Хуай Кванг" },
+  พญาไท: { th: "พญาไท", en: "Phaya Thai", cn: "琶亚泰", ru: "Пхая Тхай" },
+  ราชเทวี: { th: "ราชเทวี", en: "Ratchathewi", cn: "拉差贴威", ru: "Ратчатхеви" },
+  ปทุมวัน: { th: "ปทุมวัน", en: "Pathum Wan", cn: "巴吞旺", ru: "Патхум Ван" },
+  สวนหลวง: { th: "สวนหลวง", en: "Suan Luang", cn: "宣鑾", ru: "Суан Луанг" },
+  สาทร: { th: "สาทร", en: "Sathon", cn: "沙าทร", ru: "Саторн" },
+  บางคอแหลม: { th: "บางคอแหลม", en: "Bang Kho Laem", cn: "邦科兰", ru: "Банг Кхо Лаем" },
+  ยานนาวา: { th: "ยานนาวา", en: "Yan Nawa", cn: "延纳瓦", ru: "Ян Нава" },
+  ประเวศ: { th: "ประเวศ", en: "Prawet", cn: "普拉威", ru: "Праเวет" },
+  บางกะปิ: { th: "บางกะปิ", en: "Bang Kapi", cn: "邦甲必", ru: "Банг Капи" },
+  ลาดพร้าว: { th: "ลาดพร้าว", en: "Lat Phrao", cn: "叻拋", ru: "Лат Пхрао" },
+  จตุจักร: { th: "จตุจักร", en: "Chatuchak", cn: "恰图恰", ru: "Чатучак" },
 };
 
 // ============================
@@ -88,179 +94,214 @@ export const T: Record<string, Record<BotLang, string>> = {
     th: "ยินดีต้อนรับค่ะ! 🎉",
     en: "Welcome! 🎉",
     cn: "欢迎！🎉",
+    ru: "Добро пожаловать! 🎉",
   },
   welcome_subtitle: {
     th: "เราพร้อมช่วยคุณค้นหาทรัพย์ในฝัน",
     en: "We're ready to help you find your dream property",
     cn: "我们随时帮您找到理想房产",
+    ru: "Мы поможем вам найти дом мечты",
   },
   welcome_cta: {
     th: "เลือกเมนูด้านล่างเพื่อเริ่มต้น 👇",
     en: "Select a menu below to start 👇",
     cn: "请选择以下菜单开始 👇",
+    ru: "Выберите меню ниже 👇",
   },
   menu_search: {
     th: "ค้นหาทรัพย์ ตามประเภท",
     en: "Search by property type",
     cn: "按类型搜索",
+    ru: "Поиск по типу",
   },
   menu_deposit: {
     th: "ฝากขาย / ฝากเช่าทรัพย์",
     en: "List your property",
     cn: "委托出售/出租",
+    ru: "Разместить объект",
   },
   menu_contact: {
     th: "ติดต่อเจ้าหน้าที่",
     en: "Contact our team",
     cn: "联系我们",
+    ru: "Связаться с нами",
   },
   btn_website: {
     th: "🌐 เปิดเว็บไซต์",
     en: "🌐 Open Website",
     cn: "🌐 访问网站",
+    ru: "🌐 На сайт",
   },
   qr_search: {
     th: "🏠 ค้นหาทรัพย์",
     en: "🏠 Search Property",
     cn: "🏠 搜索房产",
+    ru: "🏠 Поиск",
   },
   qr_deposit: {
     th: "📝 ฝากขาย/เช่า",
     en: "📝 Deposit Property",
     cn: "📝 委托房产",
+    ru: "📝 Разместить",
   },
   qr_contact: {
     th: "📞 ติดต่อเจ้าหน้าที่",
     en: "📞 Contact Us",
     cn: "📞 联系我们",
+    ru: "📞 Контакты",
   },
   qr_lang: {
     th: "🌐 เปลี่ยนภาษา",
     en: "🌐 Language",
     cn: "🌐 切换语言",
+    ru: "🌐 Язык",
   },
   select_type: {
     th: "เลือกประเภททรัพย์ที่สนใจ 👇",
     en: "Select property type 👇",
     cn: "请选择房产类型 👇",
+    ru: "Выберите тип 👇",
   },
   select_area: {
     th: "เลือกทำเลที่สนใจ 📍",
     en: "Select location 📍",
     cn: "选择地点 📍",
+    ru: "Выберите район 📍",
   },
   no_results: {
     th: "ขออภัยค่ะ ไม่พบทรัพย์{context} ในขณะนี้\n\nลองค้นหาประเภทอื่น หรือพิมพ์ชื่อทำเลที่ต้องการได้เลยนะคะ 😊",
     en: "Sorry, no properties found{context} at the moment.\n\nTry another type or type a location name 😊",
     cn: "很抱歉，暂时没有找到{context}的房产。\n\n请尝试其他类型或输入地点名称 😊",
+    ru: "Извините, объектов {context} не найдено.\n\nПопробуйте другой тип или поиск по району 😊",
   },
   found_n: {
     th: "พบ {n} ทรัพย์",
     en: "Found {n} properties",
     cn: "找到 {n} 个房产",
+    ru: "Найдено: {n}",
   },
   found_in_area: {
     th: "พบ {n} ทรัพย์ใน {area}",
     en: "Found {n} properties in {area}",
     cn: "在{area}找到{n}个房产",
+    ru: "Найдено {n} в {area}",
   },
   btn_detail: {
     th: "ดูรายละเอียด",
     en: "View Details",
     cn: "查看详情",
+    ru: "Подробнее",
   },
   btn_contact_short: {
     th: "ติดต่อ",
     en: "Contact",
     cn: "联系",
+    ru: "Связаться",
   },
   price_ask: {
     th: "ราคาติดต่อสอบถาม",
     en: "Price on request",
     cn: "价格面议",
+    ru: "Цена по запросу",
   },
   per_month: {
     th: "/เดือน",
     en: "/mo",
     cn: "/月",
+    ru: "/мес",
   },
-  bed: { th: "นอน", en: "bed", cn: "卧" },
-  bath: { th: "น้ำ", en: "bath", cn: "浴" },
-  location: { th: "ทำเล", en: "Location", cn: "地点" },
+  bed: { th: "นอน", en: "bed", cn: "卧", ru: "спал" },
+  bath: { th: "น้ำ", en: "bath", cn: "浴", ru: "ванн" },
+  location: { th: "ทำเล", en: "Location", cn: "地点", ru: "Район" },
   contact_title: {
     th: "📞 ติดต่อเจ้าหน้าที่",
     en: "📞 Contact Our Team",
     cn: "📞 联系我们",
+    ru: "📞 Контакты",
   },
   deposit_title: {
     th: "📝 ฝากขาย / ฝากเช่าทรัพย์",
     en: "📝 List Your Property",
     cn: "📝 委托出售/出租",
+    ru: "📝 Разместить объект",
   },
   deposit_desc: {
     th: "ฝากทรัพย์กับเราฟรี! ไม่มีค่าใช้จ่าย\nเจ้าหน้าที่จะติดต่อกลับภายใน 24 ชม.",
     en: "List with us for free!\nOur team will contact you within 24 hours.",
     cn: "免费委托！\n我们的团队将在24小时内联系您。",
+    ru: "Разместите объект бесплатно!\nМы свяжемся с вами в течение 24 часов.",
   },
   deposit_point1: {
     th: "ลงประกาศฟรี ไม่มีค่าใช้จ่าย",
     en: "Free listing, no charges",
     cn: "免费发布，无需费用",
+    ru: "Бесплатное размещение",
   },
   deposit_point2: {
     th: "ทีมงานดูแลตลอดกระบวนการ",
     en: "Full support throughout the process",
     cn: "全程专业服务",
+    ru: "Полная поддержка",
   },
   deposit_point3: {
     th: "เข้าถึงผู้ซื้อ/ผู้เช่ากว่าพันคน",
     en: "Reach thousands of buyers/tenants",
     cn: "覆盖数千买家/租户",
+    ru: "Тысячи покупателей",
   },
   deposit_btn: {
     th: "📝 ฝากทรัพย์กับเรา",
     en: "📝 List Your Property",
     cn: "📝 委托房产",
+    ru: "📝 Разместить объект",
   },
   lang_select: {
-    th: "กรุณาเลือกภาษา\nPlease select language.\n请选择语言。",
-    en: "กรุณาเลือกภาษา\nPlease select language.\n请选择语言。",
-    cn: "กรุณาเลือกภาษา\nPlease select language.\n请选择语言。",
+    th: "กรุณาเลือกภาษา\nPlease select language.\n请选择语言。\nПожалуйста, выберите язык.",
+    en: "กรุณาเลือกภาษา\nPlease select language.\n请选择语言。\nПожалуйста, выберите язык.",
+    cn: "กรุณาเลือกภาษา\nPlease select language.\n请选择语言。\nПожалуйста, выберите язык.",
+    ru: "กรุณาเลือกภาษา\nPlease select language.\n请选择语言。\nПожалуйста, выберите язык.",
   },
   lang_changed: {
     th: "เปลี่ยนเป็นภาษาไทยแล้วค่ะ 🇹🇭",
     en: "Language changed to English 🇬🇧",
     cn: "已切换为中文 🇨🇳",
+    ru: "Язык изменен на русский 🇷🇺",
   },
   search_fallback_fail: {
     th: 'ขออภัยค่ะ ไม่พบทรัพย์ที่ตรงกับ "{text}"\n\nลองพิมพ์ชื่อทำเล หรือประเภททรัพย์ เช่น "คอนโด บางนา"\nหรือพิมพ์ "เมนู" เพื่อดูตัวเลือกทั้งหมดค่ะ 😊',
     en: 'Sorry, no properties found matching "{text}"\n\nTry typing a location or property type, e.g. "Condo Bangna"\nOr type "menu" to see all options 😊',
     cn: '很抱歉，没有找到匹配"{text}"的房产\n\n请尝试输入地点或类型，例如"公寓 曼纳"\n或输入"菜单"查看所有选项 😊',
+    ru: 'Извините, объектов по запросу "{text}" не найдено.\n\nПопробуйте ввести район или тип, например "Кондо Бангна"\nИли введите "меню", чтобы увидеть все варианты 😊',
   },
   btn_view_details: {
     th: "🌐 ดูรายละเอียดเพิ่ม",
     en: "🌐 View Details",
     cn: "🌐 查看更多",
+    ru: "🌐 Подробнее",
   },
   btn_book_viewing: {
     th: "❤️ สนใจ",
     en: "❤️ Interested",
     cn: "❤️ 感兴趣",
+    ru: "❤️ Интересует",
   },
   btn_contact_agent: {
     th: "💬 ติดต่อเจ้าหน้าที่",
     en: "💬 Contact Agent",
     cn: "💬 联系中介",
+    ru: "💬 Связаться",
   },
   book_viewing_text: {
     th: "สนใจทรัพย์: {title}\n(รหัส: {id})",
     en: "Interested in: {title}\n(ID: {id})",
     cn: "对这套房感兴趣: {title}\n(编号: {id})",
+    ru: "Интересует объект: {title}\n(ID: {id})",
   },
   interested_reply: {
     th: "ขอบคุณที่สนใจนะคะ! 🙏 เจ้าหน้าที่จะติดต่อกลับหาคุณโดยเร็วที่สุดค่ะ 😊✨",
     en: "Thank you for your interest! 🙏 Our team will get back to you as soon as possible. 😊✨",
     cn: "感谢您的关注！🙏 我们的团队会尽快与您联系。😊✨",
+    ru: "Спасибо за интерес! 🙏 Мы свяжемся с вами в ближайшее время. 😊✨",
   },
 };
 
@@ -280,22 +321,22 @@ export function t(
 
 // Property type labels per language
 const PROPERTY_TYPE_LABELS_I18N: Record<string, Record<BotLang, string>> = {
-  HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "独栋别墅" },
-  CONDO: { th: "คอนโด", en: "Condo", cn: "公寓" },
-  OFFICE_BUILDING: { th: "สำนักงานออฟฟิศ", en: "Office", cn: "办公楼" },
-  POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅" },
-  VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅" },
-  TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅" },
-  LAND: { th: "ที่ดิน", en: "Land", cn: "土地" },
-  WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库" },
-  COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial", cn: "商业楼" },
-  OTHER: { th: "อื่นๆ", en: "Other", cn: "其他" },
+  HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "独栋别墅", ru: "Дом" },
+  CONDO: { th: "คอนโด", en: "Condo", cn: "公寓", ru: "Кондо" },
+  OFFICE_BUILDING: { th: "สำนักงานออฟฟิศ", en: "Office", cn: "办公楼", ru: "Офис" },
+  POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅", ru: "Пул Вилла" },
+  VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅", ru: "Вилла" },
+  TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅", ru: "Таунхаус" },
+  LAND: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" },
+  WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
+  COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial", cn: "商业楼", ru: "Коммерция" },
+  OTHER: { th: "อื่นๆ", en: "Other", cn: "其他", ru: "Другое" },
 };
 
 // Area labels (Global Cache for Bot translations)
 export type AreaTranslations = Record<
   string,
-  { en: string | null; cn: string | null }
+  { en: string | null; cn: string | null; ru: string | null }
 >;
 
 function localizeArea(
@@ -307,6 +348,7 @@ function localizeArea(
     const trans = translations[areaName];
     if (lang === "en" && trans.en) return trans.en;
     if (lang === "cn" && trans.cn) return trans.cn;
+    if (lang === "ru" && trans.ru) return trans.ru;
   }
   return areaName;
 }
@@ -398,6 +440,17 @@ export function buildLanguageSelection(): FlexMessage {
                   label: "🇨🇳 中文",
                   data: "action=lang&value=cn",
                   displayText: "中文 🇨🇳",
+                },
+                style: "secondary",
+                height: "sm",
+              },
+              {
+                type: "button",
+                action: {
+                  type: "postback",
+                  label: "🇷🇺 Русский",
+                  data: "action=lang&value=ru",
+                  displayText: "Русский 🇷🇺",
                 },
                 style: "secondary",
                 height: "sm",
@@ -780,6 +833,7 @@ export function buildPropertyCarousel(
         let title = prop.title || "—";
         if (lang === "en" && prop.title_en) title = prop.title_en;
         if (lang === "cn" && prop.title_cn) title = prop.title_cn;
+        if (lang === "ru" && prop.title_ru) title = prop.title_ru;
 
         // Price display logic (New enhanced version based on Inquiry action)
         const priceContents = [];
@@ -954,7 +1008,7 @@ export function buildPropertyCarousel(
                   },
                   {
                     type: "text",
-                    text: `📏 ${prop.size_sqm || "-"} sqm`,
+                    text: `📏 ${prop.size_sqm || "-"} ${lang === "th" ? "ตร.ม." : lang === "ru" ? "кв.м." : "sqm"}`,
                     size: "xxs",
                     color: "#666666",
                     flex: 2,
@@ -1501,31 +1555,34 @@ export function buildSocialPostFlex(
       ? prop.title
       : lang === "en"
         ? prop.title_en
-        : prop.title_cn) ||
+        : lang === "cn"
+          ? prop.title_cn
+          : prop.title_ru) ||
     prop.title ||
     "—";
 
 
   const PROPERTY_TYPE_LABELS_I18N: Record<string, Record<string, string>> = {
-    HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "独栋别墅" },
-    CONDO: { th: "คอนโด", en: "Condo", cn: "公寓" },
-    TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅" },
-    LAND: { th: "ที่ดิน", en: "Land", cn: "土地" },
-    OFFICE_BUILDING: { th: "สำนักงานออฟฟิศ", en: "Office Building", cn: "办公楼" },
-    WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库" },
-    COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial Building", cn: "商用建筑" },
-    VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅" },
-    POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅" },
-    OTHER: { th: "อื่นๆ", en: "Other", cn: "其他" },
+    HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "独栋别墅", ru: "Дом" },
+    CONDO: { th: "คอนโด", en: "Condo", cn: "公寓", ru: "Кондо" },
+    TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅", ru: "Таунхаус" },
+    LAND: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" },
+    OFFICE_BUILDING: { th: "สำนักงานออฟฟิศ", en: "Office Building", cn: "办公楼", ru: "Офисное здание" },
+    WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
+    COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial Building", cn: "商用建筑", ru: "Коммерческое здание" },
+    VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅", ru: "Вилла" },
+    POOL_VILLA: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅", ru: "Пул Вилла" },
+    OTHER: { th: "อื่นๆ", en: "Other", cn: "其他", ru: "Другое" },
   };
 
   const LISTING_TYPE_LABELS_I18N: Record<string, Record<string, string>> = {
-    SALE: { th: "ขาย", en: "For Sale", cn: "出售" },
-    RENT: { th: "เช่า", en: "For Rent", cn: "出租" },
+    SALE: { th: "ขาย", en: "For Sale", cn: "出售", ru: "Продажа" },
+    RENT: { th: "เช่า", en: "For Rent", cn: "出租", ru: "Аренда" },
     SALE_AND_RENT: {
       th: "ขายและเช่า",
       en: "Sale & Rent",
       cn: "出售/出租",
+      ru: "Продажа и Аренда",
     },
   };
 
@@ -1535,7 +1592,9 @@ export function buildSocialPostFlex(
       ? PROPERTY_TYPE_LABELS[prop.property_type as PropertyType]
       : lang === "en"
         ? prop.property_type_en
-        : prop.property_type_cn) ||
+        : lang === "cn"
+          ? prop.property_type_cn
+          : prop.property_type_ru) ||
     PROPERTY_TYPE_LABELS[prop.property_type as PropertyType] ||
     prop.property_type ||
     "—";
@@ -1544,7 +1603,7 @@ export function buildSocialPostFlex(
     LISTING_TYPE_LABELS_I18N[prop.listing_type || ""]?.[lang] ||
     LISTING_TYPE_LABELS[prop.listing_type as ListingType] ||
     prop.listing_type ||
-    (lang === "en" ? "Property" : lang === "cn" ? "房产" : "ทรัพย์สิน");
+    (lang === "en" ? "Property" : lang === "cn" ? "房产" : lang === "ru" ? "Объект" : "ทรัพย์สิน");
   // 1. Localize location (static dictionary for common Thai areas since DB doesn't have localized fields)
   const translateLocation = (val: string | null | undefined, lang: BotLang) => {
     if (!val) return "";
@@ -1559,7 +1618,9 @@ export function buildSocialPostFlex(
         ? prop[`${field}_en` as keyof PropertyForFlex]
         : l === "cn"
           ? prop[`${field}_cn` as keyof PropertyForFlex]
-          : prop[field as keyof PropertyForFlex];
+          : l === "ru"
+            ? prop[`${field}_ru` as keyof PropertyForFlex]
+            : prop[field as keyof PropertyForFlex];
 
     if (typeof localizedField === "string" && localizedField) return localizedField;
 
@@ -1773,7 +1834,7 @@ export function buildSocialPostFlex(
                   ? [
                       specItem(
                         "",
-                        `${prop.size_sqm}${lang === "th" ? "ตร.ม." : "sq.m."}`,
+                        `${prop.size_sqm} ${lang === "th" ? "ตร.ม." : lang === "ru" ? "кв.м." : "sq.m."}`,
                         prop.land_size_sqwah ? "center" : "end",
                       ),
                     ]

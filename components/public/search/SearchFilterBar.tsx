@@ -54,6 +54,7 @@ interface SearchFilterBarProps {
     count: number;
     name_en?: string | null;
     name_cn?: string | null;
+    name_ru?: string | null;
   }[];
   province: string;
   setProvince: (v: string) => void;
@@ -125,10 +126,11 @@ export function SearchFilterBar({
   const priceOptions = useMemo(() => {
     const isEn = language === "en";
     const isCn = language === "cn";
-    const allPrices = isEn ? "All Prices" : isCn ? "所有价格" : "ทุกราคา";
-    const m = isEn ? "M" : isCn ? "百万" : "ล้าน";
-    const rentSuffix = isEn ? " (Rent)" : isCn ? " (租)" : " (เช่า)";
-    const saleSuffix = isEn ? " (Sale)" : isCn ? " (售)" : " (ขาย)";
+    const isRu = language === "ru";
+    const allPrices = isEn ? "All Prices" : isCn ? "所有价格" : isRu ? "Все цены" : "ทุกราคา";
+    const m = isEn ? "M" : isCn ? "百万" : isRu ? "млн" : "ล้าน";
+    const rentSuffix = isEn ? " (Rent)" : isCn ? " (租)" : isRu ? " (Аренда)" : " (เช่า)";
+    const saleSuffix = isEn ? " (Sale)" : isCn ? " (售)" : isRu ? " (Продажа)" : " (ขาย)";
     
     const rentOptions = [
       { label: `< 15,000`, min: "0", max: "15000", type: "RENT" },
@@ -158,8 +160,8 @@ export function SearchFilterBar({
     // ALL or SALE_AND_RENT
     return [
       { label: allPrices, min: "", max: "" },
-      { isGroup: true, label: isEn ? "Sale Pricing" : isCn ? "出售价格" : "ราคาขาย", options: saleOptions },
-      { isGroup: true, label: isEn ? "Rent Pricing" : isCn ? "出租价格" : "ราคาเช่า", options: rentOptions },
+      { isGroup: true, label: isEn ? "Sale Pricing" : isCn ? "出售价格" : isRu ? "Цены продажи" : "ราคาขาย", options: saleOptions },
+      { isGroup: true, label: isEn ? "Rent Pricing" : isCn ? "出租价格" : isRu ? "Цены аренды" : "ราคาเช่า", options: rentOptions },
     ];
   }, [listingType, language]);
 
@@ -206,8 +208,9 @@ export function SearchFilterBar({
   const sizeOptions = useMemo(() => {
     const isEn = language === "en";
     const isCn = language === "cn";
-    const allSizes = isEn ? "All Sizes" : isCn ? "所有面积" : "ทุกขนาด";
-    const sqm = isEn ? "sqm" : isCn ? "平米" : "ตร.ม.";
+    const isRu = language === "ru";
+    const allSizes = isEn ? "All Sizes" : isCn ? "所有面积" : isRu ? "Все размеры" : "ทุกขนาด";
+    const sqm = isEn ? "sqm" : isCn ? "平米" : isRu ? "м²" : "ตร.ม.";
     return [
       { label: allSizes, min: "", max: "" },
       { label: `< 30 ${sqm}`, min: "0", max: "30" },
@@ -292,7 +295,7 @@ export function SearchFilterBar({
   const PROPERTY_TYPES = [
     { 
       value: "ALL", 
-      label: language === "en" ? "All Property Types" : language === "cn" ? "所有物业类型" : "ทุกประเภททรัพย์" 
+      label: language === "en" ? "All Property Types" : language === "cn" ? "所有物业类型" : language === "ru" ? "Все типы" : "ทุกประเภททรัพย์" 
     },
     { value: "HOUSE", label: t("home.property_types.house") },
     { value: "CONDO", label: t("home.property_types.condo") },

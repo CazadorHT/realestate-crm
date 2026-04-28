@@ -19,6 +19,7 @@ export function PropertyCardFeatures({
         name: string;
         name_en?: string | null;
         name_cn?: string | null;
+        name_ru?: string | null;
         icon_key: string;
       }[]
     | null

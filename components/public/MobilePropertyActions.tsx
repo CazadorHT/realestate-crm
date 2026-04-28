@@ -23,6 +23,7 @@ interface MobilePropertyActionsProps {
     title: string;
     title_en?: string | null;
     title_cn?: string | null;
+    title_ru?: string | null;
   };
 }
 

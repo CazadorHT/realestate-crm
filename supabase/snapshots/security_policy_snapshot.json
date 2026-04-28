@@ -58,6 +58,15 @@
                     "roles": [
                         "public"
                     ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "AI Logs: Admin see all",
+                    "using_expression": "is_system_admin()"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
                     "command": "INSERT",
                     "with_check": "(auth.role() = 'authenticated'::text)",
                     "policy_name": "Allow authenticated users to insert logs",
@@ -80,6 +89,15 @@
                     "with_check": null,
                     "policy_name": "Allow admins to view all logs",
                     "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'ADMIN'::user_role))))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "AI Logs: Users see own",
+                    "using_expression": "(auth.uid() = user_id)"
                 }
             ],
             "rls_forced": false,
@@ -646,15 +664,6 @@
             "policies": [
                 {
                     "roles": [
-                        "public"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Tenant Isolation co_broker_documents",
-                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
-                },
-                {
-                    "roles": [
                         "authenticated"
                     ],
                     "command": "SELECT",
@@ -670,6 +679,15 @@
                     "with_check": null,
                     "policy_name": "manage_documents",
                     "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid()))) AND (EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text]))))))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Tenant Isolation co_broker_documents",
+                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
                 }
             ],
             "rls_forced": false,
@@ -786,6 +804,26 @@
                 {
                     "data_type": "text",
                     "column_name": "broker_group",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "bank_code",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "bank_account_no",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "bank_account_name",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "other_bank_name",
                     "is_nullable": "YES"
                 }
             ],
@@ -1126,6 +1164,16 @@
                     "data_type": "numeric",
                     "column_name": "tax_rate",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "payout_ref",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "payout_slip_url",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -1254,11 +1302,69 @@
                     "command": "ALL",
                     "with_check": null,
                     "policy_name": "Tenant Isolation deals",
-                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
                 }
             ],
             "rls_forced": false,
             "table_name": "deals",
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "original_id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "entity_type",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "data",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "deleted_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "deleted_by",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "metadata",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Admins/Owners can manage archive",
+                    "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role])))))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "deleted_records_archive",
             "rls_enabled": true
         },
         {
@@ -1387,7 +1493,7 @@
                     "command": "ALL",
                     "with_check": null,
                     "policy_name": "Tenant Isolation documents",
-                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
                 }
             ],
             "rls_forced": false,
@@ -1903,6 +2009,31 @@
                     "data_type": "USER-DEFINED",
                     "column_name": "embedding",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "ai_summary_content",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "full_name_hash",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "phone_hash",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "email_hash",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "line_id_hash",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -1946,19 +2077,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Tenant Isolation leads",
-                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                    "command": "INSERT",
+                    "with_check": "true",
+                    "policy_name": "Public Insert leads",
+                    "using_expression": null
                 },
                 {
                     "roles": [
                         "public"
                     ],
-                    "command": "INSERT",
-                    "with_check": "true",
-                    "policy_name": "Public Insert leads",
-                    "using_expression": null
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Tenant Isolation leads",
+                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
                 }
             ],
             "rls_forced": false,
@@ -2051,6 +2182,24 @@
                 }
             ],
             "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Line Templates: Everyone see",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Line Templates: Admin manage",
+                    "using_expression": "is_system_admin()"
+                },
                 {
                     "roles": [
                         "public"
@@ -2298,6 +2447,15 @@
                     "with_check": "true",
                     "policy_name": "Public Insert messages",
                     "using_expression": null
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Tenant Isolation: Omni Messages",
+                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
                 }
             ],
             "rls_forced": false,
@@ -2365,6 +2523,16 @@
                     "data_type": "uuid",
                     "column_name": "tenant_id",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "full_name_hash",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "phone_hash",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -2375,7 +2543,7 @@
                     "command": "ALL",
                     "with_check": null,
                     "policy_name": "Owners: Tenant Isolation",
-                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
                 }
             ],
             "rls_forced": false,
@@ -2566,6 +2734,39 @@
                     "is_nullable": "NO"
                 },
                 {
+                    "data_type": "uuid",
+                    "column_name": "property_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "visitor_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "triggered_at",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": null,
+            "rls_forced": false,
+            "table_name": "proactive_agent_triggers",
+            "rls_enabled": false
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
                     "data_type": "USER-DEFINED",
                     "column_name": "role",
                     "is_nullable": "NO"
@@ -2659,9 +2860,43 @@
                     "data_type": "numeric",
                     "column_name": "default_tax_rate",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "telegram_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "bank_code",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "bank_account_no",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "bank_account_name",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "other_bank_name",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Public: Anyone see basic agent info",
+                    "using_expression": "true"
+                },
                 {
                     "roles": [
                         "public"
@@ -3436,6 +3671,16 @@
                     "data_type": "USER-DEFINED",
                     "column_name": "embedding",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "co_agent_name_hash",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "co_agent_phone_hash",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -3443,10 +3688,10 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Properties: Staff Full Access",
-                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                    "policy_name": "Public: Anyone see active properties",
+                    "using_expression": "((status = 'ACTIVE'::property_status) AND (deleted_at IS NULL))"
                 },
                 {
                     "roles": [
@@ -3492,6 +3737,15 @@
                     "with_check": null,
                     "policy_name": "Public View Active Properties",
                     "using_expression": "((status = 'ACTIVE'::property_status) AND (deleted_at IS NULL))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "Properties: Staff Full Access",
+                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
                 }
             ],
             "rls_forced": false,
@@ -3542,7 +3796,7 @@
                     "command": "ALL",
                     "with_check": null,
                     "policy_name": "Property Agents: Join Isolation",
-                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM properties p\n  WHERE ((p.id = property_agents.property_id) AND (p.tenant_id = ANY (get_user_tenants()))))))"
+                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM properties p\n  WHERE ((p.id = property_agents.property_id) AND (p.tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))))))"
                 }
             ],
             "rls_forced": false,
@@ -3689,6 +3943,16 @@
                     "data_type": "timestamp with time zone",
                     "column_name": "created_at",
                     "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "scan_status",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "scan_result",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -3968,6 +4232,16 @@
                     "data_type": "timestamp with time zone",
                     "column_name": "created_at",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "visitor_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -3993,6 +4267,44 @@
             "rls_forced": false,
             "table_name": "property_views_log",
             "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "text",
+                    "column_name": "code",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_th",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_en",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "logo_url",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_active",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": null,
+            "rls_forced": false,
+            "table_name": "ref_banks",
+            "rls_enabled": false
         },
         {
             "columns": [
@@ -4226,7 +4538,7 @@
                     "command": "ALL",
                     "with_check": null,
                     "policy_name": "Tenant Isolation rental_contracts",
-                    "using_expression": "(is_system_admin() OR (tenant_id = ANY (get_user_tenants())))"
+                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
                 }
             ],
             "rls_forced": false,
@@ -4405,6 +4717,16 @@
                 {
                     "data_type": "bigint",
                     "column_name": "view_count",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "price_range_en",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "price_range_cn",
                     "is_nullable": "YES"
                 }
             ],
@@ -4912,7 +5234,17 @@
                     "is_nullable": "NO"
                 }
             ],
-            "policies": null,
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "System Admin Manage tenant_members",
+                    "using_expression": "is_system_admin()"
+                }
+            ],
             "rls_forced": false,
             "table_name": "tenant_members",
             "rls_enabled": true
@@ -5031,6 +5363,6 @@
     "metadata": {
         "project": "VC Connect Asset",
         "audit_type": "Table & RLS Security Audit",
-        "exported_at": "2026-04-20T16:36:36.434188+00:00"
+        "exported_at": "2026-04-27T01:59:04.324365+00:00"
     }
 } 

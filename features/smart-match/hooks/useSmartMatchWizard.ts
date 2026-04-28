@@ -75,10 +75,10 @@ export function useSmartMatchWizard() {
   const [settings, setSettings] =
     useState<SmartMatchSettings>(DEFAULT_SETTINGS);
   const [popularAreas, setPopularAreas] = useState<
-    { name: string; name_en?: string | null; name_cn?: string | null }[]
+    { name: string; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }[]
   >([]);
   const [availableLocations, setAvailableLocations] = useState<
-    { name: string; name_en?: string | null; name_cn?: string | null }[]
+    { name: string; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }[]
   >([]);
   const [availablePropertyTypes, setAvailablePropertyTypes] = useState<
     string[]
@@ -181,7 +181,7 @@ export function useSmartMatchWizard() {
           // Map strings back to objects
           const areaObjects = result.map((name) => {
             const existing = popularAreas.find((a) => a.name === name);
-            return existing || { name, name_en: name, name_cn: name };
+            return existing || { name, name_en: name, name_cn: name, name_ru: name };
           });
           setAvailableLocations(areaObjects);
         })
@@ -277,18 +277,18 @@ export function useSmartMatchWizard() {
           setPopularAreas(data as any);
         } else {
           setPopularAreas([
-            { name: "อ่อนนุช", name_en: "On Nut", name_cn: "On Nut" },
-            { name: "บางนา", name_en: "Bang Na", name_cn: "Bang Na" },
-            { name: "ลาดพร้าว", name_en: "Lat Phrao", name_cn: "Lat Phrao" },
-            { name: "พระราม 9", name_en: "Rama 9", name_cn: "Rama 9" },
+            { name: "อ่อนนุช", name_en: "On Nut", name_cn: "On Nut", name_ru: "Он Нут" },
+            { name: "บางนา", name_en: "Bang Na", name_cn: "Bang Na", name_ru: "Банг На" },
+            { name: "ลาดพร้าว", name_en: "Lat Phrao", name_cn: "Lat Phrao", name_ru: "Лат Пхрао" },
+            { name: "พระราม 9", name_en: "Rama 9", name_cn: "Rama 9", name_ru: "Рама 9" },
           ]);
         }
       } catch (e) {
         setPopularAreas([
-          { name: "อ่อนนุช", name_en: "On Nut", name_cn: "On Nut" },
-          { name: "บางนา", name_en: "Bang Na", name_cn: "Bang Na" },
-          { name: "ลาดพร้าว", name_en: "Lat Phrao", name_cn: "Lat Phrao" },
-          { name: "พระราม 9", name_en: "Rama 9", name_cn: "Rama 9" },
+          { name: "อ่อนนุช", name_en: "On Nut", name_cn: "On Nut", name_ru: "Он Нут" },
+          { name: "บางนา", name_en: "Bang Na", name_cn: "Bang Na", name_ru: "Банг На" },
+          { name: "ลาดพร้าว", name_en: "Lat Phrao", name_cn: "Lat Phrao", name_ru: "Лат Пхрао" },
+          { name: "พระราม 9", name_en: "Rama 9", name_cn: "Rama 9", name_ru: "Рама 9" },
         ]);
       }
     }

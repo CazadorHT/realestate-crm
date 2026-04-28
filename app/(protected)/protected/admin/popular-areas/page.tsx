@@ -1,6 +1,6 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getPopularAreas } from "@/features/admin/popular-areas-actions";
-import { PopularAreasTable } from "@/features/admin/components/PopularAreasTable";
+import { PopularAreasTable, type PopularArea } from "@/features/admin/components/PopularAreasTable";
 import { MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { CreatePopularAreaDialog } from "@/features/admin/components/CreatePopularAreaDialog";
@@ -39,10 +39,13 @@ export default async function AdminPopularAreasPage({ searchParams }: PageProps)
   });
 
   // Elite Type Safety: Map DB view results to strict PopularArea type
-  const mappedAreas = (areas || []).map((area) => ({
+  const mappedAreas: PopularArea[] = (areas || []).map((area) => ({
     ...area,
     id: area.id ?? "", 
     name: area.name ?? "ไม่มีชื่อ", 
+    name_en: area.name_en || null,
+    name_cn: area.name_cn || null,
+    name_ru: area.name_ru || null,
     sort_order: Number(area.sort_order) || 0,
     property_count: Number(area.property_count) || 0,
   }));
@@ -99,7 +102,7 @@ export default async function AdminPopularAreasPage({ searchParams }: PageProps)
 
       <div className="rounded-xl  overflow-hidden">
         <PopularAreasTable 
-          initialData={mappedAreas as any} 
+          initialData={mappedAreas} 
           totalCount={totalCount} 
         />
         

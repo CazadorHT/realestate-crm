@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import dynamic from "next/dynamic";
 import {
   format,
   setMonth,
@@ -37,7 +38,16 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Input } from "@/components/ui/input";
 
 import { EventDetailsDialog } from "./EventDetailsDialog";
-import { CalendarGrid } from "./CalendarGrid";
+
+const CalendarGrid = dynamic(() => import("./CalendarGrid").then((mod) => mod.CalendarGrid), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-col items-center justify-center min-h-[600px] bg-slate-50/50 rounded-[32px] border border-dashed border-slate-200">
+      <Loader2 className="h-10 w-10 animate-spin text-indigo-500 mb-4" />
+      <p className="text-sm font-medium text-slate-500">กำลังโหลดปฏิทินอัจฉริยะ...</p>
+    </div>
+  ),
+});
 
 interface CalendarViewProps {
   initialDate: Date;

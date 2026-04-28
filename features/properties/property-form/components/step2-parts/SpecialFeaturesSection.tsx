@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -55,14 +55,16 @@ import {
 } from "@/components/ui/tooltip";
 
 interface SpecialFeaturesSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   isReadOnly: boolean;
 }
 
 export function SpecialFeaturesSection({
-  form,
+  form: formProp,
   isReadOnly,
 }: SpecialFeaturesSectionProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   return (
     <Card className="col-span-2 border-slate-200/70 bg-white h-full relative overflow-hidden">
       <CardHeader className="space-y-3 sm:space-y-4 pb-4 px-4 sm:px-6 py-4 sm:py-6">
@@ -124,7 +126,6 @@ export function SpecialFeaturesSection({
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
-              form={form}
               name="is_pet_friendly"
               label="Pet Friendly"
               icon={PawPrint}
@@ -132,7 +133,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_foreigner_quota"
               label={
                 form.watch("listing_type") === "SALE"
@@ -146,7 +146,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="allow_smoking"
               label="สูบบุหรี่ได้"
               icon={Cigarette}
@@ -154,7 +153,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_selling_with_tenant"
               label="ขายพร้อมผู้เช่า"
               icon={UserCheck}
@@ -162,7 +160,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_exclusive"
               label="Exclusive (Sole Agent)"
               icon={Star}
@@ -171,7 +168,7 @@ export function SpecialFeaturesSection({
             />
           </div>
         </div>
-
+ 
         {/* Group 1b: Location & Transit */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
@@ -179,7 +176,6 @@ export function SpecialFeaturesSection({
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
-              form={form}
               name="is_cbd"
               label="ย่านโซน CBD"
               icon={MapPin}
@@ -188,7 +184,6 @@ export function SpecialFeaturesSection({
               title="ย่านศูนย์กลางธุรกิจ (Central Business District) แหล่งรวมออฟฟิศระดับเกรด A และการเดินทางที่สะดวกที่สุด"
             />
             <FeatureChip
-              form={form}
               name="near_transit"
               label="ใกล้รถไฟฟ้า"
               icon={TrainFront}
@@ -197,7 +192,7 @@ export function SpecialFeaturesSection({
             />
           </div>
         </div>
-
+ 
         {/* Group 2: Condition & Decor */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
@@ -205,7 +200,6 @@ export function SpecialFeaturesSection({
           </h4>
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <FeatureChip
-              form={form}
               name="is_renovated"
               label="รีโนเวทใหม่"
               icon={Hammer}
@@ -213,7 +207,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_corner_unit"
               label="ห้องหัวมุม"
               icon={LayoutDashboard}
@@ -221,7 +214,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_fully_furnished"
               label="เฟอร์ฯ ครบ"
               icon={Armchair}
@@ -229,7 +221,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_bare_shell"
               label="ห้องเปล่า / พื้นที่เปล่า"
               icon={BoxSelect}
@@ -237,7 +228,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_never_lived_in"
               label="มือหนึ่ง / ไม่เคยเข้าอยู่"
               icon={Gem}
@@ -245,7 +235,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_high_floor"
               label="ยูนิตชั้นสูง"
               icon={ArrowUpCircle}
@@ -254,7 +243,7 @@ export function SpecialFeaturesSection({
             />
           </div>
         </div>
-
+ 
         {/* Group 3: View & Direction */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
@@ -262,7 +251,6 @@ export function SpecialFeaturesSection({
           </h4>
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <FeatureChip
-              form={form}
               name="has_garden_view"
               label="วิวสวน"
               icon={TreePine}
@@ -270,7 +258,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="has_pool_view"
               label="วิวสระ"
               icon={Waves}
@@ -278,7 +265,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="has_city_view"
               label="วิวเมือง"
               icon={Building2}
@@ -286,7 +272,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="has_private_pool"
               label="สระว่ายน้ำส่วนตัว"
               icon={Waves}
@@ -294,7 +279,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="has_unblocked_view"
               label="วิวไม่บล็อก"
               icon={Scan}
@@ -302,7 +286,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="has_river_view"
               label="วิวแม่น้ำ"
               icon={Waves}
@@ -310,7 +293,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="facing_east"
               label="ทิศตะวันออก (แดดเช้า/ไม่ร้อนบ่าย)"
               icon={Compass}
@@ -318,7 +300,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="facing_north"
               label="ทิศเหนือ (ไม่ร้อน)"
               icon={Compass}
@@ -326,7 +307,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="facing_south"
               label="ทิศใต้ (ลมดี)"
               icon={Wind}
@@ -334,7 +314,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="facing_west"
               label="ทิศตก (วิวพระอาทิตย์ตก)"
               icon={Sunset}
@@ -343,7 +322,7 @@ export function SpecialFeaturesSection({
             />
           </div>
         </div>
-
+ 
         {/* Group 4: Office & Building Specs */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
@@ -351,7 +330,6 @@ export function SpecialFeaturesSection({
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
-              form={form}
               name="is_grade_a"
               label="Grade A"
               icon={Medal}
@@ -359,7 +337,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_grade_b"
               label="Grade B"
               icon={Medal}
@@ -367,7 +344,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_grade_c"
               label="Grade C"
               icon={Medal}
@@ -375,7 +351,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="has_raised_floor"
               label="พื้นยก"
               icon={Layers}
@@ -383,7 +358,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_high_ceiling"
               label="เพดานสูง"
               icon={ArrowUpFromLine}
@@ -391,7 +365,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_column_free"
               label="ไม่มีเสากลาง"
               icon={Maximize}
@@ -399,7 +372,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_central_air"
               label="แอร์รวม"
               icon={Wind}
@@ -407,7 +379,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_split_air"
               label="แอร์แยก"
               icon={Wind}
@@ -415,7 +386,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="has_247_access"
               label="เข้า-ออก 24 ชม."
               icon={CheckCircle2}
@@ -423,7 +393,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_smart_home"
               label="ระบบบ้านอัจฉริยะ"
               icon={Cpu}
@@ -431,7 +400,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="has_private_elevator"
               label="ลิฟต์ส่วนตัว"
               icon={ArrowUpFromLine}
@@ -439,7 +407,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_handicapped_friendly"
               label="รองรับผู้สูงอายุ/ผู้พิการ"
               icon={Accessibility}
@@ -448,7 +415,7 @@ export function SpecialFeaturesSection({
             />
           </div>
         </div>
-
+ 
         {/* Group 5: Services */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
@@ -456,7 +423,6 @@ export function SpecialFeaturesSection({
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
-              form={form}
               name="has_fiber_optic"
               label="Fiber Optic"
               icon={Wifi}
@@ -464,7 +430,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="is_tax_registered"
               label="จดทะเบียนภาษี/บริษัทได้"
               icon={CheckCircle2}
@@ -472,7 +437,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              form={form}
               name="has_multi_parking"
               label="จอดรถ > 1 คัน"
               icon={CheckCircle2}
@@ -533,7 +497,6 @@ const ICON_COLOR_MAP: Record<string, string> = {
 };
 
 interface FeatureChipProps {
-  form: UseFormReturn<PropertyFormValues>;
   name: keyof PropertyFormValues;
   label: string;
   icon: React.ElementType;
@@ -557,7 +520,6 @@ interface FeatureChipProps {
 }
 
 function FeatureChip({
-  form,
   name,
   label,
   icon: Icon,
@@ -565,6 +527,7 @@ function FeatureChip({
   color,
   disabled,
 }: FeatureChipProps) {
+  const form = useFormContext<PropertyFormValues>();
   const content = (
     <FormField
       control={form.control}

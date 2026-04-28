@@ -8,7 +8,7 @@ export const rentNotificationRuleSchema = z.object({
     .max(31, "วันที่ต้องอยู่ระหว่าง 1-31"),
   notification_hour: z.number().min(0).max(23),
   is_active: z.boolean(),
-  language: z.enum(["th", "en", "cn"]),
+  language: z.enum(["th", "en", "cn", "ru"]),
   tenant_id: z.string().uuid().optional().nullable(),
 });
 

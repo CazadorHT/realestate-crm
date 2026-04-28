@@ -394,7 +394,7 @@ export function DesktopFilters({
                         : "text-slate-400 hover:text-blue-600"
                   }`}
                 >
-                  {getLocaleValue({ name: a.name, name_en: a.name_en, name_cn: a.name_cn }, "name", language)}
+                  {getLocaleValue({ name: a.name, name_en: a.name_en, name_cn: a.name_cn, name_ru: a.name_ru }, "name", language)}
                   <span className={`text-sm ${a.count === 0 ? "opacity-30" : "opacity-60 text-blue-600"}`}>({a.count})</span>
                 </button>
               ))}

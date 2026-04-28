@@ -1,6 +1,7 @@
 import { Check, Star } from "lucide-react";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
+import { type Language } from "@/lib/i18n";
 
 export interface KeySellingPoint {
   name: string;
@@ -10,7 +11,7 @@ export interface KeySellingPoint {
 interface KeySellingPointsProps {
   points?: KeySellingPoint[];
   listingType: "SALE" | "RENT" | "SALE_AND_RENT";
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 export function KeySellingPoints({
@@ -89,7 +90,9 @@ export function KeySellingPoints({
                 ? "ดูเพิ่มเติมด้านล่าง"
                 : language === "cn"
                   ? "查看下方更多"
-                  : "See more below"}
+                  : language === "ru"
+                    ? "Смотреть ниже"
+                    : "See more below"}
             </span>
           </button>
         )}

@@ -9,18 +9,20 @@ import {
   PROPERTY_TYPE_ICONS,
   PROPERTY_TYPE_GRADIENTS,
 } from "@/features/properties/labels";
-import type { UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
 
 interface PropertyTypeSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   onPropertyTypeSelect?: () => void;
 }
 
 export function PropertyTypeSection({
-  form,
+  form: formProp,
   onPropertyTypeSelect,
 }: PropertyTypeSectionProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   const propertyTypeError = form.formState.errors.property_type;
 
   return (

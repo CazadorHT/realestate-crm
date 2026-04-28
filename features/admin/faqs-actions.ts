@@ -14,9 +14,11 @@ const faqSchema = z.object({
   question: z.string().min(1, "กรุณาระบุคำถาม"),
   question_en: z.string().optional().nullable(),
   question_cn: z.string().optional().nullable(),
+  question_ru: z.string().optional().nullable(),
   answer: z.string().min(1, "กรุณาระบุคำตอบ"),
   answer_en: z.string().optional().nullable(),
   answer_cn: z.string().optional().nullable(),
+  answer_ru: z.string().optional().nullable(),
   category: z.string().optional().nullable(),
   sort_order: z.number().optional().default(0),
   is_active: z.boolean().optional().default(true),
@@ -47,7 +49,7 @@ export async function getFaqs(page = 1, pageSize = 10, isTrash = false, search =
 
   let query = supabase
     .from("faqs")
-    .select("id, question, question_en, question_cn, answer, answer_en, answer_cn, category, sort_order, is_active, created_at, updated_at", { count: "exact" });
+    .select("id, question, question_en, question_cn, question_ru, answer, answer_en, answer_cn, answer_ru, category, sort_order, is_active, created_at, updated_at", { count: "exact" });
 
   if (isTrash) {
     query = query.not("deleted_at", "is", null);
@@ -105,7 +107,7 @@ export async function getFaq(id: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("faqs")
-    .select("id, question, question_en, question_cn, answer, answer_en, answer_cn, category, sort_order, is_active, created_at, updated_at")
+    .select("id, question, question_en, question_cn, question_ru, answer, answer_en, answer_cn, answer_ru, category, sort_order, is_active, created_at, updated_at")
     .eq("id", id)
     .single();
 

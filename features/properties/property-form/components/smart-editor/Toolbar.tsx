@@ -35,7 +35,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import dynamic from "next/dynamic";
 import { TEMPLATES } from "./constants";
-import { EmojiClickData } from "emoji-picker-react";
+import type { EmojiClickData } from "emoji-picker-react";
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
   ssr: false,

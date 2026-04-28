@@ -178,7 +178,7 @@ export function getListingBadge(listingType: string | null): {
  */
 export function getPriceFormatter(language: string = "th") {
   return new Intl.NumberFormat(
-    language === "th" ? "th-TH" : language === "cn" ? "zh-CN" : "en-US",
+    language === "th" ? "th-TH" : language === "cn" ? "zh-CN" : language === "ru" ? "ru-RU" : "en-US",
     {
       style: "decimal",
       maximumFractionDigits: 0,

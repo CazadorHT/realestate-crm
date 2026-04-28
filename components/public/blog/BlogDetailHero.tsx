@@ -13,6 +13,7 @@ interface BlogDetailHeroProps {
     category?: string | null;
     title_en?: string | null;
     title_cn?: string | null;
+    title_ru?: string | null;
   };
   author: {
     name: string;

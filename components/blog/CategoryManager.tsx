@@ -25,6 +25,7 @@ interface Category {
   name: string;
   name_en?: string | null;
   name_cn?: string | null;
+  name_ru?: string | null;
   slug: string;
   created_at: string;
 }
@@ -39,6 +40,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryNameEn, setNewCategoryNameEn] = useState("");
   const [newCategoryNameCn, setNewCategoryNameCn] = useState("");
+  const [newCategoryNameRu, setNewCategoryNameRu] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const handleCreate = () => {
@@ -49,12 +51,14 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
         newCategoryName,
         newCategoryNameEn,
         newCategoryNameCn,
+        newCategoryNameRu,
       );
       if (result.success && result.data) {
         setCategories((prev) => [...prev, result.data as Category]);
         setNewCategoryName("");
         setNewCategoryNameEn("");
         setNewCategoryNameCn("");
+        setNewCategoryNameRu("");
         toast.success(result.message || "สร้างหมวดหมู่สำเร็จ");
         const url = new URL(window.location.href);
         url.searchParams.set("success", "true");
@@ -102,7 +106,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
           </h3>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 lg:gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">
               Thai Name
@@ -135,6 +139,18 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
               placeholder="例如：新闻、促销"
               value={newCategoryNameCn}
               onChange={(e) => setNewCategoryNameCn(e.target.value)}
+              disabled={isPending}
+              className="bg-white h-11 border-slate-200 focus:border-blue-500 transition-all"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">
+              Russian Name
+            </label>
+            <Input
+              placeholder="напр. Новости, Акции"
+              value={newCategoryNameRu}
+              onChange={(e) => setNewCategoryNameRu(e.target.value)}
               disabled={isPending}
               className="bg-white h-11 border-slate-200 focus:border-blue-500 transition-all"
             />
@@ -176,6 +192,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                 <TableHead className="py-4">ชื่อหมวดหมู่ (TH)</TableHead>
                 <TableHead>English (EN)</TableHead>
                 <TableHead>中文 (CN)</TableHead>
+                <TableHead>Русский (RU)</TableHead>
                 <TableHead>URL (Slug)</TableHead>
                 <TableHead className="w-[80px] text-right">จัดการ</TableHead>
               </TableRow>
@@ -199,6 +216,11 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                       <span className="text-slate-300 italic">-</span>
                     )}
                   </TableCell>
+                  <TableCell className="text-slate-600">
+                    {category.name_ru || (
+                      <span className="text-slate-300 italic">-</span>
+                    )}
+                  </TableCell>
                   <TableCell className="text-slate-400 font-mono text-[10px]">
                     {category.slug}
                   </TableCell>
@@ -218,7 +240,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
               {categories.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={6}
                     className="text-center py-12 text-slate-400"
                   >
                     ไม่พบหมวดหมู่
@@ -269,6 +291,14 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
                   </span>
                   <p className="text-xs text-slate-600 truncate">
                     {category.name_cn || "-"}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    Russian
+                  </span>
+                  <p className="text-xs text-slate-600 truncate">
+                    {category.name_ru || "-"}
                   </p>
                 </div>
               </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { type Language } from "@/lib/i18n";
+
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -90,7 +92,7 @@ export function SocialPostDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<"IDLE" | "POSTING" | "SUCCESS" | "ERROR">("IDLE");
   const [resultMessage, setResultMessage] = useState("");
-  const [selectedLangs, setSelectedLangs] = useState<Array<"th" | "en" | "cn">>(["th"]);
+  const [selectedLangs, setSelectedLangs] = useState<Array<Language>>(["th"]);
   const [isConnected, setIsConnected] = useState(true);
   const [identity, setIdentity] = useState<{ display_name?: string; avatar_url?: string }>({});
   const versionRef = useRef(0);
@@ -150,7 +152,7 @@ export function SocialPostDialog({
     }
   }, [isOpen, propertyId, selectedLangs.join(","), platform, loadContent]);
 
-  const toggleLang = (l: "th" | "en" | "cn") => {
+  const toggleLang = (l: Language) => {
     setSelectedLangs((prev) =>
       prev.includes(l) ? prev.filter((x) => x !== l) : [...prev, l]
     );
@@ -295,6 +297,7 @@ export function SocialPostDialog({
                       { id: "th", label: "Thai", flag: "🇹🇭" },
                       { id: "en", label: "English", flag: "🇺🇸" },
                       { id: "cn", label: "Chinese", flag: "🇨🇳" },
+                      { id: "ru", label: "Russian", flag: "🇷🇺" },
                     ].map((l) => (
                       <button
                         key={l.id}
@@ -554,6 +557,7 @@ export function SocialPostDialog({
                 { id: "th", label: "Thai", flag: "🇹🇭" },
                 { id: "en", label: "English", flag: "🇺🇸" },
                 { id: "cn", label: "Chinese", flag: "🇨🇳" },
+                { id: "ru", label: "Russian", flag: "🇷🇺" },
               ].map((l) => {
                 const isActive = selectedLangs.includes(l.id as any);
                 return (

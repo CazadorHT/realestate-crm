@@ -120,23 +120,23 @@ export async function generateAIPropertyDescriptionAction(
 }
 
 export async function translatePlaceNameAction(text: string) {
-  if (!text) return { name_en: "", name_cn: "" };
+  if (!text) return { name_en: "", name_cn: "", name_ru: "" };
   const results = await translatePlaceNamesAction([text]);
-  return results[0] || { name_en: "", name_cn: "" };
+  return results[0] || { name_en: "", name_cn: "", name_ru: "" };
 }
 
 export async function translatePlaceNamesAction(texts: string[]) {
   const filteredTexts = texts.map((t) => t?.trim()).filter(Boolean);
   if (filteredTexts.length === 0)
-    return texts.map(() => ({ name_en: "", name_cn: "" }));
+    return texts.map(() => ({ name_en: "", name_cn: "", name_ru: "" }));
 
   const prompt = `
-    Translate the following list of Thai place/station names to English and Simplified Chinese.
+    Translate the following list of Thai place/station names to English, Simplified Chinese, and Russian.
     Inputs:
     ${filteredTexts.map((t, i) => `${i + 1}. ${t}`).join("\n")}
     
-    Return ONLY a valid JSON array of objects with keys "en" and "cn".
-    Example: [{"en": "Central World", "cn": "中央世界"}, ...]
+    Return ONLY a valid JSON array of objects with keys "en", "cn", and "ru".
+    Example: [{"en": "Central World", "cn": "中央世界", "ru": "Центральный мир"}, ...]
     Do not add markdown code blocks.
   `;
 
@@ -161,11 +161,12 @@ export async function translatePlaceNamesAction(texts: string[]) {
     // Map back to guarantee order and length matching input texts
     let jsonIdx = 0;
     return texts.map((t) => {
-      if (!t?.trim()) return { name_en: "", name_cn: "" };
+      if (!t?.trim()) return { name_en: "", name_cn: "", name_ru: "" };
       const item = json[jsonIdx++];
       return {
         name_en: item?.en || "",
         name_cn: item?.cn || "",
+        name_ru: item?.ru || "",
       };
     });
   } catch (error: unknown) {
@@ -177,6 +178,6 @@ export async function translatePlaceNamesAction(texts: string[]) {
       status: "error",
       errorMessage: (error as Error).message,
     });
-    return texts.map(() => ({ name_en: "", name_cn: "" }));
+    return texts.map(() => ({ name_en: "", name_cn: "", name_ru: "" }));
   }
 }

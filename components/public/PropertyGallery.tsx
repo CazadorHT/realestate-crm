@@ -31,6 +31,8 @@ import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { PropertyImage } from "@/features/properties/types";
 import { MdOutlinePets } from "react-icons/md";
 
+import { type Language } from "@/lib/i18n";
+
 interface PropertyGalleryProps {
   images: PropertyImage[];
   title: string;
@@ -38,7 +40,7 @@ interface PropertyGalleryProps {
   verified?: boolean;
   petFriendly?: boolean;
   propertyId?: string;
-  language?: "th" | "en" | "cn";
+  language?: Language;
   imageAlt?: string;
 }
 

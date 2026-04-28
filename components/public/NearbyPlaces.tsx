@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import {
   School,
   ShoppingBag,
@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { TRANSIT_TYPE_STYLES } from "@/features/properties/labels";
 import { MdOutlineExplore } from "react-icons/md";
+import { type Language } from "@/lib/i18n";
 import {
   useLanguage,
   dictionaries,
@@ -23,6 +24,7 @@ export interface NearbyPlaceItem {
   name: string;
   name_en?: string;
   name_cn?: string;
+  name_ru?: string;
   distance?: string;
   time?: string;
 }
@@ -32,6 +34,7 @@ export interface TransitItem {
   station_name: string;
   station_name_en?: string;
   station_name_cn?: string;
+  station_name_ru?: string;
   distance_meters?: number;
   time?: string;
 }
@@ -42,7 +45,7 @@ interface NearbyPlacesProps {
   propertyTitle?: string;
   data?: NearbyPlaceItem[];
   transits?: TransitItem[];
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 const ICON_MAP: Record<string, any> = {
@@ -177,7 +180,9 @@ export function NearbyPlaces({
                         ? item.name_en
                         : language === "cn"
                           ? item.name_cn
-                          : null) || item.name}
+                          : language === "ru"
+                            ? item.name_ru
+                            : null) || item.name}
                     </span>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {item.distance && (
@@ -233,7 +238,9 @@ export function NearbyPlaces({
                           ? transit.station_name_en
                           : language === "cn"
                             ? transit.station_name_cn
-                            : null) || transit.station_name}
+                            : language === "ru"
+                              ? transit.station_name_ru
+                              : null) || transit.station_name}
                       </span>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">

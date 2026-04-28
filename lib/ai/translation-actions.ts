@@ -4,8 +4,10 @@ import { generateText } from "./gemini";
 import { logAiUsage } from "@/features/ai-monitor/actions";
 
 export interface TranslationResult {
+  [x: string]: unknown;
   en: string;
   cn: string;
+  ru: string;
 }
 
 /**
@@ -17,12 +19,12 @@ export async function translateTextAction(
   contentType: "plain" | "html" = "plain",
 ): Promise<TranslationResult> {
   if (!text || text.trim() === "") {
-    return { en: "", cn: "" };
+    return { en: "", cn: "", ru: "" };
   }
 
   const prompt = `
     You are a professional translator and real estate marketing expert.
-    Translate the following ${contentType === "html" ? "HTML content" : "text"} from Thai to English and Chinese (Simplified).
+    Translate the following ${contentType === "html" ? "HTML content" : "text"} from Thai to English, Chinese (Simplified), and Russian.
 
     RULES:
     1. Maintain a professional, premium, and engaging tone suitable for real estate.
@@ -31,7 +33,7 @@ export async function translateTextAction(
         ? "CRITICAL: Strictly preserve all HTML tags (e.g., <h2>, <p>, <ul>, <li>, <strong>, <a>). Do NOT remove, modify, or translate the tags themselves. Only translate the text content inside the tags."
         : "Return the result as a clean string."
     }
-    3. Return the response ONLY in a valid JSON format with keys "en" and "cn". 
+    3. Return the response ONLY in a valid JSON format with keys "en", "cn", and "ru". 
     4. Do not include any Markdown formatting like \`\`\`json or explanations.
 
     TEXT TO TRANSLATE:
@@ -70,6 +72,7 @@ export async function translateTextAction(
       return {
         en: parsedResult.en || "",
         cn: parsedResult.cn || "",
+        ru: parsedResult.ru || "",
       };
     } catch (parseError) {
       console.error("Failed to parse AI translation JSON:", responseText);

@@ -20,9 +20,11 @@ export type PropertyRow = {
   title: string;
   title_en: string | null;
   title_cn: string | null;
+  title_ru: string | null;
   description: string | null;
   description_en: string | null;
   description_cn: string | null;
+  description_ru: string | null;
   property_type: string | null;
   price: number | null;
   rental_price: number | null;
@@ -40,9 +42,11 @@ export type PropertyRow = {
   address_line1: string | null;
   address_line1_en: string | null;
   address_line1_cn: string | null;
+  address_line1_ru: string | null;
   popular_area: string | null;
   popular_area_en?: string | null;
   popular_area_cn?: string | null;
+  popular_area_ru?: string | null;
   original_price: number | null;
   original_rental_price: number | null;
   verified: boolean | null;
@@ -54,6 +58,7 @@ export type PropertyRow = {
   transit_station_name: string | null;
   transit_station_name_en: string | null;
   transit_station_name_cn: string | null;
+  transit_station_name_ru: string | null;
   transit_distance_meters: number | null;
   google_maps_link: string | null;
   is_fully_furnished: boolean | null;
@@ -85,6 +90,7 @@ export type PropertyRow = {
       name: string;
       name_en: string | null;
       name_cn: string | null;
+      name_ru: string | null;
       icon_key: string;
     } | null;
   }> | null;
@@ -92,15 +98,15 @@ export type PropertyRow = {
 
 // 🛡️ Data Seal: Strictly Whitelisted Public Columns
 const PUBLIC_COLUMNS = `
-  id, slug, title, title_en, title_cn, description, description_en, description_cn,
+  id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru,
   property_type, price, rental_price, original_price, original_rental_price,
   verified, min_contract_months, bedrooms, meta_keywords, bathrooms,
   size_sqm, land_size_sqwah, parking_slots, floor, created_at, updated_at,
-  listing_type, popular_area, province, district, subdistrict,
-  address_line1, address_line1_en, address_line1_cn,
+  listing_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru, province, district, subdistrict,
+  address_line1, address_line1_en, address_line1_cn, address_line1_ru,
   nearby_places, nearby_transits, is_hot_deal,
   near_transit, transit_type, transit_station_name,
-  transit_station_name_en, transit_station_name_cn, transit_distance_meters,
+  transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_distance_meters,
   google_maps_link, is_fully_furnished, is_bare_shell,
   is_pet_friendly, is_foreigner_quota, is_tax_registered,
   ai_summary_content,
@@ -108,7 +114,7 @@ const PUBLIC_COLUMNS = `
     image_url, storage_path, is_cover, sort_order
   ),
   property_features (
-    features (id, name, name_en, name_cn, icon_key)
+    features (id, name, name_en, name_cn, name_ru, icon_key)
   )
 `;
 
@@ -225,8 +231,8 @@ export const getPublicProperties = cache(
     if (options.q) {
       const searchTerm = `%${options.q}%`;
       query = query.or(
-        `title.ilike.${searchTerm},title_en.ilike.${searchTerm},title_cn.ilike.${searchTerm},` +
-        `description.ilike.${searchTerm},description_en.ilike.${searchTerm},description_cn.ilike.${searchTerm},` +
+        `title.ilike.${searchTerm},title_en.ilike.${searchTerm},title_cn.ilike.${searchTerm},title_ru.ilike.${searchTerm},` +
+        `description.ilike.${searchTerm},description_en.ilike.${searchTerm},description_cn.ilike.${searchTerm},description_ru.ilike.${searchTerm},` +
         `ai_summary_content.ilike.${searchTerm},popular_area.ilike.${searchTerm}`
       );
     }
@@ -275,16 +281,16 @@ export const getPublicProperties = cache(
     );
     const areaTranslationsMap = new Map<
       string,
-      { en: string | null; cn: string | null }
+      { en: string | null; cn: string | null; ru: string | null }
     >();
 
     if (popularAreaNames.length > 0) {
       const { data: areaData } = await supabase
         .from("popular_areas")
-        .select("name, name_en, name_cn")
+        .select("name, name_en, name_cn, name_ru")
         .in("name", popularAreaNames);
-      (areaData || []).forEach((a: { name: string; name_en: string | null; name_cn: string | null }) =>
-        areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn }),
+      (areaData || []).forEach((a: { name: string; name_en: string | null; name_cn: string | null; name_ru: string | null }) =>
+        areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn, ru: a.name_ru }),
       );
     }
 
@@ -302,6 +308,7 @@ export const getPublicProperties = cache(
         ...cardBase,
         popular_area_en: trans?.en ?? null,
         popular_area_cn: trans?.cn ?? null,
+        popular_area_ru: trans?.ru ?? null,
         image_url: getCoverImage(finalImages),
         images: finalImages,
         location: buildLocation(row),
@@ -333,14 +340,14 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
   if (error || !data) return null;
 
   const typedRow = data as unknown as PropertyRow;
-  let trans = { en: null as string | null, cn: null as string | null };
+  let trans = { en: null as string | null, cn: null as string | null, ru: null as string | null };
   if (typedRow.popular_area) {
     const { data: areaData } = await supabase
       .from("popular_areas")
-      .select("name, name_en, name_cn")
+      .select("name, name_en, name_cn, name_ru")
       .eq("name", typedRow.popular_area)
       .single();
-    if (areaData) trans = { en: areaData.name_en, cn: areaData.name_cn };
+    if (areaData) trans = { en: areaData.name_en, cn: areaData.name_cn, ru: areaData.name_ru };
   }
 
   // Use normalized property_images if available, fallback to legacy
@@ -352,6 +359,7 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
     ...typedRow,
     popular_area_en: trans.en,
     popular_area_cn: trans.cn,
+    popular_area_ru: trans.ru,
     image_url: getCoverImage(finalImages),
     images: finalImages,
     location: buildLocation(typedRow),

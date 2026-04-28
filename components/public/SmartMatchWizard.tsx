@@ -291,7 +291,9 @@ export function SmartMatchWizard() {
                 options={popularAreas.map((a) => {
                   const lang = language;
                   return (
-                    (lang === "en"
+                    (lang === "ru"
+                      ? a.name_ru
+                      : lang === "en"
                       ? a.name_en
                       : lang === "cn"
                         ? a.name_cn
@@ -301,7 +303,9 @@ export function SmartMatchWizard() {
                 availableOptions={availableLocations.map((a) => {
                   const lang = language;
                   return (
-                    (lang === "en"
+                    (lang === "ru"
+                      ? a.name_ru
+                      : lang === "en"
                       ? a.name_en
                       : lang === "cn"
                         ? a.name_cn
@@ -312,7 +316,9 @@ export function SmartMatchWizard() {
                   const selected = popularAreas.find((a) => {
                     const lang = language;
                     const localized =
-                      (lang === "en"
+                      (lang === "ru"
+                        ? a.name_ru
+                        : lang === "en"
                         ? a.name_en
                         : lang === "cn"
                           ? a.name_cn

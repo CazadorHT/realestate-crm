@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import type { UseFormReturn } from "react-hook-form";
+import { useFormContext } from "react-hook-form";
 import {
   Loader2,
   FileText,
@@ -37,30 +37,33 @@ import { translateTextAction } from "@/lib/ai/translation-actions";
 import { toast } from "sonner";
 
 type Props = {
-  form: UseFormReturn<PropertyFormValues>;
   popularAreas: string[];
   isAddingArea: boolean;
   newArea: string;
-  setNewArea: (v: string) => void;
+  setNewAreaAction: (v: string) => void;
   newAreaEn: string;
-  setNewAreaEn: (v: string) => void;
+  setNewAreaEnAction: (v: string) => void;
   newAreaCn: string;
-  setNewAreaCn: (v: string) => void;
-  onAddArea: () => void;
+  setNewAreaCnAction: (v: string) => void;
+  newAreaRu: string;
+  setNewAreaRuAction: (v: string) => void;
+  onAddAreaAction: () => void;
 };
 
 export function QuickInfoSection({
-  form,
   popularAreas,
   isAddingArea,
   newArea,
-  setNewArea,
+  setNewAreaAction,
   newAreaEn,
-  setNewAreaEn,
+  setNewAreaEnAction,
   newAreaCn,
-  setNewAreaCn,
-  onAddArea,
+  setNewAreaCnAction,
+  newAreaRu,
+  setNewAreaRuAction,
+  onAddAreaAction,
 }: Props) {
+  const form = useFormContext<PropertyFormValues>();
   const { provinces, loading: addressLoading } = useThaiAddress();
   const hasTitleError = !!form.formState.errors.title;
   const [showAddArea, setShowAddArea] = React.useState(false);
@@ -74,14 +77,15 @@ export function QuickInfoSection({
       return;
     }
     setIsTranslatingArea(true);
-    const toastId = toast.loading("กำลังแปลชื่อย่านเป็นภาษาอังกฤษและจีน...");
+    const toastId = toast.loading("กำลังแปลชื่อย่านเป็นภาษาอังกฤษ จีน และรัสเซีย...");
     try {
       const result = await translateTextAction(newArea, "plain");
-      setNewAreaEn(result.en);
-      setNewAreaCn(result.cn);
+      setNewAreaEnAction(result.en);
+      setNewAreaCnAction(result.cn);
+      setNewAreaRuAction(result.ru);
       toast.success("แปลชื่อย่านเรียบร้อยแล้ว ✨", { id: toastId });
-    } catch (error: any) {
-      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "การแปลขัดข้อง", { id: toastId });
     } finally {
       setIsTranslatingArea(false);
     }
@@ -144,7 +148,7 @@ export function QuickInfoSection({
                     ) : (
                       <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                     )}
-                    AI แปลเป็น EN/CN
+                    AI แปลเป็น EN/CN/RU
                   </Button>
                 </div>
 
@@ -212,6 +216,29 @@ export function QuickInfoSection({
                     value={field.value ?? ""}
                     className="h-14 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md"
                     placeholder="中文名称..."
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Название (Russian) */}
+        <div className="md:col-span-1 lg:col-span-2">
+          <FormField
+            control={form.control}
+            name="title_ru"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Languages className="w-3 h-3" /> Название (Russian)
+                </label>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className="h-14 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md"
+                    placeholder="Название..."
                   />
                 </FormControl>
               </FormItem>
@@ -377,14 +404,14 @@ export function QuickInfoSection({
                   </button>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-in fade-in slide-in-from-left-4 duration-300">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-left-4 duration-300">
                   <div className="relative">
                     <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                       <Flag className="h-5 w-5" />
                     </div>
                     <Input
                       value={newArea}
-                      onChange={(e) => setNewArea(e.target.value)}
+                      onChange={(e) => setNewAreaAction(e.target.value)}
                       className="h-14 rounded-2xl bg-white font-medium pl-12 pr-6 w-full"
                       placeholder="ชื่อย่าน (ไทย)"
                     />
@@ -395,7 +422,7 @@ export function QuickInfoSection({
                     </div>
                     <Input
                       value={newAreaEn}
-                      onChange={(e) => setNewAreaEn(e.target.value)}
+                      onChange={(e) => setNewAreaEnAction(e.target.value)}
                       className="h-14 rounded-2xl bg-white font-medium pl-12 pr-6 w-full text-blue-600"
                       placeholder="Area (English)"
                     />
@@ -406,9 +433,20 @@ export function QuickInfoSection({
                     </div>
                     <Input
                       value={newAreaCn}
-                      onChange={(e) => setNewAreaCn(e.target.value)}
+                      onChange={(e) => setNewAreaCnAction(e.target.value)}
                       className="h-14 rounded-2xl bg-white font-medium pl-12 pr-6 w-full text-indigo-600"
                       placeholder="区域 (Chinese)"
+                    />
+                  </div>
+                  <div className="relative">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                      <Languages className="h-5 w-5" />
+                    </div>
+                    <Input
+                      value={newAreaRu}
+                      onChange={(e) => setNewAreaRuAction(e.target.value)}
+                      className="h-14 rounded-2xl bg-white font-medium pl-12 pr-6 w-full text-rose-600"
+                      placeholder="Район (Russian)"
                     />
                   </div>
                 </div>
@@ -417,7 +455,7 @@ export function QuickInfoSection({
                   <Button
                     type="button"
                     onClick={() => {
-                      onAddArea();
+                      onAddAreaAction();
                     }}
                     disabled={isAddingArea}
                     className="h-14 rounded-2xl font-medium px-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 min-w-[150px]"

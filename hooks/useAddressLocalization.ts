@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { ThaiAddressService } from "@/lib/thai-address/service";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { type Language } from "@/lib/i18n";
+import { getProvinceName } from "@/lib/utils/provinces";
+import { District, SubDistrict } from "@/lib/thai-address/types";
 
 interface LocalizedAddress {
   province?: string;
@@ -12,7 +15,7 @@ export function useAddressLocalization(
   provinceTh?: string | null,
   districtTh?: string | null,
   subdistrictTh?: string | null,
-  customLanguage?: "th" | "en" | "cn",
+  customLanguage?: Language,
 ) {
   const { language: globalLanguage } = useLanguage();
   const language = customLanguage || globalLanguage;
@@ -44,23 +47,26 @@ export function useAddressLocalization(
 
         let districtEn: string | undefined;
         let subdistrictEn: string | undefined;
+        let foundDistrict: District | undefined;
+        let foundSub: SubDistrict | undefined;
 
         if (foundProvince && districtTh) {
           // Fetch all districts (cached)
           const districts = await ThaiAddressService.getDistricts(true);
-          const foundDistrict = districts.find(
+          foundDistrict = districts.find(
             (d) =>
               d.province_id === foundProvince.id && d.name_th === districtTh,
           );
 
           if (foundDistrict) {
-            districtEn = foundDistrict.name_en;
+            const district = foundDistrict; // Capture for closure safety
+            districtEn = district.name_en;
 
             if (subdistrictTh) {
               const subdistricts = await ThaiAddressService.getSubDistricts();
-              const foundSub = subdistricts.find(
+              foundSub = subdistricts.find(
                 (s) =>
-                  s.district_id === foundDistrict.id &&
+                  s.district_id === district.id &&
                   s.name_th === subdistrictTh,
               );
               if (foundSub) {
@@ -70,11 +76,15 @@ export function useAddressLocalization(
           }
         }
 
+        const provinceEn = foundProvince?.name_en || provinceTh || undefined;
+        // Use the centralized province localized lookup
+        const localizedProvince = getProvinceName(provinceTh || "", language);
+
         if (mounted) {
           setLocalized({
-            province: foundProvince?.name_en || provinceTh || undefined,
-            district: districtEn || districtTh || undefined,
-            subdistrict: subdistrictEn || subdistrictTh || undefined,
+            province: localizedProvince || provinceEn,
+            district: districtEn || foundDistrict?.name_en || undefined,
+            subdistrict: subdistrictEn || foundSub?.name_en || undefined,
           });
         }
       } catch (error) {

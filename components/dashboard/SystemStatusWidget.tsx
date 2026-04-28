@@ -10,12 +10,12 @@ import {
   CheckCircle2, 
   AlertCircle,
   ShieldCheck,
-  Facebook,
   Send,
   MessageCircle,
   Settings2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FaFacebook } from "react-icons/fa6";
 
 interface StatusItemProps {
   label: string;
@@ -140,7 +140,7 @@ export function SystemStatusWidget() {
             <StatusItem 
               label="Facebook Meta" 
               status="warning" 
-              icon={<Facebook className="h-3.5 w-3.5" />} 
+              icon={<FaFacebook className="h-3.5 w-3.5" />} 
               lastActive="Token expires in 3 days"
             />
           </div>

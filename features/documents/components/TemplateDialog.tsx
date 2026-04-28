@@ -274,7 +274,7 @@ export function TemplateDialog({
           finalOwnerId as string,
           finalOwnerType as any,
           {
-            language: language as "th" | "en" | "cn",
+            language: language as "th" | "en" | "cn" | "ru",
             slip_url: slipUrl,
             bank_name: bankName,
             bank_account_no: bankAccountNo,
@@ -303,7 +303,7 @@ export function TemplateDialog({
           finalOwnerType as any,
           filePath,
           {
-            language: language as "th" | "en" | "cn",
+            language: language as "th" | "en" | "cn" | "ru",
             slip_url: slipUrl,
             bank_name: bankName,
             bank_account_no: bankAccountNo,
@@ -636,6 +636,7 @@ export function TemplateDialog({
                         { id: "th", label: "ไทย", icon: "🇹🇭" },
                         { id: "en", label: "EN", icon: "🇺🇸" },
                         { id: "cn", label: "中文", icon: "🇨🇳" },
+                        { id: "ru", label: "Русский", icon: "🇷🇺" },
                       ].map((lang) => (
                         <Button
                           key={lang.id}

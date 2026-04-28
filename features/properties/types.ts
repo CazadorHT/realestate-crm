@@ -24,10 +24,21 @@ export interface PropertyImageMetadata {
 export interface NearbyItem {
   category: string;
   name: string;
-  distance: string | null | undefined;
-  time: string | null | undefined;
-  name_en: string | null | undefined;
-  name_cn: string | null | undefined;
+  distance: string | undefined;
+  time: string | undefined;
+  name_en: string | undefined;
+  name_cn: string | undefined;
+  name_ru: string | undefined;
+}
+
+export interface NearbyTransitItem {
+  type: "BTS" | "MRT" | "MRT2" | "ARL" | "SRT" | "SRT2" | "SRT3" | "MRT3" | "OTHER";
+  station_name: string;
+  distance_meters: number | undefined;
+  time: string | undefined;
+  station_name_en: string | undefined;
+  station_name_cn: string | undefined;
+  station_name_ru: string | undefined;
 }
 
 // Property Image types
@@ -41,7 +52,7 @@ export type PropertyWithImages = PropertyRow & {
   // Hardened JSONB accessors (Stored in the main properties table)
   images: PropertyImageMetadata[] | null;
   nearby_places?: NearbyItem[] | null;
-  nearby_transits?: NearbyItem[] | null; 
+  nearby_transits?: NearbyTransitItem[] | null;
   
   // Relational Joins (Still needed for agents/features)
   property_agents?: { agent_id: string }[];
@@ -144,7 +155,7 @@ export interface PropertyDetail extends PropertyRow {
   property_features: {
     features: Pick<
       Database["public"]["Tables"]["features"]["Row"],
-      "id" | "name" | "name_en" | "name_cn" | "icon_key" | "category"
+      "id" | "name" | "name_en" | "name_cn" | "name_ru" | "icon_key" | "category"
     > | null;
   }[];
 }

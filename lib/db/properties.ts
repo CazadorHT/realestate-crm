@@ -11,7 +11,7 @@ export async function getAllProperties(): Promise<Property[]> {
   try {
     const { data, error } = await supabase
       .from("properties")
-      .select("id, title, slug, property_type, listing_type, price, rental_price, status, created_at, updated_at, tenant_id")
+      .select("id, title, slug, property_type, listing_type, price, original_price, rental_price, original_rental_price, status, created_at, updated_at, tenant_id")
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
@@ -47,7 +47,7 @@ export async function getDeletedProperties(
       count: totalCount,
     } = await supabase
       .from("properties")
-      .select("id, title, slug, property_type, listing_type, price, rental_price, status, deleted_at, tenant_id", { count: "exact" })
+      .select("id, title, slug, property_type, listing_type, price, original_price, rental_price, original_rental_price, status, deleted_at, tenant_id", { count: "exact" })
       .not("deleted_at", "is", null)
       .order("deleted_at", { ascending: false })
       .range(from, to);

@@ -1,4 +1,4 @@
-import { PropertyImageMetadata, NearbyItem } from "@/features/properties/types";
+import { PropertyImageMetadata, NearbyItem, NearbyTransitItem } from "@/features/properties/types";
 
 /**
  * 🛡️ Raw Object Guard for Images
@@ -65,10 +65,11 @@ export function getSafeNearbyPlaces(places: unknown): NearbyItem[] {
     .map(p => ({
       category: (p.category as string) || "General",
       name: (p.name as string) || "Unknown Place",
-      distance: (p.distance as string) || null,
-      time: (p.time as string) || null,
-      name_en: (p.name_en as string) || null,
-      name_cn: (p.name_cn as string) || null
+      distance: (p.distance as string) || undefined,
+      time: (p.time as string) || undefined,
+      name_en: (p.name_en as string) || undefined,
+      name_cn: (p.name_cn as string) || undefined,
+      name_ru: (p.name_ru as string) || undefined
     }));
 }
 
@@ -115,7 +116,20 @@ export function getEffectivePrice(row: {
 /**
  * 🛡️ Hardened Nearby Transits Extractor
  */
-export function getSafeNearbyTransits(transits: unknown): unknown[] {
+export function getSafeNearbyTransits(transits: unknown): NearbyTransitItem[] {
   if (!transits || !Array.isArray(transits)) return [];
-  return transits.filter(t => typeof t === "object" && t !== null);
+
+  return (transits as unknown[])
+    .filter((t): t is Record<string, unknown> => 
+      typeof t === "object" && t !== null && ("station_name" in t || "type" in t)
+    )
+    .map(t => ({
+      type: (t.type as any) || "OTHER",
+      station_name: (t.station_name as string) || "Unknown Station",
+      distance_meters: typeof t.distance_meters === "number" ? t.distance_meters : undefined,
+      time: (t.time as string) || undefined,
+      station_name_en: (t.station_name_en as string) || undefined,
+      station_name_cn: (t.station_name_cn as string) || undefined,
+      station_name_ru: (t.station_name_ru as string) || undefined,
+    }));
 }

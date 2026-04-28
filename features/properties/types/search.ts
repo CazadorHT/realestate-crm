@@ -12,6 +12,7 @@ export interface PropertyFacets {
     count: number;
     name_en: string | null;
     name_cn: string | null;
+    name_ru: string | null;
   }>;
 }
 

@@ -34,21 +34,26 @@ export type PropertyCardProps = {
   title: string;
   title_en?: string | null;
   title_cn?: string | null;
+  title_ru?: string | null;
   description?: string | null;
   description_en?: string | null;
   description_cn?: string | null;
+  description_ru?: string | null;
   property_type: string | null;
   price?: number | null;
   rental_price?: number | null;
   price_en?: number | null;
   price_cn?: number | null;
+  price_ru?: number | null;
   rental_price_en?: number | null;
   rental_price_cn?: number | null;
+  rental_price_ru?: number | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
   popular_area?: string | null;
   popular_area_en?: string | null;
   popular_area_cn?: string | null;
+  popular_area_ru?: string | null;
   province?: string | null;
   created_at: string;
   updated_at: string;
@@ -80,6 +85,7 @@ export type PropertyCardProps = {
         name: string;
         name_en?: string | null;
         name_cn?: string | null;
+        name_ru?: string | null;
         icon_key: string;
       }[]
     | null;

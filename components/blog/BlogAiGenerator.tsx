@@ -35,8 +35,10 @@ import { generateBlogPostAction } from "@/features/blog/actions";
 import { toast } from "sonner";
 import { AiUsageMonitor } from "@/components/ai-monitor/AiUsageMonitor";
 
+import { BlogAiResult } from "@/features/blog/types";
+
 interface BlogAiGeneratorProps {
-  onGenerated: (data: any) => void;
+  onGenerated: (data: BlogAiResult) => void;
 }
 
 export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
@@ -87,9 +89,9 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
       }
 
       setIsOpen(false);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("AI Generation Error:", error);
-      const errorMessage = error.message || "เกิดข้อผิดพลาดในการสร้างบทความ";
+      const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการสร้างบทความ";
       // Remove "Error: " prefix if present from server serialization
       const cleanMessage = errorMessage.replace(/^Error: /, "");
 

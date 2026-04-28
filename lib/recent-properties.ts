@@ -3,6 +3,7 @@ export type RecentProperty = {
   title: string;
   title_en?: string | null;
   title_cn?: string | null;
+  title_ru?: string | null;
   image_url?: string | null;
   price_text?: string | null;
   price?: number | null;
@@ -13,6 +14,7 @@ export type RecentProperty = {
   popular_area?: string | null;
   popular_area_en?: string | null;
   popular_area_cn?: string | null;
+  popular_area_ru?: string | null;
   price_per_sqm?: number | null;
   rent_price_per_sqm?: number | null;
   size_sqm?: number | null;
@@ -24,6 +26,7 @@ export type RecentProperty = {
     name: string;
     name_en?: string | null;
     name_cn?: string | null;
+    name_ru?: string | null;
     icon_key: string;
   }[];
   ts: number;

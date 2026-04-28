@@ -409,7 +409,7 @@ export function DealForm({
         </h4>
 
         <div className="mb-6 p-4 rounded-xl border border-blue-100 bg-white shadow-sm">
-           <CoBrokerSelect form={form} fieldName="partner_co_broker_id" />
+           <CoBrokerSelect fieldName="partner_co_broker_id" />
            <p className="text-[10px] text-slate-400 mt-2 italic">
              * การเลือกจากฐานข้อมูลช่วยให้ระบบบัญชี (Phase 6) จ่ายเงินคอมมิชชันและคำนวณภาษีได้แม่นยำขึ้น
            </p>

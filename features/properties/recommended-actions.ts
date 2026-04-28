@@ -7,12 +7,14 @@ export type RecommendedProperty = {
   title: string;
   title_en?: string | null;
   title_cn?: string | null;
+  title_ru?: string | null;
   property_type: string | null;
   listing_type: string | null;
   province: string | null;
   popular_area: string | null;
   popular_area_en?: string | null;
   popular_area_cn?: string | null;
+  popular_area_ru?: string | null;
   price: number | null;
   original_price: number | null;
   rental_price: number | null;
@@ -43,6 +45,7 @@ export async function getRecommendedProperties(
       title,
       title_en,
       title_cn,
+      title_ru,
       property_type,
       listing_type,
       province,
@@ -78,22 +81,22 @@ export async function getRecommendedProperties(
 
   const areaTranslationsMap = new Map<
     string,
-    { en: string | null; cn: string | null }
+    { en: string | null; cn: string | null; ru: string | null }
   >();
 
   if (popularAreaNames.length > 0) {
     const { data: areaData } = await supabase
       .from("popular_areas")
-      .select("name, name_en, name_cn")
+      .select("name, name_en, name_cn, name_ru")
       .in("name", popularAreaNames);
 
-    (areaData || []).forEach((a: { name: string; name_en: string | null; name_cn: string | null }) => {
-      areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn });
+    (areaData || []).forEach((a: { name: string; name_en: string | null; name_cn: string | null; name_ru: string | null }) => {
+      areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn, ru: a.name_ru });
     });
   }
 
   interface RecommendedRow {
-    id: string; title: string; title_en: string | null; title_cn: string | null; property_type: string | null; listing_type: string | null;
+    id: string; title: string; title_en: string | null; title_cn: string | null; title_ru: string | null; property_type: string | null; listing_type: string | null;
     province: string | null; popular_area: string | null; price: number | null;
     original_price: number | null; rental_price: number | null;
     original_rental_price: number | null; price_per_sqm: number | null;
@@ -116,12 +119,14 @@ export async function getRecommendedProperties(
       title: prop.title,
       title_en: prop.title_en,
       title_cn: prop.title_cn,
+      title_ru: prop.title_ru,
       property_type: prop.property_type,
       listing_type: prop.listing_type,
       province: prop.province,
       popular_area: prop.popular_area,
       popular_area_en: trans?.en ?? null,
       popular_area_cn: trans?.cn ?? null,
+      popular_area_ru: trans?.ru ?? null,
       price: prop.price,
       original_price: prop.original_price,
       rental_price: prop.rental_price,

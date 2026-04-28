@@ -14,7 +14,7 @@ import { getProvinceName } from "@/lib/utils/provinces";
 export async function postPropertyToLineAction(
   propertyId: string,
   customMessage?: string,
-  lang: "th" | "en" | "cn" = "th",
+  lang: "th" | "en" | "cn" | "ru" = "th",
 ) {
   try {
     const { supabase, role } = await requireAuthContext();
@@ -58,6 +58,8 @@ export async function postPropertyToLineAction(
               if (districtToTranslate) p.district_en = tr.en;
             } else if (lang === "cn") {
               if (districtToTranslate) p.district_cn = tr.cn;
+            } else if (lang === "ru") {
+              if (districtToTranslate) p.district_ru = tr.ru;
             }
           }
         } catch (e) {

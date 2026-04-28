@@ -20,7 +20,7 @@ const SmartEditor = dynamic(() => import("../../components/SmartEditor").then(mo
   loading: () => <div className="h-[500px] w-full bg-slate-50 animate-pulse rounded-xl border border-slate-200" />
 });
 import { useAITranslation } from "../../hooks/use-ai-translation";
-import { UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFormReturn } from "react-hook-form";
 import { generateAIPropertyDescriptionAction } from "../../actions/ai-actions";
 import { toast } from "sonner";
 import { generatePropertyDescription } from "../../utils/description-generator";
@@ -30,14 +30,16 @@ import { Button } from "@/components/ui/button";
 import { isFeatureEnabled } from "@/lib/features";
 
 interface DescriptionSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   isReadOnly: boolean;
 }
 
 export function DescriptionSection({
-  form,
+  form: formProp,
   isReadOnly,
 }: DescriptionSectionProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   const { isTranslating, translateDescription } = useAITranslation(form);
 
   const handleGenerate = useCallback(
@@ -196,6 +198,38 @@ export function DescriptionSection({
             <FormField
               control={form.control}
               name="description_cn"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <SmartEditor
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      disabled={isReadOnly}
+                      height={
+                        typeof window !== "undefined" && window.innerWidth < 640
+                          ? 300
+                          : 500
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </CardContent>
+        </Card>
+
+        <Card className="border-slate-200/70 bg-white shadow-sm overflow-hidden">
+          <div className="px-4 sm:px-6 py-3 sm:py-4 bg-slate-50/50 border-b border-slate-100 flex items-center gap-2">
+            <Languages className="w-4 h-4 text-slate-400" />
+            <span className="text-xs sm:text-sm font-medium text-slate-600 uppercase tracking-tight">
+              Описание (Russian)
+            </span>
+          </div>
+          <CardContent className="p-3 sm:p-4">
+            <FormField
+              control={form.control}
+              name="description_ru"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>

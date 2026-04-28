@@ -1,4 +1,4 @@
-export type BotLang = "th" | "en" | "cn";
+export type BotLang = "th" | "en" | "cn" | "ru";
 
 export interface FlexMessage {
   type: "flex";

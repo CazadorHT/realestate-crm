@@ -7,11 +7,13 @@ import { useLanguage, dictionaries } from "@/components/providers/LanguageProvid
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
 
+import { type Language } from "@/lib/i18n";
+
 interface PropertyMapClientProps {
   googleMapsLink: string | null;
   propertyId?: string;
   propertyTitle?: string;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 export function PropertyMapClient({

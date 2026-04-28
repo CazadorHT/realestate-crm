@@ -82,6 +82,25 @@ export function FAQAnswerSection({ form }: FAQAnswerSectionProps) {
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="answer_ru"
+          render={({ field }) => (
+            <FormItem className="space-y-4">
+              <FormLabel className="font-semibold text-[10px] uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-2">
+                <Languages className="w-3 h-3" /> Ответ (Russian)
+              </FormLabel>
+              <FormControl>
+                <TipTapEditor
+                  value={field.value || ""}
+                  onChange={field.onChange}
+                  placeholder="Ответ на русском..."
+                  className="min-h-[160px]"
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
       </div>
     </div>
   );

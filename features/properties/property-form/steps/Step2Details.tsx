@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import { useFormContext } from "react-hook-form";
+import { PropertyFormValues } from "../../schema";
 import type { Step2Props } from "../types";
 import { PriceSection } from "../components/step2-parts/PriceSection";
 import { SpecsSection } from "../components/step2-parts/SpecsSection";
@@ -10,7 +11,8 @@ import { CommissionSection } from "../components/step2-parts/CommissionSection";
 
 export const Step2Details = Step2DetailsComponent;
 
-function Step2DetailsComponent({ form, mode }: Step2Props) {
+function Step2DetailsComponent({ mode }: Step2Props) {
+  const form = useFormContext<PropertyFormValues>();
   const listingType = form.watch("listing_type");
   // Check if mode is unsupported "view" or "readonly" (future proofing, though types restrict it now)
   const isReadOnly =
@@ -23,24 +25,22 @@ function Step2DetailsComponent({ form, mode }: Step2Props) {
     <div className="space-y-6 animate-in fade-in slide-in-from-right-6 duration-500">
       {/* Price & Conditions */}
       <PriceSection
-        form={form}
         isReadOnly={isReadOnly}
         showSale={showSale}
         showRent={showRent}
       />
-
+ 
       {/* Specs & Size */}
-      <SpecsSection form={form} isReadOnly={isReadOnly} />
-
+      <SpecsSection isReadOnly={isReadOnly} />
+ 
       {/* Description & Special Features */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-6">
-        <DescriptionSection form={form} isReadOnly={isReadOnly} />
-        <SpecialFeaturesSection form={form} isReadOnly={isReadOnly} />
+        <DescriptionSection isReadOnly={isReadOnly} />
+        <SpecialFeaturesSection isReadOnly={isReadOnly} />
       </div>
-
+ 
       {/* Commission */}
       <CommissionSection
-        form={form}
         isReadOnly={isReadOnly}
         showSale={showSale}
         showRent={showRent}

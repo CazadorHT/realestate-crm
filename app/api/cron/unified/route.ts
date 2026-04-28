@@ -465,7 +465,7 @@ async function runRentNotifications(startTime: number) {
             bathrooms,
             sizeSqm,
           } = getPropertyDisplayInfo(rule);
-          const lang = (rule.language as "th" | "en" | "cn") || "th";
+          const lang = (rule.language as "th" | "en" | "cn" | "ru") || "th";
           const dateFormat = getLocaleDateFormat(lang);
 
           const message = generateRentNotificationFlex({

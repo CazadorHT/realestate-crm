@@ -11,20 +11,22 @@ import {
   IMAGE_UPLOAD_POLICY,
   PropertyImageUploader,
 } from "@/components/property-image-uploader";
-import { UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "../../../schema";
 
 interface MediaSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   uploadSessionId: string;
   initialImages: any[];
 }
 
 export const MediaSection = ({
-  form,
+  form: formProp,
   uploadSessionId,
   initialImages,
 }: MediaSectionProps) => {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   return (
     <section className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100/60 h-full">
       <div className="border-b border-slate-50 pb-3 sm:pb-4 mb-4 sm:mb-6">

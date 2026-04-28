@@ -112,7 +112,7 @@ export function amountToEnglishWords(amount: number | null | undefined): string 
  * Localize an object by aliasing language-specific fields
  * (e.g. title_en -> title) based on the target language.
  */
-export function localizeObject(obj: any, lang: "th" | "en" | "cn") {
+export function localizeObject(obj: any, lang: "th" | "en" | "cn" | "ru") {
   if (!obj || typeof obj !== "object") return obj;
 
   const result = { ...obj };
@@ -136,15 +136,16 @@ export function localizeObject(obj: any, lang: "th" | "en" | "cn") {
 /**
  * Get translations for the specified language
  */
-export async function getTranslations(lang: "th" | "en" | "cn") {
+export async function getTranslations(lang: "th" | "en" | "cn" | "ru") {
   // In a real Next.js app with next-intl, we'd use useTranslations.
   // Here we'll manually load the JSONs for server-side generation.
   // We use require to load it once as a static object.
   const th = require("@/i18n/locales/th.json");
   const en = require("@/i18n/locales/en.json");
   const cn = require("@/i18n/locales/cn.json");
+  const ru = require("@/i18n/locales/ru.json");
 
-  const dicts = { th, en, cn };
+  const dicts = { th, en, cn, ru };
   return dicts[lang]?.documents || dicts.th.documents;
 }
 
@@ -164,7 +165,7 @@ export function formatCurrency(amount: number | null | undefined) {
  */
 export function formatDate(
   dateStr: string | Date | null | undefined,
-  lang: "th" | "en" | "cn" = "th",
+  lang: "th" | "en" | "cn" | "ru" = "th",
 ) {
   if (!dateStr) return "-";
   try {
@@ -175,6 +176,7 @@ export function formatDate(
       th: "th-TH",
       en: "en-US",
       cn: "zh-CN",
+      ru: "ru-RU",
     };
 
     return date.toLocaleDateString(locales[lang], {

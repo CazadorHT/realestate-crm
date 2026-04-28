@@ -33,14 +33,18 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "../../components/SectionHeader";
-import type { UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
 
 interface NearbyPlacesSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
 }
 
-export function NearbyPlacesSection({ form }: NearbyPlacesSectionProps) {
+export function NearbyPlacesSection({
+  form: formProp,
+}: NearbyPlacesSectionProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "nearby_places",
@@ -188,8 +192,8 @@ export function NearbyPlacesSection({ form }: NearbyPlacesSectionProps) {
                       />
                     </FormControl>
 
-                    {/* Hidden fields for EN/CN */}
-                    <div className="grid grid-cols-2 gap-2 mt-2">
+                    {/* Hidden fields for EN/CN/RU */}
+                    <div className="grid grid-cols-3 gap-2 mt-2">
                       <FormField
                         control={form.control}
                         name={`nearby_places.${index}.name_en`}
@@ -210,6 +214,18 @@ export function NearbyPlacesSection({ form }: NearbyPlacesSectionProps) {
                             {...field}
                             value={field.value || ""}
                             placeholder="CN Name"
+                            className="h-8 text-[10px] bg-slate-50/50 text-slate-500 border-slate-100 focus:bg-white transition-all"
+                          />
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name={`nearby_places.${index}.name_ru`}
+                        render={({ field }) => (
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="RU Name"
                             className="h-8 text-[10px] bg-slate-50/50 text-slate-500 border-slate-100 focus:bg-white transition-all"
                           />
                         )}

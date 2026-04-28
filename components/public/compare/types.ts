@@ -3,6 +3,7 @@ export type CompareProperty = {
   title: string;
   title_en: string | null;
   title_cn: string | null;
+  title_ru: string | null;
   image_url: string | null;
   price: number | null;
   rental_price: number | null;
@@ -27,16 +28,20 @@ export type CompareProperty = {
     name: string;
     name_en: string | null;
     name_cn: string | null;
+    name_ru: string | null;
   }>;
   district: string | null;
   district_en: string | null;
   district_cn: string | null;
+  district_ru: string | null;
   subdistrict: string | null;
   subdistrict_en: string | null;
   subdistrict_cn: string | null;
+  subdistrict_ru: string | null;
   popular_area: string | null;
   popular_area_en: string | null;
   popular_area_cn: string | null;
+  popular_area_ru: string | null;
   nearby_places: any | null;
   nearby_transits: any | null;
   near_transit: boolean | null;
@@ -44,10 +49,12 @@ export type CompareProperty = {
   transit_station_name: string | null;
   transit_station_name_en: string | null;
   transit_station_name_cn: string | null;
+  transit_station_name_ru: string | null;
   transit_distance_meters: number | null;
   google_maps_link: string | null;
   address_line1_en: string | null;
   address_line1_cn: string | null;
+  address_line1_ru: string | null;
 };
 
 export type ComparisonRow = {

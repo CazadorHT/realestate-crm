@@ -133,6 +133,25 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="excerpt_ru"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Languages className="w-3 h-3" /> Краткое описание (Russian)
+                  </FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      value={field.value ?? ""}
+                      className="min-h-[80px] resize-none border-slate-200 text-sm"
+                      placeholder="Краткое описание на русском..."
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
           </div>
         </div>
 

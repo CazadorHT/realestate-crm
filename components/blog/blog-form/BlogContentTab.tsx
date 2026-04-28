@@ -66,7 +66,7 @@ export function BlogContentTab({
                   ) : (
                     <Sparkles className="h-3.5 w-3.5 text-amber-500" />
                   )}
-                  AI แปลทุกส่วนเป็น EN/CN
+                  AI แปลทุกส่วนเป็น EN/CN/RU
                 </Button>
               </div>
               <FormControl>
@@ -119,6 +119,25 @@ export function BlogContentTab({
                     value={field.value ?? ""}
                     className="h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
                     placeholder="中文标题..."
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="title_ru"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Languages className="w-3 h-3" /> Заголовок (Russian)
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className="h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
+                    placeholder="Заголовок на русском..."
                   />
                 </FormControl>
               </FormItem>
@@ -226,6 +245,26 @@ export function BlogContentTab({
             <FormField
               control={form.control}
               name="content_cn"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <TiptapEditor
+                      value={field.value || ""}
+                      onChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+          <div className="space-y-4">
+            <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+              <Languages className="w-4 h-4" /> Содержание (Russian)
+            </FormLabel>
+            <FormField
+              control={form.control}
+              name="content_ru"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>

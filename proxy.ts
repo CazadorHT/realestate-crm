@@ -15,7 +15,8 @@ import {
 /**
  * 🔒 Centralized Security Middleware (Auth -> Rate Limit -> CSP)
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+
   const { pathname } = request.nextUrl;
   const path = pathname.toLowerCase();
 
@@ -55,6 +56,8 @@ export async function middleware(request: NextRequest) {
     if (country) {
       if (country === "CN" || country === "HK" || country === "TW") {
         detectedLang = "cn";
+      } else if (country === "RU") {
+        detectedLang = "ru";
       } else if (country === "TH") {
         detectedLang = "th";
       } else {
@@ -69,11 +72,13 @@ export async function middleware(request: NextRequest) {
       if (primaryLang.startsWith("th")) detectedLang = "th";
       else if (primaryLang.startsWith("en")) detectedLang = "en";
       else if (primaryLang.startsWith("zh")) detectedLang = "cn";
+      else if (primaryLang.startsWith("ru")) detectedLang = "ru";
       
       if (!detectedLang) {
         if (acceptLang.includes("th")) detectedLang = "th";
         else if (acceptLang.includes("en")) detectedLang = "en";
         else if (acceptLang.includes("zh")) detectedLang = "cn";
+        else if (acceptLang.includes("ru")) detectedLang = "ru";
       }
     }
 

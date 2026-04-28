@@ -18,6 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
         "th-TH": `${canonicalUrl}?lang=th`,
         "en-US": `${canonicalUrl}?lang=en`,
         "zh-CN": `${canonicalUrl}?lang=cn`,
+        "ru-RU": `${canonicalUrl}?lang=ru`,
         "x-default": canonicalUrl,
       },
     },

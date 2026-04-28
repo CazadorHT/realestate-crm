@@ -1,3 +1,4 @@
+import { type Language } from "@/lib/i18n";
 import { LinePreview } from "@/features/properties/components/social-previews/LinePreview";
 import { MOCK_PROPERTY_DATA } from "./constants";
 
@@ -6,7 +7,7 @@ export function LinePostPreview({
   language = "th",
 }: {
   template: string;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }) {
   const renderContent = (text: string) => {
     if (!text)

@@ -1,16 +1,18 @@
 import type { PropertyRow, NearbyItem } from "@/features/properties/types";
-import { getSafeImages, getSafeNearbyPlaces } from "@/lib/property-hardened-utils";
+import { getSafeImages, getSafeNearbyPlaces, getSafeNearbyTransits } from "@/lib/property-hardened-utils";
 import { type PropertyFormValues } from "@/features/properties/schema";
 
 export const EMPTY_VALUES: PropertyFormValues = {
   title: "",
   title_en: "",
   title_cn: "",
+  title_ru: "",
   description: "",
   description_en: "",
   description_cn: "",
-  property_type: undefined as any,
-  listing_type: undefined as any,
+  description_ru: "",
+  property_type: "HOUSE",
+  listing_type: "SALE",
   status: "DRAFT",
   price: undefined,
   original_price: undefined,
@@ -50,6 +52,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
   transit_station_name: "",
   transit_station_name_en: "",
   transit_station_name_cn: "",
+  transit_station_name_ru: "",
   transit_type: "BTS",
   transit_distance_meters: undefined,
   is_co_agent: false,
@@ -106,6 +109,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
   address_line1: "",
   address_line1_en: "",
   address_line1_cn: "",
+  address_line1_ru: "",
   postal_code: "",
   google_maps_link: "",
 
@@ -324,9 +328,11 @@ export function mapRowToFormValues(
     title: row.title ?? "",
     title_en: row.title_en || row.title || "",
     title_cn: row.title_cn || "",
+    title_ru: row.title_ru || "",
     description: row.description ?? undefined,
     description_en: row.description_en || row.description || "",
     description_cn: row.description_cn || "",
+    description_ru: row.description_ru || "",
     property_type: row.property_type ?? "HOUSE",
     listing_type: row.listing_type ?? "SALE",
     status: row.status ?? "DRAFT",
@@ -347,6 +353,7 @@ export function mapRowToFormValues(
     address_line1: row.address_line1 ?? "",
     address_line1_en: row.address_line1_en || row.address_line1 || "",
     address_line1_cn: row.address_line1_cn || "",
+    address_line1_ru: row.address_line1_ru || "",
     province: row.province ?? "",
     district: row.district ?? "",
     subdistrict: row.subdistrict ?? "",
@@ -364,13 +371,14 @@ export function mapRowToFormValues(
     transit_station_name: row.transit_station_name ?? "",
     transit_station_name_en: row.transit_station_name_en || row.transit_station_name || "",
     transit_station_name_cn: row.transit_station_name_cn || "",
-    transit_type: (row.transit_type as any) ?? "BTS",
+    transit_station_name_ru: row.transit_station_name_ru || "",
+    transit_type: (row.transit_type as "BTS" | "MRT" | "MRT2" | "ARL" | "SRT" | "SRT2" | "SRT3" | "MRT3" | "OTHER") ?? "BTS",
     transit_distance_meters: row.transit_distance_meters ?? undefined,
     is_co_agent: row.is_co_agent ?? structuredData?.is_co_agent ?? false,
     co_agent_name: row.co_agent_name ?? structuredData?.co_agent_name ?? "",
     co_agent_phone: row.co_agent_phone ?? structuredData?.co_agent_phone ?? "",
     co_agent_contact_channel:
-      (row.co_agent_contact_channel as any) ??
+      (row.co_agent_contact_channel as "LINE" | "FB" | "TEL") ??
       structuredData?.co_agent_contact_channel ??
       "LINE",
     co_agent_contact_id:
@@ -431,16 +439,16 @@ export function mapRowToFormValues(
     is_high_floor: (row.meta_keywords || []).includes("High Floor"),
     is_never_lived_in: (row.meta_keywords || []).includes("Never Lived In"),
     feature_ids: row.property_features?.map((f) => f.feature_id) ?? [],
-    nearby_places: getSafeNearbyPlaces(row.nearby_places) as any,
-    nearby_transits: (row.nearby_transits as any[]) || [],
+    nearby_places: getSafeNearbyPlaces(row.nearby_places),
+    nearby_transits: getSafeNearbyTransits(row.nearby_transits),
     requires_ai_review: row.requires_ai_review ?? false,
     ceiling_height: row.ceiling_height ?? undefined,
     electricity_charge: row.electricity_charge ?? "",
     water_charge: row.water_charge ?? "",
     rent_free_period_days: row.rent_free_period_days ?? undefined,
-    parking_type: (row.parking_type as any) ?? "COMMON",
+    parking_type: (row.parking_type as "COMMON" | "FIXED" | "AUTO") ?? "COMMON",
     parking_fee_additional: row.parking_fee_additional ?? undefined,
-    orientation: (row.orientation as any) ?? undefined,
+    orientation: (row.orientation as "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW") ?? undefined,
     is_bare_shell: row.is_bare_shell ?? false,
     is_exclusive: row.is_exclusive ?? false,
     has_raised_floor: row.has_raised_floor ?? false,

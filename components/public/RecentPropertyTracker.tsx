@@ -13,11 +13,13 @@ export function RecentPropertyTracker({
     title: string;
     title_en?: string | null;
     title_cn?: string | null;
+    title_ru?: string | null;
     image_url?: string | null;
     province?: string | null;
     popular_area?: string | null;
     popular_area_en?: string | null;
     popular_area_cn?: string | null;
+    popular_area_ru?: string | null;
     price?: number | null;
     original_price?: number | null;
     rental_price?: number | null;
@@ -34,6 +36,7 @@ export function RecentPropertyTracker({
       name: string;
       name_en?: string | null;
       name_cn?: string | null;
+      name_ru?: string | null;
       icon_key: string;
     }[];
   };

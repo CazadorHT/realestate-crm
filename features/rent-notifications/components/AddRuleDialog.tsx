@@ -97,7 +97,7 @@ export function AddRuleDialog({
       notification_day: existingRule?.notification_day || 1,
       notification_hour: existingRule?.notification_hour ?? 9,
       is_active: existingRule?.is_active ?? true,
-      language: (existingRule?.language as "th" | "en" | "cn") || "th",
+      language: (existingRule?.language as "th" | "en" | "cn" | "ru") || "th",
       tenant_id: existingRule?.tenant_id || tenantId || null,
     },
   });
@@ -110,7 +110,7 @@ export function AddRuleDialog({
         notification_day: existingRule.notification_day,
         notification_hour: existingRule.notification_hour ?? 9,
         is_active: existingRule.is_active ?? true,
-        language: (existingRule.language as "th" | "en" | "cn") || "th",
+        language: (existingRule.language as "th" | "en" | "cn" | "ru") || "th",
         tenant_id: existingRule.tenant_id || tenantId || null,
       });
     }
@@ -501,6 +501,7 @@ export function AddRuleDialog({
                                     {field.value === "th" && "🇹🇭 ไทย"}
                                     {field.value === "en" && "🇬🇧 อังกฤษ (English)"}
                                     {field.value === "cn" && "🇨🇳 จีน (Chinese)"}
+                                    {field.value === "ru" && "🇷🇺 รัสเซีย (Russian)"}
                                   </span>
                                   <ChevronsUpDown className="w-4 h-4 text-slate-400" />
                                 </Button>
@@ -511,6 +512,7 @@ export function AddRuleDialog({
                                   { value: "th", label: "ไทย", flag: "🇹🇭" },
                                   { value: "en", label: "อังกฤษ (English)", flag: "🇬🇧" },
                                   { value: "cn", label: "จีน (Chinese)", flag: "🇨🇳" },
+                                  { value: "ru", label: "รัสเซีย (Russian)", flag: "🇷🇺" },
                                 ].map((lang) => (
                                   <Button
                                     key={lang.value}

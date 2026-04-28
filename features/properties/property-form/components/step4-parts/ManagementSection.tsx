@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import { ShieldCheck, Activity, User, Minus, Plus, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UseFormReturn, useWatch } from "react-hook-form";
+import { useFormContext, useWatch, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "../../../schema";
 import {
   PROPERTY_STATUS_LABELS,
@@ -32,7 +32,7 @@ import { FaUserPlus } from "react-icons/fa";
 import { CoBrokerSelect } from "@/features/co-brokers/components/CoBrokerSelect";
 
 interface ManagementSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   owners: Array<{ id: string; full_name: string; phone: string | null }>;
   agents: Array<{
     id: string;
@@ -48,7 +48,7 @@ interface ManagementSectionProps {
 }
 
 export const ManagementSection = ({
-  form,
+  form: formProp,
   owners,
   agents,
   refreshOwners,
@@ -57,6 +57,8 @@ export const ManagementSection = ({
   isMultiTenant,
   userRole,
 }: ManagementSectionProps) => {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   const [isAddingOwner, setIsAddingOwner] = useState(false);
   const totalUnits = useWatch({ control: form.control, name: "total_units" });
   const soldUnits = useWatch({ control: form.control, name: "sold_units" });
@@ -385,7 +387,7 @@ export const ManagementSection = ({
         <div className="h-px bg-slate-100 my-1 sm:my-2" />
 
         {/* Agent Multi Select */}
-        <AgentMultiSelect form={form} agents={agents} />
+        <AgentMultiSelect agents={agents} />
 
         {/* 🤝 Co-Agent Contact Details (Conditional) */}
         {isCoAgent && (
@@ -397,7 +399,7 @@ export const ManagementSection = ({
 
             {/* 🔍 Centralized Directory Selection */}
             <div className="bg-white p-4 rounded-xl border border-blue-100 shadow-sm">
-              <CoBrokerSelect form={form} />
+              <CoBrokerSelect />
               <p className="text-[10px] text-slate-400 mt-2 flex items-center gap-1.5">
                 <Info className="w-3 h-3" />
                 เคล็ดลับ: การเลือกจากฐานข้อมูลกลางจะช่วยบันทึกสถิติและลดเวลาการกรอกข้อมูล

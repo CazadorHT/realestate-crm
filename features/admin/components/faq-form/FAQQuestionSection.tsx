@@ -105,6 +105,25 @@ export function FAQQuestionSection({
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="question_ru"
+          render={({ field }) => (
+            <FormItem className="space-y-2">
+              <FormLabel className="font-semibold text-[10px] uppercase tracking-widest text-slate-400 flex items-center gap-1.5 px-2">
+                <Languages className="w-3 h-3" /> Вопрос (Russian)
+              </FormLabel>
+              <FormControl>
+                <Input
+                  {...field}
+                  value={field.value ?? ""}
+                  className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-blue-400 focus:ring-4 focus:ring-blue-400/5 transition-all text-sm font-medium"
+                  placeholder="Русская версия..."
+                />
+              </FormControl>
+            </FormItem>
+          )}
+        />
       </div>
     </div>
   );

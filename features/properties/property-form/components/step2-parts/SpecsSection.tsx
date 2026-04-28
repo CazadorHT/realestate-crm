@@ -32,15 +32,17 @@ import {
   Droplets,
   Zap,
 } from "lucide-react";
-import { UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
 
 interface SpecsSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   isReadOnly: boolean;
 }
 
-export function SpecsSection({ form, isReadOnly }: SpecsSectionProps) {
+export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   return (
     <Card className="border-slate-200/70 bg-white">
       <CardHeader className="space-y-4">
@@ -249,7 +251,7 @@ export function SpecsSection({ form, isReadOnly }: SpecsSectionProps) {
                 size="sm"
                 className="font-normal "
                 labelClassName=" "
-                footer={<RentFreeShortcuts form={form} />}
+                footer={<RentFreeShortcuts />}
               />
 
               <UnitNumberField
@@ -379,12 +381,9 @@ export function SpecsSection({ form, isReadOnly }: SpecsSectionProps) {
   );
 }
 
-function RentFreeShortcuts({
-  form,
-}: {
-  form: UseFormReturn<PropertyFormValues>;
-}) {
-  const value = form.watch("rent_free_period_days");
+function RentFreeShortcuts() {
+  const { watch, setValue } = useFormContext<PropertyFormValues>();
+  const value = watch("rent_free_period_days");
 
   return (
     <div className="flex gap-1">
@@ -397,7 +396,7 @@ function RentFreeShortcuts({
             type="button"
             onClick={() => {
               const newValue = isSelected ? null : days;
-              form.setValue("rent_free_period_days", newValue as any, {
+              setValue("rent_free_period_days", newValue as any, {
                 shouldDirty: true,
                 shouldValidate: false,
               });

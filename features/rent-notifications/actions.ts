@@ -182,7 +182,7 @@ export async function testSendRentNotification(ruleId: string, tenantId?: string
     // 3. Prepare Display Data via Centralized Utility
     const { propertyName, price, coverImageUrl, bedrooms, bathrooms, sizeSqm } = getPropertyDisplayInfo(rule);
     
-    const lang = (rule.language as "th" | "en" | "cn") || "th";
+    const lang = (rule.language as "th" | "en" | "cn" | "ru") || "th";
     const dateFormat = getLocaleDateFormat(lang);
     
     const monthYear = new Date().toLocaleDateString(dateFormat, {

@@ -19,10 +19,12 @@ export const PropertySchema = z
     title: z.string().trim().min(1, "คุณยังไม่ได้กรอกชื่อทรัพย์"),
     title_en: z.string().trim().optional(),
     title_cn: z.string().trim().optional(),
+    title_ru: z.string().trim().optional(),
 
     description: z.string().trim().optional(),
     description_en: z.string().trim().optional(),
     description_cn: z.string().trim().optional(),
+    description_ru: z.string().trim().optional(),
 
     property_type: z.enum(PROPERTY_TYPE_ENUM, {
       message: "คุณยังไม่ได้เลือกประเภททรัพย์",
@@ -30,7 +32,7 @@ export const PropertySchema = z
     listing_type: z.enum(LISTING_TYPE_ENUM, {
       message: "คุณยังไม่ได้เลือกรูปแบบประกาศ",
     }),
-    status: z.enum(PROPERTY_STATUS_ENUM).default("DRAFT"),
+    status: z.enum(PROPERTY_STATUS_ENUM),
 
     price: z.coerce.number().optional().nullable(),
     original_price: z.coerce.number().optional(),
@@ -57,9 +59,8 @@ export const PropertySchema = z
     // 🏢 Stock Management
     total_units: z.coerce
       .number()
-      .min(1, "จำนวนยูนิตต้องอย่างน้อย 1")
-      .default(1),
-    sold_units: z.coerce.number().min(0).default(0),
+      .min(1, "จำนวนยูนิตต้องอย่างน้อย 1"),
+    sold_units: z.coerce.number().min(0),
 
     parking_type: z.enum(["COMMON", "FIXED", "AUTO"]).optional().nullable(),
     parking_fee_additional: z.coerce.number().optional().nullable(),
@@ -71,11 +72,12 @@ export const PropertySchema = z
     price_per_sqm: z.coerce.number().optional().nullable(),
     rent_price_per_sqm: z.coerce.number().optional().nullable(),
 
-    currency: z.string().default("THB"),
+    currency: z.string(),
 
     address_line1: z.string().trim().optional().nullable(),
     address_line1_en: z.string().trim().optional(),
     address_line1_cn: z.string().trim().optional(),
+    address_line1_ru: z.string().trim().optional(),
     province: z.string().min(1, "กรุณาเลือกจังหวัด"),
     district: z.string().min(1, "กรุณาเลือกจังหวัดเขต / อำเภอ"),
     subdistrict: z.string().min(1, "กรุณาเลือกจังหวัดแขวง / ตำบล"),
@@ -84,6 +86,7 @@ export const PropertySchema = z
     popular_area: z.string().optional().nullable(),
     popular_area_en: z.string().optional().nullable(),
     popular_area_cn: z.string().optional().nullable(),
+    popular_area_ru: z.string().optional().nullable(),
 
     owner_id: z.string().uuid().nullable().optional(),
     assigned_to: z.string().uuid().nullable().optional(), // For primary agent / backward compatibility
@@ -94,10 +97,11 @@ export const PropertySchema = z
 
     commission_sale_percentage: z.coerce.number().optional().nullable(),
     commission_rent_months: z.coerce.number().optional().nullable(),
-    near_transit: z.boolean().default(false),
+    near_transit: z.boolean(),
     transit_station_name: z.string().optional().nullable(),
     transit_station_name_en: z.string().optional().nullable(),
     transit_station_name_cn: z.string().optional().nullable(),
+    transit_station_name_ru: z.string().optional().nullable(),
     transit_type: z.enum(TRANSIT_TYPE_ENUM).optional().nullable(),
     transit_distance_meters: z.coerce.number().optional().nullable(),
 
@@ -111,13 +115,13 @@ export const PropertySchema = z
           time: z.string().optional(), // เวลาเดินทาง (นาที)
           station_name_en: z.string().optional(),
           station_name_cn: z.string().optional(),
+          station_name_ru: z.string().optional(),
         }),
       )
-      .optional()
-      .default([]),
+      .optional(),
 
     // Co-Agent Logic
-    is_co_agent: z.boolean().default(false),
+    is_co_agent: z.boolean(),
     co_broker_id: z.string().uuid().optional().nullable(),
     co_agent_name: z.string().trim().optional().nullable(),
     co_agent_phone: z.string().trim().optional().nullable(),
@@ -127,51 +131,51 @@ export const PropertySchema = z
     co_agent_rent_commission_months: z.coerce.number().optional().nullable(),
 
     // Tags
-    verified: z.boolean().default(false),
-    is_pet_friendly: z.boolean().default(false),
-    is_foreigner_quota: z.boolean().default(false),
-    allow_smoking: z.boolean().default(false),
-    is_renovated: z.boolean().default(false),
+    verified: z.boolean(),
+    is_pet_friendly: z.boolean(),
+    is_foreigner_quota: z.boolean(),
+    allow_smoking: z.boolean(),
+    is_renovated: z.boolean(),
     // is_unfurnished: z.boolean().default(false), // Removed in favor of is_bare_shell
-    is_fully_furnished: z.boolean().default(false),
-    is_corner_unit: z.boolean().default(false),
-    has_private_pool: z.boolean().default(false),
-    is_selling_with_tenant: z.boolean().default(false),
-    is_bare_shell: z.boolean().default(false),
-    is_exclusive: z.boolean().default(false),
-
+    is_fully_furnished: z.boolean(),
+    is_corner_unit: z.boolean(),
+    has_private_pool: z.boolean(),
+    is_selling_with_tenant: z.boolean(),
+    is_bare_shell: z.boolean(),
+    is_exclusive: z.boolean(),
+    
     // New Requested Features
-    has_garden_view: z.boolean().default(false),
-    has_pool_view: z.boolean().default(false),
-    has_city_view: z.boolean().default(false),
-    has_unblocked_view: z.boolean().default(false),
-    has_river_view: z.boolean().default(false),
-    facing_east: z.boolean().default(false),
-    facing_north: z.boolean().default(false),
-    facing_south: z.boolean().default(false),
-    facing_west: z.boolean().default(false),
-    has_multi_parking: z.boolean().default(false),
-    is_grade_a: z.boolean().default(false),
-    is_grade_b: z.boolean().default(false),
-    is_grade_c: z.boolean().default(false),
-    is_column_free: z.boolean().default(false),
-    is_central_air: z.boolean().default(false),
-    is_split_air: z.boolean().default(false),
-    has_247_access: z.boolean().default(false),
-    has_fiber_optic: z.boolean().default(false),
-    is_tax_registered: z.boolean().default(false),
-    has_raised_floor: z.boolean().default(false),
-    is_high_ceiling: z.boolean().default(false),
-    is_cbd: z.boolean().default(false),
-    is_smart_home: z.boolean().default(false),
-    has_private_elevator: z.boolean().default(false),
-    is_handicapped_friendly: z.boolean().default(false),
-    is_high_floor: z.boolean().default(false),
-    is_never_lived_in: z.boolean().default(false),
-    requires_ai_review: z.boolean().default(false),
-    version: z.number().default(1).optional(),
+    has_garden_view: z.boolean(),
+    has_pool_view: z.boolean(),
+    has_city_view: z.boolean(),
+    has_unblocked_view: z.boolean(),
+    has_river_view: z.boolean(),
+    facing_east: z.boolean(),
+    facing_north: z.boolean(),
+    facing_south: z.boolean(),
+    facing_west: z.boolean(),
+    has_multi_parking: z.boolean(),
+    is_grade_a: z.boolean(),
+    is_grade_b: z.boolean(),
+    is_grade_c: z.boolean(),
+    is_column_free: z.boolean(),
+    is_central_air: z.boolean(),
+    is_split_air: z.boolean(),
+    has_247_access: z.boolean(),
+    has_fiber_optic: z.boolean(),
+    is_tax_registered: z.boolean(),
+    has_raised_floor: z.boolean(),
+    is_high_ceiling: z.boolean(),
+    is_cbd: z.boolean(),
+    is_smart_home: z.boolean(),
+    has_private_elevator: z.boolean(),
+    is_handicapped_friendly: z.boolean(),
+    is_high_floor: z.boolean(),
+    is_never_lived_in: z.boolean(),
+    requires_ai_review: z.boolean(),
+    version: z.number().optional(),
 
-    feature_ids: z.array(z.string()).default([]),
+    feature_ids: z.array(z.string()).optional(),
 
     // Nearby Places (JSONB)
     nearby_places: z
@@ -183,10 +187,10 @@ export const PropertySchema = z
           time: z.string().optional(),
           name_en: z.string().optional(),
           name_cn: z.string().optional(),
+          name_ru: z.string().optional(),
         }),
       )
-      .optional()
-      .default([]),
+      .optional(),
   });
 
 /** Shared Zod schema for property forms (with full refinements) */

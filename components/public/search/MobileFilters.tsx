@@ -396,7 +396,7 @@ export function MobileFilters({
                                   : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300"
                               )}
                             >
-                              <span>{getLocaleValue({ name: a.name, name_en: a.name_en, name_cn: a.name_cn }, "name", language)}</span>
+                              <span>{getLocaleValue({ name: a.name, name_en: a.name_en, name_cn: a.name_cn, name_ru: a.name_ru }, "name", language)}</span>
                               <span className={cn(
                                 "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
                                 area === a.name ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600"

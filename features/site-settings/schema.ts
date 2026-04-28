@@ -11,15 +11,19 @@ export type SiteSettingKey =
   | "facebook_post_template"
   | "facebook_post_template_en"
   | "facebook_post_template_cn"
+  | "facebook_post_template_ru"
   | "instagram_post_template"
   | "instagram_post_template_en"
   | "instagram_post_template_cn"
+  | "instagram_post_template_ru"
   | "line_post_template"
   | "line_post_template_en"
   | "line_post_template_cn"
+  | "line_post_template_ru"
   | "tiktok_post_template"
   | "tiktok_post_template_en"
   | "tiktok_post_template_cn"
+  | "tiktok_post_template_ru"
   | "site_name"
   | "company_name"
   | "site_description"
@@ -65,15 +69,19 @@ export interface SiteSettings {
   facebook_post_template?: string;
   facebook_post_template_en?: string;
   facebook_post_template_cn?: string;
+  facebook_post_template_ru?: string;
   instagram_post_template?: string;
   instagram_post_template_en?: string;
   instagram_post_template_cn?: string;
+  instagram_post_template_ru?: string;
   line_post_template?: string;
   line_post_template_en?: string;
   line_post_template_cn?: string;
+  line_post_template_ru?: string;
   tiktok_post_template?: string;
   tiktok_post_template_en?: string;
   tiktok_post_template_cn?: string;
+  tiktok_post_template_ru?: string;
   site_name: string;
   company_name: string;
   site_description: string;

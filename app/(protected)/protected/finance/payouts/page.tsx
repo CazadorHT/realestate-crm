@@ -38,7 +38,18 @@ import {
 import { TableHeader, TableRow, TableHead, TableBody, TableCell, Table as TableComponent } from "@/components/ui/table";
 import { usePayoutStore } from "@/features/finance/stores/payoutStore";
 import { PayoutSkeleton } from "@/features/finance/components/PayoutSkeleton";
-import { FinanceAnalytics } from "@/features/finance/components/FinanceAnalytics";
+import dynamic from "next/dynamic";
+
+const FinanceAnalytics = dynamic(() => import("@/features/finance/components/FinanceAnalytics").then(mod => mod.FinanceAnalytics), {
+  ssr: false,
+  loading: () => (
+    <div className="flex flex-col items-center justify-center min-h-[400px] bg-white/50 backdrop-blur-xl rounded-[2.5rem] border border-dashed border-slate-200">
+      <Loader2 className="h-10 w-10 animate-spin text-indigo-500 mb-4" />
+      <p className="text-sm font-medium text-slate-500 font-sarabun">กำลังเตรียมเครื่องมือวิเคราะห์การเงิน...</p>
+    </div>
+  ),
+});
+
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { PayoutStats } from "@/features/finance/components/PayoutStats";
 import { PayoutTable } from "@/features/finance/components/PayoutTable";

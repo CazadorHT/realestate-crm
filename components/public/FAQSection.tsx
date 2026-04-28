@@ -20,9 +20,11 @@ type FAQ = {
   question: string;
   question_en?: string;
   question_cn?: string;
+  question_ru?: string;
   answer: string;
   answer_en?: string;
   answer_cn?: string;
+  answer_ru?: string;
   category: string;
   view_count?: number;
 };
@@ -38,7 +40,7 @@ export function FAQSection() {
       const supabase = createClient();
       const { data } = await supabase
         .from("faqs")
-        .select("id, question, question_en, question_cn, answer, answer_en, answer_cn, category, view_count")
+        .select("id, question, question_en, question_cn, question_ru, answer, answer_en, answer_cn, answer_ru, category, view_count")
         .eq("is_active", true)
         .order("sort_order", { ascending: true })
         .limit(5);

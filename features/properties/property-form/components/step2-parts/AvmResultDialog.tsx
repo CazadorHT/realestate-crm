@@ -13,7 +13,7 @@ import {
   Printer,
   AlertCircle,
 } from "lucide-react";
-import { UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
 import {
   generatePropertyValuation,
@@ -22,18 +22,20 @@ import {
 import { cn } from "@/lib/utils";
 
 interface AvmResultDialogProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   isOpen: boolean;
   onClose: () => void;
   listingType: "SALE" | "RENT";
 }
 
 export function AvmResultDialog({
-  form,
+  form: formProp,
   isOpen,
   onClose,
   listingType,
 }: AvmResultDialogProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AVMResult | null>(null);
   const [error, setError] = useState<string | null>(null);

@@ -128,6 +128,25 @@ export function ServiceInfoSection({
               </FormItem>
             )}
           />
+          <FormField
+            control={form.control}
+            name="title_ru"
+            render={({ field }) => (
+              <FormItem className="space-y-2">
+                <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                  <Languages className="w-3 h-3" /> Название услуги (Russian)
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    className="h-10 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm"
+                    placeholder="กรุณาระบุชื่อบริการภาษารัสเซีย..."
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -211,6 +230,25 @@ export function ServiceInfoSection({
                       value={field.value ?? ""}
                       className="h-10 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm"
                       placeholder="例如 5,000 - 10,000 泰铢"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="price_range_ru"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                    <Languages className="w-3 h-3" /> ช่วงราคา (Russian)
+                  </FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      className="h-10 rounded-xl bg-slate-50/30 border-slate-200 focus:bg-white transition-all text-sm"
+                      placeholder="Например, 5 000 - 10 000 бат"
                     />
                   </FormControl>
                 </FormItem>

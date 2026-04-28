@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { Wallet, Briefcase, TrendingUp } from "lucide-react";
 import {
@@ -6,12 +6,14 @@ import {
   dictionaries,
 } from "@/components/providers/LanguageProvider";
 
+import { type Language } from "@/lib/i18n";
+
 interface PropertySuitabilityProps {
   listingType: "SALE" | "RENT" | "SALE_AND_RENT";
   price: number | null;
   rentalPrice: number | null;
   propertyType?: string | null;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 export function PropertySuitability({

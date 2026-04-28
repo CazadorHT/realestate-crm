@@ -1,10 +1,11 @@
 import th from "@/i18n/locales/th.json";
 import en from "@/i18n/locales/en.json";
 import cn from "@/i18n/locales/cn.json";
+import ru from "@/i18n/locales/ru.json";
 
-export const dictionaries = { th, en, cn };
+export const dictionaries = { th, en, cn, ru };
 
-export type Language = "th" | "en" | "cn";
+export type Language = "th" | "en" | "cn" | "ru";
 
 /**
  * Gets the localized field from a data object based on the language.
@@ -23,7 +24,7 @@ export function getLocalizedField<T>(
     return data[field] || "";
   }
 
-  // Try the language specific field (e.g., title_en, title_cn)
+  // Try the language specific field (e.g., title_en, title_cn, title_ru)
   const langField = `${field}_${language}`;
   if (data[langField]) {
     return data[langField];
@@ -42,7 +43,7 @@ export async function getServerLanguage(): Promise<Language> {
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
     const cookieLang = cookieStore.get("app-language")?.value as Language;
-    if (cookieLang && ["th", "en", "cn"].includes(cookieLang)) {
+    if (cookieLang && ["th", "en", "cn", "ru"].includes(cookieLang)) {
       return cookieLang;
     }
 
@@ -59,15 +60,18 @@ export async function getServerLanguage(): Promise<Language> {
       if (primaryLang.startsWith("th")) return "th";
       if (primaryLang.startsWith("en")) return "en";
       if (primaryLang.startsWith("zh")) return "cn";
+      if (primaryLang.startsWith("ru")) return "ru";
 
       // If primary is not supported, check if any of our supported languages are in their list
       if (acceptLang.includes("th")) return "th";
       if (acceptLang.includes("en")) return "en";
       if (acceptLang.includes("zh")) return "cn";
+      if (acceptLang.includes("ru")) return "ru";
     }
 
     // 2. Fallback to IP-based Location (For tourists/visitors)
     if (country === "CN" || country === "HK" || country === "TW") return "cn";
+    if (country === "RU") return "ru";
     if (country && country !== "TH") return "en";
 
     return "th";

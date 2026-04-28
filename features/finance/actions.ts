@@ -26,7 +26,10 @@ import {
 import { Database, Json } from "@/lib/database.types";
 import { getCommissionRulesAction } from "@/features/dashboard/actions/commission-actions";
 import { FinanceMath } from "@/lib/finance/precision";
+import { TaxLogic } from "@/lib/finance/tax-logic";
+import { TaxService } from "./services/tax-service";
 import { SupabaseClient, User } from "@supabase/supabase-js";
+
 
 /**
  * Marks multiple commissions as READY_TO_PAY using high-performance RPC.
@@ -223,25 +226,19 @@ export async function recalculatePayoutTotalsAction(
     if (current.status === "PAID")
       throw new Error("ไม่สามารถคำนวณใหม่ได้สำหรับรายการที่จ่ายแล้ว");
 
-    // 2. Resolve Tax Rate (Smart Fallback)
+    // 2. Resolve Tax Rate (Smart Fallback via TaxService)
     const rulesRes = await getCommissionRulesAction();
     const globalDefaultWht = rulesRes.success
       ? rulesRes.data?.defaultWhtRate || 3
       : 3;
 
-    let taxRate = current.tax_rate;
-    if (taxRate === null) {
-      // Fallback: Agent -> Tenant -> Global
-      const { data: agentProfile } = await supabase
-        .from("profiles")
-        .select("default_tax_rate")
-        .eq("id", current.agent_id || "")
-        .single();
+    const taxRate = await TaxService.resolveEffectiveRate(supabase, {
+      agentId: current.agent_id,
+      tenantId,
+      explicitRate: current.tax_rate,
+      globalDefaultWht,
+    });
 
-      const agentTaxRate = agentProfile?.default_tax_rate ?? null;
-      
-      taxRate = agentTaxRate ? agentTaxRate / 100 : globalDefaultWht / 100;
-    }
 
     const oldAmount = Number(current.amount);
     const oldNet = Number(current.net_amount);

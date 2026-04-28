@@ -1,10 +1,12 @@
-﻿"use client";
+"use client";
 
 import { BedDouble, Bath, Car, Maximize, Building2, Home } from "lucide-react";
 import {
   useLanguage,
   dictionaries,
 } from "@/components/providers/LanguageProvider";
+
+import { type Language } from "@/lib/i18n";
 
 interface PropertySpecsProps {
   bedrooms?: number | null;
@@ -14,7 +16,7 @@ interface PropertySpecsProps {
   landSize?: number | null;
   floor?: number | null;
   type: string;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 export function PropertySpecs({

@@ -12,7 +12,7 @@ import { getPublicImageUrl } from "../image-utils";
 export async function postPropertyToTikTokAction(
   propertyId: string,
   caption?: string,
-  lang: "th" | "en" | "cn" = "th",
+  lang: "th" | "en" | "cn" | "ru" = "th",
   postMode: "DIRECT_POST" | "MEDIA_UPLOAD" = "DIRECT_POST",
 ) {
   try {

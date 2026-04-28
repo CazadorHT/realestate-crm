@@ -8,10 +8,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+import { type Language } from "@/lib/i18n";
+
 interface PropertyStatusBadgeProps {
   status: "DRAFT" | "ACTIVE" | "ARCHIVED" | string;
   className?: string;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 export function PropertyStatusBadge({

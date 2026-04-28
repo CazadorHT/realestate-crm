@@ -15,13 +15,15 @@ import { BlogFeaturedPost } from "@/components/public/blog/BlogFeaturedPost";
 import { BlogSidebar } from "@/components/public/blog/BlogSidebar";
 import { siteConfig } from "@/lib/site-config";
 
+import { Metadata } from "next";
+
 export const revalidate = 3600; // Revalidate every hour
 
 interface BlogListingPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export async function generateMetadata() {
+export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
   const canonicalUrl = `${siteConfig.url}/blog`;
 
@@ -34,6 +36,7 @@ export async function generateMetadata() {
         "th-TH": `${canonicalUrl}?lang=th`,
         "en-US": `${canonicalUrl}?lang=en`,
         "zh-CN": `${canonicalUrl}?lang=cn`,
+        "ru-RU": `${canonicalUrl}?lang=ru`,
         "x-default": canonicalUrl,
       },
     },
@@ -119,7 +122,7 @@ export default async function BlogListingPage({
                 <div className="h-6 w-1 bg-linear-to-b from-slate-700 to-slate-900 rounded-full"></div>
                 <h2 className="text-xl font-bold text-slate-900">
                   {categoryFilter
-                    ? `${t("blog.category_label")}: ${categoryFilter}`
+                    ? `${t("blog.category_label")}: ${t(`blog.categories.${categoryFilter}`) !== `blog.categories.${categoryFilter}` ? t(`blog.categories.${categoryFilter}`) : categoryFilter}`
                     : tagFilter
                       ? `${t("blog.tag_label")}: #${tagFilter}`
                       : t("blog.latest_articles")}

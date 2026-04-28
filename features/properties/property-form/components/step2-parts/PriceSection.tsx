@@ -24,7 +24,7 @@ import {
   Car,
   ArrowLeftRight,
 } from "lucide-react";
-import { UseFormReturn } from "react-hook-form";
+import { useFormContext, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
 import { AvmResultDialog } from "./AvmResultDialog";
 
@@ -48,18 +48,20 @@ function CollapsibleSection({
 }
 
 interface PriceSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   isReadOnly: boolean;
   showSale: boolean;
   showRent: boolean;
 }
 
 export function PriceSection({
-  form,
+  form: formProp,
   isReadOnly,
   showSale,
   showRent,
 }: PriceSectionProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   // State for showing discount fields
   const [showSaleDiscount, setShowSaleDiscount] = useState(false);
   const [showRentDiscount, setShowRentDiscount] = useState(false);
@@ -614,13 +616,11 @@ export function PriceSection({
 
       {/* AVM Result Dialogs */}
       <AvmResultDialog
-        form={form}
         isOpen={isAvmSaleOpen}
         onClose={() => setIsAvmSaleOpen(false)}
         listingType="SALE"
       />
       <AvmResultDialog
-        form={form}
         isOpen={isAvmRentOpen}
         onClose={() => setIsAvmRentOpen(false)}
         listingType="RENT"

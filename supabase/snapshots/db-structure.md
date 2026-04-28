@@ -861,6 +861,34 @@
     "column_default": "'GENERAL'::text"
   },
   {
+    "table_name": "co_brokers",
+    "column_name": "bank_code",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "bank_account_no",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "bank_account_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "co_brokers",
+    "column_name": "other_bank_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "commission_adjustments",
     "column_name": "id",
     "data_type": "uuid",
@@ -1134,6 +1162,20 @@
     "column_default": "0.03"
   },
   {
+    "table_name": "deal_commissions",
+    "column_name": "payout_ref",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deal_commissions",
+    "column_name": "payout_slip_url",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "deals",
     "column_name": "id",
     "data_type": "uuid",
@@ -1272,6 +1314,62 @@
     "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
+  },
+  {
+    "table_name": "deleted_records_archive",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "deleted_records_archive",
+    "column_name": "original_id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "deleted_records_archive",
+    "column_name": "entity_type",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "deleted_records_archive",
+    "column_name": "data",
+    "data_type": "jsonb",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "deleted_records_archive",
+    "column_name": "deleted_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "deleted_records_archive",
+    "column_name": "deleted_by",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deleted_records_archive",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "deleted_records_archive",
+    "column_name": "metadata",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": "'{}'::jsonb"
   },
   {
     "table_name": "documents",
@@ -2009,6 +2107,41 @@
     "column_default": null
   },
   {
+    "table_name": "leads",
+    "column_name": "ai_summary_content",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "leads",
+    "column_name": "full_name_hash",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "leads",
+    "column_name": "phone_hash",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "leads",
+    "column_name": "email_hash",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "leads",
+    "column_name": "line_id_hash",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "line_groups",
     "column_name": "group_id",
     "data_type": "text",
@@ -2366,6 +2499,20 @@
     "column_default": null
   },
   {
+    "table_name": "owners",
+    "column_name": "full_name_hash",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "owners",
+    "column_name": "phone_hash",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "partners",
     "column_name": "id",
     "data_type": "uuid",
@@ -2583,6 +2730,41 @@
     "column_default": null
   },
   {
+    "table_name": "proactive_agent_triggers",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "proactive_agent_triggers",
+    "column_name": "property_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "proactive_agent_triggers",
+    "column_name": "visitor_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "proactive_agent_triggers",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "proactive_agent_triggers",
+    "column_name": "triggered_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
     "table_name": "profiles",
     "column_name": "id",
     "data_type": "uuid",
@@ -2721,6 +2903,41 @@
     "data_type": "numeric",
     "is_nullable": "YES",
     "column_default": "3.0"
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "telegram_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "bank_code",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "bank_account_no",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "bank_account_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "profiles",
+    "column_name": "other_bank_name",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "properties",
@@ -3647,6 +3864,20 @@
     "column_default": null
   },
   {
+    "table_name": "properties",
+    "column_name": "co_agent_name_hash",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "co_agent_phone_hash",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "property_agents",
     "column_name": "property_id",
     "data_type": "uuid",
@@ -3785,6 +4016,20 @@
     "data_type": "timestamp with time zone",
     "is_nullable": "NO",
     "column_default": "now()"
+  },
+  {
+    "table_name": "property_images",
+    "column_name": "scan_status",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": "'PENDING'::text"
+  },
+  {
+    "table_name": "property_images",
+    "column_name": "scan_result",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "property_matches",
@@ -4033,6 +4278,62 @@
   },
   {
     "table_name": "property_views_log",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "property_views_log",
+    "column_name": "visitor_id",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "property_views_log",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "ref_banks",
+    "column_name": "code",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "ref_banks",
+    "column_name": "name_th",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "ref_banks",
+    "column_name": "name_en",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "ref_banks",
+    "column_name": "logo_url",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "ref_banks",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "true"
+  },
+  {
+    "table_name": "ref_banks",
     "column_name": "created_at",
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
@@ -4527,6 +4828,20 @@
     "data_type": "bigint",
     "is_nullable": "YES",
     "column_default": "0"
+  },
+  {
+    "table_name": "services",
+    "column_name": "price_range_en",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "services",
+    "column_name": "price_range_cn",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "site_settings",

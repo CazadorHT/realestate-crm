@@ -34,9 +34,9 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
     const { data: property, error: propErr } = await supabase
       .from("properties")
       .select(`
-        id, title, title_en, title_cn, description, description_en, description_cn,
+        id, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru,
         property_type, listing_type, price, original_price, rental_price, original_rental_price,
-        currency, address_line1, address_line1_en, address_line1_cn,
+        currency, address_line1, address_line1_en, address_line1_cn, address_line1_ru,
         subdistrict, district, province, postal_code, bedrooms, bathrooms,
         size_sqm, land_size_sqwah, total_units, sold_units, floor, orientation,
         parking_slots, is_fully_furnished, is_pet_friendly,
@@ -44,7 +44,7 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
         created_at, updated_at,
         tenant_id, created_by, owner_id, co_agent_sale_commission_percent,
         co_agent_name, co_agent_phone, co_agent_contact_id,
-        popular_area, popular_area_en, popular_area_cn, property_source,
+        popular_area, popular_area_en, popular_area_cn, popular_area_ru, property_source,
         ai_summary_content, ai_reviewed_at,
         ai_reviewed_by, version, images, nearby_places, nearby_transits
       `)
@@ -86,9 +86,9 @@ export async function getPropertyWithImages(
   const { data, error } = await supabase
     .from("properties")
     .select(`
-      id, title, title_en, title_cn, description, description_en, description_cn,
+      id, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru,
       property_type, listing_type, price, original_price, rental_price, original_rental_price,
-      currency, address_line1, address_line1_en, address_line1_cn,
+      currency, address_line1, address_line1_en, address_line1_cn, address_line1_ru,
       subdistrict, district, province, postal_code, bedrooms, bathrooms,
       size_sqm, land_size_sqwah, total_units, sold_units, floor, orientation,
       parking_slots, is_fully_furnished, is_pet_friendly,
@@ -96,7 +96,7 @@ export async function getPropertyWithImages(
       created_at, updated_at,
       tenant_id, created_by, owner_id, co_agent_sale_commission_percent,
       co_agent_name, co_agent_phone, co_agent_contact_id,
-      popular_area, popular_area_en, popular_area_cn, property_source,
+      popular_area, popular_area_en, popular_area_cn, popular_area_ru, property_source,
       ai_summary_content, ai_reviewed_at,
       ai_reviewed_by, version, images, nearby_places, nearby_transits,
       property_agents (
@@ -145,7 +145,7 @@ export async function getPopularAreasAction(
 
   let query = supabase
     .from("popular_areas")
-    .select("name, name_cn, name_en, province")
+    .select("name, name_cn, name_en, name_ru, province")
     .order("name");
 
   if (params.province) {
@@ -176,10 +176,11 @@ export async function getPopularAreasAction(
   // Return intersection
   return allAreas
     .filter((area: { name: string }) => activeSet.has(area.name))
-    .map((item: { name: string; name_en: string | null; name_cn: string | null }) => ({
+    .map((item: { name: string; name_en: string | null; name_cn: string | null; name_ru: string | null }) => ({
       name: item.name,
       name_en: item.name_en,
       name_cn: item.name_cn,
+      name_ru: item.name_ru,
     }));
 }
 
@@ -190,6 +191,7 @@ export async function addPopularAreaAction(data: {
   name: string;
   name_en?: string;
   name_cn?: string;
+  name_ru?: string;
   province?: string;
 }) {
   const { supabase, role } = await requireAuthContext();
@@ -205,6 +207,7 @@ export async function addPopularAreaAction(data: {
     name: data.name.trim(),
     name_en: data.name_en?.trim() || null,
     name_cn: data.name_cn?.trim() || null,
+    name_ru: data.name_ru?.trim() || null,
     province: data.province || "กรุงเทพมหานคร",
   });
 

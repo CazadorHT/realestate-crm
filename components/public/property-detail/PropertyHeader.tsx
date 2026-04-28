@@ -17,6 +17,7 @@ import {
 import {
   useLanguage,
   dictionaries,
+  type Language,
 } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
@@ -89,18 +90,24 @@ interface PropertyHeaderProps {
     district_cn?: string | null;
     subdistrict_en?: string | null;
     subdistrict_cn?: string | null;
+    title_ru?: string | null;
+    province_ru?: string | null;
+    popular_area_ru?: string | null;
+    district_ru?: string | null;
+    subdistrict_ru?: string | null;
   };
   features?: Array<{
     id: string;
     name: string;
     name_en?: string | null;
     name_cn?: string | null;
+    name_ru?: string | null;
     icon_key: string;
     category?: string | null;
   }>;
   className?: string;
   hideBreadcrumbs?: boolean;
-  language?: "th" | "en" | "cn";
+  language?: Language;
   locationParts?: string;
   keySellingPoints?: Array<{ name: string; icon: string }>;
 }

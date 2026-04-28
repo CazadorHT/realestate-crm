@@ -3,11 +3,12 @@
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { PROPERTY_TYPE_GRADIENTS, PROPERTY_TYPE_LABELS, type PropertyType } from "@/features/properties/labels";
+import { type Language } from "@/lib/i18n";
 
 interface PropertyTypeBadgeProps {
   type: string;
   className?: string;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 export function PropertyTypeBadge({

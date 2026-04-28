@@ -112,11 +112,15 @@ const KilometerInput = ({
   );
 };
 
+import { useFormContext } from "react-hook-form";
+
 interface TransitSectionProps {
-  form: UseFormReturn<PropertyFormValues>;
+  form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
 }
 
-export function TransitSection({ form }: TransitSectionProps) {
+export function TransitSection({ form: formProp }: TransitSectionProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   const watchedNearTransit = form.watch("near_transit");
 
   const { fields, append, remove } = useFieldArray({
@@ -308,9 +312,9 @@ export function TransitSection({ form }: TransitSectionProps) {
                         />
                       </FormControl>
 
-                      {/* Hidden fields for EN/CN - Only shown on focus or if non-empty? 
+                      {/* Hidden fields for EN/CN/RU - Only shown on focus or if non-empty? 
                           Actually let's keep them compact but accessible. */}
-                      <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div className="grid grid-cols-3 gap-2 mt-2">
                         <FormField
                           control={form.control}
                           name={`nearby_transits.${index}.station_name_en`}
@@ -331,6 +335,18 @@ export function TransitSection({ form }: TransitSectionProps) {
                               {...field}
                               value={field.value || ""}
                               placeholder="CN Name"
+                              className="h-8 text-[10px] bg-slate-50/50 text-slate-500 border-slate-100 focus:bg-white transition-all"
+                            />
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name={`nearby_transits.${index}.station_name_ru`}
+                          render={({ field }) => (
+                            <Input
+                              {...field}
+                              value={field.value || ""}
+                              placeholder="RU Name"
                               className="h-8 text-[10px] bg-slate-50/50 text-slate-500 border-slate-100 focus:bg-white transition-all"
                             />
                           )}

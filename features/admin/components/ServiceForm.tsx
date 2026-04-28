@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Resolver } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { translateTextAction } from "@/lib/ai/translation-actions";
@@ -24,6 +24,7 @@ export const formSchema = z.object({
   title: z.string().min(1, "กรุณากรอกชื่อบริการ"),
   title_en: z.string().optional(),
   title_cn: z.string().optional(),
+  title_ru: z.string().optional(),
   slug: z
     .string()
     .min(1, "กรุณาระบุ URL (Slug)")
@@ -34,17 +35,20 @@ export const formSchema = z.object({
   description: z.string().optional(),
   description_en: z.string().optional(),
   description_cn: z.string().optional(),
+  description_ru: z.string().optional(),
   content: z.string().optional(),
   content_en: z.string().optional(),
   content_cn: z.string().optional(),
+  content_ru: z.string().optional(),
   cover_image: z.string().optional(),
   gallery_images: z.array(z.string()).optional(),
   price_range: z.string().optional(),
   price_range_en: z.string().optional(),
   price_range_cn: z.string().optional(),
+  price_range_ru: z.string().optional(),
   contact_link: z.string().optional(),
-  sort_order: z.coerce.number().default(0),
-  is_active: z.boolean().default(true),
+  sort_order: z.coerce.number(),
+  is_active: z.boolean(),
 });
 
 export type ServiceFormValues = z.infer<typeof formSchema>;
@@ -66,24 +70,28 @@ export function ServiceForm({
   const [isTranslating, setIsTranslating] = useState(false);
 
   const form = useForm<ServiceFormValues>({
-    resolver: zodResolver(formSchema) as any,
+    resolver: zodResolver(formSchema),
     mode: "onChange",
     defaultValues: {
       title: initialData?.title || "",
       title_en: initialData?.title_en || "",
       title_cn: initialData?.title_cn || "",
+      title_ru: initialData?.title_ru || "",
       slug: initialData?.slug || "",
       description: initialData?.description || "",
       description_en: initialData?.description_en || "",
       description_cn: initialData?.description_cn || "",
+      description_ru: initialData?.description_ru || "",
       content: initialData?.content || "",
       content_en: initialData?.content_en || "",
       content_cn: initialData?.content_cn || "",
+      content_ru: initialData?.content_ru || "",
       cover_image: initialData?.cover_image || "",
       gallery_images: initialData?.gallery_images || [],
       price_range: initialData?.price_range || "",
       price_range_en: initialData?.price_range_en || "",
       price_range_cn: initialData?.price_range_cn || "",
+      price_range_ru: initialData?.price_range_ru || "",
       contact_link: initialData?.contact_link || "",
       sort_order: initialData?.sort_order || 0,
       is_active: initialData?.is_active ?? true,
@@ -119,34 +127,39 @@ export function ServiceForm({
     }
 
     setIsTranslating(true);
-    const toastId = toast.loading("กำลังแปลข้อมูลบริการเป็นภาษาอังกฤษและจีน...");
+    const toastId = toast.loading("กำลังแปลข้อมูลบริการเป็นภาษาอังกฤษ จีน และรัสเซีย...");
 
     try {
       const titleRes = await translateTextAction(title, "plain");
       form.setValue("title_en", titleRes.en, { shouldDirty: true });
       form.setValue("title_cn", titleRes.cn, { shouldDirty: true });
+      form.setValue("title_ru", titleRes.ru, { shouldDirty: true });
 
       if (description && description.trim() !== "") {
         const descRes = await translateTextAction(description, "plain");
         form.setValue("description_en", descRes.en, { shouldDirty: true });
         form.setValue("description_cn", descRes.cn, { shouldDirty: true });
+        form.setValue("description_ru", descRes.ru, { shouldDirty: true });
       }
 
       if (content && content.trim() !== "" && content !== "<p></p>") {
         const contentRes = await translateTextAction(content, "html");
         form.setValue("content_en", contentRes.en, { shouldDirty: true });
         form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
+        form.setValue("content_ru", contentRes.ru, { shouldDirty: true });
       }
 
       if (priceRange && priceRange.trim() !== "") {
         const priceRes = await translateTextAction(priceRange, "plain");
         form.setValue("price_range_en", priceRes.en, { shouldDirty: true });
         form.setValue("price_range_cn", priceRes.cn, { shouldDirty: true });
+        form.setValue("price_range_ru", priceRes.ru, { shouldDirty: true });
       }
 
       toast.success("แปลข้อมูลบริการเรียบร้อยแล้ว ✨", { id: toastId });
-    } catch (error: any) {
-      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "การแปลขัดข้อง";
+      toast.error(message, { id: toastId });
     } finally {
       setIsTranslating(false);
     }
@@ -160,6 +173,7 @@ export function ServiceForm({
         price_range: values.price_range?.trim() || "สอบถามราคา",
         price_range_en: values.price_range_en?.trim() || "Contact for price",
         price_range_cn: values.price_range_cn?.trim() || "询价",
+        price_range_ru: values.price_range_ru?.trim() || "Узнать цену",
       };
 
       const res = isNew 
@@ -178,8 +192,9 @@ export function ServiceForm({
       } else {
         toast.error(res.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       }
-    } catch (error: any) {
-      toast.error("เกิดข้อผิดพลาด: " + (error.message || "กรุณาลองใหม่อีกครั้ง"));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการบันทึกข้อมูล";
+      toast.error(message);
     } finally {
       setSaving(false);
     }

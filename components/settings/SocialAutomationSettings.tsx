@@ -34,25 +34,29 @@ export function SocialAutomationSettings({
       th: initialSettings?.facebook_post_template || "",
       en: initialSettings?.facebook_post_template_en || "",
       cn: initialSettings?.facebook_post_template_cn || "",
+      ru: initialSettings?.facebook_post_template_ru || "",
     },
     instagram: {
       th: initialSettings?.instagram_post_template || "",
       en: initialSettings?.instagram_post_template_en || "",
       cn: initialSettings?.instagram_post_template_cn || "",
+      ru: initialSettings?.instagram_post_template_ru || "",
     },
     tiktok: {
       th: initialSettings?.tiktok_post_template || "",
       en: initialSettings?.tiktok_post_template_en || "",
       cn: initialSettings?.tiktok_post_template_cn || "",
+      ru: initialSettings?.tiktok_post_template_ru || "",
     },
     line: {
       th: initialSettings?.line_post_template || "",
       en: initialSettings?.line_post_template_en || "",
       cn: initialSettings?.line_post_template_cn || "",
+      ru: initialSettings?.line_post_template_ru || "",
     },
   });
 
-  const [activeTab, setActiveTab] = useState<"th" | "en" | "cn">("th");
+  const [activeTab, setActiveTab] = useState<"th" | "en" | "cn" | "ru">("th");
   const [activePlatform, setActivePlatform] = useState<
     "facebook" | "instagram" | "line" | "tiktok"
   >("facebook");
@@ -105,21 +109,25 @@ export function SocialAutomationSettings({
             th: settings.facebook_post_template || "",
             en: settings.facebook_post_template_en || "",
             cn: settings.facebook_post_template_cn || "",
+            ru: settings.facebook_post_template_ru || "",
           },
           instagram: {
             th: settings.instagram_post_template || "",
             en: settings.instagram_post_template_en || "",
             cn: settings.instagram_post_template_cn || "",
+            ru: settings.instagram_post_template_ru || "",
           },
           tiktok: {
             th: settings.tiktok_post_template || "",
             en: settings.tiktok_post_template_en || "",
             cn: settings.tiktok_post_template_cn || "",
+            ru: settings.tiktok_post_template_ru || "",
           },
           line: {
             th: settings.line_post_template || "",
             en: settings.line_post_template_en || "",
             cn: settings.line_post_template_cn || "",
+            ru: settings.line_post_template_ru || "",
           },
         });
         setTiktokConnected(!!settings.tiktok_auth_token);
@@ -160,7 +168,7 @@ export function SocialAutomationSettings({
 
   const updateTemplate = (
     platform: "facebook" | "instagram" | "line" | "tiktok",
-    lang: "th" | "en" | "cn",
+    lang: "th" | "en" | "cn" | "ru",
     value: string,
   ) => {
     setTemplates((prev) => ({
@@ -178,15 +186,19 @@ export function SocialAutomationSettings({
       templates.facebook.th !== (initialData.facebook_post_template || "") ||
       templates.facebook.en !== (initialData.facebook_post_template_en || "") ||
       templates.facebook.cn !== (initialData.facebook_post_template_cn || "") ||
+      templates.facebook.ru !== (initialData.facebook_post_template_ru || "") ||
       templates.instagram.th !== (initialData.instagram_post_template || "") ||
       templates.instagram.en !== (initialData.instagram_post_template_en || "") ||
       templates.instagram.cn !== (initialData.instagram_post_template_cn || "") ||
+      templates.instagram.ru !== (initialData.instagram_post_template_ru || "") ||
       templates.line.th !== (initialData.line_post_template || "") ||
       templates.line.en !== (initialData.line_post_template_en || "") ||
       templates.line.cn !== (initialData.line_post_template_cn || "") ||
+      templates.line.ru !== (initialData.line_post_template_ru || "") ||
       templates.tiktok.th !== (initialData.tiktok_post_template || "") ||
       templates.tiktok.en !== (initialData.tiktok_post_template_en || "") ||
-      templates.tiktok.cn !== (initialData.tiktok_post_template_cn || "")
+      templates.tiktok.cn !== (initialData.tiktok_post_template_cn || "") ||
+      templates.tiktok.ru !== (initialData.tiktok_post_template_ru || "")
     : false;
 
   const handleSave = (silent = false) => {
@@ -205,15 +217,19 @@ export function SocialAutomationSettings({
           updateSiteSetting("facebook_post_template", templates.facebook.th),
           updateSiteSetting("facebook_post_template_en", templates.facebook.en),
           updateSiteSetting("facebook_post_template_cn", templates.facebook.cn),
+          updateSiteSetting("facebook_post_template_ru", templates.facebook.ru),
           updateSiteSetting("instagram_post_template", templates.instagram.th),
           updateSiteSetting("instagram_post_template_en", templates.instagram.en),
           updateSiteSetting("instagram_post_template_cn", templates.instagram.cn),
+          updateSiteSetting("instagram_post_template_ru", templates.instagram.ru),
           updateSiteSetting("line_post_template", templates.line.th),
           updateSiteSetting("line_post_template_en", templates.line.en),
           updateSiteSetting("line_post_template_cn", templates.line.cn),
+          updateSiteSetting("line_post_template_ru", templates.line.ru),
           updateSiteSetting("tiktok_post_template", templates.tiktok.th),
           updateSiteSetting("tiktok_post_template_en", templates.tiktok.en),
           updateSiteSetting("tiktok_post_template_cn", templates.tiktok.cn),
+          updateSiteSetting("tiktok_post_template_ru", templates.tiktok.ru),
         ];
 
         const results = await Promise.all(promises);
@@ -228,15 +244,19 @@ export function SocialAutomationSettings({
               facebook_post_template: templates.facebook.th,
               facebook_post_template_en: templates.facebook.en,
               facebook_post_template_cn: templates.facebook.cn,
+              facebook_post_template_ru: templates.facebook.ru,
               instagram_post_template: templates.instagram.th,
               instagram_post_template_en: templates.instagram.en,
               instagram_post_template_cn: templates.instagram.cn,
+              instagram_post_template_ru: templates.instagram.ru,
               line_post_template: templates.line.th,
               line_post_template_en: templates.line.en,
               line_post_template_cn: templates.line.cn,
+              line_post_template_ru: templates.line.ru,
               tiktok_post_template: templates.tiktok.th,
               tiktok_post_template_en: templates.tiktok.en,
               tiktok_post_template_cn: templates.tiktok.cn,
+              tiktok_post_template_ru: templates.tiktok.ru,
             });
           }
         } else if (!silent) {
@@ -293,8 +313,8 @@ export function SocialAutomationSettings({
         }
       } else {
         // Multi-language generation for Global Templates
-        const languages: ("th" | "en" | "cn")[] = ["th", "en", "cn"];
-        toast.info("กำลังสร้างเนื้อหาทั้ง 3 ภาษาด้วย AI...");
+        const languages: ("th" | "en" | "cn" | "ru")[] = ["th", "en", "cn", "ru"];
+        toast.info("กำลังสร้างเนื้อหาทั้ง 4 ภาษาด้วย AI...");
 
         const results = await Promise.all(
           languages.map((lang) =>
@@ -321,10 +341,10 @@ export function SocialAutomationSettings({
           }
         });
 
-        if (successCount === 3) {
-          toast.success("สร้างเนื้อหาครบทั้ง 3 ภาษาแล้วครับ ✨");
+        if (successCount === 4) {
+          toast.success("สร้างเนื้อหาครบทั้ง 4 ภาษาแล้วครับ ✨");
         } else if (successCount > 0) {
-          toast.success(`สร้างเนื้อหาสำเร็จ ${successCount}/3 ภาษา`);
+          toast.success(`สร้างเนื้อหาสำเร็จ ${successCount}/4 ภาษา`);
         } else {
           toast.error("ไม่สามารถสร้างเนื้อหาได้ กรุณาลองใหม่อีกครั้ง");
         }

@@ -268,7 +268,23 @@ export async function duplicatePropertyAction(
 
     const { data: src, error: srcErr } = await supabase
       .from("properties")
-      .select("id, title, property_type, listing_type, status, price, rental_price, bedrooms, bathrooms, size_sqm, district, subdistrict, province, near_transit, is_pet_friendly, is_corner_unit, is_renovated, is_fully_furnished, floor, has_city_view, has_pool_view, has_garden_view, is_selling_with_tenant, is_tax_registered, is_foreigner_quota, google_maps_link, address_line1, postal_code, description, meta_title, meta_description, meta_keywords, tenant_id, property_images(image_url, is_cover)")
+      .select(`
+        id, title, title_en, title_cn, title_ru,
+        property_type, listing_type, status, 
+        price, original_price, rental_price, original_rental_price, 
+        bedrooms, bathrooms, size_sqm, floor,
+        district, subdistrict, province, 
+        near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru,
+        is_pet_friendly, is_corner_unit, is_renovated, is_fully_furnished, 
+        has_city_view, has_pool_view, has_garden_view, 
+        is_selling_with_tenant, is_tax_registered, is_foreigner_quota, 
+        google_maps_link, address_line1, address_line1_en, address_line1_cn, address_line1_ru, postal_code, 
+        description, description_en, description_cn, description_ru,
+        meta_title, meta_title_en, meta_title_cn, meta_title_ru,
+        meta_description, meta_description_en, meta_description_cn, meta_description_ru,
+        meta_keywords, tenant_id, 
+        property_images(image_url, is_cover, storage_path)
+      `)
       .eq("id", id)
       .eq("tenant_id", tenantId)
       .single();

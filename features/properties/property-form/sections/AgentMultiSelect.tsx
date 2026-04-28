@@ -36,12 +36,17 @@ import { siteConfig } from "@/lib/site-config";
 import { cn } from "@/lib/utils";
 import { FaPhone } from "react-icons/fa6";
 
+import { useFormContext } from "react-hook-form";
+import type { PropertyFormValues } from "@/features/properties/schema";
+
 /**
  * Agent Multi-Select Section
  * Handles multiple agent assignment with sync to assigned_to
  * Enhanced with professional layout: Roles, Commission, Quick Actions
  */
-export function AgentMultiSelect({ form, agents }: AgentMultiSelectProps) {
+export function AgentMultiSelect({ form: formProp, agents }: AgentMultiSelectProps) {
+  const formContext = useFormContext<PropertyFormValues>();
+  const form = formProp || formContext;
   // Local state for UI only (Roles are not yet persisted in Schema)
   const [agentRoles, setAgentRoles] = React.useState<Record<number, string>>(
     {},

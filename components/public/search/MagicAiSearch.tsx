@@ -50,7 +50,9 @@ export function MagicAiSearch({
               ? "ค้นหาด้วยคำสำคัญ (เช่น คอนโด อารีย์)" 
               : language === "cn"
                 ? "搜索关键词 (例如: 阿里公寓)"
-                : "Search by keywords (e.g. Condo Ari)"
+                : language === "ru"
+                  ? "Поиск по ключевым словам (например: Кондо Ари)"
+                  : "Search by keywords (e.g. Condo Ari)"
           }
           className="border-none shadow-none focus-visible:ring-0 h-12 text-sm! bg-transparent w-full font-medium placeholder:text-slate-400"
           value={inputValue}

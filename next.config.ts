@@ -84,8 +84,15 @@ const nextConfig: NextConfig = {
 };
 
 import { withSentryConfig } from "@sentry/nextjs";
+import withBundleAnalyzer from "@next/bundle-analyzer";
 
-export default withSentryConfig(nextConfig, {
+const withAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
+
+export default withAnalyzer(
+  withSentryConfig(nextConfig, {
+
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
   org: "vc-connect-asset",
@@ -103,7 +110,14 @@ export default withSentryConfig(nextConfig, {
 
   // Note: Some of these options might not work with Turbopack yet, 
   // but we keep them for standard Webpack builds/Production.
-  reactComponentAnnotation: { enabled: true },
-  automaticVercelMonitors: true,
-  disableLogger: true,
-});
+  webpack: {
+    reactComponentAnnotation: { enabled: true },
+    automaticVercelMonitors: true,
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+}));
+
+
+

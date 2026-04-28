@@ -8,6 +8,7 @@ const BOT_SELECT_FIELDS = `
   title,
   title_en,
   title_cn,
+  title_ru,
   price,
   rental_price,
   original_price,
@@ -92,6 +93,7 @@ export async function searchPropertiesForBot(query: string, limit = 5) {
       title,
       title_en,
       title_cn,
+      title_ru,
       price,
       rental_price,
       listing_type,
@@ -214,7 +216,7 @@ export async function getPopularAreaTranslations() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("popular_areas")
-    .select("name, name_en, name_cn");
+    .select("name, name_en, name_cn, name_ru");
 
   if (error) {
     console.error("getPopularAreaTranslations error:", error);

@@ -7,7 +7,7 @@ import { BlogCard } from "@/components/public/BlogCard";
 import { notFound } from "next/navigation";
 import { Home, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
-import { th, enUS as en, zhCN as zh } from "date-fns/locale";
+import { th, enUS as en, zhCN as zh, ru } from "date-fns/locale";
 import {
   dictionaries,
   getServerTranslations,
@@ -106,7 +106,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       ? (post.author as { name: string; avatar?: string; bio?: string })
       : { name: "Admin", avatar: "", bio: "" };
 
-  const dateLocales: Record<string, Locale> = { th, en, zh };
+  const dateLocales: Record<string, Locale> = { th, en, zh, ru };
   const locale = dateLocales[language === "cn" ? "zh" : language] || th;
 
   const formattedDate = post.published_at

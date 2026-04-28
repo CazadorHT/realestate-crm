@@ -44,11 +44,13 @@ import type { Database } from "@/lib/database.types";
 import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
 
+import { type Language } from "@/lib/i18n";
+
 type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 
 interface PropertyBadgesSectionProps {
   property: PropertyRow;
-  language?: "th" | "en" | "cn";
+  language?: Language;
 }
 
 export function PropertyBadgesSection({

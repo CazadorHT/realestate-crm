@@ -86,12 +86,15 @@ export function ServiceContentSection({ form }: ServiceContentSectionProps) {
           </div>
 
           <Tabs defaultValue="en" className="w-full">
-            <TabsList className="bg-slate-100/50 p-1 rounded-xl w-full sm:w-auto h-auto grid grid-cols-2">
+            <TabsList className="bg-slate-100/50 p-1 rounded-xl w-full sm:w-auto h-auto grid grid-cols-3">
               <TabsTrigger value="en" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm">
                 English (EN)
               </TabsTrigger>
               <TabsTrigger value="cn" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-sm">
                 Chinese (CN)
+              </TabsTrigger>
+              <TabsTrigger value="ru" className="rounded-lg py-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm">
+                Russian (RU)
               </TabsTrigger>
             </TabsList>
 
@@ -128,6 +131,31 @@ export function ServiceContentSection({ form }: ServiceContentSectionProps) {
                 <FormField
                   control={form.control}
                   name="content_cn"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="rounded-xl overflow-hidden border border-slate-200 bg-white">
+                          <TiptapEditor
+                            value={field.value || ""}
+                            onChange={field.onChange}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="ru" className="mt-6 space-y-4 animate-in fade-in-50 duration-500">
+              <div className="space-y-4">
+                <FormLabel className="font-bold text-xs uppercase tracking-tight text-slate-500">
+                  รายละเอียดบริการ (Russian - Подробное описание)
+                </FormLabel>
+                <FormField
+                  control={form.control}
+                  name="content_ru"
                   render={({ field }) => (
                     <FormItem>
                       <FormControl>

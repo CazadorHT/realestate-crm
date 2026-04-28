@@ -97,6 +97,7 @@ export async function generateMetadata(): Promise<Metadata> {
     th: "th_TH",
     en: "en_US",
     cn: "zh_CN",
+    ru: "ru_RU",
   };
   const currentLocale = localeMap[language] || "th_TH";
 
@@ -124,6 +125,7 @@ export async function generateMetadata(): Promise<Metadata> {
         "th-TH": `${siteConfig.url}?lang=th`,
         "en-US": `${siteConfig.url}?lang=en`,
         "zh-CN": `${siteConfig.url}?lang=cn`,
+        "ru-RU": `${siteConfig.url}?lang=ru`,
         "x-default": siteConfig.url,
       },
     },

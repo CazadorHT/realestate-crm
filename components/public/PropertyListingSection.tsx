@@ -91,6 +91,7 @@ type PopularArea = {
   popular_area: string;
   popular_area_en?: string;
   popular_area_cn?: string;
+  popular_area_ru?: string;
   province?: string;
 };
 
