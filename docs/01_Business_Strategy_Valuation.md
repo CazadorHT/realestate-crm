@@ -1,25 +1,32 @@
 # 💰 แผนธุรกิจและการประเมินมูลค่า (Business Strategy & Valuation)
 
-เอกสารรวบรวมข้อมูลด้านการตลาด การประเมินราคาขาย และกลยุทธ์การสร้างรายได้จากโปรเจค VC Connect Asset CRM (Enterprise v2.1 Hardened Edition)
+เอกสารรวบรวมข้อมูลด้านการตลาด การประเมินราคาขาย และกลยุทธ์การสร้างรายได้จากโปรเจค VC Connect Asset CRM (Enterprise v4.0 - Diamond Edition)
 
-> **อัปเดตล่าสุด:** 15 เมษายน 2026 (Enterprise v2.1 - Hardened & Verified)
+> **อัปเดตล่าสุด:** 29 เมษายน 2026 (Enterprise v4.0 - Diamond Hardened)
 
 ---
 
 ## 1. การประเมินมูลค่าโครงการ (Project Valuation)
 
-### 🏗️ โครงสร้างราคาแบ่งตามโมดูล (อิงตามตลาดซอฟต์แวร์ Enterprise)
+### 🏗️ โครงสร้างราคาแบ่งตามโมดูล (อิงตามตลาดซอฟต์แวร์ Enterprise 2026)
 
 | โมดูล (Module)                                                                 | มูลค่าประเมิน (THB)   | สถานะ (Status)           |
 | :----------------------------------------------------------------------------- | :-------------------- | :----------------------- |
-| **1. Public Listing Portal** (Premium UX, Dynamic SEO, i18n 100%)              | 1,500,000 - 2,200,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
-| **2. Professional CRM Backend** (Lead scoring, Activity Summaries)             | 1,800,000 - 2,800,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
-| **3. AI-First Ecosystem** (Gemini 2.0, Valuation, Content, Lead Matching)      | 3,500,000 - 5,000,000 | ✅ เสร็จสมบูรณ์ (Verified) |
-| **4. Omni-channel Social Studio** (Meta, TikTok, LINE, Webhook Security)       | 2,000,000 - 3,500,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
-| **5. Multi-Tenant Branch Ops** (RLS Isolation, Tenant Branding Logic)          | 2,500,000 - 4,000,000 | ✅ เสร็จสมบูรณ์ (Audited)  |
-| **6. Hardened Infrastructure** (Inngest, Upstash Redis, Partitioning, Sentry)  | 1,500,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ (NEW)      |
-| **7. AVM & Market Intel** (AI Market Comps, PDF Reports, Drop Alerts)          | 2,200,000 - 3,200,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
-| **8. Advanced Financials & Split** (Comm Engine, WHT 3%, Net Amount)           | 1,800,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ (Verified) |
+| **1. Agentic Search Engine** (Hybrid 70/30 Scoring, AI Reasoning)             | 5,500,000 - 8,000,000 | ✅ เสร็จสมบูรณ์ (S-Tier)   |
+| **2. Professional CRM Backend** (Hardened RLS, Internal Schema)                | 3,500,000 - 4,500,000 | ✅ เสร็จสมบูรณ์ (Diamond)  |
+| **3. AI-First Ecosystem** (Gemini 1.5, Sentinel AI, AVM, Content)               | 4,500,000 - 6,000,000 | ✅ เสร็จสมบูรณ์ (Verified) |
+| **4. Omni-channel Social Studio** (Zero-latency Inbox, Meta, TikTok)           | 3,000,000 - 4,500,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
+| **5. Multi-Tenant Branch Ops** (Atomic RPC, Proxy-based Safety)                | 3,500,000 - 5,000,000 | ✅ เสร็จสมบูรณ์ (Audited)  |
+| **6. Diamond Security Hardening** (Linter Certified, Schema Isolation)         | 3,000,000 - 4,000,000 | ✅ เสร็จสมบูรณ์ (NEW 💎)   |
+| **7. AVM & Market Intel** (Market Drop Alerts, PDF Reporting)                  | 2,200,000 - 3,200,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
+| **8. Advanced Financials & Split** (Transactional Outbox, WHT 3%)              | 2,500,000 - 3,500,000 | ✅ เสร็จสมบูรณ์ (Verified) |
+| **9. Smart Contract Engine** (Dynamic .docx to PDF, Versioning)                | 1,500,000 - 2,000,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
+| **10. GTM & Conversion Analytics** (Predictive Lead Scoring, Funnel)           | 1,800,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ (Verified) |
+
+## รวมมูลค่าโปรเจค (Fair Market Value): **31,000,000 – 43,200,000 บาท**
+
+*(มูลค่าสะท้อนฟีเจอร์ระดับ Enterprise ที่เหนือกว่าคู่แข่งด้วยระบบ Agentic AI และความปลอดภัยระดับสูงสุด - **ราคายังไม่รวมภาษีมูลค่าเพิ่ม 7%**)*
+. Advanced Financials & Split** (Comm Engine, WHT 3%, Net Amount)           | 1,800,000 - 2,500,000 | ✅ เสร็จสมบูรณ์ (Verified) |
 | **9. Smart Contract Engine** (Dynamic .docx to PDF, Version Control)           | 1,500,000 - 2,000,000 | ✅ เสร็จสมบูรณ์ (Hardened) |
 | **10. GTM & Conversion Analytics** (Image Engagement, Funnel tracking)         | 1,500,000 - 2,200,000 | ✅ เสร็จสมบูรณ์ (Verified) |
 
@@ -31,15 +38,15 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
 
 ## 2. กลยุทธ์การขายขาด (Exclusive Buyout Strategy) 🚀
 
-ระบบนี้ถูกออกแบบมาเพื่อเป็น **"Platform-as-a-Product"** ที่พร้อมให้บริษัทอสังหาฯ ขนาดใหญ่หรือบริษัทซอฟต์แวร์ซื้อไปเป็นของตัวเอง (White-label) โดยมีจุดแข่งที่ **Security-First Architecture**:
+ระบบนี้ถูกออกแบบมาเพื่อเป็น **"Platform-as-a-Product"** ที่พร้อมให้บริษัทอสังหาฯ ขนาดใหญ่หรือบริษัทซอฟต์แวร์ซื้อไปเป็นของตัวเอง (White-label) โดยมีจุดแข็งที่ **Agentic AI & Hardened Architecture**:
 
-### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 25,000,000 THB++
+### 👑 โมเดลขายสิทธิ์ขาด (Exclusive Rights) - 35,000,000 THB++
 
 การขาย Source Code ทั้งหมดพร้อมสิทธิ์ความเป็นเจ้าของ 100% เหมาะสำหรับ:
 
-- **Real Estate Developer (Top Tier):** ต้องการ Platform ที่มีระบบจัดการสาขา (Branch) ในตัว เพื่อควบคุมข้อมูลจากทุกสาขาทั่วประเทศ พร้อมความปลอดภัยข้อมูลระดับสูงสุด
-- **PropTech Startup / Enterprise Agency:** ต้องการทางลัด (Short-cut) ในการเข้าสู่ตลาดด้วยฟีเจอร์ที่พัฒนามาอย่างสมบูรณ์ (Ready-to-Deploy) โดยไม่ต้องเสียเวลาสร้างใหม่ 3-5 ปี
-- **Digital Agency:** นำไปขายต่อเป็นรายบริษัทในรูปแบบ SaaS (Multi-Tenant) พร้อมระบบจัดการความเสถียรที่รองรับการขยายตัวได้จริง
+- **Real Estate Developer (Top Tier):** ต้องการ Platform ที่มีระบบจัดการสาขา (Branch) ในตัว เพื่อควบคุมข้อมูลจากทุกสาขาทั่วประเทศ พร้อมความปลอดภัยข้อมูลระดับสูงสุด และระบบ AI ที่ช่วยให้นายหน้าปิดดีลได้เร็วขึ้น 300%
+- **PropTech Startup / Enterprise Agency:** ต้องการทางลัด (Short-cut) ในการเข้าสู่ตลาดด้วยเทคโนโลยี AI ที่ล้ำสมัยที่สุด (Agentic Search) โดยไม่ต้องเสียเวลาสร้างใหม่ 3-5 ปี
+- **Digital Agency:** นำไปขายต่อเป็นรายบริษัทในรูปแบบ SaaS (Multi-Tenant) พร้อมระบบจัดการความเสถียรที่รองรับการขยายตัวได้จริงที่สเกลข้อมูลหลักล้านรายการ
 
 ---
 

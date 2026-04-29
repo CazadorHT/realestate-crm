@@ -33,6 +33,7 @@ import {
   sendCommissionToLineAction,
 } from "../commission-actions";
 import { toast } from "sonner";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 type Deal = Database["public"]["Tables"]["deals"]["Row"];
@@ -66,24 +67,30 @@ export function DealFinancials({
       toast.error("กรุณาระบุยอดคอมมิชชั่นรวมก่อนคำนวณส่วนแบ่ง");
       return;
     }
+    const processId = startProcess("กำลังคำนวณส่วนแบ่งคอมมิชชั่น", {
+      type: "FINANCIAL_CALC"
+    });
     setCalculating(true);
     try {
       const res = await calculateAndSaveCommissionsAction(deal.id);
       if (res.success) {
-        toast.success("คำนวณสัดส่วนคอมมิชชั่นเรียบร้อยแล้ว");
+        finishProcess(processId, "SUCCESS", "คำนวณสัดส่วนคอมมิชชั่นเรียบร้อยแล้ว ✨");
         handleSuccessFeedback();
       } else {
-        toast.error(res.message || "เกิดข้อผิดพลาดในการคำนวณ");
+        finishProcess(processId, "ERROR", res.message || "เกิดข้อผิดพลาดในการคำนวณ");
       }
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+      finishProcess(processId, "ERROR", msg);
     } finally {
       setCalculating(false);
     }
   };
 
   const handleExportPdf = async (commissionId: string) => {
-    const toastId = toast.loading("กำลังเตรียมไฟล์ PDF...");
+    const processId = startProcess("กำลังเตรียมไฟล์ PDF ค่าคอมมิชชั่น", {
+      type: "EXPORT"
+    });
     try {
       const res = await exportCommissionPdfAction(commissionId);
       if (res.success && res.data) {
@@ -91,26 +98,30 @@ export function DealFinancials({
         link.href = `data:application/pdf;base64,${res.data}`;
         link.download = res.filename || "commission-statement.pdf";
         link.click();
-        toast.success("ดาวน์โหลด PDF สำเร็จ", { id: toastId });
+        finishProcess(processId, "SUCCESS", "ดาวน์โหลด PDF สำเร็จ ✨");
       } else {
-        toast.error(res.message || "ล้มเหลวในการสร้าง PDF", { id: toastId });
+        finishProcess(processId, "ERROR", res.message || "ล้มเหลวในการสร้าง PDF");
       }
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการดาวน์โหลด", { id: toastId });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการดาวน์โหลด";
+      finishProcess(processId, "ERROR", msg);
     }
   };
 
   const handleSendLine = async (commissionId: string) => {
-    const toastId = toast.loading("กำลังส่งไปยัง LINE...");
+    const processId = startProcess("กำลังส่งข้อมูลค่าคอมมิชชั่นไปยัง LINE", {
+      type: "SOCIAL_LINE",
+    });
     try {
       const res = await sendCommissionToLineAction(commissionId);
       if (res.success) {
-        toast.success("ส่งเรียบร้อยแล้ว", { id: toastId });
+        finishProcess(processId, "SUCCESS", "ส่งข้อมูลไปยัง LINE เรียบร้อยแล้ว ✨");
       } else {
-        toast.error(res.message || "ล้มเหลวในการส่ง", { id: toastId });
+        finishProcess(processId, "ERROR", res.message || "ล้มเหลวในการส่ง");
       }
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการส่ง", { id: toastId });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการส่ง";
+      finishProcess(processId, "ERROR", msg);
     }
   };
 

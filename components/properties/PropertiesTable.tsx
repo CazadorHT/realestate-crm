@@ -70,6 +70,7 @@ import {
 } from "@/features/properties/bulk-actions";
 import { exportPropertiesAction } from "@/features/properties/export-action";
 import { toast } from "sonner";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { Button } from "@/components/ui/button";
 import { DuplicatePropertyButton } from "./DuplicatePropertyButton";
 import type {
@@ -192,15 +193,19 @@ export function PropertiesTable({
   const [isTransitionPending, startTransition] = useTransition();
 
   const handleSelectAllGlobal = async () => {
+    const processId = startProcess("เลือกทรัพย์ทั้งหมดในระบบ", { type: "SELECTION" });
     setIsGlobalLoading(true);
     try {
       const result = await getAllPropertyIdsAction(filters);
       if (result.success && result.ids) {
         toggleSelectAll(result.ids);
-        toast.info(`เลือกทั้งหมด ${result.ids.length} รายการแล้ว`);
+        finishProcess(processId, "SUCCESS", `เลือกทั้งหมด ${result.ids.length} รายการเรียบร้อยแล้ว`);
+      } else {
+        finishProcess(processId, "ERROR", "ไม่สามารถเลือกทั้งหมดได้");
       }
-    } catch (err) {
-      toast.error("ไม่สามารถเลือกทั้งหมดได้");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเลือกทั้งหมด";
+      finishProcess(processId, "ERROR", msg);
     } finally {
       setIsGlobalLoading(false);
     }
@@ -312,46 +317,79 @@ export function PropertiesTable({
 
   const handleBulkDelete = async () => {
     const ids = Array.from(selectedIds);
-    const result = await bulkDeletePropertiesAction(ids);
-    if (result.success) {
-      toast.success(result.message);
-      clearSelection();
-      handleSuccessFeedback();
-    } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-      throw new Error(result.message || "เกิดข้อผิดพลาด");
+    const processId = startProcess(`ลบข้อมูลทรัพย์ (${ids.length} รายการ)`, { 
+      type: "BULK_DELETE",
+      onRetry: handleBulkDelete 
+    });
+    
+    try {
+      const result = await bulkDeletePropertiesAction(ids);
+      if (result.success) {
+        finishProcess(processId, "SUCCESS", result.message);
+        clearSelection();
+        handleSuccessFeedback();
+      } else {
+        finishProcess(processId, "ERROR", result.message || "เกิดข้อผิดพลาดในการลบ");
+        throw new Error(result.message || "เกิดข้อผิดพลาด");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการลบ";
+      finishProcess(processId, "ERROR", msg);
+      throw err;
     }
   };
 
   const handleBulkApproveAiReview = async () => {
     const ids = Array.from(selectedIds);
-    const result = await bulkApproveAiReviewAction(ids);
-    if (result.success) {
-      toast.success(result.message);
-      clearSelection();
-      handleSuccessFeedback();
-    } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-      throw new Error(result.message || "เกิดข้อผิดพลาด");
+    const processId = startProcess(`ยืนยันข้อมูล AI (${ids.length} รายการ)`, { 
+      type: "BULK_AI_APPROVE",
+      onRetry: handleBulkApproveAiReview
+    });
+
+    try {
+      const result = await bulkApproveAiReviewAction(ids);
+      if (result.success) {
+        finishProcess(processId, "SUCCESS", result.message);
+        clearSelection();
+        handleSuccessFeedback();
+      } else {
+        finishProcess(processId, "ERROR", result.message || "เกิดข้อผิดพลาด");
+        throw new Error(result.message || "เกิดข้อผิดพลาด");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการยืนยันข้อมูล";
+      finishProcess(processId, "ERROR", msg);
+      throw err;
     }
   };
 
   const handleBulkMove = async () => {
     const ids = Array.from(selectedIds);
-    const result = await bulkMovePropertiesToTenantAction(ids);
-    if (result.success) {
-      toast.success(result.message);
-      clearSelection();
-      handleSuccessFeedback();
-    } else {
-      toast.error(result.message || "เกิดข้อผิดพลาด");
-      throw new Error(result.message || "เกิดข้อผิดพลาด");
+    const processId = startProcess(`ดึงทรัพย์มายังสาขา (${ids.length} รายการ)`, { 
+      type: "BULK_MOVE",
+      onRetry: handleBulkMove
+    });
+
+    try {
+      const result = await bulkMovePropertiesToTenantAction(ids);
+      if (result.success) {
+        finishProcess(processId, "SUCCESS", result.message);
+        clearSelection();
+        handleSuccessFeedback();
+      } else {
+        finishProcess(processId, "ERROR", result.message || "เกิดข้อผิดพลาด");
+        throw new Error(result.message || "เกิดข้อผิดพลาด");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการดึงข้อมูล";
+      finishProcess(processId, "ERROR", msg);
+      throw err;
     }
   };
 
   const handleExportAllWithFilters = async () => {
+    const processId = startProcess("กำลังส่งออกข้อมูล Excel", { type: "EXPORT" });
     setIsExporting(true);
-    toast.info("กำลังเตรียมข้อมูลไฟล์ Excel...");
     try {
       const result = await exportPropertiesAction(undefined, filters);
       if (result.success && result.data && result.filename) {
@@ -361,15 +399,16 @@ export function PropertiesTable({
           MIME_TYPES.EXCEL,
         );
         if (downloaded) {
-          toast.success(`Export ทั้งหมด ${result.count} รายการสำเร็จ`);
+          finishProcess(processId, "SUCCESS", `Export ทั้งหมด ${result.count} รายการสำเร็จ`);
         } else {
-          toast.error("ดาวน์โหลดไฟล์ไม่สำเร็จ");
+          finishProcess(processId, "ERROR", "ดาวน์โหลดไฟล์ไม่สำเร็จ");
         }
       } else {
-        toast.error(result.message || "Export ไม่สำเร็จ");
+        finishProcess(processId, "ERROR", result.message || "Export ไม่สำเร็จ");
       }
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการ Export");
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการ Export";
+      finishProcess(processId, "ERROR", msg);
     } finally {
       setIsExporting(false);
     }

@@ -273,6 +273,72 @@ export type Database = {
         }
         Relationships: []
       }
+      background_tasks: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_details: string | null
+          id: string
+          is_cancelled: boolean | null
+          message: string | null
+          name: string
+          payload: Json | null
+          priority: number | null
+          result_link: string | null
+          status: string
+          tenant_id: string | null
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_details?: string | null
+          id?: string
+          is_cancelled?: boolean | null
+          message?: string | null
+          name: string
+          payload?: Json | null
+          priority?: number | null
+          result_link?: string | null
+          status?: string
+          tenant_id?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_details?: string | null
+          id?: string
+          is_cancelled?: boolean | null
+          message?: string | null
+          name?: string
+          payload?: Json | null
+          priority?: number | null
+          result_link?: string | null
+          status?: string
+          tenant_id?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "background_tasks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "background_tasks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blog_categories: {
         Row: {
           created_at: string
@@ -3584,20 +3650,26 @@ export type Database = {
     Views: {
       popular_areas_with_counts: {
         Row: {
-          created_at: string | null
-          featured: boolean | null
-          id: string | null
-          image_url: string | null
-          is_active: boolean | null
-          name: string | null
-          name_cn: string | null
-          name_en: string | null
+          popular_area: string | null
           property_count: number | null
-          province: string | null
-          slug: string | null
-          sort_order: number | null
+          tenant_id: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "properties_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenant_branding: {
         Row: {
@@ -3687,7 +3759,7 @@ export type Database = {
       }
       bulk_hard_delete_properties: {
         Args: { p_ids: string[] }
-        Returns: number
+        Returns: undefined
       }
       bulk_mark_commissions_as_ready_to_pay: {
         Args: {
@@ -3698,8 +3770,9 @@ export type Database = {
         }
         Returns: Json
       }
-      bulk_trash_properties: { Args: { p_ids: string[] }; Returns: number }
+      bulk_trash_properties: { Args: { p_ids: string[] }; Returns: undefined }
       check_is_staff_for_audit: { Args: never; Returns: boolean }
+      cleanup_old_background_tasks: { Args: never; Returns: undefined }
       create_lead_from_match:
         | {
             Args: {
@@ -3769,6 +3842,7 @@ export type Database = {
         }
         Returns: Json
       }
+      get_auth_uid: { Args: never; Returns: string }
       get_distinct_finance_years: { Args: never; Returns: Json }
       get_documents_stats: {
         Args: {
@@ -3881,7 +3955,7 @@ export type Database = {
       }
       increment_faq_view: { Args: { faq_id: string }; Returns: undefined }
       increment_property_view:
-        | { Args: { p_id: string }; Returns: number }
+        | { Args: { p_id: string }; Returns: undefined }
         | {
             Args: {
               p_property_id: string
@@ -3918,7 +3992,6 @@ export type Database = {
         Args: { target_tenant_id: string }
         Returns: boolean
       }
-      is_tenant_member: { Args: { target_tenant_id: string }; Returns: boolean }
       is_tenant_staff: { Args: { target_tenant_id: string }; Returns: boolean }
       log_ai_usage: {
         Args: {
@@ -3935,11 +4008,11 @@ export type Database = {
       log_system_activity: {
         Args: {
           p_action: string
-          p_email?: string
+          p_email: string
           p_entity: string
-          p_entity_id?: string
-          p_metadata?: Json
-          p_tenant_id?: string
+          p_entity_id: string
+          p_metadata: Json
+          p_tenant_id: string
         }
         Returns: undefined
       }
@@ -3990,8 +4063,6 @@ export type Database = {
           masked_name: string
         }[]
       }
-      show_limit: { Args: never; Returns: number }
-      show_trgm: { Args: { "": string }; Returns: string[] }
       submit_public_lead:
         | {
             Args: {

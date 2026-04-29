@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { 
   deleteService, 
   restoreServiceAction, 
@@ -95,18 +96,22 @@ export function useServicesActions() {
 
   const handleEmptyTrash = async () => {
     if (confirmName !== "DELETE_ALL") return;
+    const processId = startProcess("กำลังล้างถังขยะบริการทั้งหมด", {
+      type: "BULK_ACTION"
+    });
     startTransition(async () => {
       setIsDeleting(true);
       try {
         const res = await emptyServiceTrashAction();
         if (res.success) {
-          toast.success(res.message || "ล้างถังขยะเรียบร้อยแล้ว");
+          finishProcess(processId, "SUCCESS", res.message || "ล้างถังขยะเรียบร้อยแล้ว ✨");
           router.refresh();
         } else {
-          toast.error(res.message || "ไม่สามารถล้างถังขยะได้");
+          finishProcess(processId, "ERROR", res.message || "ไม่สามารถล้างถังขยะได้");
         }
-      } catch (error: any) {
-        toast.error(error.message || "เกิดข้อผิดพลาดในการล้างถังขยะ");
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการล้างถังขยะ";
+        finishProcess(processId, "ERROR", msg);
       } finally {
         setIsDeleting(false);
         setIsEmptyTrashOpen(false);
@@ -116,21 +121,25 @@ export function useServicesActions() {
   };
 
   const handleCleanup = async () => {
+    const processId = startProcess("กำลังดูแลรักษาพื้นที่จัดเก็บ (ล้างรูปภาพส่วนเกิน)", {
+      type: "MAINTENANCE"
+    });
     startTransition(async () => {
-      const toastId = toast.loading("กำลังดำเนินการดูแลรักษา...");
       try {
         const res = await cleanupOrphanedServiceImagesAction();
         if (res.success) {
-          toast.success(
-            res.message || "ดูแลรักษาพื้นที่จัดเก็บสำเร็จ (รูปภาพส่วนเกินถูกลบทิ้ง)",
-            { id: toastId }
+          finishProcess(
+            processId, 
+            "SUCCESS", 
+            res.message || "ดูแลรักษาพื้นที่จัดเก็บสำเร็จ ✨ (รูปภาพส่วนเกินถูกลบทิ้ง)"
           );
           router.refresh();
         } else {
-          toast.error(res.message || "ไม่สามารถดำเนินการดูแลรักษาได้", { id: toastId });
+          finishProcess(processId, "ERROR", res.message || "ไม่สามารถดำเนินการดูแลรักษาได้");
         }
-      } catch (error: any) {
-        toast.error(error.message || "เกิดข้อผิดพลาดในการดูแลรักษา", { id: toastId });
+      } catch (error: unknown) {
+        const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการดูแลรักษา";
+        finishProcess(processId, "ERROR", msg);
       }
     });
   };

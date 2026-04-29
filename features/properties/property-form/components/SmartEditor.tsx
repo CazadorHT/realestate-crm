@@ -26,6 +26,7 @@ import {
   Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 
 export function SmartEditor({
   value,
@@ -89,8 +90,11 @@ export function SmartEditor({
   }
 
   const handleAiGenerate = async () => {
+    const processId = startProcess("AI กำลังวิเคราะห์ข้อมูลทรัพย์สิน", { 
+      type: "AI_GENERATION",
+      onRetry: handleAiGenerate
+    });
     setIsAiLoading(true);
-    const toastId = toast.loading("AI กำลังวิเคราะห์ข้อมูลทรัพย์สิน... กรุณารอสักครู่");
 
     try {
       if (onAiGenerate) {
@@ -99,9 +103,9 @@ export function SmartEditor({
         if (content) {
           setAiDraft(content);
           setShowAiReview(true);
-          toast.success("ร่างข้อมูลอสังหาฯ สำเร็จ! กรุณาตรวจสอบความถูกต้อง", { id: toastId });
+          finishProcess(processId, "SUCCESS", "ร่างข้อมูลอสังหาฯ สำเร็จ! กรุณาตรวจสอบความถูกต้อง ✨");
         } else {
-          toast.dismiss(toastId);
+          finishProcess(processId, "ERROR", "AI ไม่สามารถสร้างเนื้อหาได้ในขณะนี้");
         }
       } else {
         // Dummy logic if no provider (Fallback)
@@ -114,11 +118,12 @@ export function SmartEditor({
           </ul>
         `);
         setShowAiReview(true);
-        toast.dismiss(toastId);
+        finishProcess(processId, "SUCCESS", "ร่างข้อมูลสำเร็จ (โหมดจำลอง) ✨");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("AI Generation failed:", error);
-      toast.error("ไม่สามารถเชื่อมต่อ AI ได้ในขณะนี้", { id: toastId });
+      const msg = error instanceof Error ? error.message : "ไม่สามารถเชื่อมต่อ AI ได้ในขณะนี้";
+      finishProcess(processId, "ERROR", msg);
     } finally {
       setIsAiLoading(false);
     }

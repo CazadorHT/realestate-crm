@@ -406,6 +406,104 @@
     "column_default": null
   },
   {
+    "table_name": "background_tasks",
+    "column_name": "id",
+    "data_type": "uuid",
+    "is_nullable": "NO",
+    "column_default": "gen_random_uuid()"
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "name",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": null
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "status",
+    "data_type": "text",
+    "is_nullable": "NO",
+    "column_default": "'PENDING'::text"
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "message",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "type",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "payload",
+    "data_type": "jsonb",
+    "is_nullable": "YES",
+    "column_default": "'{}'::jsonb"
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "result_link",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "priority",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": "0"
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "is_cancelled",
+    "data_type": "boolean",
+    "is_nullable": "YES",
+    "column_default": "false"
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "NO",
+    "column_default": "now()"
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "completed_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "background_tasks",
+    "column_name": "error_details",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "blog_categories",
     "column_name": "id",
     "data_type": "uuid",
@@ -443,6 +541,13 @@
   {
     "table_name": "blog_categories",
     "column_name": "name_cn",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "blog_categories",
+    "column_name": "name_ru",
     "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
@@ -642,6 +747,27 @@
     "data_type": "boolean",
     "is_nullable": "NO",
     "column_default": "false"
+  },
+  {
+    "table_name": "blog_posts",
+    "column_name": "title_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "blog_posts",
+    "column_name": "excerpt_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "blog_posts",
+    "column_name": "content_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "co_broker_documents",
@@ -1638,6 +1764,20 @@
     "column_default": null
   },
   {
+    "table_name": "faqs",
+    "column_name": "question_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "faqs",
+    "column_name": "answer_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "features",
     "column_name": "id",
     "data_type": "uuid",
@@ -1682,6 +1822,13 @@
   {
     "table_name": "features",
     "column_name": "name_cn",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "features",
+    "column_name": "name_ru",
     "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
@@ -2646,79 +2793,16 @@
     "column_default": "false"
   },
   {
-    "table_name": "popular_areas_with_counts",
-    "column_name": "id",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "popular_areas_with_counts",
-    "column_name": "name",
+    "table_name": "popular_areas",
+    "column_name": "name_ru",
     "data_type": "text",
     "is_nullable": "YES",
     "column_default": null
   },
   {
     "table_name": "popular_areas_with_counts",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "popular_areas_with_counts",
-    "column_name": "name_en",
+    "column_name": "popular_area",
     "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "popular_areas_with_counts",
-    "column_name": "name_cn",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "popular_areas_with_counts",
-    "column_name": "province",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "popular_areas_with_counts",
-    "column_name": "slug",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "popular_areas_with_counts",
-    "column_name": "image_url",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "popular_areas_with_counts",
-    "column_name": "is_active",
-    "data_type": "boolean",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "popular_areas_with_counts",
-    "column_name": "sort_order",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": null
-  },
-  {
-    "table_name": "popular_areas_with_counts",
-    "column_name": "featured",
-    "data_type": "boolean",
     "is_nullable": "YES",
     "column_default": null
   },
@@ -2726,6 +2810,13 @@
     "table_name": "popular_areas_with_counts",
     "column_name": "property_count",
     "data_type": "bigint",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "popular_areas_with_counts",
+    "column_name": "tenant_id",
+    "data_type": "uuid",
     "is_nullable": "YES",
     "column_default": null
   },
@@ -3878,6 +3969,55 @@
     "column_default": null
   },
   {
+    "table_name": "properties",
+    "column_name": "title_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "description_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "address_line1_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "popular_area_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "transit_station_name_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "meta_title_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "properties",
+    "column_name": "meta_description_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "property_agents",
     "column_name": "property_id",
     "data_type": "uuid",
@@ -4338,6 +4478,13 @@
     "data_type": "timestamp with time zone",
     "is_nullable": "YES",
     "column_default": "now()"
+  },
+  {
+    "table_name": "ref_banks",
+    "column_name": "name_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
   },
   {
     "table_name": "rent_notification_history",
@@ -4844,6 +4991,34 @@
     "column_default": null
   },
   {
+    "table_name": "services",
+    "column_name": "title_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "services",
+    "column_name": "description_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "services",
+    "column_name": "content_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "services",
+    "column_name": "price_range_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "site_settings",
     "column_name": "key",
     "data_type": "text",
@@ -4949,6 +5124,13 @@
     "column_default": null
   },
   {
+    "table_name": "smart_match_budget_ranges",
+    "column_name": "label_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "smart_match_office_sizes",
     "column_name": "id",
     "data_type": "uuid",
@@ -5012,6 +5194,13 @@
     "column_default": null
   },
   {
+    "table_name": "smart_match_office_sizes",
+    "column_name": "label_ru",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
     "table_name": "smart_match_property_types",
     "column_name": "id",
     "data_type": "uuid",
@@ -5063,6 +5252,13 @@
   {
     "table_name": "smart_match_property_types",
     "column_name": "label_cn",
+    "data_type": "text",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  {
+    "table_name": "smart_match_property_types",
+    "column_name": "label_ru",
     "data_type": "text",
     "is_nullable": "YES",
     "column_default": null

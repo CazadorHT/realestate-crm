@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { generateLeadSummaryAction } from "../actions";
 import { toast } from "sonner";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 
 interface LeadSummaryCardProps {
   leadId: string;
@@ -17,15 +18,21 @@ export function LeadSummaryCard({ leadId, initialSummary }: LeadSummaryCardProps
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGenerate = async () => {
+    const processId = startProcess("วิเคราะห์ข้อมูลด้วย AI", { 
+      type: "AI_SUMMARIZE",
+      onRetry: handleGenerate
+    });
+
     setIsLoading(true);
     try {
       const result = await generateLeadSummaryAction({ leadId });
       if (!result.success) throw new Error(result.error);
       setSummary(result.data);
-      toast.success("สรุปข้อมูลด้วย AI เรียบร้อยแล้ว ✨");
-    } catch (error: any) {
+      finishProcess(processId, "SUCCESS", "สรุปข้อมูลด้วย AI เรียบร้อยแล้ว ✨");
+    } catch (error: unknown) {
       console.error("AI Summary Error:", error);
-      toast.error(error.message || "ไม่สามารถสรุปข้อมูลได้ในขณะนี้");
+      const errorMessage = error instanceof Error ? error.message : "ไม่สามารถสรุปข้อมูลได้ในขณะนี้";
+      finishProcess(processId, "ERROR", errorMessage);
     } finally {
       setIsLoading(false);
     }

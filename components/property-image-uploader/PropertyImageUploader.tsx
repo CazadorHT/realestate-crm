@@ -34,6 +34,7 @@ import { SortableImageItem } from "./SortableImageItem";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Info } from "lucide-react";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 
 export function PropertyImageUploader({
   sessionId,
@@ -57,7 +58,7 @@ export function PropertyImageUploader({
       const {
         getPublicImageUrl,
       } = require("@/features/properties/image-utils");
-      return initialImages.map((img, index) => {
+      return initialImages.map((img: { image_url?: string; storage_path?: string; is_cover?: boolean }, index) => {
         // Use image_url if it looks like a full URL, otherwise generate from storage_path
         const preview_url =
           img.image_url && img.image_url.startsWith("http")
@@ -162,7 +163,7 @@ export function PropertyImageUploader({
   useEffect(() => {
     const paths = images
       .filter((img) => img.storage_path)
-      .map((img) => img.storage_path);
+      .map((img) => img.storage_path as string);
     if (onChange) onChange(paths);
   }, [images, onChange]);
 
@@ -229,14 +230,19 @@ export function PropertyImageUploader({
       // Update state immediately to show skeletons/placeholders
       setImages((prev) => [...prev, ...newItems]);
 
+      const processId = startProcess(`อัปโหลดรูปภาพ (${acceptedFiles.length} รูป)`, {
+        type: "IMAGE_UPLOAD",
+      });
+
       // Step 2: Process each file in background (Sequential to avoid overloading)
       const { validateImageFile } = await import("@/lib/file-validation");
       const { compressImage } = await import("@/lib/image-compression");
 
+      let successCount = 0;
       for (const item of newItems) {
         const file = item.file!;
         try {
-          // A. Size Validation (already mostly handled by browser, but double check)
+          // A. Size Validation
           if (file.size > maxFileSizeMB * 1024 * 1024) {
             throw new Error(`ไฟล์ใหญ่เกิน ${maxFileSizeMB}MB`);
           }
@@ -255,7 +261,7 @@ export function PropertyImageUploader({
               result.compressedFile,
               file.name,
             );
-          } catch (err) {
+          } catch (err: unknown) {
             console.warn(
               `Compression failed for ${file.name}, using original.`,
               err,
@@ -290,9 +296,10 @@ export function PropertyImageUploader({
                 : img,
             ),
           );
-
-          toast.success(`อัปโหลด ${file.name} สำเร็จ`);
-        } catch (error) {
+          
+          successCount++;
+          finishProcess(processId, "PROCESSING", `อัปโหลดสำเร็จแล้ว ${successCount}/${acceptedFiles.length} รูป`);
+        } catch (error: unknown) {
           console.error(`Error processing ${file.name}:`, error);
           const msg = error instanceof Error ? error.message : "ล้มเหลว";
           uploadErrors.push(`${file.name}: ${msg}`);
@@ -308,11 +315,18 @@ export function PropertyImageUploader({
       }
 
       if (uploadErrors.length > 0) {
+        finishProcess(processId, "ERROR", `พบข้อผิดพลาด ${uploadErrors.length} รายการ จากทั้งหมด ${acceptedFiles.length} รายการ`, {
+          errorDetails: uploadErrors.join("\n")
+        });
         setErrorDialog({
           type: "error",
           title: "พบข้อผิดพลาดขณะอัปโหลด",
           description: "บางไฟล์ไม่สามารถอัปโหลดได้ กรุณาตรวจสอบ:",
           errors: uploadErrors,
+        });
+      } else {
+        finishProcess(processId, "SUCCESS", `อัปโหลดรูปภาพ ${successCount} รูปสำเร็จเรียบร้อย ✨`, {
+          resultLink: typeof window !== "undefined" ? window.location.href : undefined
         });
       }
 

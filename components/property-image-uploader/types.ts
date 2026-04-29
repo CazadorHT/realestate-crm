@@ -1,6 +1,6 @@
 export interface ImageItem {
   id: string;
-  storage_path: string;
+  storage_path?: string;
   preview_url: string;
   is_cover: boolean;
   is_uploading?: boolean;

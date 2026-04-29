@@ -11,10 +11,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { toast } from "sonner";
 import { transferLeadsAction } from "../actions/transferLeadsAction";
 import { User, ArrowRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
+import { toast } from "sonner";
 
 interface TransferLeadsDialogProps {
   isOpen: boolean;
@@ -54,24 +55,30 @@ export function TransferLeadsDialog({
 
   const handleTransfer = async () => {
     if (!targetAgentId) {
-      toast.error("กรุณาเลือกผูรับงานคนใหม่");
+      toast.error("กรุณาเลือกผู้รับงานคนใหม่");
       return;
     }
 
+    const agentName = agents.find(a => a.id === targetAgentId)?.full_name || "Agent";
+    const processId = startProcess(`โอนย้าย Lead ${selectedIds.length} รายการ`, {
+      type: "TRANSFER",
+      onRetry: handleTransfer
+    });
+
     setIsLoading(true);
+    onClose(); // Close dialog immediately as it's a background process now
+
     try {
       const result = await transferLeadsAction(selectedIds, targetAgentId);
       if (result.success) {
-        toast.success(
-          `โอนย้าย Lead ${selectedIds.length} รายการ เรียบร้อยแล้ว`,
-        );
+        finishProcess(processId, "SUCCESS", `โอนย้าย Lead ให้คุณ ${agentName} เรียบร้อยแล้ว`);
         onSuccess();
-        onClose();
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาดในการโอนย้าย");
+        finishProcess(processId, "ERROR", result.message || "เกิดข้อผิดพลาดในการโอนย้าย");
       }
-    } catch (error) {
-      toast.error("เกิดข้อผิดพลาดในการดำเนินการ");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการดำเนินการ";
+      finishProcess(processId, "ERROR", errorMessage);
     } finally {
       setIsLoading(false);
     }

@@ -17,7 +17,7 @@ import { postPropertyToLineAction } from "@/features/properties/actions/line";
 import { postPropertyToTikTokAction, getTikTokPostStatusAction } from "@/features/properties/actions/tiktok";
 import { FaFacebook, FaInstagram, FaLine, FaTiktok } from "react-icons/fa";
 import { cn } from "@/lib/utils";
-import { dispatchSocialPostEvent } from "@/lib/social-post-events";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { v4 as uuidv4 } from "uuid";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { 
@@ -160,16 +160,11 @@ export function SocialPostDialog({
 
   const handlePost = async () => {
     setStatus("POSTING");
-    const taskId = uuidv4();
-
-    dispatchSocialPostEvent({
-      type: "STARTED",
-      task: {
-        id: taskId,
-        propertyTitle: propertyTitle || "ทรัพย์สิน",
-        platform,
-        status: "PROCESSING",
-      },
+    
+    // Unified Process Monitor
+    const processId = startProcess(`โพสต์ ${PLATFORM_CONFIG[platform].title}: ${propertyTitle || "ทรัพย์สิน"}`, {
+      type: `SOCIAL_${platform}`,
+      onRetry: handlePost
     });
 
     try {
@@ -197,12 +192,7 @@ export function SocialPostDialog({
       }
 
       if (res && res.success) {
-        dispatchSocialPostEvent({
-          type: "FINISHED",
-          id: taskId,
-          status: "SUCCESS",
-          message: res.message,
-        });
+        finishProcess(processId, "SUCCESS", res.message || "โพสต์สำเร็จเรียบร้อย ✨");
         setStatus("SUCCESS");
         setResultMessage(res.message || "โพสต์สำเร็จเรียบร้อย");
         if (platform === "TIKTOK" && res.publish_id) {
@@ -210,24 +200,15 @@ export function SocialPostDialog({
         }
         onSuccess?.();
       } else {
-        dispatchSocialPostEvent({
-          type: "FINISHED",
-          id: taskId,
-          status: "ERROR",
-          message: res?.message || "เกิดข้อผิดพลาดในการโพสต์",
-        });
+        finishProcess(processId, "ERROR", res?.message || "เกิดข้อผิดพลาดในการโพสต์ ❌");
         setStatus("ERROR");
         setResultMessage(res?.message || "เกิดข้อผิดพลาดในการโพสต์");
       }
     } catch (error: any) {
-      dispatchSocialPostEvent({
-        type: "FINISHED",
-        id: taskId,
-        status: "ERROR",
-        message: error.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ",
-      });
+      const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+      finishProcess(processId, "ERROR", errorMessage);
       setStatus("ERROR");
-      setResultMessage(error.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      setResultMessage(errorMessage);
     }
   };
 

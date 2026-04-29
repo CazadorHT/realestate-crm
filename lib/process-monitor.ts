@@ -12,17 +12,19 @@ export interface BackgroundProcess {
   type?: string;
   payload?: unknown;
   onRetry?: () => void;
+  resultLink?: string;
+  errorDetails?: string;
 }
 
 export type ProcessEvent = 
   | { type: "PROCESS_STARTED"; process: BackgroundProcess }
-  | { type: "PROCESS_UPDATED"; id: string; status: ProcessStatus; message?: string };
+  | { type: "PROCESS_UPDATED"; id: string; status: ProcessStatus; message?: string; resultLink?: string; errorDetails?: string }
+  | { type: "PROCESSES_SYNCED"; processes: BackgroundProcess[] };
 
 const APP_PROCESS_EVENT = "app-process-event";
 
 /**
  * Dispatch a process event that can be heard by the ProcessProvider.
- * Use this to trigger updates from anywhere in the client.
  */
 export function dispatchProcessEvent(event: ProcessEvent) {
   if (typeof window === "undefined") return;
@@ -30,36 +32,77 @@ export function dispatchProcessEvent(event: ProcessEvent) {
 }
 
 /**
- * Convenience helper to start a process
+ * Start a process and sync to DB
  */
 export function startProcess(
   name: string, 
   options?: { type?: string; payload?: unknown; onRetry?: () => void }
 ): string {
-  const id = Math.random().toString(36).substring(7);
+  // 🛡️ Standard UUID for Database Compatibility
+  const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7);
+  
+  const process: BackgroundProcess = {
+    id,
+    name,
+    status: "PROCESSING",
+    startedAt: new Date(),
+    type: options?.type,
+    payload: options?.payload,
+    onRetry: options?.onRetry,
+  };
+
   dispatchProcessEvent({
     type: "PROCESS_STARTED",
-    process: {
+    process
+  });
+
+  // 🛡️ Persistence: Sync to Database (Non-blocking)
+  import("./background-tasks/actions").then(({ createBackgroundTaskAction }) => {
+    createBackgroundTaskAction({
       id,
       name,
-      status: "PROCESSING",
-      startedAt: new Date(),
       type: options?.type,
       payload: options?.payload,
-      onRetry: options?.onRetry,
-    }
+    });
   });
+
   return id;
 }
 
 /**
- * Convenience helper to update a process
+ * Update a process status and message, and sync to DB
  */
-export function finishProcess(id: string, status: "SUCCESS" | "ERROR", message?: string) {
+export function finishProcess(
+  id: string, 
+  status: "SUCCESS" | "ERROR" | "PROCESSING", 
+  message?: string,
+  options?: { resultLink?: string; errorDetails?: string }
+) {
   dispatchProcessEvent({
     type: "PROCESS_UPDATED",
     id,
     status,
-    message
+    message,
+    resultLink: options?.resultLink,
+    errorDetails: options?.errorDetails
+  });
+
+  // 🛡️ Persistence: Sync to Database (Non-blocking)
+  import("./background-tasks/actions").then(({ updateBackgroundTaskAction }) => {
+    updateBackgroundTaskAction({
+      id,
+      status,
+      message,
+      result_link: options?.resultLink,
+      error_details: options?.errorDetails
+    });
   });
 }
+
+/**
+ * Alias for finishProcess(id, 'PROCESSING', message)
+ */
+export function updateProcess(id: string, message: string) {
+  finishProcess(id, "PROCESSING", message);
+}
+

@@ -10,6 +10,8 @@ import {
 import { FinanceMath } from "@/lib/finance/precision";
 import { usePayoutStore } from "../stores/payoutStore";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 
 interface PayoutTableRowProps {
   payout: any;
@@ -156,21 +158,36 @@ export const PayoutTableRow = React.memo(({
                 className="h-9 w-9 rounded-xl border-indigo-200 text-indigo-600 hover:bg-indigo-50 transition-all shadow-sm"
                 onClick={async () => {
                    const { generateWhtPdfAction } = await import("../actions");
-                   const { toast } = await import("sonner");
-                   const tId = toast.loading("กำลังสร้างใบ 50 ทวิ...");
+                   const processId = startProcess("กำลังสร้างใบ 50 ทวิ (WHT Certificate)", {
+                     type: "EXPORT"
+                   });
                    try {
                      const res = await generateWhtPdfAction(payout.id);
                      if (res.success && res.content) {
+                        // 🧬 Convert base64 to Blob for internal linking
+                        const byteCharacters = atob(res.content);
+                        const byteNumbers = new Array(byteCharacters.length);
+                        for (let i = 0; i < byteCharacters.length; i++) {
+                          byteNumbers[i] = byteCharacters.charCodeAt(i);
+                        }
+                        const byteArray = new Uint8Array(byteNumbers);
+                        const blob = new Blob([byteArray], { type: "application/pdf" });
+                        const blobUrl = URL.createObjectURL(blob);
+
                         const link = document.createElement("a");
-                        link.href = `data:application/pdf;base64,${res.content}`;
+                        link.href = blobUrl;
                         link.download = res.fileName || "WHT_Certificate.pdf";
                         link.click();
-                        toast.success("ดาวน์โหลดใบ 50 ทวิสำเร็จ", { id: tId });
+                        
+                        finishProcess(processId, "SUCCESS", "ดาวน์โหลดใบ 50 ทวิสำเร็จ ✨", {
+                          resultLink: blobUrl
+                        });
                      } else {
-                        toast.error(res.error || "เกิดข้อผิดพลาดในการสร้าง PDF", { id: tId });
+                        finishProcess(processId, "ERROR", res.error || "เกิดข้อผิดพลาดในการสร้าง PDF");
                      }
-                   } catch (e) {
-                     toast.error("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", { id: tId });
+                   } catch (e: unknown) {
+                     const msg = e instanceof Error ? e.message : "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้";
+                     finishProcess(processId, "ERROR", msg);
                    }
                 }}
                 title="ดาวน์โหลดใบ 50 ทวิ (Server-side generated)"

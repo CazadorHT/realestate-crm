@@ -1,61 +1,61 @@
 # 🛠️ 02: คู่มือเทคนิคัลเจาะลึก (Enterprise Technical Manual)
 
-> **เทคโนโลยีแกนกลาง:** Next.js 16 (App Router), Turbopack, Tailwind CSS 4, React Query, Supabase SSR
+> **เทคโนโลยีแกนกลาง:** Next.js 16.2 (App Router), Turbopack, Tailwind CSS 4, Agentic AI (Gemini 1.5 Flash), Supabase Diamond Hardened
 > **ระดับความเข้มข้น:** สถาปนิกระบบ (Systems Architecture)
 
-เอกสารฉบับนี้เจาะลึกถึงก้นบึ้งของเทคนิคการประกอบโมดูล (Composability) และสถาปัตยกรรมระดับโค้ดของแอปพลิเคชัน ที่ช่วยทำลายเส้นจำกัด (Bottleneck) ที่ระบบ Frontend และ Backend มักจะเผชิญเมื่อมีการสเกล
+เอกสารฉบับนี้เจาะลึกถึงก้นบึ้งของเทคนิคการประกอบโมดูล (Composability) และสถาปัตยกรรมระดับโค้ดของแอปพลิเคชันเวอร์ชัน 4.0 ที่ยกระดับสู่ความปลอดภัยระดับ Diamond และความแม่นยำของข้อมูลสูงสุด
 
 ---
 
-## 1. Next.js 16.1.6 App Router & Hydration Strategy
+## 1. Agentic Search Engine Architecture (Hybrid Scoring 70/30)
 
-ระบบนี้หลีกเลี่ยงข้อผิดพลาดร้ายแรงของระบบ Enterprise สมัยใหม่ นั่นคือ "การแคชจนข้อมูลปลอมหลอกตาผู้ใช้งาน" (Stale Data Presentation)
+ระบบค้นหาทรัพย์สินในเวอร์ชัน 4.0 ไม่ใช่เพียงการค้นหาด้วยคำ (Keyword Search) แต่เป็นระบบ **Agentic Discovery** ที่ใช้การประมวลผลสองชั้น:
 
-### 1.1 Pessimistic Revalidation & Server Actions
-แอปพลิเคชันใช้งาน React Server Actions อย่างหนาแน่น เพื่อความปลอดภัย (เนื่องจากโค้ดไม่หลุดสู่ Client) แต่อุปสรรคคือการสั่งให้จออัปเดต โดยได้มีการวาง **State Management Strategy** ที่ชัดเจน:
-- **`revalidatePath` / `revalidateTag`**: ทันทีที่มีการเรียก `updateDeal` หรือ `deleteProperty` ฟังก์ชันหลักจะเชิดคำสั่งข้ามกลับมาเซิร์ฟเวอร์ และทำการล้างแคชทิ้งอย่างดุดัน ทำให้การกดกลับไปหน้าตาราง จะได้ข้อมูลหน้าใหม่ 100% เสมอ
-- **Client Fallback**: เพื่อไม่ให้ UI ดับ หรือกระตุกขณะรอแคชหน้าบ้าน มีการฝังระเบียบของ Optimistic UI ควบคู่กับ React Query (ในจุดที่มีตัวกรองตารางซับซ้อน) โดยตั้งเวลาทำ Stale-time ให้อยู่ระดับต่ำ เพื่อให้ Fetch ใหม่อัตโนมัติเมื่อ User โฟกัสกลับมาที่เบราว์เซอร์
+### 1.1 Semantic Reasoning Layer (70%)
+ใช้เทคนิค **Vector Embedding** ร่วมกับ Gemini AI ในการวิเคราะห์ "เจตนา" ของผู้ใช้งาน เช่น เมื่อเซลล์พิมพ์ว่า "หาห้องที่วิวสวย เดินทางสะดวกสำหรับคนทำงานออฟฟิศสุขุมวิท" AI จะวิเคราะห์ความหมายของคำว่า "เดินทางสะดวก" และ "วิวสวย" เพื่อดึงข้อมูลทรัพย์ที่มีลักษณะใกล้เคียงที่สุดแม้จะไม่มีคำเหล่านั้นในชื่อทรัพย์
 
-### 1.2 โค้ดสปลิตติ้งและ Lazy Loading ลดภาระ Bundle (The UX Enhancer)
-ระบบ B2B ที่อัดแน่นทั้ง TipTap (Rich Text), Recharts, และ Google Maps มักกระตุกหน้าจอแตกในมือถือแอนดรอยด์ราคาถูก 
-- โค้ดเบสจึงใช้เทคนิค `next/dynamic` โหลดไลบรารีหนักๆ "เฉพาะเมื่อ User สไลด์หรือคลิกถึง Step ฟอร์มนั้น" (Lazy loaded by conditional trees) ทำให้ Initial Page Load เร็วปานกามนิต
+### 1.2 Hard-Filter Constraints (30%)
+ทำงานควบคู่กับ SQL Filter ที่เป็น Hard-logic (ราคา, พื้นที่, จำนวนห้องนอน) เพื่อยืนยันว่าผลลัพธ์ที่ได้ "ถูกต้องตามเงื่อนไข" 100% ก่อนจะนำมาผ่านระบบ **Hybrid Scoring** เพื่อเรียงลำดับความคุ้มค่า
 
 ---
 
-## 2. 🧙‍♂️ มนตร์ดำแห่ง Type-Safety: "The Proxy Injector"
+## 2. 🧙‍♂️ มนตร์ดำแห่ง Type-Safety: "The Hardened Proxy"
 
-นี่คือความลับอันดับหนึ่งของการวาง **Enterprise Tenant Isolation** อย่างหมดจด โดยไม่ต้องพึ่งนักพัฒนาให้มีสติเตือนตัวเองในทุกบรรทัด
+นี่คือหัวใจของการวาง **Enterprise Tenant Isolation** ที่ผ่านการ Audit แล้วว่าข้อมูลไม่มีวันรั่วไหลข้ามสาขา (Zero Data Leakage)
 
-### 2.1 ปัญหาของโลกความจริง
-ซอฟต์แวร์ที่ใช้ร่วมกันหลายบริษัท (Multi-Tenant) มักจะมีบั๊กที่โปรแกรมเมอร์เผลอลืมพิมพ์ `.eq('tenant_id', ...)` ส่งผลให้สาขาลาดพร้าว ดันเสิร์ชเจอทรัพย์ของสาขาสุขุมวิท
-
-### 2.2 การสร้าง Runtime Proxy Interception
-โปรเจคนี้มีการสร้าง **Object Proxy (ES6 Proxy)** เพื่อครอบกลไกฐานข้อมูลของ Supabase โดยตรง
-```typescript
-// สถาปัตยกรรมจำลองการดักจับ
-const createScopedClient = (supabaseClient, scopedTenantId) => {
-    return new Proxy(supabaseClient, {
-        get(target, prop, receiver) {
-            // ดักจับการเรียก Table()
-            // ผูกโยง .eq('tenant_id', scopedTenantId) เข้าไปในระดับ Runtime โดยที่โปรแกรมเมอร์ไม่มีทาง Bypass ได้
-        }
-    })
-}
-```
-ผลลัพธ์คือ **Zero-Any Typing Effect** โปรแกรมเมอร์หน้าบ้านแค่รับพิมพ์ `supabase.from('deals').select('*')` โดยไม่ต้องรับผิดชอบเรื่องความรู้ด้านสาขาเลย ระบบ Proxy หุ้มเปราะฐานข้อมูล จะจัดการผูกไอดีพนักงานให้เงียบๆ 
+### 2.1 Native Proxy Interception
+โปรเจคนี้มีการสร้าง **Object Proxy (ES6 Proxy)** ครอบกลไกฐานข้อมูลของ Supabase ในระดับลึกสุด:
+- **Automatic Tenant Injection**: เมื่อมีการเรียก `from('table')` ระบบจะฉีด `tenant_id` ของสาขานั้นๆ เข้าไปในทุก Query โดยอัตโนมัติ
+- **Read-Only Scoping**: สำหรับพนักงานระดับ Agent ระบบจะสลับ Scope เป็น Restricted Mode ทันทีในระดับ Runtime ทำให้ไม่สามารถเข้าถึงคำสั่งที่เสี่ยงต่อการทำลายข้อมูลชุดใหญ่ได้
 
 ---
 
-## 3. สถาปัตยกรรม Mobile & UI UX (Omnipresent Interfaces)
+## 3. Process Monitor & Background Resilience (Inngest)
 
-แอปนี้ไม่ได้หยุดแค่ "เว็บย่อส่วน" ให้พอเปิดในมือถือได้ แต่เป็นการใช้ปรัชญาสัมผัส (Touch-first Mentality):
-- **Dialogs vs Drawers (Vaul)**: เปลี่ยนป็อปอัพธรรมดา เป็นลิ้นชักที่ดึงจากข้างล่าง (Bottom Drawer) เมื่อระบบตรวจจับความกว้างจอมือถือ (Responsive Hook) ให้ประสบการณ์เหมือนแอปพลิเคชันพื้นเมือง (Native-like) ทันที
-- **Infinite Scroll Matrix**: หน้าจอ Omnichannel Inbox สานรวมกับ Intersection Observer API เมื่อ User เลื่อนสุดแชท จะพ่น History เก่าออกแบบไร้รอยต่อ โดยไม่ซ้อน Layer ทับให้เปลือง RAM
+การจัดการงานหนัก (Heavy Tasks) ในระดับ Enterprise ต้องการความโปร่งใสและตรวจสอบได้:
+
+- **Centralized Task Monitoring**: งานหลังบ้านทั้งหมด (AI Translation, PDF Generation, Social Media Posting) จะถูกบันทึกสถานะลงใน **Process Monitor Engine** 
+- **Self-Healing Background Jobs**: ด้วยสถาปัตยกรรมของ **Inngest**, หาก Webhook ล่มหรือ AI เกิด Error, ระบบจะทำการ Retry อัตโนมัติ (Exponential Backoff) และสามารถ "ไปต่อ" จากจุดเดิมได้ (Resilience) โดยไม่ทำให้ข้อมูลพัง
+- **Audit-ready Task Logs**: ผู้ดูแลระบบสามารถตรวจสอบย้อนหลังได้ทุก Task ว่า "ใครสั่ง, รันเมื่อไหร่, ผลลัพธ์เป็นอย่างไร" เพื่อใช้ในการทำ Financial & Operational Audit
 
 ---
 
-## 4. จัดการวิกฤตของโมดูลลึกซึ้ง (Error & Boundaries)
+## 4. Mobile Perfection & UI Strategy (React 19 Hooks)
 
-เมื่อย้ายการประมวลผลเข้าสู่ระดับ Background และการใช้ AI อาการ "ท่อตัน (Error Pipe)" มีโอกาสเกิดบ่อยกว่าปกติ 
-- **Graceful Error Boundaries**: หาก Chart ระเบิด หรือ AI หายไป จะพังเฉพาะส่วน Component (โชว์ Safe mode สีเหลือง) ในขณะที่หน้าเว็บข้างๆ ยังไหลลื่น สัญญาและฐานข้อมูลจะไม่หยุดทำงานกะทันหัน
-- โค้ดทั้งหมดผ่านกระบวนการ Compile ด้วย Turbopack รองรับการรันระดับ 1 ล้านบรรทัด โดยไร้เสียงเตือน Import Resolution Path พลาด เพราะเราแก้ไขระบบ Barrel import export แตกไปแล้วทั้งหมด
+แอปพลิเคชันเวอร์ชัน 4.0 ใช้ขีดความสามารถของ **React 19** และ **Next.js 16.2 Turbopack**:
+- **Optimistic UI Updates**: การกด Like ทรัพย์สินหรือการเปลี่ยนสถานะดีลจะเกิดขึ้นทันทีในหน้าจอ (Instant Feedback) ก่อนที่เซิร์ฟเวอร์จะตอบกลับ มอบประสบการณ์ที่ลื่นไหลสูงสุด
+- **Dynamic Mobile Drawers**: เปลี่ยนระบบ Pop-up ที่เกะกะบนมือถือ เป็น **Bottom Drawers (Vaul)** ที่รองรับการสัมผัส (Gestures) อย่างสมบูรณ์
+- **Infinite Hydration**: หน้าแชท Omni-channel รองรับการโหลดข้อมูลมหาศาลโดยใช้ทรัพยากรเครื่อง (RAM) ต่ำที่สุดผ่านเทคนิค Virtual Scrolling
+
+---
+
+## 5. 💎 Atomic RPC & Internal Schema Isolation
+
+เพื่อความปลอดภัยและความแม่นยำสูงสุดในระดับ Enterprise โปรเจกต์ v4.0 ได้นำสถาปัตยกรรมระดับสูงมาใช้:
+- **Internal Schema Isolation**: ย้ายฟังก์ชันที่เป็นความลับและฟังก์ชันระบบ (เช่น การจัดการ User, Audit Logs) ไปไว้ใน `internal` schema ซึ่งไม่สามารถเข้าถึงได้ผ่าน Public REST API ป้องกันการแฮกเกอร์เจาะช่องโหว่ RPC
+- **Atomic Database RPC**: เปลี่ยนการทำงานที่ซับซ้อน (เช่น การทำสัญญา, การแบ่งคอมมิชชั่น) จากโค้ดฝั่งหน้าบ้านมาเป็น PostgreSQL Functions ที่รันแบบ Transaction 100% มั่นใจว่าข้อมูลจะไม่มีวันผิดพลาดแม้เน็ตจะหลุดระหว่างทาง
+- **Deterministic Search Path**: ฟังก์ชันทั้งหมดถูกล็อค `search_path` อย่างเข้มงวดเพื่อป้องกันการโจมตีแบบ Search-path Hijacking
+
+---
+
+_เอกสารฉบับนี้เป็นเพียงภาพรวมระดับสูง หากต้องการดูโค้ดตัวอย่างในแต่ละส่วน โปรดอ้างอิงจากบทที่ 4-6 ในสารบัญหลัก_

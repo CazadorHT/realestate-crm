@@ -34,6 +34,7 @@ import { AlignJustify } from "lucide-react";
 import { generateBlogPostAction } from "@/features/blog/actions";
 import { toast } from "sonner";
 import { AiUsageMonitor } from "@/components/ai-monitor/AiUsageMonitor";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 
 import { BlogAiResult } from "@/features/blog/types";
 
@@ -57,13 +58,11 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
       return;
     }
 
+    const processId = startProcess(`สร้างบทความ AI: ${keyword}`, {
+      type: "BLOG_AI_GEN",
+      onRetry: handleGenerate
+    });
     setIsLoading(true);
-    const toastId = toast.loading(
-      "AI กำลังสร้างบทความคุณภาพสูง (2,000+ คำ)... กรุณารอสักครู่ครับ",
-      {
-        duration: 60000,
-      },
-    );
 
     try {
       const result = await generateBlogPostAction(
@@ -77,15 +76,14 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
       onGenerated(result);
 
       if (includeImage && !result.cover_image) {
-        toast.warning(
-          "สร้างบทความสำเร็จ 📝 แต่ระบบรูปภาพขัดข้องชั่วคราว (Pollinations API 502)",
-          {
-            id: toastId,
-            duration: 5000,
-          },
-        );
+        finishProcess(processId, "SUCCESS", "สร้างบทความสำเร็จ 📝 แต่ระบบรูปภาพขัดข้องชั่วคราว", {
+          resultLink: `/blog/${result.slug}`
+        });
+        toast.warning("สร้างบทความสำเร็จ 📝 แต่ระบบรูปภาพขัดข้องชั่วคราว (Pollinations API 502)");
       } else {
-        toast.success("สร้างบทความด้วย AI สำเร็จแล้ว! ✨", { id: toastId });
+        finishProcess(processId, "SUCCESS", "สร้างบทความด้วย AI สำเร็จแล้ว! ✨", {
+          resultLink: `/blog/${result.slug}`
+        });
       }
 
       setIsOpen(false);
@@ -97,8 +95,10 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
 
       if (errorMessage.includes("[RATE_LIMIT]")) {
         setShowLimitDialog(true);
+        finishProcess(processId, "ERROR", "โควต้า AI เต็มชั่วคราว กรุณารอ 1 นาที");
       } else {
-        toast.error(cleanMessage, { id: toastId, duration: 5000 });
+        finishProcess(processId, "ERROR", cleanMessage);
+        toast.error(cleanMessage);
       }
     } finally {
       setIsLoading(false);

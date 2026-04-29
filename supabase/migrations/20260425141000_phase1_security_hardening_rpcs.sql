@@ -58,7 +58,7 @@ DECLARE
 BEGIN
     -- Check permissions
     SELECT role INTO v_role FROM public.profiles WHERE id = v_user_id;
-    IF v_role NOT IN ('ADMIN', 'MANAGER', 'STAFF') THEN
+    IF v_role NOT IN ('ADMIN', 'MANAGER', 'AGENT') THEN
         RAISE EXCEPTION 'Forbidden: Staff access only';
     END IF;
 
@@ -198,6 +198,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
+DROP FUNCTION IF EXISTS public.get_user_tenants() CASCADE;
 CREATE OR REPLACE FUNCTION public.get_user_tenants()
 RETURNS uuid[] AS $$
 DECLARE

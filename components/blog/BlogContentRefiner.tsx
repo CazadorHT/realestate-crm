@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Wand2, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { refineBlogPostAction } from "@/features/blog/actions";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 
 interface BlogContentRefinerProps {
   currentContent: string;
@@ -53,8 +54,11 @@ export function BlogContentRefiner({
       return;
     }
 
+    const processId = startProcess("AI กำลังปรับปรุงเนื้อหา", {
+      type: "BLOG_AI_REFINE",
+      onRetry: handleRefine
+    });
     setIsLoading(true);
-    const toastId = toast.loading("AI กำลังปรับปรุงเนื้อหา... กรุณารอสักครู่");
 
     try {
       const result = await refineBlogPostAction(
@@ -65,17 +69,17 @@ export function BlogContentRefiner({
 
       if (result.success && result.refinedContent) {
         onRefined(result.refinedContent);
-        toast.success("ปรับปรุงเนื้อหาสำเร็จ ✨", { id: toastId });
+        finishProcess(processId, "SUCCESS", "ปรับปรุงเนื้อหาสำเร็จ ✨");
         setIsOpen(false);
       } else {
-        toast.error(result.message || "เกิดข้อผิดพลาดในการปรับปรุงเนื้อหา", {
-          id: toastId,
-          duration: 5000,
-        });
+        const msg = result.message || "เกิดข้อผิดพลาดในการปรับปรุงเนื้อหา";
+        finishProcess(processId, "ERROR", msg);
+        toast.error(msg);
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Refine error:", error);
-      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI", { id: toastId });
+      const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI";
+      finishProcess(processId, "ERROR", msg);
     } finally {
       setIsLoading(false);
     }

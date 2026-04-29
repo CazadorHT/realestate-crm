@@ -27,6 +27,7 @@ import {
 import { AiReviewBanner } from "@/components/shared/AiReviewBanner";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { toast } from "sonner";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
@@ -256,12 +257,14 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     }
 
     setIsTranslating(true);
-    const toastId = toast.loading(
-      "กำลังแปลเนื้อหาบทความเป็นภาษาอังกฤษ จีน และรัสเซีย...",
-    );
+    const processId = startProcess("กำลังแปลเนื้อหาบทความ (AI Multilingual)", {
+      type: "BLOG_TRANSLATION",
+      onRetry: handleTranslateBlog
+    });
 
     try {
       // 1. Translate Title (Plain)
+      finishProcess(processId, "PROCESSING", "กำลังแปลหัวข้อบทความ...");
       const titleRes = await translateTextAction(title, "plain");
       form.setValue("title_en", titleRes.en, { shouldDirty: true });
       form.setValue("title_cn", titleRes.cn, { shouldDirty: true });
@@ -269,6 +272,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
       // 2. Translate Excerpt (Plain)
       if (excerpt && excerpt.trim() !== "") {
+        finishProcess(processId, "PROCESSING", "กำลังแปลเนื้อหาย่อ...");
         const excerptRes = await translateTextAction(excerpt, "plain");
         form.setValue("excerpt_en", excerptRes.en, { shouldDirty: true });
         form.setValue("excerpt_cn", excerptRes.cn, { shouldDirty: true });
@@ -277,16 +281,19 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
       // 3. Translate Content (HTML)
       if (content && content.trim() !== "" && content !== "<p></p>") {
+        finishProcess(processId, "PROCESSING", "กำลังแปลเนื้อหาฉบับเต็ม (HTML)...");
         const contentRes = await translateTextAction(content, "html");
         form.setValue("content_en", contentRes.en, { shouldDirty: true });
         form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
         form.setValue("content_ru", contentRes.ru, { shouldDirty: true });
       }
 
-      toast.success("แปลเนื้อหาบทความเรียบร้อยแล้ว ✨", { id: toastId });
+      finishProcess(processId, "SUCCESS", "แปลเนื้อหาบทความเรียบร้อยแล้ว ✨");
       form.setValue("requires_ai_review", true, { shouldDirty: true });
-    } catch (error: any) {
-      toast.error(error.message || "การแปลขัดข้อง", { id: toastId });
+    } catch (error: unknown) {
+      console.error("Translation error:", error);
+      const msg = error instanceof Error ? error.message : "การแปลขัดข้อง";
+      finishProcess(processId, "ERROR", msg);
     } finally {
       setIsTranslating(false);
     }

@@ -12,7 +12,6 @@ import { getPropertiesDashboardStatsQuery } from "@/features/properties/queries/
 
 import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 
-import { SocialPostMonitor } from "@/components/properties/SocialPostMonitor";
 import { TenantSwitcher } from "@/components/common/TenantSwitcher";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { GlobalSearch } from "@/components/dashboard/GlobalSearch";
@@ -83,7 +82,6 @@ export default async function ProtectedLayout({
             <main className="flex-1 p-6 md:p-8 mx-auto w-full">
               <ErrorBoundary>{children}</ErrorBoundary>
             </main>
-            <SocialPostMonitor />
             <ProcessMonitor />
           </div>
         </div>

@@ -58,18 +58,9 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "AI Logs: Admin see all",
-                    "using_expression": "is_system_admin()"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
                     "command": "INSERT",
-                    "with_check": "(auth.role() = 'authenticated'::text)",
-                    "policy_name": "Allow authenticated users to insert logs",
+                    "with_check": "(user_id = ( SELECT auth.uid() AS uid))",
+                    "policy_name": "ai_usage_logs_insert_policy",
                     "using_expression": null
                 },
                 {
@@ -78,26 +69,8 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Allow users to view their own logs",
-                    "using_expression": "(auth.uid() = user_id)"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Allow admins to view all logs",
-                    "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'ADMIN'::user_role))))"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "AI Logs: Users see own",
-                    "using_expression": "(auth.uid() = user_id)"
+                    "policy_name": "ai_usage_logs_select_policy",
+                    "using_expression": "((user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))"
                 }
             ],
             "rls_forced": false,
@@ -147,10 +120,20 @@
                     "is_nullable": "YES"
                 }
             ],
-            "policies": null,
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Audit logs isolation 03",
+                    "using_expression": "((user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))"
+                }
+            ],
             "rls_forced": false,
             "table_name": "audit_logs_2026_03",
-            "rls_enabled": false
+            "rls_enabled": true
         },
         {
             "columns": [
@@ -195,10 +178,20 @@
                     "is_nullable": "YES"
                 }
             ],
-            "policies": null,
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Audit logs isolation 04",
+                    "using_expression": "((user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))"
+                }
+            ],
             "rls_forced": false,
             "table_name": "audit_logs_2026_04",
-            "rls_enabled": false
+            "rls_enabled": true
         },
         {
             "columns": [
@@ -243,10 +236,20 @@
                     "is_nullable": "YES"
                 }
             ],
-            "policies": null,
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Audit logs isolation 05",
+                    "using_expression": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT is_system_admin() AS is_system_admin))"
+                }
+            ],
             "rls_forced": false,
             "table_name": "audit_logs_2026_05",
-            "rls_enabled": false
+            "rls_enabled": true
         },
         {
             "columns": [
@@ -291,10 +294,20 @@
                     "is_nullable": "YES"
                 }
             ],
-            "policies": null,
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Audit logs isolation 06",
+                    "using_expression": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT is_system_admin() AS is_system_admin))"
+                }
+            ],
             "rls_forced": false,
             "table_name": "audit_logs_2026_06",
-            "rls_enabled": false
+            "rls_enabled": true
         },
         {
             "columns": [
@@ -339,10 +352,126 @@
                     "is_nullable": "YES"
                 }
             ],
-            "policies": null,
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Audit logs isolation",
+                    "using_expression": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT is_system_admin() AS is_system_admin))"
+                }
+            ],
             "rls_forced": false,
             "table_name": "audit_logs_history",
-            "rls_enabled": false
+            "rls_enabled": true
+        },
+        {
+            "columns": [
+                {
+                    "data_type": "uuid",
+                    "column_name": "id",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "status",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "message",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "type",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "jsonb",
+                    "column_name": "payload",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "result_link",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "integer",
+                    "column_name": "priority",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "boolean",
+                    "column_name": "is_cancelled",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "user_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "uuid",
+                    "column_name": "tenant_id",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "created_at",
+                    "is_nullable": "NO"
+                },
+                {
+                    "data_type": "timestamp with time zone",
+                    "column_name": "completed_at",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "error_details",
+                    "is_nullable": "YES"
+                }
+            ],
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT is_system_admin() AS is_system_admin))",
+                    "policy_name": "background_tasks_insert_optimized",
+                    "using_expression": null
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "background_tasks_select_optimized",
+                    "using_expression": "(( SELECT is_system_admin() AS is_system_admin) OR (tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "background_tasks_update_optimized",
+                    "using_expression": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT is_system_admin() AS is_system_admin))"
+                }
+            ],
+            "rls_forced": false,
+            "table_name": "background_tasks",
+            "rls_enabled": true
         },
         {
             "columns": [
@@ -375,6 +504,11 @@
                     "data_type": "text",
                     "column_name": "name_cn",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_ru",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -382,10 +516,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "System Admin Manage blog_categories",
-                    "using_expression": "is_system_admin()"
+                    "policy_name": "blog_categories_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "blog_categories_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -393,8 +536,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Public categories are viewable by everyone",
+                    "policy_name": "blog_categories_select_optimized",
                     "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "blog_categories_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -424,19 +576,37 @@
                     "roles": [
                         "public"
                     ],
+                    "command": "DELETE",
+                    "with_check": null,
+                    "policy_name": "blog_views_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
                     "command": "INSERT",
-                    "with_check": "true",
-                    "policy_name": "Public can insert blog views log",
+                    "with_check": "(( SELECT auth.role() AS role) = ANY (ARRAY['anon'::text, 'authenticated'::text]))",
+                    "policy_name": "blog_views_insert_optimized",
                     "using_expression": null
                 },
                 {
                     "roles": [
-                        "authenticated"
+                        "public"
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Admins can view blog analytics",
-                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))"
+                    "policy_name": "blog_views_select_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "blog_views_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -569,6 +739,21 @@
                     "data_type": "boolean",
                     "column_name": "requires_ai_review",
                     "is_nullable": "NO"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "excerpt_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "content_ru",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -576,37 +761,10 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "System Admin Manage blog_posts",
-                    "using_expression": "is_system_admin()"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Public can view published posts",
-                    "using_expression": "(is_published = true)"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Public View Published Blogs",
-                    "using_expression": "(is_published = true)"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Staff Manage blog_posts",
-                    "using_expression": "is_staff()"
+                    "policy_name": "blog_posts_select_optimized",
+                    "using_expression": "(((is_published = true) AND (deleted_at IS NULL)) OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role, 'AGENT'::user_role]))))))"
                 }
             ],
             "rls_forced": false,
@@ -664,30 +822,39 @@
             "policies": [
                 {
                     "roles": [
-                        "authenticated"
+                        "public"
                     ],
-                    "command": "SELECT",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "view_documents",
-                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
-                },
-                {
-                    "roles": [
-                        "authenticated"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "manage_documents",
-                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid()))) AND (EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text]))))))"
+                    "policy_name": "co_broker_documents_delete_optimized",
+                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = ( SELECT auth.uid() AS uid)) AND (tenant_members.role = ANY (ARRAY['OWNER'::text, 'ADMIN'::text, 'MANAGER'::text])))))"
                 },
                 {
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "INSERT",
+                    "with_check": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = ( SELECT auth.uid() AS uid)) AND (tenant_members.role = ANY (ARRAY['OWNER'::text, 'ADMIN'::text, 'MANAGER'::text])))))",
+                    "policy_name": "co_broker_documents_insert_optimized",
+                    "using_expression": null
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Tenant Isolation co_broker_documents",
-                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
+                    "policy_name": "co_broker_documents_select_optimized",
+                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid))))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "co_broker_documents_update_optimized",
+                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = ( SELECT auth.uid() AS uid)) AND (tenant_members.role = ANY (ARRAY['OWNER'::text, 'ADMIN'::text, 'MANAGER'::text])))))"
                 }
             ],
             "rls_forced": false,
@@ -830,75 +997,39 @@
             "policies": [
                 {
                     "roles": [
-                        "authenticated"
+                        "public"
                     ],
-                    "command": "SELECT",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "External Agents: View members of their tenant",
-                    "using_expression": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.tenant_id = co_brokers.tenant_id) AND (tenant_members.profile_id = auth.uid()))))"
+                    "policy_name": "co_brokers_delete_optimized",
+                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid))))"
                 },
                 {
                     "roles": [
                         "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Co-brokers: View shared tenant directory",
-                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid()))) AND (deleted_at IS NULL))"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Co-brokers: Manage shared tenant directory",
-                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
-                },
-                {
-                    "roles": [
-                        "authenticated"
-                    ],
-                    "command": "ALL",
-                    "with_check": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.tenant_id = tenant_members.tenant_id) AND (tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text, 'AGENT'::text])))))",
-                    "policy_name": "External Agents: Manage members of their tenant",
-                    "using_expression": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.tenant_id = co_brokers.tenant_id) AND (tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text])))))"
-                },
-                {
-                    "roles": [
-                        "authenticated"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "view_co_brokers",
-                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid()))) AND ((deleted_at IS NULL) OR (EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text])))))))"
-                },
-                {
-                    "roles": [
-                        "authenticated"
                     ],
                     "command": "INSERT",
-                    "with_check": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))",
-                    "policy_name": "insert_co_brokers",
+                    "with_check": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid))))",
+                    "policy_name": "co_brokers_insert_optimized",
                     "using_expression": null
                 },
                 {
                     "roles": [
-                        "authenticated"
+                        "public"
                     ],
-                    "command": "UPDATE",
-                    "with_check": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))",
-                    "policy_name": "update_co_brokers",
-                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "co_brokers_select_optimized",
+                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))) AND ((deleted_at IS NULL) OR ( SELECT is_system_admin() AS is_system_admin)))"
                 },
                 {
                     "roles": [
-                        "authenticated"
+                        "public"
                     ],
-                    "command": "DELETE",
+                    "command": "UPDATE",
                     "with_check": null,
-                    "policy_name": "hard_delete_co_brokers",
-                    "using_expression": "(EXISTS ( SELECT 1\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = 'ADMIN'::text))))"
+                    "policy_name": "co_brokers_update_optimized",
+                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid))))"
                 }
             ],
             "rls_forced": false,
@@ -953,28 +1084,37 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "Finance: Adjustment View",
-                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM deal_commissions dc\n  WHERE ((dc.id = commission_adjustments.commission_id) AND (is_personal_record(dc.agent_id) OR is_tenant_manager(dc.tenant_id))))))"
+                    "policy_name": "commission_adjustments_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 },
                 {
                     "roles": [
-                        "authenticated"
+                        "public"
                     ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Adjustments: Admins manage all",
-                    "using_expression": "(auth.uid() IN ( SELECT profiles.id\n   FROM profiles\n  WHERE ((profiles.role = 'ADMIN'::user_role) AND (commission_adjustments.tenant_id = commission_adjustments.tenant_id))))"
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "commission_adjustments_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
-                        "authenticated"
+                        "public"
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Adjustments: Agents view their own",
-                    "using_expression": "(EXISTS ( SELECT 1\n   FROM deal_commissions dc\n  WHERE ((dc.id = commission_adjustments.commission_id) AND (dc.agent_id = auth.uid()))))"
+                    "policy_name": "commission_adjustments_select_optimized",
+                    "using_expression": "(( SELECT is_system_admin() AS is_system_admin) OR (EXISTS ( SELECT 1\n   FROM deal_commissions dc\n  WHERE ((dc.id = commission_adjustments.commission_id) AND ((dc.agent_id = ( SELECT auth.uid() AS uid)) OR (dc.tenant_id IN ( SELECT tenant_members.tenant_id\n           FROM tenant_members\n          WHERE ((tenant_members.profile_id = ( SELECT auth.uid() AS uid)) AND (tenant_members.role = ANY (ARRAY['OWNER'::text, 'ADMIN'::text, 'MANAGER'::text]))))))))))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "commission_adjustments_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -1044,19 +1184,37 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "Allow authenticated users to read templates",
-                    "using_expression": "(auth.role() = 'authenticated'::text)"
+                    "policy_name": "contract_templates_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 },
                 {
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "contract_templates_insert_optimized",
+                    "using_expression": null
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Allow admins to manage templates",
-                    "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = 'ADMIN'::user_role))))"
+                    "policy_name": "contract_templates_select_optimized",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "contract_templates_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -1301,8 +1459,8 @@
                     ],
                     "command": "ALL",
                     "with_check": null,
-                    "policy_name": "Tenant Isolation deals",
-                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
+                    "policy_name": "deals_all_optimized",
+                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))) OR ( SELECT is_system_admin() AS is_system_admin))"
                 }
             ],
             "rls_forced": false,
@@ -1359,8 +1517,8 @@
                     ],
                     "command": "ALL",
                     "with_check": null,
-                    "policy_name": "Admins/Owners can manage archive",
-                    "using_expression": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role])))))"
+                    "policy_name": "deleted_records_admin_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -1492,8 +1650,8 @@
                     ],
                     "command": "ALL",
                     "with_check": null,
-                    "policy_name": "Tenant Isolation documents",
-                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
+                    "policy_name": "documents_all_optimized",
+                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))) OR ( SELECT is_system_admin() AS is_system_admin))"
                 }
             ],
             "rls_forced": false,
@@ -1576,6 +1734,16 @@
                     "data_type": "tsvector",
                     "column_name": "fts_vector",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "question_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "answer_ru",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -1583,10 +1751,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "Public FAQs are viewable by everyone",
-                    "using_expression": "true"
+                    "policy_name": "faqs_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "faqs_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -1594,26 +1771,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Enable read access for all users",
+                    "policy_name": "faqs_select_optimized",
                     "using_expression": "true"
                 },
                 {
                     "roles": [
-                        "authenticated"
+                        "public"
                     ],
-                    "command": "ALL",
-                    "with_check": "is_system_admin()",
-                    "policy_name": "SuperAdmin: Full Access on faqs",
-                    "using_expression": "is_system_admin()"
-                },
-                {
-                    "roles": [
-                        "authenticated"
-                    ],
-                    "command": "SELECT",
+                    "command": "UPDATE",
                     "with_check": null,
-                    "policy_name": "Public/Tenants: Read Access on faqs",
-                    "using_expression": "((is_active = true) AND (deleted_at IS NULL))"
+                    "policy_name": "faqs_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -1656,6 +1824,11 @@
                     "data_type": "text",
                     "column_name": "name_cn",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_ru",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -1663,10 +1836,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "System Admin Manage features",
-                    "using_expression": "is_system_admin()"
+                    "policy_name": "features_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "features_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -1674,8 +1856,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Public Read features",
+                    "policy_name": "features_select_optimized",
                     "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "features_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -1723,10 +1914,10 @@
             "policies": [
                 {
                     "roles": [
-                        "public"
+                        "authenticated"
                     ],
                     "command": "INSERT",
-                    "with_check": "true",
+                    "with_check": "(id IS NOT NULL)",
                     "policy_name": "Public Insert lead_activities",
                     "using_expression": null
                 }
@@ -1783,7 +1974,17 @@
                     "is_nullable": "NO"
                 }
             ],
-            "policies": null,
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "lead_transfers_all_optimized",
+                    "using_expression": "((from_tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))) OR (to_tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))) OR ( SELECT is_system_admin() AS is_system_admin))"
+                }
+            ],
             "rls_forced": false,
             "table_name": "lead_transfers",
             "rls_enabled": true
@@ -2041,19 +2242,10 @@
                     "roles": [
                         "authenticated"
                     ],
-                    "command": "SELECT",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "Staff can view leads",
+                    "policy_name": "Staff can delete leads",
                     "using_expression": "is_staff()"
-                },
-                {
-                    "roles": [
-                        "authenticated"
-                    ],
-                    "command": "INSERT",
-                    "with_check": "is_staff()",
-                    "policy_name": "Staff can insert leads",
-                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -2066,30 +2258,21 @@
                 },
                 {
                     "roles": [
-                        "authenticated"
-                    ],
-                    "command": "DELETE",
-                    "with_check": null,
-                    "policy_name": "Staff can delete leads",
-                    "using_expression": "is_staff()"
-                },
-                {
-                    "roles": [
                         "public"
                     ],
                     "command": "INSERT",
-                    "with_check": "true",
-                    "policy_name": "Public Insert leads",
+                    "with_check": "(( SELECT auth.role() AS role) = ANY (ARRAY['anon'::text, 'authenticated'::text]))",
+                    "policy_name": "leads_insert_all",
                     "using_expression": null
                 },
                 {
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Tenant Isolation leads",
-                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
+                    "policy_name": "leads_select_optimized",
+                    "using_expression": "(tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid))))"
                 }
             ],
             "rls_forced": false,
@@ -2137,20 +2320,20 @@
             "policies": [
                 {
                     "roles": [
-                        "authenticated"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Enable read access for authenticated users",
-                    "using_expression": "true"
-                },
-                {
-                    "roles": [
                         "service_role"
                     ],
                     "command": "ALL",
                     "with_check": "true",
                     "policy_name": "Enable all access for service_role",
+                    "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Enable read access for authenticated users",
                     "using_expression": "true"
                 }
             ],
@@ -2186,28 +2369,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "Line Templates: Everyone see",
-                    "using_expression": "true"
+                    "policy_name": "line_templates_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 },
                 {
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Line Templates: Admin manage",
-                    "using_expression": "is_system_admin()"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "System Admin Manage line_templates",
-                    "using_expression": "is_system_admin()"
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "line_templates_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -2215,8 +2389,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Public Read line_templates",
+                    "policy_name": "line_templates_select_optimized",
                     "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "line_templates_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -2274,12 +2457,12 @@
             "policies": [
                 {
                     "roles": [
-                        "authenticated"
+                        "public"
                     ],
-                    "command": "SELECT",
+                    "command": "ALL",
                     "with_check": null,
-                    "policy_name": "Admins can view maintenance logs",
-                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))"
+                    "policy_name": "maintenance_logs_admin_optimized",
+                    "using_expression": "(( SELECT is_system_admin() AS is_system_admin) OR (tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = ( SELECT auth.uid() AS uid)) AND (tenant_members.role = ANY (ARRAY['OWNER'::text, 'ADMIN'::text, 'MANAGER'::text]))))))"
                 }
             ],
             "rls_forced": false,
@@ -2339,35 +2522,8 @@
                     "roles": [
                         "authenticated"
                     ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Users can view their own notifications",
-                    "using_expression": "(auth.uid() = user_id)"
-                },
-                {
-                    "roles": [
-                        "authenticated"
-                    ],
-                    "command": "UPDATE",
-                    "with_check": "(auth.uid() = user_id)",
-                    "policy_name": "Users can update their own notifications",
-                    "using_expression": "(auth.uid() = user_id)"
-                },
-                {
-                    "roles": [
-                        "authenticated"
-                    ],
-                    "command": "DELETE",
-                    "with_check": null,
-                    "policy_name": "Users can delete their own notifications",
-                    "using_expression": "(auth.uid() = user_id)"
-                },
-                {
-                    "roles": [
-                        "authenticated"
-                    ],
                     "command": "INSERT",
-                    "with_check": "true",
+                    "with_check": "(id IS NOT NULL)",
                     "policy_name": "Authenticated users can insert notifications",
                     "using_expression": null
                 },
@@ -2375,10 +2531,28 @@
                     "roles": [
                         "public"
                     ],
+                    "command": "DELETE",
+                    "with_check": null,
+                    "policy_name": "Users can delete their own notifications",
+                    "using_expression": "(user_id = ( SELECT auth.uid() AS uid))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "Users can update their own notifications",
+                    "using_expression": "(user_id = ( SELECT auth.uid() AS uid))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Users can see their own notifications",
-                    "using_expression": "(auth.uid() = user_id)"
+                    "policy_name": "Users can view their own notifications",
+                    "using_expression": "(user_id = ( SELECT auth.uid() AS uid))"
                 }
             ],
             "rls_forced": false,
@@ -2441,21 +2615,13 @@
             "policies": [
                 {
                     "roles": [
-                        "public"
+                        "anon",
+                        "authenticated"
                     ],
                     "command": "INSERT",
-                    "with_check": "true",
+                    "with_check": "(id IS NOT NULL)",
                     "policy_name": "Public Insert messages",
                     "using_expression": null
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Tenant Isolation: Omni Messages",
-                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
                 }
             ],
             "rls_forced": false,
@@ -2542,8 +2708,8 @@
                     ],
                     "command": "ALL",
                     "with_check": null,
-                    "policy_name": "Owners: Tenant Isolation",
-                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
+                    "policy_name": "owners_all_optimized",
+                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))) OR ( SELECT is_system_admin() AS is_system_admin))"
                 }
             ],
             "rls_forced": false,
@@ -2598,10 +2764,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "Public Partners are viewable by everyone",
-                    "using_expression": "true"
+                    "policy_name": "partners_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "partners_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -2609,26 +2784,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Enable read access for all users",
+                    "policy_name": "partners_select_optimized",
                     "using_expression": "true"
                 },
                 {
                     "roles": [
-                        "authenticated"
+                        "public"
                     ],
-                    "command": "ALL",
-                    "with_check": "is_system_admin()",
-                    "policy_name": "SuperAdmin: Full Access on partners",
-                    "using_expression": "is_system_admin()"
-                },
-                {
-                    "roles": [
-                        "authenticated"
-                    ],
-                    "command": "SELECT",
+                    "command": "UPDATE",
                     "with_check": null,
-                    "policy_name": "Public/Tenants: Read Access on partners",
-                    "using_expression": "(is_active = true)"
+                    "policy_name": "partners_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -2691,6 +2857,11 @@
                     "data_type": "boolean",
                     "column_name": "featured",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_ru",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -2698,10 +2869,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "Allow public read access",
-                    "using_expression": "true"
+                    "policy_name": "popular_areas_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "popular_areas_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -2709,17 +2889,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Public Read popular_areas",
+                    "policy_name": "popular_areas_select_optimized",
                     "using_expression": "true"
                 },
                 {
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "UPDATE",
                     "with_check": null,
-                    "policy_name": "Staff Manage popular_areas",
-                    "using_expression": "is_staff()"
+                    "policy_name": "popular_areas_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -2754,10 +2934,20 @@
                     "is_nullable": "YES"
                 }
             ],
-            "policies": null,
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "proactive_agent_triggers_admin_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                }
+            ],
             "rls_forced": false,
             "table_name": "proactive_agent_triggers",
-            "rls_enabled": false
+            "rls_enabled": true
         },
         {
             "columns": [
@@ -2892,55 +3082,10 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Public: Anyone see basic agent info",
-                    "using_expression": "true"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "profiles_select_own",
-                    "using_expression": "(id = auth.uid())"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "UPDATE",
-                    "with_check": "((id = auth.uid()) AND (role = 'AGENT'::user_role))",
-                    "policy_name": "profiles_agent_update_self",
-                    "using_expression": "((id = auth.uid()) AND (role = 'AGENT'::user_role))"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "profiles_admin_select_all",
-                    "using_expression": "(COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text)"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "UPDATE",
-                    "with_check": "((COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text) AND (role = ANY (ARRAY['ADMIN'::user_role, 'AGENT'::user_role])))",
-                    "policy_name": "profiles_admin_update_all",
-                    "using_expression": "(COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text)"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
                     "command": "DELETE",
                     "with_check": null,
                     "policy_name": "profiles_admin_delete_agents",
-                    "using_expression": "((COALESCE((auth.jwt() ->> 'role'::text), ''::text) = 'ADMIN'::text) AND (role = 'AGENT'::user_role))"
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 },
                 {
                     "roles": [
@@ -2948,62 +3093,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "profiles_select_matching_tenant",
-                    "using_expression": "((id = auth.uid()) OR (id IN ( SELECT tm2.profile_id\n   FROM (tenant_members tm1\n     JOIN tenant_members tm2 ON ((tm1.tenant_id = tm2.tenant_id)))\n  WHERE (tm1.profile_id = auth.uid()))) OR (role = 'ADMIN'::user_role))"
+                    "policy_name": "profiles_select_optimized",
+                    "using_expression": "((id = ( SELECT auth.uid() AS uid)) OR ( SELECT is_system_admin() AS is_system_admin) OR (role = ANY (ARRAY['AGENT'::user_role, 'MANAGER'::user_role])) OR (id IN ( SELECT tm2.profile_id\n   FROM (tenant_members tm1\n     JOIN tenant_members tm2 ON ((tm1.tenant_id = tm2.tenant_id)))\n  WHERE (tm1.profile_id = ( SELECT auth.uid() AS uid)))))"
                 },
                 {
                     "roles": [
                         "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Profiles: Staff Network View",
-                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM (tenant_members tm1\n     JOIN tenant_members tm2 ON ((tm1.tenant_id = tm2.tenant_id)))\n  WHERE ((tm1.profile_id = auth.uid()) AND (tm2.profile_id = profiles.id)))) OR (id = auth.uid()))"
-                },
-                {
-                    "roles": [
-                        "authenticated"
                     ],
                     "command": "UPDATE",
-                    "with_check": "(auth.uid() = id)",
-                    "policy_name": "Users can update own profile",
-                    "using_expression": "(auth.uid() = id)"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Admins can view all profiles for audit",
-                    "using_expression": "check_is_staff_for_audit()"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Profiles: Public Minimal View",
-                    "using_expression": "(role = ANY (ARRAY['ADMIN'::user_role, 'AGENT'::user_role, 'MANAGER'::user_role]))"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Users can view their own profile",
-                    "using_expression": "(auth.uid() = id)"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Public View Agent Profiles",
-                    "using_expression": "(role = ANY (ARRAY['ADMIN'::user_role, 'AGENT'::user_role, 'MANAGER'::user_role]))"
+                    "policy_name": "profiles_update_optimized",
+                    "using_expression": "((id = ( SELECT auth.uid() AS uid)) OR ( SELECT is_system_admin() AS is_system_admin))"
                 }
             ],
             "rls_forced": false,
@@ -3681,6 +3781,41 @@
                     "data_type": "text",
                     "column_name": "co_agent_phone_hash",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "description_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "address_line1_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "popular_area_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "transit_station_name_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "meta_title_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "meta_description_ru",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -3688,10 +3823,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "Public: Anyone see active properties",
-                    "using_expression": "((status = 'ACTIVE'::property_status) AND (deleted_at IS NULL))"
+                    "policy_name": "properties_delete_optimized",
+                    "using_expression": "(( SELECT is_system_admin() AS is_system_admin) OR (tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))))"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "(( SELECT is_system_admin() AS is_system_admin) OR (tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))))",
+                    "policy_name": "properties_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -3699,53 +3843,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Properties: Public Search",
-                    "using_expression": "((status = 'ACTIVE'::property_status) AND (deleted_at IS NULL))"
-                },
-                {
-                    "roles": [
-                        "anon"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Public can read ACTIVE properties",
-                    "using_expression": "(status = 'ACTIVE'::property_status)"
+                    "policy_name": "properties_public_select_optimized",
+                    "using_expression": "(((status = 'ACTIVE'::property_status) AND (deleted_at IS NULL)) OR ( SELECT is_system_admin() AS is_system_admin) OR (tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))))"
                 },
                 {
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
+                    "command": "UPDATE",
                     "with_check": null,
-                    "policy_name": "Public view active properties",
-                    "using_expression": "(status = 'ACTIVE'::property_status)"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Allow public read access to active properties",
-                    "using_expression": "(status = 'ACTIVE'::property_status)"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Public View Active Properties",
-                    "using_expression": "((status = 'ACTIVE'::property_status) AND (deleted_at IS NULL))"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Properties: Staff Full Access",
-                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
+                    "policy_name": "properties_update_optimized",
+                    "using_expression": "(( SELECT is_system_admin() AS is_system_admin) OR (tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))))"
                 }
             ],
             "rls_forced": false,
@@ -3777,26 +3885,8 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Staff View Property Agents",
-                    "using_expression": "is_staff()"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Admin Manage Property Agents",
-                    "using_expression": "is_system_admin()"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Property Agents: Join Isolation",
-                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM properties p\n  WHERE ((p.id = property_agents.property_id) AND (p.tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants))))))"
+                    "policy_name": "property_agents_read_all",
+                    "using_expression": "true"
                 }
             ],
             "rls_forced": false,
@@ -3826,18 +3916,9 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "System Admin Manage property_features",
-                    "using_expression": "is_system_admin()"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Public Read property_features",
+                    "policy_name": "property_features_read_all",
                     "using_expression": "true"
                 }
             ],
@@ -3888,18 +3969,9 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Staff Manage property_image_uploads",
-                    "using_expression": "is_staff()"
-                },
-                {
-                    "roles": [
-                        "authenticated"
-                    ],
                     "command": "INSERT",
-                    "with_check": "(auth.uid() = user_id)",
-                    "policy_name": "piu_insert_own",
+                    "with_check": "((user_id = ( SELECT auth.uid() AS uid)) OR ( SELECT is_system_admin() AS is_system_admin))",
+                    "policy_name": "piu_insert_optimized",
                     "using_expression": null
                 }
             ],
@@ -3958,12 +4030,21 @@
             "policies": [
                 {
                     "roles": [
-                        "anon"
+                        "public"
                     ],
-                    "command": "SELECT",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "Public can read images for ACTIVE properties",
-                    "using_expression": "(EXISTS ( SELECT 1\n   FROM properties p\n  WHERE ((p.id = property_images.property_id) AND (p.status = 'ACTIVE'::property_status))))"
+                    "policy_name": "property_images_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "property_images_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -3971,26 +4052,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Public View property_images",
-                    "using_expression": "(EXISTS ( SELECT 1\n   FROM properties\n  WHERE ((properties.id = property_images.property_id) AND (properties.status = 'ACTIVE'::property_status) AND (properties.deleted_at IS NULL))))"
+                    "policy_name": "property_images_select_optimized",
+                    "using_expression": "true"
                 },
                 {
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
+                    "command": "UPDATE",
                     "with_check": null,
-                    "policy_name": "Staff View property_images",
-                    "using_expression": "is_staff()"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Staff Manage property_images",
-                    "using_expression": "is_staff()"
+                    "policy_name": "property_images_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -4203,8 +4275,8 @@
                     ],
                     "command": "ALL",
                     "with_check": null,
-                    "policy_name": "Enable all for authenticated users",
-                    "using_expression": "(auth.role() = 'authenticated'::text)"
+                    "policy_name": "property_syndication_auth_optimized",
+                    "using_expression": "(( SELECT auth.uid() AS uid) IS NOT NULL)"
                 }
             ],
             "rls_forced": false,
@@ -4247,21 +4319,22 @@
             "policies": [
                 {
                     "roles": [
-                        "public"
-                    ],
-                    "command": "INSERT",
-                    "with_check": "true",
-                    "policy_name": "Public can insert property views log",
-                    "using_expression": null
-                },
-                {
-                    "roles": [
                         "authenticated"
                     ],
                     "command": "SELECT",
                     "with_check": null,
                     "policy_name": "Branch isolation for property views",
                     "using_expression": "(is_system_admin() OR is_tenant_admin(tenant_id))"
+                },
+                {
+                    "roles": [
+                        "anon",
+                        "authenticated"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "(id IS NOT NULL)",
+                    "policy_name": "Public can insert property views log",
+                    "using_expression": null
                 }
             ],
             "rls_forced": false,
@@ -4299,12 +4372,27 @@
                     "data_type": "timestamp with time zone",
                     "column_name": "created_at",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "name_ru",
+                    "is_nullable": "YES"
                 }
             ],
-            "policies": null,
+            "policies": [
+                {
+                    "roles": [
+                        "authenticated"
+                    ],
+                    "command": "SELECT",
+                    "with_check": null,
+                    "policy_name": "Authenticated users can read banks",
+                    "using_expression": "true"
+                }
+            ],
             "rls_forced": false,
             "table_name": "ref_banks",
-            "rls_enabled": false
+            "rls_enabled": true
         },
         {
             "columns": [
@@ -4359,7 +4447,17 @@
                     "is_nullable": "YES"
                 }
             ],
-            "policies": null,
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "rent_notification_history_all_optimized",
+                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))) OR ( SELECT is_system_admin() AS is_system_admin))"
+                }
+            ],
             "rls_forced": false,
             "table_name": "rent_notification_history",
             "rls_enabled": true
@@ -4422,7 +4520,17 @@
                     "is_nullable": "YES"
                 }
             ],
-            "policies": null,
+            "policies": [
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "ALL",
+                    "with_check": null,
+                    "policy_name": "rent_notification_rules_all_optimized",
+                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))) OR ( SELECT is_system_admin() AS is_system_admin))"
+                }
+            ],
             "rls_forced": false,
             "table_name": "rent_notification_rules",
             "rls_enabled": true
@@ -4537,8 +4645,8 @@
                     ],
                     "command": "ALL",
                     "with_check": null,
-                    "policy_name": "Tenant Isolation rental_contracts",
-                    "using_expression": "(is_system_admin() OR (tenant_id IN ( SELECT get_user_tenants() AS get_user_tenants)))"
+                    "policy_name": "rental_contracts_all_optimized",
+                    "using_expression": "((tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))) OR ( SELECT is_system_admin() AS is_system_admin))"
                 }
             ],
             "rls_forced": false,
@@ -4588,19 +4696,37 @@
                     "roles": [
                         "public"
                     ],
+                    "command": "DELETE",
+                    "with_check": null,
+                    "policy_name": "service_views_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
                     "command": "INSERT",
-                    "with_check": "true",
-                    "policy_name": "Public can insert service views log via RPC",
+                    "with_check": "(( SELECT auth.role() AS role) = ANY (ARRAY['anon'::text, 'authenticated'::text]))",
+                    "policy_name": "service_views_insert_optimized",
                     "using_expression": null
                 },
                 {
                     "roles": [
-                        "authenticated"
+                        "public"
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Admins can view service analytics",
-                    "using_expression": "(is_system_admin() OR (EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = auth.uid()) AND (profiles.role = ANY (ARRAY['ADMIN'::user_role, 'MANAGER'::user_role]))))))"
+                    "policy_name": "service_views_select_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "service_views_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -4728,6 +4854,26 @@
                     "data_type": "text",
                     "column_name": "price_range_cn",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "title_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "description_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "content_ru",
+                    "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "price_range_ru",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -4735,10 +4881,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "System Admin Manage services",
-                    "using_expression": "is_system_admin()"
+                    "policy_name": "services_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "services_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -4746,26 +4901,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Public Read services",
+                    "policy_name": "services_select_optimized",
                     "using_expression": "true"
                 },
                 {
                     "roles": [
                         "public"
                     ],
-                    "command": "SELECT",
+                    "command": "UPDATE",
                     "with_check": null,
-                    "policy_name": "Public View Active Services",
-                    "using_expression": "(is_active = true)"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "Staff Manage services",
-                    "using_expression": "is_staff()"
+                    "policy_name": "services_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -4800,19 +4946,37 @@
                     "roles": [
                         "public"
                     ],
+                    "command": "DELETE",
+                    "with_check": null,
+                    "policy_name": "site_settings_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "site_settings_insert_optimized",
+                    "using_expression": null
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Public Read Site Settings",
+                    "policy_name": "site_settings_select_optimized",
                     "using_expression": "true"
                 },
                 {
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "UPDATE",
                     "with_check": null,
-                    "policy_name": "Admin manage site settings",
-                    "using_expression": "is_system_admin()"
+                    "policy_name": "site_settings_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -4875,6 +5039,11 @@
                     "data_type": "text",
                     "column_name": "label_cn",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label_ru",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -4882,10 +5051,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "System Admin Manage smart_match_budget_ranges",
-                    "using_expression": "is_system_admin()"
+                    "policy_name": "smart_match_budget_ranges_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "smart_match_budget_ranges_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -4893,8 +5071,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Allow public read for budget ranges",
+                    "policy_name": "smart_match_budget_ranges_select_optimized",
                     "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "smart_match_budget_ranges_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -4947,6 +5134,11 @@
                     "data_type": "text",
                     "column_name": "label_cn",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label_ru",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -4954,10 +5146,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "System Admin Manage smart_match_office_sizes",
-                    "using_expression": "is_system_admin()"
+                    "policy_name": "smart_match_office_sizes_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "smart_match_office_sizes_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -4965,8 +5166,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Allow public read for office sizes",
+                    "policy_name": "smart_match_office_sizes_select_optimized",
                     "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "smart_match_office_sizes_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -5014,6 +5224,11 @@
                     "data_type": "text",
                     "column_name": "label_cn",
                     "is_nullable": "YES"
+                },
+                {
+                    "data_type": "text",
+                    "column_name": "label_ru",
+                    "is_nullable": "YES"
                 }
             ],
             "policies": [
@@ -5021,10 +5236,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "System Admin Manage smart_match_property_types",
-                    "using_expression": "is_system_admin()"
+                    "policy_name": "smart_match_property_types_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "smart_match_property_types_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -5032,8 +5256,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Allow public read for property types",
+                    "policy_name": "smart_match_property_types_select_optimized",
                     "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "smart_match_property_types_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -5063,10 +5296,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "System Admin Manage smart_match_settings",
-                    "using_expression": "is_system_admin()"
+                    "policy_name": "smart_match_settings_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "smart_match_settings_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -5074,8 +5316,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Allow public read for settings",
+                    "policy_name": "smart_match_settings_select_optimized",
                     "using_expression": "true"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "UPDATE",
+                    "with_check": null,
+                    "policy_name": "smart_match_settings_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -5115,10 +5366,19 @@
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "DELETE",
                     "with_check": null,
-                    "policy_name": "System Admin Manage teams",
-                    "using_expression": "is_system_admin()"
+                    "policy_name": "teams_delete_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
+                },
+                {
+                    "roles": [
+                        "public"
+                    ],
+                    "command": "INSERT",
+                    "with_check": "( SELECT is_system_admin() AS is_system_admin)",
+                    "policy_name": "teams_insert_optimized",
+                    "using_expression": null
                 },
                 {
                     "roles": [
@@ -5126,17 +5386,17 @@
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Teams are visible to branch members",
-                    "using_expression": "((tenant_id IS NULL) OR (tenant_id = (( SELECT ((auth.jwt() -> 'user_metadata'::text) ->> 'tenant_id'::text)))::uuid) OR is_admin())"
+                    "policy_name": "teams_select_optimized",
+                    "using_expression": "(( SELECT is_system_admin() AS is_system_admin) OR (tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = ( SELECT auth.uid() AS uid)))))"
                 },
                 {
                     "roles": [
                         "public"
                     ],
-                    "command": "ALL",
+                    "command": "UPDATE",
                     "with_check": null,
-                    "policy_name": "Teams are manageable by branch admins",
-                    "using_expression": "(is_admin() OR ((tenant_id = (( SELECT ((auth.jwt() -> 'user_metadata'::text) ->> 'tenant_id'::text)))::uuid) AND is_tenant_admin(tenant_id)))"
+                    "policy_name": "teams_update_optimized",
+                    "using_expression": "( SELECT is_system_admin() AS is_system_admin)"
                 }
             ],
             "rls_forced": false,
@@ -5198,8 +5458,8 @@
                     ],
                     "command": "ALL",
                     "with_check": null,
-                    "policy_name": "Admins can manage invitations",
-                    "using_expression": "(tenant_id IN ( SELECT tm.tenant_id\n   FROM tenant_members tm\n  WHERE ((tm.profile_id = auth.uid()) AND (tm.role = ANY (ARRAY['OWNER'::text, 'ADMIN'::text])))))"
+                    "policy_name": "tenant_invitations_admin_optimized",
+                    "using_expression": "(( SELECT is_system_admin() AS is_system_admin) OR (tenant_id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = ( SELECT auth.uid() AS uid)) AND (tenant_members.role = ANY (ARRAY['OWNER'::text, 'ADMIN'::text]))))))"
                 }
             ],
             "rls_forced": false,
@@ -5310,49 +5570,21 @@
             "policies": [
                 {
                     "roles": [
-                        "anon",
-                        "authenticated"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Public View Tenants Branding",
-                    "using_expression": "((is_deleted = false) OR (is_deleted IS NULL))"
-                },
-                {
-                    "roles": [
-                        "authenticated"
-                    ],
-                    "command": "ALL",
-                    "with_check": null,
-                    "policy_name": "System Admin Manage Tenants",
-                    "using_expression": "is_system_admin()"
-                },
-                {
-                    "roles": [
                         "public"
                     ],
                     "command": "SELECT",
                     "with_check": null,
-                    "policy_name": "Users can view tenants they are members of",
-                    "using_expression": "(id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
-                },
-                {
-                    "roles": [
-                        "public"
-                    ],
-                    "command": "SELECT",
-                    "with_check": null,
-                    "policy_name": "Allow members to select their tenant",
-                    "using_expression": "(id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE (tenant_members.profile_id = auth.uid())))"
+                    "policy_name": "tenants_select_optimized",
+                    "using_expression": "true"
                 },
                 {
                     "roles": [
                         "public"
                     ],
                     "command": "UPDATE",
-                    "with_check": "(id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text])))))",
-                    "policy_name": "Allow admins and managers to update their tenant",
-                    "using_expression": "(id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = auth.uid()) AND (tenant_members.role = ANY (ARRAY['ADMIN'::text, 'MANAGER'::text])))))"
+                    "with_check": null,
+                    "policy_name": "tenants_update_optimized",
+                    "using_expression": "((id IN ( SELECT tenant_members.tenant_id\n   FROM tenant_members\n  WHERE ((tenant_members.profile_id = ( SELECT auth.uid() AS uid)) AND (tenant_members.role = ANY (ARRAY['OWNER'::text, 'ADMIN'::text]))))) OR ( SELECT is_system_admin() AS is_system_admin))"
                 }
             ],
             "rls_forced": false,
@@ -5363,6 +5595,6 @@
     "metadata": {
         "project": "VC Connect Asset",
         "audit_type": "Table & RLS Security Audit",
-        "exported_at": "2026-04-27T01:59:04.324365+00:00"
+        "exported_at": "2026-04-29T14:22:03.841418+00:00"
     }
 } 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { 
   generateExecutiveAiInsightsAction, 
   ExecutiveAiInsights 
@@ -45,27 +46,31 @@ export function useExecutiveDashboard(
 
   const handleGenerateAi = useCallback(async () => {
     setIsGeneratingAi(true);
-    const toastId = toast.loading("AI กำลังวิเคราะห์ข้อมูลและจัดทำกลยุทธ์...");
+    const processId = startProcess("AI กำลังวิเคราะห์ข้อมูลและจัดทำกลยุทธ์", {
+      type: "AI_GENERATION",
+      onRetry: handleGenerateAi
+    });
     try {
       const result = await generateExecutiveAiInsightsAction();
       if (result.success && result.data) {
         setAiInsights(result.data);
-        toast.success("AI วิเคราะห์ข้อมูลสำเร็จ", { id: toastId });
+        finishProcess(processId, "SUCCESS", "AI วิเคราะห์ข้อมูลสำเร็จ");
       } else {
-        toast.error(result.message || "AI ไม่สามารถวิเคราะห์ได้ในขณะนี้", {
-          id: toastId,
-        });
+        finishProcess(processId, "ERROR", result.message || "AI ไม่สามารถวิเคราะห์ได้ในขณะนี้");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error("เกิดข้อผิดพลาดในการเรียก AI", { id: toastId });
+      const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเรียก AI";
+      finishProcess(processId, "ERROR", msg);
     } finally {
       setIsGeneratingAi(false);
     }
   }, []); // Actions are stable
 
   const handleExport = useCallback(async (type: "excel" | "pdf") => {
-    const toastId = toast.loading(`กำลังเตรียมไฟล์ ${type.toUpperCase()}...`);
+    const processId = startProcess(`เตรียมไฟล์รายงาน ${type.toUpperCase()}`, {
+      type: "EXPORT"
+    });
     try {
       const action = type === "excel" ? exportExecutiveExcelAction : exportExecutivePdfAction;
       const result: ExportActionResponse = await action(undefined, aiInsights);
@@ -79,13 +84,14 @@ export function useExecutiveDashboard(
         };base64,${result.data}`;
         link.download = result.filename || `report.${type === "excel" ? "xlsx" : "pdf"}`;
         link.click();
-        toast.success(`ดาวน์โหลดไฟล์ ${type.toUpperCase()} สำเร็จ`, { id: toastId });
+        finishProcess(processId, "SUCCESS", `ดาวน์โหลดไฟล์ ${type.toUpperCase()} สำเร็จ ✨`);
       } else {
-        toast.error(result.message || "ล้มเหลวในการสร้างไฟล์รายงาน", { id: toastId });
+        finishProcess(processId, "ERROR", result.message || "ล้มเหลวในการสร้างไฟล์รายงาน");
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
-      toast.error("เกิดข้อผิดพลาดในการดาวน์โหลด", { id: toastId });
+      const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการดาวน์โหลด";
+      finishProcess(processId, "ERROR", msg);
     }
   }, [aiInsights]); // Export depends on current AI insights
 

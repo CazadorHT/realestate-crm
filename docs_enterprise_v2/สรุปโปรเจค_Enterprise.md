@@ -1,9 +1,9 @@
-# 📊 ภาพรวมโปรเจค: Enterprise Real Estate CRM (Hardened Edition)
+# 📊 ภาพรวมโปรเจค: Enterprise Real Estate CRM (Diamond Edition)
 
-> **เวอร์ชันเอกสาร:** Enterprise v2.1 (Hardened & Verified)
-> **สถาปัตยกรรมหลัก:** Next.js 16 (App Router), Supabase (PostgreSQL RPC), Inngest (Event-driven), Upstash Redis
+> **เวอร์ชันเอกสาร:** Enterprise v4.0 (Diamond Hardened)
+> **สถาปัตยกรรมหลัก:** Next.js 16.2, Agentic AI, Diamond Security (Internal Schema Isolation)
 
-แฟ้มเอกสารชุดนี้ถูกจัดทำขึ้นเพื่อเจาะลึกสถาปัตยกรรมระดับองค์กร (Enterprise Architecture) ของระบบ Real Estate CRM โดยเน้นอธิบายกลไกที่ซ่อนอยู่เบื้องหลังความปลอดภัย เสถียรภาพ และความสามารถในการขยายระบบ (Scalability) ในการรับโหลดขนาดใหญ่ ระดับ 10,000+ Concurrent Users 
+แฟ้มเอกสารชุดนี้ถูกจัดทำขึ้นเพื่อเจาะลึกสถาปัตยกรรมระดับองค์กร (Enterprise Architecture) ของระบบ Real Estate CRM โดยเน้นอธิบายกลไกที่ก้าวข้ามจากระบบบริหารจัดการทั่วไป สู่การเป็น **"AI Agent"** ที่ทำงานร่วมกับมนุษย์อย่างไร้รอยต่อ
 
 ---
 
@@ -11,43 +11,46 @@
 
 | เฟสเอกสาร (Phase) | รายการเอกสาร | หัวใจสำคัญ (Core Concept) |
 | --- | --- | --- |
-| **Foundation** | [1. สรุปโปรเจคภาพรวม (Executive Summary)](./สรุปโปรเจค_Enterprise.md) | จุดเด่นด้าน Enterprise และภาพรวมระบบ |
-| | [2. กลยุทธ์ประเมินมูลค่า (Valuation & Strategy)](./01_Business_Strategy_Valuation.md) | มูลค่าธุรกิจที่เติบโตแบบทวีคูณผ่านระบบหุ้มเกราะ Security |
-| | [3. คู่มือเทคนิคัล (Technical Manual)](./02_Technical_Manual.md) | Next.js 16, Turbopack Lazy Loading และ Runtime Proxy Type-Safety |
-| **Security & DB** | [4. ระบบความปลอดภัย (Security & Maintenance)](./03_Security_Maintenance.md) | Upstash Redis Rate Limiting, Webhook Idempotency ป้องกันสแปม |
-| | [5. โครงสร้างฐานข้อมูล (Database Schema Schema)](./04_Database_Schema_Setup.md) | PostgreSQL RPC, Atomic Transactions และ `pg_trgm` GIN Index |
-| | [6. การประมวลผลเบื้องหลัง (Cron & Queue Setup)](./07_Cron_Security_Setup.md) | Event-driven Architecture บน Inngest (Background Jobs) |
-| | [7. รายงานการตรวจสอบ (Audit Report / Timeline)](./09_Audit_Report.md) | Table Partitioning สำหรับ Log ระดับมหาศาล และ Visual Diffing |
-| **Compliance** | [8. โครงสร้างทีมและองค์กร (Enterprise Operations)](./05_Enterprise_Operations_Roles.md) | RLS (Row-Level Security) Tenant Isolation ปะทะข้อมูลข้ามสาขา |
-| | [9. การจัดการสิทธิ์ (Roles Permissions Setup)](./12_Roles_Permissions_Setup.md) | การฉีด (Inject) Tenant ID ซ่อนผ่าน Proxy ป้องกัน Human Error 100% |
-| | [10. กฎหมายดิจิทัล (PDPA Compliance Checklist)](./07_PDPA_Compliance_Checklist.md) | ระบบ Soft Delete และการสครับข้อมูล (Data Scrubbing) บน Audit Log |
-| **AI & AI Ops** | [11. ออโตเมชั่นแชท (Keyword Automation Guide)](./10_Keyword_Automation_Guide.md) | สถาปัตยกรรม Omni-channel Inbox, Infinite Scroll ไร้คอขวดปิง (Zero-Latency) |
-| | [12. การควบคุมโซเชียล (Meta Token Guide)](./11_Meta_Token_Guide.md) | Token Rotation และระบบแฮนเดิล Error กรณี Facebook API ล่ม |
-| | [13. แผนการตลาด AI (AI Tracking Plan)](./14_AI_Marketing_Tracking_Plan.md) | ทรุดทุน AI Token (32THB/USD) และ Sentinel AI (Human-in-the-loop) |
-| **Financials & Contracts** | [14. สัญญาอัจฉริยะ (Smart Contracts)](./15_Smart_Contracts_Architecture.md) | การฉีดตัวแปรลง MS Word (.docx) กลายเป็น PDF ไร้พิรุธการแก้ไขสัญญา |
-| | [15. เครื่องยนต์การเงินขั้นสูง (Commission Engine)](./16_Advanced_Financials_Engine.md) | สถาปัตยกรรมหั่นส่วนแบ่งคอมมิชชันและคำนวณ WHT 3% ผ่านโครงสร้างทศนิยมเป๊ะ |
-| **Handover** | [16. เล่มขายงานผู้บริหาร (Pitch Deck Outline)](./13_Pitch_Deck_Outline.md) | วางโครงสร้างพรีเซนต์เพื่อปิดดีล 30 ล้านบาท (เน้น Security) |
-| | [17. คู่มือส่งมอบโปรเจค (Technical Handover)](./06_Technical_Handover_Guide.md) | การถ่ายทอด "มนตร์ดำ (Black Magic)" ของโค้ดให้ทีมชุดใหม่เข้าใจ |
-| | [18. คู่มือผู้ใช้งานแอดมิน (User Manual)](./08_User_Manual.md) | การกู้คืนข้อมูลผ่าน Time-travel (Audit Timeline) และ Mobile UX Drawers |
+| **Strategy Master** | [0. บทสรุปผู้บริหาร (Ultimate Business Summary)](./00_Ultimate_Business_Summary_Valuation.md) | **คัมภีร์ปิดการขาย 35-45 ล้านบาท (ครบทุกมิติ)** |
+| **Foundation** | [1. สรุปโปรเจคภาพรวม (Executive Summary)](./สรุปโปรเจค_Enterprise.md) | จุดเด่นด้าน Enterprise และภาพรวมระบบ v3.0 |
+| | [2. กลยุทธ์ประเมินมูลค่า (Valuation & Strategy)](./01_Business_Strategy_Valuation.md) | มูลค่า 35M+ ผ่าน Agentic AI และ Hardened Security |
+| | [3. คู่มือเทคนิคัล (Technical Manual)](./02_Technical_Manual.md) | Next.js 16.2, Turbopack และ Agentic Search Engine |
+| **Security & DB** | [4. ระบบความปลอดภัย (Security & Maintenance)](./03_Security_Maintenance.md) | Hardened RLS, Database Proxy และ Audit Sentinel |
+| | [5. โครงสร้างฐานข้อมูล (Database Schema)](./04_Database_Schema_Setup.md) | PostgreSQL RPC, Atomic Transactions และ Full-text AI Search |
+| | [6. การประมวลผลเบื้องหลัง (Process Monitor)](./07_Cron_Security_Setup.md) | Process Monitor Engine และ Background Resilience (Inngest) |
+| | [7. รายงานการตรวจสอบ (Audit Report / Timeline)](./09_Audit_Report.md) | Visual Diffing และ Property Audit Timeline (One-click Restore) |
+| **Compliance** | [8. โครงสร้างทีมและองค์กร (Enterprise Operations)](./05_Enterprise_Operations_Roles.md) | RLS Tenant Isolation แยกข้อมูลสาขาเด็ดขาด 100% |
+| | [9. การจัดการสิทธิ์ (Roles Permissions Setup)](./12_Roles_Permissions_Setup.md) | Proxy-based Tenant Injection ป้องกันข้อมูลรั่วไหล |
+| | [10. กฎหมายดิจิทัล (PDPA Compliance Checklist)](./07_PDPA_Compliance_Checklist.md) | ระบบจัดการสิทธิ์ข้อมูลและการลบข้อมูลตามกฎหมาย (Right to be Forgotten) |
+| **AI & AI Ops** | [11. ออโตเมชั่นแชท (Keyword Automation Guide)](./10_Keyword_Automation_Guide.md) | Zero-Latency Omni-channel Inbox (LINE, Meta, TikTok) |
+| | [12. การควบคุมโซเชียล (Meta Token Guide)](./11_Meta_Token_Guide.md) | ระบบ Syndicate ทรัพย์สินลง Social Media แบบอัตโนมัติ |
+| | [13. แผนการตลาด AI (AI Tracking Plan)](./14_AI_Marketing_Tracking_Plan.md) | Agentic Search Scoring และ ROI Analysis ของ AI Tokens |
+| **Financials & Contracts** | [14. สัญญาอัจฉริยะ (Smart Contracts)](./15_Smart_Contracts_Architecture.md) | ระบบสร้างสัญญาจาก Template และการจัดการ Versioning |
+| | [15. เครื่องยนต์การเงินขั้นสูง (Commission Engine)](./16_Advanced_Financials_Engine.md) | Advanced Commission Split (Listing/Closing/Agency) และ WHT 3% |
+| **Handover** | [16. เล่มขายงานผู้บริหาร (Pitch Deck Outline)](./13_Pitch_Deck_Outline.md) | วางโครงสร้างพรีเซนต์เพื่อปิดดีล 35-40 ล้านบาท (เน้น AI & Security) |
+| | [17. คู่มือส่งมอบโปรเจค (Technical Handover)](./06_Technical_Handover_Guide.md) | ระบบสืบทอดรหัสผ่านและโครงสร้าง Cloud Infrastructure |
+| | [18. คู่มือผู้ใช้งานแอดมิน (User Manual)](./08_User_Manual.md) | คู่มือการใช้งาน Agentic Search และ Dashboard อัจฉริยะ |
+| | [19. รายงานการตรวจสอบคุณภาพ (Hardening & Forensic Audit)](./19_System_Hardening_Forensic_Audit.md) | บันทึกการปฏิรูปความปลอดภัยและเสถียรภาพระดับ Diamond 💎 |
+| | [20. สถาปัตยกรรม Dynamic RPC (Elite Architecture)](./20_Atomic_RPC_Elite_Architecture.md) | ระบบจัดการข้อมูลระดับสูงที่ปลอดภัยและรองรับอนาคต 100% |
 
 ---
 
-## 🚀 วิวัฒนาการสู่ Enterprise-Grade (What's New in v2.1)
+## 🚀 วิวัฒนาการสู่ Agentic Era (What's New in v3.0)
 
-โปรเจคได้ก้าวข้ามจาก "ซอฟต์แวร์ที่ดี" สู่คำว่า **"ระบบที่ทนทานต่ออุปสรรค (Resilient System)"** โดยมีความสำเร็จที่เป็นเสาหลัก 6 ประการ:
+โปรเจคได้ก้าวข้ามจากระบบจัดการ (Management) สู่การเป็น **"ระบบอัจฉริยะที่ตัดสินใจได้ (Agentic System)"** ผ่านเสาหลัก 6 ประการ:
 
-1. **Native Proxy Type-Safety (The Zero-Any Approach):** 
-   การสร้าง Runtime Proxy ที่แข็งแกร่ง ดักการเรียกใช้ ฐานข้อมูล (CRUD) ทุกครั้งเพื่อยัด `tenant_id` แบบหลบซ่อน ทำให้โปรแกรมเมอร์ต่อให้ตั้งใจเขียนโค้ดผิดพลาด ข้อมูลก็ไม่มีวันรั่วไหลไปสู่สาขาอื่น 
-2. **Atomic RPC Orchestrator:** 
-   ย้ายลอจิกทำลายລ้าง (เช่น การตัดสต็อก, การชนคอมมิชชั่น) เข้าสู่ฟังก์ชัน PostgreSQL ระดับลึก (RPC) แก้ปัญหา Race Conditions (สมมุติเซลล์สองคนกดปิดดีลบ้านหลังเดียวกันพร้อมกันในพริบตาเดียว) ได้เบ็ดเสร็จ
-3. **Queue-Based Event Processing (Inngest):**
-   ถอดสิ่งที่ต้องใช้เวลาทำงานประมวลผลนาน เช่น การยิง Post ไปยัง Facebook, การกระตุ้นให้ Gemini AI ประเมินราคา ออกจากเธรดการทำงานหน้าบ้าน (Main Thread) และส่งเข้า Queue ทำให้ UX หน้าเว็บเร็วปานสายฟ้าแลบ แม้แอดมินหลายคนกดใช้งาน AI พร้อมกัน
-4. **Ironclad Protection via Redis (Upstash):**
-   สกัดกั้นการโจมตีแบบ DDoS หรือ Webhook Replay Attacks จากภายนอก (อาทิ ไลน์ยิงซ้ำ) ด้วยการเก็บ Signature ใน Upstash Redis ป้องกันฐานข้อมูลหลักพังทลาย
-5. **Omnichannel Inbox & Visual Time-Travel:**
-   ยกระดับแชทสู่ Infinite Scroll ด้วย Data Hydration และการสร้างหน้า UI บันทึกประวัติศาสตร์ (Audit log) อัจฉริยะ ให้ผู้จัดการสาขากดปุ่มย้อนเวลา (Restore) เช็คได้ว่า "ใคร, พิมพ์อะไรเปลี่ยนไป" ได้ในระดับบรรทัด
-6. **Mobile Perfection with Lazy Loading:**
-   แอปโหลดหนักน้อยลง 70% บนมือถือ เพราะ Tiptap, Charts, และ Google Maps ถูกเรียกด้วย `next/dynamic` ย่อขนาด Bundle พร้อมกันเปลี่ยน Interface ตารางเป็น Drawer ที่ลื่นไหลตามนิ้วสัมผัส 
+1. **Agentic AI Search (The Intelligence Leap):** 
+   ระบบค้นหาที่ไม่เพียงแค่หาคำที่ตรง แต่ "เข้าใจความต้องการ" ผ่าน Hybrid Scoring (Semantic + Filtering) และสามารถอธิบายเหตุผล (Reasoning) ในการเลือกห้องให้เซลล์ฟังได้
+2. **Enterprise Hardened Shield (Security-First):** 
+   ยกระดับความปลอดภัยสู่ระดับ Bank-grade ด้วยการ Audit RLS ทุกจุด และการใช้ Proxy ดักจับทุก Transaction เพื่อยืนยันความถูกต้องของข้อมูลข้ามสาขา
+3. **Atomic Financial Orchestrator:** 
+   ย้ายลอจิกการเงินที่ซับซ้อนเข้าสู่ PostgreSQL RPC 100% เพื่อความแม่นยำสูงสุด ป้องกันปัญหาเงินหายหรือคอมมิชชันทับซ้อน (Race Condition)
+4. **Process Monitor & Background Resilience:**
+   ระบบเฝ้าติดตามงานหลังบ้าน (AI, Social Posting) ที่ทนทานต่อความล้มเหลว สามารถ Resume งานที่ค้างอยู่ได้อัตโนมัติผ่าน Inngest
+5. **Zero-Latency Omni-channel Hub:**
+   Inbox กลางที่เชื่อมต่อทุก Social Media (LINE, FB, IG, WA, TikTok) ด้วยสถาปัตยกรรมที่รองรับการเลื่อนอ่านข้อมูลไม่จำกัด (Infinite Scroll) โดยไม่มีการหน่วง
+6. **Property Audit Timeline (Visual Time-Travel):**
+   การบันทึกประวัติการเปลี่ยนแปลงทรัพย์สินแบบละเอียด (Field-level) ทำให้สามารถเปรียบเทียบข้อมูลเก่า-ใหม่ (Visual Diff) และกู้คืนข้อมูลได้ทันที
 
 ---
 

@@ -17,42 +17,40 @@ const STORAGE_KEY = "app_process_history";
 export function ProcessProvider({ children }: { children: React.ReactNode }) {
   const [processes, setProcesses] = useState<BackgroundProcess[]>([]);
 
-  // Load from localStorage on mount
+  // 🛡️ Load from Database on mount (Enterprise Persistence)
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+    const syncWithDB = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        interface SerializedProcess extends Omit<BackgroundProcess, 'startedAt' | 'completedAt' | 'onRetry'> {
-          startedAt: string;
-          completedAt?: string;
+        const { getBackgroundTasksAction } = await import("@/lib/background-tasks/actions");
+        const res = await getBackgroundTasksAction();
+        if (res.success && Array.isArray(res.data)) {
+          const synced = res.data.map((task: any) => ({
+            id: task.id,
+            name: task.name,
+            status: task.status as any,
+            message: task.message,
+            startedAt: new Date(task.created_at),
+            completedAt: task.completed_at ? new Date(task.completed_at) : undefined,
+            type: task.type,
+            payload: task.payload,
+            resultLink: task.result_link,
+            errorDetails: task.error_details,
+          }));
+          setProcesses(synced);
         }
-        const revived = (parsed as SerializedProcess[]).map((p) => ({
-          ...p,
-          startedAt: new Date(p.startedAt),
-          completedAt: p.completedAt ? new Date(p.completedAt) : undefined,
-          // onRetry cannot be persisted, it will be lost on refresh
-        }));
-        setProcesses(revived);
       } catch (e) {
-        console.error("Failed to load process history", e);
+        console.error("Failed to sync background tasks from DB", e);
       }
-    }
+    };
+    syncWithDB();
   }, []);
-
-  // Save to localStorage whenever processes change (Limit to 10)
-  useEffect(() => {
-    // We remove onRetry as it's not serializable
-    const toSave = processes.slice(0, 10).map(({ onRetry, ...p }) => p);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-  }, [processes]);
 
   useEffect(() => {
     const handler = (e: Event) => {
       const event = (e as CustomEvent<ProcessEvent>).detail;
       
       if (event.type === "PROCESS_STARTED") {
-        setProcesses((prev) => [event.process, ...prev].slice(0, 20)); // Keep slightly more in memory
+        setProcesses((prev) => [event.process, ...prev].slice(0, 50)); 
       } else if (event.type === "PROCESS_UPDATED") {
         setProcesses((prev) =>
           prev.map((p) =>
@@ -61,6 +59,8 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
                   ...p,
                   status: event.status,
                   message: event.message,
+                  resultLink: event.resultLink || p.resultLink,
+                  errorDetails: event.errorDetails || p.errorDetails,
                   completedAt:
                     event.status === "SUCCESS" || event.status === "ERROR"
                       ? new Date()
@@ -69,6 +69,8 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
               : p
           )
         );
+      } else if (event.type === "PROCESSES_SYNCED") {
+        setProcesses(event.processes);
       }
     };
 
