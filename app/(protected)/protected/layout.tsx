@@ -18,6 +18,8 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { GlobalSearch } from "@/components/dashboard/GlobalSearch";
 import { TenantProvider } from "@/components/providers/TenantProvider";
 import { RealtimeProvider } from "@/components/providers/RealtimeProvider";
+import { ProcessProvider } from "@/components/providers/ProcessProvider";
+import { ProcessMonitor } from "@/components/common/ProcessMonitor";
 
 export default async function ProtectedLayout({
   children,
@@ -48,7 +50,8 @@ export default async function ProtectedLayout({
   return (
     <TenantProvider>
       <RealtimeProvider>
-        <div className="flex min-h-screen w-full bg-slate-50/50">
+        <ProcessProvider>
+          <div className="flex min-h-screen w-full bg-slate-50/50">
           <SidebarNav 
             role={profile.role} 
             initialCollapsed={initialCollapsed} 
@@ -81,8 +84,10 @@ export default async function ProtectedLayout({
               <ErrorBoundary>{children}</ErrorBoundary>
             </main>
             <SocialPostMonitor />
+            <ProcessMonitor />
           </div>
         </div>
+        </ProcessProvider>
       </RealtimeProvider>
     </TenantProvider>
   );

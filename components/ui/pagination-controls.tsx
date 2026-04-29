@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
 
 interface PaginationControlsProps {
@@ -21,6 +21,31 @@ export function PaginationControls({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
+  const isCRM = pathname?.includes("/protected");
+
+  // Helper to force Thai for CRM, otherwise use context language
+  const T = (key: string, params?: Record<string, string | number>): string => {
+    if (isCRM) {
+      const dict = dictionaries.th as Record<string, unknown>;
+      let value = key.split(".").reduce((prev: unknown, curr: string) => {
+        if (prev && typeof prev === "object") {
+          return (prev as Record<string, unknown>)[curr];
+        }
+        return undefined;
+      }, dict);
+      
+      if (typeof value !== "string") return key;
+
+      let result = value;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          result = result.replace(`{${k}}`, String(v));
+        });
+      }
+      return result;
+    }
+    return t(key, params);
+  };
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -73,11 +98,11 @@ export function PaginationControls({
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between mt-4 p-4 gap-4 bg-slate-50/50 rounded-xl border border-slate-100">
       <div className="text-xs sm:text-sm text-slate-500 font-medium order-2 sm:order-1">
-        <span className="hidden sm:inline">{t("search.displaying")} </span>
+        <span className="hidden sm:inline">{T("search.displaying")} </span>
         {Math.min(pageSize * (currentPage - 1) + 1, totalCount)} –{" "}
         {Math.min(pageSize * currentPage, totalCount)}{" "}
         <span className="text-slate-400 font-normal mx-1">/</span> {totalCount}{" "}
-        {t("search.items")}
+        {T("search.items")}
       </div>
 
       <div className="flex items-center gap-1 sm:gap-1.5 order-1 sm:order-2 flex-wrap justify-center">
@@ -88,10 +113,10 @@ export function PaginationControls({
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage <= 1}
           className="h-8 w-8 sm:h-9 sm:w-auto px-0 sm:px-3 text-slate-600 hover:bg-white hover:text-blue-600 transition-all rounded-lg"
-          title={t("common.back")}
+          title={T("common.back")}
         >
           <ChevronLeft className="h-4 w-4 sm:mr-1.5" />
-          <span className="hidden sm:inline">{t("common.back")}</span>
+          <span className="hidden sm:inline">{T("common.back")}</span>
         </Button>
 
         {/* Page Numbers */}
@@ -135,9 +160,9 @@ export function PaginationControls({
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
           className="h-8 w-8 sm:h-9 sm:w-auto px-0 sm:px-3 text-slate-600 hover:bg-white hover:text-blue-600 transition-all rounded-lg"
-          title={t("common.next")}
+          title={T("common.next")}
         >
-          <span className="hidden sm:inline">{t("common.next")}</span>
+          <span className="hidden sm:inline">{T("common.next")}</span>
           <ChevronRight className="h-4 w-4 sm:ml-1.5" />
         </Button>
       </div>

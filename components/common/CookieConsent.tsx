@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Cookie, Settings, ShieldCheck, BarChart3, Target, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
 
 interface CookiePreferences {
@@ -20,6 +20,33 @@ export function CookieConsent() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { t } = useLanguage();
   const pathname = usePathname();
+  const isCRM = pathname?.includes("/protected");
+
+  // Helper to force Thai for CRM, otherwise use context language
+  const T = (key: string, params?: Record<string, string | number>): string => {
+    if (isCRM) {
+      const dict = dictionaries.th as Record<string, unknown>;
+      let value = key.split(".").reduce((prev: unknown, curr: string) => {
+        if (prev && typeof prev === "object") {
+          return (prev as Record<string, unknown>)[curr];
+        }
+        return undefined;
+      }, dict);
+      
+      if (typeof value !== "string") {
+        return key;
+      }
+
+      let result = value;
+      if (params) {
+        Object.entries(params).forEach(([k, v]) => {
+          result = result.replace(`{${k}}`, String(v));
+        });
+      }
+      return result;
+    }
+    return t(key, params);
+  };
 
   // Detect open dialogs/sheets (Radix UI/Shadcn)
   useEffect(() => {
@@ -123,7 +150,7 @@ export function CookieConsent() {
         >
           <Cookie className="h-5 w-5" />
           <div className="absolute left-12 bg-slate-900 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all whitespace-nowrap pointer-events-none uppercase tracking-wider">
-            {t("common.cookie_consent.settings")}
+            {T("common.cookie_consent.settings")}
           </div>
         </button>
       )}
@@ -146,15 +173,15 @@ export function CookieConsent() {
                       <div className="space-y-2">
                         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                           <Cookie className="h-5 w-5 sm:hidden text-blue-600" />
-                          {t("common.cookie_consent.title")}
+                          {T("common.cookie_consent.title")}
                         </h3>
                         <p className="text-slate-600 leading-relaxed max-w-2xl text-sm md:text-base">
-                          {t("common.cookie_consent.description")}{" "}
+                          {T("common.cookie_consent.description")}{" "}
                           <Link
                             href="/privacy-policy"
                             className="text-blue-600 hover:text-blue-700 underline underline-offset-4 font-medium transition-colors"
                           >
-                            {t("common.cookie_consent.privacy_policy")}
+                            {T("common.cookie_consent.privacy_policy")}
                           </Link>
                         </p>
                       </div>
@@ -167,20 +194,20 @@ export function CookieConsent() {
                         className="flex-1 lg:flex-none text-slate-500 hover:text-slate-900 transition-colors h-11 px-6 rounded-xl hover:bg-slate-100"
                       >
                         <Settings className="h-4 w-4 mr-2" />
-                        {t("common.cookie_consent.settings")}
+                        {T("common.cookie_consent.settings")}
                       </Button>
                       <Button
                         variant="outline"
                         onClick={handleDeclineAll}
                         className="flex-1 lg:flex-none h-11 px-6 rounded-xl border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold"
                       >
-                        {t("common.cookie_consent.decline")}
+                        {T("common.cookie_consent.decline")}
                       </Button>
                       <Button
                         onClick={handleAcceptAll}
                         className="flex-2 lg:flex-none h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-[0_4px_12px_rgba(37,99,235,0.25)] hover:shadow-[0_6px_16px_rgba(37,99,235,0.35)] transition-all"
                       >
-                        {t("common.cookie_consent.accept")}
+                        {T("common.cookie_consent.accept")}
                       </Button>
                     </div>
                   </div>
@@ -192,7 +219,7 @@ export function CookieConsent() {
                         <div className="h-10 w-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                           <Settings className="h-5 w-5" />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900">{t("common.cookie_consent.settings")}</h3>
+                        <h3 className="text-xl font-bold text-slate-900">{T("common.cookie_consent.settings")}</h3>
                       </div>
                       <Button 
                         variant="ghost" 
@@ -212,9 +239,9 @@ export function CookieConsent() {
                             <ShieldCheck className="h-5 w-5" />
                           </div>
                           <div className="space-y-1">
-                            <h4 className="font-bold text-slate-900">{t("common.cookie_consent.categories.necessary.title")}</h4>
+                            <h4 className="font-bold text-slate-900">{T("common.cookie_consent.categories.necessary.title")}</h4>
                             <p className="text-sm text-slate-500 leading-relaxed max-w-xl">
-                              {t("common.cookie_consent.categories.necessary.description")}
+                              {T("common.cookie_consent.categories.necessary.description")}
                             </p>
                           </div>
                         </div>
@@ -239,9 +266,9 @@ export function CookieConsent() {
                             <BarChart3 className="h-5 w-5" />
                           </div>
                           <div className="space-y-1">
-                            <h4 className="font-bold text-slate-900">{t("common.cookie_consent.categories.analytics.title")}</h4>
+                            <h4 className="font-bold text-slate-900">{T("common.cookie_consent.categories.analytics.title")}</h4>
                             <p className="text-sm text-slate-500 leading-relaxed max-w-xl">
-                              {t("common.cookie_consent.categories.analytics.description")}
+                              {T("common.cookie_consent.categories.analytics.description")}
                             </p>
                           </div>
                         </div>
@@ -276,9 +303,9 @@ export function CookieConsent() {
                             <Target className="h-5 w-5" />
                           </div>
                           <div className="space-y-1">
-                            <h4 className="font-bold text-slate-900">{t("common.cookie_consent.categories.marketing.title")}</h4>
+                            <h4 className="font-bold text-slate-900">{T("common.cookie_consent.categories.marketing.title")}</h4>
                             <p className="text-sm text-slate-500 leading-relaxed max-w-xl">
-                              {t("common.cookie_consent.categories.marketing.description")}
+                              {T("common.cookie_consent.categories.marketing.description")}
                             </p>
                           </div>
                         </div>
@@ -304,20 +331,20 @@ export function CookieConsent() {
                         onClick={() => setShowSettings(false)}
                         className="w-full sm:w-auto h-11 px-6 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100"
                       >
-                        {t("confirm.cancel") || "Cancel"}
+                        {T("confirm.cancel") || "Cancel"}
                       </Button>
                       <Button
                         variant="outline"
                         onClick={handleAcceptAll}
                         className="w-full sm:w-auto h-11 px-8 rounded-xl border-slate-200 text-slate-700 font-semibold hover:bg-slate-50"
                       >
-                        {t("common.cookie_consent.accept")}
+                        {T("common.cookie_consent.accept")}
                       </Button>
                       <Button
                         onClick={handleSavePreferences}
                         className="w-full sm:w-auto h-11 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-[0_4px_12px_rgba(37,99,235,0.25)] transition-all"
                       >
-                        {t("common.cookie_consent.save_preferences")}
+                        {T("common.cookie_consent.save_preferences")}
                       </Button>
                     </div>
                   </div>

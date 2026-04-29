@@ -179,7 +179,7 @@ export function PopularAreaPropertiesDialog({
 function ListingTypeBadge({ type }: { type: string | null }) {
   if (!type) return null;
 
-  const config: Record<string, { label: string; icon: any; class: string }> = {
+  const config: Record<string, { label: string; icon: React.ComponentType<{ className?: string }>; class: string }> = {
     SALE: { label: "ขาย", icon: Tag, class: "bg-blue-600 text-white" },
     RENT: { label: "เช่า", icon: Key, class: "bg-emerald-600 text-white" },
     SALE_RENT: { label: "ขาย/เช่า", icon: Repeat, class: "bg-indigo-600 text-white" },
@@ -231,16 +231,18 @@ function PriceDisplay({
   originalRentalPrice: number | null;
   listingType: string | null;
 }) {
-  const format = (val: number | null) => {
-    if (val === null) return "N/A";
-    return new Intl.NumberFormat("th-TH").format(val);
+  const format = (val: number | null | undefined) => {
+    if (val === null || val === undefined || isNaN(Number(val))) return "-";
+    return new Intl.NumberFormat("th-TH").format(Number(val));
   };
 
   const isRent = listingType === "RENT" || listingType === "SALE_RENT" || listingType === "SALE_AND_RENT";
   const isSale = listingType === "SALE" || listingType === "SALE_RENT" || listingType === "SALE_AND_RENT";
 
-  const hasSalePrice = price !== null || originalPrice !== null;
-  const hasRentPrice = rentalPrice !== null || originalRentalPrice !== null;
+  const isValid = (v: number | null | undefined) => v !== null && v !== undefined && !isNaN(Number(v));
+
+  const hasSalePrice = isValid(price) || isValid(originalPrice);
+  const hasRentPrice = isValid(rentalPrice) || isValid(originalRentalPrice);
 
   return (
     <div className="flex flex-col gap-0.5">

@@ -585,7 +585,7 @@ export function SidebarNav({
             <Link
               href="/protected"
               className={cn(
-                "flex h-11 items-center gap-4 rounded-xl px-4 transition-all duration-300 font-bold text-sm relative overflow-hidden group/dash",
+                "flex h-11 items-center gap-4 rounded-xl px-4 transition-all duration-300 font-semibold text-xs relative overflow-hidden group/dash",
                 pathname === "/protected"
                   ? "bg-blue-600/10 text-blue-700 shadow-[0_0_0_1px_rgba(37,99,235,0.1)]"
                   : "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
@@ -664,7 +664,7 @@ export function SidebarNav({
                 <button
                   onClick={() => toggleGroup(group.id)}
                   className={cn(
-                    "w-full flex h-10 items-center justify-between gap-3 rounded-xl px-4 transition-all duration-300 font-bold text-[10px] uppercase tracking-[0.15em] relative group/header",
+                    "w-full flex h-10 items-center justify-between gap-3 rounded-xl px-4 transition-all duration-300 font-semibold text-[11px] uppercase tracking-[0.15em] relative group/header",
                     hasActiveItem
                       ? "text-blue-700 bg-blue-50/50"
                       : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/30",

@@ -252,22 +252,23 @@ export async function resequencePopularAreas() {
     const supabase = await createClient();
     const { data: areas } = await supabase
       .from("popular_areas")
-      .select("id")
+      .select("id, name")
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true });
 
     if (!areas) return;
 
-    const updates: PopularAreaUpdate[] = (areas || []).map(
-      (area: { id: string }, index: number) => ({
+    const updates: PopularAreaInsert[] = areas.map(
+      (area: { id: string; name: string }, index: number) => ({
         id: area.id,
+        name: area.name,
         sort_order: index + 1,
       }),
     );
 
     const { error } = await supabase
       .from("popular_areas")
-      .upsert(updates as any);
+      .upsert(updates);
 
     if (error) throw error;
   } catch (error: unknown) {
@@ -288,16 +289,26 @@ export async function reorderPopularAreasAction(
 
     const supabase = await createClient();
 
-    const updates: PopularAreaUpdate[] = ids.map(
-      (id: string, index: number) => ({
-        id,
-        sort_order: offset + index + 1,
-      }),
+    // We need to fetch names to satisfy Insert type requirement for upsert
+    const { data: currentAreas } = await supabase
+      .from("popular_areas")
+      .select("id, name")
+      .in("id", ids);
+
+    const updates: PopularAreaInsert[] = ids.map(
+      (id: string, index: number) => {
+        const area = currentAreas?.find((a: { id: string; name: string }) => a.id === id);
+        return {
+          id,
+          name: area?.name || "",
+          sort_order: offset + index + 1,
+        };
+      },
     );
 
     const { error } = await supabase
       .from("popular_areas")
-      .upsert(updates as any);
+      .upsert(updates);
 
     if (error) throw error;
 
@@ -455,20 +466,24 @@ export async function bulkTranslatePopularAreasAction(
       };
     }
 
-    // Filter out items that are missing essential fields
-    const validUpdates: PopularAreaUpdate[] = (
+    // Filter out items that are missing essential fields and include required fields for upsert integrity
+    const validUpdates: PopularAreaInsert[] = (
         translatedData as { id: string; name_en?: string; name_cn?: string; name_ru?: string }[]
       )
       .filter(
-        (item: { id: string; name_en?: string; name_cn?: string; name_ru?: string }) =>
-          item.id && (item.name_en || item.name_cn || item.name_ru),
+        (item) => item.id && (item.name_en || item.name_cn || item.name_ru),
       )
-      .map((item: { id: string; name_en?: string; name_cn?: string; name_ru?: string }) => ({
-        id: item.id,
-        name_en: (item.name_en || "").trim() || null,
-        name_cn: (item.name_cn || "").trim() || null,
-        name_ru: (item.name_ru || "").trim() || null,
-      }));
+      .map((item) => {
+        const original = areas.find((a: { id: string; name: string; province: string | null }) => a.id === item.id);
+        return {
+          id: item.id,
+          name: original?.name || "", // Essential NOT NULL field
+          province: original?.province || null,
+          name_en: (item.name_en || "").trim() || null,
+          name_cn: (item.name_cn || "").trim() || null,
+          name_ru: (item.name_ru || "").trim() || null,
+        };
+      });
 
     if (validUpdates.length === 0) {
       return {
@@ -479,7 +494,7 @@ export async function bulkTranslatePopularAreasAction(
 
     const { error: upsertErr } = await supabase
       .from("popular_areas")
-      .upsert(validUpdates as any);
+      .upsert(validUpdates);
     if (upsertErr) throw upsertErr;
 
     // Log AI Usage & Audit Trail

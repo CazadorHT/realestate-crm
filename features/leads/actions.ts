@@ -62,7 +62,7 @@ export const createLeadAction = createSafeAction(
     const { inngest } = await import("@/lib/inngest/client");
     await inngest.send({
       name: "lead.created",
-      data: { leadId: lead.id, tenantId }
+      data: { leadId: lead.id, tenantId },
     });
 
     return { leadId: lead.id };
@@ -83,9 +83,15 @@ export const updateLeadAction = createSafeAction(
       email: encrypt(updateData.email),
       email_hash: generateBlindIndex(updateData.email),
       line_id: encrypt(updateData.preferences?.["line_id"] as string),
-      line_id_hash: generateBlindIndex(updateData.preferences?.["line_id"] as string),
-      facebook_psid: encrypt(updateData.preferences?.["facebook_psid"] as string),
-      instagram_sid: encrypt(updateData.preferences?.["instagram_sid"] as string),
+      line_id_hash: generateBlindIndex(
+        updateData.preferences?.["line_id"] as string,
+      ),
+      facebook_psid: encrypt(
+        updateData.preferences?.["facebook_psid"] as string,
+      ),
+      instagram_sid: encrypt(
+        updateData.preferences?.["instagram_sid"] as string,
+      ),
       note: encrypt(updateData.note),
       nationality: Array.isArray(updateData.nationality)
         ? updateData.nationality.join(", ")
@@ -258,7 +264,14 @@ export const searchPropertiesAction = createSafeAction(
     tenantId: z.string().uuid().optional(),
   }),
   async (
-    { q, listing_type, property_type, popular_area, status, tenantId: inputTenantId },
+    {
+      q,
+      listing_type,
+      property_type,
+      popular_area,
+      status,
+      tenantId: inputTenantId,
+    },
     { supabase, tenantId: contextTenantId },
   ) => {
     const queryTerm = (q ?? "").trim();
@@ -291,21 +304,29 @@ export const searchPropertiesAction = createSafeAction(
     if (facetError) {
       console.error("Facet Error:", facetError);
     } else if (facetData) {
-      facetData.forEach((x: { listing_type: string | null; property_type: string | null; status: string | null }) => {
-        if (x.listing_type)
-          counts.listing_type[x.listing_type] = (counts.listing_type[x.listing_type] || 0) + 1;
-        if (x.property_type)
-          counts.property_type[x.property_type] = (counts.property_type[x.property_type] || 0) + 1;
-        if (x.status)
-          counts.status[x.status] = (counts.status[x.status] || 0) + 1;
-      });
+      facetData.forEach(
+        (x: {
+          listing_type: string | null;
+          property_type: string | null;
+          status: string | null;
+        }) => {
+          if (x.listing_type)
+            counts.listing_type[x.listing_type] =
+              (counts.listing_type[x.listing_type] || 0) + 1;
+          if (x.property_type)
+            counts.property_type[x.property_type] =
+              (counts.property_type[x.property_type] || 0) + 1;
+          if (x.status)
+            counts.status[x.status] = (counts.status[x.status] || 0) + 1;
+        },
+      );
     }
 
     // 2. Fetch actually filtered property results (Explicit Select Only - Price Shield Enforced)
     let sb = supabase
       .from("properties")
       .select(
-        "id, title, price, rental_price, listing_type, property_type, province, district, popular_area, status, images",
+        "id, title, price, original_price, rental_price, original_rental_price, listing_type, property_type, province, district, popular_area, status, images",
       )
       .is("deleted_at", null);
 
@@ -326,7 +347,10 @@ export const searchPropertiesAction = createSafeAction(
     }
 
     if (property_type) {
-      sb = sb.eq("property_type", property_type as Database["public"]["Enums"]["property_type"]);
+      sb = sb.eq(
+        "property_type",
+        property_type as Database["public"]["Enums"]["property_type"],
+      );
     }
 
     if (popular_area) {
@@ -335,9 +359,15 @@ export const searchPropertiesAction = createSafeAction(
 
     if (status) {
       if (Array.isArray(status)) {
-        sb = sb.in("status", status as Database["public"]["Enums"]["property_status"][]);
+        sb = sb.in(
+          "status",
+          status as Database["public"]["Enums"]["property_status"][],
+        );
       } else {
-        sb = sb.eq("status", status as Database["public"]["Enums"]["property_status"]);
+        sb = sb.eq(
+          "status",
+          status as Database["public"]["Enums"]["property_status"],
+        );
       }
     }
 
@@ -454,7 +484,7 @@ export const transferLeadAction = createSafeAction(
     await logAudit(
       {
         supabase,
-        user: { id: userId } as any, 
+        user: { id: userId } as { id: string },
         role: role as UserRole,
       },
       {
@@ -517,14 +547,15 @@ export const searchLeadsAction = createSafeAction(
     q: z.string().optional(),
     tenantId: z.string().uuid().optional(),
   }),
-  async ({ q, tenantId: inputTenantId }, { supabase, tenantId: contextTenantId }) => {
+  async (
+    { q, tenantId: inputTenantId },
+    { supabase, tenantId: contextTenantId },
+  ) => {
     const queryTerm = (q ?? "").trim();
     const effectiveTenantId = inputTenantId || contextTenantId;
 
     try {
-      let sb = supabase
-        .from("leads")
-        .select("id, full_name, phone, email")
+      let sb = supabase.from("leads").select("id, full_name, phone, email");
 
       if (effectiveTenantId) {
         sb = sb.eq("tenant_id", effectiveTenantId);
@@ -534,10 +565,14 @@ export const searchLeadsAction = createSafeAction(
         const hash = generateBlindIndex(queryTerm);
         if (hash) {
           // Search by blind index for exact matches (fast & secure)
-          sb = sb.or(`full_name_hash.eq.${hash},phone_hash.eq.${hash},email_hash.eq.${hash}`);
+          sb = sb.or(
+            `full_name_hash.eq.${hash},phone_hash.eq.${hash},email_hash.eq.${hash}`,
+          );
         } else {
           // Fallback if hashing fails (should not happen for strings)
-          sb = sb.or(`full_name.ilike.%${queryTerm}%,phone.ilike.%${queryTerm}%`);
+          sb = sb.or(
+            `full_name.ilike.%${queryTerm}%,phone.ilike.%${queryTerm}%`,
+          );
         }
       }
 
@@ -545,17 +580,16 @@ export const searchLeadsAction = createSafeAction(
 
       const { data, error } = await sb;
       if (error) throw error;
-      
-      return (data || []).map(lead => ({
+
+      return (data || []).map((lead) => ({
         ...lead,
         full_name: decrypt(lead.full_name) || "Unknown",
         phone: decrypt(lead.phone),
-        email: decrypt(lead.email)
+        email: decrypt(lead.email),
       }));
     } catch (error: unknown) {
-      const err = error as { message?: string };
-      console.error("Search lead error:", err);
-      throw new Error(mapDbError(err));
+      console.error("Search lead error:", error);
+      throw new Error(mapDbError(error));
     }
-  }
+  },
 );

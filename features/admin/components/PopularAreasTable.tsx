@@ -36,6 +36,7 @@ import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeletePopularAreasAction } from "@/features/admin/popular-areas-bulk-actions";
 import { cn } from "@/lib/utils";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { EditPopularAreaDialog } from "./EditPopularAreaDialog";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { PopularAreaPropertiesDialog } from "./PopularAreaPropertiesDialog";
@@ -344,48 +345,69 @@ export function PopularAreasTable({
   const handleBulkDelete = async () => setIsBulkDeleteOpen(true);
 
   const executeBulkDelete = async () => {
-    const ids = Array.from(selectedIds);
-    setIsDeleting(true);
-    toast.promise(bulkDeletePopularAreasAction(ids, isAllAcrossSelected, search), {
-      loading: "กำลังลบข้อมูลหลายรายการ...",
-      success: (res) => {
+    const ids = Array.from(selectedIds) as string[];
+    const count = isAllAcrossSelected ? totalCount : selectedIds.size;
+    
+    const executeAction = async () => {
+      const processId = startProcess(`ลบทำเลยอดนิยม (${count} รายการ)`, { 
+        type: "BULK_DELETE",
+        onRetry: executeAction
+      });
+
+      try {
+        const res = await bulkDeletePopularAreasAction(ids, isAllAcrossSelected, search);
         setIsDeleting(false);
         setIsBulkDeleteOpen(false);
+        
         if (res.success) {
+          finishProcess(processId, "SUCCESS", res.message);
           clearSelection();
           setIsAllAcrossSelected(false);
           router.refresh();
-          return res.message;
+        } else {
+          finishProcess(processId, "ERROR", res.message);
         }
-        throw new Error(res.message);
-      },
-      error: (err) => {
+      } catch (err: unknown) {
         setIsDeleting(false);
-        return err.message;
-      },
-    });
+        const errorMessage = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+        finishProcess(processId, "ERROR", `[PopularAreasTable:executeBulkDelete] ${errorMessage}`);
+      }
+    };
+
+    executeAction();
   };
 
   const handleBulkTranslate = async () => {
     setIsTranslating(true);
-    const ids = isAllAcrossSelected ? undefined : Array.from(selectedIds);
-    toast.promise(bulkTranslatePopularAreasAction(ids, isAllAcrossSelected, search), {
-      loading: "กำลังใช้ AI แปลข้อมูล...",
-      success: (res) => {
+    const ids = (isAllAcrossSelected ? undefined : Array.from(selectedIds)) as string[] | undefined;
+    const count = isAllAcrossSelected ? totalCount : selectedIds.size;
+    
+    const executeAction = async () => {
+      const processId = startProcess(`แปลภาษาทำเลยอดนิยม (${count} รายการ)`, { 
+        type: "AI_TRANSLATION",
+        onRetry: executeAction
+      });
+
+      try {
+        const res = await bulkTranslatePopularAreasAction(ids, isAllAcrossSelected, search);
         setIsTranslating(false);
+        
         if (res.success) {
+          finishProcess(processId, "SUCCESS", res.message);
           setIsAllAcrossSelected(false);
           clearSelection();
           router.refresh();
-          return res.message;
+        } else {
+          finishProcess(processId, "ERROR", res.message);
         }
-        throw new Error(res.message);
-      },
-      error: (err) => {
+      } catch (err: unknown) {
         setIsTranslating(false);
-        return err.message;
-      },
-    });
+        const errorMessage = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+        finishProcess(processId, "ERROR", `[PopularAreasTable:handleBulkTranslate] ${errorMessage}`);
+      }
+    };
+
+    executeAction();
   };
 
   const start = (page - 1) * pageSize;
