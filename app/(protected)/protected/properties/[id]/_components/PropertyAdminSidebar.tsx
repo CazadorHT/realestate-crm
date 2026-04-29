@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 
 import { AdminAiTriggers } from "@/components/admin/properties/AdminAiTriggers";
+import { PropertySocialGenerator } from "@/features/properties/components/PropertySocialGenerator";
 
 interface PropertyAdminSidebarProps {
   property: {
@@ -89,6 +90,8 @@ export function PropertyAdminSidebar({ property }: PropertyAdminSidebarProps) {
         requiresReview={!!property.requires_ai_review}
         isFeatured={!!property.is_featured}
       />
+
+      <PropertySocialGenerator propertyId={property.id} />
 
       <PropertySuitability
         listingType={(property.listing_type as any) || "SALE"}

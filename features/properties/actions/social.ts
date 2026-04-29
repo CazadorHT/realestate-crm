@@ -8,6 +8,8 @@ import { getSiteSettings } from "@/features/site-settings/actions";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { PropertyRow } from "@/lib/services/properties";
+import { generateText } from "@/lib/ai/gemini";
+import { createClient } from "@/lib/supabase/server";
 
 export interface SocialProperty {
   [key: string]: unknown;
@@ -23,6 +25,7 @@ export interface SocialProperty {
   price_per_sqm: number | null;
   rent_price_per_sqm: number | null;
   size_sqm: number | null;
+  land_size_sqwah: number | null;
   property_type: string | null;
   province: string | null;
   district: string | null;
@@ -272,7 +275,18 @@ export async function renderPropertySocialTemplate(
               : `${property.bathrooms} 浴室`
         : null,
       property.size_sqm
-        ? `${property.size_sqm} ${lang === "th" ? "ตร.ม." : lang === "ru" ? "кв.м." : "Sqm"}`
+        ? `${property.size_sqm} ${lang === "th" ? "ตร.ม." : lang === "en" ? "sq.m." : lang === "cn" ? "平米" : lang === "ru" ? "кв.м." : "Sq.m."}`
+        : null,
+      property.land_size_sqwah
+        ? lang === "th"
+          ? `${property.land_size_sqwah} ตร.ว.`
+          : lang === "en"
+            ? `${property.land_size_sqwah} sq.wah`
+            : lang === "cn"
+              ? `${property.land_size_sqwah} 哇`
+              : lang === "ru"
+                ? `${property.land_size_sqwah} кв.ва`
+                : `${property.land_size_sqwah} Sq.wah`
         : null,
       property.floor
         ? lang === "th"
@@ -710,7 +724,7 @@ export async function getPropertySocialContent(
 
   const content = await renderPropertySocialTemplate(
     template,
-    property as any,
+    property,
     lang,
   );
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -804,15 +818,17 @@ export async function postPropertyToMetaAction(
         },
       );
 
-      const updateField =
-        platform === "FACEBOOK"
-          ? "posted_to_facebook_at"
-          : "posted_to_instagram_at";
-      const updateData: Record<string, string> = { [updateField]: new Date().toISOString() };
-      await supabase
-        .from("properties")
-        .update(updateData as any)
-        .eq("id", propertyId);
+      if (platform === "FACEBOOK") {
+        await supabase
+          .from("properties")
+          .update({ posted_to_facebook_at: new Date().toISOString() })
+          .eq("id", propertyId);
+      } else {
+        await supabase
+          .from("properties")
+          .update({ posted_to_instagram_at: new Date().toISOString() })
+          .eq("id", propertyId);
+      }
 
       revalidatePath("/(protected)/protected/properties", "page");
 
@@ -827,5 +843,59 @@ export async function postPropertyToMetaAction(
   } catch (err) {
     console.error("postPropertyToMetaAction error:", err);
     return { success: false, message: "เกิดข้อผิดพลาดในการเชื่อมต่อ" };
+  }
+}
+
+/**
+ * [AI Extension] Generate social media captions for properties using Gemini AI
+ */
+export async function generateSocialCaptionsAction(propertyId: string, platform: 'facebook' | 'tiktok' | 'instagram' | 'all') {
+  const supabase = await createClient();
+  
+  // 1. Fetch Property Data
+  const { data: property, error } = await supabase
+    .from("properties")
+    .select("*")
+    .eq("id", propertyId)
+    .single();
+
+  if (error || !property) {
+    throw new Error("Property not found");
+  }
+
+  // 2. Build Prompt
+  const prompt = `
+    You are an expert real estate social media manager. 
+    Create engaging, high-conversion captions for a property with these details:
+    - Title: ${property.title}
+    - Location: ${property.popular_area}, ${property.province}
+    - Price: ${property.price || property.rental_price}
+    - Type: ${property.property_type}
+    - Key Features: ${property.description}
+
+    Requirements:
+    - Use professional yet friendly tone.
+    - Include relevant emojis.
+    - Include hashtags (e.g., #RealEstate #LuxuryLiving).
+    - Language: Thai (with English summary if possible).
+    
+    Target Platform: ${platform === 'all' ? 'Facebook, Instagram, and TikTok' : platform}
+    
+    Format the output as a JSON object with keys: facebook, instagram, tiktok.
+  `;
+
+  try {
+    const result = await generateText(prompt, "gemini-2.0-flash");
+    
+    // Attempt to parse JSON from AI response
+    const jsonMatch = result.text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    
+    return { raw: result.text };
+  } catch (e) {
+    console.error("Caption generation error:", e);
+    throw e;
   }
 }

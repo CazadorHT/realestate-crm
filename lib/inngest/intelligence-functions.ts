@@ -27,10 +27,51 @@ export const onLeadCreated = inngest.createFunction(
       return data;
     });
 
-    // 🧠 Step 2: [Future] Perform Vector Search
-    // For now, we set up the architecture to notify the agent that we are matching
-    if (lead.assigned_to) {
-      await step.run("notify-agent-matching-start", async () => {
+    // 🧠 Step 2: Generate Lead Embedding & Perform Vector Search
+    const matches = await step.run("generate-lead-embedding-and-match", async () => {
+      const { constructLeadRequirementText, generateEmbedding } = await import("@/lib/ai/gemini");
+      
+      // 1. Re-fetch full lead data to get preferences for embedding
+      const { data: fullLead } = await supabase
+        .from("leads")
+        .select("*")
+        .eq("id", leadId)
+        .single();
+        
+      if (!fullLead) return [];
+
+      // 2. Generate text description of requirements (Decrypt sensitive fields first)
+      const { decrypt } = await import("@/lib/crypto");
+      const requirementsText = constructLeadRequirementText({
+        budget_max: fullLead.budget_max,
+        preferred_property_types: fullLead.preferred_property_types,
+        preferred_locations: fullLead.preferred_locations,
+        min_bedrooms: fullLead.min_bedrooms,
+        note: fullLead.note ? decrypt(fullLead.note) : null
+      });
+
+      // 3. Generate Vector
+      const embedding = await generateEmbedding(requirementsText);
+      if (!embedding) return [];
+
+      // 4. Save embedding to lead record for future use
+      const vectorString = JSON.stringify(embedding);
+      await supabase.from("leads").update({ embedding: vectorString }).eq("id", leadId);
+
+      // 5. Find matches using RPC
+      const { data: matchedProperties } = await supabase.rpc("match_properties", {
+        query_embedding: vectorString,
+        match_threshold: 0.75, // Only high confidence matches
+        match_count: 5,
+        p_tenant_id: lead.tenant_id ?? undefined
+      });
+
+      return matchedProperties || [];
+    });
+
+    // 📢 Step 3: Notify Agent with specific matches
+    if (lead.assigned_to && matches.length > 0) {
+      await step.run("notify-agent-with-matches", async () => {
         const { data: agent } = await supabase
           .from("profiles")
           .select("telegram_id, full_name")
@@ -38,15 +79,27 @@ export const onLeadCreated = inngest.createFunction(
           .single();
 
         if (agent?.telegram_id) {
+          interface PropertyMatch {
+            id: string;
+            title: string;
+            price: number | null;
+            rental_price: number | null;
+            similarity: number;
+          }
+
+          const matchList = (matches as PropertyMatch[])
+            .map((m) => `• <b>${m.title}</b> (${Math.round(m.similarity * 100)}% match)\n  💰 ${m.price ? m.price.toLocaleString() : m.rental_price?.toLocaleString()} THB\n  🔗 <a href="${process.env.NEXT_PUBLIC_SITE_URL}/protected/properties/${m.id}">ดูรายละเอียด</a>`)
+            .join("\n\n");
+
           await sendAdminNotification(
-            `🤖 <b>AI Smart Match กำลังทำงาน...</b>\n━━━━━━━━━━━━━━━━━━\n\nเรากำลังค้นหาทรัพย์ที่แมตช์กับลีดใหม่: <b>${lead.full_name}</b>\n\n<i>ระบบจะแจ้งเตือนคุณอีกครั้งหากเจอทรัพย์ที่คะแนนแมตช์ > 80%</i>`,
+            `🎯 <b>AI Smart Match พบคู่แท้!</b>\n━━━━━━━━━━━━━━━━━━\n\nพบคู่ที่เหมาะสมที่สุด <b>${matches.length} รายการ</b> สำหรับลีด <b>${lead.full_name}</b>:\n\n${matchList}`,
             { chatId: agent.telegram_id },
           );
         }
       });
     }
 
-    return { status: "infrastructure_ready", leadId };
+    return { status: "matching_complete", leadId, matchCount: matches.length };
   },
 );
 
