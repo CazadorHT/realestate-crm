@@ -11,7 +11,7 @@ import {
 } from "react-icons/ri";
 
 import { getPropertiesForSelect } from "@/features/properties/queries/search";
-import { getDealById, getDealCommissions } from "@/features/deals/queries";
+import { getDealById, getDealCommissions, getInvoicesByDealId } from "@/features/deals/queries";
 import { Button } from "@/components/ui/button";
 import { DealFormDialog } from "@/features/deals/components/DealFormDialog";
 import { DocumentSection } from "@/features/documents/components/DocumentSection";
@@ -36,6 +36,7 @@ export default async function DealDetailPage({ params }: PageProps) {
   const { tenantId } = await requireAuthContext();
   const deal = await getDealById(id);
   const commissions = await getDealCommissions(id);
+  const invoices = await getInvoicesByDealId(id);
   const properties = await getPropertiesForSelect();
 
   if (!deal) {
@@ -135,6 +136,7 @@ export default async function DealDetailPage({ params }: PageProps) {
             deal={deal}
             isRent={isRent}
             commissions={commissions}
+            invoices={invoices}
           />
 
           <DealLeadCard lead={deal.lead ?? null} />

@@ -1244,6 +1244,79 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          amount: number
+          created_at: string | null
+          deal_id: string | null
+          due_date: string | null
+          id: string
+          invoice_number: string
+          metadata: Json | null
+          paid_at: string | null
+          status: string
+          tenant_id: string | null
+          total_amount: number
+          updated_at: string | null
+          vat_amount: number
+          wht_amount: number
+        }
+        Insert: {
+          amount?: number
+          created_at?: string | null
+          deal_id?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          metadata?: Json | null
+          paid_at?: string | null
+          status?: string
+          tenant_id?: string | null
+          total_amount?: number
+          updated_at?: string | null
+          vat_amount?: number
+          wht_amount?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          deal_id?: string | null
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          metadata?: Json | null
+          paid_at?: string | null
+          status?: string
+          tenant_id?: string | null
+          total_amount?: number
+          updated_at?: string | null
+          vat_amount?: number
+          wht_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenant_branding"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_activities: {
         Row: {
           activity_type: Database["public"]["Enums"]["lead_activity_type"]
@@ -3771,6 +3844,14 @@ export type Database = {
         Returns: Json
       }
       bulk_trash_properties: { Args: { p_ids: string[] }; Returns: undefined }
+      calculate_net_commission: {
+        Args: { p_amount: number; p_tax_rate?: number; p_vat_rate?: number }
+        Returns: {
+          v_net_amount: number
+          v_vat_amount: number
+          v_wht_amount: number
+        }[]
+      }
       check_is_staff_for_audit: { Args: never; Returns: boolean }
       cleanup_old_background_tasks: { Args: never; Returns: undefined }
       create_lead_from_match:

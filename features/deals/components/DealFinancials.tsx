@@ -14,6 +14,7 @@ import {
   FileDown,
   Share2,
   Trash2,
+  FileText,
 } from "lucide-react";
 import type { Database } from "@/lib/database.types";
 import { DealCommission } from "../types";
@@ -42,15 +43,18 @@ interface DealFinancialsProps {
   deal: Deal;
   isRent: boolean;
   commissions: DealCommission[];
+  invoices?: any[];
 }
 
 export function DealFinancials({
   deal,
   isRent,
   commissions: initialCommissions,
+  invoices = [],
 }: DealFinancialsProps) {
   const [commissions, setCommissions] = useState(initialCommissions);
   const [calculating, setCalculating] = useState(false);
+  const latestInvoice = invoices[0];
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -164,11 +168,44 @@ export function DealFinancials({
           <div className="flex items-center gap-2 text-emerald-600 mb-2">
             <BadgeCent className="h-4 w-4" />
             <span className="text-[10px] font-bold uppercase tracking-wider">
-              ค่าคอมมิชชั่นทั้งหมด
+              ค่าคอมฯ (Base)
             </span>
           </div>
           <p className="text-2xl font-bold text-emerald-700">
             ฿{(deal.commission_amount || 0).toLocaleString()}
+          </p>
+        </div>
+
+        {/* VAT Card */}
+        <div className="rounded-xl border border-blue-100 bg-linear-to-br from-blue-50 to-white p-4 shadow-sm">
+          <div className="flex items-center gap-2 text-blue-600 mb-2">
+            <TrendingUp className="h-4 w-4" />
+            <span className="text-[10px] font-bold uppercase tracking-wider">
+              VAT (7%)
+            </span>
+          </div>
+          <p className="text-2xl font-bold text-blue-700">
+            ฿{(latestInvoice?.vat_amount || 0).toLocaleString()}
+          </p>
+        </div>
+
+        {/* Total Invoice Card */}
+        <div className="rounded-xl border border-indigo-100 bg-linear-to-br from-indigo-50 to-white p-4 shadow-sm col-span-2">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2 text-indigo-600">
+              <FileText className="h-4 w-4" />
+              <span className="text-[10px] font-bold uppercase tracking-wider">
+                ยอดเรียกเก็บรวม (Invoice Total)
+              </span>
+            </div>
+            {latestInvoice && (
+              <Badge className="bg-indigo-100 text-indigo-600 hover:bg-indigo-100 border-none text-[10px]">
+                {latestInvoice.invoice_number} • {latestInvoice.status}
+              </Badge>
+            )}
+          </div>
+          <p className="text-3xl font-bold text-indigo-700">
+            ฿{(latestInvoice?.total_amount || (deal.commission_amount || 0)).toLocaleString()}
           </p>
         </div>
 

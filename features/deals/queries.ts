@@ -183,3 +183,22 @@ export async function getDealsPageStats(timeRange: string = "all") {
 
   return stats;
 }
+
+export async function getInvoicesByDealId(dealId: string) {
+  const { supabase, tenantId } = await requireAuthContext();
+  if (!tenantId) return [];
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select("*")
+    .eq("deal_id", dealId)
+    .eq("tenant_id", tenantId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Fetch Invoices Error:", error);
+    return [];
+  }
+
+  return data;
+}

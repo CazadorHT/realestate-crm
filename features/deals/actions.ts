@@ -511,8 +511,41 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     if (insertErr) throw new Error(mapDbError(insertErr));
 
-    revalidatePath("/protected/deals/[id]"); // Update specifically if in detail view
-    return { success: true, message: "คำนวณและบันทึกค่าคอมมิชชั่นสำเร็จ" };
+    // 6. 💎 10/10 NEW: Auto-generate Draft Invoice
+    const invoiceNumber = `INV-${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${dealId.slice(0, 4).toUpperCase()}`;
+    
+    // คำนวณยอดรวม Invoice (ยอดคอมมิชชั่นรวม + VAT 7%)
+    const totalBaseAmount = deal.commission_amount || 0;
+    const vatRate = 0.07; // 7% VAT
+    const vatAmount = Number((totalBaseAmount * vatRate).toFixed(2));
+    const totalInvoiceAmount = totalBaseAmount + vatAmount;
+
+    await supabase
+      .from("invoices")
+      .upsert({
+        tenant_id: tenantId,
+        deal_id: dealId,
+        invoice_number: invoiceNumber,
+        amount: totalBaseAmount,
+        vat_amount: vatAmount,
+        total_amount: totalInvoiceAmount,
+        status: "DRAFT",
+        metadata: { generated_at: new Date().toISOString(), type: "COMMISSION" }
+      }, { onConflict: 'tenant_id, invoice_number' });
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "finance.calculate",
+        entity: "deals",
+        entityId: dealId,
+        summary: `คำนวณส่วนแบ่งคอมมิชชั่นและออกร่างใบแจ้งหนี้ ${invoiceNumber} สำเร็จ`,
+        metadata: { totalAmount: totalBaseAmount, invoiceNumber }
+      }
+    );
+
+    revalidatePath("/protected/deals/[id]");
+    return { success: true, message: "คำนวณค่าคอมมิชชั่นและออกใบแจ้งหนี้สำเร็จ" };
   } catch (error: unknown) {
     console.error("Calculate Commissions Error:", error);
     const message = error instanceof z.ZodError 

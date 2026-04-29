@@ -55,6 +55,7 @@ import { toast } from "sonner";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { th } from "date-fns/locale";
 import { format } from "date-fns";
 
@@ -275,18 +276,35 @@ export function LeadTimeline({
                 </div>
 
                 {/* 📝 Content Section */}
-                <div className="flex-1 p-3 flex items-center justify-between gap-3 min-w-0">
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center gap-2">
+                <div className="relative flex-1 p-4 flex items-start justify-between gap-4 min-w-0">
+                  {/* Timeline connecting line */}
+                  <div className="absolute -left-px top-0 h-full w-[2px] bg-slate-100 hidden md:block" />
+                  
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <span
                         className={cn(
-                          "text-[9px] md:text-[10px] font-semibold uppercase tracking-widest px-1.5 py-0.5 rounded-sm border",
+                          "text-[9px] md:text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border shadow-xs",
                           config.color,
-                          "border-current/10",
+                          "border-current/20",
                         )}
                       >
                         {config.label}
                       </span>
+                      
+                      {/* 👤 Created By Avatar */}
+                      <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-50 border border-slate-100">
+                        <Avatar className="h-4 w-4">
+                          <AvatarImage src={a.profiles?.avatar_url || ""} />
+                          <AvatarFallback className="text-[6px] bg-blue-100 text-blue-600">
+                            {a.profiles?.full_name?.charAt(0) || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-[10px] font-semibold text-slate-500">
+                          {a.profiles?.full_name?.split(' ')[0] || "System"}
+                        </span>
+                      </div>
+
                       <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
                         <Calendar className="h-3 w-3 opacity-50" />
                         {format(new Date(a.created_at), "d MMM yy • HH:mm", {
@@ -346,19 +364,22 @@ export function LeadTimeline({
                       </p>
                     )}
 
-                    {/* Property Card (Compact) */}
+                    {/* 🏠 Property Card (Improved) */}
                     {p && (
                       <Link
                         href={`/protected/properties/${p.id}`}
-                        className="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50/50 p-2 hover:bg-white hover:border-blue-100 hover:shadow-xs transition-all mt-2 max-w-sm"
+                        className="flex items-center gap-3 rounded-xl border border-blue-50 bg-blue-50/20 p-2.5 hover:bg-white hover:border-blue-200 hover:shadow-md hover:shadow-blue-900/5 transition-all mt-3 max-w-lg group/prop"
                       >
+                        <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+                          <Building2 className="h-4 w-4 text-blue-600" />
+                        </div>
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-semibold  text-slate-600 line-clamp-2!">
+                          <p className="text-[10px] font-bold text-blue-500 uppercase tracking-tight mb-0.5">
+                            ทรัพย์สินที่เกี่ยวข้อง
+                          </p>
+                          <p className="text-xs font-bold text-slate-700 line-clamp-1 group-hover/prop:text-blue-600 transition-colors">
                             {p.title}
                           </p>
-                          {/* <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                             <PriceDisplay p={p} />
-                          </div> */}
                         </div>
                       </Link>
                     )}

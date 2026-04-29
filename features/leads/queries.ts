@@ -223,8 +223,9 @@ export async function getLeadWithActivitiesQuery(
         .select(`
                 id, full_name, email, phone, stage, source, budget_min, budget_max, property_id, preferred_property_types, preferred_locations, note, line_id, facebook_psid, instagram_sid, ai_summary_content, created_at, updated_at, tenant_id, created_by, assigned_to,
                 lead_activities (
-                id, lead_id, property_id, activity_type, note, created_by, created_at,
-                properties ( id, title )
+                  id, lead_id, property_id, activity_type, note, created_by, created_at,
+                  profiles:created_by ( full_name, avatar_url ),
+                  properties ( id, title )
                 )
             `)
       .eq("id", id);
