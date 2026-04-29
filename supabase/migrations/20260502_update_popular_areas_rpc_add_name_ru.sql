@@ -45,10 +45,9 @@ BEGIN
   GROUP BY pa.id
   ORDER BY pa.sort_order ASC;
 END;
-$$ LANGUAGE plpgsql SECURITY INVOKER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- Re-grant access (required after CREATE OR REPLACE)
-GRANT EXECUTE ON FUNCTION get_popular_areas_with_counts(UUID) TO authenticated;
-GRANT EXECUTE ON FUNCTION get_popular_areas_with_counts(UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION get_popular_areas_with_counts(UUID) TO anon, authenticated, service_role;
 
 COMMENT ON FUNCTION get_popular_areas_with_counts(UUID) IS 'ดึงข้อมูลทำเลยอดนิยมพร้อมนับยอดทรัพย์แบบ Dynamic ตาม Tenant ID (รองรับ Global Mode + name_ru)';

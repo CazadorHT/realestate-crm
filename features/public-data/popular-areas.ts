@@ -46,7 +46,7 @@ export const getPublicProvincesAction = unstable_cache(
       return [];
     }
   },
-  ["public-provinces-list"],
+  ["public-provinces-list-v2"],
   { revalidate: 86400, tags: ["provinces"] } // Cache for 24h as provinces rarely change
 );
 
@@ -168,6 +168,6 @@ export const getPopularAreasAction = unstable_cache(
       return [];
     }
   },
-  ["popular-areas-cache"],
+  ["popular-areas-cache-v2"],
   { revalidate: 3600, tags: ["popular-areas"] } // Cache for 1h as per user insight
 );
