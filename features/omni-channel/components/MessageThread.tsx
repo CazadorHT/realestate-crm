@@ -336,7 +336,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
         )}
       </AnimatePresence>
       {/* Header */}
-      <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-white shadow-sm z-10">
+      <div id="tour-inbox-thread-header" className="p-4 border-b border-slate-100 flex items-center justify-between bg-white shadow-sm z-10">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-inner text-slate-400">
             {messages?.[0]?.payload?.profile?.pictureUrl ? (

@@ -66,8 +66,8 @@ export function SpecialFeaturesSection({
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   return (
-    <Card className="col-span-2 border-slate-200/70 bg-white h-full relative overflow-hidden">
-      <CardHeader className="space-y-3 sm:space-y-4 pb-4 px-4 sm:px-6 py-4 sm:py-6">
+    <Card   className="col-span-2 border-slate-200/70 bg-white h-full relative overflow-hidden">
+      <CardHeader id="tour-property-special-features" className="space-y-3 sm:space-y-4 pb-4 px-4 sm:px-6 py-4 sm:py-6">
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-purple-100 text-purple-600">
             <Star className="h-5 w-5" />

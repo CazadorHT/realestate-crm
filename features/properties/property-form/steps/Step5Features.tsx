@@ -156,7 +156,7 @@ function Step5FeaturesComponent() {
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-500">
-      <div className="bg-blue-50/50 p-4 sm:p-5 rounded-2xl border border-blue-100 mb-4 sm:mb-6">
+      <div id="tour-property-facilities" className="bg-blue-50/50 p-4 sm:p-5 rounded-2xl border border-blue-100 mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-xl text-blue-600">

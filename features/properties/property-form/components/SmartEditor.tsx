@@ -17,13 +17,13 @@ interface SmartEditorProps {
 }
 
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import { 
-  AlertTriangle, 
-  CheckCircle2, 
-  Wand2, 
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Wand2,
   FileEdit,
   ClipboardCheck,
-  Info
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
@@ -90,9 +90,9 @@ export function SmartEditor({
   }
 
   const handleAiGenerate = async () => {
-    const processId = startProcess("AI กำลังวิเคราะห์ข้อมูลทรัพย์สิน", { 
+    const processId = startProcess("AI กำลังวิเคราะห์ข้อมูลทรัพย์สิน", {
       type: "AI_GENERATION",
-      onRetry: handleAiGenerate
+      onRetry: handleAiGenerate,
     });
     setIsAiLoading(true);
 
@@ -103,9 +103,17 @@ export function SmartEditor({
         if (content) {
           setAiDraft(content);
           setShowAiReview(true);
-          finishProcess(processId, "SUCCESS", "ร่างข้อมูลอสังหาฯ สำเร็จ! กรุณาตรวจสอบความถูกต้อง ✨");
+          finishProcess(
+            processId,
+            "SUCCESS",
+            "ร่างข้อมูลอสังหาฯ สำเร็จ! กรุณาตรวจสอบความถูกต้อง ✨",
+          );
         } else {
-          finishProcess(processId, "ERROR", "AI ไม่สามารถสร้างเนื้อหาได้ในขณะนี้");
+          finishProcess(
+            processId,
+            "ERROR",
+            "AI ไม่สามารถสร้างเนื้อหาได้ในขณะนี้",
+          );
         }
       } else {
         // Dummy logic if no provider (Fallback)
@@ -122,7 +130,10 @@ export function SmartEditor({
       }
     } catch (error: unknown) {
       console.error("AI Generation failed:", error);
-      const msg = error instanceof Error ? error.message : "ไม่สามารถเชื่อมต่อ AI ได้ในขณะนี้";
+      const msg =
+        error instanceof Error
+          ? error.message
+          : "ไม่สามารถเชื่อมต่อ AI ได้ในขณะนี้";
       finishProcess(processId, "ERROR", msg);
     } finally {
       setIsAiLoading(false);
@@ -146,7 +157,7 @@ export function SmartEditor({
       className="rounded-xl border border-slate-200 bg-white shadow-sm transition-[border,box-shadow] duration-200 focus-within:border-slate-300 focus-within:shadow-md flex flex-col overflow-hidden"
       style={{ height: height || 650 }}
     >
-      <Toolbar 
+      <Toolbar
         editor={editor}
         disabled={disabled}
         isAiLoading={isAiLoading}
@@ -191,20 +202,23 @@ export function SmartEditor({
 
           {/* AI Output Content */}
           <div className="px-6 pb-8">
-             <div className="flex items-center gap-2 mb-3">
-               <FileEdit className="h-4 w-4 text-slate-400" />
-               <span className="text-xs font-bold text-slate-400 uppercase tracking-tight">AI Generated Draft</span>
-             </div>
-             <div 
-               className="p-6 bg-white border-2 border-indigo-50 rounded-2xl prose prose-sm max-w-none text-slate-700 shadow-sm transition-all focus-within:border-indigo-100 focus-within:ring-4 focus-within:ring-indigo-50/50"
-               contentEditable
-               dangerouslySetInnerHTML={{ __html: aiDraft || "" }}
-               onBlur={(e) => setAiDraft(e.currentTarget.innerHTML)}
-               suppressContentEditableWarning
-             />
-             <p className="mt-3 text-[10px] text-slate-400 italic text-center">
-               💡 เคล็ดลับ: คุณสามารถแก้ไขข้อความด้านบนได้ทันที ก่อนกดยืนยันใช้งาน
-             </p>
+            <div className="flex items-center gap-2 mb-3">
+              <FileEdit className="h-4 w-4 text-slate-400" />
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-tight">
+                AI Generated Draft
+              </span>
+            </div>
+            <div
+              className="p-6 bg-white border-2 border-indigo-50 rounded-2xl prose prose-sm max-w-none text-slate-700 shadow-sm transition-all focus-within:border-indigo-100 focus-within:ring-4 focus-within:ring-indigo-50/50"
+              contentEditable
+              dangerouslySetInnerHTML={{ __html: aiDraft || "" }}
+              onBlur={(e) => setAiDraft(e.currentTarget.innerHTML)}
+              suppressContentEditableWarning
+            />
+            <p className="mt-3 text-[10px] text-slate-400 italic text-center">
+              💡 เคล็ดลับ: คุณสามารถแก้ไขข้อความด้านบนได้ทันที
+              ก่อนกดยืนยันใช้งาน
+            </p>
           </div>
         </div>
 

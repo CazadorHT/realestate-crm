@@ -58,7 +58,7 @@ const ExecutiveRevenueForecastChart = ({ data }: ExecutiveRevenueForecastChartPr
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart
         data={data}
-        margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
+        margin={{ top: 35, right: 30, left: 25, bottom: 10 }}
       >
         <defs>
           <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
@@ -83,6 +83,7 @@ const ExecutiveRevenueForecastChart = ({ data }: ExecutiveRevenueForecastChartPr
           dy={10}
         />
         <YAxis 
+          width={65}
           axisLine={false}
           tickLine={false}
           tick={{ fill: '#94a3b8', fontSize: 10 }}

@@ -40,6 +40,7 @@ interface DashboardHeaderProps {
 export function DashboardHeader({}: DashboardHeaderProps) {
   return (
     <PageHeader
+      id="tour-header"
       title={<span className="font-semibold">Executive Dashboard</span>}
       subtitle="สรุปภาพรวมผลประกอบการและการเติบโตของธุรกิจ"
       icon="pieChart"

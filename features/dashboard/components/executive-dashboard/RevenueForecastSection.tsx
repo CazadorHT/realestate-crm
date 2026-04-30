@@ -73,11 +73,11 @@ export const RevenueForecastSection = memo(function RevenueForecastSection({
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="h-[350px] sm:h-[450px] px-2 sm:px-6 relative mt-4">
+      <CardContent className="h-[350px] sm:h-[450px] px-5 sm:px-6 relative mt-4">
         {mounted ? (
           <ExecutiveRevenueForecastChart data={data} />
         ) : (
-          <div className="h-full w-full bg-slate-100/50 animate-pulse rounded-2xl" />
+          <div className="h-full w-full py-4 bg-slate-100/50 animate-pulse rounded-2xl" />
         )}
       </CardContent>
     </Card>

@@ -506,7 +506,7 @@ export function PropertiesTable({
         </div>
       )}
 
-      <div className="rounded-md border border-gray-200 shadow-sm bg-card overflow-hidden">
+      <div id="tour-property-list-top" className="rounded-md border border-gray-200 shadow-sm bg-card overflow-hidden">
         {/* Desktop Table View */}
         <div className="hidden lg:block overflow-x-auto">
           <Table>

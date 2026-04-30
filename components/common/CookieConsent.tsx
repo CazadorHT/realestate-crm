@@ -78,7 +78,13 @@ export function CookieConsent() {
   // Decide bottom position based on page
   const normalizedPath = pathname?.replace(/^\/(th|en|cn)/, "") || "/";
   const isPropertyRelated = normalizedPath.startsWith("/properties/");
-  const bottomClass = isPropertyRelated ? "bottom-28 md:bottom-22 xl:bottom-6" : "bottom-6";
+  const isPropertyForm = pathname?.includes("/properties/new") || pathname?.includes("/edit");
+  
+  const bottomClass = isPropertyForm 
+    ? "bottom-24 sm:bottom-6" // Lift high for form actions
+    : isPropertyRelated 
+      ? "bottom-28 md:bottom-22 xl:bottom-6" 
+      : "bottom-6";
 
   const [preferences, setPreferences] = useState<CookiePreferences>({
     necessary: true,

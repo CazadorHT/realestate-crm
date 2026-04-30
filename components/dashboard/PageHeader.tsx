@@ -54,6 +54,7 @@ interface PageHeaderProps {
   gradient?: "blue" | "emerald" | "purple" | "amber" | "rose";
   breadcrumbs?: { label: string; href?: string }[];
   children?: ReactNode;
+  id?: string;
 }
 
 const GRADIENT_MAP = {
@@ -76,12 +77,14 @@ export function PageHeader({
   gradient = "blue",
   breadcrumbs,
   children,
+  id,
 }: PageHeaderProps) {
   const Icon = icon ? ICON_MAP[icon] : null;
   const ActionIcon = actionIcon ? ICON_MAP[actionIcon] : null;
 
   return (
     <div
+      id={id}
       className={`relative overflow-hidden rounded-2xl bg-linear-to-r ${GRADIENT_MAP[gradient]} p-6 md:p-8 shadow-xl`}
     >
       {/* Decorative Elements */}

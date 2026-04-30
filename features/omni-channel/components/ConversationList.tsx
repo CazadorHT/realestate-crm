@@ -49,7 +49,7 @@ export function ConversationList({
   };
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto">
+    <div id="tour-inbox-list" className="flex flex-col h-full overflow-y-auto">
       <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <div className="font-bold text-[11px] uppercase tracking-wider text-slate-500">
           การสนทนา ({conversations.length})

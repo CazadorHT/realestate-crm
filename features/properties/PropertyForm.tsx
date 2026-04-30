@@ -593,7 +593,7 @@ export function PropertyForm({
 
   return (
     <div className="relative pb-32 sm:pb-0 lg:px-8 max-w-screen-2xl mx-auto">
-      <PropertyFormTour />
+      <PropertyFormTour onStepChange={setCurrentStep} />
       <TopLoader isLoading={isActuallySubmitting} />
       {/* 1. Header */}
       <PropertyFormHeader

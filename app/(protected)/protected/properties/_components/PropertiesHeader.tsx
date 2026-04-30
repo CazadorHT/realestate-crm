@@ -1,5 +1,7 @@
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
 
 interface PropertiesHeaderProps {
@@ -29,16 +31,36 @@ export function PropertiesHeader({ count }: PropertiesHeaderProps) {
           </p>
         </div>
 
-        <Button
-          asChild
-          size="lg"
-          className="w-full md:w-auto bg-white text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 font-bold h-11 md:h-12"
-        >
-          <Link href="/protected/properties/new">
-            <PlusCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
-            เพิ่มทรัพย์ใหม่
-          </Link>
-        </Button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4">
+          {/* Mock Branch Toggle for Tour */}
+          <div 
+            id="tour-property-all-branches"
+            className="flex items-center gap-3 px-4 py-2 justify-between bg-white/10 backdrop-blur-md rounded-xl border border-white/20 hover:bg-white/20 transition-all group"
+          >
+            <div className="flex flex-col items-end">
+              <Label htmlFor="all-branches-mock" className="text-xs font-bold text-white cursor-pointer select-none">
+                ทุกสาขา (Multi-Branch)
+              </Label>
+              <span className="text-[10px] text-blue-200 font-medium leading-tight">Enterprise Feature</span>
+            </div>
+            <Switch 
+              id="all-branches-mock" 
+              disabled 
+              className="data-[state=checked]:bg-green-400"
+            />
+          </div>
+
+          <Button
+            asChild
+            size="lg"
+            className="bg-white text-blue-600 hover:bg-blue-50 shadow-lg hover:shadow-xl transition-all duration-300 font-bold h-11 md:h-12 rounded-xl"
+          >
+            <Link href="/protected/properties/new">
+              <PlusCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
+              เพิ่มทรัพย์ใหม่
+            </Link>
+          </Button>
+        </div>
       </div>
     </div>
   );

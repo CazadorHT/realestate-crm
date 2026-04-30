@@ -141,7 +141,9 @@ _(มูลค่าสะท้อนฟีเจอร์ระดับ Enter
 - [x] Dynamic Smart Contracts (Word .docx Template to PDF Generator)
 - [x] Advanced Document Preview & E-Sign System
 - [x] Real-time Notification Center (Bell Notification)
-
+- [x] **CRM Guided Tour Optimization**: ระบบสอนใช้งานภาษาไทย รองรับ Mobile Drawer & Keyboard Sync
+- [x] **Mobile UX Excellence**: ระบบ UI ลอยตัวหลบแถบ Actions อัตโนมัติ และ Cookie Consent ยกสูง
+- [x] **Hardened Security Baseline**: Security Headers, 100% RLS Isolation, และ Webhook HMAC Auth
 - [x] **Next.js 16.1.6 + Turbopack + React 19 Upgrade**
 - [x] **Hardened Security Baseline (Webhook HMAC + Redis Idempotency)**
 - [x] **100% Unit Testing (130/130 Passed)**

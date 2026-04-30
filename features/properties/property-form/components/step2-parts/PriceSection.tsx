@@ -207,6 +207,7 @@ export function PriceSection({
                 {/* AI Evaluate Button for Sale */}
                 {!isReadOnly && (
                   <button
+                    id="tour-property-ai-price"
                     type="button"
                     onClick={() => setIsAvmSaleOpen(true)}
                     className="flex w-fit items-center gap-2 px-3 py-1.5 mt-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 transition-colors shadow-sm cursor-pointer hover:shadow-md"

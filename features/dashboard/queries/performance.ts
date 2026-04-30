@@ -117,7 +117,7 @@ export async function getAdvancedTopAgents(
       .gte("created_at", startOfMonth) as unknown as { data: JoinedCommission[] | null; error: any };
 
     if (error || !commissions) {
-      if (error) console.error("Error fetching advanced top agents:", error);
+      if (error) console.error("Error fetching advanced top agents:", error.message || error);
       return [];
     }
 

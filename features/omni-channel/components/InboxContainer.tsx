@@ -40,7 +40,7 @@ export function InboxContainer({
   };
 
   return (
-    <div className="flex flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div className="flex flex-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm ">
       {/* Sidebar: Conversation List */}
       <div className="w-80 border-r border-slate-200">
         <ConversationList

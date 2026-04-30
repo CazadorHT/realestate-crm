@@ -32,6 +32,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Separator } from "@/components/ui/separator";
 import dynamic from "next/dynamic";
 import { TEMPLATES } from "./constants";
@@ -39,7 +45,9 @@ import type { EmojiClickData } from "emoji-picker-react";
 
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
   ssr: false,
-  loading: () => <div className="h-[350px] w-[320px] bg-slate-50 animate-pulse rounded-lg" />
+  loading: () => (
+    <div className="h-[350px] w-[320px] bg-slate-50 animate-pulse rounded-lg" />
+  ),
 });
 
 interface ToolbarProps {
@@ -108,9 +116,13 @@ export function Toolbar({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 2 }).run()
+            }
             className={`h-7 w-7 p-0 rounded-md ${
-              editor.isActive("heading", { level: 2 }) ? "bg-slate-100 text-slate-900" : "text-slate-500"
+              editor.isActive("heading", { level: 2 })
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-500"
             }`}
             disabled={disabled}
             title="Heading 2"
@@ -121,9 +133,13 @@ export function Toolbar({
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            onClick={() =>
+              editor.chain().focus().toggleHeading({ level: 3 }).run()
+            }
             className={`h-7 w-7 p-0 rounded-md ${
-              editor.isActive("heading", { level: 3 }) ? "bg-slate-100 text-slate-900" : "text-slate-500"
+              editor.isActive("heading", { level: 3 })
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-500"
             }`}
             disabled={disabled}
             title="Heading 3"
@@ -139,7 +155,9 @@ export function Toolbar({
             size="sm"
             onClick={() => editor.chain().focus().toggleBold().run()}
             className={`h-7 w-7 p-0 rounded-md ${
-              editor.isActive("bold") ? "bg-slate-100 text-slate-900" : "text-slate-500"
+              editor.isActive("bold")
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-500"
             }`}
             disabled={disabled}
             title="Bold"
@@ -152,7 +170,9 @@ export function Toolbar({
             size="sm"
             onClick={() => editor.chain().focus().toggleItalic().run()}
             className={`h-7 w-7 p-0 rounded-md ${
-              editor.isActive("italic") ? "bg-slate-100 text-slate-900" : "text-slate-500"
+              editor.isActive("italic")
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-500"
             }`}
             disabled={disabled}
             title="Italic"
@@ -165,7 +185,9 @@ export function Toolbar({
             size="sm"
             onClick={setLink}
             className={`h-7 w-7 p-0 rounded-md ${
-              editor.isActive("link") ? "bg-slate-100 text-slate-900" : "text-slate-500"
+              editor.isActive("link")
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-500"
             }`}
             disabled={disabled}
             title="Link"
@@ -194,7 +216,9 @@ export function Toolbar({
             size="sm"
             onClick={() => editor.chain().focus().toggleBulletList().run()}
             className={`h-7 w-7 p-0 rounded-md ${
-              editor.isActive("bulletList") ? "bg-slate-100 text-slate-900" : "text-slate-500"
+              editor.isActive("bulletList")
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-500"
             }`}
             disabled={disabled}
             title="Bullet List"
@@ -207,7 +231,9 @@ export function Toolbar({
             size="sm"
             onClick={() => editor.chain().focus().toggleOrderedList().run()}
             className={`h-7 w-7 p-0 rounded-md ${
-              editor.isActive("orderedList") ? "bg-slate-100 text-slate-900" : "text-slate-500"
+              editor.isActive("orderedList")
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-500"
             }`}
             disabled={disabled}
             title="Ordered List"
@@ -257,7 +283,10 @@ export function Toolbar({
               <Smile className="h-3.5 w-3.5" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-full p-0 border-none shadow-xl z-50" align="start">
+          <PopoverContent
+            className="w-full p-0 border-none shadow-xl z-50"
+            align="start"
+          >
             <EmojiPicker
               onEmojiClick={(emoji: EmojiClickData) => {
                 editor.commands.insertContent(emoji.emoji);
@@ -284,12 +313,24 @@ export function Toolbar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => setLineHeight("leading-none")}>None (1.0)</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLineHeight("leading-tight")}>Tight (1.25)</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLineHeight("leading-snug")}>Snug (1.375)</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLineHeight("leading-normal")}>Normal (1.5)</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLineHeight("leading-relaxed")}>Relaxed (1.625)</DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setLineHeight("leading-loose")}>Loose (2.0)</DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLineHeight("leading-none")}>
+              None (1.0)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLineHeight("leading-tight")}>
+              Tight (1.25)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLineHeight("leading-snug")}>
+              Snug (1.375)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLineHeight("leading-normal")}>
+              Normal (1.5)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLineHeight("leading-relaxed")}>
+              Relaxed (1.625)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setLineHeight("leading-loose")}>
+              Loose (2.0)
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -313,24 +354,6 @@ export function Toolbar({
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
 
-        <Button
-          id="tour-property-ai-writer"
-          type="button"
-          size="sm"
-          onClick={onAiGenerate}
-          disabled={disabled || isAiLoading}
-          className={`
-            h-7 gap-1.5 text-xs font-medium transition-all px-3 shrink-0
-            ${
-              isAiLoading
-                ? "bg-slate-100 text-slate-400"
-                : "bg-linear-to-r from-violet-500 to-fuchsia-500 text-white hover:from-violet-600 hover:to-fuchsia-600 shadow-sm"
-            }
-          `}
-        >
-          <Sparkles className={`h-3.5 w-3.5 ${isAiLoading ? "animate-spin" : ""}`} />
-          {isAiLoading ? "Writing..." : "AI Writer"}
-        </Button>
       </div>
     </div>
   );

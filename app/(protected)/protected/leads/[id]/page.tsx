@@ -30,6 +30,7 @@ import { LeadSmartMatch } from "@/features/smart-match/components/LeadSmartMatch
 type LeadActivity = Database["public"]["Tables"]["lead_activities"]["Row"];
 
 import { LeadDetailTour } from "@/features/leads/_components/LeadDetailTour";
+import { LeadsMatchingTour } from "@/features/leads/_components/LeadsMatchingTour";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 
 export default async function LeadDetailPage({
@@ -98,6 +99,7 @@ export default async function LeadDetailPage({
   return (
     <div className="space-y-8 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pb-20 pt-4">
       <LeadDetailTour />
+      <LeadsMatchingTour />
       <SuccessAnimation />
       {/* Breadcrumb Navigation */}
       <div className="px-1">

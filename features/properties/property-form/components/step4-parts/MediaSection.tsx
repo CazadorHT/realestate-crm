@@ -50,7 +50,7 @@ export const MediaSection = ({
         control={form.control}
         name="images"
         render={({ field }) => (
-          <FormItem className="bg-slate-50/50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-slate-200">
+          <FormItem id="tour-property-upload" className="bg-slate-50/50 p-4 sm:p-6 rounded-xl border-2 border-dashed border-slate-200">
             <FormControl>
               <PropertyImageUploader
                 sessionId={uploadSessionId}

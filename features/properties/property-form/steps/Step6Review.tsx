@@ -98,6 +98,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { cn } from "@/lib/utils";
+import { AiWriterButton } from "../components/AiWriterButton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Step6ReviewProps {
   mode: "create" | "edit";
@@ -133,6 +140,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
     isTranslatingAll,
     translateDescription,
     translateAll,
+    generateAndTranslateAll,
   } = useAITranslation(form);
 
   // Load features and user profile
@@ -364,23 +372,23 @@ export function Step6Review({ mode }: Step6ReviewProps) {
     .filter((f): f is { name: string; icon: string } => !!f)
     .slice(0, 6);
 
+  const [isGenerating, setIsGenerating] = useState(false);
+
   const handleRegenerateDescription = useCallback(async () => {
     try {
-      const newDesc = generatePropertyDescription(form.getValues());
-      form.setValue("description", newDesc, {
-        shouldDirty: true,
-        shouldTouch: true,
-      });
-      toast.success("อัปเดตรายละเอียดเรียบร้อย");
+      setIsGenerating(true);
+      await generateAndTranslateAll();
     } catch (e) {
-      toast.error("เกิดข้อผิดพลาดในการสร้างรายละเอียด");
+      console.error("AI Writer Error:", e);
+    } finally {
+      setIsGenerating(false);
     }
-  }, [form]);
+  }, [generateAndTranslateAll]);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Review Header Alert */}
-      <div className="sticky top-38 z-101 bg-blue-50 border border-blue-100 p-4 sm:p-5 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6 shadow-sm">
+      <div id="tour-property-review" className="sticky top-38 z-101 bg-blue-50 border border-blue-100 p-4 sm:p-5 rounded-2xl flex flex-col lg:flex-row lg:items-center justify-between gap-5 sm:gap-6 shadow-sm">
         <div className="flex items-start gap-3 sm:gap-4">
           <div className="p-2 sm:p-2.5 bg-blue-100/50 rounded-xl text-blue-600 shrink-0">
             <FileCheck className="h-6 w-6 sm:h-7 sm:w-7" />
@@ -408,21 +416,36 @@ export function Step6Review({ mode }: Step6ReviewProps) {
         </div>
 
         <div className="flex flex-col sm:flex-row bg-white/50 backdrop-blur-sm border border-blue-100 p-1.5 rounded-2xl shadow-sm items-center gap-2 sm:gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={translateAll}
-            disabled={isTranslatingAll}
-            className="w-full sm:w-auto h-9 gap-2 border-blue-200 text-blue-600 bg-blue-50 hover:bg-white hover:text-blue-600 font-bold px-4 rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
-          >
-            {isTranslatingAll ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-            )}
-            AI Global Fix
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            <AiWriterButton />
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={translateAll}
+                    disabled={isTranslatingAll}
+                    className="w-full sm:w-auto h-9 gap-2 border-blue-200 text-blue-600 bg-blue-50 hover:bg-white hover:text-blue-600 font-bold px-4 rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
+                  >
+                    {isTranslatingAll ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Languages className="h-3.5 w-3.5 text-blue-500" />
+                    )}
+                    AI Global Fix
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent className="bg-slate-900 text-white border-none shadow-xl px-4 py-2 text-xs">
+                  <div className="flex items-center gap-2">
+                    <Languages className="w-3 h-3 text-blue-400" />
+                    <span>AI Global Fix: ตรวจสอบและแปลข้อมูลทุกส่วนที่ยังไม่สมบูรณ์ให้ครบถ้วน 🌐</span>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
 
           <Separator
             orientation="vertical"
@@ -445,14 +468,10 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                     : "text-slate-500 hover:text-blue-600 hover:bg-blue-50",
                 )}
               >
-                <Languages
-                  className={cn(
-                    "w-3.5 h-3.5 sm:w-4 sm:h-4",
-                    previewLanguage === lang
-                      ? "text-blue-200"
-                      : "text-slate-400",
-                  )}
-                />
+                <span className={cn(
+                  "fi shadow-xs rounded-xs",
+                  lang === "th" ? "fi-th" : lang === "en" ? "fi-us" : lang === "cn" ? "fi-cn" : "fi-ru"
+                )} />
                 {lang === "th" ? "ไทย" : lang === "en" ? "English" : lang === "cn" ? "中文" : "Русский"}
               </button>
             ))}
@@ -547,6 +566,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                         </>
                       ) : (
                         <Button
+                          id="tour-property-edit-content"
                           size="sm"
                           variant="outline"
                           onClick={() => setIsEditingDesc(true)}
@@ -565,30 +585,38 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                           <TabsList className="bg-transparent h-auto p-0 gap-1 flex-1 sm:flex-none">
                             <TabsTrigger
                               value="th"
-                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent"
+                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent gap-2"
                             >
+                              <span className="fi fi-th rounded-sm shadow-xs" />
                               ไทย
                             </TabsTrigger>
                             <TabsTrigger
                               value="en"
-                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent"
+                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent gap-2"
                             >
+                              <span className="fi fi-us rounded-sm shadow-xs" />
                               English
                             </TabsTrigger>
                             <TabsTrigger
                               value="cn"
-                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent"
+                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent gap-2"
                             >
+                              <span className="fi fi-cn rounded-sm shadow-xs" />
                               中文
                             </TabsTrigger>
                             <TabsTrigger
                               value="ru"
-                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent"
+                              className="flex-1 sm:flex-none data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm px-4 sm:px-6 py-2 rounded-xl text-[11px] sm:text-sm font-bold border-transparent gap-2"
                             >
+                              <span className="fi fi-ru rounded-sm shadow-xs" />
                               Русский
                             </TabsTrigger>
                           </TabsList>
-
+                          <AiWriterButton
+                            onClick={handleRegenerateDescription}
+                            disabled={isGenerating}
+                            className="w-full sm:w-auto mt-2 sm:mt-0 border-blue-100 text-blue-600 hover:bg-white hover:text-blue-600 gap-2 h-9 sm:h-10 px-4 sm:px-5 rounded-xl shadow-sm transition-all hover:scale-105 active:scale-95 text-[11px] sm:text-xs"
+                          />
                           <Button
                             type="button"
                             variant="outline"

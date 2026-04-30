@@ -28,8 +28,8 @@ const INVENTORY_LIST_STEPS: TourStep[] = [
   },
   {
     targetId: "tour-filter-price",
-    title: "ปรับแต่งราคาและขนาด 💰",
-    content: "คุณสามารถระบุช่วงราคาที่ต้องการ หรือจำนวนห้องนอนที่ลูกค้ามองหาได้ที่นี่",
+    title: "ตัวกรองขั้นสูง",
+    content: "ปรับแต่งการค้นหาตามความต้องการของคุณ",
     position: "left",
     onEnter: () => {
       // Auto-open filters
@@ -56,7 +56,7 @@ const INVENTORY_LIST_STEPS: TourStep[] = [
     }
   },
   {
-    targetId: "table",
+    targetId: "tour-property-list-top",
     title: "ตารางรายการทรัพย์ 📋",
     content: "คลิกที่แถวใดก็ได้เพื่อดูรายละเอียดเชิงลึก แก้ไขข้อมูล หรือแชร์ลิ้งค์ประกาศไปยัง Social Media",
     position: "top",
