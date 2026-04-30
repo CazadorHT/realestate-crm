@@ -42,6 +42,7 @@ import { TikTokPostButton } from "./components/TikTokPostButton";
 import { FaTiktok } from "react-icons/fa";
 import { TopLoader } from "@/components/ui/top-loader";
 import { AiReviewBanner } from "@/components/shared/AiReviewBanner";
+import { PropertyFormTour } from "./_components/PropertyFormTour";
 
 // Step components (Dynamically imported for chunk-splitting)
 const step1Import = () => import("./property-form/steps/Step1BasicInfo").then((m) => m.Step1BasicInfo);
@@ -592,6 +593,7 @@ export function PropertyForm({
 
   return (
     <div className="relative pb-32 sm:pb-0 lg:px-8 max-w-screen-2xl mx-auto">
+      <PropertyFormTour />
       <TopLoader isLoading={isActuallySubmitting} />
       {/* 1. Header */}
       <PropertyFormHeader

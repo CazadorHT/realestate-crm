@@ -314,6 +314,7 @@ export function Toolbar({
         </Button>
 
         <Button
+          id="tour-property-ai-writer"
           type="button"
           size="sm"
           onClick={onAiGenerate}

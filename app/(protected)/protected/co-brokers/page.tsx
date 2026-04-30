@@ -4,8 +4,10 @@ import { CoBrokersContent } from "@/features/co-brokers/components/CoBrokersCont
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Metadata } from "next";
+import { CoBrokerTour } from "@/features/co-brokers/_components/CoBrokerTour";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "เครือข่ายคู่ค้า | Real Estate CRM",
   description: "จัดการพาร์ทเนอร์และ Co-brokers ในเครือข่ายธุรกิจของคุณ",
 };
@@ -13,6 +15,7 @@ export const metadata = {
 export default async function CoBrokersPage() {
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
+      <CoBrokerTour />
       <PageHeader
         title="เครือข่ายคู่ค้า (Co-Brokers)"
         subtitle="จัดการข้อมูลพาร์ทเนอร์, ตรวจสอบผลงาน และตำแหน่งพื้นที่เชี่ยวชาญ"

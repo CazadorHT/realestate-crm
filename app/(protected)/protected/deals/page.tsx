@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import { getDeals } from "@/features/deals/queries.getDeals";
 import { getPropertiesForSelect } from "@/features/properties/queries/search";
 import { getDealsPageStats } from "@/features/deals/queries";
@@ -16,10 +17,11 @@ import {
 } from "lucide-react";
 import { SectionTitle } from "@/components/dashboard/SectionTitle";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { DealsFinancialsTour } from "@/features/deals/_components/DealsFinancialsTour";
 import { Suspense } from "react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Deals | จัดการดีล",
 };
 
@@ -39,6 +41,7 @@ export default async function DealsPage({
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <DealsFinancialsTour />
       {/* 🚀 1. HEADER (Static with fast context) */}
       <PageHeader
         title="ดีล (Deals)"
@@ -76,7 +79,7 @@ async function DealsStatsSection({ timeRange }: { timeRange: string }) {
 
   return (
     <>
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-5">
+      <div id="tour-deals-stats" className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">ดีลทั้งหมด</CardTitle>
@@ -216,7 +219,7 @@ async function DealsContentSection({
           )}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden p-4">
+        <div id="tour-deals-table" className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden p-4">
           <DealsTable
             initialData={data}
             initialCount={count}

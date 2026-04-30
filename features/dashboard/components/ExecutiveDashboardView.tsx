@@ -25,6 +25,7 @@ import { RevenueChartSection } from "./executive-dashboard/RevenueChartSection";
 import { RevenueForecastSection } from "./executive-dashboard/RevenueForecastSection";
 import { TransactionSummary } from "./executive-dashboard/TransactionSummary";
 import { CommissionCalculator } from "./executive-dashboard/CommissionCalculator";
+import { DashboardTour } from "./DashboardTour";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useExecutiveDashboard } from "../useExecutiveDashboard";
@@ -80,6 +81,7 @@ export function ExecutiveDashboardView({
   return (
     <ErrorBoundary>
       <div className="space-y-4 sm:space-y-8 p-1">
+        <DashboardTour />
         <BranchOnboardingDialog 
           isOpen={showOnboarding} 
           onClose={() => setShowOnboarding(false)} 
@@ -105,6 +107,7 @@ export function ExecutiveDashboardView({
           <div className="flex flex-col xl:flex-row md:items-center justify-between gap-4 sm:gap-6 mb-2">
             <div className="grid grid-cols-3 sm:flex items-center gap-1.5 sm:gap-3 w-full sm:w-auto">
               <Button
+                id="tour-tab-overview"
                 variant={activeTab === "overview" ? "default" : "outline"}
                 onClick={() => setActiveTab("overview")}
                 className={cn(
@@ -118,6 +121,7 @@ export function ExecutiveDashboardView({
                 <span className="truncate">ภาพรวม</span>
               </Button>
               <Button
+                id="tour-tab-agents"
                 variant={activeTab === "agents" ? "default" : "outline"}
                 onClick={() => setActiveTab("agents")}
                 className={cn(
@@ -131,6 +135,7 @@ export function ExecutiveDashboardView({
                 <span className="truncate">ตัวแทน</span>
               </Button>
               <Button
+                id="tour-tab-settings"
                 variant={activeTab === "settings" ? "default" : "outline"}
                 onClick={() => setActiveTab("settings")}
                 className={cn(

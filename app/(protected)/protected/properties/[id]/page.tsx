@@ -17,6 +17,7 @@ import { BsStars } from "react-icons/bs";
 import { Suspense } from "react";
 import { PropertyRelatedDealsSection } from "./_components/PropertyRelatedDealsSection";
 import { PropertyCRMDetailsSkeleton } from "@/components/skeletons/PropertyDetailSkeleton";
+import { PropertyDetailTour } from "@/features/properties/_components/PropertyDetailTour";
 
 interface PropertyWithDetails extends PropertyRow {
   owner: {
@@ -196,6 +197,7 @@ export default async function PropertyDetailsPage({
 
   return (
     <div className="min-h-screen bg-white pb-24 lg:pb-32 font-sans ">
+      <PropertyDetailTour />
       <PropertyAdminHeader property={property} images={images} />
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-8 sm:pb-12 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
@@ -304,12 +306,14 @@ export default async function PropertyDetailsPage({
 
                 {/* Deal & Contracts (CRM only) - Streamed via Suspense */}
                 <Suspense fallback={<PropertyCRMDetailsSkeleton />}>
-                  <PropertyRelatedDealsSection
-                    propertyId={id}
-                    isClosed={isClosed}
-                    property={property}
-                    tenantId={tenantId}
-                  />
+                  <div id="tour-property-related-deals">
+                    <PropertyRelatedDealsSection
+                      propertyId={id}
+                      isClosed={isClosed}
+                      property={property}
+                      tenantId={tenantId}
+                    />
+                  </div>
                 </Suspense>
               </div>
 

@@ -10,8 +10,9 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
 import { History as HistoryIcon } from "lucide-react";
 import { PurgeLogsButton } from "@/features/admin/components/PurgeLogsButton";
+import { Metadata } from "next";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Audit Logs | Admin",
 };
 

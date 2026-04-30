@@ -83,13 +83,15 @@ export function PropertyAdminSidebar({ property }: PropertyAdminSidebarProps) {
         </div>
       </div>
 
-      <AdminAiTriggers
-        propertyId={property.id}
-        hasSummary={!!property.ai_summary_content}
-        hasEmbedding={!!property.embedding && property.embedding.length > 0}
-        requiresReview={!!property.requires_ai_review}
-        isFeatured={!!property.is_featured}
-      />
+      <div id="tour-property-ai-triggers">
+        <AdminAiTriggers
+          propertyId={property.id}
+          hasSummary={!!property.ai_summary_content}
+          hasEmbedding={!!property.embedding && property.embedding.length > 0}
+          requiresReview={!!property.requires_ai_review}
+          isFeatured={!!property.is_featured}
+        />
+      </div>
 
       <PropertySocialGenerator propertyId={property.id} />
 
@@ -103,7 +105,7 @@ export function PropertyAdminSidebar({ property }: PropertyAdminSidebarProps) {
 
       {/* Owner Card (Protected) */}
       {property.owner && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-4 duration-700">
+        <div id="tour-property-owner-card" className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-4 duration-700">
           <div className="px-5 py-3.5 bg-orange-500 flex items-center gap-3">
             <div className="p-1.5 bg-white/20 rounded-lg">
               <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />

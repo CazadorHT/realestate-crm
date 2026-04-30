@@ -10,6 +10,7 @@ import { PropertyFilters } from "@/components/properties/PropertyFilters";
 import { requireAuthContext } from "@/lib/authz";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import { MobileFloatingAction } from "@/components/ui/mobile-floating-action";
+import { InventoryListTour } from "@/features/properties/_components/InventoryListTour";
 import { Suspense } from "react";
 import { createClient } from "@/lib/supabase/server";
 
@@ -82,6 +83,7 @@ export default async function PropertiesPage({
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
+      <InventoryListTour />
       <SuccessAnimation />
       <PropertiesHeaderWrapper params={params} />
 

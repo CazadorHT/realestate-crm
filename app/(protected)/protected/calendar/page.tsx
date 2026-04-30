@@ -19,8 +19,10 @@ import { CalendarDays, Building2 } from "lucide-react";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Metadata } from "next";
+import { CalendarTour } from "@/features/calendar/_components/CalendarTour";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Calendar | CRM",
 };
 
@@ -75,6 +77,7 @@ export default async function CalendarPage({
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
+      <CalendarTour />
       <PageHeader
         title={
           <div className="flex items-center gap-2">

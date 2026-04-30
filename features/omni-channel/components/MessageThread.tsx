@@ -608,6 +608,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
 
         <div className="flex gap-2">
           <input
+            id="tour-inbox-input"
             type="text"
             value={input}
             onChange={(e) => {
@@ -626,6 +627,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
             className="flex-1 bg-slate-100 border-transparent focus:bg-white focus:border-blue-500 rounded-2xl px-5 py-3 text-sm transition-all shadow-inner"
           />
           <button
+            id="tour-inbox-send"
             onClick={handleSend}
             disabled={!input.trim() || isSending}
             className={cn(

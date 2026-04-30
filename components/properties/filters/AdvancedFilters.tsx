@@ -52,6 +52,7 @@ interface Filters {
 }
 
 interface AdvancedFiltersProps {
+  id?: string;
   open: boolean;
   setOpen: (open: boolean) => void;
   filters: Filters;
@@ -64,6 +65,7 @@ interface AdvancedFiltersProps {
 }
 
 export function AdvancedFilters({
+  id,
   open,
   setOpen,
   filters,
@@ -297,6 +299,7 @@ export function AdvancedFilters({
       description="ปรับแต่งการค้นหาตามความต้องการของคุณ"
       trigger={
         <Button
+          id={id}
           variant={activeFilterCount > 0 ? "default" : "outline"}
           className="hover:bg-blue-500! hover:text-white"
         >
@@ -344,6 +347,7 @@ export function AdvancedFilters({
         >
           {/* Sort By Accordion */}
           <AccordionItem
+            id="tour-filter-sort"
             value="sort"
             className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
           >
@@ -389,6 +393,7 @@ export function AdvancedFilters({
           </AccordionItem>
           {/* Property Status Accordion */}
           <AccordionItem
+            id="tour-filter-status"
             value="status"
             className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
           >
@@ -622,6 +627,7 @@ export function AdvancedFilters({
 
           {/* Price & Rooms Accordion */}
           <AccordionItem
+            id="tour-filter-price"
             value="amenities"
             className="border-b-0 bg-white rounded-2xl shadow-sm border border-slate-200 px-4"
           >

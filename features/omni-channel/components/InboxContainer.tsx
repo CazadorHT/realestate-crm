@@ -47,9 +47,9 @@ export function InboxContainer({
           conversations={filteredConversations}
           allConversations={initialConversations}
           selectedLeadId={selectedLeadId}
-          onSelect={setSelectedLeadId}
+          onSelectAction={setSelectedLeadId}
           filterCategory={filterCategory}
-          onFilterChange={handleFilterChange}
+          onFilterChangeAction={handleFilterChange}
         />
       </div>
 

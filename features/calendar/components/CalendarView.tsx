@@ -184,7 +184,7 @@ export function CalendarView({
   return (
     <div className="space-y-4 animate-in fade-in duration-700">
       {/* Header controls - Elite Grid Overhaul */}
-      <div className="grid grid-cols-1 xl:grid-cols-[auto_1fr_auto] items-center gap-4 p-5 bg-white/80 backdrop-blur-md rounded-[32px] border border-slate-200/60 shadow-sm sticky top-0 z-20">
+      <div id="tour-calendar-controls" className="grid grid-cols-1 xl:grid-cols-[auto_1fr_auto] items-center gap-4 p-5 bg-white/80 backdrop-blur-md rounded-[32px] border border-slate-200/60 shadow-sm sticky top-0 z-20">
         
         {/* Section 1: Navigation & Title Group */}
         <div className="flex items-center justify-between xl:justify-start gap-4 w-full">
@@ -345,7 +345,7 @@ export function CalendarView({
           )}
 
           {/* View Mode Toggle - Elite Design Standardized Height */}
-          <div className="flex bg-slate-100/60 p-1.5 gap-1.5 rounded-2xl border border-slate-200/50 w-full lg:w-auto h-11 items-center">
+          <div id="tour-calendar-view-mode" className="flex bg-slate-100/60 p-1.5 gap-1.5 rounded-2xl border border-slate-200/50 w-full lg:w-auto h-11 items-center">
             <button
               onClick={() => handleViewChange("dayGridMonth")}
               className={cn(
@@ -390,7 +390,7 @@ export function CalendarView({
       </div>
 
       {/* Main Calendar Content */}
-      <div className="bg-white rounded-[32px] border border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden p-3 min-h-[700px] transition-all">
+      <div id="tour-calendar-grid" className="bg-white rounded-[32px] border border-slate-200/60 shadow-xl shadow-slate-200/40 overflow-hidden p-3 min-h-[700px] transition-all">
         {/* Event Legend - More Premium */}
         <div className="px-6 py-4 flex flex-wrap gap-5 text-[10px] font-black uppercase tracking-[0.12em] text-slate-400 border-b border-slate-50 mb-2">
           <div className="flex items-center gap-2 group cursor-default">

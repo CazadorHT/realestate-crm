@@ -113,6 +113,7 @@ export function GlobalSearch({
             className,
           )}
           onClick={() => setOpen(true)}
+          id="tour-search"
         >
           <Search className="mr-2.5 h-4 w-4 text-slate-400 group-hover:text-blue-500 transition-colors shrink-0" />
           <span className="truncate">ค้นชื่อทรัพย์, ลูกค้า, เบอร์โทร...</span>

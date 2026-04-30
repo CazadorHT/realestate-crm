@@ -193,7 +193,9 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-      <CoBrokerStats stats={stats} />
+      <div id="tour-cobrokers-stats">
+        <CoBrokerStats stats={stats} />
+      </div>
 
       <Tabs 
         defaultValue="active" 
@@ -223,6 +225,7 @@ export function CoBrokersContent({ initialData }: CoBrokersContentProps) {
                   รายงาน CSV
                 </Button>
                 <Button 
+                   id="tour-cobrokers-add"
                    onClick={() => setIsDialogOpen(true)} 
                    className="bg-blue-600 hover:bg-blue-700 h-12 shadow-xl shadow-blue-100 font-bold px-8 rounded-2xl"
                    disabled={showTrash}

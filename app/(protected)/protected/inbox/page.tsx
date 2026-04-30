@@ -1,8 +1,10 @@
 import { getInboxConversationsQuery } from "@/features/omni-channel/queries";
 import { InboxContainer } from "@/features/omni-channel/components/InboxContainer";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { Metadata } from "next";
+import { InboxTour } from "@/features/omni-channel/_components/InboxTour";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "กล่องข้อความรวม (Omni-channel Inbox)",
   description: "จัดการข้อความจากทุกช่องทางในที่เดียว",
 };
@@ -12,6 +14,7 @@ import { Suspense } from "react";
 export default async function InboxPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] space-y-6">
+      <InboxTour />
       <PageHeader
         title="กล่องข้อความรวม"
         subtitle="จัดการการแชทจาก LINE, Facebook, และช่องทางอื่นๆ"

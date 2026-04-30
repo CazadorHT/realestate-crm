@@ -27,16 +27,16 @@ export function ConversationList({
   conversations,
   allConversations,
   selectedLeadId,
-  onSelect,
+  onSelectAction,
   filterCategory,
-  onFilterChange,
+  onFilterChangeAction,
 }: {
   conversations: Conversation[];
   allConversations: Conversation[];
   selectedLeadId: string | null;
-  onSelect: (id: string) => void;
+  onSelectAction: (id: string) => void;
   filterCategory: string | null;
-  onFilterChange: (id: string | null) => void;
+  onFilterChangeAction: (id: string | null) => void;
 }) {
   const { isMultiTenantEnabled } = useTenant();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -60,10 +60,13 @@ export function ConversationList({
           onOpenChange={setIsFilterOpen}
           title="กรองประเภทผู้ติดต่อ"
           trigger={
-            <button className={cn(
-              "p-1.5 rounded-lg border transition-all hover:bg-white active:scale-95 flex items-center gap-1.5",
-              filterCategory ? "bg-blue-50 border-blue-200 text-blue-600" : "bg-transparent border-slate-200 text-slate-500"
-            )}>
+            <button 
+              id="tour-inbox-filter-btn"
+              className={cn(
+                "p-1.5 rounded-lg border transition-all hover:bg-white active:scale-95 flex items-center gap-1.5",
+                filterCategory ? "bg-blue-50 border-blue-200 text-blue-600" : "bg-transparent border-slate-200 text-slate-500"
+              )}
+            >
               <ListFilter className="w-3.5 h-3.5" />
               {filterCategory && (
                 <span className="text-[9px] font-bold uppercase tracking-tight">
@@ -83,7 +86,7 @@ export function ConversationList({
               <button
                 key={option.id?.toString() || "all"}
                 onClick={() => {
-                  onFilterChange(option.id);
+                  onFilterChangeAction(option.id);
                   setIsFilterOpen(false);
                 }}
                 className={cn(
@@ -148,7 +151,7 @@ export function ConversationList({
           return (
             <button
               key={conv.id}
-              onClick={() => onSelect(conv.id)}
+              onClick={() => onSelectAction(conv.id)}
               className={cn(
                 "w-full p-4 pl-3 flex gap-3 text-left transition-all hover:bg-slate-50 border-b border-slate-50 relative group",
                 selectedLeadId === conv.id ? "bg-blue-50" : "bg-white",

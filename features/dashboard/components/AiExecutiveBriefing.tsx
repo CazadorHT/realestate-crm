@@ -42,7 +42,7 @@ export function AiExecutiveBriefing({
   if (!insights) return null;
 
   return (
-    <div className={cn("space-y-6", className)}>
+    <div id="tour-ai-briefing" className={cn("space-y-6", className)}>
       {/* Main Summary & Forecast */}
       <div className="grid gap-6 grid-cols-1 md:grid-cols-3 ">
         <Card className="md:col-span-2 border-0 shadow-lg bg-linear-to-br from-indigo-500 to-blue-600 text-white relative overflow-hidden">

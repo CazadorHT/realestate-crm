@@ -38,7 +38,7 @@ export function DashboardHeader({ email, name }: DashboardHeaderProps) {
   }, []);
 
   return (
-    <div className="relative overflow-hidden flex flex-col lg:flex-row md:items-center justify-between gap-6 bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-10 rounded-3xl shadow-xl">
+    <div id="tour-header" className="relative overflow-hidden flex flex-col lg:flex-row md:items-center justify-between gap-6 bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 p-6 md:p-10 rounded-3xl shadow-xl">
       {/* Decorative background elements */}
       <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
       <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-white/5 rounded-full blur-2xl" />

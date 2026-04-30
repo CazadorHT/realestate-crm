@@ -173,11 +173,13 @@ export function PropertyFilters({
   return (
     <div className="flex flex-col lg:flex-row items-center gap-2 w-full">
       <div className="flex items-center gap-2 w-full lg:w-auto flex-1">
-        <QuickSearch
-          value={filters.q}
-          onChange={(q) => setFilters({ ...filters, q })}
-          onSearch={applyFilters}
-        />
+        <div id="tour-property-search" className="flex-1">
+          <QuickSearch
+            value={filters.q}
+            onChange={(q) => setFilters({ ...filters, q })}
+            onSearch={applyFilters}
+          />
+        </div>
 
         {/* Mobile Filter Trigger */}
         <div className="flex lg:hidden gap-2">
@@ -200,6 +202,7 @@ export function PropertyFilters({
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
+                id="tour-property-ai-filter"
                 variant="outline"
                 size="sm"
                 onClick={() => {
@@ -296,6 +299,7 @@ export function PropertyFilters({
         />
 
         <AdvancedFilters
+          id="tour-property-advanced-filters"
           open={open}
           setOpen={setOpen}
           filters={filters}
@@ -308,6 +312,7 @@ export function PropertyFilters({
         />
         {isMultiTenant && (
           <div
+            id="tour-property-all-branches"
             className={cn(
               "flex items-center gap-2 px-3 h-9 py-1.5 bg-blue-50/50 border border-blue-200 rounded-lg transition-all duration-200 shadow-xs select-none",
               isPending

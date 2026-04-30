@@ -37,7 +37,7 @@ export function LeadSmartMatch({ leadId, leadName, initialSummary }: LeadSmartMa
   };
 
   return (
-    <div className="rounded-3xl bg-white border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden transition-all duration-500">
+    <div id="tour-leads-smart-match" className="rounded-3xl bg-white border border-slate-100 shadow-xl shadow-slate-200/40 overflow-hidden transition-all duration-500">
       <div className="p-6 md:p-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -52,6 +52,7 @@ export function LeadSmartMatch({ leadId, leadName, initialSummary }: LeadSmartMa
           </div>
 
           <button
+            id="tour-leads-scan-btn"
             onClick={handleScan}
             disabled={loading}
             className="inline-flex  items-center justify-center gap-2 px-6 py-3 rounded-xl bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-all active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none shadow-lg shadow-slate-900/10"

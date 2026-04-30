@@ -437,6 +437,7 @@ export function PropertyImageUploader({
       {images.length < maxFiles && (
         <div
           {...getRootProps()}
+          id="tour-property-upload"
           className={cn(
             "border-2 border-dashed rounded-lg p-4 sm:p-8 text-center cursor-pointer transition-colors",
             isDragActive
@@ -480,7 +481,7 @@ export function PropertyImageUploader({
               items={images.map((img) => img.id)}
               strategy={rectSortingStrategy}
             >
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div id="tour-property-images-grid" className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                 {images.map((image, index) => (
                   <SortableImageItem
                     key={image.id}

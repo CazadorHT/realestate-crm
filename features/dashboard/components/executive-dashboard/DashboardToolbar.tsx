@@ -72,7 +72,7 @@ export function DashboardToolbar({
   };
 
   return (
-    <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 sm:gap-4 w-full bg-white/50 backdrop-blur-md border border-slate-200/60 p-2 sm:p-3 rounded-2xl shadow-sm">
+    <div id="tour-toolbar" className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 sm:gap-4 w-full bg-white/50 backdrop-blur-md border border-slate-200/60 p-2 sm:p-3 rounded-2xl shadow-sm">
       <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
         {allBranches.length > 0 && (
           <>

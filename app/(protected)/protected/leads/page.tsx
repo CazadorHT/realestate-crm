@@ -22,6 +22,7 @@ import { getSystemConfig } from "@/lib/actions/system-config";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 import { MobileFloatingAction } from "@/components/ui/mobile-floating-action";
 import { UserPlus } from "lucide-react";
+import { LeadsListTour } from "@/features/leads/_components/LeadsListTour";
 import { Suspense } from "react";
 
 export default async function LeadsPage({
@@ -58,6 +59,7 @@ export default async function LeadsPage({
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <LeadsListTour />
       <SuccessAnimation />
       
       {/* 1. HEADER (Static part fetched in wrapper) */}
@@ -169,7 +171,9 @@ async function LeadsContentWrapper({
           color="emerald"
         />
 
-        <LeadsFilters />
+        <div id="tour-leads-filters">
+          <LeadsFilters />
+        </div>
 
         {isEmptyState ? (
           <EmptyState
@@ -181,14 +185,16 @@ async function LeadsContentWrapper({
             actionIcon="userPlus"
           />
         ) : (
-          <LeadsTable
-            leads={listLeads}
-            totalCount={count}
-            showBranch={sp.allBranches === "true"}
-            currentTenantId={tenantId}
-            isMultiTenant={isMultiTenant}
-            filters={{ q: sp.q, stage: sp.stage }}
-          />
+          <div id="tour-leads-table">
+            <LeadsTable
+              leads={listLeads}
+              totalCount={count}
+              showBranch={sp.allBranches === "true"}
+              currentTenantId={tenantId}
+              isMultiTenant={isMultiTenant}
+              filters={{ q: sp.q, stage: sp.stage }}
+            />
+          </div>
         )}
       </div>
     );
