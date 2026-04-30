@@ -79,7 +79,7 @@ export default async function ProtectedLayout({
               </div>
             </header>
 
-            <main className="flex-1 p-6 md:p-8 mx-auto w-full">
+            <main className="flex-1 p-4 sm:p-6 md:p-8 mx-auto w-full">
               <ErrorBoundary>{children}</ErrorBoundary>
             </main>
             <ProcessMonitor />

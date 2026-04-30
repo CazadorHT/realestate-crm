@@ -67,27 +67,27 @@ export function StatsCard({
           color === "amber" && "bg-amber-500",
         )}
       />
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-sm font-medium text-slate-500">
+      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 px-4 xs:px-6">
+        <CardTitle className="text-xs xs:text-sm font-medium text-slate-500">
           {title}
         </CardTitle>
         <div
           className={cn(
-            "p-2 rounded-xl transition-all duration-300 group-hover:scale-110",
+            "p-1.5 xs:p-2 rounded-xl transition-all duration-300 group-hover:scale-110",
             colorMap[color],
           )}
         >
-          <Icon className="w-5 h-5" />
+          <Icon className="w-4 h-4 xs:w-5 xs:h-5" />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="flex items-baseline justify-between gap-2">
-          <div className="text-2xl font-bold text-slate-900 tracking-tight">
+      <CardContent className="px-4 xs:px-6">
+        <div className="flex flex-col xs:flex-row xs:items-baseline justify-between gap-1 xs:gap-2">
+          <div className="text-xl xs:text-2xl font-bold text-slate-900 tracking-tight shrink-0">
             {isCurrency ? formatThaiCurrency(value) : value.toLocaleString()}
             {suffix}
           </div>
           {compareValue !== undefined && compareValue !== null && (
-            <div className="text-[10px] font-bold text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded-lg border border-indigo-100 truncate max-w-[120px]">
+            <div className="text-[10px] font-bold text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded-lg border border-indigo-100 truncate max-w-full xs:max-w-[120px] self-start xs:self-auto">
               VS {isCurrency ? formatThaiCurrency(compareValue) : compareValue.toLocaleString()}
               {suffix}
             </div>

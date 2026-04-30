@@ -2,14 +2,14 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { 
-  Search, 
-  Building2, 
-  UserCircle, 
-  Briefcase, 
+import {
+  Search,
+  Building2,
+  UserCircle,
+  Briefcase,
   FileText,
-  Command as CommandIcon, 
-  Loader2
+  Command as CommandIcon,
+  Loader2,
 } from "lucide-react";
 import {
   Command,
@@ -19,7 +19,10 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { globalSearchAction, type SearchResult } from "@/app/actions/global-search";
+import {
+  globalSearchAction,
+  type SearchResult,
+} from "@/app/actions/global-search";
 import { useDebounce } from "use-debounce";
 import { cn } from "@/lib/utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
@@ -29,7 +32,10 @@ export interface GlobalSearchProps {
   variant?: "auto" | "bar" | "icon";
 }
 
-export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps) {
+export function GlobalSearch({
+  className,
+  variant = "auto",
+}: GlobalSearchProps) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [results, setResults] = React.useState<SearchResult[]>([]);
@@ -73,11 +79,11 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
   const onSelect = (url: string) => {
     setNavigatingUrl(url);
     router.push(url);
-    // Note: Open stays true until router actually navigates, 
+    // Note: Open stays true until router actually navigates,
     // or we can close it, but then we lose the loading state visibility.
     // Let's close it after a short delay or just let it be.
     // Actually, usually we close it immediately.
-    // But since the user wants to see "loading", we should keep it open 
+    // But since the user wants to see "loading", we should keep it open
     // or show something.
     // Let's close it after navigation starts.
   };
@@ -104,7 +110,7 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
           className={cn(
             "relative h-11 w-full justify-start bg-slate-50/50 text-xs sm:text-sm font-medium text-slate-500 shadow-none border-slate-200/60 pr-10 hover:bg-white hover:border-blue-200 hover:text-blue-600 transition-all rounded-xl group truncate shrink-0",
             variant === "auto" && "hidden md:flex md:w-[220px] lg:w-[280px]",
-            className
+            className,
           )}
           onClick={() => setOpen(true)}
         >
@@ -124,7 +130,7 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
           className={cn(
             "h-10 w-10 rounded-full bg-slate-50/80 text-slate-500 hover:bg-blue-50 hover:text-blue-600 transition-colors shrink-0",
             variant === "auto" && "md:hidden",
-            className
+            className,
           )}
           onClick={() => setOpen(true)}
           aria-label="ค้นหา"
@@ -141,7 +147,10 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
         loadingText="กำลังสืบค้นข้อมูล..."
         minHeight="400px"
       >
-        <Command shouldFilter={false} className="rounded-none h-full max-h-screen w-full bg-transparent">
+        <Command
+          shouldFilter={false}
+          className="rounded-none h-full max-h-screen w-full bg-transparent"
+        >
           <div className="flex items-center border-b border-slate-200/60 px-4 bg-white/50">
             <Search className="h-5 w-5 text-slate-400 shrink-0" />
             <CommandInput
@@ -152,9 +161,9 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
               autoFocus
             />
             {query.length > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              <Button
+                variant="ghost"
+                size="sm"
                 className="h-8 px-2 mr-6 text-xs font-bold text-slate-400 hover:text-slate-600"
                 onClick={() => setQuery("")}
               >
@@ -162,18 +171,22 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
               </Button>
             )}
           </div>
-          
+
           <CommandList className="max-h-[70vh] sm:max-h-[480px] p-2 overflow-y-auto w-full custom-scrollbar">
             {/* The ResponsiveDialog premium loader handles the loading overlay */}
-            
+
             {!loading && results.length === 0 && query.length >= 2 && (
               <div className="py-20 flex flex-col items-center justify-center gap-4 text-slate-400">
                 <div className="h-16 w-16 bg-slate-100 rounded-full flex items-center justify-center">
                   <Search className="h-8 w-8 opacity-20" />
                 </div>
                 <div className="text-center space-y-1">
-                  <p className="text-sm font-bold text-slate-600">ไม่พบข้อมูลที่ตรงกับ "{query}"</p>
-                  <p className="text-xs text-slate-400 px-10">ลองค้นหาด้วยคำอื่น หรือตรวจสอบตัวสะกดอีกครั้ง</p>
+                  <p className="text-sm font-bold text-slate-600">
+                    ไม่พบข้อมูลที่ตรงกับ "{query}"
+                  </p>
+                  <p className="text-xs text-slate-400 px-10">
+                    ลองค้นหาด้วยคำอื่น หรือตรวจสอบตัวสะกดอีกครั้ง
+                  </p>
                 </div>
               </div>
             )}
@@ -184,17 +197,25 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                   <CommandIcon className="h-8 w-8 text-blue-200" />
                 </div>
                 <div className="text-center space-y-1">
-                  <p className="text-sm font-bold text-slate-500">ระบบค้นหาอัจฉริยะ</p>
+                  <p className="text-sm font-bold text-slate-500">
+                    ระบบค้นหาอัจฉริยะ
+                  </p>
                   <p className="text-xs text-slate-400 px-10 leading-relaxed max-w-[280px]">
-                    พิมพ์รหัสทรัพย์ (REF), ชื่อลูกค้า, เบอร์โทร <br/> หรือชื่อเอเจนท์เพื่อเริ่มต้น
+                    พิมพ์รหัสทรัพย์ (REF), ชื่อลูกค้า, เบอร์โทร <br />{" "}
+                    หรือชื่อเอเจนท์เพื่อเริ่มต้น
                   </p>
                 </div>
               </div>
             )}
 
             {properties.length > 0 && (
-              <CommandGroup 
-                heading={<span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-blue-600 mb-2 px-2 mt-4">ทรัพย์สิน (Properties) <span className="h-px flex-1 bg-blue-100" /></span>}
+              <CommandGroup
+                heading={
+                  <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-blue-600 mb-2 px-2 mt-4">
+                    ทรัพย์สิน (Properties){" "}
+                    <span className="h-px flex-1 bg-blue-100" />
+                  </span>
+                }
                 className="px-1"
               >
                 {properties.map((item) => (
@@ -211,7 +232,9 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                       )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="font-bold text-slate-800 text-sm truncate group-hover:text-blue-700 transition-colors">{item.title}</span>
+                      <span className="font-bold text-slate-800 text-sm truncate group-hover:text-blue-700 transition-colors">
+                        {item.title}
+                      </span>
                       {item.subtitle && (
                         <span className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
                           {item.subtitle}
@@ -220,8 +243,18 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                     </div>
                     <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="h-7 w-7 rounded-full bg-blue-50 flex items-center justify-center">
-                        <svg className="w-3.5 h-3.5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        <svg
+                          className="w-3.5 h-3.5 text-blue-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </div>
                     </div>
@@ -231,8 +264,13 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
             )}
 
             {leads.length > 0 && (
-              <CommandGroup 
-                heading={<span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-emerald-600 mb-2 px-2 mt-4">ผู้สนใจ (Leads) <span className="h-px flex-1 bg-emerald-100" /></span>}
+              <CommandGroup
+                heading={
+                  <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-emerald-600 mb-2 px-2 mt-4">
+                    ผู้สนใจ (Leads){" "}
+                    <span className="h-px flex-1 bg-emerald-100" />
+                  </span>
+                }
                 className="px-1"
               >
                 {leads.map((item) => (
@@ -249,7 +287,9 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                       )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="font-bold text-slate-800 text-sm truncate group-hover:text-emerald-700 transition-colors">{item.title}</span>
+                      <span className="font-bold text-slate-800 text-sm truncate group-hover:text-emerald-700 transition-colors">
+                        {item.title}
+                      </span>
                       {item.subtitle && (
                         <span className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
                           {item.subtitle}
@@ -258,8 +298,18 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                     </div>
                     <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="h-7 w-7 rounded-full bg-emerald-50 flex items-center justify-center">
-                        <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        <svg
+                          className="w-3.5 h-3.5 text-emerald-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </div>
                     </div>
@@ -269,8 +319,13 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
             )}
 
             {deals.length > 0 && (
-              <CommandGroup 
-                heading={<span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-purple-600 mb-2 px-2 mt-4">ดีลการขาย (Deals) <span className="h-px flex-1 bg-purple-100" /></span>}
+              <CommandGroup
+                heading={
+                  <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-purple-600 mb-2 px-2 mt-4">
+                    ดีลการขาย (Deals){" "}
+                    <span className="h-px flex-1 bg-purple-100" />
+                  </span>
+                }
                 className="px-1"
               >
                 {deals.map((item) => (
@@ -287,7 +342,9 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                       )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="font-bold text-slate-800 text-sm truncate group-hover:text-purple-700 transition-colors">{item.title}</span>
+                      <span className="font-bold text-slate-800 text-sm truncate group-hover:text-purple-700 transition-colors">
+                        {item.title}
+                      </span>
                       {item.subtitle && (
                         <span className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
                           {item.subtitle}
@@ -296,8 +353,18 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                     </div>
                     <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="h-7 w-7 rounded-full bg-purple-50 flex items-center justify-center">
-                        <svg className="w-3.5 h-3.5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        <svg
+                          className="w-3.5 h-3.5 text-purple-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </div>
                     </div>
@@ -307,8 +374,13 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
             )}
 
             {agents.length > 0 && (
-              <CommandGroup 
-                heading={<span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-indigo-600 mb-2 px-2 mt-4">เอเจนท์ / ทีมงาน (Agents) <span className="h-px flex-1 bg-indigo-100" /></span>}
+              <CommandGroup
+                heading={
+                  <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-indigo-600 mb-2 px-2 mt-4">
+                    เอเจนท์ / ทีมงาน (Agents){" "}
+                    <span className="h-px flex-1 bg-indigo-100" />
+                  </span>
+                }
                 className="px-1"
               >
                 {agents.map((item) => (
@@ -325,7 +397,9 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                       )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="font-bold text-slate-800 text-sm truncate group-hover:text-indigo-700 transition-colors">{item.title}</span>
+                      <span className="font-bold text-slate-800 text-sm truncate group-hover:text-indigo-700 transition-colors">
+                        {item.title}
+                      </span>
                       {item.subtitle && (
                         <span className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
                           {item.subtitle}
@@ -334,8 +408,18 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                     </div>
                     <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="h-7 w-7 rounded-full bg-indigo-50 flex items-center justify-center">
-                        <svg className="w-3.5 h-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        <svg
+                          className="w-3.5 h-3.5 text-indigo-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </div>
                     </div>
@@ -345,8 +429,13 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
             )}
 
             {owners.length > 0 && (
-              <CommandGroup 
-                heading={<span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-amber-600 mb-2 px-2 mt-4">เจ้าของทรัพย์ (Owners) <span className="h-px flex-1 bg-amber-100" /></span>}
+              <CommandGroup
+                heading={
+                  <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-amber-600 mb-2 px-2 mt-4">
+                    เจ้าของทรัพย์ (Owners){" "}
+                    <span className="h-px flex-1 bg-amber-100" />
+                  </span>
+                }
                 className="px-1"
               >
                 {owners.map((item) => (
@@ -363,7 +452,9 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                       )}
                     </div>
                     <div className="flex flex-col min-w-0 flex-1">
-                      <span className="font-bold text-slate-800 text-sm truncate group-hover:text-amber-700 transition-colors">{item.title}</span>
+                      <span className="font-bold text-slate-800 text-sm truncate group-hover:text-amber-700 transition-colors">
+                        {item.title}
+                      </span>
                       {item.subtitle && (
                         <span className="text-[11px] text-slate-500 font-medium truncate mt-0.5">
                           {item.subtitle}
@@ -372,8 +463,18 @@ export function GlobalSearch({ className, variant = "auto" }: GlobalSearchProps)
                     </div>
                     <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <div className="h-7 w-7 rounded-full bg-amber-50 flex items-center justify-center">
-                        <svg className="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                        <svg
+                          className="w-3.5 h-3.5 text-amber-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            d="M9 5l7 7-7 7"
+                          />
                         </svg>
                       </div>
                     </div>

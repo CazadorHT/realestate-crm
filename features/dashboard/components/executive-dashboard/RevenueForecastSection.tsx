@@ -46,11 +46,11 @@ export const RevenueForecastSection = memo(function RevenueForecastSection({
       
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-bold flex items-center gap-2 text-slate-800">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <BrainCircuit className="h-5 w-5 text-blue-600" />
+          <CardTitle className="text-base xs:text-lg font-bold flex items-center gap-2 text-slate-800">
+            <div className="p-1.5 xs:p-2 bg-blue-100 rounded-lg shrink-0">
+              <BrainCircuit className="h-4 w-4 xs:h-5 xs:w-5 text-blue-600" />
             </div>
-            AI Market Intelligence: ทำนายรายได้ล่วงหน้า
+            <span className="leading-tight">AI Market Intelligence</span>
           </CardTitle>
           
           <TooltipProvider>
@@ -68,8 +68,8 @@ export const RevenueForecastSection = memo(function RevenueForecastSection({
             </Tooltip>
           </TooltipProvider>
         </div>
-        <CardDescription className="text-xs text-slate-500 ml-11">
-          การวิเคราะห์รายได้จริง (Past) เทียบกับรายได้คาดการณ์ (Future) แม่นยำด้วย Machine Learning
+        <CardDescription className="text-[10px] xs:text-xs text-slate-500 ml-9 xs:ml-11">
+          การวิเคราะห์รายได้จริง เทียบกับคาดการณ์ล่วงหน้า
         </CardDescription>
       </CardHeader>
       

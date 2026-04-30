@@ -72,7 +72,7 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
             : `รายได้ปี ${selectedYear}`;
 
   return (
-    <Card className="shadow-lg border-none bg-white overflow-hidden group h-full flex flex-col">
+    <Card className="shadow-lg border-none bg-white overflow-hidden group h-full flex flex-col ">
       <CardHeader className="pb-2 shrink-0">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
@@ -114,14 +114,13 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
           </Select>
         </div>
       </CardHeader>
-      <CardContent className="pt-4">
+      <CardContent className="pt-4 pb-6 sm:pb-8">
         <div className="h-[280px] w-full relative">
           {loading && (
             <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-xl">
               <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent shadow-lg"></div>
             </div>
           )}
-
           {!data || data.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
               <p className="text-slate-400 text-sm font-medium">
@@ -135,7 +134,7 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
             >
               <BarChart
                 data={data}
-                margin={{ top: 10, right: 10, left: 20, bottom: 20 }}
+                margin={{ top: 10, right: 10, left: 10, bottom: 25 }}
               >
                 <defs>
                   <linearGradient
@@ -156,7 +155,7 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
                   fontWeight={600}
                   tickLine={false}
                   axisLine={false}
-                  dy={10}
+                  dy={5}
                 />
                 <YAxis
                   stroke="#64748b"

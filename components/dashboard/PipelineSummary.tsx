@@ -22,7 +22,7 @@ export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pb-6">
         <div className="space-y-2">
           {data.map((stage) => {
             const percentage =

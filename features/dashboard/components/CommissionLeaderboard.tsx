@@ -52,46 +52,46 @@ export function CommissionLeaderboard({
       <div className="absolute -top-24 -right-24 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors duration-700" />
       <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-colors duration-700" />
 
-      <CardHeader className="pb-4 px-6 relative z-10 border-b border-slate-100/50">
+      <CardHeader className="pb-4 px-4 sm:px-6 relative z-10 border-b border-slate-100/50">
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <CardTitle className="text-xl font-semibold text-slate-800 flex items-center gap-2 tracking-tight">
-              <span className="p-2 bg-indigo-50 text-indigo-600 rounded-xl shadow-sm border border-indigo-100">
-                <Trophy className="h-5 w-5" />
+            <CardTitle className="text-lg xs:text-xl font-semibold text-slate-800 flex items-center gap-2 tracking-tight">
+              <span className="p-1.5 xs:p-2 bg-indigo-50 text-indigo-600 rounded-xl shadow-sm border border-indigo-100">
+                <Trophy className="h-4 w-4 xs:h-5 xs:w-5" />
               </span>
               {title}
             </CardTitle>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-11">
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest pl-9 xs:pl-11">
               สะสมคอมมิชชั่นสุทธิ (เดือนนี้)
             </p>
           </div>
           <div className="flex flex-col items-end">
             <Badge
               variant="outline"
-              className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[10px] px-2 py-0.5 rounded-full"
+              className="bg-indigo-50 text-indigo-700 border-indigo-100 font-bold text-[9px] xs:text-[10px] px-2 py-0.5 rounded-full"
             >
-              LIVE RANKING
+              LIVE
             </Badge>
           </div>
         </div>
       </CardHeader>
 
-      <CardContent className="px-6 py-6 relative z-10">
+      <CardContent className="px-4 sm:px-6 py-4 sm:py-6 relative z-10">
         <div className="space-y-6">
           {data.map((agent, index) => (
             <div key={agent.id} className="relative group/item">
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 min-w-0 flex-1">
                   {/* Rank Circle */}
                   <div
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-black text-sm transition-transform duration-300 group-hover/item:scale-110 shadow-md ${getRankStyle(index)}`}
+                    className={`flex h-8 w-8 xs:h-9 xs:w-9 shrink-0 items-center justify-center rounded-full font-black text-xs xs:text-sm transition-transform duration-300 group-hover/item:scale-110 shadow-md ${getRankStyle(index)}`}
                   >
                     {index + 1}
                   </div>
 
-                  <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <Avatar className="h-12 w-12 border-2 border-white shadow-md transition-transform duration-300 group-hover/item:-translate-y-1">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="relative shrink-0">
+                      <Avatar className="h-10 w-10 xs:h-12 xs:w-12 border-2 border-white shadow-md transition-transform duration-300 group-hover/item:-translate-y-1">
                         <AvatarImage src={agent.avatar_url || ""} />
                         <AvatarFallback className="bg-linear-to-br from-slate-100 to-slate-200 font-bold text-slate-500">
                           {agent.name.slice(0, 2).toUpperCase()}
@@ -104,39 +104,39 @@ export function CommissionLeaderboard({
                       )}
                     </div>
 
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-base font-black text-slate-800 truncate leading-none">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <p className="text-sm xs:text-base font-black text-slate-800 truncate leading-none">
                           {agent.name}
                         </p>
                         {index === 0 && (
-                          <span className="text-[10px] font-bold bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded uppercase tracking-tighter shadow-sm animate-pulse-slow">
+                          <span className="shrink-0 text-[8px] xs:text-[10px] font-bold bg-yellow-400 text-yellow-900 px-1 xs:px-1.5 py-0.5 rounded uppercase tracking-tighter shadow-sm">
                             MVP
                           </span>
                         )}
                       </div>
-                      <p className="text-[11px] text-slate-400 font-bold mt-1 flex items-center gap-1">
-                        <Target className="h-3 w-3 text-slate-300" />
-                        {agent.deals_count} ดีลสำเร็จ
+                      <p className="text-[10px] xs:text-[11px] text-slate-400 font-bold mt-1 flex items-center gap-1">
+                        <Target className="h-2.5 w-2.5 xs:h-3 xs:w-3 text-slate-300" />
+                        {agent.deals_count} ดีล
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <div className="flex items-center justify-end gap-1 text-emerald-600 font-black text-lg leading-none">
-                    <TrendingUp className="h-4 w-4" />฿
+                <div className="text-right shrink-0 ml-2">
+                  <div className="flex items-center justify-end gap-0.5 xs:gap-1 text-emerald-600 font-black text-sm xs:text-lg leading-none">
+                    <TrendingUp className="h-3 w-3 xs:h-4 xs:w-4" />฿
                     {agent.total_commission.toLocaleString()}
                   </div>
-                  <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">
-                    NET COMMISSION
+                  <p className="text-[8px] xs:text-[9px] text-slate-400 font-bold uppercase mt-1">
+                    COMMISSION
                   </p>
                 </div>
               </div>
 
               {/* Progress Bar */}
-              <div className="pl-13 pr-1">
-                <div className="relative h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div className="pl-11 xs:pl-13 pr-1">
+                <div className="relative h-1.5 xs:h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                   <div
                     className={`absolute inset-0 transition-all duration-1000 ease-out rounded-full ${
                       index === 0
@@ -174,7 +174,7 @@ export function CommissionLeaderboard({
         </div>
       </CardContent>
 
-      <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 relative z-10 flex items-center justify-between">
+      <div className="px-4 xs:px-6 py-3 xs:py-4 bg-slate-50/50 border-t border-slate-100 relative z-10 flex items-center justify-between">
         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
           อัปเดตแบบเรียลไทม์
         </p>

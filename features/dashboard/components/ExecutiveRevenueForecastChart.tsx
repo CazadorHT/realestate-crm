@@ -79,13 +79,13 @@ const ExecutiveRevenueForecastChart = ({ data }: ExecutiveRevenueForecastChartPr
           dataKey="month" 
           axisLine={false}
           tickLine={false}
-          tick={{ fill: '#94a3b8', fontSize: 12 }}
+          tick={{ fill: '#94a3b8', fontSize: 10 }}
           dy={10}
         />
         <YAxis 
           axisLine={false}
           tickLine={false}
-          tick={{ fill: '#94a3b8', fontSize: 11 }}
+          tick={{ fill: '#94a3b8', fontSize: 10 }}
           tickFormatter={(value) => `฿${value / 1000}k`}
         />
         <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#e2e8f0', strokeWidth: 1 }} />

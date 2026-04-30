@@ -138,17 +138,17 @@ export function BranchOnboardingDialog({ isOpen, onClose }: BranchOnboardingDial
             )}
           </Button>
         ) : (
-          <div className="grid grid-cols-2 gap-4 w-full shrink-0">
+          <div className="flex flex-col xs:grid xs:grid-cols-2 gap-3 sm:gap-4 w-full shrink-0">
             <Button
               variant="outline"
-              className="h-12 font-bold rounded-xl border-slate-200 text-slate-500"
+              className="h-12 font-bold rounded-xl border-slate-200 text-slate-500 order-2 xs:order-1"
               onClick={() => handleMigrateData(false)}
               disabled={isProcessing}
             >
               ไว้ทีหลัง
             </Button>
             <Button
-              className="h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 transition-all"
+              className="h-12 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 transition-all order-1 xs:order-2"
               onClick={() => handleMigrateData(true)}
               disabled={isProcessing}
             >

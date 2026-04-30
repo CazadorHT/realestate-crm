@@ -170,10 +170,10 @@ export function DashboardToolbar({
           <Sparkles
             className={cn("h-3.5 w-3.5 sm:h-4 sm:w-4", isGeneratingAi && "animate-pulse")}
           />
-          <span className="hidden xs:inline">
+          <span className="hidden sm:inline">
             {aiInsights ? "Analyze" : "AI Analysis"}
           </span>
-          <span className="xs:hidden">AI</span>
+          <span className="sm:hidden">AI</span>
         </Button>
 
         <DropdownMenu>

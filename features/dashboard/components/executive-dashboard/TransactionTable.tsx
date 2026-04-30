@@ -100,20 +100,20 @@ export function TransactionTable({ stats, className }: TransactionTableProps) {
             <div className="absolute top-0 right-0 p-4 opacity-10">
               <TrendingUp className="h-16 w-16" />
             </div>
-            <div className="relative z-10 flex items-center justify-between">
+            <div className="relative z-10 flex flex-col xs:flex-row xs:items-center justify-between gap-3 xs:gap-0">
               <div>
                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
                   Total Summary
                 </p>
-                <p className="text-2xl font-semibold mt-1">
+                <p className="text-xl xs:text-2xl font-semibold mt-1">
                   {stats.totalDeals} <span className="text-xs font-normal text-slate-400">Deals</span>
                 </p>
               </div>
-              <div className="text-right">
+              <div className="xs:text-right border-t xs:border-t-0 border-slate-800 pt-3 xs:pt-0">
                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">
                   Total Commission
                 </p>
-                <p className="text-xl font-semibold text-blue-400 mt-1">
+                <p className="text-lg xs:text-xl font-semibold text-blue-400 mt-1">
                   {formatThaiCurrency(stats.totalCommission)}
                 </p>
               </div>

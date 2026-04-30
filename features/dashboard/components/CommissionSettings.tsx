@@ -232,15 +232,15 @@ export function CommissionSettings() {
         </Button>
       </CardHeader>
       <CardContent className="space-y-6">
-        <div className="flex items-center gap-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-          <div className="p-3 bg-blue-100 rounded-full text-blue-600">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
+          <div className="p-3 bg-blue-100 rounded-full text-blue-600 shrink-0">
             <Percent className="h-5 w-5" />
           </div>
           <div>
-            <h4 className="font-bold text-blue-900">
+            <h4 className="font-bold text-blue-900 text-sm sm:text-base">
               แบบขั้นบันได (Tiered Model)
             </h4>
-            <p className="text-xs text-blue-700">
+            <p className="text-[10px] sm:text-xs text-blue-700">
               ระบบจะคำนวณค่าคอมมิชชั่นตามช่วงราคาของอสังหาริมทรัพย์ที่คุณกำหนดไว้ด้านล่าง
             </p>
           </div>
@@ -353,21 +353,20 @@ export function CommissionSettings() {
               </p>
             </div>
           </div>
-            <div className="px-8 py-10 bg-blue-50/30 rounded-xl border border-blue-100 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg text-blue-600">
+            <div className="px-4 sm:px-8 py-6 sm:py-10 bg-blue-50/30 rounded-xl border border-blue-100 flex flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                <div className="p-2 bg-blue-100 rounded-lg text-blue-600 shrink-0">
                   <SettingsIcon className="h-4 w-4" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <Label
                     htmlFor="enable-advanced-split"
-                    className="font-bold text-blue-900 cursor-pointer"
+                    className="font-bold text-blue-900 cursor-pointer text-xs sm:text-sm block truncate"
                   >
-                    เปิดใช้งานการแบ่งคอมมิชชั่นขั้นสูง (Enable Advanced Split)
+                    เปิดการแบ่งคอมมิชชั่นขั้นสูง
                   </Label>
-                  <p className="text-[10px] text-blue-700">
-                    เปิดเพื่อใช้งานระบบแบ่งส่วนแบ่งระบุตัวตน (Listing, Closing,
-                    Agency)
+                  <p className="text-[9px] sm:text-[10px] text-blue-700 truncate">
+                    (Listing, Closing, Agency)
                   </p>
                 </div>
               </div>
@@ -386,6 +385,7 @@ export function CommissionSettings() {
                     );
                   }
                 }}
+                className="shrink-0"
               />
             </div>
 
@@ -393,7 +393,7 @@ export function CommissionSettings() {
               <div className="space-y-6 animate-in fade-in slide-in-from-top-2 duration-300">
                 {/* Visual Split Bar */}
                 <div className="space-y-3 p-6 bg-slate-50/50 rounded-2xl border border-slate-100">
-                  <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest text-slate-400 px-2">
+                  <div className="flex flex-col xs:flex-row justify-between text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-slate-400 px-1 sm:px-2 gap-1 xs:gap-0">
                     <span className="text-blue-600 italic">
                       Listing ({ruleSet.defaultListingPercent}%)
                     </span>
@@ -428,20 +428,20 @@ export function CommissionSettings() {
 
                   <div
                     className={cn(
-                      "flex items-center justify-between mt-4 p-3 rounded-xl border text-sm font-bold",
+                      "flex flex-col xs:flex-row items-start xs:items-center justify-between mt-4 p-3 rounded-xl border text-[11px] sm:text-sm font-bold gap-2 xs:gap-0",
                       splitSum === 100
                         ? "bg-emerald-50 border-emerald-100 text-emerald-700"
                         : "bg-red-50 border-red-100 text-red-600 animate-pulse",
                     )}
                   >
                     <div className="flex items-center gap-2">
-                      <Calculator className="h-4 w-4" />
-                      <span>ผลรวมส่วนแบ่งทั้งหมด: {splitSum}%</span>
+                      <Calculator className="h-4 w-4 shrink-0" />
+                      <span>ผลรวมทั้งหมด: {splitSum}%</span>
                     </div>
                     <span>
                       {splitSum === 100
                         ? "✓ ครบถ้วน (Perfect Split)"
-                        : "⚠ ผลรวมต้องเท่ากับ 100%"}
+                        : "⚠ ต้องเท่ากับ 100%"}
                     </span>
                   </div>
                 </div>

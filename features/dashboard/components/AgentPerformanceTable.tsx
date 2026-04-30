@@ -131,8 +131,8 @@ export function AgentPerformanceTable({ agents }: AgentPerformanceTableProps) {
                 <ChevronRight className="h-4 w-4 text-slate-300 mt-1" />
               </div>
 
-              <div className="grid grid-cols-2 gap-2 sm:gap-4 mb-4 bg-slate-50/50 p-2.5 sm:p-3 rounded-2xl border border-slate-100">
-                <div className="flex flex-col">
+              <div className="flex flex-col xs:grid xs:grid-cols-2 gap-2 sm:gap-4 mb-4 bg-slate-50/50 p-2.5 sm:p-3 rounded-2xl border border-slate-100">
+                <div className="flex flex-col border-b xs:border-b-0 border-slate-100 pb-2 xs:pb-0">
                   <span className="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">
                     สะสมยอดขาย (Revenue)
                   </span>

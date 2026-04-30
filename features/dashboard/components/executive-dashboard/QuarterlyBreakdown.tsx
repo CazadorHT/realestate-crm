@@ -55,13 +55,13 @@ export function QuarterlyBreakdown({
                   }}
                 />
               </div>
-              <div className="flex justify-between text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-tighter">
+              <div className="flex flex-col xs:flex-row justify-between text-[9px] sm:text-[10px] text-slate-400 font-semibold uppercase tracking-tighter gap-1 xs:gap-0">
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0" />
                   Sales: {formatThaiCurrency(q.sales)}
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
                   Rent: {formatThaiCurrency(q.rent)}
                 </span>
               </div>

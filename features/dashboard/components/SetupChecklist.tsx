@@ -73,12 +73,12 @@ export function SetupChecklist({ progress }: SetupChecklistProps) {
               ทำตามขั้นตอนเหล่านี้เพื่อให้ระบบทำงานได้อย่างสมบูรณ์แบบ
             </CardDescription>
           </div>
-          <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-slate-900">{percentage}% สำเร็จ</p>
-              <p className="text-xs text-slate-500">{progress.completedCount}/{progress.totalSteps} ขั้นตอน</p>
+          <div className="flex items-center gap-3 xs:gap-4">
+            <div className="text-right">
+              <p className="text-xs xs:text-sm font-bold text-slate-900">{percentage}%</p>
+              <p className="text-[10px] text-slate-500">{progress.completedCount}/{progress.totalSteps}</p>
             </div>
-            <div className="w-32 h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+            <div className="w-24 xs:w-32 h-2.5 xs:h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200 shrink-0">
               <div 
                 className="h-full bg-linear-to-r from-indigo-500 to-blue-500 transition-all duration-1000 shadow-sm"
                 style={{ width: `${percentage}%` }}

@@ -74,7 +74,7 @@ export function NotificationBell() {
         </Button>
       }
     >
-      <div className="flex flex-col min-h-[300px] overflow-hidden -mx-6 sm:mx-0">
+      <div className="flex flex-col min-h-[300px] overflow-hidden sm:mx-0">
         {loading ? (
           <div className="p-12 text-center text-sm text-slate-400 animate-pulse flex flex-col items-center gap-3">
             <div className="h-10 w-10 rounded-full border-2 border-slate-100 border-t-blue-500 animate-spin" />
