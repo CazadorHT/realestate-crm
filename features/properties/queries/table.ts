@@ -182,10 +182,16 @@ export async function getPropertiesTableData(params: {
 
     // Map Property Types
     if (tokens.some(t => t.includes("คอนโด"))) smartFilters.push(`property_type.eq.CONDO`);
-    if (tokens.some(t => t.includes("บ้าน") || t.includes("ทาวน์"))) smartFilters.push(`property_type.in.("HOUSE","TOWNHOUSE")`);
-    if (tokens.some(t => t.includes("วิลล่า"))) smartFilters.push(`property_type.eq.VILLA`);
+    if (tokens.some(t => t.includes("บ้าน") || t.includes("เดี่ยว"))) smartFilters.push(`property_type.eq.HOUSE`);
+    if (tokens.some(t => t.includes("ทาวน์"))) smartFilters.push(`property_type.eq.TOWNHOME`);
+    if (tokens.some(t => t.includes("พูลวิลล่า"))) smartFilters.push(`property_type.eq.POOL_VILLA`);
+    else if (tokens.some(t => t.includes("วิลล่า"))) smartFilters.push(`property_type.eq.VILLA`);
+    
     if (tokens.some(t => t.includes("ที่ดิน"))) smartFilters.push(`property_type.eq.LAND`);
-    if (tokens.some(t => t.includes("พาณิชย์") || t.includes("ตึกแถว"))) smartFilters.push(`property_type.eq.COMMERCIAL`);
+    if (tokens.some(t => t.includes("พาณิชย์") || t.includes("ตึกแถว") || t.includes("shophouse"))) smartFilters.push(`property_type.eq.COMMERCIAL_BUILDING`);
+    if (tokens.some(t => t.includes("ออฟฟิศ") || t.includes("สำนักงาน") || t.includes("office"))) smartFilters.push(`property_type.eq.OFFICE_BUILDING`);
+    if (tokens.some(t => t.includes("โกดัง") || t.includes("โรงงาน") || t.includes("warehouse"))) smartFilters.push(`property_type.eq.WAREHOUSE`);
+    if (tokens.some(t => t.includes("อื่นๆ") || t.includes("other"))) smartFilters.push(`property_type.eq.OTHER`);
 
     // Map Agent Name (Profiles Join)
     // Note: Cross-table OR filters are not supported in basic PostgREST syntax

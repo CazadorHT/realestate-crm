@@ -86,11 +86,18 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
       const isRent = tokens.some(t => t.includes("เช่า"));
       if (isSale) smartFilters.push(`listing_type.in.("SALE","SALE_AND_RENT")`);
       if (isRent) smartFilters.push(`listing_type.in.("RENT","SALE_AND_RENT")`);
-
+      // Map Property Types
       if (tokens.some(t => t.includes("คอนโด"))) smartFilters.push(`property_type.eq.CONDO`);
-      if (tokens.some(t => t.includes("บ้าน") || t.includes("ทาวน์"))) smartFilters.push(`property_type.in.("HOUSE","TOWNHOUSE")`);
-      if (tokens.some(t => t.includes("วิลล่า"))) smartFilters.push(`property_type.eq.VILLA`);
+      if (tokens.some(t => t.includes("บ้าน") || t.includes("เดี่ยว"))) smartFilters.push(`property_type.eq.HOUSE`);
+      if (tokens.some(t => t.includes("ทาวน์"))) smartFilters.push(`property_type.eq.TOWNHOME`);
+      if (tokens.some(t => t.includes("พูลวิลล่า"))) smartFilters.push(`property_type.eq.POOL_VILLA`);
+      else if (tokens.some(t => t.includes("วิลล่า"))) smartFilters.push(`property_type.eq.VILLA`);
+      
       if (tokens.some(t => t.includes("ที่ดิน"))) smartFilters.push(`property_type.eq.LAND`);
+      if (tokens.some(t => t.includes("พาณิชย์") || t.includes("ตึกแถว") || t.includes("shophouse"))) smartFilters.push(`property_type.eq.COMMERCIAL_BUILDING`);
+      if (tokens.some(t => t.includes("ออฟฟิศ") || t.includes("สำนักงาน") || t.includes("office"))) smartFilters.push(`property_type.eq.OFFICE_BUILDING`);
+      if (tokens.some(t => t.includes("โกดัง") || t.includes("โรงงาน") || t.includes("warehouse"))) smartFilters.push(`property_type.eq.WAREHOUSE`);
+      if (tokens.some(t => t.includes("อื่นๆ") || t.includes("other"))) smartFilters.push(`property_type.eq.OTHER`);
       if (tokens.some(t => t.includes("พาณิชย์"))) smartFilters.push(`property_type.eq.COMMERCIAL`);
 
       let finalOr = conditions.join(",");

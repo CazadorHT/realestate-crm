@@ -40,6 +40,13 @@ export function MagicAiSearch({
   return (
     <div className="relative group w-full">
       <div className="relative flex items-center bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-400">
+        {/* [PREMIUM LOADING BAR] */}
+        {globalLoading && (
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-indigo-100 overflow-hidden z-50">
+            <div className="h-full bg-indigo-500 animate-loading-bar shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+          </div>
+        )}
+
         <div className="pl-4 text-slate-400">
           <Search className="h-5 w-5" />
         </div>
@@ -47,17 +54,17 @@ export function MagicAiSearch({
         <Input
           placeholder={
             language === "th" 
-              ? "ค้นหาด้วยคำสำคัญ (เช่น คอนโด อารีย์)" 
+              ? "ค้นหาทำเล, ประเภททรัพย์, จำนวนห้อง (เช่น คอนโดอารีย์ 2นอน)" 
               : language === "cn"
-                ? "搜索关键词 (例如: 阿里公寓)"
+                ? "搜索地点, 房产类型, 卧室数量 (例如: 阿里公寓 2室)"
                 : language === "ru"
-                  ? "Поиск по ключевым словам (например: Кондо Ари)"
-                  : "Search by keywords (e.g. Condo Ari)"
+                  ? "Поиск по местоположению, типу и комнатам (например: Кондо Ари 2 сп)"
+                  : "Search location, type, rooms (e.g. Condo Ari 2bed)"
           }
           className="border-none shadow-none focus-visible:ring-0 h-12 text-sm! bg-transparent w-full font-medium placeholder:text-slate-400"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          disabled={globalLoading}
+          disabled={false} // Keep input enabled even when loading for better UX
         />
 
         <div className="pr-1.5 flex items-center">

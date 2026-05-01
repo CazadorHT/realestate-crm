@@ -260,26 +260,45 @@ export const getPublicProperties = cache(
       // 2. Intelligent Mapping Conditions
       const smartFilters: string[] = [];
       
-      // Map Listing Types
-      const isSale = tokens.some(t => t.includes("ขาย"));
-      const isRent = tokens.some(t => t.includes("เช่า"));
+      // Map Listing Types (TH, EN, CN, RU)
+      const isSale = tokens.some(t => t.includes("ขาย") || t.toLowerCase().includes("sale") || t.includes("出售") || t.toLowerCase().includes("продажа") || t.toLowerCase().includes("купить"));
+      const isRent = tokens.some(t => t.includes("เช่า") || t.toLowerCase().includes("rent") || t.includes("出租") || t.toLowerCase().includes("аренда") || t.toLowerCase().includes("снять"));
       if (isSale) smartFilters.push(`listing_type.in.("SALE","SALE_AND_RENT")`);
       if (isRent) smartFilters.push(`listing_type.in.("RENT","SALE_AND_RENT")`);
 
-      // Map Property Types
-      if (tokens.some(t => t.includes("คอนโด"))) smartFilters.push(`property_type.eq.CONDO`);
-      if (tokens.some(t => t.includes("บ้าน") || t.includes("ทาวน์"))) smartFilters.push(`property_type.in.("HOUSE","TOWNHOUSE")`);
-      if (tokens.some(t => t.includes("วิลล่า"))) smartFilters.push(`property_type.eq.VILLA`);
-      if (tokens.some(t => t.includes("ที่ดิน"))) smartFilters.push(`property_type.eq.LAND`);
+      // Map Property Types (Multilingual)
+      if (tokens.some(t => t.includes("คอนโด") || t.toLowerCase().includes("condo") || t.includes("公寓") || t.toLowerCase().includes("квартира"))) smartFilters.push(`property_type.eq.CONDO`);
+      if (tokens.some(t => t.includes("บ้าน") || t.toLowerCase().includes("house") || t.includes("房子") || t.toLowerCase().includes("дом"))) smartFilters.push(`property_type.eq.HOUSE`);
+      if (tokens.some(t => t.includes("ทาวน์") || t.toLowerCase().includes("town") || t.includes("联排") || t.toLowerCase().includes("таунхаус"))) smartFilters.push(`property_type.eq.TOWNHOME`);
+      if (tokens.some(t => t.includes("วิลล่า") || t.toLowerCase().includes("villa") || t.includes("别墅") || t.toLowerCase().includes("вилла"))) {
+        if (tokens.some(t => t.includes("พูล") || t.toLowerCase().includes("pool"))) smartFilters.push(`property_type.eq.POOL_VILLA`);
+        else smartFilters.push(`property_type.eq.VILLA`);
+      }
+      
+      if (tokens.some(t => t.includes("ที่ดิน") || t.toLowerCase().includes("land") || t.includes("土地") || t.toLowerCase().includes("земля"))) smartFilters.push(`property_type.eq.LAND`);
+      if (tokens.some(t => t.includes("พาณิชย์") || t.includes("ตึกแถว") || t.toLowerCase().includes("shophouse") || t.includes("商铺") || t.toLowerCase().includes("коммерция"))) smartFilters.push(`property_type.eq.COMMERCIAL_BUILDING`);
+      if (tokens.some(t => t.includes("ออฟฟิศ") || t.includes("สำนักงาน") || t.toLowerCase().includes("office") || t.includes("办公室") || t.toLowerCase().includes("офис"))) smartFilters.push(`property_type.eq.OFFICE_BUILDING`);
 
-      // Map Room Counts & Size
+      // Map Room Counts & Size (Multilingual)
       tokens.forEach(t => {
         const numMatch = t.match(/(\d+)/);
         if (numMatch) {
           const num = numMatch[1];
-          if (t.includes("นอน") || t.includes("bed")) smartFilters.push(`bedrooms.eq.${num}`);
-          if (t.includes("น้ำ") || t.includes("bath")) smartFilters.push(`bathrooms.eq.${num}`);
-          if (t.includes("ตรม") || t.includes("sqm")) smartFilters.push(`size_sqm.gte.${num}`);
+          // Bedrooms
+          if (t.includes("นอน") || t.toLowerCase().includes("bed") || t.includes("卧室") || t.includes("室") || t.toLowerCase().includes("спальн") || t.toLowerCase().includes("сп")) {
+            smartFilters.push(`bedrooms.eq.${num}`);
+          }
+          // Bathrooms
+          if (t.includes("น้ำ") || t.toLowerCase().includes("bath") || t.includes("浴室") || t.includes("卫") || t.toLowerCase().includes("ванн") || t.toLowerCase().includes("санузел")) {
+            smartFilters.push(`bathrooms.eq.${num}`);
+          }
+          // Sizes
+          if (t.includes("ตรม") || t.toLowerCase().includes("sqm") || t.includes("平方米") || t.toLowerCase().includes("кв.ม")) {
+            smartFilters.push(`size_sqm.gte.${num}`);
+          }
+          if (t.includes("วา") || t.toLowerCase().includes("sqwah") || t.includes("平方哇")) {
+            smartFilters.push(`land_size_sqwah.gte.${num}`);
+          }
         }
       });
 
