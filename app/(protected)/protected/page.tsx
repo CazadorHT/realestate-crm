@@ -93,7 +93,7 @@ export default async function DashboardPage() {
   const showAnalytics = isFeatureEnabled("dashboard_analytics");
   const showSmartSummary = isFeatureEnabled("ai_smart_summary");
 
-  // Basic info always fetched fast
+  // Basic info promises (non-blocking)
   const notificationsPromise = getRecentNotifications(
     profile?.notification_preferences as any,
     tenantId,
@@ -102,6 +102,7 @@ export default async function DashboardPage() {
   const followUpPromise = getFollowUpLeads(tenantId);
   const riskPromise = getRiskDeals(tenantId);
   const upcomingPromise = getCalendarEvents(new Date(), addDays(new Date(), 7));
+  const setupProgressPromise = getSetupProgress(tenantId);
 
   // If not staff, show simple card
   if (!staff) {
@@ -113,17 +114,6 @@ export default async function DashboardPage() {
     );
   }
 
-  // Await basic info (fast queries)
-  const [notifications, agendaData, followUpLeads, riskDeals, upcomingEvents] =
-    await Promise.all([
-      notificationsPromise,
-      agendaPromise,
-      followUpPromise,
-      riskPromise,
-      upcomingPromise,
-    ]);
-  const setupProgress = await getSetupProgress(tenantId);
-
   return (
     <div className="flex flex-col gap-6 p-2 pb-20">
       {/* 1. HEADER & SEARCH */}
@@ -131,12 +121,9 @@ export default async function DashboardPage() {
 
       <SystemStatus />
 
-      <ProactiveSetupTrigger
-        branchCount={setupProgress.branchCount}
-        role={profile?.role}
-      />
-
-      <SetupChecklist progress={setupProgress} />
+      <Suspense fallback={<div className="h-20 animate-pulse bg-slate-50 rounded-2xl" />}>
+        <SetupSectionWrapper promise={setupProgressPromise} role={profile?.role} />
+      </Suspense>
 
       <>
         {/* 2. SMART SUMMARY (AI GATED) */}
@@ -181,9 +168,13 @@ export default async function DashboardPage() {
                       <FunnelWrapper tenantId={tenantId} />
                     </ErrorBoundary>
                   </Suspense>
-               <FollowUpInsights leads={followUpLeads} />
-               <RiskAlerts deals={riskDeals} />
                   
+                  <Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 rounded-2xl" />}>
+                    <FollowUpWrapper promise={followUpPromise} />
+                  </Suspense>
+                  <Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 rounded-2xl" />}>
+                    <RiskWrapper promise={riskPromise} />
+                  </Suspense>
                 </div>
 
                 {/* TOP AGENTS */}
@@ -210,15 +201,16 @@ export default async function DashboardPage() {
               <MarketingROIWrapper tenantId={tenantId} />
             </Suspense>
 
-            {/* <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-1 gap-6">
-               <FollowUpInsights leads={followUpLeads} />
-               <RiskAlerts deals={riskDeals} />
-            </div> */}
-
             {/* Daily Management */}
-            <UpcomingEvents events={upcomingEvents} />
-            <AgendaList agenda={agendaData} />
-            <NotificationCenter notifications={notifications} />
+            <Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 rounded-2xl" />}>
+              <UpcomingEventsWrapper promise={upcomingPromise} />
+            </Suspense>
+            <Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 rounded-2xl" />}>
+              <AgendaWrapper promise={agendaPromise} />
+            </Suspense>
+            <Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 rounded-2xl" />}>
+              <NotificationsWrapper promise={notificationsPromise} />
+            </Suspense>
           </div>
         </div>
 
@@ -233,7 +225,45 @@ export default async function DashboardPage() {
 
 import { Skeleton } from "@/components/ui/skeleton";
 
-// Inline Wrappers for simpler refactoring
+// Inline Wrappers for simpler refactoring and Non-blocking data flow
+async function SetupSectionWrapper({ promise, role }: { promise: Promise<any>, role?: string }) {
+  const setupProgress = await promise;
+  return (
+    <>
+      <ProactiveSetupTrigger
+        branchCount={setupProgress.branchCount}
+        role={role}
+      />
+      <SetupChecklist progress={setupProgress} />
+    </>
+  );
+}
+
+async function FollowUpWrapper({ promise }: { promise: Promise<any> }) {
+  const data = await promise;
+  return <FollowUpInsights leads={data} />;
+}
+
+async function RiskWrapper({ promise }: { promise: Promise<any> }) {
+  const data = await promise;
+  return <RiskAlerts deals={data} />;
+}
+
+async function UpcomingEventsWrapper({ promise }: { promise: Promise<any> }) {
+  const data = await promise;
+  return <UpcomingEvents events={data} />;
+}
+
+async function AgendaWrapper({ promise }: { promise: Promise<any> }) {
+  const data = await promise;
+  return <AgendaList agenda={data} />;
+}
+
+async function NotificationsWrapper({ promise }: { promise: Promise<any> }) {
+  const data = await promise;
+  return <NotificationCenter notifications={data} />;
+}
+
 async function SmartSummaryWrapper({ tenantId }: { tenantId?: string | null }) {
   const stats = await getDashboardStats(tenantId);
   return (

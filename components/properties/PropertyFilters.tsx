@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState, useEffect, useTransition } from "react";
+import { useMemo, useState, useEffect, useTransition, useRef } from "react";
 import { QuickSearch } from "./filters/QuickSearch";
 import { QuickSort } from "./filters/QuickSort";
 import { QuickStatus } from "./filters/QuickStatus";
@@ -76,6 +76,7 @@ export function PropertyFilters({
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const isInitialMount = useRef(true);
 
   const [filters, setFilters] = useState<Filters>({
     q: searchParams.get("q") || "",
@@ -98,27 +99,29 @@ export function PropertyFilters({
     needsAiReview: searchParams.get("needsAiReview") || "",
   });
 
-  const applyFilters = () => {
-    const params = new URLSearchParams();
+  const applyFilters = useMemo(() => {
+    return () => {
+      const params = new URLSearchParams();
 
-    (Object.entries(filters) as [keyof Filters, string][]).forEach(
-      ([key, value]) => {
-        const v = String(value ?? "").trim();
-        if (!v) return;
-        if (v === "ALL") return;
-        params.set(String(key), v);
-      },
-    );
+      (Object.entries(filters) as [keyof Filters, string][]).forEach(
+        ([key, value]) => {
+          const v = String(value ?? "").trim();
+          if (!v) return;
+          if (v === "ALL") return;
+          params.set(String(key), v);
+        },
+      );
 
-    const qs = params.toString();
-    const url = qs
-      ? `/protected/properties?${qs}#table`
-      : "/protected/properties#table";
-    startTransition(() => {
-      router.push(url, { scroll: false });
-    });
-    setOpen(false);
-  };
+      const qs = params.toString();
+      const url = qs
+        ? `/protected/properties?${qs}#table`
+        : "/protected/properties#table";
+      startTransition(() => {
+        router.push(url, { scroll: false });
+      });
+      setOpen(false);
+    };
+  }, [filters, router]);
 
   const clearFilters = () => {
     setFilters(DEFAULT_FILTERS);
@@ -141,6 +144,28 @@ export function PropertyFilters({
       return true;
     }).length;
   }, [filters]);
+
+  useEffect(() => {
+    const table = document.getElementById("table");
+    if (table) {
+      if (isPending) {
+        table.classList.add("opacity-50", "pointer-events-none", "transition-opacity", "duration-300");
+      } else {
+        table.classList.remove("opacity-50", "pointer-events-none");
+        
+        // [AUTO-FOCUS RESULTS] Scroll to table smoothly when search finishes
+        // Only trigger if we actually had a search value or filters changed
+        const hasQuery = searchParams.get('q');
+        if (hasQuery && !isInitialMount.current) {
+          table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+    }
+    
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    }
+  }, [isPending, searchParams]);
 
   useEffect(() => {
     setFilters((prev) => ({
@@ -171,15 +196,23 @@ export function PropertyFilters({
   }, [searchParams]);
 
   return (
-    <div className="flex flex-col lg:flex-row items-center gap-2 w-full">
+    <div className="relative flex flex-col lg:flex-row items-center gap-2 w-full">
       <div className="flex items-center gap-2 w-full lg:w-auto flex-1">
         <div id="tour-property-search" className="flex-1">
           <QuickSearch
             value={filters.q}
             onChange={(q) => setFilters({ ...filters, q })}
             onSearch={applyFilters}
+            isPending={isPending}
           />
         </div>
+
+        {/* [LOADING PROGRESS BAR] - High Visibility at Table Boundary */}
+        {isPending && (
+          <div className="absolute top-full left-0 right-0 h-0.5 overflow-hidden rounded-full bg-indigo-50 z-10 mt-2">
+            <div className="h-full w-1/3 animate-loading-bar bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(79,70,229,0.5)]" />
+          </div>
+        )}
 
         {/* Mobile Filter Trigger */}
         <div className="flex lg:hidden gap-2">
@@ -246,6 +279,8 @@ export function PropertyFilters({
             </TooltipContent>
           </Tooltip>
         </div>
+
+        
       </div>
 
       <div className="hidden lg:flex items-center gap-2">

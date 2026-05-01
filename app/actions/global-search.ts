@@ -30,23 +30,10 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
   const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanQuery);
   const isREF = /^[0-9a-f]{8}$/i.test(cleanQuery);
 
-  // Smart mapping for property types (Thai -> Enum)
-  let typeFilter = "";
-  const thToEnType: Record<string, string> = {
-    "บ้าน": "HOUSE",
-    "คอนโด": "CONDO",
-    "ทาวน์": "TOWNHOME",
-    "ที่ดิน": "LAND",
-    "วิลล่า": "VILLA",
-    "ออฟฟิศ": "OFFICE",
-    "โกดัง": "WAREHOUSE",
-    "ตึก": "COMMERCIAL"
-  };
-
-  const matchedType = Object.entries(thToEnType).find(([th]) => cleanQuery.includes(th))?.[1];
-  if (matchedType) {
-    typeFilter = `,property_type.eq.${matchedType}`;
-  }
+  const fuzzyQuery = cleanQuery
+    .replace(/([ก-ฮa-zA-Z])(\d)/g, '$1%$2')
+    .replace(/(\d)([ก-ฮa-zA-Z])/g, '$1%$2')
+    .replace(/\s+/g, "%");
 
   // Helper to build a base query with tenant scoping
   function getBaseQuery(table: "properties" | "leads" | "deals" | "owners", columns: string) {
@@ -59,36 +46,60 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
 
   // Parallel queries for speed
   const [propertiesRes, leadsRes, dealsRes, agentsRes, ownersRes] = await Promise.all([
-    // 1. Properties - Expanded with more columns and REF priority
-    (() => {
-      let q = getBaseQuery("properties", "id, title, popular_area, district, province, property_type, address_line1");
+    // 1. Properties - Expanded with Smart Token Logic
+    (async () => {
+      let q = getBaseQuery("properties", "id, title, popular_area, district, province, property_type, address_line1, assigned_to");
+      if (isUUID) return q.eq("id", cleanQuery).limit(10);
+
+      const tokens = cleanQuery.split(/\s+/).filter(t => t.length > 0);
       
-      if (isUUID) {
-        return q.eq("id", cleanQuery);
-      } 
-      
-      // Build a broad search string
+      // [AGENT LOOKUP] - Pre-fetch matching agent IDs for precise filtering
+      const { data: matchingAgents } = await supabase
+        .from("profiles")
+        .select("id")
+        .ilike("full_name", `%${fuzzyQuery}%`);
+      const agentIds = matchingAgents?.map(a => a.id) || [];
+
+      // Base Text Conditions
       let conditions = [
-        `title.ilike.%${cleanQuery}%`,
-        `popular_area.ilike.%${cleanQuery}%`,
-        `district.ilike.%${cleanQuery}%`,
-        `province.ilike.%${cleanQuery}%`,
-        `address_line1.ilike.%${cleanQuery}%`
+        `title.ilike.%${fuzzyQuery}%`,
+        `popular_area.ilike.%${fuzzyQuery}%`,
+        `district.ilike.%${fuzzyQuery}%`,
+        `province.ilike.%${fuzzyQuery}%`,
+        `address_line1.ilike.%${fuzzyQuery}%`
       ];
-      
-      // ONLY search ID if it's a valid hex fragment to avoid Postgres UUID cast errors
+
+      // ID Search
       const isHexFragment = /^[0-9a-fA-F-]+$/.test(cleanQuery);
       if (isHexFragment) {
-        if (isREF) {
-          conditions.unshift(`id.ilike.${cleanQuery}%`);
-        } else {
-          conditions.unshift(`id.ilike.%${cleanQuery}%`);
-        }
+        conditions.unshift(isREF ? `id.ilike.${cleanQuery}%` : `id.ilike.%${cleanQuery}%`);
       }
 
-      const orFilter = conditions.join(",");
-      return q.or(orFilter + typeFilter);
-    })().limit(10),
+      // Agent Search
+      if (agentIds.length > 0) {
+        conditions.push(`assigned_to.in.(${agentIds.map(id => `"${id}"`).join(",")})`);
+      }
+
+      // Intelligent Mapping Conditions
+      const smartFilters: string[] = [];
+      const isSale = tokens.some(t => t.includes("ขาย"));
+      const isRent = tokens.some(t => t.includes("เช่า"));
+      if (isSale) smartFilters.push(`listing_type.in.("SALE","SALE_AND_RENT")`);
+      if (isRent) smartFilters.push(`listing_type.in.("RENT","SALE_AND_RENT")`);
+
+      if (tokens.some(t => t.includes("คอนโด"))) smartFilters.push(`property_type.eq.CONDO`);
+      if (tokens.some(t => t.includes("บ้าน") || t.includes("ทาวน์"))) smartFilters.push(`property_type.in.("HOUSE","TOWNHOUSE")`);
+      if (tokens.some(t => t.includes("วิลล่า"))) smartFilters.push(`property_type.eq.VILLA`);
+      if (tokens.some(t => t.includes("ที่ดิน"))) smartFilters.push(`property_type.eq.LAND`);
+      if (tokens.some(t => t.includes("พาณิชย์"))) smartFilters.push(`property_type.eq.COMMERCIAL`);
+
+      let finalOr = conditions.join(",");
+      if (smartFilters.length > 0) {
+        finalOr = `${finalOr},and(${smartFilters.join(",")})`;
+      }
+
+      return q.or(finalOr).limit(10);
+    })(),
 
     // 2. Leads - Search by name, phone, email and partial ID
     (() => {
@@ -96,9 +107,9 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
       if (isUUID) return q.eq("id", cleanQuery);
       
       let conditions = [
-        `full_name.ilike.%${cleanQuery}%`,
-        `phone.ilike.%${cleanQuery}%`,
-        `email.ilike.%${cleanQuery}%`
+        `full_name.ilike.%${fuzzyQuery}%`,
+        `phone.ilike.%${fuzzyQuery}%`,
+        `email.ilike.%${fuzzyQuery}%`
       ];
 
       const isHexFragment = /^[0-9a-fA-F-]+$/.test(cleanQuery);
@@ -130,7 +141,7 @@ export async function globalSearchAction(query: string): Promise<SearchResult[]>
     (isUUID 
       ? getBaseQuery("owners", "id, full_name, phone, company_name").eq("id", cleanQuery)
       : getBaseQuery("owners", "id, full_name, phone, company_name")
-          .or(`full_name.ilike.%${cleanQuery}%,phone.ilike.%${cleanQuery}%,company_name.ilike.%${cleanQuery}%`)
+          .or(`full_name.ilike.%${fuzzyQuery}%,phone.ilike.%${fuzzyQuery}%,company_name.ilike.%${fuzzyQuery}%`)
     ).limit(5),
   ]);
 

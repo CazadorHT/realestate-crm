@@ -32,6 +32,7 @@ interface TableQueryResult {
   posted_to_line_at: string | null;
   posted_to_tiktok_at: string | null;
   assigned_to: string | null;
+  agent: { full_name: string } | null;
   tenant_id: string | null;
   tenants: { name: string } | null;
   requires_ai_review: boolean | null;
@@ -99,7 +100,16 @@ export async function getPropertiesTableData(params: {
   let query = supabase
     .from("properties")
     .select(
-      "id, title, description, status, property_type, listing_type, price, rental_price, original_price, original_rental_price, updated_at, created_at, bedrooms, bathrooms, province, district, popular_area, view_count, address_line1, images, total_units, sold_units, posted_to_facebook_at, posted_to_instagram_at, posted_to_line_at, posted_to_tiktok_at, assigned_to, tenant_id, tenants(name), requires_ai_review",
+      `
+      id, title, description, status, property_type, listing_type, 
+      price, rental_price, original_price, original_rental_price, 
+      updated_at, created_at, bedrooms, bathrooms, province, district, 
+      popular_area, view_count, address_line1, images, total_units, 
+      sold_units, posted_to_facebook_at, posted_to_instagram_at, 
+      posted_to_line_at, posted_to_tiktok_at, assigned_to, 
+      agent:profiles!properties_assigned_to_profile_fkey(full_name),
+      tenant_id, tenants(name), requires_ai_review
+      `,
       {
         count: "exact",
       },
@@ -115,18 +125,90 @@ export async function getPropertiesTableData(params: {
     }
   }
 
-  // Search
+  // [SMART SEARCH HARDENING] - Token-based Logic Grouping
   if (q && q.trim()) {
-    const isHexFragment = /^[0-9a-fA-F-]{4,}$/.test(q);
-    const conditions = [
-      `title.ilike.%${q}%`,
-      `description.ilike.%${q}%`,
-      `address_line1.ilike.%${q}%`,
+    const searchTerm = q.trim();
+    const tokens = searchTerm.split(/\s+/).filter(t => t.length > 0);
+    const fuzzyQuery = searchTerm
+      .replace(/([ก-ฮa-zA-Z])(\d)/g, '$1%$2')
+      .replace(/(\d)([ก-ฮa-zA-Z])/g, '$1%$2')
+      .replace(/\s+/g, "%");
+    const isHexFragment = /^[0-9a-fA-F-]{4,}$/.test(searchTerm);
+
+    // [AGENT LOOKUP] - Pre-fetch matching agent IDs for precise filtering
+    const { data: matchingAgents } = await supabase
+      .from("profiles")
+      .select("id")
+      .ilike("full_name", `%${fuzzyQuery}%`);
+    const agentIds = matchingAgents?.map(a => a.id) || [];
+    
+    // 1. Text Search Conditions (Base OR)
+    const textConditions = [
+      `title.ilike.%${fuzzyQuery}%`,
+      `description.ilike.%${fuzzyQuery}%`,
+      `address_line1.ilike.%${fuzzyQuery}%`,
+      `province.ilike.%${fuzzyQuery}%`,
+      `district.ilike.%${fuzzyQuery}%`,
+      `popular_area.ilike.%${fuzzyQuery}%`,
     ];
-    if (isHexFragment) {
-      conditions.unshift(`id.ilike.%${q}%`);
+    if (isHexFragment) textConditions.unshift(`id.ilike.%${searchTerm}%`);
+    if (agentIds.length > 0) {
+      textConditions.push(`assigned_to.in.(${agentIds.map(id => `"${id}"`).join(",")})`);
     }
-    query = query.or(conditions.join(","));
+
+    // 2. Intelligent Mapping Conditions
+    const smartFilters: string[] = [];
+    
+    // Map Listing Types
+    const isSale = tokens.some(t => t.includes("ขาย"));
+    const isRent = tokens.some(t => t.includes("เช่า"));
+    if (isSale) smartFilters.push(`listing_type.in.("SALE","SALE_AND_RENT")`);
+    if (isRent) smartFilters.push(`listing_type.in.("RENT","SALE_AND_RENT")`);
+
+    // Map Statuses
+    if (tokens.some(t => t.includes("ว่าง") || t.includes("ใช้งาน"))) smartFilters.push(`status.eq.ACTIVE`);
+    if (tokens.some(t => t.includes("ขายแล้ว"))) smartFilters.push(`status.eq.SOLD`);
+    if (tokens.some(t => t.includes("เช่าแล้ว"))) smartFilters.push(`status.eq.RENTED`);
+    if (tokens.some(t => t.includes("จองแล้ว"))) smartFilters.push(`status.eq.RESERVED`);
+    if (tokens.some(t => t.includes("ติดจอง") || t.includes("ข้อเสนอ"))) smartFilters.push(`status.eq.UNDER_OFFER`);
+    if (tokens.some(t => t.includes("ร่าง"))) smartFilters.push(`status.eq.DRAFT`);
+    if (tokens.some(t => t.includes("เก็บถาวร"))) smartFilters.push(`status.eq.ARCHIVED`);
+
+    // Map Social Media (Posted)
+    if (tokens.some(t => t.toLowerCase().includes("tiktok"))) smartFilters.push(`posted_to_tiktok_at.not.is.null`);
+    if (tokens.some(t => t.toLowerCase().includes("facebook") || t.toLowerCase() === "fb")) smartFilters.push(`posted_to_facebook_at.not.is.null`);
+    if (tokens.some(t => t.toLowerCase().includes("instagram") || t.toLowerCase() === "ig")) smartFilters.push(`posted_to_instagram_at.not.is.null`);
+    if (tokens.some(t => t.toLowerCase().includes("line"))) smartFilters.push(`posted_to_line_at.not.is.null`);
+
+    // Map Property Types
+    if (tokens.some(t => t.includes("คอนโด"))) smartFilters.push(`property_type.eq.CONDO`);
+    if (tokens.some(t => t.includes("บ้าน") || t.includes("ทาวน์"))) smartFilters.push(`property_type.in.("HOUSE","TOWNHOUSE")`);
+    if (tokens.some(t => t.includes("วิลล่า"))) smartFilters.push(`property_type.eq.VILLA`);
+    if (tokens.some(t => t.includes("ที่ดิน"))) smartFilters.push(`property_type.eq.LAND`);
+    if (tokens.some(t => t.includes("พาณิชย์") || t.includes("ตึกแถว"))) smartFilters.push(`property_type.eq.COMMERCIAL`);
+
+    // Map Agent Name (Profiles Join)
+    // Note: Cross-table OR filters are not supported in basic PostgREST syntax
+    // We will keep the join for display but remove it from the global OR search for now
+    // to prevent query failure.
+
+    // Map Room Counts
+    tokens.forEach(t => {
+      const numMatch = t.match(/(\d+)/);
+      if (numMatch) {
+        const num = numMatch[1];
+        if (t.includes("นอน") || t.includes("bed")) smartFilters.push(`bedrooms.eq.${num}`);
+        if (t.includes("น้ำ") || t.includes("bath")) smartFilters.push(`bathrooms.eq.${num}`);
+      }
+    });
+
+    // 3. Final Assembly: (Text Search) OR (Smart Filters AND Group)
+    if (smartFilters.length > 0) {
+      const smartGroup = `and(${smartFilters.join(",")})`;
+      query = query.or(`${textConditions.join(",")},${smartGroup}`);
+    } else {
+      query = query.or(textConditions.join(","));
+    }
   }
 
   // Filters
@@ -258,14 +340,11 @@ export async function getPropertiesTableData(params: {
         : Promise.resolve({ data: [] }),
 
       (async () => {
-        const config = await getSystemConfig();
-        const isMultiTenant = config.multi_tenant_enabled;
-
+        // [PERFORMANCE HARDENING] Fetch ONLY columns needed for Filter Counts
+        // This restores the UI logic while keeping the payload as small as possible.
         let q = supabase
           .from("properties")
-          .select(
-            "status, property_type, province, popular_area, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, near_transit, is_pet_friendly, is_fully_furnished",
-          )
+          .select("status, property_type, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, province, popular_area, near_transit, is_fully_furnished, requires_ai_review")
           .is("deleted_at", null);
 
         if (isMultiTenant) {
@@ -275,7 +354,6 @@ export async function getPropertiesTableData(params: {
             q = q.eq("tenant_id", tenantId);
           }
         }
-        // Single-tenant mode: show everything (permissive)
         return q;
       })(),
     ]);
@@ -358,7 +436,7 @@ export async function getPropertiesTableData(params: {
       posted_to_instagram_at: p.posted_to_instagram_at ?? null,
       posted_to_line_at: p.posted_to_line_at ?? null,
       posted_to_tiktok_at: p.posted_to_tiktok_at ?? null,
-      agent_name: null,
+      agent_name: p.agent?.full_name || null,
       tenant_id: p.tenant_id,
       tenant_name: p.tenants?.name || null,
       province: p.province,

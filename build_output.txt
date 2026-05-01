@@ -1,0 +1,146 @@
+
+> @ build /Users/hunter/Developer/realestate-crm
+> next build
+
+▲ Next.js 16.2.4 (Turbopack)
+- Environments: .env
+- Experiments (use with caution):
+  · clientTraceMetadata
+  · optimizePackageImports
+  · serverActions
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 33.9s
+  Running next.config.js provided runAfterProductionCompile ...
+✓ Completed runAfterProductionCompile in 1620ms
+  Running TypeScript ...
+  Finished TypeScript in 38.6s ...
+  Collecting page data using 9 workers ...
+⚠ Using edge runtime on a page currently disables static generation for that page
+  Generating static pages using 9 workers (0/43) ...
+  Generating static pages using 9 workers (10/43) 
+  Generating static pages using 9 workers (21/43) 
+  Generating static pages using 9 workers (32/43) 
+✓ Generating static pages using 9 workers (43/43) in 1100ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /about
+├ ƒ /api/auth/callback/facebook
+├ ƒ /api/auth/callback/google
+├ ƒ /api/auth/callback/tiktok
+├ ƒ /api/auth/facebook/login
+├ ƒ /api/auth/google/login
+├ ƒ /api/auth/tiktok/login
+├ ƒ /api/cron/payout-health
+├ ƒ /api/cron/unified
+├ ƒ /api/dashboard/revenue
+├ ƒ /api/dashboard/stats
+├ ƒ /api/deals
+├ ƒ /api/finance/wht/[id]
+├ ƒ /api/inngest
+├ ƒ /api/leads
+├ ƒ /api/line-webhook
+├ ƒ /api/monitoring/sentry-webhook
+├ ƒ /api/og/property
+├ ƒ /api/proxy/image
+├ ƒ /api/public/popular-areas
+├ ƒ /api/public/properties
+├ ƒ /api/public/properties/[id]
+├ ƒ /api/rental-contracts/[dealId]
+├ ƒ /api/site-settings/smart-match
+├ ƒ /api/syndication/feed/[portal]
+├ ƒ /api/thai-address/[...path]
+├ ƒ /api/webhook/line
+├ ƒ /api/webhook/meta
+├ ƒ /api/webhook/telegram
+├ ƒ /api/webhook/tiktok
+├ ƒ /auth/confirm
+├ ƒ /auth/error
+├ ƒ /auth/forgot-password
+├ ƒ /auth/login
+├ ƒ /auth/mfa/enroll
+├ ƒ /auth/mfa/verify
+├ ƒ /auth/pending
+├ ƒ /auth/sign-up
+├ ƒ /auth/sign-up-success
+├ ƒ /auth/update-password
+├ ƒ /avm-report
+├ ƒ /blocking
+├ ƒ /blog
+├ ƒ /blog/[slug]
+├ ƒ /compare
+├ ƒ /contact
+├ ƒ /favorites
+├ ○ /opengraph-image.png
+├ ƒ /privacy-policy
+├ ƒ /properties
+├ ƒ /properties/[slug]
+├ ƒ /protected
+├ ƒ /protected/admin/ai-config
+├ ƒ /protected/admin/analytics
+├ ƒ /protected/admin/audit-logs
+├ ƒ /protected/admin/executive
+├ ƒ /protected/admin/inventory
+├ ƒ /protected/admin/popular-areas
+├ ƒ /protected/admin/users
+├ ƒ /protected/ai-monitor
+├ ƒ /protected/blogs
+├ ƒ /protected/blogs/[id]
+├ ƒ /protected/blogs/categories
+├ ƒ /protected/blogs/new
+├ ƒ /protected/calendar
+├ ƒ /protected/co-brokers
+├ ƒ /protected/contracts
+├ ƒ /protected/dashboard/executive
+├ ƒ /protected/deals
+├ ƒ /protected/deals/[id]
+├ ƒ /protected/documents
+├ ƒ /protected/faqs
+├ ƒ /protected/finance/payouts
+├ ƒ /protected/inbox
+├ ƒ /protected/leads
+├ ƒ /protected/leads/[id]
+├ ƒ /protected/leads/[id]/edit
+├ ƒ /protected/leads/new
+├ ƒ /protected/line-manager
+├ ƒ /protected/notifications
+├ ƒ /protected/owners
+├ ƒ /protected/owners/[id]
+├ ƒ /protected/owners/[id]/edit
+├ ƒ /protected/partners
+├ ƒ /protected/profile
+├ ƒ /protected/properties
+├ ƒ /protected/properties/[id]
+├ ƒ /protected/properties/[id]/edit
+├ ƒ /protected/properties/new
+├ ƒ /protected/properties/trash
+├ ƒ /protected/rent-notifications
+├ ƒ /protected/services
+├ ƒ /protected/settings
+├ ƒ /protected/settings/branches
+├ ƒ /protected/settings/branches/[id]
+├ ƒ /protected/settings/smart-match
+├ ƒ /protected/settings/teams
+├ ƒ /protected/settings/users
+├ ƒ /protected/settings/users/[id]
+├ ƒ /protected/support/sla
+├ ƒ /protected/test-sharing
+├ ƒ /protected/test-tenant
+├ ƒ /protected/wallet
+├ ○ /robots.txt
+├ ƒ /search
+├ ƒ /services
+├ ƒ /services/[slug]
+├ ƒ /sitemap.xml
+├ ƒ /terms
+└ ○ /twitter-image.png
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

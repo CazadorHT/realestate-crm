@@ -750,28 +750,62 @@ export function PropertiesTable({
 
                   {/* BUYER / TENANT / AGENT */}
                   <TableCell className="px-2">
-                    {property.status === "SOLD" || property.status === "RENTED" ? (
-                      property.closed_lead_name ? (
-                        <div 
-                          onClick={() => {
-                            setNavigatingId(`lead-${property.id}`);
-                            router.push(`/protected/leads?stage=CLOSED`);
-                          }}
-                          className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 max-w-[80px] truncate cursor-pointer relative"
-                        >
-                          {navigatingId === `lead-${property.id}` && (
-                            <Loader2 className="h-3 w-3 animate-spin text-emerald-600 mr-1" />
-                          )}
-                          <span className="truncate">คุณ {property.closed_lead_name}</span>
-                        </div>
-                      ) : (
-                        <span className="text-[11px] text-slate-400 italic">ปิดดีล</span>
-                      )
-                    ) : (
-                      <div className="text-[11px] text-slate-500 truncate max-w-[80px]">
-                        <span className="font-medium text-blue-600">{property.agent_name || "Me"}</span>
-                      </div>
-                    )}
+                    <TooltipProvider delayDuration={200}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex flex-col gap-1 min-w-0">
+                            {/* CASE 1: SOLD/RENTED WITH LEAD */}
+                            {(property.status === "SOLD" || property.status === "RENTED") && property.closed_lead_name ? (
+                              <div className="flex flex-col gap-0.5">
+                                <div 
+                                  onClick={() => {
+                                    setNavigatingId(`lead-${property.id}`);
+                                    router.push(`/protected/leads?stage=CLOSED`);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 max-w-[120px] truncate cursor-pointer hover:bg-emerald-100 transition-all shadow-sm"
+                                >
+                                  {navigatingId === `lead-${property.id}` ? (
+                                    <Loader2 className="h-2.5 w-2.5 animate-spin text-emerald-600" />
+                                  ) : (
+                                    <Users className="h-3 w-3 text-emerald-500 shrink-0" />
+                                  )}
+                                  <span className="truncate leading-tight">คุณ {property.closed_lead_name}</span>
+                                </div>
+                                <div className="text-[9px] text-slate-400 font-medium px-1 truncate max-w-[100px] flex items-center gap-1.5">
+                                  <div className="h-1 w-1 rounded-full bg-slate-300 shrink-0" />
+                                  <span className="truncate text-slate-500/80">{property.agent_name || "Me"}</span>
+                                </div>
+                              </div>
+                            ) : (
+                              /* CASE 2: REGULAR ASSIGNEE */
+                              <div className="text-[11px] text-slate-500 flex flex-col gap-0.5">
+                                <span className="font-bold text-blue-600 truncate max-w-[100px] flex items-center gap-1.5">
+                                  <Users className="h-3 w-3 text-blue-400 shrink-0" />
+                                  {property.agent_name || "ไม่มีผู้ดูแล"}
+                                </span>
+                                <span className="text-[9px] text-slate-400 opacity-70 ml-4.5 pl-4.5">
+                                  ผู้ดูแลทรัพย์
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="left" className="p-3 bg-white border-slate-200 shadow-xl rounded-xl">
+                          <div className="space-y-2">
+                            {(property.status === "SOLD" || property.status === "RENTED") && property.closed_lead_name && (
+                              <div className="space-y-0.5">
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ลูกค้า (Lead)</p>
+                                <p className="text-sm font-bold text-emerald-700">คุณ {property.closed_lead_name}</p>
+                              </div>
+                            )}
+                            <div className="space-y-0.5 border-t border-slate-100 pt-1.5">
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ผู้รับผิดชอบ (Agent)</p>
+                              <p className="text-sm font-bold text-blue-700">{property.agent_name || "ยังไม่ได้มอบหมาย"}</p>
+                            </div>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </TableCell>
 
                   {/* STATUS */}

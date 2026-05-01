@@ -42,7 +42,7 @@ export function GlobalSearch({
   const [loading, setLoading] = React.useState(false);
   const [navigatingUrl, setNavigatingUrl] = React.useState<string | null>(null);
   const router = useRouter();
-  const [debouncedQuery] = useDebounce(query, 300);
+  const [debouncedQuery] = useDebounce(query, 500);
 
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -144,15 +144,21 @@ export function GlobalSearch({
         open={open}
         onOpenChange={setOpen}
         className="max-w-2xl p-0 overflow-hidden border-none sm:shadow-2xl bg-slate-50/95 backdrop-blur-xl"
-        isLoading={loading}
-        loadingText="กำลังสืบค้นข้อมูล..."
+        isLoading={false}
         minHeight="400px"
       >
         <Command
           shouldFilter={false}
           className="rounded-none h-full max-h-screen w-full bg-transparent"
         >
-          <div className="flex items-center border-b border-slate-200/60 px-4 bg-white/50">
+          <div className="flex items-center border-b border-slate-200/60 px-4 bg-white/50 relative">
+            {/* [PREMIUM LOADING BAR] */}
+            {loading && (
+              <div className="absolute top-0 left-0 right-0 h-[2px] bg-indigo-100 overflow-hidden z-50">
+                <div className="h-full bg-indigo-500 animate-loading-bar shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
+              </div>
+            )}
+            
             <Search className="h-5 w-5 text-slate-400 shrink-0" />
             <CommandInput
               placeholder="ค้นหาทรัพย์, ลูกค้า, เบอร์โทร, ดีล..."

@@ -8,6 +8,7 @@ describe('Guided Tour Utilities - Positioning', () => {
     width: 200,
     height: 50,
     bottom: 150,
+    right: 300,
   };
 
   it('should calculate default position below target', () => {
@@ -29,7 +30,7 @@ describe('Guided Tour Utilities - Positioning', () => {
   });
 
   it('should shift right if cutting off at left bound', () => {
-    const edgeRect = { ...mockRect, left: 10 };
+    const edgeRect = { ...mockRect, left: 10, right: 210 };
     const result = calculateTooltipPosition(edgeRect, 1000, 1000, false);
     
     // tooltip half-width is 190. Left must be at least 190 + 20 = 210
@@ -37,7 +38,7 @@ describe('Guided Tour Utilities - Positioning', () => {
   });
 
   it('should shift left if cutting off at right bound', () => {
-    const edgeRect = { ...mockRect, left: 800, width: 200 }; // right at 1000
+    const edgeRect = { ...mockRect, left: 800, width: 200, right: 1000 }; // right at 1000
     const result = calculateTooltipPosition(edgeRect, 1000, 1000, false);
     
     // windowWidth (1000) - half-width (190) - 20 = 790

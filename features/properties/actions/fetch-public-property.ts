@@ -20,7 +20,7 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
     id, title, title_en, title_cn, title_ru, slug, status, listing_type, property_type,
     price, rental_price, original_price, original_rental_price,
     size_sqm, land_size_sqwah, bedrooms, bathrooms, floor, 
-    province, district, subdistrict, popular_area, google_maps_link,
+    province, district, subdistrict, popular_area, popular_area_en, popular_area_cn, popular_area_ru, google_maps_link,
     description, description_en, description_cn, description_ru,
     meta_title, meta_description, meta_keywords,
     meta_title_en, meta_description_en,
@@ -29,7 +29,10 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
     is_hot_deal, is_pet_friendly, is_fully_furnished, is_foreigner_quota,
     near_transit, is_exclusive, is_selling_with_tenant, verified, 
     transit_station_name, transit_distance_meters, transit_type,
-    created_at, updated_at, images,
+    created_at, updated_at,
+    property_images (
+      image_url, storage_path, is_cover, sort_order
+    ),
     assigned_agent:profiles!properties_assigned_to_profile_fkey (
       full_name,
       phone,
@@ -67,26 +70,13 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
     ...rawData,
   } as unknown as PropertyDetail;
 
-  // Popular Area Translations (Cached-ready logic)
-  if (data.popular_area) {
-    const { data: areaData } = await supabase
-      .from("popular_areas")
-      .select("name_en, name_cn, name_ru")
-      .eq("name", data.popular_area)
-      .maybeSingle();
-
-    if (areaData) {
-      data.popular_area_en = areaData.name_en;
-      data.popular_area_cn = areaData.name_cn;
-      data.popular_area_ru = areaData.name_ru;
-    }
-  }
+  // [OPTIMIZATION] Popular Area Translations are already included in the main query
+  // No second fetch needed. Just ensure they are mapped if null from property but exist in popular_areas?
+  // Actually, they should be denormalized. If they are missing, we can keep the denormalization strategy.
 
   // Image Normalization (Centralized via image-utils helper logic)
-  interface RawImage { url?: string; image_url?: string; storage_path?: string; id?: string; is_cover?: boolean; sort_order?: number; }
-  
-  data.images = ((rawData.images as RawImage[]) || []).map((img) => {
-    const finalUrl = img.url || img.image_url || (img.storage_path ? getPublicImageUrl(img.storage_path) : "/images/hero-realestate.png");
+  const finalImages = (rawData.property_images || []).map((img: any) => {
+    const finalUrl = img.image_url || (img.storage_path ? getPublicImageUrl(img.storage_path) : "/images/hero-realestate.png");
     
     return {
       id: img.id || null,
@@ -97,6 +87,8 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
       sort_order: img.sort_order || 0
     };
   });
+
+  data.images = finalImages;
 
   return data;
 });

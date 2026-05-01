@@ -14,117 +14,49 @@ export async function getDashboardStats(tenantId?: string | null): Promise<Dashb
     };
 
     const now = new Date();
-    const startOfMonth = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      1,
-    ).toISOString();
-    const startOfLastMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() - 1,
-      1,
-    ).toISOString();
-    const endOfLastMonth = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      0,
-    ).toISOString();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+    const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).toISOString();
 
-    // 1. Revenue (Sold/Rented Properties)
-    const { data: revenueCurrent } = await applyTenantFilter(
-      supabase
-        .from("properties")
-        .select("price, rental_price, status, updated_at")
-        .in("status", ["SOLD", "RENTED"])
-        .is("deleted_at", null)
-        .gte("updated_at", startOfMonth),
-    );
+    // [OPTIMIZATION] Parallel Fetching to reduce TTFB
+    const [
+      { data: revenueCurrent },
+      { data: revenueLast },
+      { count: leadsCurrent },
+      { count: leadsLast },
+      { count: leadsTotal },
+      { count: totalSold },
+      { data: commissionDeals },
+      { count: dealsWonLast }
+    ] = await Promise.all([
+      // 1. Revenue Current
+      applyTenantFilter(supabase.from("properties").select("price, rental_price, status").in("status", ["SOLD", "RENTED"]).is("deleted_at", null).gte("updated_at", startOfMonth)),
+      // 2. Revenue Last Month
+      applyTenantFilter(supabase.from("properties").select("price, rental_price, status").in("status", ["SOLD", "RENTED"]).is("deleted_at", null).gte("updated_at", startOfLastMonth).lte("updated_at", endOfLastMonth)),
+      // 3. Leads Current
+      applyTenantFilter(supabase.from("leads").select("id", { count: "exact", head: true }).gte("created_at", startOfMonth)),
+      // 4. Leads Last Month
+      applyTenantFilter(supabase.from("leads").select("id", { count: "exact", head: true }).gte("created_at", startOfLastMonth).lte("created_at", endOfLastMonth)),
+      // 5. Leads Total
+      applyTenantFilter(supabase.from("leads").select("id", { count: "exact", head: true })),
+      // 6. Total Sold (for conversion)
+      applyTenantFilter(supabase.from("properties").select("id", { count: "exact", head: true }).is("deleted_at", null).eq("status", "SOLD")),
+      // 7. Commission Deals
+      applyTenantFilter(supabase.from("deals").select("commission_amount").eq("status", "CLOSED_WIN").gte("created_at", startOfMonth)),
+      // 8. Deals Won Last Month
+      applyTenantFilter(supabase.from("properties").select("id", { count: "exact", head: true }).in("status", ["SOLD", "RENTED"]).is("deleted_at", null).gte("updated_at", startOfLastMonth).lte("updated_at", endOfLastMonth))
+    ]);
 
-    const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, p: { status: string; price: number | null; rental_price: number | null }) => {
-      return sum + (p.status === "SOLD" ? (p.price || 0) : (p.rental_price || 0));
-    }, 0);
+    // Calculate Totals from results
+    const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, p: { status: string; price: number | null; rental_price: number | null }) => sum + (p.status === "SOLD" ? (p.price || 0) : (p.rental_price || 0)), 0);
+    const totalRevenueLast = (revenueLast || []).reduce((sum: number, p: { status: string; price: number | null; rental_price: number | null }) => sum + (p.status === "SOLD" ? (p.price || 0) : (p.rental_price || 0)), 0);
+    const totalCommission = (commissionDeals || []).reduce((sum: number, d: { commission_amount: number | null }) => sum + (d.commission_amount || 0), 0);
 
-    const { data: revenueLast } = await applyTenantFilter(
-      supabase
-        .from("properties")
-        .select("price, rental_price, status, updated_at")
-        .in("status", ["SOLD", "RENTED"])
-        .is("deleted_at", null)
-        .gte("updated_at", startOfLastMonth)
-        .lte("updated_at", endOfLastMonth),
-    );
-
-    const totalRevenueLast = (revenueLast || []).reduce((sum: number, p: { status: string; price: number | null; rental_price: number | null }) => {
-      return sum + (p.status === "SOLD" ? (p.price || 0) : (p.rental_price || 0));
-    }, 0);
-
-    const revenueChangePercent =
-      totalRevenueLast === 0
-        ? 100
-        : ((totalRevenueCurrent - totalRevenueLast) / totalRevenueLast) * 100;
-
-    // 2. Leads
-    const { count: leadsCurrent } = await applyTenantFilter(
-      supabase
-        .from("leads")
-        .select("id", { count: "exact", head: true })
-        .gte("created_at", startOfMonth),
-    );
-
-    const { count: leadsLast } = await applyTenantFilter(
-      supabase
-        .from("leads")
-        .select("id", { count: "exact", head: true })
-        .gte("created_at", startOfLastMonth)
-        .lte("created_at", endOfLastMonth),
-    );
-
-    const { count: leadsTotal } = await applyTenantFilter(
-      supabase
-        .from("leads")
-        .select("id", { count: "exact", head: true }),
-    );
-
-    const leadsChangePercent =
-      leadsLast === 0
-        ? 100
-        : (((leadsCurrent || 0) - (leadsLast || 0)) / (leadsLast || 1)) * 100;
-
-    const { count: totalSold } = await applyTenantFilter(
-      supabase
-        .from("properties")
-        .select("id", { count: "exact", head: true })
-        .is("deleted_at", null)
-        .eq("status", "SOLD"),
-    );
-
-    const conversionRate =
-      leadsTotal && leadsTotal > 0 ? ((totalSold || 0) / leadsTotal) * 100 : 0;
-
-    const { data: commissionDeals } = await applyTenantFilter(supabase
-      .from("deals")
-      .select("commission_amount")
-      .eq("status", "CLOSED_WIN")
-      .gte("created_at", startOfMonth));
-
+    const revenueChangePercent = totalRevenueLast === 0 ? 100 : ((totalRevenueCurrent - totalRevenueLast) / totalRevenueLast) * 100;
+    const leadsChangePercent = (leadsLast || 0) === 0 ? 100 : (((leadsCurrent || 0) - (leadsLast || 0)) / (leadsLast || 1)) * 100;
+    const conversionRate = leadsTotal && leadsTotal > 0 ? ((totalSold || 0) / leadsTotal) * 100 : 0;
     const dealsWon = (commissionDeals || []).length;
-
-    const { count: dealsWonLast } = await applyTenantFilter(
-      supabase
-        .from("properties")
-        .select("id", { count: "exact", head: true })
-        .in("status", ["SOLD", "RENTED"])
-        .is("deleted_at", null)
-        .gte("updated_at", startOfLastMonth)
-        .lte("updated_at", endOfLastMonth),
-    );
-
     const dealsChange = dealsWon - (dealsWonLast || 0);
-
-    const totalCommission = (commissionDeals || []).reduce(
-      (sum: number, d: { commission_amount: number | null }) => sum + (d.commission_amount || 0),
-      0,
-    );
 
     return {
       revenueThisMonth: totalRevenueCurrent,

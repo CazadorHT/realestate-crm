@@ -5,64 +5,58 @@ export async function getTopAgents(tenantId?: string | null): Promise<TopAgent[]
   try {
     const supabase = await createClient();
 
-    // Refined tenant filter helper
-    const applyTenantFilter = <T extends { eq: (col: string, val: string) => T }>(query: T): T => {
-      if (tenantId && tenantId !== "ALL") {
-        return query.eq("tenant_id", tenantId);
-      }
-      return query;
-    };
-
-    const { data: deals } = await applyTenantFilter(supabase
+    // [OPTIMIZATION] Using SQL Join to fetch deals and profiles in ONE trip
+    let query = supabase
       .from("deals")
-      .select("created_by, commission_amount")
-      .eq("status", "CLOSED_WIN"));
+      .select(`
+        created_by,
+        commission_amount,
+        agent:profiles!created_by (
+          id,
+          full_name,
+          avatar_url
+        )
+      `)
+      .eq("status", "CLOSED_WIN");
 
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("id, full_name, avatar_url");
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
 
-    if (!deals || !profiles) return [];
+    const { data: deals, error } = await query;
 
-    const agentStats = new Map<
-      string,
-      {
-        count: number;
-        commission: number;
-        profile: { full_name: string | null; avatar_url: string | null };
-      }
-    >();
+    if (error || !deals) return [];
 
-    deals.forEach((d: { created_by: string | null; commission_amount: number | null }) => {
-      if (!d.created_by) return;
+    const agentStats = new Map<string, { count: number; commission: number; name: string; avatar: string | null }>();
+
+    deals.forEach((d: { created_by: string | null; commission_amount: number | null; agent: any }) => {
+      const agent = d.agent as unknown as { full_name: string | null; avatar_url: string | null } | null;
+      if (!d.created_by || !agent) return;
       const current = agentStats.get(d.created_by) || {
         count: 0,
         commission: 0,
-        profile: profiles.find((p: { id: string }) => p.id === d.created_by) || {
-          full_name: "Unknown",
-          avatar_url: null,
-        },
+        name: agent.full_name || "Unknown Agent",
+        avatar: agent.avatar_url,
       };
 
       agentStats.set(d.created_by, {
         count: current.count + 1,
         commission: current.commission + (d.commission_amount || 0),
-        profile: current.profile,
+        name: current.name,
+        avatar: current.avatar,
       });
     });
 
-    const result = Array.from(agentStats.entries())
+    return Array.from(agentStats.entries())
       .map(([id, stats]) => ({
         id,
-        name: stats.profile.full_name || "Unknown Agent",
-        avatar_url: stats.profile.avatar_url,
+        name: stats.name,
+        avatar_url: stats.avatar,
         deals_count: stats.count,
         total_commission: stats.commission,
       }))
       .sort((a, b) => b.total_commission - a.total_commission)
       .slice(0, 5);
-
-    return result;
   } catch (error) {
     console.error("getTopAgents Error:", error);
     return [];

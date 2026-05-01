@@ -49,7 +49,8 @@ export async function getInboxConversationsQuery(): Promise<Conversation[]> {
 
   const { data, error } = await query
     .order("created_at", { referencedTable: "omni_messages", ascending: false })
-    .limit(1, { referencedTable: "omni_messages" });
+    .limit(1, { referencedTable: "omni_messages" })
+    .limit(50); // [OPTIMIZATION] Safeguard: Only load 50 active conversations initially for peak performance
 
   if (error) {
     console.error("Error fetching inbox conversations:", error);

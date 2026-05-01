@@ -165,11 +165,18 @@ async function TableWrapper({
   const { tableData, count, filterMetadata } = tableResult;
   const currentTenantName = tenantResult.data?.name || null;
 
+  const hasActiveFilters = Object.entries(params).some(([key, value]) => {
+    if (key === 'page') return false;
+    if (key === 'sortBy' || key === 'sortOrder') return false;
+    return value && value !== 'ALL';
+  });
+
   if (tableData.length === 0 && currentPage > 1) {
     redirect("/protected/properties?page=1");
   }
 
-  if (tableData.length === 0 && currentPage === 1) {
+  // Truly Empty: No data AND No active filters
+  if (tableData.length === 0 && currentPage === 1 && !hasActiveFilters) {
     return <PropertiesEmptyState />;
   }
 
@@ -180,18 +187,32 @@ async function TableWrapper({
         filterMetadata={filterMetadata}
         isMultiTenant={isMultiTenant}
       />
-      <PropertiesTable
-        data={tableData}
-        isAdmin={isAdminUser}
-        isMultiTenant={isMultiTenant}
-        currentTenantId={tenantId}
-        currentTenantName={currentTenantName}
-        showBranch={
-          isAdminUser && params.allBranches === "true" && isMultiTenant
-        }
-        totalCount={count}
-        filters={params}
-      />
+      {tableData.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 px-4 bg-white rounded-3xl border border-slate-100 shadow-sm animate-fade-in">
+          <div className="w-16 h-16 bg-slate-50 rounded-2xl flex items-center justify-center mb-4">
+            <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold text-slate-800 mb-1">ไม่พบข้อมูลที่ตรงตามเงื่อนไข</h3>
+          <p className="text-slate-500 text-sm text-center max-w-xs">
+            ลองปรับเปลี่ยนคำค้นหา หรือใช้ตัวกรองแบบอื่นดูนะครับ
+          </p>
+        </div>
+      ) : (
+        <PropertiesTable
+          data={tableData}
+          isAdmin={isAdminUser}
+          isMultiTenant={isMultiTenant}
+          currentTenantId={tenantId}
+          currentTenantName={currentTenantName}
+          showBranch={
+            isAdminUser && params.allBranches === "true" && isMultiTenant
+          }
+          totalCount={count}
+          filters={params}
+        />
+      )}
     </>
   );
 }

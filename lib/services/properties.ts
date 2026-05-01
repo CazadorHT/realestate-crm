@@ -227,14 +227,69 @@ export const getPublicProperties = cache(
     if (options.isForeigner) query = query.eq("is_foreigner_quota", true);
     if (options.companyRegistered) query = query.eq("is_tax_registered", true);
 
-    // 🌍 AI-Ready Unified Search (Extended Multilingual Coverage)
+    // 🌍 [SMART SEARCH HARDENING] - Token-based Logic Grouping
     if (options.q) {
-      const searchTerm = `%${options.q}%`;
-      query = query.or(
-        `title.ilike.${searchTerm},title_en.ilike.${searchTerm},title_cn.ilike.${searchTerm},title_ru.ilike.${searchTerm},` +
-        `description.ilike.${searchTerm},description_en.ilike.${searchTerm},description_cn.ilike.${searchTerm},description_ru.ilike.${searchTerm},` +
-        `ai_summary_content.ilike.${searchTerm},popular_area.ilike.${searchTerm}`
-      );
+      const searchTerm = options.q.trim();
+      const tokens = searchTerm.split(/\s+/).filter(t => t.length > 0);
+      
+      // 🚀 [SMART FUZZY] - Insert % between Text and Numbers to handle missing spaces
+      // e.g. "พระราม9" -> "พระราม%9", "sukhumvit55" -> "sukhumvit%55"
+      const fuzzyQuery = searchTerm
+        .replace(/([ก-ฮa-zA-Z])(\d)/g, '$1%$2')
+        .replace(/(\d)([ก-ฮa-zA-Z])/g, '$1%$2')
+        .replace(/\s+/g, "%");
+        
+      const pctTerm = `%${fuzzyQuery}%`;
+
+      // 1. Text Search Conditions (Base OR across languages)
+      const textConditions = [
+        `title.ilike.${pctTerm}`,
+        `title_en.ilike.${pctTerm}`,
+        `title_cn.ilike.${pctTerm}`,
+        `title_ru.ilike.${pctTerm}`,
+        `description.ilike.${pctTerm}`,
+        `description_en.ilike.${pctTerm}`,
+        `description_cn.ilike.${pctTerm}`,
+        `description_ru.ilike.${pctTerm}`,
+        `ai_summary_content.ilike.${pctTerm}`,
+        `popular_area.ilike.${pctTerm}`,
+        `province.ilike.${pctTerm}`,
+        `district.ilike.${pctTerm}`
+      ];
+
+      // 2. Intelligent Mapping Conditions
+      const smartFilters: string[] = [];
+      
+      // Map Listing Types
+      const isSale = tokens.some(t => t.includes("ขาย"));
+      const isRent = tokens.some(t => t.includes("เช่า"));
+      if (isSale) smartFilters.push(`listing_type.in.("SALE","SALE_AND_RENT")`);
+      if (isRent) smartFilters.push(`listing_type.in.("RENT","SALE_AND_RENT")`);
+
+      // Map Property Types
+      if (tokens.some(t => t.includes("คอนโด"))) smartFilters.push(`property_type.eq.CONDO`);
+      if (tokens.some(t => t.includes("บ้าน") || t.includes("ทาวน์"))) smartFilters.push(`property_type.in.("HOUSE","TOWNHOUSE")`);
+      if (tokens.some(t => t.includes("วิลล่า"))) smartFilters.push(`property_type.eq.VILLA`);
+      if (tokens.some(t => t.includes("ที่ดิน"))) smartFilters.push(`property_type.eq.LAND`);
+
+      // Map Room Counts & Size
+      tokens.forEach(t => {
+        const numMatch = t.match(/(\d+)/);
+        if (numMatch) {
+          const num = numMatch[1];
+          if (t.includes("นอน") || t.includes("bed")) smartFilters.push(`bedrooms.eq.${num}`);
+          if (t.includes("น้ำ") || t.includes("bath")) smartFilters.push(`bathrooms.eq.${num}`);
+          if (t.includes("ตรม") || t.includes("sqm")) smartFilters.push(`size_sqm.gte.${num}`);
+        }
+      });
+
+      // 3. Final Assembly: (Text Search) OR (Smart Filters AND Group)
+      if (smartFilters.length > 0) {
+        const smartGroup = `and(${smartFilters.join(",")})`;
+        query = query.or(`${textConditions.join(",")},${smartGroup}`);
+      } else {
+        query = query.or(textConditions.join(","));
+      }
     }
 
     // Items Per Page
