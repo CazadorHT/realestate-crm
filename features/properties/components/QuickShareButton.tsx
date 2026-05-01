@@ -70,7 +70,7 @@ export function QuickShareButton({
     th: { intro: "📢 ฝากทรัพย์คุณภาพครับ ✨", price: "💰 ราคา:", sale: "ขาย", rent: "เช่า", month: "/เดือน", location: "📍 ทำเล:", area: "📐 พื้นที่:", sqm: "ตร.ม.", bed: "ห้องนอน", bath: "ห้องน้ำ", id: "🆔 รหัสทรัพย์:", link: "🔗 ดูรายละเอียดเพิ่มเติม:", from: "ลดจาก" },
     en: { intro: "📢 Premium Property for you ✨", price: "💰 Price:", sale: "Sale", rent: "Rent", month: "/mo", location: "📍 Location:", area: "📐 Area:", sqm: "sqm", bed: "Bedrooms", bath: "Bathrooms", id: "🆔 Property ID:", link: "🔗 View more details:", from: "Discount from" },
     cn: { intro: "📢 为您推荐优质房产 ✨", price: "💰 价格:", sale: "出售", rent: "出租", month: "/月", location: "📍 地点:", area: "📐 面积:", sqm: "平方米", bed: "卧室", bath: "浴室", id: "🆔 房产编号:", link: "🔗 查看更多详情:", from: "原价" },
-    ru: { intro: "📢 Предлагаем качественную недвижимость ✨", price: "💰 Цена:", sale: "Продажа", rent: "Аренда", month: "/мес", location: "📍 Район:", area: "📐 Площадь:", sqm: "кв.м.", bed: "спальни", bath: "ванные", id: "🆔 ID объекта:", link: "🔗 Подробнее:", from: "Цена снижена с" }
+    ru: { intro: "📢 Предлагаем качественную недвижимость ✨", price: "💰 Цена:", sale: "Продажа", rent: "Аренда", month: "/мес", location: "📍 Район:", area: "📐 Площадь:", sqm: "кв.м.", bed: "спальняняняни", bath: "ванные", id: "🆔 ID объекта:", link: "🔗 Подробнее:", from: "Цена снижена с" }
   }[lang];
 
   // Location logic: Priority Neighborhood > Subdistrict > District

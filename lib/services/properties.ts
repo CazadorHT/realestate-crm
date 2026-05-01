@@ -1,5 +1,4 @@
 import { cache } from "react";
-import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
   getSafeImages,
@@ -7,12 +6,12 @@ import {
   getSafeNearbyPlaces,
   getSafeNearbyTransits,
 } from "@/lib/property-hardened-utils";
-import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { 
   PropertySearchResponse, 
   PropertyFacets,
-  FacetRPCParams 
+  FacetRPCParams
 } from "@/features/properties/types/search";
+import { detectSearchIntent } from "../search-config";
 
 export type PropertyRow = {
   id: string;
@@ -96,7 +95,6 @@ export type PropertyRow = {
   }> | null;
 };
 
-// 🛡️ Data Seal: Strictly Whitelisted Public Columns
 const PUBLIC_COLUMNS = `
   id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru,
   property_type, price, rental_price, original_price, original_rental_price,
@@ -154,13 +152,6 @@ export interface GetPropertiesOptions {
   includeFacets?: boolean;
 }
 
-/**
- * [S-Tier] Hardened Public Properties Fetcher
- * - React.cache for Request Memoization
- * - Server-Side Filtering Logic
- * - Security Whitelisted Columns
- * - Server-Side Faceting Support
- */
 export const getPublicProperties = cache(
   async (options: GetPropertiesOptions = {}): Promise<PropertySearchResponse> => {
     const supabase = await createClient();
@@ -171,14 +162,12 @@ export const getPublicProperties = cache(
       .eq("status", "ACTIVE")
       .is("deleted_at", null);
 
-    // Filter Logic (Server-Side)
     if (options.ids && options.ids.length > 0)
       query = query.in("id", options.ids);
     
     if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal")
       query = query.eq("is_hot_deal", true);
 
-    // Province & Area Filtering
     if (options.province && options.province !== "ALL") {
       query = query.eq("province", options.province);
     }
@@ -186,12 +175,10 @@ export const getPublicProperties = cache(
       query = query.or(`subdistrict.ilike.%${options.area}%,popular_area.ilike.%${options.area}%`);
     }
 
-    // Property Type
     if (options.propertyType && options.propertyType !== "ALL") {
       query = query.eq("property_type", options.propertyType);
     }
 
-    // Listing Type (Hardened logic)
     if (options.listingType && options.listingType !== "ALL") {
       if (options.listingType === "SALE")
         query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
@@ -201,7 +188,6 @@ export const getPublicProperties = cache(
         query = query.eq("listing_type", "SALE_AND_RENT");
     }
 
-    // Price Filtering (Server-Side)
     const effectivePriceType = options.priceType || options.listingType;
     if (options.minPrice || options.maxPrice) {
       const min = Number(options.minPrice) || 0;
@@ -213,35 +199,29 @@ export const getPublicProperties = cache(
       }
     }
 
-    // Size Filtering
     if (options.minSize || options.maxSize) {
       const minS = Number(options.minSize) || 0;
       const maxS = Number(options.maxSize) || 100000;
       query = query.gte("size_sqm", minS).lte("size_sqm", maxS);
     }
 
-    // Boolean Flags (Server-Side)
     if (options.nearTrain) query = query.eq("near_transit", true);
     if (options.petFriendly) query = query.eq("is_pet_friendly", true);
     if (options.fullyFurnished) query = query.eq("is_fully_furnished", true);
     if (options.isForeigner) query = query.eq("is_foreigner_quota", true);
     if (options.companyRegistered) query = query.eq("is_tax_registered", true);
 
-    // 🌍 [SMART SEARCH HARDENING] - Token-based Logic Grouping
     if (options.q) {
       const searchTerm = options.q.trim();
       const tokens = searchTerm.split(/\s+/).filter(t => t.length > 0);
       
-      // 🚀 [SMART FUZZY] - Insert % between Text and Numbers to handle missing spaces
-      // e.g. "พระราม9" -> "พระราม%9", "sukhumvit55" -> "sukhumvit%55"
       const fuzzyQuery = searchTerm
-        .replace(/([ก-ฮa-zA-Z])(\d)/g, '$1%$2')
-        .replace(/(\d)([ก-ฮa-zA-Z])/g, '$1%$2')
+        .replace(/([ก-ฮ\u0E30-\u0E4Ea-zA-Z\u0400-\u04FF\u4e00-\u9fa5])(\d)/g, '$1%$2')
+        .replace(/(\d)([ก-ฮ\u0E30-\u0E4Ea-zA-Z\u0400-\u04FF\u4e00-\u9fa5])/g, '$1%$2')
         .replace(/\s+/g, "%");
         
       const pctTerm = `%${fuzzyQuery}%`;
 
-      // 1. Text Search Conditions (Base OR across languages)
       const textConditions = [
         `title.ilike.${pctTerm}`,
         `title_en.ilike.${pctTerm}`,
@@ -254,67 +234,41 @@ export const getPublicProperties = cache(
         `ai_summary_content.ilike.${pctTerm}`,
         `popular_area.ilike.${pctTerm}`,
         `province.ilike.${pctTerm}`,
-        `district.ilike.${pctTerm}`
+        `district.ilike.${pctTerm}`,
+        `meta_keywords.cs.{"${searchTerm}"}`
       ];
 
-      // 2. Intelligent Mapping Conditions
-      const smartFilters: string[] = [];
-      
-      // Map Listing Types (TH, EN, CN, RU)
-      const isSale = tokens.some(t => t.includes("ขาย") || t.toLowerCase().includes("sale") || t.includes("出售") || t.toLowerCase().includes("продажа") || t.toLowerCase().includes("купить"));
-      const isRent = tokens.some(t => t.includes("เช่า") || t.toLowerCase().includes("rent") || t.includes("出租") || t.toLowerCase().includes("аренда") || t.toLowerCase().includes("снять"));
-      if (isSale) smartFilters.push(`listing_type.in.("SALE","SALE_AND_RENT")`);
-      if (isRent) smartFilters.push(`listing_type.in.("RENT","SALE_AND_RENT")`);
+      // [Diamond-Tier] Unified Intent Detection
+      const { 
+        targetCategories, targetListing, targetBeds, 
+        targetBaths, targetMinSize, targetLandSize, isSearchingPool 
+      } = detectSearchIntent(tokens);
 
-      // Map Property Types (Multilingual)
-      if (tokens.some(t => t.includes("คอนโด") || t.toLowerCase().includes("condo") || t.includes("公寓") || t.toLowerCase().includes("квартира"))) smartFilters.push(`property_type.eq.CONDO`);
-      if (tokens.some(t => t.includes("บ้าน") || t.toLowerCase().includes("house") || t.includes("房子") || t.toLowerCase().includes("дом"))) smartFilters.push(`property_type.eq.HOUSE`);
-      if (tokens.some(t => t.includes("ทาวน์") || t.toLowerCase().includes("town") || t.includes("联排") || t.toLowerCase().includes("таунхаус"))) smartFilters.push(`property_type.eq.TOWNHOME`);
-      if (tokens.some(t => t.includes("วิลล่า") || t.toLowerCase().includes("villa") || t.includes("别墅") || t.toLowerCase().includes("вилла"))) {
-        if (tokens.some(t => t.includes("พูล") || t.toLowerCase().includes("pool"))) smartFilters.push(`property_type.eq.POOL_VILLA`);
-        else smartFilters.push(`property_type.eq.VILLA`);
-      }
-      
-      if (tokens.some(t => t.includes("ที่ดิน") || t.toLowerCase().includes("land") || t.includes("土地") || t.toLowerCase().includes("земля"))) smartFilters.push(`property_type.eq.LAND`);
-      if (tokens.some(t => t.includes("พาณิชย์") || t.includes("ตึกแถว") || t.toLowerCase().includes("shophouse") || t.includes("商铺") || t.toLowerCase().includes("коммерция"))) smartFilters.push(`property_type.eq.COMMERCIAL_BUILDING`);
-      if (tokens.some(t => t.includes("ออฟฟิศ") || t.includes("สำนักงาน") || t.toLowerCase().includes("office") || t.includes("办公室") || t.toLowerCase().includes("офис"))) smartFilters.push(`property_type.eq.OFFICE_BUILDING`);
+      if (targetListing === "SALE") query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+      else if (targetListing === "RENT") query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+      else if (targetListing === "SALE_AND_RENT") query = query.eq("listing_type", "SALE_AND_RENT");
 
-      // Map Room Counts & Size (Multilingual)
-      tokens.forEach(t => {
-        const numMatch = t.match(/(\d+)/);
-        if (numMatch) {
-          const num = numMatch[1];
-          // Bedrooms
-          if (t.includes("นอน") || t.toLowerCase().includes("bed") || t.includes("卧室") || t.includes("室") || t.toLowerCase().includes("спальн") || t.toLowerCase().includes("сп")) {
-            smartFilters.push(`bedrooms.eq.${num}`);
-          }
-          // Bathrooms
-          if (t.includes("น้ำ") || t.toLowerCase().includes("bath") || t.includes("浴室") || t.includes("卫") || t.toLowerCase().includes("ванн") || t.toLowerCase().includes("санузел")) {
-            smartFilters.push(`bathrooms.eq.${num}`);
-          }
-          // Sizes
-          if (t.includes("ตรม") || t.toLowerCase().includes("sqm") || t.includes("平方米") || t.toLowerCase().includes("кв.ม")) {
-            smartFilters.push(`size_sqm.gte.${num}`);
-          }
-          if (t.includes("วา") || t.toLowerCase().includes("sqwah") || t.includes("平方哇")) {
-            smartFilters.push(`land_size_sqwah.gte.${num}`);
-          }
+      if (targetCategories.length > 0) {
+        if (targetCategories.includes("OFFICE_BUILDING") || targetCategories.includes("COMMERCIAL_BUILDING")) {
+           query = query.in("property_type", ["OFFICE_BUILDING", "COMMERCIAL_BUILDING"]);
+        } else if (targetCategories.includes("VILLA")) {
+           if (isSearchingPool) query = query.eq("property_type", "POOL_VILLA");
+           else query = query.in("property_type", ["VILLA", "POOL_VILLA"]);
+        } else {
+           query = query.in("property_type", targetCategories);
         }
-      });
-
-      // 3. Final Assembly: (Text Search) OR (Smart Filters AND Group)
-      if (smartFilters.length > 0) {
-        const smartGroup = `and(${smartFilters.join(",")})`;
-        query = query.or(`${textConditions.join(",")},${smartGroup}`);
-      } else {
-        query = query.or(textConditions.join(","));
       }
+
+      if (targetBeds !== null) query = query.eq("bedrooms", targetBeds);
+      if (targetBaths !== null) query = query.eq("bathrooms", targetBaths);
+      if (targetMinSize !== null) query = query.gte("size_sqm", targetMinSize);
+      if (targetLandSize !== null) query = query.gte("land_size_sqwah", targetLandSize);
+
+      query = query.or(textConditions.join(","));
     }
 
-    // Items Per Page
     const itemsPerPage = options.limit || 60;
 
-    // Sorting
     if (options.filter === "hot_deals") {
       query = query.order("updated_at", { ascending: false });
     } else if (options.listingType === "RENT") {
@@ -330,22 +284,18 @@ export const getPublicProperties = cache(
       return { properties: [], facets: null };
     }
 
-    // Server-Side Faceting Logic (Optimized for scale)
     let facets: PropertyFacets | null = null;
     if (options.includeFacets) {
-      // Type-safe RPC call using Augmented Type Interface
       const rpcParams: FacetRPCParams = {
         p_q: options.q || null,
         p_province: options.province || null,
         p_property_type: options.propertyType || null,
         p_listing_type: options.listingType || null
       };
-
       const { data: facetData } = await supabase.rpc('get_public_property_facets_v2', rpcParams);
       facets = (facetData as unknown) as PropertyFacets | null;
     }
 
-    // Fetch Popular Area Translations (Optimized)
     const popularAreaNames = Array.from(
       new Set(
         (propertiesData || [])
@@ -370,12 +320,10 @@ export const getPublicProperties = cache(
 
     const finalProperties = (propertiesData as unknown as PropertyRow[] ?? []).map((row: PropertyRow) => {
       const trans = areaTranslationsMap.get(row.popular_area || "");
-      // 🛡️ Exclude DB-specific fields from the card object
       const { structured_data: _, property_features: __, property_images: pi, images: legacyImages, ...cardBase } = row;
       
-      // Use normalized property_images if available, fallback to legacy
       const finalImages = (pi && pi.length > 0) 
-        ? pi.map(img => ({ ...img, url: img.image_url })) 
+        ? pi.map((img: NonNullable<PropertyRow['property_images']>[number]) => ({ ...img, url: img.image_url })) 
         : getSafeImages(legacyImages);
 
       return {
@@ -383,34 +331,24 @@ export const getPublicProperties = cache(
         popular_area_en: trans?.en ?? null,
         popular_area_cn: trans?.cn ?? null,
         popular_area_ru: trans?.ru ?? null,
+        created_at_time: new Date(row.created_at).getTime(),
         image_url: getCoverImage(finalImages),
         images: finalImages,
         location: buildLocation(row),
-        features: (row.property_features || [])
-          .map((pf) => pf.features)
-          .filter((f): f is NonNullable<typeof f> => !!f),
+        features: (row.property_features || []).map((pf: NonNullable<PropertyRow['property_features']>[number]) => pf.features).filter((f): f is NonNullable<typeof f> => !!f),
         verified: row.verified === true ? true : row.verified === false ? false : undefined,
         nearby_places: getSafeNearbyPlaces(row.nearby_places),
         nearby_transits: getSafeNearbyTransits(row.nearby_transits),
       };
     });
 
-    return {
-      properties: finalProperties,
-      facets
-    };
+    return { properties: finalProperties, facets };
   },
 );
 
 export const getPublicPropertyBySlug = cache(async (slug: string) => {
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("properties")
-    .select(PUBLIC_COLUMNS)
-    .eq("slug", slug)
-    .eq("status", "ACTIVE")
-    .single();
-
+  const { data, error } = await supabase.from("properties").select(PUBLIC_COLUMNS).eq("slug", slug).eq("status", "ACTIVE").single();
   if (error || !data) return null;
 
   const typedRow = data as unknown as PropertyRow;
@@ -421,12 +359,14 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
       .select("name, name_en, name_cn, name_ru")
       .eq("name", typedRow.popular_area)
       .single();
-    if (areaData) trans = { en: areaData.name_en, cn: areaData.name_cn, ru: areaData.name_ru };
+    if (areaData) {
+      const a = areaData as { name_en: string | null; name_cn: string | null; name_ru: string | null };
+      trans = { en: a.name_en, cn: a.name_cn, ru: a.name_ru };
+    }
   }
 
-  // Use normalized property_images if available, fallback to legacy
-  const finalImages = (typedRow.property_images && typedRow.property_images.length > 0)
-    ? typedRow.property_images.map(img => ({ ...img, url: img.image_url }))
+  const finalImages = (typedRow.property_images && typedRow.property_images.length > 0) 
+    ? typedRow.property_images.map((img: NonNullable<PropertyRow['property_images']>[number]) => ({ ...img, url: img.image_url })) 
     : getSafeImages(typedRow.images);
 
   return {
@@ -437,9 +377,7 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
     image_url: getCoverImage(finalImages),
     images: finalImages,
     location: buildLocation(typedRow),
-    features: (typedRow.property_features || [])
-      .map((pf) => pf.features)
-      .filter(Boolean),
+    features: (typedRow.property_features || []).map((pf: NonNullable<PropertyRow['property_features']>[number]) => pf.features).filter((f): f is NonNullable<typeof f> => !!f),
     nearby_places: getSafeNearbyPlaces(typedRow.nearby_places),
     nearby_transits: getSafeNearbyTransits(typedRow.nearby_transits),
   };

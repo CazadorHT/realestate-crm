@@ -101,7 +101,7 @@ export function generateRentNotificationFlex({
       forMonth: "За месяц:",
       contractEnds: "Окончание договора:",
       footer: "Пожалуйста, отправьте чек об оплате в эту группу. Спасибо 🙏",
-      specs: { bed: "спальни", bath: "ванные", sqm: "кв.м." },
+      specs: { bed: "спальняняняни", bath: "ванные", sqm: "кв.м." },
     },
   };
 

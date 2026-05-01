@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from "react";
 import { PropertyCardProps } from "@/components/public/PropertyCard";
 import { PropertyFacets } from "@/features/properties/types/search";
+import { detectSearchIntent } from "@/lib/search-config";
 
 type ApiProperty = PropertyCardProps;
 
@@ -26,8 +27,8 @@ interface FilteringOptions {
 }
 
 /**
- * [S-Tier] Optimized Property Filtering Hook (Version 2.0 - Hardened)
- * High-performance single-pass faceting and filtering.
+ * [Ultra S-Tier] Optimized Property Filtering Hook (Version 6.0 - Centralized)
+ * Uses shared intent detection logic to ensure 100% consistency with server results.
  */
 export function usePropertyFiltering(
   properties: ApiProperty[],
@@ -41,31 +42,77 @@ export function usePropertyFiltering(
     minPrice, maxPrice, minSize, maxSize, sort,
   } = options;
 
-  // Optimized match checker (Pure function)
+  // --- ⚡ Centralized Search Intent (Diamond Optimization) ---
+  const searchIntent = useMemo(() => {
+    const k = keyword.trim().toLowerCase();
+    if (!k) return null;
+    const tokens = k.split(/\s+/).filter(t => t.length > 0);
+    return {
+      k,
+      ...detectSearchIntent(tokens)
+    };
+  }, [keyword]);
+
+  // Optimized match checker
   const checkMatch = useCallback((p: ApiProperty, excludeFilters: string[] = []) => {
-    // 1. Keyword search (Multi-language & AI-ready)
-    if (!excludeFilters.includes("keyword") && keyword.trim()) {
-      const k = keyword.toLowerCase();
-      const match = p.title.toLowerCase().includes(k) || 
-                   (p.title_en || "").toLowerCase().includes(k) ||
-                   (p.title_cn || "").toLowerCase().includes(k) ||
-                   (p.title_ru || "").toLowerCase().includes(k) ||
-                   (p.description || "").toLowerCase().includes(k) || 
-                   (p.description_en || "").toLowerCase().includes(k) ||
-                   (p.description_cn || "").toLowerCase().includes(k) ||
-                   (p.description_ru || "").toLowerCase().includes(k) ||
-                   (p.popular_area || "").toLowerCase().includes(k) || 
-                   (p.province || "").toLowerCase().includes(k) ||
-                   (p.ai_summary_content || "").toLowerCase().includes(k);
-      if (!match) return false;
+    if (!excludeFilters.includes("keyword") && searchIntent) {
+      const { 
+        targetCategories, targetListing, targetBeds, 
+        targetBaths, targetMinSize, targetLandSize, isSearchingPool, remainingTokens 
+      } = searchIntent;
+
+      // 1. Strict Category Enforcement
+      if (targetCategories.length > 0) {
+        if (targetCategories.includes("OFFICE_BUILDING") || targetCategories.includes("COMMERCIAL_BUILDING")) {
+           if (p.property_type !== "OFFICE_BUILDING" && p.property_type !== "COMMERCIAL_BUILDING") return false;
+        } else if (targetCategories.includes("VILLA")) {
+           if (isSearchingPool) { if (p.property_type !== "POOL_VILLA") return false; }
+           else { if (p.property_type !== "VILLA" && p.property_type !== "POOL_VILLA") return false; }
+        } else {
+           if (!targetCategories.includes(p.property_type || "")) return false;
+        }
+      }
+
+      // 2. Strict Listing Enforcement
+      if (targetListing) {
+        if (targetListing === "SALE") {
+          if (p.listing_type !== "SALE" && p.listing_type !== "SALE_AND_RENT") return false;
+        } else if (targetListing === "RENT") {
+          if (p.listing_type !== "RENT" && p.listing_type !== "SALE_AND_RENT") return false;
+        } else if (targetListing === "SALE_AND_RENT") {
+          if (p.listing_type !== "SALE_AND_RENT") return false;
+        }
+      }
+
+      // 3. Number Enforcement
+      if (targetBeds !== null && p.bedrooms !== targetBeds) return false;
+      if (targetBaths !== null && p.bathrooms !== targetBaths) return false;
+      if (targetMinSize !== null && (p.size_sqm || 0) < targetMinSize) return false;
+      if (targetLandSize !== null && (p.land_size_sqwah || 0) < targetLandSize) return false;
+
+      // 4. Remaining Text Token Match (AND logic)
+      if (remainingTokens.length > 0) {
+        const allMatch = remainingTokens.every(token => {
+          return p.title.toLowerCase().includes(token) || 
+                 (p.title_en || "").toLowerCase().includes(token) ||
+                 (p.title_cn || "").toLowerCase().includes(token) ||
+                 (p.title_ru || "").toLowerCase().includes(token) ||
+                 (p.description || "").toLowerCase().includes(token) || 
+                 (p.description_en || "").toLowerCase().includes(token) ||
+                 (p.popular_area || "").toLowerCase().includes(token) || 
+                 (p.province || "").toLowerCase().includes(token) ||
+                 (p.meta_keywords || []).some(mk => mk.toLowerCase().includes(token)) ||
+                 (p.ai_summary_content || "").toLowerCase().includes(token);
+        });
+        if (!allMatch) return false;
+      }
     }
 
-    // 2. Base Metadata
+    // 2. Base Metadata Filters (Sidebar)
     if (!excludeFilters.includes("province") && province !== "ALL" && p.province !== province) return false;
     if (!excludeFilters.includes("type") && type !== "ALL" && p.property_type !== type) return false;
     if (!excludeFilters.includes("area") && area !== "ALL" && p.popular_area !== area) return false;
 
-    // 3. Listing Type (Hardened logic)
     if (!excludeFilters.includes("listingType") && listingType !== "ALL") {
       if (listingType === "SALE") {
         if (p.listing_type !== "SALE" && p.listing_type !== "SALE_AND_RENT") return false;
@@ -76,7 +123,6 @@ export function usePropertyFiltering(
       }
     }
 
-    // 4. Boolean Features
     if (!excludeFilters.includes("nearTrain") && nearTrain && !p.near_transit) return false;
     if (!excludeFilters.includes("petFriendly") && petFriendly && !p.is_pet_friendly) return false;
     if (!excludeFilters.includes("fullyFurnished") && fullyFurnished && !p.is_fully_furnished) return false;
@@ -84,14 +130,12 @@ export function usePropertyFiltering(
     if (!excludeFilters.includes("companyRegistered") && companyRegistered && !p.is_tax_registered) return false;
     if (!excludeFilters.includes("isHotDeal") && isHotDeal && !p.is_hot_deal) return false;
 
-    // 5. Bedrooms
     if (!excludeFilters.includes("bedrooms") && bedrooms !== "ALL") {
       const beds = p.bedrooms || 0;
       if (bedrooms === "4+") { if (beds < 4) return false; }
       else if (beds !== parseInt(bedrooms)) return false;
     }
 
-    // 6. Price (Optimized parseFloat)
     if (!excludeFilters.includes("price")) {
       const min = minPrice ? Number(minPrice) : 0;
       const max = maxPrice ? Number(maxPrice) : Infinity;
@@ -107,7 +151,6 @@ export function usePropertyFiltering(
       }
     }
 
-    // 7. Size
     if (!excludeFilters.includes("size")) {
       const minS = minSize ? Number(minSize) : 0;
       const maxS = maxSize ? Number(maxSize) : Infinity;
@@ -116,7 +159,7 @@ export function usePropertyFiltering(
     }
 
     return true;
-  }, [keyword, province, type, listingType, priceType, area, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, minPrice, maxPrice, minSize, maxSize]);
+  }, [searchIntent, province, type, listingType, priceType, area, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, minPrice, maxPrice, minSize, maxSize]);
 
   // Single-Pass Engine (O(N))
   const results = useMemo(() => {
@@ -129,19 +172,13 @@ export function usePropertyFiltering(
     const bedroomCounts: Record<string, number> = { ALL: 0, "1": 0, "2": 0, "3": 0, "4+": 0 };
 
     properties.forEach((p) => {
-      // Main Filter pass
       const fullMatch = checkMatch(p);
       if (fullMatch) filteredList.push(p);
 
-      // Faceting logic (Single pass using exclusion checks where needed)
-      // We only re-check specific filters if they aren't part of the core match
-      
-      // Province Facets
       if (checkMatch(p, ["province"]) && p.province) {
         provinceMap.set(p.province, (provinceMap.get(p.province) || 0) + 1);
       }
 
-      // Area Facets
       if (checkMatch(p, ["area"]) && p.popular_area) {
         const existing = areaMap.get(p.popular_area) || { count: 0, name_en: null as string | null, name_cn: null as string | null, name_ru: null as string | null };
         areaMap.set(p.popular_area, { 
@@ -152,12 +189,10 @@ export function usePropertyFiltering(
         });
       }
 
-      // Type Facets
       if (checkMatch(p, ["type"]) && p.property_type) {
         typeCounts[p.property_type] = (typeCounts[p.property_type] || 0) + 1;
       }
 
-      // Listing Type Facets
       if (checkMatch(p, ["listingType"])) {
         listingTypeCounts.ALL++;
         if (p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT") listingTypeCounts.SALE++;
@@ -165,7 +200,6 @@ export function usePropertyFiltering(
         if (p.listing_type === "SALE_AND_RENT") listingTypeCounts.SALE_AND_RENT++;
       }
 
-      // Quick Filters Facets
       if (checkMatch(p, ["nearTrain"]) && p.near_transit) quickCounts.nearTrain++;
       if (checkMatch(p, ["petFriendly"]) && p.is_pet_friendly) quickCounts.petFriendly++;
       if (checkMatch(p, ["fullyFurnished"]) && p.is_fully_furnished) quickCounts.fullyFurnished++;
@@ -173,7 +207,6 @@ export function usePropertyFiltering(
       if (checkMatch(p, ["companyRegistered"]) && p.is_tax_registered) quickCounts.companyRegistered++;
       if (checkMatch(p, ["isHotDeal"]) && p.is_hot_deal) quickCounts.isHotDeal++;
 
-      // Bedrooms
       if (checkMatch(p, ["bedrooms"])) {
         bedroomCounts.ALL++;
         const beds = p.bedrooms || 0;
@@ -182,22 +215,18 @@ export function usePropertyFiltering(
       }
     });
 
-    // ⚡ Hardened Sorting Implementation
     filteredList.sort((a, b) => {
-      if (sort === "NEWEST") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      
+      if (sort === "NEWEST") return (b.created_at_time || 0) - (a.created_at_time || 0);
       const getPrice = (p: ApiProperty) => {
         const pSale = p.price || p.original_price || 0;
         const pRent = p.rental_price || p.original_rental_price || 0;
         if (listingType === "RENT" || priceType === "RENT") return pRent || pSale;
         return pSale || pRent;
       };
-
       if (sort === "PRICE_ASC") return getPrice(a) - getPrice(b);
       if (sort === "PRICE_DESC") return getPrice(b) - getPrice(a);
       if (sort === "AREA_ASC") return (a.size_sqm || 0) - (b.size_sqm || 0);
       if (sort === "AREA_DESC") return (b.size_sqm || 0) - (a.size_sqm || 0);
-      
       return 0;
     });
 
@@ -212,28 +241,12 @@ export function usePropertyFiltering(
     };
   }, [properties, checkMatch, sort, listingType, priceType]);
 
-  // Integrated Server Facets (Hybrid logic)
   const finalFacets = useMemo(() => {
     if (!serverFacets) return results;
-
-    // Convert Record<string, number> to Array<{name, count}> for provinces
-    const serverProvinces = Object.entries(serverFacets.availableProvinces || {}).map(([name, count]) => ({
-      name,
-      count
-    })).sort((a, b) => b.count - a.count);
-
-    // Convert Areas Record to expected format
-    const serverAreas = Object.entries(serverFacets.availableAreas || {}).map(([name, val]) => ({
-      name,
-      count: val.count,
-      name_en: val.name_en,
-      name_cn: val.name_cn,
-      name_ru: val.name_ru
-    })).sort((a, b) => a.name.localeCompare(b.name));
-
+    const serverProvinces = Object.entries(serverFacets.availableProvinces || {}).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
+    const serverAreas = Object.entries(serverFacets.availableAreas || {}).map(([name, val]) => ({ name, count: val.count, name_en: val.name_en, name_cn: val.name_cn, name_ru: val.name_ru })).sort((a, b) => a.name.localeCompare(b.name));
     return {
       ...results,
-      // Use server-side accuracy for core facets
       availableProvinces: serverProvinces.length > 0 ? serverProvinces : results.availableProvinces,
       availableAreas: serverAreas.length > 0 ? serverAreas : results.availableAreas,
       availableTypes: serverFacets.availableTypes || results.availableTypes,

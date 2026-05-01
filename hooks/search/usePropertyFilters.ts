@@ -50,6 +50,13 @@ export function usePropertyFilters() {
   // --- Agentic AI State ---
   const [aiInsight, setAiInsight] = useState<string | null>(null);
 
+  // --- ⚡ Performance: Keyword Debouncing (Diamond Optimization) ---
+  const [debouncedKeyword, setDebouncedKeyword] = useState(keyword);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedKeyword(keyword), 400);
+    return () => clearTimeout(timer);
+  }, [keyword]);
+
   // Update state when params change (for back/forward navigation)
   useEffect(() => {
     setKeyword(searchParams.get("keyword") || "");
@@ -147,6 +154,7 @@ export function usePropertyFilters() {
 
   return {
     keyword, setKeyword,
+    debouncedKeyword,
     type, setType,
     listingType, setListingType,
     minPrice, setMinPrice,

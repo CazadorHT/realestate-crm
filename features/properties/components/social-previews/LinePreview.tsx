@@ -54,7 +54,7 @@ export function LinePreview({ images, previewData, lang }: LinePreviewProps) {
                 <span className="text-sm">🛌</span>
                 <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap">
                   {previewData.bedrooms || "-"}
-                  {lang === "th" ? "นอน" : lang === "cn" ? "卧室" : lang === "ru" ? "спаль" : "Bed"}
+                  {lang === "th" ? "นอน" : lang === "cn" ? "卧室" : lang === "ru" ? "спальняняня" : "Bed"}
                 </span>
               </div>
               <div className="flex flex-col items-center flex-1">

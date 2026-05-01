@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { CheckSquare, Square, Sparkles } from "lucide-react";
+import { CheckSquare, Square } from "lucide-react";
 import { PiFireFill } from "react-icons/pi";
 import { 
   HiArrowTrendingDown, 
   HiArrowsPointingOut, 
   HiOutlineSparkles 
 } from "react-icons/hi2";
-import { useEffect, useState, useRef, useCallback, MouseEvent } from "react";
+import { useEffect, useState, useRef, useCallback, MouseEvent, memo } from "react";
 import { toggleCompareId, readCompareIds } from "@/lib/compare-store";
 import { toggleFavoriteId, readFavoriteIds } from "@/lib/favorite-store";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -25,7 +25,6 @@ import { PropertyCardFooter } from "./property-card/PropertyCardFooter";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { getEffectivePrice } from "@/lib/property-hardened-utils";
-import { FaFire } from "react-icons/fa6";
 
 // Re-using types or defining subset
 export type PropertyCardProps = {
@@ -56,6 +55,7 @@ export type PropertyCardProps = {
   popular_area_ru?: string | null;
   province?: string | null;
   created_at: string;
+  created_at_time?: number;
   updated_at: string;
   listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
   image_url?: string | null;
@@ -92,7 +92,10 @@ export type PropertyCardProps = {
   footerVariant?: "default" | "minimal";
 };
 
-export function PropertyCard({
+/**
+ * [Diamond-Grade] Performance Optimized Property Card
+ */
+function PropertyCardComponent({
   property,
   priority = false,
   compareWith,
@@ -113,7 +116,6 @@ export function PropertyCard({
   const router = useRouter();
   const prefetchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Sync with compare store
   useEffect(() => {
     const check = () => {
       const ids = readCompareIds();
@@ -124,7 +126,6 @@ export function PropertyCard({
     return () => window.removeEventListener("compare-updated", check);
   }, [property.id]);
 
-  // Sync with favorite store
   useEffect(() => {
     const check = () => {
       const ids = readFavoriteIds();
@@ -140,35 +141,28 @@ export function PropertyCard({
   const handleCompareClick = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (!isInCompare) {
       pushToDataLayer(GTM_EVENTS.ADD_COMPARE, {
         item_id: property.id,
         item_name: property.title,
-        // Meta Pixel
         content_ids: [property.id],
         content_name: property.title,
         content_type: "product",
       });
       updateAIScore(10);
     }
-
     toggleCompareId(property.id);
   };
 
   const handleFavoriteClick = (e: MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-
-    // Trigger animation
     setIsAnimating(true);
     setTimeout(() => setIsAnimating(false), 600);
-
     if (!isFavorite) {
       pushToDataLayer(GTM_EVENTS.ADD_FAVORITE, {
         item_id: property.id,
         item_name: property.title,
-        // Meta Pixel
         content_ids: [property.id],
         content_name: property.title,
         content_type: "product",
@@ -183,88 +177,51 @@ export function PropertyCard({
   const areaProvince = [
     getLocaleValue(property, "popular_area", language),
     getProvinceName(property.province || "", language),
-  ]
-    .filter(Boolean)
-    .join(" • ");
+  ].filter(Boolean).join(" • ");
 
   const prices = getEffectivePrice(property);
 
-  // Comparison Logic
   const comparisonBadges = [];
   if (compareWith) {
-    const currentPrice =
-      property.listing_type === "RENT" ? prices.rentalPrice : prices.salePrice;
+    const currentPrice = property.listing_type === "RENT" ? prices.rentalPrice : prices.salePrice;
     const comparePrice = compareWith.price;
-
     if (currentPrice && comparePrice && currentPrice < comparePrice) {
-      comparisonBadges.push({
-        label: t("common.save_more"),
-        icon: HiArrowTrendingDown,
-        color: "bg-green-600/90 text-white",
-      });
+      comparisonBadges.push({ label: t("common.save_more"), icon: HiArrowTrendingDown, color: "bg-green-600/90 text-white" });
     }
-
-    if (
-      property.size_sqm &&
-      compareWith.size &&
-      property.size_sqm > compareWith.size
-    ) {
-      comparisonBadges.push({
-        label: t("common.larger_area"),
-        icon: HiArrowsPointingOut,
-        color: "bg-[#4285F4]/90 text-white", // Matches verified blue
-      });
+    if (property.size_sqm && compareWith.size && property.size_sqm > compareWith.size) {
+      comparisonBadges.push({ label: t("common.larger_area"), icon: HiArrowsPointingOut, color: "bg-[#4285F4]/90 text-white" });
     }
-
-    if (
-      property.created_at &&
-      compareWith.date &&
-      new Date(property.created_at) > new Date(compareWith.date)
-    ) {
-      comparisonBadges.push({
-        label: t("common.newer"),
-        icon: HiOutlineSparkles,
-        color: "bg-purple-600/90 text-white",
-      });
+    if (property.created_at && compareWith.date && new Date(property.created_at) > new Date(compareWith.date)) {
+      comparisonBadges.push({ label: t("common.newer"), icon: HiOutlineSparkles, color: "bg-purple-600/90 text-white" });
     }
   }
 
-  const isHotDeal = 
-    prices.hasSaleDiscount || 
-    prices.hasRentalDiscount || 
-    property.meta_keywords?.some(k => k.toLowerCase().includes("hot deal") || k.toLowerCase().includes("hotdeal"));
+  const isHotDeal = prices.hasSaleDiscount || prices.hasRentalDiscount || property.meta_keywords?.some(k => k.toLowerCase().includes("hot deal") || k.toLowerCase().includes("hotdeal"));
 
   const cardRef = useRef<HTMLDivElement>(null);
   const hasTrackedImpression = useRef(false);
 
-  // Card Impression tracking via IntersectionObserver
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !hasTrackedImpression.current) {
-          hasTrackedImpression.current = true;
-          pushToDataLayer(GTM_EVENTS.CARD_IMPRESSION, {
-            item_id: property.id,
-            item_name: property.title,
-            content_ids: [property.id],
-            content_type: "product",
-            property_type: property.property_type,
-            listing_type: property.listing_type,
-            price: property.listing_type === "RENT" ? property.rental_price : property.price,
-          });
-        }
-      },
-      { threshold: 0.5 }, // 50% ของการ์ดต้องเห็นบนหน้าจอ
-    );
-
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting && !hasTrackedImpression.current) {
+        hasTrackedImpression.current = true;
+        pushToDataLayer(GTM_EVENTS.CARD_IMPRESSION, {
+          item_id: property.id,
+          item_name: property.title,
+          content_ids: [property.id],
+          content_type: "product",
+          property_type: property.property_type,
+          listing_type: property.listing_type,
+          price: property.listing_type === "RENT" ? property.rental_price : property.price,
+        });
+      }
+    }, { threshold: 0.5 });
     observer.observe(el);
     return () => observer.disconnect();
   }, [property.id, property.title, property.property_type, property.listing_type, property.price, property.rental_price]);
 
-  // Card Click tracking
   const handleCardClick = useCallback(() => {
     pushToDataLayer(GTM_EVENTS.CARD_CLICK, {
       item_id: property.id,
@@ -278,7 +235,6 @@ export function PropertyCard({
     updateAIScore(5);
   }, [property.id, property.title, property.property_type, property.listing_type, property.price, property.rental_price]);
 
-  // Smart Prefetch: Trigger only on intentional hover (100ms)
   const handleMouseEnter = () => {
     prefetchTimerRef.current = setTimeout(() => {
       router.prefetch(`/properties/${property.slug || property.id}`);
@@ -286,9 +242,7 @@ export function PropertyCard({
   };
 
   const handleMouseLeave = () => {
-    if (prefetchTimerRef.current) {
-      clearTimeout(prefetchTimerRef.current);
-    }
+    if (prefetchTimerRef.current) clearTimeout(prefetchTimerRef.current);
   };
 
   return (
@@ -313,10 +267,7 @@ export function PropertyCard({
       {isHotDeal && (
         <div className="absolute -top-5 -left-3 md:-top-7 md:-left-5 z-40 block select-none pointer-events-none transform-gpu will-change-[transform,opacity]">
           <div className="relative">
-            {/* Pulsing Glow Background */}
             <div className="absolute inset-0 bg-red-500 rounded-full blur-md animate-[glow-pulse_3s_infinite_ease-in-out] will-change-[transform,opacity]"></div>
-            
-            {/* The Badge Itself */}
             <div className="relative bg-linear-to-br from-red-500 to-orange-600 text-white p-2 md:p-2.5 rounded-full shadow-[0_4px_16px_rgba(239,68,68,0.4)] border border-white/20 transform animate-[fire-flicker_4s_infinite_ease-in-out] group-hover:animate-none group-hover:rotate-0 group-hover:scale-110 transition-all duration-700 ease-out will-change-transform">
               <PiFireFill className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 fill-yellow-200 drop-shadow-[0_0_8px_rgba(254,240,138,0.6)]" />
             </div>
@@ -340,38 +291,23 @@ export function PropertyCard({
           comparisonBadges={comparisonBadges}
           areaProvince={areaProvince}
         />
-
-        {/* Content Section */}
         <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 mt-2 sm:mt-2 md:mt-3 gap-y-2 sm:gap-y-2 md:gap-y-3 grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col">
           <PropertyCardInfo property={property} areaProvince={areaProvince} />
-
           <PropertyCardSpecs property={property} />
-
           <PropertyCardFeatures features={property.features} />
-
-          {/* Compare Checkbox Button */}
           <button
             onClick={handleCompareClick}
-            className={`mt-3 flex items-center gap-1.5 text-xs font-medium transition-all duration-200 ${
-              isInCompare
-                ? "text-blue-600"
-                : "text-slate-400 hover:text-slate-600"
-            }`}
+            className={`mt-3 flex items-center gap-1.5 text-xs font-medium transition-all duration-200 ${isInCompare ? "text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
           >
-            {isInCompare ? (
-              <CheckSquare className="h-4 w-4" />
-            ) : (
-              <Square className="h-4 w-4" />
-            )}
+            {isInCompare ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
             {t("common.compare")}
           </button>
         </div>
-
-        <PropertyCardFooter
-          property={property}
-          variant={footerVariant || property.footerVariant}
-        />
+        <PropertyCardFooter property={property} variant={footerVariant || property.footerVariant} />
       </Link>
     </div>
   );
 }
+
+// Export named constant for memoized version
+export const PropertyCard = memo(PropertyCardComponent);
