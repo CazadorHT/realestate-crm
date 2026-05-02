@@ -209,6 +209,7 @@ export function PublicNav() {
           className={`border-b border-b-slate-200 transition-all duration-300 ${
             scrolled ? "bg-white/95 backdrop-blur-md shadow-lg" : "bg-white"
           }`}
+          style={scrolled ? { WebkitBackdropFilter: "blur(12px)" } : undefined}
         >
           <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8">
             <div className="flex justify-between items-center h-16">

@@ -540,6 +540,7 @@ export function ContactAgentDialog({
       </DialogTrigger>
 
       <DialogContent
+        onOpenAutoFocus={(e) => e.preventDefault()}
         overlayClassName="z-150"
         className="fixed z-150 w-full gap-0 p-0 border-0 duration-300
         data-[state=open]:animate-in data-[state=closed]:animate-out
