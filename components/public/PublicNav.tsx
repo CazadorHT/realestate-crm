@@ -223,7 +223,7 @@ export function PublicNav() {
                     alt={`${siteName} Logo`}
                     width={280}
                     height={80}
-                    className="h-16 w-auto -mx-2 mt-1"
+                    className="h-13 sm:h-16 w-auto -mx-2 mt-1"
                     priority
                   />
                 </Link>
@@ -268,7 +268,7 @@ export function PublicNav() {
                       >
                         <div className="flex justify-between items-center w-full">
                           <div className="flex items-center">
-                            <span className="fi fi-th mr-3 rounded-sm shadow-sm" />
+                            <span className="fi fi-th h-4 w-6 inline-block mr-3 rounded-sm shadow-sm" />
                             <span className="font-medium">Thai</span>
                           </div>
                           {language === "th" && (
@@ -282,7 +282,7 @@ export function PublicNav() {
                       >
                         <div className="flex justify-between items-center w-full">
                           <div className="flex items-center">
-                            <span className="fi fi-us mr-3 rounded-sm shadow-sm" />
+                            <span className="fi fi-us h-4 w-6 inline-block mr-3 rounded-sm shadow-sm" />
                             <span className="font-medium">English</span>
                           </div>
                           {language === "en" && (
@@ -296,7 +296,7 @@ export function PublicNav() {
                       >
                         <div className="flex justify-between items-center w-full">
                           <div className="flex items-center">
-                            <span className="fi fi-cn mr-3 rounded-sm shadow-sm" />
+                            <span className="fi fi-cn h-4 w-6 inline-block mr-3 rounded-sm shadow-sm" />
                             <span className="font-medium">Chinese</span>
                           </div>
                           {language === "cn" && (
@@ -310,7 +310,7 @@ export function PublicNav() {
                       >
                         <div className="flex justify-between items-center w-full">
                           <div className="flex items-center">
-                            <span className="fi fi-ru mr-3 rounded-sm shadow-sm" />
+                            <span className="fi fi-ru h-4 w-6 inline-block mr-3 rounded-sm shadow-sm" />
                             <span className="font-medium">Russian</span>
                           </div>
                           {language === "ru" && (
@@ -462,7 +462,7 @@ export function PublicNav() {
                             )}
                           >
                             <div className="flex items-center gap-4">
-                              <span className="fi fi-th h-5 w-7 rounded-sm shadow-sm" />
+                              <span className="fi fi-th h-5 w-7 inline-block rounded-sm shadow-sm">&nbsp;</span>
                               <span className="font-bold">Thai (ภาษาไทย)</span>
                             </div>
                             {language === "th" && (
@@ -481,7 +481,7 @@ export function PublicNav() {
                             )}
                           >
                             <div className="flex items-center gap-4">
-                              <span className="fi fi-us h-5 w-7 rounded-sm shadow-sm" />
+                              <span className="fi fi-us h-5 w-7 inline-block rounded-sm shadow-sm">&nbsp;</span>
                               <span className="font-bold">English</span>
                             </div>
                             {language === "en" && (
@@ -500,7 +500,7 @@ export function PublicNav() {
                             )}
                           >
                             <div className="flex items-center gap-4">
-                              <span className="fi fi-cn h-5 w-7 rounded-sm shadow-sm" />
+                              <span className="fi fi-cn h-5 w-7 inline-block rounded-sm shadow-sm">&nbsp;</span>
                               <span className="font-bold">Chinese (中文)</span>
                             </div>
                             {language === "cn" && (
@@ -519,7 +519,7 @@ export function PublicNav() {
                             )}
                           >
                             <div className="flex items-center gap-4">
-                              <span className="fi fi-ru h-5 w-7 rounded-sm shadow-sm" />
+                              <span className="fi fi-ru h-5 w-7 inline-block rounded-sm shadow-sm">&nbsp;</span>
                               <span className="font-bold">Russian (Русский)</span>
                             </div>
                             {language === "ru" && (
@@ -532,7 +532,7 @@ export function PublicNav() {
                   </Sheet>
                 ) : (
                   <Button variant="ghost" size="icon" className="text-slate-600">
-                    <span className="fi fi-th h-3 w-4 rounded-sm shadow-sm" />
+                    <span className="fi fi-th h-3 w-4 inline-block rounded-sm shadow-sm">&nbsp;</span>
                   </Button>
                 )}
 
