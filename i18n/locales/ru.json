@@ -500,6 +500,7 @@
   "search": {
     "title": "Поиск недвижимости",
     "filter_title": "Фильтры",
+    "active_filters": "Выбранные фильтры",
     "keyword_placeholder": "Поиск объектов...",
     "province": "Провинция",
     "all_provinces": "Все провинции",
@@ -518,6 +519,14 @@
     "foreigner": "Квота для иностранцев",
     "company_registered": "Регистрация компании",
     "hot_deal": "Горячее предложение",
+    "near_train": "Рядом с метро",
+    "select_station": "Выбрать станцию",
+    "all_stations": "Все станции",
+    "clear": "Очистить",
+    "clear_all": "Очистить все",
+    "more": "Еще",
+    "all": "Все",
+    "no_stations_type": "Станции этого типа не найдены",
     "location": "Локация",
     "all_locations": "Все районы",
     "popular_locations": "Популярные районы",
@@ -527,7 +536,6 @@
       "lat_phrao": "Лат Пхрао",
       "rama_9": "Рама 9"
     },
-    "near_train": "Рядом с BTS/MRT",
     "pet_allowed": "Можно с животными",
     "fully_furnished": "С мебелью",
     "view_results": "Показать результаты",
@@ -854,6 +862,14 @@
     "commercial_building": "Коммерческое здание"
   },
   "property": {
+    "amenity_groups": {
+      "residential": "Особенности жилья",
+      "office": "Офис и бизнес",
+      "facility": "Удобства здания",
+      "unit": "Удобства в юните",
+      "others": "Другие особенности"
+    },
+    "floor_plan": "План этажа / Планировка",
     "status": {
       "active": "Активен",
       "draft": "Черновик",
@@ -937,7 +953,9 @@
       "floor": "Этаж",
       "unit_room": "комн.",
       "unit_car": "мест",
-      "unit_floor": "эт."
+      "unit_floor": "эт.",
+      "capacity": "Вместимость",
+      "unit_desk": "чел./мест"
     },
     "special_features": "Особенности",
     "special_features_description": "Особенности этого объекта, всего",
@@ -1012,6 +1030,9 @@
       "accessible": "Доступная среда",
       "investment_ready": "Готов к инвестициям",
       "good_location": "Удобная локация",
+      "green_building": "Экологичное здание",
+      "flexible_lease": "Гибкая аренда",
+      "fully_fitted": "Готовый офис",
       "ready_to_move": "Готов к въезду",
       "family_friendly": "Семейный"
     },

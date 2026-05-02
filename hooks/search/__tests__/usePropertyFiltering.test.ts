@@ -90,6 +90,7 @@ const defaultFilters = {
   maxPrice: '',
   minSize: '',
   maxSize: '',
+  transitStation: '',
   sort: 'NEWEST'
 };
 

@@ -234,15 +234,7 @@ export function FAQForm({
       )}>
         <div className={cn("p-8 md:p-10", isStandalone && "p-0")}>
           <Form {...form}>
-            <form 
-              onSubmit={form.handleSubmit(onSubmit)} 
-              className="space-y-10"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.target as HTMLElement).tagName !== "TEXTAREA") {
-                  e.preventDefault();
-                }
-              }}
-            >
+            <div className="space-y-10">
               
               {/* STEP 1: Question Content */}
               {currentStep === 1 && (
@@ -328,9 +320,15 @@ export function FAQForm({
                     </Button>
                   ) : (
                     <Button
-                      type="submit"
-                      disabled={saving || !form.formState.isValid}
-                      className="h-12 w-full bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold gap-2 shadow-lg shadow-blue-200 disabled:opacity-50"
+                      type="button"
+                      disabled={saving}
+                      onClick={form.handleSubmit(onSubmit)}
+                      className={cn(
+                        "h-12 w-full text-white rounded-xl font-semibold gap-2 shadow-lg transition-all",
+                        saving 
+                          ? "bg-slate-300 cursor-not-allowed shadow-none" 
+                          : "bg-blue-600 hover:bg-blue-700 shadow-blue-200"
+                      )}
                     >
                       {saving ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -343,7 +341,7 @@ export function FAQForm({
                 </div>
               </div>
 
-            </form>
+            </div>
           </Form>
         </div>
       </div>

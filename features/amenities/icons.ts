@@ -25,6 +25,13 @@ import {
   Moon,
   Wind,
   Droplets,
+  UserCheck,
+  User,
+  Users,
+  Cpu,
+  Layout,
+  Microscope,
+  CarFront,
 } from "lucide-react";
 
 export const ICON_MAP: Record<string, any> = {
@@ -35,6 +42,7 @@ export const ICON_MAP: Record<string, any> = {
   camera: Camera,
   "tree-deciduous": TreeDeciduous,
   car: Car,
+  "car-front": CarFront,
   briefcase: Briefcase,
   sofa: Sofa,
   wifi: Wifi,
@@ -53,7 +61,14 @@ export const ICON_MAP: Record<string, any> = {
   moon: Moon,
   wind: Wind,
   water: Droplets,
+  droplets: Droplets,
   box: Box,
+  "user-check": UserCheck,
+  user: User,
+  users: Users,
+  cpu: Cpu,
+  layout: Layout,
+  microscope: Microscope,
 };
 
 export const DEFAULT_ICON = Box;

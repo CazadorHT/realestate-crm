@@ -24,6 +24,7 @@ interface FilteringOptions {
   minSize: string;
   maxSize: string;
   sort: string;
+  transitStation: string;
 }
 
 /**
@@ -39,7 +40,7 @@ export function usePropertyFiltering(
     keyword, province, type, listingType, priceType, area,
     nearTrain, petFriendly, fullyFurnished, bedrooms,
     isForeigner, companyRegistered, isHotDeal,
-    minPrice, maxPrice, minSize, maxSize, sort,
+    minPrice, maxPrice, minSize, maxSize, sort, transitStation,
   } = options;
 
   // --- ⚡ Centralized Search Intent (Diamond Optimization) ---
@@ -158,8 +159,19 @@ export function usePropertyFiltering(
       if (size < minS || size > maxS) return false;
     }
 
+    if (!excludeFilters.includes("transitStation") && transitStation) {
+      const station = transitStation.toLowerCase().replace(/_/g, " ");
+      const hasStation = (p.nearby_transits || []).some(t => 
+        t.station_name.toLowerCase() === station ||
+        (t.station_name_en || "").toLowerCase() === station ||
+        (t.station_name_cn || "").toLowerCase() === station ||
+        (t.station_name_ru || "").toLowerCase() === station
+      );
+      if (!hasStation) return false;
+    }
+
     return true;
-  }, [searchIntent, province, type, listingType, priceType, area, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, minPrice, maxPrice, minSize, maxSize]);
+  }, [searchIntent, province, type, listingType, priceType, area, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, minPrice, maxPrice, minSize, maxSize, transitStation]);
 
   // Single-Pass Engine (O(N))
   const results = useMemo(() => {
@@ -170,10 +182,29 @@ export function usePropertyFiltering(
     const listingTypeCounts: Record<string, number> = { ALL: 0, SALE: 0, RENT: 0, SALE_AND_RENT: 0 };
     const quickCounts = { nearTrain: 0, petFriendly: 0, fullyFurnished: 0, isForeigner: 0, companyRegistered: 0, isHotDeal: 0 };
     const bedroomCounts: Record<string, number> = { ALL: 0, "1": 0, "2": 0, "3": 0, "4+": 0 };
+    const stationMap = new Map<string, { count: number; type: string; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }>();
 
     properties.forEach((p) => {
       const fullMatch = checkMatch(p);
-      if (fullMatch) filteredList.push(p);
+      if (fullMatch) {
+        filteredList.push(p);
+        
+        // Extract available stations from MATCHED properties
+        (p.nearby_transits || []).forEach((t: any) => {
+          const existing = stationMap.get(t.station_name);
+          if (existing) {
+            existing.count++;
+          } else {
+            stationMap.set(t.station_name, {
+              count: 1,
+              type: t.type,
+              name_en: t.station_name_en,
+              name_cn: t.station_name_cn,
+              name_ru: t.station_name_ru
+            });
+          }
+        });
+      }
 
       if (checkMatch(p, ["province"]) && p.province) {
         provinceMap.set(p.province, (provinceMap.get(p.province) || 0) + 1);
@@ -238,6 +269,14 @@ export function usePropertyFiltering(
       availableListingTypes: listingTypeCounts,
       availableQuickFilters: quickCounts,
       availableBedrooms: bedroomCounts,
+      availableStations: Array.from(stationMap.entries()).map(([name, val]) => ({
+        name,
+        count: val.count,
+        type: val.type,
+        name_en: val.name_en,
+        name_cn: val.name_cn,
+        name_ru: val.name_ru
+      })).sort((a, b) => b.count - a.count),
     };
   }, [properties, checkMatch, sort, listingType, priceType]);
 
@@ -245,10 +284,20 @@ export function usePropertyFiltering(
     if (!serverFacets) return results;
     const serverProvinces = Object.entries(serverFacets.availableProvinces || {}).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count);
     const serverAreas = Object.entries(serverFacets.availableAreas || {}).map(([name, val]) => ({ name, count: val.count, name_en: val.name_en, name_cn: val.name_cn, name_ru: val.name_ru })).sort((a, b) => a.name.localeCompare(b.name));
+    const serverStations = Object.entries(serverFacets.availableStations || {}).map(([name, val]) => ({
+      name,
+      count: val.count,
+      type: val.type,
+      name_en: val.name_en,
+      name_cn: val.name_cn,
+      name_ru: val.name_ru
+    })).sort((a, b) => b.count - a.count);
+
     return {
       ...results,
       availableProvinces: serverProvinces.length > 0 ? serverProvinces : results.availableProvinces,
       availableAreas: serverAreas.length > 0 ? serverAreas : results.availableAreas,
+      availableStations: serverStations.length > 0 ? serverStations : results.availableStations,
       availableTypes: serverFacets.availableTypes || results.availableTypes,
       availableListingTypes: serverFacets.availableListingTypes || results.availableListingTypes,
     };

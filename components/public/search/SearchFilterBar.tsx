@@ -48,6 +48,8 @@ interface SearchFilterBarProps {
   setPriceType?: (v: string) => void;
   bedrooms: string;
   setBedrooms: (v: string) => void;
+  transitStation: string;
+  setTransitStation: (v: string) => void;
   filteredLength: number;
   availableAreas: {
     name: string;
@@ -63,6 +65,14 @@ interface SearchFilterBarProps {
   availableListingTypes: Record<string, number>;
   availableQuickFilters: Record<string, number>;
   availableBedrooms: Record<string, number>;
+  availableStations: {
+    name: string;
+    count: number;
+    type: string;
+    name_en?: string | null;
+    name_cn?: string | null;
+    name_ru?: string | null;
+  }[];
   properties?: any[];
   matchesFilters?: (p: any, excludeFilters?: string[]) => boolean;
   setBulkFilters: (updates: any) => void;
@@ -104,6 +114,8 @@ export function SearchFilterBar({
   setPriceType,
   bedrooms,
   setBedrooms,
+  transitStation,
+  setTransitStation,
   filteredLength,
   availableAreas,
   province,
@@ -113,6 +125,7 @@ export function SearchFilterBar({
   availableListingTypes,
   availableQuickFilters,
   availableBedrooms,
+  availableStations,
   properties,
   matchesFilters,
   setBulkFilters,
@@ -331,6 +344,7 @@ export function SearchFilterBar({
     setIsForeigner(false);
     setCompanyRegistered(false);
     setBedrooms("ALL");
+    setTransitStation("");
     setPriceType && setPriceType("");
   };
 
@@ -356,6 +370,8 @@ export function SearchFilterBar({
           setCompanyRegistered={setCompanyRegistered}
           isHotDeal={isHotDeal}
           setIsHotDeal={setIsHotDeal}
+          transitStation={transitStation}
+          setTransitStation={setTransitStation}
           type={type}
           setType={setType}
           listingType={listingType}
@@ -381,6 +397,7 @@ export function SearchFilterBar({
           availableListingTypes={availableListingTypes}
           availableQuickFilters={availableQuickFilters}
           availableBedrooms={availableBedrooms}
+          availableStations={availableStations}
           filteredLength={filteredLength}
           showAllProvincesMobile={showAllProvincesMobile}
           setShowAllProvincesMobile={setShowAllProvincesMobile}
@@ -436,11 +453,14 @@ export function SearchFilterBar({
           setCompanyRegistered={setCompanyRegistered}
           isHotDeal={isHotDeal}
           setIsHotDeal={setIsHotDeal}
+          transitStation={transitStation}
+          setTransitStation={setTransitStation}
           availableBedrooms={availableBedrooms}
           availableProvinces={availableProvinces}
           availableTypes={availableTypes}
           availableListingTypes={availableListingTypes}
           availableQuickFilters={availableQuickFilters}
+          availableStations={availableStations}
           availableAreas={availableAreas}
           area={area}
           setArea={setArea}
@@ -454,6 +474,10 @@ export function SearchFilterBar({
           PROPERTY_TYPES={PROPERTY_TYPES}
           getProvinceName={getProvinceName}
           getLocaleValue={getLocaleValue}
+          minPrice={minPrice}
+          maxPrice={maxPrice}
+          minSize={minSize}
+          maxSize={maxSize}
           setBulkFilters={setBulkFilters}
         />
       </div>

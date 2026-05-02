@@ -26,6 +26,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function TrashRowActions({ id }: { id: string }) {
   const router = useRouter();
@@ -69,49 +70,44 @@ export function TrashRowActions({ id }: { id: string }) {
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
+          <Button variant="ghost" className="h-8 w-8 p-0" disabled={isPending}>
             <span className="sr-only">เปิดเมนู</span>
             <MoreHorizontal className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={handleRestore} disabled={isPending}>
-            <RotateCcw className="mr-2 h-4 w-4" />
-            กู้คืน
-          </DropdownMenuItem>
+          <ConfirmDialog
+            title="กู้คืนทรัพย์"
+            description="คุณต้องการกู้คืนทรัพย์นี้กลับไปยังสถานะปกติใช่หรือไม่?"
+            confirmText="กู้คืนทันที"
+            onConfirm={handleRestore}
+            trigger={
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <RotateCcw className="mr-2 h-4 w-4" />
+                กู้คืน
+              </DropdownMenuItem>
+            }
+          />
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="text-red-600 focus:text-red-600"
-            onClick={() => setOpenDelete(true)}
-            disabled={isPending}
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            ลบถาวร
-          </DropdownMenuItem>
+          <ConfirmDialog
+            title="ลบทรัพย์ถาวร"
+            description="คำเตือน: การลบถาวรจะไม่สามารถกู้คืนข้อมูลได้อีก ข้อมูลรูปภาพและรายละเอียดทั้งหมดจะหายไป"
+            confirmText="ลบถาวรทันที"
+            confirmString="DELETE"
+            variant="destructive"
+            onConfirm={handlePermanentDelete}
+            trigger={
+              <DropdownMenuItem 
+                className="text-red-600 focus:text-red-600 font-bold" 
+                onSelect={(e) => e.preventDefault()}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                ลบถาวร
+              </DropdownMenuItem>
+            }
+          />
         </DropdownMenuContent>
       </DropdownMenu>
-
-      <AlertDialog open={openDelete} onOpenChange={setOpenDelete}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบถาวร</AlertDialogTitle>
-            <AlertDialogDescription>
-              การกระทำนี้ไม่สามารถย้อนกลับได้
-              ข้อมูลทรัพย์นี้จะถูกลบออกจากระบบอย่างสมบูรณ์
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isPending}>ยกเลิก</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-red-600 hover:bg-red-700"
-              onClick={handlePermanentDelete}
-              disabled={isPending}
-            >
-              {isPending ? "กำลังลบ..." : "ยืนยันลบถาวร"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

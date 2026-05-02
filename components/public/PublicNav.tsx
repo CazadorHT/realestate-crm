@@ -94,13 +94,13 @@ export function PublicNav() {
 
       // Only hide/show on scroll for /properties page
       if (pathname === "/properties" && !mobileMenuOpen) {
-        // Only trigger changes if scrolled more than a small threshold
-        if (Math.abs(scrollDelta) > 5) {
-          if (currentScrollY > 100 && scrollDelta > 0) {
-            // Scrolling down & passed header
+        // High sensitivity for faster hiding/showing
+        if (Math.abs(scrollDelta) > 2) {
+          if (currentScrollY > 20 && scrollDelta > 0) {
+            // Scrolling down - hide quickly
             setIsVisible(false);
-          } else if (scrollDelta < -10 || currentScrollY < 20) {
-            // Scrolling up significantly or back to top
+          } else if (scrollDelta < -5 || currentScrollY < 10) {
+            // Scrolling up - show quickly
             setIsVisible(true);
           }
         }

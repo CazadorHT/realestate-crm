@@ -299,7 +299,10 @@ export async function deleteService(id: string) {
 
     const { error } = await ctx.supabase
       .from("services")
-      .update({ deleted_at: new Date().toISOString() })
+      .update({ 
+        deleted_at: new Date().toISOString(),
+        is_active: false 
+      })
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId);
 

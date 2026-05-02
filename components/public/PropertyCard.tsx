@@ -89,6 +89,16 @@ export type PropertyCardProps = {
         icon_key: string;
       }[]
     | null;
+  nearby_transits?:
+    | {
+        type: string;
+        station_name: string;
+        station_name_en?: string | null;
+        station_name_cn?: string | null;
+        station_name_ru?: string | null;
+        distance_meters?: number | null;
+      }[]
+    | null;
   footerVariant?: "default" | "minimal";
 };
 

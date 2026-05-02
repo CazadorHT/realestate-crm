@@ -149,6 +149,7 @@ export interface GetPropertiesOptions {
   fullyFurnished?: boolean;
   isForeigner?: boolean;
   companyRegistered?: boolean;
+  transitStation?: string;
   includeFacets?: boolean;
 }
 
@@ -210,6 +211,13 @@ export const getPublicProperties = cache(
     if (options.fullyFurnished) query = query.eq("is_fully_furnished", true);
     if (options.isForeigner) query = query.eq("is_foreigner_quota", true);
     if (options.companyRegistered) query = query.eq("is_tax_registered", true);
+
+    if (options.transitStation) {
+      const station = options.transitStation;
+      query = query.or(
+        `nearby_transits.cs.[{"station_name":"${station}"}],nearby_transits.cs.[{"station_name_en":"${station}"}],nearby_transits.cs.[{"station_name_cn":"${station}"}],nearby_transits.cs.[{"station_name_ru":"${station}"}]`
+      );
+    }
 
     if (options.q) {
       const searchTerm = options.q.trim();

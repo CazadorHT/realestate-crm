@@ -65,6 +65,8 @@ export function FAQsTable({
   const [searchValue, setSearchValue] = useState(searchParams.get("q") || "");
   const [debouncedSearchValue] = useDebounce(searchValue, 500);
   
+  const [confirmName, setConfirmName] = useState("");
+  
   const isTrash = activeTab === "trash";
   const allIds = useMemo(() => faqs?.map((f) => f.id) || [], [faqs]);
   
@@ -122,12 +124,14 @@ export function FAQsTable({
   };
 
   const handleEmptyTrash = async () => {
+    if (confirmName !== "DELETE_ALL") return;
     setIsLoading(true);
     const result = await emptyFaqTrashAction();
     setIsLoading(false);
     if (result.success) {
       toast.success(result.message);
       setIsEmptyTrashConfirm(false);
+      setConfirmName("");
       handleSuccessFeedback();
     } else {
       toast.error(result.message || "เกิดข้อผิดพลาด");
@@ -173,6 +177,7 @@ export function FAQsTable({
   };
 
   const handlePermanentDelete = async (faq: FAQ) => {
+    if (confirmName !== "DELETE") return;
     setIsLoading(true);
     try {
       const res = await permanentDeleteFaqAction(faq.id);
@@ -188,6 +193,7 @@ export function FAQsTable({
     } finally {
       setIsLoading(false);
       setPermanentDeleteFaq(null);
+      setConfirmName("");
     }
   };
 
@@ -659,7 +665,12 @@ export function FAQsTable({
       {/* Permanent Delete Dialog */}
       <ResponsiveDialog
         open={!!permanentDeleteFaq}
-        onOpenChange={(open) => !open && setPermanentDeleteFaq(null)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPermanentDeleteFaq(null);
+            setConfirmName("");
+          }
+        }}
         title="ลบทิ้งถาวร"
         description={
           permanentDeleteFaq ? (
@@ -669,7 +680,14 @@ export function FAQsTable({
                 <p className="text-sm font-bold">คำเตือน: การลบถาวรจะไม่สามารถกู้กลับคืนมาได้อีก!</p>
               </div>
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                 <p className="text-slate-900 font-bold italic">"{permanentDeleteFaq.question}"</p>
+                 <p className="text-slate-900 font-bold italic mb-3">"{permanentDeleteFaq.question}"</p>
+                 <p className="text-[10px] text-rose-600 font-bold mb-2 uppercase">พิมพ์ DELETE เพื่อยืนยัน:</p>
+                 <Input
+                    value={confirmName}
+                    onChange={(e) => setConfirmName(e.target.value)}
+                    placeholder="DELETE"
+                    className="h-10 bg-white border-rose-200 focus:border-rose-500 font-mono"
+                 />
               </div>
             </div>
           ) : ""
@@ -686,12 +704,15 @@ export function FAQsTable({
             </Button>
             <Button
               onClick={() => permanentDeleteFaq && handlePermanentDelete(permanentDeleteFaq)}
-              disabled={isLoading}
+              disabled={isLoading || confirmName !== "DELETE"}
               variant="destructive"
-              className="flex-1 h-12 rounded-2xl font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200"
+              className="flex-1 h-12 rounded-2xl font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 transition-all disabled:opacity-50"
             >
               {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <div className="flex items-center gap-2">
+                   <Loader2 className="h-4 w-4 animate-spin" />
+                   <span>กำลังลบ...</span>
+                </div>
               ) : (
                 "ลบถาวรทันที"
               )}
@@ -703,7 +724,12 @@ export function FAQsTable({
       {/* Empty Trash Confirm Dialog */}
       <ResponsiveDialog
         open={isEmptyTrashConfirm}
-        onOpenChange={(open) => !open && setIsEmptyTrashConfirm(false)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsEmptyTrashConfirm(false);
+            setConfirmName("");
+          }
+        }}
         title="ล้างถังขยะทั้งหมด"
         description={
           <div className="space-y-4 py-2">

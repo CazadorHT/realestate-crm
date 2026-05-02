@@ -39,18 +39,18 @@ import { IconPicker } from "@/components/icon-picker";
 import { DynamicIcon } from "@/components/dynamic-icon";
 
 const CATEGORIES = [
-  "ทั่วไป (General)",
-  "ความปลอดภัย (Security)",
-  "ความสะดวกสบาย (Comfort)",
-  "ครัว (Kitchen)",
-  "สำหรับเด็ก (Kids)",
-  "ห้องน้ำ (Bathroom)",
-  "ภายนอก (Exterior)",
-  "เทคโนโลยี (Tech)",
-  "สันทนาการ (Recreation)",
-  "สถานที่ใกล้เคียง (Nearby)",
-  "บริการ (Services)",
-  "อื่นๆ (Other)",
+  "RESIDENTIAL",
+  "OFFICE",
+  "FACILITY",
+  "UNIT",
+  "EXTERIOR",
+  "SECURITY",
+  "KITCHEN",
+  "TECH",
+  "RECREATION",
+  "NEARBY",
+  "SERVICES",
+  "OTHER",
 ];
 
 interface FeaturesManagementDialogProps {
@@ -279,9 +279,19 @@ export function FeaturesManagementDialog({
                           </h4>
                           {feature.category && (
                             <div>
+                            <div>
                               <span className="text-[10px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-full inline-block max-w-full truncate border border-slate-100 uppercase tracking-wide">
-                                {feature.category.split("(")[0].trim()}
+                                {(() => {
+                                  const displayNames: Record<string, string> = {
+                                    RESIDENTIAL: "Residential",
+                                    OFFICE: "Office",
+                                    FACILITY: "Facility",
+                                    UNIT: "Unit",
+                                  };
+                                  return displayNames[feature.category.toUpperCase()] || feature.category.split("(")[0].trim();
+                                })()}
                               </span>
+                            </div>
                             </div>
                           )}
                         </div>
@@ -304,7 +314,7 @@ export function FeaturesManagementDialog({
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4 py-4"
+              className="space-y-4 py-4 px-4"
             >
               <FormField
                 control={form.control}
@@ -384,11 +394,27 @@ export function FeaturesManagementDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {CATEGORIES.map((c) => (
-                          <SelectItem key={c} value={c}>
-                            {c}
-                          </SelectItem>
-                        ))}
+                        {CATEGORIES.map((c) => {
+                          const displayNames: Record<string, string> = {
+                            RESIDENTIAL: "ที่พักอาศัย (Residential)",
+                            OFFICE: "สำนักงาน (Office)",
+                            FACILITY: "ส่วนกลาง (Facilities)",
+                            UNIT: "ในยูนิต (Unit Features)",
+                            EXTERIOR: "ภายนอก (Exterior)",
+                            SECURITY: "ความปลอดภัย (Security)",
+                            KITCHEN: "ครัว (Kitchen)",
+                            TECH: "เทคโนโลยี (Tech)",
+                            RECREATION: "สันทนาการ (Recreation)",
+                            NEARBY: "สถานที่ใกล้เคียง (Nearby)",
+                            SERVICES: "บริการ (Services)",
+                            OTHER: "อื่นๆ (Other)",
+                          };
+                          return (
+                            <SelectItem key={c} value={c}>
+                              {displayNames[c] || c}
+                            </SelectItem>
+                          );
+                        })}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -413,7 +439,7 @@ export function FeaturesManagementDialog({
                 )}
               />
 
-              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t mt-4">
+              <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-200 mt-4">
                 <Button
                   type="button"
                   variant="ghost"

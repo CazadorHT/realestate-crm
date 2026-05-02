@@ -49,6 +49,7 @@ import {
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 import { BlogPost } from "@/lib/services/blog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface BlogsTableProps {
   posts: BlogPost[];
@@ -132,24 +133,40 @@ function MobileActionDrawer({ post, isTrash }: { post: BlogPost, isTrash?: boole
       <div className="grid grid-cols-2 gap-3 p-6">
         {isTrash ? (
           <>
-            <Button 
-              variant="outline" 
-              className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-green-600"
-              onClick={() => handleAction(() => restoreBlogPostAction(post.id))}
-              disabled={isBusy}
-            >
-              <RotateCcw className="h-5 w-5" />
-              กู้คืนบทความ
-            </Button>
-            <Button 
-              variant="outline" 
-              className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-destructive"
-              onClick={() => handleAction(() => permanentDeleteBlogPostAction(post.id))}
-              disabled={isBusy}
-            >
-              <ShieldAlert className="h-5 w-5" />
-              ลบถาวร
-            </Button>
+            <ConfirmDialog
+              title="กู้คืนบทความ"
+              description={`คุณต้องการกู้คืนบทความ "${post.title}" กลับมาใช้งานปกติใช่หรือไม่?`}
+              confirmText="กู้คืนบทความ"
+              onConfirm={() => handleAction(() => restoreBlogPostAction(post.id))}
+              trigger={
+                <Button 
+                  variant="outline" 
+                  className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-green-600"
+                  disabled={isBusy}
+                >
+                  <RotateCcw className="h-5 w-5" />
+                  กู้คืนบทความ
+                </Button>
+              }
+            />
+            <ConfirmDialog
+              title="ลบบทความถาวร"
+              description={`คำเตือน: คุณกำลังจะลบบทความ "${post.title}" ทิ้งถาวร ข้อมูลนี้ไม่สามารถกู้คืนได้อีก`}
+              confirmText="ลบถาวรทันที"
+              confirmString="DELETE"
+              variant="destructive"
+              onConfirm={() => handleAction(() => permanentDeleteBlogPostAction(post.id))}
+              trigger={
+                <Button 
+                  variant="outline" 
+                  className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-destructive"
+                  disabled={isBusy}
+                >
+                  <ShieldAlert className="h-5 w-5" />
+                  ลบถาวร
+                </Button>
+              }
+            />
           </>
         ) : (
           <>
@@ -496,32 +513,46 @@ export function BlogsTable({ posts, totalCount, currentPage }: BlogsTableProps) 
                         <div className="flex justify-end gap-1 opacity-10 sm:group-hover:opacity-100 transition-opacity duration-300">
                           {isTrash ? (
                             <>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8 text-green-600 hover:bg-green-50 rounded-lg"
-                                onClick={() => startTransition(async () => {
+                              <ConfirmDialog
+                                title="กู้คืนบทความ"
+                                description={`คุณต้องการกู้คืนบทความ "${post.title}" ใช่หรือไม่?`}
+                                confirmText="กู้คืนบทความ"
+                                onConfirm={() => startTransition(async () => {
                                   const res = await restoreBlogPostAction(post.id);
                                   if (res.success) { toast.success(res.message); router.refresh(); }
                                 })}
-                                title="Restore"
-                              >
-                                <RotateCcw className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg"
-                                onClick={() => startTransition(async () => {
-                                  if (confirm("คุณแน่ใจหรือไม่ว่าต้องการลบบทความนี้ถาวร? การดำเนินการนี้ไม่สามารถย้อนกลับได้")) {
-                                    const res = await permanentDeleteBlogPostAction(post.id);
-                                    if (res.success) { toast.success(res.message); router.refresh(); }
-                                  }
+                                trigger={
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-green-600 hover:bg-green-50 rounded-lg"
+                                    title="Restore"
+                                  >
+                                    <RotateCcw className="h-4 w-4" />
+                                  </Button>
+                                }
+                              />
+                              <ConfirmDialog
+                                title="ลบบทความถาวร"
+                                description={`คุณกำลังจะลบบทความ "${post.title}" ทิ้งถาวร การดำเนินการนี้ไม่สามารถย้อนกลับได้`}
+                                confirmText="ลบถาวรทันที"
+                                confirmString="DELETE"
+                                variant="destructive"
+                                onConfirm={() => startTransition(async () => {
+                                  const res = await permanentDeleteBlogPostAction(post.id);
+                                  if (res.success) { toast.success(res.message); router.refresh(); }
                                 })}
-                                title="Delete Permanently"
-                              >
-                                <ShieldAlert className="h-4 w-4" />
-                              </Button>
+                                trigger={
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg"
+                                    title="Delete Permanently"
+                                  >
+                                    <ShieldAlert className="h-4 w-4" />
+                                  </Button>
+                                }
+                              />
                             </>
                           ) : (
                             <>

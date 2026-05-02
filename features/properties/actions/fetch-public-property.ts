@@ -19,7 +19,7 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
   const publicColumns = `
     id, title, title_en, title_cn, title_ru, slug, status, listing_type, property_type,
     price, rental_price, original_price, original_rental_price,
-    size_sqm, land_size_sqwah, bedrooms, bathrooms, floor, 
+    size_sqm, land_size_sqwah, bedrooms, bathrooms, floor, office_capacity,
     province, district, subdistrict, popular_area, popular_area_en, popular_area_cn, popular_area_ru, google_maps_link,
     description, description_en, description_cn, description_ru,
     meta_title, meta_description, meta_keywords,
@@ -28,7 +28,10 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
     meta_title_ru, meta_description_ru,
     is_hot_deal, is_pet_friendly, is_fully_furnished, is_foreigner_quota,
     near_transit, is_exclusive, is_selling_with_tenant, verified, 
+    is_green_building, has_flexible_lease, is_fully_fitted,
+    floor_plan_url,
     transit_station_name, transit_distance_meters, transit_type,
+    nearby_places, nearby_transits,
     created_at, updated_at,
     property_images (
       image_url, storage_path, is_cover, sort_order

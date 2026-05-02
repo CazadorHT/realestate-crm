@@ -19,6 +19,7 @@ interface TableQueryResult {
   created_at: string;
   bedrooms: number | null;
   bathrooms: number | null;
+  office_capacity: number | null;
   province: string | null;
   district: string | null;
   popular_area: string | null;
@@ -103,7 +104,7 @@ export async function getPropertiesTableData(params: {
       `
       id, title, description, status, property_type, listing_type, 
       price, rental_price, original_price, original_rental_price, 
-      updated_at, created_at, bedrooms, bathrooms, province, district, 
+      updated_at, created_at, bedrooms, bathrooms, office_capacity, province, district, 
       popular_area, view_count, address_line1, images, total_units, 
       sold_units, posted_to_facebook_at, posted_to_instagram_at, 
       posted_to_line_at, posted_to_tiktok_at, assigned_to, 
@@ -434,6 +435,7 @@ export async function getPropertiesTableData(params: {
       closed_lead_name: closedLeadNameMap.get(p.id) || null,
       original_price: p.original_price,
       original_rental_price: p.original_rental_price,
+      office_capacity: p.office_capacity,
       is_new: isNew,
       view_count: p.view_count || 0,
       total_units: p.total_units || undefined,

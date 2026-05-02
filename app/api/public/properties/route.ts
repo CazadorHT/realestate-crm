@@ -45,6 +45,8 @@ export async function GET(request: Request) {
       rawParams["popular_area"] = value === "ALL" ? undefined : value;
     } else if (key === "province") {
       rawParams["province"] = value === "ALL" ? undefined : value;
+    } else if (key === "transit_station") {
+      rawParams["transitStation"] = value;
     } else if (key === "keyword") {
       rawParams["q"] = value;
     } else {

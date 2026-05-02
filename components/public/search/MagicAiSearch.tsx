@@ -47,11 +47,12 @@ export function MagicAiSearch({
           </div>
         )}
 
-        <div className="pl-4 text-slate-400">
-          <Search className="h-5 w-5" />
+        <div className="pl-3.5 text-slate-400">
+          <Search className="h-4 w-4" />
         </div>
         
         <Input
+        
           placeholder={
             language === "th" 
               ? "ค้นหาทำเล, ประเภททรัพย์, จำนวนห้อง (เช่น คอนโดอารีย์ 2นอน)" 
@@ -61,7 +62,7 @@ export function MagicAiSearch({
                   ? "Поиск по местоположению, типу и комнатам (например: Кондо Ари 2 сп)"
                   : "Search location, type, rooms (e.g. Condo Ari 2bed)"
           }
-          className="border-none shadow-none focus-visible:ring-0 h-12 text-sm! bg-transparent w-full font-medium placeholder:text-slate-400"
+          className="border-none shadow-none focus-visible:ring-0 h-10! text-xs bg-transparent w-full font-medium placeholder:text-[12px] placeholder:text-slate-400/80"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           disabled={false} // Keep input enabled even when loading for better UX

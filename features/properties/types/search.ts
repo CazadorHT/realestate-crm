@@ -14,6 +14,13 @@ export interface PropertyFacets {
     name_cn: string | null;
     name_ru: string | null;
   }>;
+  availableStations?: Record<string, {
+    count: number;
+    name_en: string | null;
+    name_cn: string | null;
+    name_ru: string | null;
+    type: string;
+  }>;
 }
 
 export interface PropertySearchResponse {

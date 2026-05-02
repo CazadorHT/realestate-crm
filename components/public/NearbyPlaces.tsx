@@ -8,6 +8,7 @@ import {
   Building2,
   TrainFront,
 } from "lucide-react";
+import Link from "next/link";
 import { TRANSIT_TYPE_STYLES } from "@/features/properties/labels";
 import { MdOutlineExplore } from "react-icons/md";
 import { type Language } from "@/lib/i18n";
@@ -233,7 +234,18 @@ export function NearbyPlaces({
                       >
                         {typeLabel}
                       </span>
-                      <span className="text-slate-600 leading-tight group-hover/item:text-slate-800 transition-colors">
+                      <Link
+                        href={`/properties?transit_station=${encodeURIComponent(
+                          (language === "en"
+                            ? transit.station_name_en
+                            : language === "cn"
+                              ? transit.station_name_cn
+                              : language === "ru"
+                                ? transit.station_name_ru
+                                : null) || transit.station_name,
+                        )}`}
+                        className="text-slate-600 leading-tight hover:text-blue-600 hover:underline transition-colors decoration-blue-300 underline-offset-4"
+                      >
                         {(language === "en"
                           ? transit.station_name_en
                           : language === "cn"
@@ -241,7 +253,7 @@ export function NearbyPlaces({
                             : language === "ru"
                               ? transit.station_name_ru
                               : null) || transit.station_name}
-                      </span>
+                      </Link>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {distanceKm && (

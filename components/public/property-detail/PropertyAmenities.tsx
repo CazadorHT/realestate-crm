@@ -40,8 +40,8 @@ export function PropertyAmenities({
   
   // S-Tier Grouping Logic with Localized Fallbacks
   const getCategoryLabel = (key: string, defaultLabel: string) => {
-    const label = t(`property.amenities.${key}`);
-    if (label !== `property.amenities.${key}`) return label;
+    const label = t(`property.amenity_groups.${key}`);
+    if (label !== `property.amenity_groups.${key}`) return label;
     
     // Fallback dictionary for common categories
     const fallbacks: Record<string, Record<string, string>> = {
@@ -53,26 +53,46 @@ export function PropertyAmenities({
   };
 
   const categories = {
-    unit: {
-      label: getCategoryLabel("unit", "Unit Features"),
-      items: features.filter(f => 
-        f.category === "unit" || 
-        ["sofa", "fan", "utensils", "tv", "thermometer", "kitchen", "ac", "aircon"].some(k => f.icon_key?.toLowerCase().includes(k))
-      )
+    residential: {
+      label: getCategoryLabel("residential", "Residential Features"),
+      items: features.filter(f => f.category?.toUpperCase() === "RESIDENTIAL")
+    },
+    office: {
+      label: getCategoryLabel("office", "Office & Business"),
+      items: features.filter(f => f.category?.toUpperCase() === "OFFICE")
     },
     facility: {
-      label: getCategoryLabel("facility", "Facilities"),
-      items: features.filter(f => 
-        f.category === "building" || f.category === "facility" ||
-        ["waves", "dumbbell", "shield-check", "camera", "tree-deciduous", "car", "security", "pool", "gym"].some(k => f.icon_key?.toLowerCase().includes(k))
-      )
+      label: getCategoryLabel("facility", "Building Facilities"),
+      items: features.filter(f => {
+        const cat = f.category?.toUpperCase();
+        const icon = f.icon_key?.toLowerCase();
+        return ["FACILITY", "BUILDING", "FACILITIES", "AMENITY"].includes(cat || "") || 
+               ["waves", "dumbbell", "tree-deciduous", "shield-check", "camera", "users", "car-front"].includes(icon || "");
+      })
+    },
+    unit: {
+      label: getCategoryLabel("unit", "Unit Features"),
+      items: features.filter(f => {
+        const cat = f.category?.toUpperCase();
+        const icon = f.icon_key?.toLowerCase();
+        return ["UNIT", "FEATURES", "INTERIOR"].includes(cat || "") || 
+               ["sofa", "fan", "tv", "thermometer", "zap", "cpu", "layout"].includes(icon || "");
+      })
     },
     others: {
       label: getCategoryLabel("others", "Other Features"),
-      items: features.filter(f => 
-        !["unit", "building", "facility"].includes(f.category || "") &&
-        !["sofa", "fan", "utensils", "tv", "thermometer", "kitchen", "ac", "aircon", "waves", "dumbbell", "shield-check", "camera", "tree-deciduous", "car", "security", "pool", "gym"].some(k => f.icon_key?.toLowerCase().includes(k))
-      )
+      items: features.filter(f => {
+        const cat = f.category?.toUpperCase();
+        const icon = f.icon_key?.toLowerCase();
+        const isFacility = ["FACILITY", "BUILDING", "FACILITIES", "AMENITY"].includes(cat || "") || 
+                          ["waves", "dumbbell", "tree-deciduous", "shield-check", "camera", "users", "car-front"].includes(icon || "");
+        const isUnit = ["UNIT", "FEATURES", "INTERIOR"].includes(cat || "") || 
+                      ["sofa", "fan", "tv", "thermometer", "zap", "cpu", "layout"].includes(icon || "");
+        const isResidential = cat === "RESIDENTIAL";
+        const isOffice = cat === "OFFICE";
+        
+        return !isFacility && !isUnit && !isResidential && !isOffice;
+      })
     }
   };
 

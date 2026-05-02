@@ -6,9 +6,10 @@ import { BlogPostInput } from "@/features/blog/types";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Globe, Search, Sparkles, Languages, BarChart3, TrendingUp } from "lucide-react";
+import { Globe, Search, Sparkles, Languages, BarChart3, TrendingUp, Type } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BlogRelatedSuggestions } from "./BlogRelatedSuggestions";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface BlogSeoTabProps {
   form: UseFormReturn<BlogPostInput>;
@@ -52,7 +53,7 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
           </div>
         </div>
 
-        {/* Meta Description */}
+        {/* Meta Description (Multilingual Tabs) */}
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
           <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
             <div className="p-2 bg-amber-100 rounded-lg">
@@ -60,99 +61,124 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
             </div>
             <div>
               <h3 className="font-semibold text-slate-900">Meta Description</h3>
-              <p className="text-sm text-slate-500">ข้อความสรุปสำหรับ SEO</p>
+              <p className="text-sm text-slate-500">ข้อความสรุปสำหรับ SEO แยกตามภาษา</p>
             </div>
           </div>
 
-          <FormField
-            control={form.control}
-            name="excerpt"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-slate-700 font-medium">
-                  ข้อความสรุป (ไทย)
-                </FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="สรุปเนื้อหาบทความสั้นๆ (แนะนำ 150-160 ตัวอักษร)"
-                    className="min-h-[100px] resize-none border-slate-200"
-                    {...field}
-                  />
-                </FormControl>
-                <div className="flex justify-between">
-                  <FormMessage />
-                  <span
-                    className={cn(
-                      "text-xs",
-                      (field.value?.length || 0) > 160 ? "text-red-500" : "text-slate-500"
-                    )}
-                  >
-                    {field.value?.length || 0}/160
-                  </span>
-                </div>
-              </FormItem>
-            )}
-          />
+          <Tabs defaultValue="th" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6 bg-slate-50 p-1 h-auto rounded-xl border border-slate-100">
+              <TabsTrigger value="th" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs">
+                🇹🇭 TH
+              </TabsTrigger>
+              <TabsTrigger value="en" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs">
+                🇬🇧 EN
+              </TabsTrigger>
+              <TabsTrigger value="cn" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs">
+                🇨🇳 CN
+              </TabsTrigger>
+              <TabsTrigger value="ru" className="rounded-lg py-2 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm text-xs">
+                🇷🇺 RU
+              </TabsTrigger>
+            </TabsList>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-            <FormField
-              control={form.control}
-              name="excerpt_en"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <Languages className="w-3 h-3" /> Excerpt (English)
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      value={field.value ?? ""}
-                      className="min-h-[80px] resize-none border-slate-200 text-sm"
-                      placeholder="English excerpt..."
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="excerpt_cn"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <Languages className="w-3 h-3" /> 文章摘要 (Chinese)
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      value={field.value ?? ""}
-                      className="min-h-[80px] resize-none border-slate-200 text-sm"
-                      placeholder="中文摘要..."
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="excerpt_ru"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-                    <Languages className="w-3 h-3" /> Краткое описание (Russian)
-                  </FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      value={field.value ?? ""}
-                      className="min-h-[80px] resize-none border-slate-200 text-sm"
-                      placeholder="Краткое описание на русском..."
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-          </div>
+            <TabsContent value="th" className="mt-0 focus-visible:outline-none">
+              <FormField
+                control={form.control}
+                name="excerpt"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-700 font-medium">
+                      ข้อความสรุป (ไทย)
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder="สรุปเนื้อหาบทความสั้นๆ (แนะนำ 150-160 ตัวอักษร)"
+                        className="min-h-[120px] resize-none border-slate-200"
+                        {...field}
+                      />
+                    </FormControl>
+                    <div className="flex justify-between">
+                      <FormMessage />
+                      <span
+                        className={cn(
+                          "text-xs",
+                          (field.value?.length || 0) > 160 ? "text-red-500" : "text-slate-500"
+                        )}
+                      >
+                        {field.value?.length || 0}/160
+                      </span>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </TabsContent>
+
+            <TabsContent value="en" className="mt-0 focus-visible:outline-none">
+              <FormField
+                control={form.control}
+                name="excerpt_en"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-700 font-medium">
+                      Excerpt (English)
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        value={field.value ?? ""}
+                        className="min-h-[120px] resize-none border-slate-200 text-sm"
+                        placeholder="English excerpt..."
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </TabsContent>
+
+            <TabsContent value="cn" className="mt-0 focus-visible:outline-none">
+              <FormField
+                control={form.control}
+                name="excerpt_cn"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-700 font-medium">
+                      文章摘要 (Chinese)
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        value={field.value ?? ""}
+                        className="min-h-[120px] resize-none border-slate-200 text-sm"
+                        placeholder="Chinese excerpt..."
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </TabsContent>
+
+            <TabsContent value="ru" className="mt-0 focus-visible:outline-none">
+              <FormField
+                control={form.control}
+                name="excerpt_ru"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-slate-700 font-medium">
+                      Краткое описание (Russian)
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea
+                        {...field}
+                        value={field.value ?? ""}
+                        className="min-h-[120px] resize-none border-slate-200 text-sm"
+                        placeholder="Russian excerpt..."
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Structured Data */}
@@ -229,3 +255,4 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
     </div>
   );
 }
+

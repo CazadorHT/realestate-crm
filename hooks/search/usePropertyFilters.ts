@@ -20,6 +20,7 @@ export function usePropertyFilters() {
   const [minSize, setMinSize] = useState(searchParams.get("min_size") || "");
   const [maxSize, setMaxSize] = useState(searchParams.get("max_size") || "");
   const [sort, setSort] = useState("NEWEST");
+  const [transitStation, setTransitStation] = useState(searchParams.get("transit_station") || "");
 
   const [area, setArea] = useState(searchParams.get("popular_area") || "ALL");
   const [province, setProvince] = useState(
@@ -76,6 +77,7 @@ export function usePropertyFilters() {
     setCompanyRegistered(searchParams.get("company_registered") === "true");
     setIsHotDeal(searchParams.get("hot_deal") === "true");
     setBedrooms(searchParams.get("bedrooms") || "ALL");
+    setTransitStation(searchParams.get("transit_station") || "");
     
     // Clear AI insight on manual navigation change
     setAiInsight(null);
@@ -98,6 +100,7 @@ export function usePropertyFilters() {
     if (isForeigner) params.set("foreigner", "true"); else params.delete("foreigner");
     if (companyRegistered) params.set("company_registered", "true"); else params.delete("company_registered");
     if (isHotDeal) params.set("hot_deal", "true"); else params.delete("hot_deal");
+    if (transitStation) params.set("transit_station", transitStation); else params.delete("transit_station");
     if (minSize) params.set("min_size", minSize); else params.delete("min_size");
     if (maxSize) params.set("max_size", maxSize); else params.delete("max_size");
     if (priceType && (minPrice || maxPrice)) params.set("price_type", priceType); else params.delete("price_type");
@@ -108,7 +111,7 @@ export function usePropertyFilters() {
   }, [
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
-    companyRegistered, isHotDeal, minSize, maxSize,
+    isHotDeal, minSize, maxSize, transitStation,
   ]);
 
   const clearFilters = useCallback(() => {
@@ -129,6 +132,7 @@ export function usePropertyFilters() {
     setIsForeigner(false);
     setCompanyRegistered(false);
     setIsHotDeal(false);
+    setTransitStation("");
     setAiInsight(null);
   }, []);
 
@@ -149,6 +153,7 @@ export function usePropertyFilters() {
     if (updates.fullyFurnished !== undefined) setFullyFurnished(updates.fullyFurnished);
     if (updates.bedrooms !== undefined) setBedrooms(updates.bedrooms);
     if (updates.isHotDeal !== undefined) setIsHotDeal(updates.isHotDeal);
+    if (updates.transitStation !== undefined) setTransitStation(updates.transitStation);
     if (updates.aiInsight !== undefined) setAiInsight(updates.aiInsight);
   }, []);
 
@@ -172,6 +177,7 @@ export function usePropertyFilters() {
     isForeigner, setIsForeigner,
     companyRegistered, setCompanyRegistered,
     isHotDeal, setIsHotDeal,
+    transitStation, setTransitStation,
     aiInsight, setAiInsight,
     clearFilters,
     setBulkFilters,

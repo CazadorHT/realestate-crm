@@ -1,6 +1,6 @@
 "use client";
 
-import { BedDouble, Bath, Car, Maximize, Building2, Home } from "lucide-react";
+import { BedDouble, Bath, Car, Maximize, Building2, Home, Users } from "lucide-react";
 import {
   useLanguage,
   dictionaries,
@@ -12,6 +12,7 @@ interface PropertySpecsProps {
   bedrooms?: number | null;
   bathrooms?: number | null;
   parking?: number | null;
+  office_capacity?: number | null;
   sizeSqm?: number | null;
   landSize?: number | null;
   floor?: number | null;
@@ -23,6 +24,7 @@ export function PropertySpecs({
   bedrooms,
   bathrooms,
   parking,
+  office_capacity,
   sizeSqm,
   landSize,
   floor,
@@ -83,6 +85,13 @@ export function PropertySpecs({
       suffix: t("property.specs.unit_floor"),
       icon: <Building2 className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
       show: !!floor,
+    },
+    {
+      label: t("property.specs.capacity"),
+      value: office_capacity,
+      suffix: t("property.specs.unit_desk"),
+      icon: <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
+      show: !!office_capacity,
     },
   ].filter(
     (item) => item.show && item.value !== null && item.value !== undefined,

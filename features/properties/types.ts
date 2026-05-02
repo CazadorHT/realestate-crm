@@ -41,6 +41,8 @@ export interface NearbyTransitItem {
   station_name_ru: string | undefined;
 }
 
+export type TransitType = NearbyTransitItem["type"];
+
 // Property Image types
 export type PropertyImage =
   Database["public"]["Tables"]["property_images"]["Row"];
@@ -116,6 +118,7 @@ export interface PropertyTableData {
   land_size_sqwah?: number | null;
   bedrooms?: number | null;
   bathrooms?: number | null;
+  office_capacity?: number | null;
   agent_name?: string | null;
   popular_area?: string | null;
   original_price?: number | null;

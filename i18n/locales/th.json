@@ -495,6 +495,7 @@
   "search": {
     "title": "ค้นหาทรัพย์",
     "filter_title": "ตัวกรองค้นหา",
+    "active_filters": "ตัวกรองที่เลือก",
     "keyword_placeholder": "ค้นหาทรัพย์...",
     "province": "จังหวัด",
     "all_provinces": "ทุกจังหวัด",
@@ -513,6 +514,14 @@
     "foreigner": "โควตาต่างชาติ",
     "company_registered": "จดทะเบียนบริษัท",
     "hot_deal": "ส่วนลดพิเศษ (Hot Deal)",
+    "near_train": "ใกล้รถไฟฟ้า",
+    "select_station": "เลือกสถานี",
+    "all_stations": "ทุกสถานี",
+    "clear": "ล้างค่า",
+    "clear_all": "ล้างทั้งหมด",
+    "more": "เพิ่มเติม",
+    "all": "ทั้งหมด",
+    "no_stations_type": "ไม่พบสถานีในประเภทที่เลือก",
     "location": "ทำเล",
     "all_locations": "ทุกย่านทำเล",
     "popular_locations": "ทำเลยอดนิยม",
@@ -522,7 +531,6 @@
       "lat_phrao": "ลาดพร้าว",
       "rama_9": "พระราม 9"
     },
-    "near_train": "ใกล้รถไฟฟ้า",
     "pet_allowed": "เลี้ยงสัตว์ได้",
     "fully_furnished": "เฟอร์ครบ",
     "view_results": "ดูผลลัพธ์",
@@ -849,6 +857,14 @@
     "commercial_building": "อาคารพาณิชย์"
   },
   "property": {
+    "amenity_groups": {
+      "residential": "คุณสมบัติที่พักอาศัย",
+      "office": "สำนักงานและธุรกิจ",
+      "facility": "สิ่งอำนวยความสะดวกในโครงการ",
+      "unit": "สิ่งอำนวยความสะดวกในยูนิต",
+      "others": "คุณสมบัติอื่นๆ"
+    },
+    "floor_plan": "ผังอาคาร / ห้อง",
     "status": {
       "active": "เปิดขาย/เช่า",
       "draft": "ฉบับร่าง",
@@ -931,7 +947,9 @@
       "floor": "ชั้นที่",
       "unit_room": "ห้อง",
       "unit_car": "คัน",
-      "unit_floor": "ชั้น"
+      "unit_floor": "ชั้น",
+      "capacity": "จำนวนที่นั่ง",
+      "unit_desk": "คน/ที่นั่ง"
     },
     "special_features": "คุณสมบัติพิเศษ",
     "special_features_description": "คุณสมบัติพิเศษของทรัพย์นี้ มีทั้งหมด",
@@ -1006,6 +1024,9 @@
       "accessible": "รองรับรถเข็น/ผู้สูงอายุ",
       "investment_ready": "พร้อมลงทุน (Investment Ready)",
       "good_location": "ทำเลดี เดินทางสะดวก",
+      "green_building": "อาคารประหยัดพลังงาน",
+      "flexible_lease": "สัญญาเช่ายืดหยุ่น",
+      "fully_fitted": "ตกแต่งกึ่งสำเร็จรูป",
       "ready_to_move": "พร้อมเข้าอยู่",
       "family_friendly": "เหมาะสำหรับครอบครัว"
     },

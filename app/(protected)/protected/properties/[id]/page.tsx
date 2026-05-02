@@ -240,6 +240,7 @@ export default async function PropertyDetailsPage({
                   bedrooms={property.bedrooms}
                   bathrooms={property.bathrooms}
                   parking={property.parking_slots}
+                  office_capacity={property.office_capacity}
                   sizeSqm={property.size_sqm}
                   landSize={property.land_size_sqwah}
                   floor={property.floor}
@@ -249,7 +250,7 @@ export default async function PropertyDetailsPage({
 
                 {/* Badges ticker */}
                 <PropertyBadgesSection
-                  property={property as PropertyRow}
+                  property={property}
                   language="th"
                 />
 

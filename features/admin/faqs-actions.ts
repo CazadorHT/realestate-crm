@@ -204,7 +204,10 @@ export async function moveToTrashAction(id: string) {
 
     const { error } = await supabase
       .from("faqs")
-      .update({ deleted_at: new Date().toISOString() })
+      .update({ 
+        deleted_at: new Date().toISOString(),
+        is_active: false 
+      })
       .eq("id", id);
 
     if (error) throw error;

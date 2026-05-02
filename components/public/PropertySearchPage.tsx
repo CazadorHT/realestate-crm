@@ -48,6 +48,7 @@ export function PropertySearchPage({
     availableListingTypes,
     availableQuickFilters,
     availableBedrooms,
+    availableStations,
     matchesFilters,
   } = usePropertyFiltering(properties, { ...filters, keyword: filters.debouncedKeyword }, serverFacets);
 
@@ -94,7 +95,7 @@ export function PropertySearchPage({
     filters.debouncedKeyword, filters.type, filters.listingType, filters.minPrice, 
     filters.maxPrice, filters.area, filters.province, filters.nearTrain, 
     filters.petFriendly, filters.fullyFurnished, filters.bedrooms, 
-    filters.isForeigner, filters.isHotDeal
+    filters.isForeigner, filters.isHotDeal, filters.transitStation
   ]);
 
   useEffect(() => {
@@ -139,6 +140,7 @@ export function PropertySearchPage({
         availableListingTypes={availableListingTypes}
         availableQuickFilters={availableQuickFilters}
         availableBedrooms={availableBedrooms}
+        availableStations={availableStations}
         properties={properties}
         matchesFilters={matchesFilters}
         setBulkFilters={filters.setBulkFilters}

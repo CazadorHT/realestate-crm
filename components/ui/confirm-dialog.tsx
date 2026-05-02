@@ -18,11 +18,13 @@ interface ConfirmDialogProps {
   variant?: "default" | "destructive";
   trigger?: ReactNode;
   confirmDisabled?: boolean;
+  confirmString?: string;
 }
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, Check } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
+import { Input } from "@/components/ui/input";
 
 export function ConfirmDialog({
   open: controlledOpen,
@@ -35,14 +37,27 @@ export function ConfirmDialog({
   variant = "default",
   trigger,
   confirmDisabled = false,
+  confirmString,
 }: ConfirmDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [confirmInput, setConfirmInput] = useState("");
   const { t } = useLanguage();
 
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
-  const onOpenChange = controlledOnOpenChange || setInternalOpen;
+  const onOpenChange = (val: boolean) => {
+    if (controlledOnOpenChange) {
+      controlledOnOpenChange(val);
+    } else {
+      setInternalOpen(val);
+    }
+    if (!val) {
+      setConfirmInput("");
+    }
+  };
+
+  const isUnlocked = confirmString ? confirmInput === confirmString : true;
 
   const finalTitle =
     title === "ยืนยันการทำรายการ" ? t("common.confirm") : title;
@@ -81,7 +96,25 @@ export function ConfirmDialog({
       open={isOpen}
       onOpenChange={onOpenChange}
       title={finalTitle}
-      description={finalDescription}
+      description={
+        <div className="space-y-4">
+          <div>{finalDescription}</div>
+          {confirmString && (
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+              <p className="text-[10px] font-bold text-rose-600 uppercase tracking-widest">
+                กรุณาพิมพ์ {confirmString} เพื่อยืนยัน:
+              </p>
+              <Input
+                value={confirmInput}
+                onChange={(e) => setConfirmInput(e.target.value)}
+                placeholder={confirmString}
+                className="h-10 bg-white border-slate-200 focus:border-rose-500 font-mono text-sm"
+                autoFocus
+              />
+            </div>
+          )}
+        </div>
+      }
       trigger={trigger}
       className={cn(
         "sm:max-w-md!",
@@ -98,7 +131,7 @@ export function ConfirmDialog({
             {finalCancelText}
           </Button>
           <Button
-            disabled={isConfirming || isSuccess || confirmDisabled}
+            disabled={isConfirming || isSuccess || confirmDisabled || !isUnlocked}
             className={cn(
               "w-full sm:flex-1 h-12 rounded-xl font-bold shadow-lg transition-all active:scale-95 gap-2",
               isSuccess 

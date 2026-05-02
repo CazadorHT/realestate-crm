@@ -46,6 +46,9 @@ import {
   Gem,
   MapPin,
   Sparkles,
+  Leaf,
+  CalendarRange,
+  Layout,
 } from "lucide-react";
 import {
   Tooltip,
@@ -225,6 +228,13 @@ export function SpecialFeaturesSection({
               label="ห้องเปล่า / พื้นที่เปล่า"
               icon={BoxSelect}
               color="amber"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="is_fully_fitted"
+              label="กั้นห้องและแอร์ (Fully Fitted)"
+              icon={Layout}
+              color="sky"
               disabled={isReadOnly}
             />
             <FeatureChip
@@ -412,6 +422,22 @@ export function SpecialFeaturesSection({
               icon={Accessibility}
               color="emerald"
               disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="is_green_building"
+              label="อาคารสีเขียว (Green Building)"
+              icon={Leaf}
+              color="green"
+              disabled={isReadOnly}
+              title="อาคารประหยัดพลังงานหรือได้รับการรับรองมาตรฐาน LEED/TREES"
+            />
+            <FeatureChip
+              name="has_flexible_lease"
+              label="สัญญาเช่ายืดหยุ่น"
+              icon={CalendarRange}
+              color="orange"
+              disabled={isReadOnly}
+              title="เงื่อนไขการเช่าที่ยืดหยุ่นกว่าปกติ (เช่น สัญญาต่ำกว่า 3 ปี หรือ Break Clause)"
             />
           </div>
         </div>

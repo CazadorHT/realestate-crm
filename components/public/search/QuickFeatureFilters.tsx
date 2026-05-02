@@ -69,7 +69,7 @@ export function QuickFeatureFilters({
                   disabled={isDisabled}
                   onClick={() => !isDisabled && f.setState(!f.state)}
                   className={cn(
-                    "flex items-center justify-center w-12 h-12 rounded-xl border-2 transition-all duration-200 font-medium text-sm relative",
+                    "flex items-center justify-center w-10 h-10 rounded-xl border-2 transition-all duration-200 font-medium text-sm relative",
                     f.state
                       ? `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
                       : isDisabled
@@ -80,10 +80,10 @@ export function QuickFeatureFilters({
                   <f.icon 
                     className={cn(
                       "transition-transform",
-                      f.label === "near_train" ? "h-5 w-5" : 
-                      f.label === "hot_deal" ? "h-[22px] w-[22px]" :
-                      f.label === "fully_furnished" ? "h-6 w-6" :
-                      "h-[22px] w-[22px]",
+                      f.label === "near_train" ? "h-4 w-4" : 
+                      f.label === "hot_deal" ? "h-4 w-4" :
+                      f.label === "fully_furnished" ? "h-5 w-5" :
+                      "h-[18px] w-[18px]",
                       f.state ? "text-white" : isDisabled ? "text-slate-200" : `text-${f.color}-500`
                     )} 
                   />

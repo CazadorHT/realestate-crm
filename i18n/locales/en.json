@@ -501,6 +501,7 @@
   "search": {
     "title": "Properties Search",
     "filter_title": "Search Filters",
+    "active_filters": "Active Filters",
     "keyword_placeholder": "Search properties...",
     "province": "Province",
     "all_provinces": "All Provinces",
@@ -519,6 +520,14 @@
     "foreigner": "Foreigner Quota",
     "company_registered": "Company Registered",
     "hot_deal": "Hot Deal",
+    "near_train": "Near Train",
+    "select_station": "Select Station",
+    "all_stations": "All Stations",
+    "clear": "Clear",
+    "clear_all": "Clear All",
+    "more": "More",
+    "all": "All",
+    "no_stations_type": "No stations found for this type",
     "location": "Location",
     "all_locations": "All Areas",
     "popular_locations": "Popular Areas",
@@ -528,7 +537,6 @@
       "lat_phrao": "Lat Phrao",
       "rama_9": "Rama 9"
     },
-    "near_train": "Near BTS/MRT",
     "pet_allowed": "Pet Friendly",
     "fully_furnished": "Fully Furnished",
     "view_results": "View Results",
@@ -855,6 +863,14 @@
     "commercial_building": "Commercial Building"
   },
   "property": {
+    "amenity_groups": {
+      "residential": "Residential Features",
+      "office": "Office & Business",
+      "facility": "Building Facilities",
+      "unit": "Unit Features",
+      "others": "Other Features"
+    },
+    "floor_plan": "Floor Plan / Layout",
     "status": {
       "active": "Active",
       "draft": "Draft",
@@ -937,8 +953,10 @@
       "parking": "Parking",
       "floor": "Floor",
       "unit_room": "room",
-      "unit_car": "cars",
-      "unit_floor": "floor"
+      "unit_car": "Slots",
+      "unit_floor": "Floor",
+      "capacity": "Capacity",
+      "unit_desk": "Desks/People"
     },
     "special_features": "Special Features",
     "special_features_description": "Special features of this property, total",
@@ -1013,6 +1031,9 @@
       "accessible": "Accessible",
       "investment_ready": "Investment Ready",
       "good_location": "Good Location, Convenient",
+      "green_building": "Green Building",
+      "flexible_lease": "Flexible Lease",
+      "fully_fitted": "Fully Fitted",
       "ready_to_move": "Ready to Move In",
       "family_friendly": "Family Friendly"
     },

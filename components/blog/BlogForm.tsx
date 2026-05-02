@@ -170,12 +170,11 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   });
 
   const { watch, setValue } = form;
+  
+  // Only watch what's absolutely needed for the top-level UI logic
   const watchedTitle = watch("title");
   const watchedContent = watch("content");
-  const watchedExcerpt = watch("excerpt");
-  const watchedSlug = watch("slug");
   const watchedIsPublished = watch("is_published");
-  const watchedCoverImage = watch("cover_image");
 
   // Auto-generate slug from title
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

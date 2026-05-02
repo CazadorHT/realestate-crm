@@ -111,31 +111,6 @@ export function BlogHeader({
               />
             </div>
 
-            {/* Publish Toggle */}
-            <FormField
-              control={form.control}
-              name="is_published"
-              render={({ field }) => (
-                <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 h-10 md:h-12 overflow-hidden">
-                  <span className="text-[10px] md:text-sm font-medium text-slate-600">
-                    เผยแพร่
-                  </span>
-                  <Switch
-                    checked={field.value}
-                    onCheckedChange={(checked) => {
-                      field.onChange(checked);
-                      toast.success(
-                        checked
-                          ? "เปิดเผยแพร่บทความสำเร็จ"
-                          : "ปิดการเผยแพร่บทความสำเร็จ",
-                      );
-                    }}
-                    className="data-[state=checked]:bg-blue-600 scale-75 md:scale-90"
-                  />
-                </div>
-              )}
-            />
-
             <Button
               type="submit"
               disabled={

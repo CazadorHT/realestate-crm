@@ -702,8 +702,14 @@ export function PropertiesTable({
                         ) : null}
                       </div>
                       <div className="text-[11px] text-slate-400 flex gap-1.5">
-                        {property.bedrooms ? <span>{property.bedrooms}น</span> : null}
+                        {property.bedrooms ? <span>{property.bedrooms}น.</span> : null}
                         {property.bathrooms ? <span>{property.bathrooms}น้ำ</span> : null}
+                        {property.office_capacity ? (
+                          <span className="flex items-center gap-0.5 text-blue-600 font-bold">
+                            <Users className="h-2.5 w-2.5" />
+                            {property.office_capacity}ที่นั่ง
+                          </span>
+                        ) : null}
                       </div>
                     </div>
                   </TableCell>

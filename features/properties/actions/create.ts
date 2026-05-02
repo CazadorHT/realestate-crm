@@ -47,7 +47,16 @@ export async function createPropertyAction(
     }
     const safeValues = parsed.data;
 
-    const { images, agent_ids, feature_ids, ...propertyData } = safeValues;
+    const {
+      images,
+      agent_ids,
+      feature_ids,
+      video_url,
+      co_agent_name,
+      co_agent_phone,
+      co_agent_contact_id,
+      ...propertyData
+    } = safeValues;
 
     // 🧠 Auto-Status Logic: AI Draft Enforcement
     // Skip review for staff manual creation
@@ -102,11 +111,11 @@ export async function createPropertyAction(
       .from("properties")
       .insert({
         ...propertyData,
-        co_agent_name: encrypt(propertyData.co_agent_name),
-        co_agent_name_hash: generateBlindIndex(propertyData.co_agent_name),
-        co_agent_phone: encrypt(propertyData.co_agent_phone),
-        co_agent_phone_hash: generateBlindIndex(propertyData.co_agent_phone),
-        co_agent_contact_id: encrypt(propertyData.co_agent_contact_id),
+        co_agent_name: encrypt(co_agent_name),
+        co_agent_name_hash: generateBlindIndex(co_agent_name),
+        co_agent_phone: encrypt(co_agent_phone),
+        co_agent_phone_hash: generateBlindIndex(co_agent_phone),
+        co_agent_contact_id: encrypt(co_agent_contact_id),
         tenant_id: tenantId,
         original_price: propertyData.original_price, // Force include
         original_rental_price: propertyData.original_rental_price,
@@ -116,6 +125,8 @@ export async function createPropertyAction(
         meta_description: seoData.metaDescription,
         meta_keywords: mergedKeywords,
         structured_data: seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
+        nearby_places: (propertyData.nearby_places || []) as Database["public"]["Tables"]["properties"]["Insert"]["nearby_places"],
+        nearby_transits: (propertyData.nearby_transits || []) as Database["public"]["Tables"]["properties"]["Insert"]["nearby_transits"],
       })
       .select("id")
       .single();

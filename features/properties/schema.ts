@@ -51,10 +51,13 @@ export const PropertySchema = z
     maintenance_fee: z.coerce.number().optional().nullable(),
     parking_slots: z.coerce.number().optional().nullable(),
     zoning: z.string().optional().nullable(),
+    floor_plan_url: z.string().optional().nullable(),
+    video_url: z.string().optional().nullable(),
     ceiling_height: z.coerce.number().optional().nullable(),
     electricity_charge: z.string().optional().nullable(),
     water_charge: z.string().optional().nullable(),
     rent_free_period_days: z.coerce.number().optional().nullable(),
+    office_capacity: z.coerce.number().optional().nullable(),
 
     // 🏢 Stock Management
     total_units: z.coerce
@@ -171,6 +174,9 @@ export const PropertySchema = z
     has_private_elevator: z.boolean(),
     is_handicapped_friendly: z.boolean(),
     is_high_floor: z.boolean(),
+    is_green_building: z.boolean(),
+    has_flexible_lease: z.boolean(),
+    is_fully_fitted: z.boolean(),
     is_never_lived_in: z.boolean(),
     requires_ai_review: z.boolean(),
     version: z.number().optional(),

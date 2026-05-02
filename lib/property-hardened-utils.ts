@@ -1,4 +1,5 @@
-import { PropertyImageMetadata, NearbyItem, NearbyTransitItem } from "@/features/properties/types";
+import { PropertyImageMetadata, NearbyItem, NearbyTransitItem, TransitType } from "@/features/properties/types";
+import { Database } from "@/lib/database.types";
 
 /**
  * 🛡️ Raw Object Guard for Images
@@ -124,7 +125,7 @@ export function getSafeNearbyTransits(transits: unknown): NearbyTransitItem[] {
       typeof t === "object" && t !== null && ("station_name" in t || "type" in t)
     )
     .map(t => ({
-      type: (t.type as any) || "OTHER",
+      type: (t.type as TransitType) || "OTHER",
       station_name: (t.station_name as string) || "Unknown Station",
       distance_meters: typeof t.distance_meters === "number" ? t.distance_meters : undefined,
       time: (t.time as string) || undefined,

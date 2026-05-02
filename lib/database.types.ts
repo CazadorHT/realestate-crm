@@ -2169,10 +2169,12 @@ export type Database = {
           facing_south: boolean | null
           facing_west: boolean | null
           floor: number | null
+          floor_plan_url: string | null
           google_maps_link: string | null
           has_247_access: boolean | null
           has_city_view: boolean | null
           has_fiber_optic: boolean | null
+          has_flexible_lease: boolean | null
           has_garden_view: boolean | null
           has_multi_parking: boolean | null
           has_pool_view: boolean | null
@@ -2191,10 +2193,12 @@ export type Database = {
           is_corner_unit: boolean | null
           is_exclusive: boolean | null
           is_foreigner_quota: boolean | null
+          is_fully_fitted: boolean | null
           is_fully_furnished: boolean | null
           is_grade_a: boolean | null
           is_grade_b: boolean | null
           is_grade_c: boolean | null
+          is_green_building: boolean | null
           is_handicapped_friendly: boolean | null
           is_high_ceiling: boolean | null
           is_high_floor: boolean | null
@@ -2222,6 +2226,7 @@ export type Database = {
           near_transit: boolean | null
           nearby_places: Json | null
           nearby_transits: Json | null
+          office_capacity: number | null
           orientation: string | null
           original_price: number | null
           original_rental_price: number | null
@@ -2312,10 +2317,12 @@ export type Database = {
           facing_south?: boolean | null
           facing_west?: boolean | null
           floor?: number | null
+          floor_plan_url?: string | null
           google_maps_link?: string | null
           has_247_access?: boolean | null
           has_city_view?: boolean | null
           has_fiber_optic?: boolean | null
+          has_flexible_lease?: boolean | null
           has_garden_view?: boolean | null
           has_multi_parking?: boolean | null
           has_pool_view?: boolean | null
@@ -2334,10 +2341,12 @@ export type Database = {
           is_corner_unit?: boolean | null
           is_exclusive?: boolean | null
           is_foreigner_quota?: boolean | null
+          is_fully_fitted?: boolean | null
           is_fully_furnished?: boolean | null
           is_grade_a?: boolean | null
           is_grade_b?: boolean | null
           is_grade_c?: boolean | null
+          is_green_building?: boolean | null
           is_handicapped_friendly?: boolean | null
           is_high_ceiling?: boolean | null
           is_high_floor?: boolean | null
@@ -2365,6 +2374,7 @@ export type Database = {
           near_transit?: boolean | null
           nearby_places?: Json | null
           nearby_transits?: Json | null
+          office_capacity?: number | null
           orientation?: string | null
           original_price?: number | null
           original_rental_price?: number | null
@@ -2455,10 +2465,12 @@ export type Database = {
           facing_south?: boolean | null
           facing_west?: boolean | null
           floor?: number | null
+          floor_plan_url?: string | null
           google_maps_link?: string | null
           has_247_access?: boolean | null
           has_city_view?: boolean | null
           has_fiber_optic?: boolean | null
+          has_flexible_lease?: boolean | null
           has_garden_view?: boolean | null
           has_multi_parking?: boolean | null
           has_pool_view?: boolean | null
@@ -2477,10 +2489,12 @@ export type Database = {
           is_corner_unit?: boolean | null
           is_exclusive?: boolean | null
           is_foreigner_quota?: boolean | null
+          is_fully_fitted?: boolean | null
           is_fully_furnished?: boolean | null
           is_grade_a?: boolean | null
           is_grade_b?: boolean | null
           is_grade_c?: boolean | null
+          is_green_building?: boolean | null
           is_handicapped_friendly?: boolean | null
           is_high_ceiling?: boolean | null
           is_high_floor?: boolean | null
@@ -2508,6 +2522,7 @@ export type Database = {
           near_transit?: boolean | null
           nearby_places?: Json | null
           nearby_transits?: Json | null
+          office_capacity?: number | null
           orientation?: string | null
           original_price?: number | null
           original_rental_price?: number | null
@@ -2898,6 +2913,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "property_syndication_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_transit_stations: {
+        Row: {
+          created_at: string | null
+          distance_meters: number | null
+          id: string
+          property_id: string | null
+          station_name: string
+          station_name_cn: string | null
+          station_name_en: string | null
+          station_name_ru: string | null
+          type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          distance_meters?: number | null
+          id?: string
+          property_id?: string | null
+          station_name: string
+          station_name_cn?: string | null
+          station_name_en?: string | null
+          station_name_ru?: string | null
+          type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          distance_meters?: number | null
+          id?: string
+          property_id?: string | null
+          station_name?: string
+          station_name_cn?: string | null
+          station_name_en?: string | null
+          station_name_ru?: string | null
+          type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_transit_stations_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
@@ -4183,13 +4242,13 @@ export type Database = {
           }
         | {
             Args: {
-              p_full_name: string
-              p_line_id?: string
-              p_note?: string
-              p_phone?: string
-              p_source?: string
+              p_email: string
+              p_message: string
+              p_name: string
+              p_phone: string
+              p_property_id?: string
             }
-            Returns: string
+            Returns: undefined
           }
       swap_property_stock_atomic: {
         Args: {
@@ -4269,10 +4328,12 @@ export type Database = {
           facing_south: boolean | null
           facing_west: boolean | null
           floor: number | null
+          floor_plan_url: string | null
           google_maps_link: string | null
           has_247_access: boolean | null
           has_city_view: boolean | null
           has_fiber_optic: boolean | null
+          has_flexible_lease: boolean | null
           has_garden_view: boolean | null
           has_multi_parking: boolean | null
           has_pool_view: boolean | null
@@ -4291,10 +4352,12 @@ export type Database = {
           is_corner_unit: boolean | null
           is_exclusive: boolean | null
           is_foreigner_quota: boolean | null
+          is_fully_fitted: boolean | null
           is_fully_furnished: boolean | null
           is_grade_a: boolean | null
           is_grade_b: boolean | null
           is_grade_c: boolean | null
+          is_green_building: boolean | null
           is_handicapped_friendly: boolean | null
           is_high_ceiling: boolean | null
           is_high_floor: boolean | null
@@ -4322,6 +4385,7 @@ export type Database = {
           near_transit: boolean | null
           nearby_places: Json | null
           nearby_transits: Json | null
+          office_capacity: number | null
           orientation: string | null
           original_price: number | null
           original_rental_price: number | null
@@ -4428,10 +4492,12 @@ export type Database = {
           facing_south: boolean | null
           facing_west: boolean | null
           floor: number | null
+          floor_plan_url: string | null
           google_maps_link: string | null
           has_247_access: boolean | null
           has_city_view: boolean | null
           has_fiber_optic: boolean | null
+          has_flexible_lease: boolean | null
           has_garden_view: boolean | null
           has_multi_parking: boolean | null
           has_pool_view: boolean | null
@@ -4450,10 +4516,12 @@ export type Database = {
           is_corner_unit: boolean | null
           is_exclusive: boolean | null
           is_foreigner_quota: boolean | null
+          is_fully_fitted: boolean | null
           is_fully_furnished: boolean | null
           is_grade_a: boolean | null
           is_grade_b: boolean | null
           is_grade_c: boolean | null
+          is_green_building: boolean | null
           is_handicapped_friendly: boolean | null
           is_high_ceiling: boolean | null
           is_high_floor: boolean | null
@@ -4481,6 +4549,7 @@ export type Database = {
           near_transit: boolean | null
           nearby_places: Json | null
           nearby_transits: Json | null
+          office_capacity: number | null
           orientation: string | null
           original_price: number | null
           original_rental_price: number | null

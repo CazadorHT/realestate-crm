@@ -44,7 +44,10 @@ export async function softDeleteProperty(id: string) {
     // 🛡️ SECURITY LOCK 2: Update with strict tenant isolation
     const { error } = await supabase
       .from("properties")
-      .update({ deleted_at: new Date().toISOString() })
+      .update({ 
+        deleted_at: new Date().toISOString(),
+        status: "ARCHIVED" as any 
+      })
       .eq("id", id)
       .eq("tenant_id", tenantId);
 

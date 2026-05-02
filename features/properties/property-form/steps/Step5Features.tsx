@@ -19,6 +19,10 @@ import {
   MoreHorizontal,
   Baby, // Kids
   ConciergeBell, // Services
+  Home,
+  Briefcase,
+  Building2,
+  Layout,
 } from "lucide-react";
 import { FeaturesManagementDialog } from "@/features/amenities/components/FeaturesManagementDialog";
 import { PropertyFormValues } from "../../schema";
@@ -33,6 +37,10 @@ type Feature = {
 };
 
 const CATEGORY_ICONS: Record<string, any> = {
+  "ที่พักอาศัย (Residential)": Home,
+  "สำนักงาน (Office)": Briefcase,
+  "ส่วนกลาง (Facilities)": Building2,
+  "ในยูนิต (Unit Features)": Layout,
   "ความปลอดภัย (Security)": Shield,
   "ความสะดวกสบาย (Comfort)": Armchair,
   "ครัว (Kitchen)": Utensils,
@@ -48,9 +56,13 @@ const CATEGORY_ICONS: Record<string, any> = {
 };
 
 const CATEGORY_MAPPING: Record<string, string> = {
+  RESIDENTIAL: "ที่พักอาศัย (Residential)",
+  OFFICE: "สำนักงาน (Office)",
+  FACILITY: "ส่วนกลาง (Facilities)",
+  UNIT: "ในยูนิต (Unit Features)",
   EXTERIOR: "ภายนอก (Exterior)",
-  INTERIOR: "ภายใน (Interior)",
-  FACILITIES: "ความสะดวกสบาย (Comfort)",
+  INTERIOR: "ในยูนิต (Unit Features)",
+  FACILITIES: "ส่วนกลาง (Facilities)",
   COMFORT: "ความสะดวกสบาย (Comfort)",
   GENERAL: "ทั่วไป (General)",
   SECURITY: "ความปลอดภัย (Security)",

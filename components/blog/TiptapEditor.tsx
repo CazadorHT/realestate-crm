@@ -64,14 +64,23 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
 
   // Sync editor content when value prop changes
   useEffect(() => {
-    if (editor && value) {
-      // Only update if the content is different to avoid cursor jumping / loops
-      // We check for HTML mismatch or if the editor is empty but value is not
-      const currentContent = editor.getHTML();
-      if (currentContent !== value && !editor.isDestroyed) {
-        // Use commands.setContent to update
-        editor.commands.setContent(value);
-      }
+    if (!editor || editor.isDestroyed) return;
+
+    // IMPORTANT: Only sync if the editor is NOT focused to avoid infinite loops 
+    // and cursor jumping while the user is typing.
+    if (editor.isFocused) return;
+
+    const currentContent = editor.getHTML();
+    if (currentContent !== value) {
+      // Use a small timeout or requestAnimationFrame to ensure the editor is ready
+      // and to break the synchronous update cycle
+      const timeoutId = setTimeout(() => {
+        if (!editor.isDestroyed && !editor.isFocused) {
+          // Pass emitUpdate: false to prevent the update event from triggering another onChange cycle
+          editor.commands.setContent(value || "", { emitUpdate: false }); 
+        }
+      }, 0);
+      return () => clearTimeout(timeoutId);
     }
   }, [editor, value]);
 

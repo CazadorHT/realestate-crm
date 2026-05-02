@@ -96,14 +96,14 @@ export function ServicesActionDialogs({
               การกระทำนี้ <span className="text-rose-600 font-bold">ไม่สามารถย้อนกลับได้</span> ข้อมูลและรูปภาพทั้งหมดจะถูกลบออกจากเซิร์ฟเวอร์ถาว
             </p>
             <div className="bg-rose-50 p-4 rounded-xl border border-rose-100">
-              <p className="text-xs text-rose-700 font-medium mb-2">
-                พิมพ์ชื่อบริการด้านล่างเพื่อยืนยัน:
+              <p className="text-xs text-rose-700 font-bold mb-2">
+                พิมพ์ <span className="underline italic">DELETE</span> เพื่อยืนยัน:
               </p>
               <Input
                 value={confirmName}
                 onChange={(e) => setConfirmName(e.target.value)}
-                placeholder="ชื่อบริการ..."
-                className="h-10 border-rose-200 focus:border-rose-400 focus:ring-rose-400"
+                placeholder="พิมพ์ตัวใหญ่ทั้งหมด..."
+                className="h-10 border-rose-200 focus:border-rose-400 focus:ring-rose-400 font-mono"
               />
             </div>
           </div>
@@ -119,7 +119,7 @@ export function ServicesActionDialogs({
               ยกเลิก
             </Button>
             <Button
-              disabled={isDeleting || confirmName === ""}
+              disabled={isDeleting || confirmName !== "DELETE"}
               onClick={(e: React.MouseEvent) => {
                 e.preventDefault();
                 onPermanentDelete();
@@ -127,7 +127,10 @@ export function ServicesActionDialogs({
               className="flex-1 rounded-xl h-11 px-8 font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-200 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
             >
               {isDeleting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>กำลังลบถาวร...</span>
+                </div>
               ) : (
                 "ลบทิ้งถาวร"
               )}
@@ -188,7 +191,10 @@ export function ServicesActionDialogs({
               className="flex-1 rounded-xl h-11 px-8 font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-200 transition-all active:scale-95 disabled:opacity-50 disabled:grayscale"
             >
               {isDeleting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>กำลังล้างถังขยะ...</span>
+                </div>
               ) : (
                 "ยืนยันล้างถังขยะ"
               )}

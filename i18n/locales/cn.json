@@ -502,6 +502,7 @@
   "search": {
     "title": "房产搜索",
     "filter_title": "搜索过滤器",
+    "active_filters": "已选条件",
     "keyword_placeholder": "搜索房产...",
     "province": "省份",
     "all_provinces": "所有省份",
@@ -520,6 +521,14 @@
     "foreigner": "外籍配额",
     "company_registered": "公司注册注册",
     "hot_deal": "特惠/特价房",
+    "near_train": "靠近地铁",
+    "select_station": "选择站点",
+    "all_stations": "所有站点",
+    "clear": "清除",
+    "clear_all": "清除全部",
+    "more": "更多",
+    "all": "全部",
+    "no_stations_type": "未找到此类型的站点",
     "location": "地点",
     "all_locations": "所有区域",
     "popular_locations": "热门区域",
@@ -529,7 +538,6 @@
       "lat_phrao": "叻抛 (Lat Phrao)",
       "rama_9": "拉玛 9 (Rama 9)"
     },
-    "near_train": "靠近 BTS/MRT",
     "pet_allowed": "允许宠物",
     "fully_furnished": "全家具",
     "view_results": "查看结果",
@@ -856,6 +864,14 @@
     "commercial_building": "商业建筑"
   },
   "property": {
+    "amenity_groups": {
+      "residential": "住宅设施",
+      "office": "办公与商务",
+      "facility": "大楼设施",
+      "unit": "室内设施",
+      "others": "其他特点"
+    },
+    "floor_plan": "建筑平面图 / 布局",
     "status": {
       "active": "已上线",
       "draft": "草稿",
@@ -939,7 +955,9 @@
       "floor": "楼层",
       "unit_room": "间",
       "unit_car": "个位",
-      "unit_floor": "层"
+      "unit_floor": "层",
+      "capacity": "容纳人数",
+      "unit_desk": "人/工位"
     },
     "special_features": "特色功能",
     "special_features_description": "此物业的特色功能，共",
@@ -1006,6 +1024,11 @@
       "fiber_optic": "光纤网络",
       "multi_parking": "多车位",
       "hot_deal": "特价房 (Hot Deal)",
+    "near_train": "靠近地铁",
+    "select_station": "选择站点",
+    "all_stations": "所有站点",
+    "clear": "清除",
+    "more": "更多",
       "verified": "已认证",
       "cbd": "CBD 核心地段",
       "new_listing": "全新/未入住",
@@ -1014,6 +1037,9 @@
       "accessible": "无障碍设施",
       "investment_ready": "投资首选",
       "good_location": "地段优越，交通便利",
+      "green_building": "绿色建筑",
+      "flexible_lease": "灵活租期",
+      "fully_fitted": "精装修",
       "ready_to_move": "即可入住",
       "family_friendly": "适合家庭"
     },

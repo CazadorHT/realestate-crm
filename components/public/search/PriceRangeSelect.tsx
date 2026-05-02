@@ -54,7 +54,7 @@ export function PriceRangeSelect({
         }
       }}
     >
-      <SelectTrigger className={cn("h-12! rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all", className)}>
+      <SelectTrigger className={cn("h-10! rounded-xl border-slate-200 bg-white shadow-sm hover:shadow-md transition-all text-xs", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent align={align}>

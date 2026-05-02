@@ -37,6 +37,8 @@ import {
   Navigation,
   Accessibility,
   ArrowUpCircle,
+  CalendarRange,
+  Layout,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
@@ -46,10 +48,58 @@ import { cn } from "@/lib/utils";
 
 import { type Language } from "@/lib/i18n";
 
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+interface BadgeProperty {
+  is_hot_deal?: boolean | null;
+  verified?: boolean | null;
+  is_exclusive?: boolean | null;
+  is_cbd?: boolean | null;
+  near_transit?: boolean | null;
+  meta_keywords?: string[] | string | null;
+  is_bare_shell?: boolean | null;
+  is_never_lived_in?: boolean | null;
+  is_smart_home?: boolean | null;
+  is_high_ceiling?: boolean | null;
+  has_private_elevator?: boolean | null;
+  is_high_floor?: boolean | null;
+  is_pet_friendly?: boolean | null;
+  is_handicapped_friendly?: boolean | null;
+  bedrooms?: number | null;
+  is_foreigner_quota?: boolean | null;
+  is_renovated?: boolean | null;
+  is_corner_unit?: boolean | null;
+  is_fully_furnished?: boolean | null;
+  has_private_pool?: boolean | null;
+  is_selling_with_tenant?: boolean | null;
+  has_river_view?: boolean | null;
+  has_city_view?: boolean | null;
+  has_garden_view?: boolean | null;
+  has_unblocked_view?: boolean | null;
+  allow_smoking?: boolean | null;
+  is_column_free?: boolean | null;
+  is_grade_a?: boolean | null;
+  is_grade_b?: boolean | null;
+  is_grade_c?: boolean | null;
+  is_tax_registered?: boolean | null;
+  has_pool_view?: boolean | null;
+  facing_east?: boolean | null;
+  facing_north?: boolean | null;
+  facing_south?: boolean | null;
+  facing_west?: boolean | null;
+  has_raised_floor?: boolean | null;
+  is_central_air?: boolean | null;
+  is_split_air?: boolean | null;
+  has_247_access?: boolean | null;
+  has_fiber_optic?: boolean | null;
+  has_multi_parking?: boolean | null;
+  is_green_building?: boolean | null;
+  has_flexible_lease?: boolean | null;
+  is_fully_fitted?: boolean | null;
+  listing_type?: string | null;
+  created_at?: string | null;
+}
 
 interface PropertyBadgesSectionProps {
-  property: PropertyRow;
+  property: BadgeProperty;
   language?: Language;
 }
 
@@ -140,7 +190,7 @@ export function PropertyBadgesSection({
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return "";
     const date = new Date(dateString);
     const d = String(date.getDate()).padStart(2, "0");
@@ -410,6 +460,24 @@ export function PropertyBadgesSection({
       label: t("property.badges.multi_parking"),
       icon: CheckCircle2,
       color: "bg-blue-50 text-blue-700",
+    },
+    {
+      condition: property.is_green_building,
+      label: t("property.badges.green_building"),
+      icon: Leaf,
+      color: "bg-green-50 text-green-700 border border-green-100",
+    },
+    {
+      condition: property.has_flexible_lease,
+      label: t("property.badges.flexible_lease"),
+      icon: CalendarRange,
+      color: "bg-orange-50 text-orange-700 border border-orange-100",
+    },
+    {
+      condition: property.is_fully_fitted,
+      label: t("property.badges.fully_fitted"),
+      icon: Layout,
+      color: "bg-sky-50 text-sky-700 border border-sky-100",
     },
   ];
 

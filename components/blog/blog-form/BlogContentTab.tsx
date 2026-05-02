@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Type, Sparkles, Loader2, Languages, Link2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TiptapEditor = dynamic(() => import("../TiptapEditor").then(mod => mod.TiptapEditor), {
   ssr: false,
@@ -85,7 +86,7 @@ export function BlogContentTab({
           )}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
           <FormField
             control={form.control}
             name="title_en"
@@ -187,41 +188,61 @@ export function BlogContentTab({
         />
       </div>
 
-      {/* Content Editor */}
+      {/* Content Editor with Tabs */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
-        <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
-          <div className="p-2 bg-purple-100 rounded-lg">
-            <Type className="h-5 w-5 text-purple-600" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-slate-900">เนื้อหาบทความ</h3>
-            <p className="text-sm text-slate-500">เขียนเนื้อหาด้วย Rich Text Editor</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-purple-100 rounded-lg">
+              <Type className="h-5 w-5 text-purple-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-slate-900">เนื้อหาบทความ</h3>
+              <p className="text-sm text-slate-500">เขียนเนื้อหาด้วย Rich Text Editor แยกตามภาษา</p>
+            </div>
           </div>
         </div>
 
-        <FormField
-          control={form.control}
-          name="content"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <ErrorBoundary>
-                  <TiptapEditor
-                    value={field.value || ""}
-                    onChange={field.onChange}
-                  />
-                </ErrorBoundary>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <Tabs defaultValue="th" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6 bg-slate-50 p-1 h-auto rounded-xl border border-slate-100">
+            <TabsTrigger value="th" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <span className="text-lg">🇹🇭</span>
+              <span className="text-xs md:text-sm font-medium">ภาษาไทย</span>
+            </TabsTrigger>
+            <TabsTrigger value="en" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <span className="text-lg">🇬🇧</span>
+              <span className="text-xs md:text-sm font-medium">English</span>
+            </TabsTrigger>
+            <TabsTrigger value="cn" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <span className="text-lg">🇨🇳</span>
+              <span className="text-xs md:text-sm font-medium">Chinese</span>
+            </TabsTrigger>
+            <TabsTrigger value="ru" className="rounded-lg py-2.5 gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+              <span className="text-lg">🇷🇺</span>
+              <span className="text-xs md:text-sm font-medium">Russian</span>
+            </TabsTrigger>
+          </TabsList>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-          <div className="space-y-4">
-            <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <Languages className="w-4 h-4" /> Content (English)
-            </FormLabel>
+          <TabsContent value="th" className="mt-0 focus-visible:outline-none">
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <ErrorBoundary>
+                      <TiptapEditor
+                        value={field.value || ""}
+                        onChange={field.onChange}
+                      />
+                    </ErrorBoundary>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TabsContent>
+
+          <TabsContent value="en" className="mt-0 focus-visible:outline-none">
             <FormField
               control={form.control}
               name="content_en"
@@ -237,11 +258,9 @@ export function BlogContentTab({
                 </FormItem>
               )}
             />
-          </div>
-          <div className="space-y-4">
-            <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <Languages className="w-4 h-4" /> 文章内容 (Chinese)
-            </FormLabel>
+          </TabsContent>
+
+          <TabsContent value="cn" className="mt-0 focus-visible:outline-none">
             <FormField
               control={form.control}
               name="content_cn"
@@ -257,11 +276,9 @@ export function BlogContentTab({
                 </FormItem>
               )}
             />
-          </div>
-          <div className="space-y-4">
-            <FormLabel className="font-medium text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-              <Languages className="w-4 h-4" /> Содержание (Russian)
-            </FormLabel>
+          </TabsContent>
+
+          <TabsContent value="ru" className="mt-0 focus-visible:outline-none">
             <FormField
               control={form.control}
               name="content_ru"
@@ -277,8 +294,8 @@ export function BlogContentTab({
                 </FormItem>
               )}
             />
-          </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );

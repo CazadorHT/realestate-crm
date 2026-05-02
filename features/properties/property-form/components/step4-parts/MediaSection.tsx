@@ -6,7 +6,7 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Image } from "lucide-react";
+import { Image, Layout } from "lucide-react";
 import {
   IMAGE_UPLOAD_POLICY,
   PropertyImageUploader,
@@ -17,7 +17,11 @@ import { PropertyFormValues } from "../../../schema";
 interface MediaSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
   uploadSessionId: string;
-  initialImages: any[];
+  initialImages: {
+    image_url: string;
+    storage_path: string;
+    is_cover?: boolean;
+  }[];
 }
 
 export const MediaSection = ({
@@ -66,6 +70,49 @@ export const MediaSection = ({
           </FormItem>
         )}
       />
+
+      <div className="mt-8 border-t border-slate-100 pt-6">
+        <div className="flex items-center gap-2 mb-4">
+          <div className="p-1.5 bg-emerald-50 rounded-lg text-emerald-600">
+            <Layout className="w-4 h-4" />
+          </div>
+          <h4 className="text-sm font-semibold text-slate-800">
+            ผังอาคาร / ห้อง (Floor Plan)
+          </h4>
+        </div>
+
+        <FormField
+          control={form.control}
+          name="floor_plan_url"
+          render={({ field }) => (
+            <FormItem className="bg-slate-50/50 p-4 rounded-xl border-2 border-dashed border-slate-200">
+              <FormControl>
+                <PropertyImageUploader
+                  sessionId={`${uploadSessionId}-floorplan`}
+                  value={field.value ? [field.value] : []}
+                  onChange={(imgs) => {
+                    field.onChange(imgs.length > 0 ? imgs[0] : null);
+                  }}
+                  initialImages={
+                    field.value
+                      ? [
+                          {
+                            image_url: field.value,
+                            storage_path: field.value,
+                          },
+                        ]
+                      : []
+                  }
+                  maxFiles={5}
+                  maxFileSizeMB={IMAGE_UPLOAD_POLICY.maxBytes / (1024 * 1024)}
+                  cleanupOnUnmount={false}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      </div>
     </section>
   );
 };
