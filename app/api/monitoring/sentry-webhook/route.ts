@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, after } from "next/server";
 import { sendAdminNotification } from "@/lib/telegram";
 import { logger } from "@/lib/logger";
+import { siteConfig } from "@/lib/site-config";
 
 /**
  * 🛡️ Super Sentry Webhook (Phase 3: Bulletproof & Zero Latency)
@@ -85,7 +86,7 @@ ${envIcon} <b>Env:</b> <code>${environment.toUpperCase()}</code>
 
 🔗 <a href="${url}">View Details on Sentry</a>
 ━━━━━━━━━━━━━━━━━━
-<i>Sent via VC Connect Command Center</i>
+<i>Sent via ${siteConfig.name} Command Center</i>
     `.trim();
 
     // 5. Zero Latency Dispatch: Use after() to ensure delivery in Serverless environments

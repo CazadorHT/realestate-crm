@@ -2,8 +2,8 @@ import { Globe, ChevronDown, ThumbsUp, MessageCircle, Share2 } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MOCK_PROPERTY_DATA } from "./constants";
-
 import { type Language } from "@/lib/i18n";
+import { siteConfig } from "@/lib/site-config";
 
 export function FacebookPostPreview({
   template,
@@ -33,17 +33,26 @@ export function FacebookPostPreview({
     ));
   };
 
+  const initials = siteConfig.name
+    ? siteConfig.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "VC";
+
   return (
     <div className="bg-white border rounded-2xl border-slate-200 shadow-sm overflow-hidden max-w-md mx-auto sticky top-24 italic">
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold">
-            VC
+            {initials}
           </div>
           <div>
             <div className="font-semibold text-[15px] flex items-center gap-1">
-              VC Connect Asset
+              {siteConfig.name}
               <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
                 <Badge className="h-2 w-2 p-0 border-0 bg-white" />
               </div>

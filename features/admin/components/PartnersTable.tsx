@@ -512,7 +512,7 @@ function SortablePartnerRow({
 }: SortableRowProps) {
   const [imgError, setImgError] = useState(false);
   const isSafe = isAllowedHost(partner.logo_url);
-  const finalSrc = (!imgError && isSafe) ? partner.logo_url : "/images/v-link-svg-png-logo.svg";
+  const finalSrc = (!imgError && isSafe) ? partner.logo_url : siteConfig.logo;
   const {
     attributes,
     listeners,
@@ -639,10 +639,12 @@ function SortablePartnerRow({
   );
 }
 
+import { siteConfig } from "@/lib/site-config";
+
 function MobilePartnerLogo({ url, name }: { url: string; name: string }) {
   const [imgError, setImgError] = useState(false);
   const isSafe = isAllowedHost(url);
-  const finalSrc = (!imgError && isSafe) ? url : "/images/v-link-svg-png-logo.svg";
+  const finalSrc = (!imgError && isSafe) ? url : siteConfig.logo;
 
   return (
     <Image

@@ -6,8 +6,11 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { format } from "date-fns";
 import { th, enUS, zhCN, ru } from "date-fns/locale";
 
+import { siteConfig } from "@/lib/site-config";
+
 export default function PrivacyPolicyPageClient() {
   const { t, language } = useLanguage();
+  const company_name = siteConfig.company;
   const lastUpdated = format(new Date(), "PPP", {
     locale: language === "th" ? th : language === "cn" ? zhCN : language === "ru" ? ru : enUS,
   });
@@ -59,7 +62,7 @@ export default function PrivacyPolicyPageClient() {
                 </span>
                 {t("privacy.section1_title")}
               </h2>
-              <p>{t("privacy.section1_p1")}</p>
+              <p>{t("privacy.section1_p1", { company_name })}</p>
             </section>
 
             <section className="mb-10 last:mb-0">
@@ -121,7 +124,7 @@ export default function PrivacyPolicyPageClient() {
               <ul>
                 <li>{t("privacy.section3_l1")}</li>
                 <li>{t("privacy.section3_l2")}</li>
-                <li>{t("privacy.section3_l3")}</li>
+                <li>{t("privacy.section3_l3", { company_name })}</li>
                 <li>{t("privacy.section3_l4")}</li>
               </ul>
             </section>
@@ -169,14 +172,14 @@ export default function PrivacyPolicyPageClient() {
                 </span>
                 {t("privacy.section6_title")}
               </h2>
-              <p>{t("privacy.section6_p1")}</p>
+              <p>{t("privacy.section6_p1", { company_name })}</p>
               <div className="mt-4 p-5 bg-slate-50 rounded-xl border border-slate-200 not-prose flex flex-col sm:flex-row gap-4 sm:items-center justify-between">
                 <div>
                   <h4 className="font-semibold text-slate-900">
-                    {t("privacy.customer_service")}
+                    {t("privacy.customer_service", { company_name })}
                   </h4>
                   <p className="text-slate-500 text-sm">
-                    {t("privacy.customer_service_desc")}
+                    {t("privacy.customer_service_desc", { company_name })}
                   </p>
                 </div>
                 <a

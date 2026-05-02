@@ -14,6 +14,8 @@ interface FacebookPreviewProps {
   lang: string;
 }
 
+import { siteConfig } from "@/lib/site-config";
+
 export function FacebookPreview({
   content,
   images,
@@ -25,17 +27,27 @@ export function FacebookPreview({
   const isTooLong = content?.length > maxLength;
   const displayContent = isTooLong && !isExpanded ? content.slice(0, maxLength).trim() + "..." : content;
 
+  // Extract initials from site name
+  const initials = siteConfig.name
+    ? siteConfig.name
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "VC";
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden w-full transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 max-w-[300px] xs:max-w-[340px] sm:max-w-[380px] mx-auto">
       {/* Header */}
       <div className="p-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-[10px] shadow-inner shrink-0">
-            VC
+            {initials}
           </div>
           <div>
             <div className="font-bold text-[14px] flex items-center gap-1.5 text-slate-900 leading-none">
-              VC Connect Asset
+              {siteConfig.name}
               {previewData?.verified && (
                 <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center -mt-0.5 border border-white shadow-xs">
                   <div className="text-[7px] text-white font-bold">✓</div>

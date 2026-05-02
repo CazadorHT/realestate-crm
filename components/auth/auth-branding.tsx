@@ -47,7 +47,7 @@ export function AuthBranding({ isLogin }: AuthBrandingProps) {
             isLogin ? "text-white/70" : "text-white/30",
           )}
         >
-          © {new Date().getFullYear()} VC Connect Asset Co., Ltd. All rights reserved.
+          © {new Date().getFullYear()} {siteConfig.company}. All rights reserved.
         </p>
       </div>
 

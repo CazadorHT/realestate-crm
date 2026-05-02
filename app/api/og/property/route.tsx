@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
-
+import { siteConfig } from "@/lib/site-config";
 
 export const runtime = "edge";
 
@@ -13,50 +13,68 @@ export async function GET(req: NextRequest) {
 
     // Get parameters from URL
     const id = searchParams.get("id");
+    const overrideImg = searchParams.get("img");
     const title = searchParams.get("title") || "Real Estate Property";
+
     const rawPrice = searchParams.get("price") || "";
     const type = searchParams.get("type") || "Property";
     const location = searchParams.get("location") || "";
 
     // 1. Fetch Property Image (Minimal Inline Client)
-    let imageUrl = null;
-    if (id) {
-      const { createClient } = await import("@supabase/supabase-js");
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-        { auth: { persistSession: false } }
-      );
+    let imageUrl = overrideImg;
+    if (!imageUrl && id && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const { createClient } = await import("@supabase/supabase-js");
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL,
+          process.env.SUPABASE_SERVICE_ROLE_KEY,
+          { auth: { persistSession: false } }
+        );
 
-      const { data: images } = await supabase
-        .from("property_images")
-        .select("image_url, storage_path")
-        .eq("property_id", id)
-        .order("is_cover", { ascending: false })
-        .limit(1);
+        const { data: images } = await supabase
+          .from("property_images")
+          .select("image_url, storage_path")
+          .eq("property_id", id)
+          .order("is_cover", { ascending: false })
+          .limit(1);
 
-      if (images?.[0]) {
-        imageUrl = images[0].image_url;
-        if (imageUrl && !imageUrl.startsWith("http") && images[0].storage_path) {
-          imageUrl = supabase.storage
-            .from("property-images")
-            .getPublicUrl(images[0].storage_path, {
-              transform: { width: 1200, height: 630, quality: 80 }
-            }).data.publicUrl;
+        if (images?.[0]) {
+          imageUrl = images[0].image_url;
+          if (imageUrl && !imageUrl.startsWith("http") && images[0].storage_path) {
+            imageUrl = supabase.storage
+              .from("property-images")
+              .getPublicUrl(images[0].storage_path, {
+                transform: { width: 1200, height: 630, quality: 80 }
+              }).data.publicUrl;
+          }
         }
+      } catch (dbError) {
+        console.error("OG DB Fetch Error:", dbError);
+        // Continue without image
       }
     }
+
 
     // 2. Format Price
     const displayPrice = rawPrice && !rawPrice.includes("฿") ? `฿ ${rawPrice}` : rawPrice;
 
-    // 3. Ultra-light Font Loading (CDN Only)
+    // 3. Ultra-light Font Loading (Multiple Sources for Reliability)
     if (!cachedFont) {
-      try {
-        const fontRes = await fetch("https://fonts.gstatic.com/s/kanit/v15/n0felmS_IDxbg6sRRC631X8.ttf");
-        if (fontRes.ok) cachedFont = await fontRes.arrayBuffer();
-      } catch (e) {
-        console.error("Font error:", e);
+      const fontUrls = [
+        "https://github.com/google/fonts/raw/main/ofl/kanit/Kanit-Bold.ttf",
+        "https://fonts.gstatic.com/s/kanit/v15/n0felmS_IDxbg6sRRC631X8.ttf"
+      ];
+      
+      for (const url of fontUrls) {
+        try {
+          const fontRes = await fetch(url);
+          if (fontRes.ok) {
+            cachedFont = await fontRes.arrayBuffer();
+            break;
+          }
+        } catch (e) {
+          console.error(`Font fetch failed for ${url}:`, e);
+        }
       }
     }
 
@@ -132,7 +150,6 @@ export async function GET(req: NextRequest) {
               padding: "80px",
               width: "100%",
               color: "white",
-              zIndex: 10,
             }}
           >
             {/* Badge Row */}
@@ -219,12 +236,6 @@ export async function GET(req: NextRequest) {
               )}
 
               {/* Branding */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                }}
-              >
                 <div
                   style={{
                     fontSize: "36px",
@@ -232,19 +243,9 @@ export async function GET(req: NextRequest) {
                     color: "white",
                   }}
                 >
-                  VC Connect
+                  {siteConfig.name}
                 </div>
-                <div
-                  style={{
-                    fontSize: "36px",
-                    fontWeight: "lighter",
-                    color: "rgba(255,255,255,0.6)",
-                    marginLeft: "8px",
-                  }}
-                >
-                  Asset
-                </div>
-              </div>
+
             </div>
           </div>
         </div>

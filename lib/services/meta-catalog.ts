@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { Database } from "../database.types";
+import { siteConfig } from "@/lib/site-config";
 
 /**
  * Generates an XML feed for Meta Real Estate Catalog
@@ -35,7 +36,7 @@ export async function generateMetaCatalogFeed() {
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<listings>\n`;
-  xml += `  <title>VC Connect Asset Catalog</title>\n`;
+  xml += `  <title>${siteConfig.name} Catalog</title>\n`;
   xml += `  <link>${process.env.NEXT_PUBLIC_APP_URL || "https://your-crm.com"}</link>\n`;
 
   for (const p_raw of (properties || [])) {

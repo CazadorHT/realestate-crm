@@ -1,7 +1,9 @@
 "use client";
 
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { AppBreadcrumbs } from "@/components/common/AppBreadcrumbs";
 import { m } from "framer-motion";
+
 import {
   ShieldCheck,
   Target,
@@ -99,67 +101,84 @@ export default function AboutPageClient() {
 
   return (
     <main className="overflow-hidden bg-white min-h-screen">
-      {/* ── Hero Section ── */}
-      <section className="relative pt-24 pb-20 lg:pt-32 lg:pb-32 px-4 overflow-hidden border-b border-slate-50">
-        <div className="absolute top-0 inset-x-0 h-full -z-10 overflow-hidden">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[120%] bg-linear-to-b from-blue-50/50 via-white to-white blur-3xl rounded-full" />
+      {/* ── Hero Section (Dark Theme) ── */}
+      <section className="relative pt-24 pb-20 lg:pt-32 lg:pb-32 px-4 overflow-hidden bg-slate-950 text-white">
+        {/* Background Effects */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-linear-to-b from-slate-950/95 via-slate-950/40 to-slate-950" />
+          <div className="absolute inset-0 bg-linear-to-r from-blue-900/30 via-transparent to-purple-900/30" />
         </div>
 
-        <m.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="max-w-4xl mx-auto text-center space-y-8"
-        >
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="container mx-auto">
+            <AppBreadcrumbs
+              variant="on-dark"
+              items={[
+                { label: t("nav.home"), href: "/" },
+                { label: t("about.title"), href: "/about" },
+              ]}
+              className="text-slate-400 mb-8 lg:mb-12"
+            />
+          </div>
+
           <m.div
-            variants={itemVariants}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-100/50 text-blue-700 text-xs font-bold uppercase tracking-widest"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="max-w-4xl mx-auto text-center space-y-8"
           >
-            {siteConfig.name}
+            <m.div
+              variants={itemVariants}
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-blue-300 text-[10px] lg:text-xs font-bold uppercase tracking-widest shadow-2xl"
+            >
+              <Award className="w-3.5 h-3.5" />
+              {siteConfig.name}
+            </m.div>
+
+            <m.h1
+              variants={itemVariants}
+              className="text-4xl lg:text-7xl font-bold tracking-tight leading-[1.05]"
+            >
+              {t("about.title")}
+              <br />
+              <span className="bg-linear-to-r from-blue-400 via-indigo-400 to-blue-400 bg-clip-text text-transparent">
+                {t("about.hero_subtitle")}
+              </span>
+            </m.h1>
+
+            <m.p
+              variants={itemVariants}
+              className="text-lg lg:text-xl text-blue-100/80 max-w-2xl mx-auto leading-relaxed font-medium"
+            >
+              {t("about.description")}
+            </m.p>
+
+            {/* Stats Board (Adjusted for Dark) */}
+            <m.div
+              variants={itemVariants}
+              className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-12 max-w-3xl mx-auto"
+            >
+              {stats.map((stat, idx) => (
+                <div
+                  key={idx}
+                  className="bg-white/5 backdrop-blur-sm border border-white/10 p-6 rounded-3xl shadow-2xl flex flex-col items-center gap-2 hover:bg-white/10 transition-colors group"
+                >
+                  <div className="text-blue-400 p-2 bg-blue-500/10 rounded-xl mb-1 group-hover:scale-110 transition-transform">
+                    {stat.icon}
+                  </div>
+                  <div className="text-3xl font-bold text-white">
+                    {stat.value}
+                  </div>
+                  <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    {stat.label}
+                  </div>
+                </div>
+              ))}
+            </m.div>
           </m.div>
-
-          <m.h1
-            variants={itemVariants}
-            className="text-4xl lg:text-7xl font-bold text-slate-900 tracking-tight leading-[1.05]"
-          >
-            {t("about.title")}
-            <br />
-            <span className="bg-linear-to-r from-blue-600 via-indigo-600 to-blue-600 bg-clip-text text-transparent">
-              {t("about.hero_subtitle")}
-            </span>
-          </m.h1>
-
-          <m.p
-            variants={itemVariants}
-            className="text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-medium"
-          >
-            {t("about.description")}
-          </m.p>
-
-          {/* New Stats Board */}
-          <m.div
-            variants={itemVariants}
-            className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-12 max-w-3xl mx-auto"
-          >
-            {stats.map((stat, idx) => (
-              <div
-                key={idx}
-                className="bg-white border border-slate-100 p-6 rounded-3xl shadow-xs flex flex-col items-center gap-2"
-              >
-                <div className="text-blue-600 p-2 bg-blue-50 rounded-xl mb-1">
-                  {stat.icon}
-                </div>
-                <div className="text-3xl font-bold text-slate-900">
-                  {stat.value}
-                </div>
-                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </m.div>
-        </m.div>
+        </div>
       </section>
+
 
       {/* ── Values Grid ── */}
       <section className="py-24 px-4 bg-slate-50/50">

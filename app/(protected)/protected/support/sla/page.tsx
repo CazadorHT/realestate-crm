@@ -16,8 +16,10 @@ import {
 } from "@/components/ui/card";
 import { getServerTranslations } from "@/lib/i18n";
 
+import { siteConfig } from "@/lib/site-config";
+
 export const metadata: Metadata = {
-  title: "SLA Agreement | Service Level Agreement",
+  title: `SLA Agreement | ${siteConfig.name}`,
   description: "รายละเอียดข้อตกลงระดับการให้บริการ (SLA) และการันตีคุณภาพระบบ",
 };
 
@@ -26,6 +28,7 @@ export default async function SLAPage() {
 
   return (
     <div className="flex flex-col gap-6 p-4 pb-20 max-w-5xl mx-auto">
+
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">
           {t("support.sla.title")}
@@ -134,7 +137,7 @@ export default async function SLAPage() {
           <div className="space-y-2">
             <h4 className="font-semibold text-slate-900">ขอบเขต (Scope)</h4>
             <p className="text-sm text-slate-500">
-              ครอบคลุมระบบ CRM, API และฐานข้อมูลทั้งหมดของ VC Connect Asset
+              ครอบคลุมระบบ CRM, API และฐานข้อมูลทั้งหมดของ {siteConfig.name}
             </p>
           </div>
           <div className="space-y-2">

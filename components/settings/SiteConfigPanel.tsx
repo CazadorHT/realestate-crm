@@ -58,6 +58,7 @@ import { cn } from "@/lib/utils";
 import { FaLine } from "react-icons/fa";
 import { Eye, EyeOff } from "lucide-react";
 import { FaFacebook } from "react-icons/fa6";
+import { siteConfig } from "@/lib/site-config";
 
 type BrandingSettings = z.infer<typeof siteSettingsSchema>;
 
@@ -263,7 +264,7 @@ export function SiteConfigPanel() {
                       <FormLabel>ชื่อเว็บไซต์ (Site Name)</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="เช่น VC Connect Asset"
+                          placeholder={`เช่น ${siteConfig.name}`}
                           className="rounded-xl"
                           {...field}
                         />
@@ -280,11 +281,12 @@ export function SiteConfigPanel() {
                       <FormLabel>ชื่อบริษัท (Company Name)</FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="เช่น VC Connect Asset Co., Ltd."
+                          placeholder={`เช่น ${siteConfig.company}`}
                           className="rounded-xl"
                           {...field}
                         />
                       </FormControl>
+
                       <FormMessage />
                     </FormItem>
                   )}

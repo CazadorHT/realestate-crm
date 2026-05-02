@@ -188,7 +188,7 @@ function PartnerLogo({
   // Immediate fallback if host is not in our known list
   const finalSrc = (!error && isAllowedHost(partner.logo_url)) 
     ? partner.logo_url 
-    : "/images/v-link-svg-png-logo.svg";
+    : siteConfig.logo;
 
   return (
     <Image

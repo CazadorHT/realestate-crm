@@ -7,8 +7,11 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { format } from "date-fns";
 import { th, enUS, zhCN, ru } from "date-fns/locale";
 
+import { siteConfig } from "@/lib/site-config";
+
 export default function TermsPageClient() {
   const { t, language } = useLanguage();
+  const company_name = siteConfig.company;
   const lastUpdated = format(new Date(), "PPP", {
     locale: language === "th" ? th : language === "cn" ? zhCN : language === "ru" ? ru : enUS,
   });
@@ -115,7 +118,7 @@ export default function TermsPageClient() {
 
             <section className="mb-10 last:mb-0">
               <h2 className="text-2xl mb-4">{t("terms.section5_title")}</h2>
-              <p>{t("terms.section5_p1")}</p>
+              <p>{t("terms.section5_p1", { company_name })}</p>
             </section>
 
             <section className="mb-10 last:mb-0">
