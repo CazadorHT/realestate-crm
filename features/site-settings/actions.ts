@@ -12,6 +12,7 @@ import {
   siteSettingsSchema,
   SENSITIVE_KEYS,
 } from "./schema";
+import { Json } from "@/lib/database.types";
 import { siteConfig } from "@/lib/site-config";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { encrypt, decrypt, isEncrypted } from "@/lib/crypto";
@@ -266,15 +267,13 @@ export async function updateSiteSetting(
       }
     }
 
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData?.user?.id;
-
+    const userId = ctx.user.id;
     const encryptedValue = await encryptValue(key, value);
 
     const { error } = await supabase.from("site_settings").upsert(
       {
         key,
-        value: encryptedValue as string | number | boolean | null,
+        value: (encryptedValue ?? "") as Json,
         updated_at: new Date().toISOString(),
         updated_by: userId,
       },
@@ -369,13 +368,12 @@ export async function updateSiteSettings(
       };
     }
 
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData?.user?.id;
+    const userId = ctx.user.id;
 
     const updates = await Promise.all(
       Object.entries(settings).map(async ([key, value]) => ({
         key,
-        value: (await encryptValue(key, value)) as string | number | boolean | null,
+        value: ((await encryptValue(key, value)) ?? "") as Json,
         updated_at: new Date().toISOString(),
         updated_by: userId,
       }))

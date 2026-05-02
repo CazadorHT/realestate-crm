@@ -221,9 +221,9 @@ export function PublicNav() {
                   <Image
                     src={settings.logo_light || siteConfig.logo}
                     alt={`${siteName} Logo`}
-                    width={220}
-                    height={70}
-                    className="h-16 w-auto"
+                    width={280}
+                    height={80}
+                    className="h-16 w-auto -mx-2 mt-1"
                     priority
                   />
                 </Link>

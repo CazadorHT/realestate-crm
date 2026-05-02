@@ -28,13 +28,14 @@ export async function uploadSiteAsset(
       "image/jpeg",
       "image/png",
       "image/webp",
+      "image/svg+xml",
       "image/x-icon",
       "image/vnd.microsoft.icon",
     ];
-    if (!validTypes.includes(file.type) && !file.name.endsWith(".ico")) {
+    if (!validTypes.includes(file.type) && !file.name.endsWith(".ico") && !file.name.endsWith(".svg")) {
       return {
         success: false,
-        message: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WebP, ICO)",
+        message: "รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WebP, SVG, ICO)",
       };
     }
   }

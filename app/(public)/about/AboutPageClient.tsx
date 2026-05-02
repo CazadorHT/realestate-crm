@@ -20,9 +20,11 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { siteConfig } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
 export default function AboutPageClient() {
   const { t } = useLanguage();
+  const settings = useSiteConfig();
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -252,7 +254,7 @@ export default function AboutPageClient() {
                 <div className="text-center space-y-4">
                   <div className="relative w-70 h-70 mx-auto">
                     <Image
-                      src={siteConfig.logoDark}
+                      src={settings.brand_card || siteConfig.brandCard}
                       alt={siteConfig.name}
                       fill
                       className="object-contain   group-hover:opacity-100 transition-opacity"

@@ -90,6 +90,7 @@ export function SiteConfigPanel() {
       google_tag_manager_enabled: true,
       hot_lead_threshold: 80,
       executive_summary_enabled: true,
+      brand_card: "",
     },
   });
 
@@ -523,6 +524,27 @@ export function SiteConfigPanel() {
                     </FormItem>
                   )}
                 />
+                <FormField
+                  control={form.control}
+                  name="brand_card"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <SiteAssetUploader
+                          label="Social Sharing Card (สำหรับแชร์ลงโซเชียล)"
+                          value={field.value}
+                          onChange={field.onChange}
+                          disabled={isPending}
+                          folder="branding"
+                        />
+                      </FormControl>
+                      <p className="text-[10px] text-slate-400">
+                        แนะนำขนาด 1200x630 (1.91:1) หรือรูปภาพสี่เหลี่ยมจัตุรัสสำหรับ Facebook/Line
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
@@ -773,11 +795,11 @@ export function SiteConfigPanel() {
                   </p>
                   <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden max-w-sm mx-auto">
                     <div className="aspect-[1.91/1] bg-slate-100 relative overflow-hidden group">
-                      {form.watch("logo_dark") ? (
+                      {form.watch("brand_card") || form.watch("logo_dark") ? (
                         <div
-                          className="absolute inset-0 flex items-center justify-center p-8 bg-slate-900"
+                          className="absolute inset-0 flex items-center justify-center p-4 bg-slate-900"
                           style={{
-                            backgroundImage: `url(${form.watch("logo_dark")})`,
+                            backgroundImage: `url(${form.watch("brand_card") || form.watch("logo_dark")})`,
                             backgroundSize: "contain",
                             backgroundPosition: "center",
                             backgroundRepeat: "no-repeat",

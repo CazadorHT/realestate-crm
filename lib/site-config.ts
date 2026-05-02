@@ -17,8 +17,9 @@ export const siteConfig = {
   company: "VC Connect Asset Co., Ltd.",
   description: "ระบบจัดการอสังหาริมทรัพย์และพอร์ทัลประกาศขาย-เช่า",
   url: getBaseUrl(),
-  logo: "/images/v-link-svg-png-logo.svg",
-  logoDark: "/images/v-link-svg-png-dark.svg",
+  logo: "/images/branding/vcc-asset/logo-dark.svg",
+  logoDark: "/images/branding/vcc-asset/logo-light.svg",
+  brandCard: "/images/branding/vcc-asset/favicon-animated-light.svg",
   ogImage: "/images/hero-realestate.png",
   keywords: [
     "ซื้อขายบ้าน",
@@ -60,8 +61,8 @@ export const siteConfig = {
     lineId: "@vcconnectasset",
     address: "ที่ตั้งออฟฟิศของคุณ...",
   },
-  companySignature: "/images/v-link-svg-png-logo.svg",
-  companyStamp: "/images/v-link-svg-png-dark.svg",
+  companySignature: "/images/branding/vcc-asset/logo-dark.svg",
+  companyStamp: "/images/branding/vcc-asset/logo-light.svg",
   // ============================================================
   // Third-party site verification tokens
   // Update these when transferring ownership of the project

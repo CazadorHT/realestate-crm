@@ -119,8 +119,8 @@ export function PublicFooter() {
       <footer className="bg-[#0B1120] text-slate-300 relative overflow-hidden font-sans">
         {/* Background Effects */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-          <div className="absolute top-0 -left-[10%] w-[50%] h-[500px] bg-blue-900/10 rounded-full blur-[120px]" />
-          <div className="absolute bottom-0 -right-[10%] w-[50%] h-[500px] bg-purple-900/10 rounded-full blur-[120px]" />
+          <div className="absolute top-0 left-[-10%] w-[50%] h-[500px] bg-blue-900/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 right-[-10%] w-[50%] h-[500px] bg-purple-900/10 rounded-full blur-[120px]" />
         </div>
 
         {/* Schema.org Structured Data */}
@@ -139,7 +139,7 @@ export function PublicFooter() {
               <div className="flex items-center gap-2">
                 <Link
                   href="/"
-                  className="block w-48 transition-opacity hover:opacity-90"
+                  className="block w-[280px] transition-opacity hover:opacity-90"
                 >
                   <Image
                     src={settings.logo_dark || siteConfig.logoDark}

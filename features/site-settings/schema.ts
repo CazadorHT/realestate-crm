@@ -49,7 +49,8 @@ export type SiteSettingKey =
   | "google_integration_tokens"
   | "meta_page_access_token"
   | "line_channel_access_token"
-  | "meta_page_name";
+  | "meta_page_name"
+  | "brand_card";
 
 export interface SocialKeyword {
   keyword: string;
@@ -123,6 +124,7 @@ export interface SiteSettings {
   meta_page_access_token?: string;
   line_channel_access_token?: string;
   meta_page_name?: string;
+  brand_card?: string;
 }
 
 export const siteSettingsSchema = z.object({
@@ -199,6 +201,7 @@ export const siteSettingsSchema = z.object({
   meta_page_access_token: z.string().optional(),
   line_channel_access_token: z.string().optional(),
   meta_page_name: z.string().optional(),
+  brand_card: z.string().or(z.literal("")).optional(),
 });
 
 export const SENSITIVE_KEYS: SiteSettingKey[] = [

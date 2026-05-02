@@ -51,11 +51,12 @@ export function SiteAssetUploader({
         "image/jpeg",
         "image/png",
         "image/webp",
+        "image/svg+xml",
         "image/x-icon",
         "image/vnd.microsoft.icon",
       ];
-      if (!validTypes.includes(file.type) && !file.name.endsWith(".ico")) {
-        toast.error("รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WebP, ICO)");
+      if (!validTypes.includes(file.type) && !file.name.endsWith(".ico") && !file.name.endsWith(".svg")) {
+        toast.error("รองรับเฉพาะไฟล์รูปภาพ (JPG, PNG, WebP, SVG, ICO)");
         return;
       }
 
@@ -100,7 +101,7 @@ export function SiteAssetUploader({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { "image/*": [".jpg", ".jpeg", ".png", ".webp", ".ico"] },
+    accept: { "image/*": [".jpg", ".jpeg", ".png", ".webp", ".ico", ".svg"] },
     maxFiles: 1,
     disabled: disabled || isUploading,
   });
@@ -202,7 +203,7 @@ export function SiteAssetUploader({
                   : "คลิกหรือลากรูปมาวางเพื่ออัปโหลด"}
               </p>
               <p className="text-[10px] text-slate-400">
-                JPG, PNG, WebP (สูงสุด 5MB)
+                JPG, PNG, WebP, SVG (สูงสุด 5MB)
               </p>
             </div>
           </div>
