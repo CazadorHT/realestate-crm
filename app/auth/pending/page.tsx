@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { PremiumAuthLayout } from "@/components/auth/premium-auth-layout";
 import { Button } from "@/components/ui/button";
@@ -7,9 +8,62 @@ import { Clock, ArrowLeft, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function PendingApprovalPage() {
   const { t } = useLanguage();
+  const supabase = createClient();
+  const router = useRouter();
+
+  useEffect(() => {
+    let channel: any;
+
+    const setupRealtime = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // 1. Initial check (in case already approved)
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profile && profile.role !== "USER") {
+        router.push("/protected");
+        return;
+      }
+
+      // 2. Subscribe to Realtime updates for THIS user's profile
+      channel = supabase
+        .channel(`profile-updates-${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "profiles",
+            filter: `id=eq.${user.id}`,
+          },
+          (payload: any) => {
+            console.log("[REALTIME] Profile updated:", payload);
+            const newRole = payload.new.role;
+            if (newRole !== "USER") {
+              // 🎉 Approved! Redirect to dashboard
+              router.push("/protected");
+            }
+          }
+        )
+        .subscribe();
+    };
+
+    setupRealtime();
+
+    return () => {
+      if (channel) supabase.removeChannel(channel);
+    };
+  }, [supabase, router]);
 
   return (
     <PremiumAuthLayout
