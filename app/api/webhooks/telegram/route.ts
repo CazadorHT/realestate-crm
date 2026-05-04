@@ -14,27 +14,34 @@ export async function POST(request: Request) {
     const replyText = message.text.toLowerCase();
     const originalText = message.reply_to_message.text || message.reply_to_message.caption || "";
     
+    console.log("[TELEGRAM_WEBHOOK] Reply Text:", replyText);
+    console.log("[TELEGRAM_WEBHOOK] Original Text Found:", originalText);
+
     // Check if the reply is "agent" or "อนุมัติ"
     const isApproval = replyText.includes("agent") || replyText.includes("อนุมัติ");
     if (!isApproval) {
+      console.log("[TELEGRAM_WEBHOOK] Not an approval command");
       return NextResponse.json({ ok: true });
     }
 
     // 🕵️ Extract UUID from the original message
-    // We look for the ID: <uuid> pattern we added
     const uuidRegex = /ID:\s*([0-9a-fA-F-]{36})/;
     const match = originalText.match(uuidRegex);
     const userId = match ? match[1] : null;
 
+    console.log("[TELEGRAM_WEBHOOK] Extracted userId:", userId);
+
     if (!userId) {
-      console.warn("[TELEGRAM_WEBHOOK] No userId found in original message");
+      console.warn("[TELEGRAM_WEBHOOK] No userId found in original message structure");
       return NextResponse.json({ ok: true });
     }
 
-    // 🛡️ Security: Check if the message came from our Admin Group
+    // 🛡️ Security Check
     const adminGroupId = process.env.TELEGRAM_ADMIN_GROUP_ID;
+    console.log("[TELEGRAM_WEBHOOK] Chat ID:", message.chat.id, "Expected Admin Group:", adminGroupId);
+
     if (adminGroupId && String(message.chat.id) !== String(adminGroupId)) {
-      console.warn("[TELEGRAM_WEBHOOK] Unauthorized chat ID:", message.chat.id);
+      console.warn("[TELEGRAM_WEBHOOK] Unauthorized chat ID mismatch");
       return NextResponse.json({ ok: true });
     }
 
