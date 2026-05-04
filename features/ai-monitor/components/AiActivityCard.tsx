@@ -52,10 +52,12 @@ export function AiActivityCard({ logs }: AiActivityCardProps) {
 
           {/* Bottom Section: Message or Stats */}
           <div className="space-y-3">
-            {log.status === "error" ? (
+            {log.status === "error" || log.status === "validation_error" ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                   <span className="text-[10px] font-semibold uppercase tracking-wider text-red-500/80">System Exception</span>
+                   <span className="text-[10px] font-semibold uppercase tracking-wider text-red-500/80">
+                    {log.status === "validation_error" ? "Format Validation Failed" : "System Exception"}
+                   </span>
                    {log.error_message && <CopyErrorButton text={log.error_message} />}
                 </div>
                 <div className="max-h-[100px] overflow-y-auto custom-scrollbar flex items-start gap-2 p-3 rounded-2xl bg-red-50/50 border border-red-100 text-red-700">

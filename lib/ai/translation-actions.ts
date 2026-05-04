@@ -50,15 +50,36 @@ export async function translateTextAction(
     const result = await generateText(prompt, modelName);
     const responseText = result.text;
 
-    // Attempt to parse JSON
-    try {
-      // Cleanup common AI artifacts just in case
-      const cleanedResponse = responseText
-        .trim()
-        .replace(/^```json/, "")
-        .replace(/```$/, "");
+    // 🛠️ ROBUST EXTRACTION: Handle AI quirks like markdown blocks or extra text
+    const extractJson = (text: string) => {
+      try {
+        const clean = text.trim();
+        if (clean.startsWith('{') && clean.endsWith('}')) return JSON.parse(clean);
+      } catch (e) {}
 
-      const parsedResult = JSON.parse(cleanedResponse) as TranslationResult;
+      const markdownMatch = text.match(/```json\s?([\s\S]*?)\s?```/);
+      if (markdownMatch && markdownMatch[1]) {
+        try {
+          return JSON.parse(markdownMatch[1].trim());
+        } catch (e) {}
+      }
+
+      const start = text.indexOf('{');
+      const end = text.lastIndexOf('}');
+      if (start !== -1 && end !== -1 && end > start) {
+        let candidate = text.substring(start, end + 1);
+        try {
+          return JSON.parse(candidate);
+        } catch (e) {
+          try { return JSON.parse(candidate + '}'); } catch (e2) {}
+        }
+      }
+      return null;
+    };
+
+    try {
+      const parsedResult = extractJson(responseText) as TranslationResult | null;
+      if (!parsedResult) throw new Error("JSON Extraction Failed");
 
       // Log success
       await logAiUsage({

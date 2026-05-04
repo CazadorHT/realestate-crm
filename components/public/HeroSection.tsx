@@ -79,7 +79,7 @@ export function HeroSection() {
             >
               {/* Premium Glass Badge */}
               <div
-                className={`inline-flex items-center gap-2 sm:gap-2.5 bg-white/10 backdrop-blur-md text-white/80 px-3 sm:px-5 md:px-5 py-1.5 md:py-2 rounded-full text-xs sm:text-sm md:text-base font-semibold border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-300 hover:text-white hover:bg-white/20 ${!showSmartMatch ? "mx-auto" : "md:mx-0"}`}
+                className={`inline-flex items-center gap-2 sm:gap-2.5 bg-white/10 backdrop-blur-md text-white/80 px-3 sm:px-5 md:px-5 py-1.5 md:py-2 rounded-full text-xs sm:text-sm md:text-base font-semibold border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-200 hover:text-white hover:bg-white/20 ${!showSmartMatch ? "mx-auto" : "md:mx-0"}`}
               >
                 <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-blue-400" />
                 <span className="font-semibold tracking-tight">{t("common.verified_100")}</span>
@@ -97,7 +97,7 @@ export function HeroSection() {
                 <Button
                   asChild
                   size="lg"
-                  className="w-full sm:w-auto md:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl shadow-lg hover:shadow-xl bg-linear-to-r from-blue-600 to-blue-500 hover:brightness-125 transition-all duration-500 animate-in fade-in-0 slide-in-from-bottom-4 text-white"
+                  className="w-full sm:w-auto md:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl shadow-lg hover:shadow-xl bg-linear-to-r from-blue-600 to-blue-500 hover:brightness-110 transition-all duration-300 animate-in fade-in-0 slide-in-from-bottom-2 text-white"
                 >
                   <Link href="/properties">
                     {t("home.hero.cta_buy")}
@@ -115,7 +115,7 @@ export function HeroSection() {
                     <Button
                       size="lg"
                       variant="outline"
-                      className="w-full sm:w-auto md:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl bg-white/90 hover:bg-white! border-slate-200 text-slate-700 hover:text-blue-600! shadow-sm transition-all animate-in fade-in-0 duration-300 slide-in-from-bottom-4"
+                      className="w-full sm:w-auto md:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl bg-white/90 hover:bg-white! border-slate-200 text-slate-700 hover:text-blue-600! shadow-sm transition-all animate-in fade-in-0 duration-200 slide-in-from-bottom-2"
                     >
                       {t("home.hero.cta_deposit")}
                     </Button>

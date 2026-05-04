@@ -396,6 +396,47 @@
   .prose h1, .prose h2, .prose h3 {
     @apply tracking-tight mb-4 mt-8!;
   }
+
+  /* Table Padding & Style Fixes */
+  .prose table {
+    @apply my-8 border-collapse w-full!;
+  }
+  .prose table th, 
+  .prose table td,
+  .ProseMirror table th,
+  .ProseMirror table td {
+    @apply px-6! py-4! border border-slate-200 text-left!;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+    min-width: 100px;
+  }
+  .prose table th,
+  .ProseMirror table th {
+    @apply bg-slate-50 font-bold text-slate-700!;
+  }
+
+  .prose img {
+    @apply rounded-2xl shadow-xl my-12 mx-auto max-w-3xl w-full max-h-[700px] object-contain border border-slate-100!;
+  }
+
+  /* CTA Box Contrast Fixes (Force white text inside dark CTA containers) */
+  .prose div[class*="bg-blue-"],
+  .prose div[class*="bg-indigo-"],
+  .prose div[class*="bg-linear-"] {
+    @apply text-white!;
+  }
+  .prose div[class*="bg-blue-"] h1,
+  .prose div[class*="bg-blue-"] h2,
+  .prose div[class*="bg-blue-"] h3,
+  .prose div[class*="bg-indigo-"] h3,
+  .prose div[class*="bg-linear-"] h3 {
+    @apply text-white! mb-2!;
+  }
+  .prose div[class*="bg-blue-"] p,
+  .prose div[class*="bg-indigo-"] p,
+  .prose div[class*="bg-linear-"] p {
+    @apply text-blue-50! opacity-90!;
+  }
 }
 
 /* Hide chatbot when any dialog is open */

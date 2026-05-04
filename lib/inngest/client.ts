@@ -71,6 +71,19 @@ export const storageCleanupRequestedEvent = eventType("storage.cleanup.requested
   }>(),
 });
 
+export const blogGenerateRequestedEvent = eventType("blog.generate.requested", {
+  schema: staticSchema<{
+    taskId: string;
+    keyword: string;
+    targetAudience: string;
+    tone: string;
+    length: string;
+    imageStyle: string;
+    authorId: string;
+    tenantId: string;
+  }>(),
+});
+
 // 🔥 Create Inngest Client
 export const inngest = new Inngest({ 
   id: "real-estate-crm",
@@ -82,5 +95,6 @@ export const inngest = new Inngest({
     "property.created": propertyCreatedEvent,
     "user.delete.requested": userDeleteRequestedEvent,
     "storage.cleanup.requested": storageCleanupRequestedEvent,
+    "blog.generate.requested": blogGenerateRequestedEvent,
   }
 });

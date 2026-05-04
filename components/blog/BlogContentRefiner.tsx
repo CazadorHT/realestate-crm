@@ -9,6 +9,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -87,16 +92,23 @@ export function BlogContentRefiner({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button
-          type="button"
-          variant="secondary"
-          className="gap-2 h-12 px-4 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 shadow-sm"
-        >
-          <Wand2 className="h-4 w-4" />
-          <span className="hidden sm:inline">AI Refine</span>
-        </Button>
-      </DialogTrigger>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DialogTrigger asChild>
+            <Button
+              type="button"
+              variant="secondary"
+              className="gap-2 h-12 px-4 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 shadow-sm transition-all duration-200 hover:shadow-md"
+            >
+              <Wand2 className="h-4 w-4" />
+              <span className="hidden sm:inline">ขัดเกลาเนื้อหา</span>
+            </Button>
+          </DialogTrigger>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="bg-indigo-600 text-white border-indigo-500">
+          ใช้พลัง AI ช่วยปรับปรุงสำนวนและการเขียนให้ดูเป็นมืออาชีพยิ่งขึ้น
+        </TooltipContent>
+      </Tooltip>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">

@@ -20,11 +20,16 @@ export default async function EditBlogPostPage({
   const supabase = await createClient();
   const { data: categories } = await getCategoriesAction();
 
-  const { data: post } = await supabase
+  const { data: post, error } = await supabase
     .from("blog_posts")
-    .select("id, title, title_en, title_cn, title_ru, slug, content, content_en, content_cn, content_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, cover_image, is_published, published_at, category_id, tenant_id, created_at, updated_at")
+    .select("id, title, title_en, title_cn, title_ru, slug, content, content_en, content_cn, content_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, cover_image, is_published, published_at, category, created_at, updated_at")
     .eq("id", id)
     .single();
+
+  if (error) {
+    console.error("Error fetching blog post:", error);
+    notFound();
+  }
 
   if (!post) {
     notFound();
@@ -56,14 +61,14 @@ export default async function EditBlogPostPage({
                   variant="outline"
                   className="bg-green-50 text-green-700 border-green-200"
                 >
-                  Published
+                  เผยแพร่
                 </Badge>
               ) : (
                 <Badge
                   variant="outline"
                   className="bg-orange-50 text-orange-700 border-orange-200"
                 >
-                  Draft
+                  ฉบับร่าง
                 </Badge>
               )}
             </div>

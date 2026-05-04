@@ -36,10 +36,10 @@ export function dispatchProcessEvent(event: ProcessEvent) {
  */
 export function startProcess(
   name: string, 
-  options?: { type?: string; payload?: unknown; onRetry?: () => void }
+  options?: { id?: string; type?: string; payload?: unknown; onRetry?: () => void }
 ): string {
-  // 🛡️ Standard UUID for Database Compatibility
-  const id = typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7);
+  // 🛡️ Use provided ID or generate a new one
+  const id = options?.id || (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(7));
   
   const process: BackgroundProcess = {
     id,

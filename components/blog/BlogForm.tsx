@@ -106,6 +106,7 @@ interface BlogFormProps {
 export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState("content");
   const [successData, setSuccessData] = useState<{
     slug: string;
@@ -220,28 +221,74 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
       toast.error("รูปแบบ JSON ไม่ถูกต้อง");
     }
   };
-
   const handleAiGenerated = (data: BlogAiResult) => {
     if (!data) return;
 
-    setValue("requires_ai_review", true, { shouldDirty: true });
+    // 🛡️ Force UI to acknowledge AI data
+    const options = { shouldDirty: true, shouldValidate: true };
 
-    if (data.title) setValue("title", data.title);
-    if (data.slug) setValue("slug", data.slug);
-    if (data.excerpt) setValue("excerpt", data.excerpt);
-    if (data.content) setValue("content", data.content);
-    if (data.tags) setValue("tags", data.tags);
+    setValue("requires_ai_review", true, options);
+
+    if (data.title) setValue("title", data.title, options);
+    if (data.slug) setValue("slug", data.slug, options);
+    if (data.excerpt) {
+      const cleanExcerpt = data.excerpt.slice(0, 160);
+      setValue("excerpt", cleanExcerpt, options);
+    }
+    if (data.content) setValue("content", data.content, options);
+    if (data.category) setValue("category", data.category, options);
+    if (data.tags) setValue("tags", data.tags, options);
+
+    // Multilingual support
+    if (data.title_en) setValue("title_en", data.title_en, options);
+    if (data.title_cn) setValue("title_cn", data.title_cn, options);
+    if (data.title_ru) setValue("title_ru", data.title_ru, options);
+    
+    if (data.excerpt_en) setValue("excerpt_en", data.excerpt_en.slice(0, 160), options);
+    if (data.excerpt_cn) setValue("excerpt_cn", data.excerpt_cn.slice(0, 160), options);
+    if (data.excerpt_ru) setValue("excerpt_ru", data.excerpt_ru.slice(0, 160), options);
+    
+    if (data.content_en) setValue("content_en", data.content_en, options);
+    if (data.content_cn) setValue("content_cn", data.content_cn, options);
+    if (data.content_ru) setValue("content_ru", data.content_ru, options);
+
     if (data.structured_data) {
       setValue(
         "structured_data",
         JSON.stringify(data.structured_data, null, 2),
+        options
       );
     }
 
+    const scoreMsg = data.seo_score ? ` (SEO Score: ${data.seo_score})` : "";
     toast.success(
-      "ข้อมูลบทความถูกเติมลงในฟอร์มเรียบร้อยแล้ว ✨ อย่าลืมตรวจสอบเนื้อหาก่อนบันทึกนะครับ",
+      `ข้อมูลบทความ หมวดหมู่ และแท็ก ถูกเติมลงในฟอร์มเรียบร้อยแล้ว${scoreMsg} ✨`,
     );
+    setIsAiGenerating(false);
   };
+
+  // 🛡️ BACKGROUND GENERATION HANDLER
+  useEffect(() => {
+    const handleStart = () => setIsAiGenerating(true);
+    const handleError = () => setIsAiGenerating(false);
+    const handleSuccess = (event: any) => {
+      const data = event.detail;
+      if (data) {
+        handleAiGenerated(data);
+      }
+      setIsAiGenerating(false);
+    };
+
+    window.addEventListener("BLOG_AI_GENERATION_START", handleStart);
+    window.addEventListener("BLOG_AI_GENERATION_ERROR", handleError);
+    window.addEventListener("BLOG_AI_GENERATED_SUCCESS", handleSuccess);
+
+    return () => {
+      window.removeEventListener("BLOG_AI_GENERATION_START", handleStart);
+      window.removeEventListener("BLOG_AI_GENERATION_ERROR", handleError);
+      window.removeEventListener("BLOG_AI_GENERATED_SUCCESS", handleSuccess);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const [isTranslating, setIsTranslating] = useState(false);
 
@@ -310,7 +357,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
       if (res.success) {
         toast.success(res.message);
-        // router.push("/protected/blogs");
+        // router.push("/protected/blogs"); // ลบออกเพื่อให้ Dialog แสดงค้างไว้
         // router.refresh();
         setSuccessData({ slug: data.slug });
       } else {
@@ -330,7 +377,30 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="pb-20">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="pb-20 relative">
+        {/* 🤖 BACKGROUND GENERATION LOADING OVERLAY */}
+        {isAiGenerating && (
+          <div className="absolute inset-0 z-50 bg-white/60 backdrop-blur-[2px] rounded-2xl flex flex-col items-center justify-start pt-40 transition-all duration-500">
+            <div className="bg-white p-8 rounded-3xl shadow-2xl border border-slate-100 flex flex-col items-center gap-6 max-w-sm text-center animate-in zoom-in-95 duration-300">
+              <div className="relative">
+                <div className="absolute -inset-4 bg-violet-500/10 rounded-full blur-2xl animate-pulse" />
+                <Loader2 className="h-12 w-12 text-violet-600 animate-spin" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold text-slate-900">กำลังรับข้อมูลจาก AI...</h3>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  AI กำลังรังสรรค์เนื้อหาบทความระดับพรีเมียมให้คุณ <br/>
+                  ข้อมูลจะถูกเติมลงในฟอร์มโดยอัตโนมัติเมื่อเสร็จสิ้น
+                </p>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-slate-50 rounded-full border border-slate-100">
+                <div className="h-2 w-2 bg-emerald-500 rounded-full animate-ping" />
+                <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Background Sync Active</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {form.watch("requires_ai_review") && (
           <AiReviewBanner
             type="blog"

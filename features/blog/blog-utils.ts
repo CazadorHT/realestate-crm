@@ -104,8 +104,9 @@ export function generateBlogJsonLd(post: {
   cover_image?: string;
   published_at?: string;
   author_name?: string;
+  faqs?: Array<{ question: string; answer: string }>;
 }) {
-  return {
+  const jsonLd: any = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     "headline": post.title,
@@ -117,4 +118,17 @@ export function generateBlogJsonLd(post: {
       "name": post.author_name || "Admin"
     }
   };
+
+  if (post.faqs && post.faqs.length > 0) {
+    jsonLd.mainEntity = post.faqs.map(faq => ({
+      "@type": "Question",
+      "name": faq.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": faq.answer
+      }
+    }));
+  }
+
+  return jsonLd;
 }

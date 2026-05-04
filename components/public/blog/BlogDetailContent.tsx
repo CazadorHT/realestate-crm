@@ -10,6 +10,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { m, AnimatePresence } from "framer-motion";
 
 interface BlogDetailContentProps {
   post: {
@@ -78,8 +79,8 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
       const DOMPurify = module.default;
       setSanitizedContent(
         DOMPurify.sanitize(content || "", {
-          ADD_TAGS: ["iframe"],
-          ADD_ATTR: ["target", "class"],
+          ADD_TAGS: ["iframe", "table", "thead", "tbody", "tr", "th", "td"],
+          ADD_ATTR: ["target", "class", "rel"],
         }),
       );
     });
@@ -120,11 +121,21 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
 
       {/* Main Content Render */}
       <div className="relative">
-        <div
+        <m.div
           ref={contentRef}
+          initial={false}
+          animate={{ 
+            height: !isExpanded && isTooLong ? MAX_HEIGHT : "auto",
+          }}
+          transition={{ 
+            type: "spring",
+            stiffness: 40,  // น้อยลงเพื่อให้ขยับช้าและนุ่ม
+            damping: 20,    // ป้องกันการเด้งเกินไป
+            mass: 1.5,      // เพิ่มน้ำหนักให้ดูนุ่มนวล
+            restDelta: 0.5
+          }}
           className={cn(
-            "prose prose-base md:prose-lg max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline text-slate-600 transition-all duration-700 ease-in-out overflow-hidden",
-            !isExpanded && isTooLong ? "max-h-[800px]" : "max-h-none"
+            "prose prose-base md:prose-lg max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline text-slate-600 overflow-hidden",
           )}
           dangerouslySetInnerHTML={{
             __html: sanitizedContent,
@@ -133,56 +144,65 @@ export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
         />
 
         {/* Gradient Overlay for collapsed state */}
-        {!isExpanded && isTooLong && (
-          <div className="absolute bottom-0 left-0 right-0 h-40 bg-linear-to-t from-white via-white/80 to-transparent pointer-events-none z-10" />
-        )}
+        <AnimatePresence>
+          {!isExpanded && isTooLong && (
+            <m.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute bottom-0 left-0 right-0 h-40 bg-linear-to-t from-white via-white/80 to-transparent pointer-events-none z-10" 
+            />
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Read More / Show Less Button */}
       {isTooLong && (
         <div className="relative z-20 flex justify-center -mt-6 mb-4">
-          <Button
-            variant="outline"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="group px-8 py-6 rounded-full bg-white hover:bg-blue-600 hover:text-white border-blue-200 hover:border-blue-600 shadow-lg hover:shadow-blue-200/50 transition-all duration-300 font-bold flex items-center gap-2"
+          <m.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            {isExpanded ? (
-              <>
-                {t("common.show_less")}
-                <ChevronUp className="h-4 w-4 transition-transform group-hover:-translate-y-1" />
-              </>
-            ) : (
-              <>
-                {t("common.read_more")}
-                <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-1" />
-              </>
-            )}
-          </Button>
+            <Button
+              variant="outline"
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="group px-8 py-6 rounded-full bg-white hover:bg-blue-600 hover:text-white border-blue-200 hover:border-blue-600 shadow-xl hover:shadow-blue-200/50 transition-all duration-300 font-bold flex items-center gap-2 overflow-hidden"
+            >
+              <AnimatePresence mode="wait">
+                <m.div
+                  key={isExpanded ? "less" : "more"}
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -10, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-2"
+                >
+                  {isExpanded ? (
+                    <>
+                      {t("common.show_less")}
+                      <ChevronUp className="h-4 w-4 transition-transform group-hover:-translate-y-1" />
+                    </>
+                  ) : (
+                    <>
+                      {t("common.read_more")}
+                      <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-1" />
+                    </>
+                  )}
+                </m.div>
+              </AnimatePresence>
+            </Button>
+          </m.div>
         </div>
       )}
 
-      {/* Share Buttons */}
-      <div className="mt-12 pt-8 border-t">
-        <h4 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
-          {t("blog.share_title")}
-        </h4>
-        <div className="max-w-md">
-          <ShareButtons
-            url={currentUrl}
-            title={title}
-          />
-        </div>
-      </div>
-
       {/* Tags */}
       {post.tags && post.tags.length > 0 && (
-        <div className="mt-8 md:mt-12 pt-6 md:pt-8 border-t flex flex-wrap gap-2">
+        <div className="mt-8 md:mt-12 pt-6 md:pt-8 border-t border-slate-200 flex flex-wrap gap-2">
           {post.tags.map((tag) => (
             <Badge
               key={tag}
               variant="outline"
-              className="text-xs sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors cursor-pointer"
+              className="text-xs border-slate-200 sm:text-sm px-2.5 sm:px-3 py-1 sm:py-1.5 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200 transition-colors cursor-pointer"
             >
               #{tag}
             </Badge>

@@ -100,11 +100,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     m.getServerTranslations(),
   );
 
-  // Safe parsing for author field which is JSONB
-  const author =
-    typeof post.author === "object"
-      ? (post.author as { name: string; avatar?: string; bio?: string })
-      : { name: "Admin", avatar: "", bio: "" };
+  // 🏗️ RELATIONAL: Get real author data from profiles table
+  const author = {
+    name: post.profiles?.full_name || "Admin",
+    avatar: post.profiles?.avatar_url || "",
+    bio: (post.author as any)?.bio || "" // Keep bio from JSONB if exists
+  };
 
   const dateLocales: Record<string, Locale> = { th, en, zh, ru };
   const locale = dateLocales[language === "cn" ? "zh" : language] || th;
@@ -118,12 +119,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     : [];
 
   // Schema.org Article markup
-  const schemaData = {
+  const defaultSchema = {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: getLocalizedField(post, "title", language),
     description: getLocalizedField(post, "excerpt", language) || "",
     image: post.cover_image || "",
+    url: `${siteConfig.url}/blog/${decodedSlug}`, // ✅ Fix: Added URL
     datePublished: post.published_at,
     dateModified: post.updated_at || post.published_at,
     author: {
@@ -137,6 +139,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         "@type": "ImageObject",
         url: `${siteConfig.url}${siteConfig.logo}`,
       },
+      address: { // ✅ Fix: Added Address
+        "@type": "PostalAddress",
+        streetAddress: "กรุงเทพมหานคร",
+        addressLocality: "Bangkok",
+        postalCode: "10110",
+        addressCountry: "TH"
+      },
+      url: siteConfig.url
     },
     mainEntityOfPage: {
       "@type": "WebPage",
@@ -145,6 +155,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     keywords: post.tags?.join(", ") || "",
   };
 
+  // If we have AI-generated structured data, we use it. 
+  // Often it's a list [schema1, schema2] or a single object.
+  const finalSchema = post.structured_data || defaultSchema;
+
   return (
     <article className="min-h-screen bg-slate-50 pb-20 pt-16 md:pt-16">
       {/* Analytics: Silent View Tracking */}
@@ -152,7 +166,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       {/* Schema.org Structured Data */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(finalSchema) }}
       />
 
       <div className="container mx-auto px-4 md:px-6 py-4">

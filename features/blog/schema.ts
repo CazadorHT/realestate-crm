@@ -29,8 +29,15 @@ export const blogPostSchema = z.object({
   tags: z.string().optional(), // Will handle comma-separated string in form, convert to array in action
   is_published: z.boolean().optional(),
   published_at: z.string().optional(),
-  structured_data: z.string().optional(),
+  structured_data: z.union([z.string(), z.record(z.any()), z.array(z.record(z.any()))]).optional(),
   requires_ai_review: z.boolean().optional(),
+  seo_score: z.number().optional(),
+  seo_feedback: z.string().optional(),
+  social_snippets: z.record(z.any()).optional(),
+  faqs: z.array(z.object({
+    question: z.string(),
+    answer: z.string(),
+  })).optional(),
 });
 
 export const blogCategorySchema = z.object({

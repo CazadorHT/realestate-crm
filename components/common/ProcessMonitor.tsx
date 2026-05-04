@@ -18,8 +18,11 @@ import {
   Check,
   ExternalLink,
   Volume2,
+  Square,
+  Monitor,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cancelBackgroundTaskAction } from "@/lib/background-tasks/actions";
 import { toast } from "sonner";
 import Link from "next/link";
 import {
@@ -35,15 +38,17 @@ import {
   AnimatedLoader, 
   AnimatedActivity 
 } from "./ProcessIcons";
+import { Checkbox } from "@/components/ui/checkbox";
 
 // 🔊 Premium Sound Assets (Public CDN)
 const SUCCESS_SOUND = "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"; 
 const ERROR_SOUND = "https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3";
 
 export function ProcessMonitor() {
-  const { processes, activeCount, errorCount, clearFinished } = useProcess();
+  const { processes, activeCount, errorCount, clearFinished, deleteMultiple } = useProcess();
   const [isOpen, setIsOpen] = useState(false);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // 🛡️ Effect to play sound when processes change status
   useEffect(() => {
@@ -64,6 +69,27 @@ export function ProcessMonitor() {
       });
     }
   }, [processes, soundEnabled]);
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === processes.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(processes.map(p => p.id));
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (selectedIds.length === 0) return;
+    await deleteMultiple(selectedIds);
+    setSelectedIds([]);
+    toast.success(`ลบรายการที่เลือก (${selectedIds.length}) เรียบร้อยแล้ว`);
+  };
 
   return (
     <>
@@ -152,18 +178,42 @@ export function ProcessMonitor() {
       >
         <div className="p-4 sm:p-6">
           <div className="flex items-center justify-between mb-6">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              ประวัติการทำงาน ({processes.length})
-            </p>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={clearFinished}
-              className="text-xs text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-full h-8"
-            >
-              <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-              ล้างที่สำเร็จ
-            </Button>
+            <div className="flex items-center gap-3">
+              {processes.length > 0 && (
+                <Checkbox 
+                  checked={selectedIds.length === processes.length && processes.length > 0}
+                  onCheckedChange={toggleSelectAll}
+                  className="rounded-md border-slate-300"
+                />
+              )}
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                ประวัติการทำงาน ({processes.length})
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              {selectedIds.length > 0 ? (
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  onClick={handleDeleteSelected}
+                  className="text-xs rounded-full h-8 px-4 animate-in fade-in zoom-in duration-200"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                  ลบที่เลือก ({selectedIds.length})
+                </Button>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={clearFinished}
+                  disabled={processes.filter(p => p.status !== 'PROCESSING').length === 0}
+                  className="text-xs text-slate-500 hover:text-red-500 hover:bg-red-50 rounded-full h-8"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                  ล้างที่สำเร็จ
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="space-y-3 max-h-[60vh] overflow-y-auto px-1">
@@ -175,13 +225,19 @@ export function ProcessMonitor() {
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: 20, opacity: 0 }}
                   className={cn(
-                    "flex items-start gap-4 p-4 rounded-2xl border transition-all relative overflow-hidden",
+                    "flex items-start gap-4 p-4 rounded-2xl border transition-all relative overflow-hidden group/item",
                     p.status === "PROCESSING" ? "bg-blue-50/30 border-blue-100" :
                     p.status === "ERROR" ? "bg-red-50/30 border-red-100" :
-                    "bg-white border-slate-100 shadow-sm"
+                    "bg-white border-slate-100 shadow-sm",
+                    selectedIds.includes(p.id) && "ring-2 ring-blue-500 border-blue-500"
                   )}
                 >
-                  <div className="mt-1 shrink-0">
+                  <div className="mt-1 shrink-0 flex flex-col items-center gap-4">
+                    <Checkbox 
+                      checked={selectedIds.includes(p.id)}
+                      onCheckedChange={() => toggleSelect(p.id)}
+                      className="rounded-md border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                    />
                     {(() => {
                       if (p.type?.startsWith("SOCIAL_")) {
                         const platform = p.type.replace("SOCIAL_", "");
@@ -218,6 +274,16 @@ export function ProcessMonitor() {
                       {p.status === "PROCESSING" ? "กำลังประมวลผลระบบหลังบ้าน..." : 
                        p.message || (p.status === "SUCCESS" ? "ดำเนินการเสร็จสิ้นเรียบร้อยแล้ว" : "เกิดข้อผิดพลาดในการประมวลผล")}
                     </p>
+
+                    {/* 🕵️ Source Tracking (Audit Info) */}
+                    {(p.payload as any)?.metadata?.userAgent && (
+                      <div className="mt-2 flex items-center gap-1.5 opacity-40 hover:opacity-100 transition-opacity">
+                        <Monitor className="h-3 w-3" />
+                        <p className="text-[9px] font-medium truncate max-w-[200px]" title={(p.payload as any).metadata.userAgent}>
+                          Source: {(p.payload as any).metadata.userAgent.split(')')[0].split('(')[1] || "Browser"}
+                        </p>
+                      </div>
+                    )}
                     
                     {/* Task Actions */}
                     <div className="flex flex-wrap items-center gap-2 mt-4">
@@ -236,6 +302,33 @@ export function ProcessMonitor() {
                           </Button>
                         )}
 
+                        {p.status === "PROCESSING" && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={async () => {
+                              const res = await cancelBackgroundTaskAction(p.id);
+                              if (res.success) {
+                                // 🚀 Instant UI Feedback
+                                const { dispatchProcessEvent } = await import("@/lib/process-monitor");
+                                dispatchProcessEvent({
+                                  type: "PROCESS_UPDATED",
+                                  id: p.id,
+                                  status: "ERROR",
+                                  message: "ยกเลิกการทำงานโดยผู้ใช้"
+                                });
+                                toast.success("หยุดการทำงานเรียบร้อยแล้ว");
+                              } else {
+                                toast.error("ไม่สามารถยกเลิกงานได้: " + res.message);
+                              }
+                            }}
+                            className="h-8 text-[10px] font-bold gap-1.5 rounded-xl border-orange-100 text-orange-600! hover:bg-orange-50 hover:border-orange-200"
+                          >
+                            <Square className="h-3 w-3 fill-current" />
+                            หยุดทำงาน
+                          </Button>
+                        )}
+
                         {p.status === "SUCCESS" && p.resultLink && (
                           <Button
                             size="sm"
@@ -250,21 +343,6 @@ export function ProcessMonitor() {
                           </Button>
                         )}
 
-                        {p.status === "ERROR" && p.message && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              const errorText = `Process: ${p.name}\nStatus: ${p.status}\nMessage: ${p.message}\nType: ${p.type || "N/A"}\nTime: ${p.completedAt?.toLocaleString() || "N/A"}`;
-                              navigator.clipboard.writeText(errorText);
-                              toast.success("คัดลอกรายละเอียดข้อผิดพลาดแล้ว");
-                            }}
-                            className="h-8 text-[10px] font-bold gap-1.5 rounded-xl text-slate-500 hover:text-slate-900"
-                          >
-                            <Copy className="h-3 w-3" />
-                            คัดลอก Error
-                          </Button>
-                        )}
                     </div>
 
                     {p.completedAt && (

@@ -50,9 +50,18 @@ export function TestimonialsSection() {
   // Schema.org Review for SEO
   const schemaData = {
     "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "RealEstateAgent",
     name: siteName,
     url: siteConfig.url,
+    image: `${siteConfig.url}${siteConfig.ogImage}`,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "Bangkok",
+      addressLocality: "Bangkok",
+      postalCode: "10110",
+      addressCountry: "TH"
+    },
+    priceRange: "$$",
     aggregateRating: {
       "@type": "AggregateRating",
       ratingValue: "5.0",

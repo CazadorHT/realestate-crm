@@ -18,11 +18,11 @@ export function AnimationProvider({ children }: AnimationProviderProps) {
   useEffect(() => {
     // Initialize AOS globally with professional "snappy" defaults
     AOS.init({
-      duration: 800,
-      easing: "ease-out-cubic",
+      duration: 300, // Reduced duration for snappier feel
+      easing: "ease-out-quart",
       once: true,
       mirror: false,
-      offset: 120, // Start animation slightly before element enters viewport
+      offset: 100, // Reduced offset for better mobile performance
     });
 
     // Handle dynamic route changes if needed

@@ -205,6 +205,7 @@ export function BlogSeoTab({ form, postId }: BlogSeoTabProps) {
                     placeholder='{ "@context": "https://schema.org", ... }'
                     className="font-mono text-xs min-h-[200px] border-slate-200"
                     {...field}
+                    value={(field.value as any) ?? ""}
                   />
                 </FormControl>
                 <FormMessage />

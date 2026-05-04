@@ -71,11 +71,11 @@ export function AiActivityTable({ logs }: AiActivityTableProps) {
               </td>
               <td className="px-6 py-4">
                 <div className="max-w-xs transition-all duration-300">
-                  {log.status === "error" ? (
+                  {log.status === "error" || log.status === "validation_error" ? (
                     <div className="flex flex-col gap-1.5 animate-in fade-in slide-in-from-right-2 duration-300">
                       <div className="flex items-center justify-between">
                         <span className="text-[10px] font-semibold uppercase tracking-wider text-red-500/80 italic">
-                          System Exception
+                          {log.status === "validation_error" ? "Format Validation Failed" : "System Exception"}
                         </span>
                         {log.error_message && (
                           <CopyErrorButton text={log.error_message} />

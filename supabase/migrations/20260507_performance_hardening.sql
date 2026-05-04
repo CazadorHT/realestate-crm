@@ -8,8 +8,13 @@ BEGIN;
 
 -- 1. PROFILES OPTIMIZATION
 DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
-CREATE POLICY "profiles_select_own" ON public.profiles
-FOR SELECT USING (id = (SELECT auth.uid()));
+DROP POLICY IF EXISTS "profiles_public_read_basic" ON public.profiles;
+DROP POLICY IF EXISTS "Users can view their own profile" ON public.profiles;
+DROP POLICY IF EXISTS "Master: Profiles Select" ON public.profiles;
+DROP POLICY IF EXISTS "profiles_select_optimized_unified" ON public.profiles;
+
+CREATE POLICY "profiles_select_optimized_v2" ON public.profiles
+FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "profiles_agent_update_self" ON public.profiles;
 CREATE POLICY "profiles_agent_update_self" ON public.profiles
@@ -86,6 +91,7 @@ DROP POLICY IF EXISTS "System Admin Manage blog_posts" ON public.blog_posts;
 CREATE POLICY "blog_posts_select_optimized" ON public.blog_posts
 FOR SELECT USING (
     (is_published = true AND deleted_at IS NULL) OR 
+    author_id = (SELECT auth.uid()) OR
     EXISTS (SELECT 1 FROM public.profiles WHERE id = (SELECT auth.uid()) AND role IN ('ADMIN', 'MANAGER', 'AGENT'))
 );
 

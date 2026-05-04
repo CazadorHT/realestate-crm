@@ -13,6 +13,10 @@ import { generateBlogPost, refineBlogContent } from "./services/ai-service";
 import { uploadBlogImage } from "./services/storage-service";
 import { generateBlogSlug, ensureUniqueSlug, generateBlogJsonLd } from "./blog-utils";
 import { Database } from "@/lib/database.types";
+import { v4 as uuidv4 } from "uuid";
+import { createBackgroundTaskAction } from "@/lib/background-tasks/actions";
+import { inngest } from "@/lib/inngest/client";
+import { requireAuthContext } from "@/lib/authz";
 
 /**
  * Standardized Action Response Interface
@@ -53,10 +57,14 @@ export async function createBlogPostAction(
     // ⚡ AUTOMATION: Handle Structured Data (Auto-gen if empty)
     let structuredData = null;
     if (validated.structured_data) {
-      try {
-        structuredData = JSON.parse(validated.structured_data);
-      } catch (e: unknown) {
-        console.warn("Invalid manual structured data, will fallback to auto-gen", e);
+      if (typeof validated.structured_data === "string") {
+        try {
+          structuredData = JSON.parse(validated.structured_data);
+        } catch (e: unknown) {
+          console.warn("Invalid manual structured data, will fallback to auto-gen", e);
+        }
+      } else {
+        structuredData = validated.structured_data;
       }
     }
     
@@ -66,7 +74,8 @@ export async function createBlogPostAction(
         excerpt: validated.excerpt,
         cover_image: validated.cover_image,
         published_at: validated.published_at,
-        author_name: user.full_name || "Admin"
+        author_name: user.full_name || "Admin",
+        faqs: validated.faqs
       });
     }
 
@@ -79,7 +88,7 @@ export async function createBlogPostAction(
       : [];
 
     // 🛡️ HARDENING: AI Draft Enforcement
-    const isPublishedFinal = validated.requires_ai_review ? false : validated.is_published;
+    const isPublishedFinal = !!validated.is_published;
 
     const { error, data } = await supabase.from("blog_posts").insert({
       title: validated.title,
@@ -105,6 +114,9 @@ export async function createBlogPostAction(
       author_id, // 🏗️ RELATIONAL
       structured_data: structuredData, // ⚡ AUTOMATED
       requires_ai_review: validated.requires_ai_review,
+      seo_score: validated.seo_score || null,
+      seo_feedback: validated.seo_feedback || null,
+      social_snippets: validated.social_snippets || null,
     }).select("id, slug").single();
 
     if (error) throw error;
@@ -163,9 +175,13 @@ export async function updateBlogPostAction(
     // ⚡ AUTOMATION: Structured Data (Update auto-gen if needed)
     let structuredData = null;
     if (validated.structured_data) {
-      try {
-        structuredData = JSON.parse(validated.structured_data);
-      } catch (e) {}
+      if (typeof validated.structured_data === "string") {
+        try {
+          structuredData = JSON.parse(validated.structured_data);
+        } catch (e) {}
+      } else {
+        structuredData = validated.structured_data;
+      }
     }
 
     if (!structuredData) {
@@ -174,7 +190,8 @@ export async function updateBlogPostAction(
         excerpt: validated.excerpt,
         cover_image: validated.cover_image,
         published_at: validated.published_at,
-        author_name: user.full_name || "Admin"
+        author_name: user.full_name || "Admin",
+        faqs: validated.faqs
       });
     }
 
@@ -187,7 +204,7 @@ export async function updateBlogPostAction(
       : [];
 
     // 🛡️ HARDENING: AI Draft Enforcement
-    const isPublishedFinal = validated.requires_ai_review ? false : validated.is_published;
+    const isPublishedFinal = !!validated.is_published;
 
     const { error } = await supabase
       .from("blog_posts")
@@ -214,6 +231,9 @@ export async function updateBlogPostAction(
         tags: tagsArray,
         structured_data: structuredData,
         requires_ai_review: validated.requires_ai_review,
+        seo_score: validated.seo_score || null,
+        seo_feedback: validated.seo_feedback || null,
+        social_snippets: validated.social_snippets || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id);
@@ -357,17 +377,35 @@ export async function permanentDeleteBlogPostAction(id: string): Promise<ActionR
   try {
     const supabase = await createClient();
     const user = await getCurrentProfile();
-
-    // ONLY ADMIN can permanently delete
-    if (!user || user.role !== "ADMIN") {
-      return { success: false, message: "Unauthorized: ต้องเป็น Admin เท่านั้น" };
+    
+    // 🛡️ SECURITY: Only ADMIN or MANAGER can permanently delete
+    if (!user || !["ADMIN", "MANAGER"].includes(user.role)) {
+      return { success: false, message: "Unauthorized: คุณไม่มีสิทธิ์ลบข้อมูลถาวร" };
     }
 
-    const { error } = await supabase.from("blog_posts").delete().eq("id", id);
+    // 🛡️ Step 1: Delete associated data first (to avoid foreign key errors)
+    await supabase.from("blog_post_views_log").delete().eq("post_id", id);
+    
+    // 🛡️ Step 2: Delete the actual blog post
+    const { error, count } = await supabase
+      .from("blog_posts")
+      .delete({ count: 'exact' }) // 👈 ขอเช็คจำนวนแถวที่ลบได้
+      .eq("id", id);
 
     if (error) throw error;
+    
+    // 🚩 If no rows deleted, it might be due to RLS policies
+    if (count === 0) {
+      return { 
+        success: false, 
+        message: "ไม่สามารถลบได้: คุณอาจไม่มีสิทธิ์ในระดับฐานข้อมูล (RLS) หรือบทความนี้ถูกลบไปแล้ว" 
+      };
+    }
 
+    // Comprehensive Path Revalidation
     revalidatePath("/protected/blogs");
+    revalidatePath("/protected/blogs/trash"); // 👈 มั่นใจว่าหน้าถังขยะจะอัปเดต
+    revalidatePath("/blog");
     
     return {
       success: true,
@@ -375,6 +413,51 @@ export async function permanentDeleteBlogPostAction(id: string): Promise<ActionR
     };
   } catch (error: unknown) {
     console.error("Permanent delete blog error:", error);
+    return {
+      success: false,
+      message: mapDbError(error),
+    };
+  }
+}
+
+/**
+ * Bulk permanently deletes multiple blog posts.
+ */
+export async function bulkPermanentDeleteBlogAction(ids: string[]): Promise<ActionResponse> {
+  try {
+    if (!ids || ids.length === 0) {
+      return { success: false, message: "กรุณาเลือกบทความที่ต้องการลบ" };
+    }
+
+    const supabase = await createClient();
+    const user = await getCurrentProfile();
+
+    // 🛡️ SECURITY: Only ADMIN or MANAGER
+    if (!user || !["ADMIN", "MANAGER"].includes(user.role)) {
+      return { success: false, message: "Unauthorized: คุณไม่มีสิทธิ์ลบข้อมูลถาวร" };
+    }
+
+    // 🛡️ Step 1: Delete associated data for all IDs
+    await supabase.from("blog_post_views_log").delete().in("post_id", ids);
+    
+    // 🛡️ Step 2: Delete the actual blog posts
+    const { error, count } = await supabase
+      .from("blog_posts")
+      .delete({ count: 'exact' })
+      .in("id", ids);
+
+    if (error) throw error;
+
+    revalidatePath("/protected/blogs");
+    revalidatePath("/protected/blogs/trash");
+    revalidatePath("/blog");
+    
+    return {
+      success: true,
+      message: `ลบถาวรจำนวน ${count || ids.length} บทความเรียบร้อยแล้ว`,
+    };
+  } catch (error: unknown) {
+    console.error("Bulk permanent delete error:", error);
     return {
       success: false,
       message: mapDbError(error),
@@ -646,26 +729,103 @@ export async function generateBlogPostAction(
   targetAudience: string,
   tone: string,
   length: string = "Medium",
-  includeImage: boolean = false,
+  imageStyle: string = "Realistic",
+  taskId?: string,
 ) {
   try {
-    const user = await getCurrentProfile();
+    const { user, tenantId } = await requireAuthContext();
+    const { t } = await getServerTranslations();
     if (!user) return { success: false, message: "Unauthorized" };
 
-    const result = await generateBlogPost(
-      keyword,
-      targetAudience,
-      tone,
-      length,
-      includeImage,
-    );
-    
-    return result;
+    // 🏗️ Step 1: Use provided taskId or create a unique one
+    const finalTaskId = taskId || uuidv4();
+
+    // 🚀 Step 2: Trigger Inngest Background Worker (TRUE Non-blocking)
+    // We don't await this if we want it to be super fast, 
+    // but for stability we'll try to send it and catch immediate network errors
+    try {
+      // Use a timeout for the inngest.send to avoid hanging the server action
+      const sendPromise = inngest.send({
+        name: "blog.generate.requested",
+        data: {
+          taskId: finalTaskId,
+          keyword,
+          targetAudience,
+          tone,
+          length,
+          imageStyle,
+          authorId: user.id,
+          tenantId: tenantId || "default",
+          metadata: {
+            userAgent: (await (await import("next/headers")).headers()).get("user-agent") || "unknown",
+            referer: (await (await import("next/headers")).headers()).get("referer") || "unknown",
+          }
+        }
+      });
+
+      // Wait maximum 3 seconds for inngest to respond, otherwise fallback
+      const result = await Promise.race([
+        sendPromise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error("Inngest Timeout")), 3000))
+      ]);
+      
+      return { 
+        success: true, 
+        message: "ระบบกำลังเจนบทความในพื้นหลัง คุณสามารถปิดหน้าต่างนี้ได้เลยครับ",
+        taskId: finalTaskId 
+      };
+    } catch (inngestError: any) {
+      console.warn("⚠️ Inngest failed/timeout, falling back to SYNC:", inngestError.message);
+      
+      try {
+        const result = await generateBlogPost(
+          keyword,
+          targetAudience,
+          tone,
+          length as any,
+          [], 
+          imageStyle
+        );
+
+        const dbResult = await createBlogPostAction({
+          ...result,
+          author_id: user.id,
+          is_published: false,
+          requires_ai_review: true
+        } as any);
+
+        if (!dbResult.success) throw new Error(dbResult.message);
+        
+        // ✅ CRITICAL: Finalize the task in DB so the Monitor knows it's DONE
+        if (finalTaskId) {
+          const { updateBackgroundTaskAction } = await import("@/lib/background-tasks/actions");
+          await updateBackgroundTaskAction({
+            id: finalTaskId,
+            status: "SUCCESS",
+            message: "สร้างบทความสำเร็จ (Sync Fallback)",
+            result_link: `/protected/blogs/${(dbResult.data as any).slug}`,
+            result: result
+          });
+        }
+
+        return {
+          success: true,
+          message: "เจนบทความสำเร็จ (รันแบบ Synchronous เนื่องจากระบบพื้นหลังไม่พร้อม)",
+          data: { ...result, slug: (dbResult.data as any).slug }
+        };
+      } catch (syncError: any) {
+        console.error("❌ Both Inngest and Sync generation failed:", syncError);
+        return {
+          success: false,
+          message: `ไม่สามารถเชื่อมต่อกับ AI ได้ (${syncError.message || "Network Error"}). กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณครับ`,
+        };
+      }
+    }
   } catch (error: unknown) {
     console.error("AI Generate blog error:", error);
     return {
       success: false,
-      message: "AI ประมวลผลล้มเหลว กรุณาลองใหม่อีกครั้ง",
+      message: error instanceof Error ? error.message : "AI ประมวลผลล้มเหลว กรุณาลองใหม่อีกครั้ง",
     };
   }
 }

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { BsStars } from "react-icons/bs";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { m, AnimatePresence } from "framer-motion";
 import {
   useLanguage,
   dictionaries,
@@ -108,19 +109,35 @@ export function PropertyDescription({
       </h2>
 
       <div className="relative">
-        <div
+        <m.div
           ref={contentRef}
-          className={`prose prose-slate max-w-none text-slate-600 leading-normal text-sm md:text-base transition-all duration-1000 ease-in-out border-b border-slate-200/60 pb-10 overflow-hidden ${
-            !isExpanded && shouldShowButton ? "max-h-[300px]" : "max-h-[5000px]"
-          }`}
+          initial={false}
+          animate={{ 
+            height: !isExpanded && shouldShowButton ? THRESHOLD_HEIGHT : "auto",
+          }}
+          transition={{ 
+            type: "spring",
+            stiffness: 40,
+            damping: 20,
+            mass: 1.5,
+            restDelta: 0.5
+          }}
+          className="prose prose-slate max-w-none text-slate-600 leading-normal text-sm md:text-base border-b border-slate-200/60 pb-10 overflow-hidden"
           dangerouslySetInnerHTML={{
             __html: sanitizedDescription || t("property.no_description"),
           }}
         />
 
-        {!isExpanded && shouldShowButton && (
-          <div className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-white via-white/80 to-transparent pointer-events-none" />
-        )}
+        <AnimatePresence>
+          {!isExpanded && shouldShowButton && (
+            <m.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute bottom-0 left-0 right-0 h-32 bg-linear-to-t from-white via-white/80 to-transparent pointer-events-none" 
+            />
+          )}
+        </AnimatePresence>
       </div>
 
       {shouldShowButton && (

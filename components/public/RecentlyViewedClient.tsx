@@ -455,9 +455,20 @@ export function RecentlyViewedClient({
     itemListElement: items.slice(0, 10).map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,
-      url: item.slug
-        ? `${siteConfig.url}/properties/${item.slug}`
-        : `${siteConfig.url}/properties/${item.id}`,
+      item: {
+        "@type": "Product",
+        name: getLocaleValue(item, "title", language),
+        url: item.slug
+          ? `${siteConfig.url}/properties/${item.slug}`
+          : `${siteConfig.url}/properties/${item.id}`,
+        image: item.image_url || `${siteConfig.url}${siteConfig.ogImage}`,
+        offers: {
+          "@type": "Offer",
+          price: item.price || item.rental_price || 0,
+          priceCurrency: "THB",
+          availability: "https://schema.org/InStock",
+        }
+      }
     })),
   };
 

@@ -1,9 +1,12 @@
-"use client";
-
 import { useEditor, EditorContent } from "@tiptap/react";
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableCell } from "@tiptap/extension-table-cell";
 import { Toggle } from "@/components/ui/toggle";
 import {
   Bold,
@@ -16,7 +19,12 @@ import {
   Undo,
   Redo,
   Link as LinkIcon,
+  Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
+import { uploadBlogImage } from "@/features/blog/services/storage-service";
+import { toast } from "sonner";
+import { Button } from "../ui/button";
 
 interface TiptapEditorProps {
   value: string;
@@ -24,10 +32,31 @@ interface TiptapEditorProps {
 }
 
 export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
+  const handleImageUpload = useCallback(async (file: File) => {
+    const toastId = toast.loading("กำลังอัปโหลดและปรับแต่งรูปภาพ...");
+    try {
+      const response = await uploadBlogImage(file, file.name, file.type);
+      if (response.success && response.data) {
+        toast.success("อัปโหลดรูปภาพเรียบร้อยแล้ว (WebP Optimized)", { id: toastId });
+        return response.data.publicUrl;
+      }
+      throw new Error(response.message);
+    } catch (error) {
+      toast.error("อัปโหลดรูปภาพไม่สำเร็จ", { id: toastId });
+      return null;
+    }
+  }, []);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
       StarterKit,
+      Image.configure({
+        allowBase64: true,
+        HTMLAttributes: {
+          class: "rounded-2xl shadow-lg border border-slate-100 my-8 mx-auto hover:scale-[1.01] transition-transform duration-500 cursor-zoom-in max-w-2xl w-full max-h-[600px] object-contain",
+        },
+      }),
       Link.extend({
         addAttributes() {
           return {
@@ -46,15 +75,66 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
       }).configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: "text-primary underline cursor-pointer", // This might still apply default style if no class present, or merge.
+          class: "text-primary underline cursor-pointer",
         },
       }),
+      Table.configure({
+        resizable: true,
+        HTMLAttributes: {
+          class: "border-collapse table-auto w-full border border-slate-200 my-4",
+        },
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
     ],
     content: value,
     editorProps: {
       attributes: {
         class:
-          "min-h-[400px] max-h-[600px] overflow-y-auto w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 prose prose-sm max-w-none",
+          "min-h-[400px] max-h-[600px] overflow-y-auto w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 prose prose-sm max-w-none prose-img:mx-auto prose-img:rounded-2xl",
+      },
+      // 🛠️ Handle Drag and Drop
+      handleDrop: (view, event, slice, moved) => {
+        if (!moved && event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0]) {
+          const file = event.dataTransfer.files[0];
+          if (file.type.startsWith("image/")) {
+            event.preventDefault(); // Stop default browser behavior
+            handleImageUpload(file).then(url => {
+              if (url) {
+                const { schema } = view.state;
+                const node = schema.nodes.image.create({ src: url });
+                const transaction = view.state.tr.replaceSelectionWith(node);
+                view.dispatch(transaction);
+              }
+            });
+            return true;
+          }
+        }
+        return false;
+      },
+      // 🛠️ Handle Paste
+      handlePaste: (view, event) => {
+        const items = Array.from(event.clipboardData?.items || []);
+        const files = Array.from(event.clipboardData?.files || []);
+        
+        // Handle image files in clipboard
+        const imageFile = files.find(f => f.type.startsWith("image/")) || 
+                          items.find(item => item.type.startsWith("image/"))?.getAsFile();
+
+        if (imageFile) {
+          event.preventDefault();
+          handleImageUpload(imageFile as File).then(url => {
+            if (url) {
+              const { schema } = view.state;
+              const node = schema.nodes.image.create({ src: url });
+              const transaction = view.state.tr.replaceSelectionWith(node);
+              view.dispatch(transaction);
+            }
+          });
+          return true;
+        }
+        return false;
       },
     },
     onUpdate: ({ editor }) => {
@@ -65,18 +145,12 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
   // Sync editor content when value prop changes
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
-
-    // IMPORTANT: Only sync if the editor is NOT focused to avoid infinite loops 
-    // and cursor jumping while the user is typing.
     if (editor.isFocused) return;
 
     const currentContent = editor.getHTML();
     if (currentContent !== value) {
-      // Use a small timeout or requestAnimationFrame to ensure the editor is ready
-      // and to break the synchronous update cycle
       const timeoutId = setTimeout(() => {
         if (!editor.isDestroyed && !editor.isFocused) {
-          // Pass emitUpdate: false to prevent the update event from triggering another onChange cycle
           editor.commands.setContent(value || "", { emitUpdate: false }); 
         }
       }, 0);
@@ -88,30 +162,43 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
     return null;
   }
 
+  const addImage = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = async () => {
+      if (input.files?.length) {
+        const file = input.files[0];
+        const url = await handleImageUpload(file);
+        if (url) {
+          editor.chain().focus().setImage({ src: url }).run();
+        }
+      }
+    };
+    input.click();
+  };
+
   const setLink = () => {
     const previousUrl = editor.getAttributes("link").href;
     const url = window.prompt("URL", previousUrl);
 
-    if (url === null) {
-      return;
-    }
-
+    if (url === null) return;
     if (url === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
-
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
   };
 
   return (
-    <div className="flex flex-col gap-2 rounded-md border  border-input bg-transparent">
+    <div className="flex flex-col gap-2 rounded-md border border-input bg-transparent overflow-hidden group">
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 border-b border-gray-200 p-2">
+      <div className="flex flex-wrap items-center gap-1 border-b border-gray-200 p-2 bg-slate-50/50">
         <Toggle
           size="sm"
           pressed={editor.isActive("bold")}
           onPressedChange={() => editor.chain().focus().toggleBold().run()}
+          className="data-[state=on]:bg-white data-[state=on]:text-blue-600"
         >
           <Bold className="h-4 w-4" />
         </Toggle>
@@ -119,25 +206,24 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
           size="sm"
           pressed={editor.isActive("italic")}
           onPressedChange={() => editor.chain().focus().toggleItalic().run()}
+          className="data-[state=on]:bg-white data-[state=on]:text-blue-600"
         >
           <Italic className="h-4 w-4" />
         </Toggle>
-        <div className="w-px h-6 bg-border  mx-1" />
+        <div className="w-px h-6 bg-border mx-1" />
         <Toggle
           size="sm"
           pressed={editor.isActive("heading", { level: 2 })}
-          onPressedChange={() =>
-            editor.chain().focus().toggleHeading({ level: 2 }).run()
-          }
+          onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          className="data-[state=on]:bg-white data-[state=on]:text-blue-600"
         >
           <Heading2 className="h-4 w-4" />
         </Toggle>
         <Toggle
           size="sm"
           pressed={editor.isActive("heading", { level: 3 })}
-          onPressedChange={() =>
-            editor.chain().focus().toggleHeading({ level: 3 }).run()
-          }
+          onPressedChange={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          className="data-[state=on]:bg-white data-[state=on]:text-blue-600"
         >
           <Heading3 className="h-4 w-4" />
         </Toggle>
@@ -145,18 +231,14 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         <Toggle
           size="sm"
           pressed={editor.isActive("bulletList")}
-          onPressedChange={() =>
-            editor.chain().focus().toggleBulletList().run()
-          }
+          onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
         >
           <List className="h-4 w-4" />
         </Toggle>
         <Toggle
           size="sm"
           pressed={editor.isActive("orderedList")}
-          onPressedChange={() =>
-            editor.chain().focus().toggleOrderedList().run()
-          }
+          onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
         >
           <ListOrdered className="h-4 w-4" />
         </Toggle>
@@ -164,12 +246,22 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
         <Toggle
           size="sm"
           pressed={editor.isActive("blockquote")}
-          onPressedChange={() =>
-            editor.chain().focus().toggleBlockquote().run()
-          }
+          onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
         >
           <Quote className="h-4 w-4" />
         </Toggle>
+        
+        {/* 📸 Optimized Image Upload Button */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={addImage}
+          className="h-8 w-8 p-0 hover:bg-white hover:text-blue-600"
+        >
+          <ImageIcon className="h-4 w-4" />
+        </Button>
+
         <Toggle
           size="sm"
           pressed={editor.isActive("link")}
@@ -198,6 +290,11 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
 
       {/* Editor */}
       <EditorContent editor={editor} className="p-0" />
+      
+      <div className="px-4 py-2 border-t border-slate-100 bg-slate-50/30 text-[10px] text-slate-400 flex items-center gap-4">
+        <span>💡 TIP: วางรูปภาพ หรือลากไฟล์มาวางใน Editor เพื่ออัปโหลดและปรับแต่งอัตโนมัติ</span>
+      </div>
     </div>
   );
 }
+

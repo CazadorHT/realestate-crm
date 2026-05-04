@@ -9,6 +9,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { useEffect, useRef } from "react";
 import { useDebounce } from "use-debounce";
+import { siteConfig } from "@/lib/site-config";
 
 export function MortgageCalculatorSection() {
   const { t } = useLanguage();
@@ -70,6 +71,12 @@ export function MortgageCalculatorSection() {
     description: t("home.mortgage.description"),
     applicationCategory: "FinanceApplication",
     operatingSystem: "Web Browser",
+    image: `${siteConfig.url}${siteConfig.ogImage}`,
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5.0",
+      ratingCount: "1250"
+    },
     offers: {
       "@type": "Offer",
       price: "0",

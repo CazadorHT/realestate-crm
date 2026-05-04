@@ -2,12 +2,15 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { BackgroundProcess, ProcessEvent } from "@/lib/process-monitor";
+import { useTenant } from "./TenantProvider";
+import { toast } from "sonner";
 
 interface ProcessContextType {
   processes: BackgroundProcess[];
   activeCount: number;
   errorCount: number;
   clearFinished: () => void;
+  deleteMultiple: (ids: string[]) => Promise<void>;
 }
 
 const ProcessContext = createContext<ProcessContextType | undefined>(undefined);
@@ -16,12 +19,25 @@ const STORAGE_KEY = "app_process_history";
 
 export function ProcessProvider({ children }: { children: React.ReactNode }) {
   const [processes, setProcesses] = useState<BackgroundProcess[]>([]);
+  const { activeTenant } = useTenant();
+  const tenantId = activeTenant?.id;
 
   // 🛡️ Load from Database on mount (Enterprise Persistence)
   useEffect(() => {
+    if (!tenantId) return;
+
     const syncWithDB = async () => {
       try {
-        const { getBackgroundTasksAction } = await import("@/lib/background-tasks/actions");
+        const { getBackgroundTasksAction, autoPruneOldTasksAction, markStuckTasksAsErrorAction } = await import("@/lib/background-tasks/actions");
+        
+        // 🧹 Economical Cleanup: 
+        // 1. Remove very old tasks (7+ days) 
+        // 2. Mark stuck tasks (>2h) as ERROR
+        await Promise.all([
+          autoPruneOldTasksAction(),
+          markStuckTasksAsErrorAction()
+        ]);
+
         const res = await getBackgroundTasksAction();
         if (res.success && Array.isArray(res.data)) {
           const synced = res.data.map((task: any) => ({
@@ -43,7 +59,88 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
       }
     };
     syncWithDB();
-  }, []);
+
+    // ⚡ REALTIME: Listen for background task updates (Optimized by Tenant)
+    const initRealtime = async () => {
+      const { createClient } = await import("@/lib/supabase/client");
+      const supabase = createClient();
+      
+      const channel = supabase
+        .channel(`background_tasks_${tenantId}`)
+        .on(
+          "postgres_changes",
+          { 
+            event: "UPDATE", 
+            schema: "public", 
+            table: "background_tasks",
+            filter: `tenant_id=eq.${tenantId}` 
+          },
+          (payload) => {
+            const updatedTask = payload.new as any;
+            
+            window.dispatchEvent(
+              new CustomEvent("app-process-event", {
+                detail: {
+                  type: "PROCESS_UPDATED",
+                  id: updatedTask.id,
+                  status: updatedTask.status,
+                  message: updatedTask.message,
+                  resultLink: updatedTask.result_link,
+                  errorDetails: updatedTask.error_details,
+                },
+              })
+            );
+
+            if (updatedTask.status === "SUCCESS") {
+              toast.success(`สำเร็จ: ${updatedTask.name}`, {
+                description: updatedTask.message,
+                action: updatedTask.result_link ? {
+                  label: "ดูผลลัพธ์",
+                  onClick: () => window.open(updatedTask.result_link, "_blank")
+                } : undefined
+              });
+            }
+
+            if (
+              updatedTask.status === "SUCCESS" && 
+              updatedTask.type === "BLOG_GENERATION" && 
+              updatedTask.result
+            ) {
+              window.dispatchEvent(
+                new CustomEvent("BLOG_AI_GENERATED_SUCCESS", { 
+                  detail: updatedTask.result 
+                })
+              );
+            }
+          }
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "DELETE",
+            schema: "public",
+            table: "background_tasks",
+            filter: `tenant_id=eq.${tenantId}`
+          },
+          (payload) => {
+            const deletedId = (payload.old as any).id;
+            if (deletedId) {
+              setProcesses((prev) => prev.filter((p) => p.id !== deletedId));
+            }
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    };
+
+    const cleanup = initRealtime();
+    return () => {
+      cleanup.then(fn => fn && (fn as any)());
+    };
+  }, [tenantId]);
 
   useEffect(() => {
     const handler = (e: Event) => {
@@ -78,10 +175,40 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("app-process-event", handler);
   }, []);
 
-  const clearFinished = useCallback(() => {
+  const clearFinished = useCallback(async () => {
+    const finishedIds = processes
+      .filter((p) => p.status === "SUCCESS" || p.status === "ERROR")
+      .map((p) => p.id);
+    
+    if (finishedIds.length === 0) return;
+
+    // 1. Update UI immediately
     setProcesses((prev) => 
       prev.filter((p) => p.status === "PROCESSING" || p.status === "PENDING")
     );
+
+    // 2. Persist to DB
+    try {
+      const { pruneBackgroundTasksAction } = await import("@/lib/background-tasks/actions");
+      await pruneBackgroundTasksAction();
+    } catch (e) {
+      console.error("Failed to prune background tasks from DB", e);
+    }
+  }, [processes]);
+
+  const deleteMultiple = useCallback(async (ids: string[]) => {
+    if (ids.length === 0) return;
+
+    // 1. Update UI immediately
+    setProcesses((prev) => prev.filter((p) => !ids.includes(p.id)));
+
+    // 2. Persist to DB
+    try {
+      const { deleteBackgroundTasksAction } = await import("@/lib/background-tasks/actions");
+      await deleteBackgroundTasksAction(ids);
+    } catch (e) {
+      console.error("Failed to delete background tasks from DB", e);
+    }
   }, []);
 
   const activeCount = processes.filter(
@@ -97,6 +224,7 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
         activeCount,
         errorCount,
         clearFinished,
+        deleteMultiple,
       }}
     >
       {children}

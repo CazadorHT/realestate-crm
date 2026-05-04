@@ -9,12 +9,20 @@ import {
   MapPin 
 } from "lucide-react";
 
-export function StatusBadge({ status }: { status: "success" | "error" }) {
+export function StatusBadge({ status }: { status: "success" | "error" | "validation_error" }) {
   if (status === "success") {
     return (
       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100/80 text-emerald-700 border border-emerald-200/50 shadow-xs">
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
         Success
+      </span>
+    );
+  }
+  if (status === "validation_error") {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-100/80 text-amber-700 border border-amber-200/50 shadow-xs">
+        <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+        Invalid Data
       </span>
     );
   }

@@ -180,75 +180,77 @@ export default async function LandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50 overflow-x-hidden scroll-smooth">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50 overflow-x-hidden scroll-smooth selection:bg-blue-100">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       
-      {/* ABOVE THE FOLD: Static for maximum First Impression */}
-      <HeroSection />
+      {/* ABOVE THE FOLD: Static for maximum First Impression & Zero CLS */}
+      <div className="relative">
+        <HeroSection />
+      </div>
       
-      <div className="min-h-[400px]">
+      <div className="min-h-[300px] md:min-h-[350px]">
         <PropertyTypeGrid />
       </div>
       
-      <div className="min-h-[100px]">
+      <div className="min-h-[80px] md:min-h-[100px]">
         <StatsBand />
       </div>
       
-      <div className="min-h-[200px]">
+      <div className="min-h-[150px] md:min-h-[200px]">
         <PartnerSection />
       </div>
       
-      {/* STRATEGIC CONVERSION: Hot Deals comes first based on Urgency & Conversion Insight */}
-      <div className="min-h-[600px]">
+      {/* STRATEGIC CONVERSION: Hot Deals with optimized skeleton height */}
+      <div className="min-h-[700px] md:min-h-[800px]">
         <HotDealsSection />
       </div>
       
-      {/* NAVIGATION & SEO: Popular Areas for Bot Crawling & Layout Flow */}
-      <div className="min-h-[400px]">
+      {/* NAVIGATION & SEO: Popular Areas */}
+      <div className="min-h-[450px] md:min-h-[500px]">
         <PopularAreasSection initialItems={popularAreas} initialProvinces={provinces} />
       </div>
       
-      {/* BELOW THE FOLD: Dynamic / Lazy */}
-      <div className="min-h-[800px]">
+      {/* BELOW THE FOLD: Dynamic / Lazy with realistic height placeholders */}
+      <div className="min-h-[1200px] md:min-h-[1400px]">
         <PropertyListingSection />
       </div>
       
-      <div className="min-h-[400px]">
+      <div className="min-h-[400px] md:min-h-[450px]">
         <MortgageCalculatorSection />
       </div>
       
-      <div className="min-h-[500px]">
+      <div className="min-h-[450px] md:min-h-[500px]">
         <RecentlyViewedSection />
       </div>
       
-      <div className="min-h-[600px]">
+      <div className="min-h-[500px] md:min-h-[600px]">
         <TrustSection />
       </div>
       
-      <div className="min-h-[600px]">
+      <div className="min-h-[500px] md:min-h-[600px]">
         <HowItWorksSection />
       </div>
       
-      <div className="min-h-[600px]">
+      <div className="min-h-[500px] md:min-h-[600px]">
         <TestimonialsSection />
       </div>
       
-      <div className="min-h-[600px]">
+      <div className="min-h-[500px] md:min-h-[600px]">
         <BlogSection />
       </div>
       
-      <div className="min-h-[500px]">
+      <div className="min-h-[400px] md:min-h-[500px]">
         <FAQSection />
       </div>
       
-      <div className="min-h-[600px]">
+      <div className="min-h-[500px] md:min-h-[600px]">
         <DepositPropertySection />
       </div>
       
-      <div className="min-h-[400px]">
+      <div className="min-h-[350px] md:min-h-[400px]">
         <CTASection />
       </div>
     </div>

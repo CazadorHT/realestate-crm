@@ -46,7 +46,12 @@ function normalizeModelName(modelName: string): string {
 /**
  * Get a specific generative model by name
  */
-export function getModel(modelName: string = DEFAULT_MODEL, options?: { useSearch?: boolean }) {
+export function getModel(modelName: string = DEFAULT_MODEL, options?: { 
+  useSearch?: boolean;
+  systemInstruction?: string;
+  responseMimeType?: "application/json" | "text/plain";
+  maxOutputTokens?: number;
+}) {
   const genAI = getClient();
   if (!genAI) return null;
 
@@ -55,6 +60,24 @@ export function getModel(modelName: string = DEFAULT_MODEL, options?: { useSearc
   
   if (options?.useSearch) {
     modelOptions.tools = [{ googleSearchRetrieval: {} }];
+  }
+
+  if (options?.systemInstruction) {
+    modelOptions.systemInstruction = options.systemInstruction;
+  }
+
+  if (options?.responseMimeType) {
+    modelOptions.generationConfig = {
+      ...modelOptions.generationConfig,
+      responseMimeType: options.responseMimeType,
+    };
+  }
+
+  if (options?.maxOutputTokens) {
+    modelOptions.generationConfig = {
+      ...modelOptions.generationConfig,
+      maxOutputTokens: options.maxOutputTokens,
+    };
   }
 
   return genAI.getGenerativeModel(modelOptions);
@@ -111,20 +134,20 @@ export async function generateText(
   prompt: string | any[],
   modelName: string = DEFAULT_MODEL,
   retryCount: number = 0,
-  options?: { useSearch?: boolean }
+  options?: { 
+    useSearch?: boolean;
+    systemInstruction?: string;
+    responseMimeType?: "application/json" | "text/plain";
+    maxOutputTokens?: number;
+  }
 ): Promise<AiGenerationResult> {
   const genAI = getClient();
   if (!genAI) {
     throw new Error("No GEMINI_API_KEY configured in environment");
   }
 
-  const normalizedModelName = normalizeModelName(modelName);
-  const modelOptions: any = { model: normalizedModelName };
-  if (options?.useSearch) {
-    modelOptions.tools = [{ googleSearchRetrieval: {} }];
-  }
-
-  const model = genAI.getGenerativeModel(modelOptions);
+  const model = getModel(modelName, options);
+  if (!model) throw new Error("Could not initialize AI model");
 
   try {
     const contentParts = Array.isArray(prompt) ? prompt : [prompt];

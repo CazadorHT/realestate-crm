@@ -4,6 +4,7 @@ import { processPropertyCreated, scanPropertyImage } from "@/lib/inngest/functio
 import { syncCommissionPayment } from "@/lib/inngest/finance-functions";
 import { dailyContractExpiryCheck } from "@/lib/inngest/contract-functions";
 import { onLeadCreated, onUserLogin } from "@/lib/inngest/intelligence-functions";
+import { onBlogGenerateRequested } from "@/lib/inngest/functions/blog-functions";
 
 // ✅ Export the Inngest API route handler
 export const { GET, POST, PUT } = serve({
@@ -15,5 +16,6 @@ export const { GET, POST, PUT } = serve({
     dailyContractExpiryCheck,
     onLeadCreated,
     onUserLogin,
+    onBlogGenerateRequested,
   ],
 });

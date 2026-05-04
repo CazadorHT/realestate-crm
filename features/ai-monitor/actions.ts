@@ -6,10 +6,11 @@ import { revalidatePath } from "next/cache";
 export type AiLogInput = {
   model: string;
   feature: string;
-  status: "success" | "error";
+  status: "success" | "error" | "validation_error";
   errorMessage?: string;
   promptTokens?: number;
   completionTokens?: number;
+  userId?: string; // 👈 เพิ่มตรงนี้
 };
 
 export async function calculateAiCost(model: string, promptTokens: number, completionTokens: number) {
@@ -33,6 +34,13 @@ export async function calculateAiCost(model: string, promptTokens: number, compl
 export async function logAiUsage(input: AiLogInput) {
   const supabase = await createClient();
 
+  // 🕵️ Determine User ID: Priority to input, then session
+  let finalUserId = input.userId;
+  if (!finalUserId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    finalUserId = user?.id;
+  }
+
   let costThb = 0;
   if (
     input.status === "success" &&
@@ -51,6 +59,7 @@ export async function logAiUsage(input: AiLogInput) {
       p_prompt_tokens: input.promptTokens || 0,
       p_completion_tokens: input.completionTokens || 0,
       p_cost_thb: costThb,
+      p_user_id: finalUserId || null, // 👈 ส่ง User ID ไปที่ RPC
     });
 
     if (error) {
@@ -146,7 +155,7 @@ export type AiLogRecord = {
   created_at: string;
   model: string;
   feature: string;
-  status: "success" | "error";
+  status: "success" | "error" | "validation_error";
   error_message: string | null;
   prompt_tokens: number;
   completion_tokens: number;

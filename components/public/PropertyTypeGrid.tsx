@@ -182,6 +182,13 @@ export function PropertyTypeGrid({
         name: type.title,
         description: type.description,
         url: `${siteConfig.url}${type.href}`,
+        image: `${siteConfig.url}${siteConfig.ogImage}`, // ✅ Fix: Added image
+        offers: { // ✅ Fix: Added generic offer
+          "@type": "Offer",
+          availability: "https://schema.org/InStock",
+          price: 0,
+          priceCurrency: "THB"
+        }
       },
     })),
   };

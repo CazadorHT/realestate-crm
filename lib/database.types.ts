@@ -416,7 +416,10 @@ export type Database = {
           published_at: string | null
           reading_time: string | null
           requires_ai_review: boolean
+          seo_feedback: string | null
+          seo_score: number | null
           slug: string
+          social_snippets: Json | null
           structured_data: Json | null
           tags: string[] | null
           title: string
@@ -446,7 +449,10 @@ export type Database = {
           published_at?: string | null
           reading_time?: string | null
           requires_ai_review?: boolean
+          seo_feedback?: string | null
+          seo_score?: number | null
           slug: string
+          social_snippets?: Json | null
           structured_data?: Json | null
           tags?: string[] | null
           title: string
@@ -476,7 +482,10 @@ export type Database = {
           published_at?: string | null
           reading_time?: string | null
           requires_ai_review?: boolean
+          seo_feedback?: string | null
+          seo_score?: number | null
           slug?: string
+          social_snippets?: Json | null
           structured_data?: Json | null
           tags?: string[] | null
           title?: string

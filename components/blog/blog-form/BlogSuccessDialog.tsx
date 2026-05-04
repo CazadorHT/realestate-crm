@@ -27,14 +27,16 @@ export function BlogSuccessDialog({
   return (
     <Dialog
       open={!!successData}
+      
       onOpenChange={(open) => {
         if (!open) {
           onOpenChange(false);
+          router.refresh(); // บังคับรีเฟรชข้อมูลใหม่
           router.push("/protected/blogs");
         }
       }}
     >
-      <DialogContent className="sm:max-w-md bg-white border-0 shadow-xl rounded-2xl">
+      <DialogContent className="sm:max-w-md! bg-white border-0 shadow-xl rounded-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3 text-emerald-600 text-xl">
             <div className="p-2 bg-emerald-100 rounded-full">
@@ -53,6 +55,7 @@ export function BlogSuccessDialog({
             onClick={() => {
               if (successData?.slug) {
                 window.open(`/blog/${successData.slug}`, "_blank");
+                router.refresh();
                 router.push("/protected/blogs");
               } else {
                 toast.error("ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
@@ -70,7 +73,10 @@ export function BlogSuccessDialog({
 
           <Button
             className="w-full justify-start gap-3 h-14 text-base font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-xl"
-            onClick={() => router.push("/protected/blogs")}
+            onClick={() => {
+              router.refresh();
+              router.push("/protected/blogs");
+            }}
           >
             <ListIcon className="w-5 h-5" />
             <div className="flex flex-col items-start">

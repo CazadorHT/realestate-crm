@@ -12,11 +12,18 @@ export type BlogPost = Database["public"]["Tables"]["blog_posts"]["Row"] & {
  * Get published blog posts with author info for public site
  */
 export async function getBlogPosts(category?: string, limit = 10, offset = 0): Promise<BlogPost[]> {
-  const supabase = createClient();
+  let supabase;
+  if (typeof window === "undefined") {
+    const { createClient: createServerClient } = await import("@/lib/supabase/server");
+    supabase = await createServerClient();
+  } else {
+    supabase = createClient();
+  }
+
   let query = supabase
     .from("blog_posts")
     .select(`
-      id, slug, title, title_en, title_cn, title_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, cover_image, category, published_at,
+      id, slug, title, title_en, title_cn, title_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, cover_image, category, published_at, tags,
       profiles:author_id (
         full_name,
         avatar_url
@@ -45,13 +52,21 @@ export async function getBlogPosts(category?: string, limit = 10, offset = 0): P
  * Get all blog posts with author info for admin dashboard
  */
 export async function getAllBlogPosts(page = 1, pageSize = 10): Promise<{ posts: BlogPost[]; count: number }> {
-  const supabase = createClient();
+  // 🛡️ DYNAMIC CLIENT: Use server client if on server, client-side if in browser
+  let supabase;
+  if (typeof window === "undefined") {
+    const { createClient: createServerClient } = await import("@/lib/supabase/server");
+    supabase = await createServerClient();
+  } else {
+    supabase = createClient();
+  }
+
   const offset = (page - 1) * pageSize;
   
   const { data, error, count } = await supabase
     .from("blog_posts")
     .select(`
-      id, slug, title, title_en, title_cn, title_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, cover_image, category, published_at, is_published, created_at,
+      id, slug, title, title_en, title_cn, title_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, cover_image, category, published_at, is_published, created_at, tags,
       profiles:author_id (
         full_name,
         avatar_url
@@ -63,7 +78,7 @@ export async function getAllBlogPosts(page = 1, pageSize = 10): Promise<{ posts:
 
   if (error) {
     console.error("Error fetching all blog posts:", error);
-    throw new Error(require("@/lib/db-error").mapDbError(error));
+    throw new Error("Failed to fetch blog posts");
   }
 
   return { posts: (data as BlogPost[]) || [], count: count || 0 };
@@ -73,11 +88,18 @@ export async function getAllBlogPosts(page = 1, pageSize = 10): Promise<{ posts:
  * Get single blog post by slug with author info
  */
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  const supabase = createClient();
+  let supabase;
+  if (typeof window === "undefined") {
+    const { createClient: createServerClient } = await import("@/lib/supabase/server");
+    supabase = await createServerClient();
+  } else {
+    supabase = createClient();
+  }
+
   const { data, error } = await supabase
     .from("blog_posts")
     .select(`
-      id, slug, title, title_en, title_cn, title_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, content, content_en, content_cn, content_ru, cover_image, category, published_at,
+      id, slug, title, title_en, title_cn, title_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, content, content_en, content_cn, content_ru, cover_image, category, published_at, is_published, tags, structured_data,
       profiles:author_id (
         full_name,
         avatar_url
@@ -85,7 +107,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
     `)
     .is("deleted_at", null)
     .eq("slug", slug)
-    .eq("is_published", true)
+    // Removed strict is_published check here so admins can preview drafts
     .single();
 
   if (error) {
@@ -103,11 +125,18 @@ export async function getRelatedPosts(
   category: string,
   limit: number = 3,
 ): Promise<BlogPost[]> {
-  const supabase = createClient();
+  let supabase;
+  if (typeof window === "undefined") {
+    const { createClient: createServerClient } = await import("@/lib/supabase/server");
+    supabase = await createServerClient();
+  } else {
+    supabase = createClient();
+  }
+
   const { data, error } = await supabase
     .from("blog_posts")
     .select(`
-      id, slug, title, title_en, title_cn, title_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, cover_image, category, published_at,
+      id, slug, title, title_en, title_cn, title_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, cover_image, category, published_at, tags,
       profiles:author_id (
         full_name,
         avatar_url
