@@ -1,3 +1,5 @@
+import { BarChart } from "lucide-react";
+
 const getBaseUrl = () => {
   // Support standard NEXT_PUBLIC_SITE_URL first
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
@@ -20,6 +22,7 @@ export const siteConfig = {
   logo: "/images/branding/vcc-asset/logo-dark.svg",
   logoDark: "/images/branding/vcc-asset/logo-light.svg",
   brandCard: "/images/branding/vcc-asset/favicon-animated-light.svg",
+  brandCardDark: "/images/branding/vcc-asset/png/favicon-dark.png",
   ogImage: "/images/hero-realestate.png",
   keywords: [
     "ซื้อขายบ้าน",

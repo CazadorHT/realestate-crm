@@ -5,11 +5,60 @@ import { Json } from "@/lib/database.types";
 import { sendLineNotification } from "@/lib/line";
 import { getTemplateConfig } from "@/features/line/utils";
 import { headers } from "next/headers";
-
-import { parseUserAgent } from "./utils";
-import { logger } from "@/lib/logger";
+import { requireAuthContext } from "@/lib/authz";
+import { AuditActionResult, AuditLogEntry } from "./types";
 import * as Sentry from "@sentry/nextjs";
+import { logger } from "@/lib/logger";
+import { parseUserAgent } from "./utils";
 
+/**
+ * 🛡️ PDPA Helper: Scrub sensitive keys from object recursively
+ */
+const SENSITIVE_LOG_KEYS = [
+  "commission_sale_percentage",
+  "commission_rent_months",
+  "co_agent_phone",
+  "co_agent_contact_id",
+  "co_agent_contact_channel",
+  "co_agent_sale_commission_percent",
+  "co_agent_rent_commission_months",
+  "owner_name",
+  "owner_phone",
+  "owner_line",
+  "owner_email"
+];
+
+function scrubMetadata(obj: unknown): unknown {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj !== "object") return obj;
+  
+  if (Array.isArray(obj)) {
+    return obj.map((x: unknown) => scrubMetadata(x));
+  }
+
+  const scrubbed: Record<string, unknown> = {};
+  const entries = Object.entries(obj as Record<string, unknown>);
+  
+  for (const [key, value] of entries) {
+    const isSensitive = SENSITIVE_LOG_KEYS.some(
+      (k) => key.toLowerCase() === k.toLowerCase()
+    );
+
+    if (isSensitive) {
+      scrubbed[key] = "[MASKED]";
+    } else if (value !== null && typeof value === "object") {
+      scrubbed[key] = scrubMetadata(value);
+    } else {
+      scrubbed[key] = value;
+    }
+  }
+  return scrubbed;
+}
+
+/**
+ * 📝 Log Activity Action
+ * Handles system-wide audit logging and notifications
+ */
 export async function logActivityAction(
   action: string,
   entity: string,
@@ -22,7 +71,6 @@ export async function logActivityAction(
       data: { user },
     } = await supabase.auth.getUser();
 
-    // 🌐 Capture IP and User Agent from headers
     const reqHeaders = await headers();
     const ip = reqHeaders.get("x-forwarded-for")?.split(",")[0] || reqHeaders.get("x-real-ip") || "unknown";
     const userAgent = reqHeaders.get("user-agent") || "unknown";
@@ -32,14 +80,12 @@ export async function logActivityAction(
         ? (metadata as Record<string, unknown>).email
         : user?.email || "anonymous";
 
-    // Prepare metadata with system info
     const enrichedMetadata = {
       ...(typeof metadata === "object" ? metadata : {}),
       ip,
       userAgent: parseUserAgent(userAgent),
     };
 
-    // 🛡️ [PHASE 1] Use Security Definer RPC for logging to avoid adminClient bypass
     const { error: dbError } = await supabase.rpc("log_system_activity", {
       p_action: action,
       p_entity: entity,
@@ -52,7 +98,6 @@ export async function logActivityAction(
       logger.error("Audit log RPC failed", dbError, { source: "audit-actions", action, entity });
     }
 
-    // 🕵️ Resolve User Identity for Notifications (Use secure RPC to avoid adminClient)
     type ProfileSummary = {
       id: string;
       role: string;
@@ -71,7 +116,6 @@ export async function logActivityAction(
         effectiveUserId = profile.id;
       }
     } else if (user) {
-      // Authenticated user can read their own profile usually
       const { data: p } = await supabase
         .from("profiles")
         .select("id, role, avatar_url")
@@ -80,7 +124,6 @@ export async function logActivityAction(
       profile = p as ProfileSummary;
     }
 
-    // 🛡️ Sentry Integration: Add breadcrumb for every important action
     Sentry.addBreadcrumb({
       category: "activity",
       message: `${action} ${entity}`,
@@ -88,7 +131,6 @@ export async function logActivityAction(
       data: { entityId, userId: effectiveUserId },
     });
 
-    // 🛡️ Structured Logging: Info level for traceability
     logger.info(`Activity: ${action} ${entity}`, {
       source: "audit-actions",
       action,
@@ -98,8 +140,6 @@ export async function logActivityAction(
     });
 
     if (action === "LOGIN") {
-      console.log(`[AUDIT] Detected LOGIN action for: ${email}`);
-      
       const templateConfig = await getTemplateConfig("LOGIN");
       const headerIcon = "🔐";
 
@@ -193,9 +233,7 @@ export async function logActivityAction(
                 },
                 {
                   type: "text",
-                  text: parseUserAgent(
-                    (await (await headers()).get("user-agent")) || "",
-                  ),
+                  text: parseUserAgent(userAgent),
                   size: "sm",
                   color: "#111111",
                   flex: 7,
@@ -233,7 +271,6 @@ export async function logActivityAction(
         },
       };
 
-      // Add Avatar as Hero if exists
       if (profile?.avatar_url) {
         flexContents.hero = {
           type: "image",
@@ -250,7 +287,6 @@ export async function logActivityAction(
         contents: flexContents,
       });
 
-      // 🛡️ S-Tier Telegram Security Alert (Hybrid Model)
       try {
         const { inngest } = await import("@/lib/inngest/client");
         await inngest.send({
@@ -266,7 +302,6 @@ export async function logActivityAction(
         logger.error("[AUDIT] Inngest event send failed:", inngestErr);
       }
 
-      // 🔐 Enterprise Telegram Notification (Admin Hub)
       try {
         const { sendAdminNotification } = await import("@/lib/telegram");
         const time = new Date().toLocaleString("th-TH", {
@@ -298,10 +333,50 @@ export async function logActivityAction(
   }
 }
 
-export async function notifySignupAction(email: string) {
+/**
+ * 🔔 Notify Signup Action
+ * Sends notifications to admins via LINE and Telegram for new signups
+ * Includes secure one-click approval links.
+ */
+export async function notifySignupAction(
+  email: string, 
+  userId?: string, 
+  metadata?: { full_name?: string; avatar_url?: string }
+) {
   try {
     const templateConfig = await getTemplateConfig("SIGNUP");
     const headerIcon = "👤";
+    const fullName = metadata?.full_name || "Unknown User";
+    const avatarUrl = metadata?.avatar_url;
+
+    let approvalUrl = "";
+    if (userId) {
+      const { siteConfig } = await import("@/lib/site-config");
+      const crypto = await import("crypto");
+      const role = "AGENT";
+      const secret = process.env.SUPABASE_SERVICE_ROLE_KEY || "fallback_secret";
+      const token = crypto
+        .createHmac("sha256", secret)
+        .update(`${userId}:${role}`)
+        .digest("hex");
+      
+      approvalUrl = `${siteConfig.url}/api/admin/approve-user?userId=${userId}&role=${role}&token=${token}`;
+    }
+
+    const footerContents: any[] = [];
+    if (approvalUrl) {
+      footerContents.push({
+        type: "button",
+        action: {
+          type: "uri",
+          label: "✅ อนุมัติเป็น AGENT",
+          uri: approvalUrl
+        },
+        style: "primary",
+        color: "#F57C00",
+        height: "sm"
+      });
+    }
 
     await sendLineNotification({
       type: "flex",
@@ -312,14 +387,7 @@ export async function notifySignupAction(email: string) {
           type: "box",
           layout: "horizontal",
           contents: [
-            {
-              type: "text",
-              text: headerIcon,
-              size: "xxl",
-              flex: 1,
-              align: "center",
-              gravity: "center",
-            },
+            { type: "text", text: headerIcon, size: "xxl", flex: 1, align: "center", gravity: "center" },
             {
               type: "text",
               text: templateConfig.config.headerText || "สมาชิกใหม่ (New User)",
@@ -334,91 +402,70 @@ export async function notifySignupAction(email: string) {
           backgroundColor: templateConfig.config.headerColor || "#F57C00",
           paddingAll: "lg",
         },
+        hero: avatarUrl ? {
+          type: "image",
+          url: avatarUrl,
+          size: "full",
+          aspectRatio: "20:13",
+          aspectMode: "cover",
+        } : undefined,
         body: {
           type: "box",
           layout: "vertical",
           contents: [
-            {
-              type: "text",
-              text: "📧 อีเมล:",
-              size: "sm",
-              color: "#555555",
-            },
-            {
-              type: "text",
-              text: email,
-              weight: "bold",
-              size: "lg",
-              color: "#111111",
-              margin: "sm",
-              wrap: true,
-            },
+            { type: "text", text: "👤 ชื่อ:", size: "xs", color: "#555555" },
+            { type: "text", text: fullName, weight: "bold", size: "md", color: "#111111", margin: "xs", wrap: true },
+            { type: "text", text: "📧 อีเมล:", size: "xs", color: "#555555", margin: "md" },
+            { type: "text", text: email, weight: "bold", size: "md", color: "#111111", margin: "xs", wrap: true },
           ],
         },
+        footer: footerContents.length > 0 ? {
+          type: "box",
+          layout: "vertical",
+          contents: footerContents,
+          paddingAll: "md"
+        } : undefined
       },
     });
-    console.log("[NOTIFY] notifySignupAction completed for:", email);
 
-    // 🛡️ S-Tier Telegram Notification (Admin Hub)
     try {
-      const { sendAdminNotification } = await import("@/lib/telegram");
-      await sendAdminNotification(
-        `👤 <b>แจ้งเตือนสมาชิกใหม่ (New Signup)</b>\n━━━━━━━━━━━━━━━━━━\n\n<b>📧 อีเมล:</b> <code>${email}</code>\n<b>⏰ เวลา:</b> ${new Date().toLocaleString("th-TH")}\n\n<i>กรุณาตรวจสอบและกำหนดบทบาท (Role) ในระบบหลังบ้านครับ</i>`
-      );
+      const { sendAdminNotification, sendAdminPhoto } = await import("@/lib/telegram");
+      let message = `👤 <b>แจ้งเตือนสมาชิกใหม่ (New Signup)</b>\n━━━━━━━━━━━━━━━━━━\n\n<b>👤 ชื่อ:</b> <code>${fullName}</code>\n<b>📧 อีเมล:</b> <code>${email}</code>\n<b>⏰ เวลา:</b> ${new Date().toLocaleString("th-TH")}\n\n<i>💬 ตอบกลับข้อความนี้ด้วยคำว่า <b>"agent"</b> หรือ <b>"อนุมัติ"</b> เพื่อปรับบทบาททันทีครับ</i>`;
+      
+      if (userId) {
+        message += `\n\n<span class="tg-spoiler">ID: ${userId}</span>`; 
+      }
+
+      if (avatarUrl) {
+        await sendAdminPhoto(avatarUrl, message);
+      } else {
+        await sendAdminNotification(message);
+      }
     } catch (tgErr) {
       console.error("[NOTIFY] Telegram Notification failed for Signup:", tgErr);
+    }
+
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const supabaseAdmin = createAdminClient("internal");
+      const { error: rpcError } = await supabaseAdmin.rpc("notify_admins_of_signup" as any, {
+        p_email: email,
+      });
+
+      if (rpcError) {
+        console.error("[NOTIFY] RPC Notification error:", rpcError);
+      }
+    } catch (notifErr) {
+      console.error("[NOTIFY] In-app Notification failed for Signup:", notifErr);
     }
   } catch (error) {
     console.error("[NOTIFY] Error in notifySignupAction:", error);
   }
 }
-import { requireAuthContext } from "@/lib/authz";
-import { AuditActionResult, AuditLogEntry } from "./types";
 
 /**
- * 🛡️ PDPA Helper: Scrub sensitive keys from object recursively
+ * 🔍 Get Property Audit Logs
  */
-const SENSITIVE_LOG_KEYS = [
-  "commission_sale_percentage",
-  "commission_rent_months",
-  "co_agent_phone",
-  "co_agent_contact_id",
-  "co_agent_contact_channel",
-  "co_agent_sale_commission_percent",
-  "co_agent_rent_commission_months",
-  "owner_name",
-  "owner_phone",
-  "owner_line",
-  "owner_email"
-];
-
-function scrubMetadata(obj: unknown): unknown {
-  if (obj === null || obj === undefined) return obj;
-  if (typeof obj !== "object") return obj;
-  
-  if (Array.isArray(obj)) {
-    return obj.map((x: unknown) => scrubMetadata(x));
-  }
-
-  const scrubbed: Record<string, unknown> = {};
-  const entries = Object.entries(obj as Record<string, unknown>);
-  
-  for (const [key, value] of entries) {
-    const isSensitive = SENSITIVE_LOG_KEYS.some(
-      (k) => key.toLowerCase() === k.toLowerCase()
-    );
-
-    if (isSensitive) {
-      scrubbed[key] = "[MASKED]";
-    } else if (value !== null && typeof value === "object") {
-      scrubbed[key] = scrubMetadata(value);
-    } else {
-      scrubbed[key] = value;
-    }
-  }
-  return scrubbed;
-}
-
 export async function getPropertyAuditLogsAction(
   propertyId: string,
   page: number = 1,
@@ -431,22 +478,18 @@ export async function getPropertyAuditLogsAction(
 ): Promise<AuditActionResult<{ logs: AuditLogEntry[]; totalCount: number; hasMore: boolean }>> {
   try {
     const { supabase, tenantId, role } = await requireAuthContext();
-
     const offset = (page - 1) * pageSize;
 
-    // 🛡️ [HARDENING] Fetch audit logs without direct join to avoid schema cache issues with partitioned tables
     let query = supabase
       .from("audit_logs")
       .select("id, user_id, action, entity, entity_id, metadata, tenant_id, created_at", { count: "exact" })
       .eq("entity_id", propertyId)
       .eq("entity", "properties");
 
-    // 🛡️ [BRANCH ISOLATION] Apply tenant filter if not in "ALL" mode
     if (tenantId && tenantId !== "ALL") {
       query = query.eq("tenant_id", tenantId);
     }
 
-    // 🛡️ [FILTERS] Apply Action and User filters
     if (filters.action && filters.action !== "ALL") {
       query = query.eq("action", filters.action);
     }
@@ -454,10 +497,7 @@ export async function getPropertyAuditLogsAction(
       query = query.eq("user_id", filters.userId);
     }
 
-    // 🛡️ [SEARCH] Client-side search logic moved to server for performance
     if (filters.search) {
-      // Search in actions or metadata summary (diff)
-      // Note: Full-text search on JSONB might be slow, but for single property id is acceptable
       query = query.or(`action.ilike.%${filters.search}%,metadata->>diff.ilike.%${filters.search}%`);
     }
 
@@ -467,7 +507,6 @@ export async function getPropertyAuditLogsAction(
 
     if (error) throw error;
 
-    // 🛡️ [MANUAL JOIN] Fetch profiles for the found user_ids
     const userIds = Array.from(new Set(data?.map((log) => log.user_id).filter(Boolean))) as string[];
     
     const { data: profiles } = userIds.length > 0 
@@ -479,7 +518,6 @@ export async function getPropertyAuditLogsAction(
 
     const profileMap = new Map(profiles?.map((p) => [p.id, p]));
 
-    // 🛡️ [SECURITY] Deep Scrub sensitive metadata & Map profiles
     const enrichedData = (data || []).map((log) => {
       const logWithUser = {
         ...log,
@@ -514,8 +552,7 @@ export async function getPropertyAuditLogsAction(
 }
 
 /**
- * 📊 Sentinel Summary: Fetch total counts for actions and modifiers 
- * for a specific property to populate filter UI badges accurately.
+ * 📊 Get Audit Stats Action
  */
 export async function getAuditStatsAction(
   propertyId: string
@@ -546,16 +583,12 @@ export async function getAuditStatsAction(
     const modifierCounts: Record<string, number> = {};
 
     data?.forEach((log) => {
-      // Action stats
       actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
-      
-      // Modifier (User) stats
       if (log.user_id) {
         modifierCounts[log.user_id] = (modifierCounts[log.user_id] || 0) + 1;
       }
     });
 
-    // 🛡️ Fetch profiles for all involved modifiers to ensure filter UI has names
     const userIds = Object.keys(modifierCounts);
     const { data: profiles } = userIds.length > 0 
       ? await supabase

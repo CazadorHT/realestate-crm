@@ -32,17 +32,30 @@ export async function GET(request: NextRequest) {
   if (code) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data?.user) {
-      // Check if it's a new signup
+      // Check if it's a new signup by checking if they already have a profile
       const user = data.user;
-      const isNew =
-        !user.last_sign_in_at ||
-        new Date(user.last_sign_in_at).getTime() ===
-          new Date(user.created_at).getTime();
+      
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, created_at")
+        .eq("id", user.id)
+        .maybeSingle();
 
-      if (isNew) {
-        // Run in background (don't await to avoid blocking redirect, but here since it's a small task we can)
+      // Detection: If profile doesn't exist OR was created in the last 30 seconds
+      // it means this is a fresh signup from the DB trigger
+      const isNewSignup = !profile || (
+        profile.created_at && 
+        (new Date().getTime() - new Date(profile.created_at).getTime() < 30000)
+      );
+
+      if (isNewSignup) {
         await notifySignupAction(
           user.email || user.user_metadata?.email || "Unknown OAuth User",
+          user.id,
+          {
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name,
+            avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture
+          }
         );
       }
       return redirect(next);

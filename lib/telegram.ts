@@ -43,3 +43,32 @@ export async function sendAdminNotification(
     }
   }
 }
+
+/**
+ * 🖼️ Send Photo with Caption to Admin
+ */
+export async function sendAdminPhoto(
+  photoUrl: string,
+  caption: string,
+  options: { 
+    chatId?: string; 
+    parseMode?: "HTML" | "MarkdownV2";
+    replyMarkup?: any;
+  } = {}
+) {
+  if (!telegramBot) return;
+  const targetId = options.chatId || process.env.TELEGRAM_ADMIN_GROUP_ID;
+  if (!targetId) return;
+
+  try {
+    await telegramBot.api.sendPhoto(targetId, photoUrl, {
+      caption,
+      parse_mode: options.parseMode || "HTML",
+      reply_markup: options.replyMarkup,
+    });
+  } catch (error: any) {
+    console.error("[TELEGRAM] Failed to send photo:", error.message || error);
+    // Fallback to text if photo fails
+    await sendAdminNotification(caption, options);
+  }
+}

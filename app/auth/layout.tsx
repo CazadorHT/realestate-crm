@@ -3,5 +3,5 @@ export default function AuthLayoutWrapper({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <div className="bg-[#020617] min-h-screen">{children}</div>;
 }

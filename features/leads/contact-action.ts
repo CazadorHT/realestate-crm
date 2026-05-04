@@ -435,6 +435,44 @@ export async function submitContactFormAction(
       },
     });
 
+    // 🛡️ Enterprise Telegram Notification (Admin Hub)
+    try {
+      const { sendAdminNotification } = await import("@/lib/telegram");
+      const alertPrefix = isHotLead ? "🔥 <b>HOT LEAD ALERT</b> 🔥\n" : "📧 <b>แจ้งเตือนคนติดต่อใหม่</b>\n";
+      const messageText = `
+${alertPrefix}━━━━━━━━━━━━━━━━━━
+<b>👤 ผู้ติดต่อ:</b> <code>${name}</code>
+<b>📞 เบอร์โทร:</b> <code>${phone}</code>
+<b>📧 อีเมล:</b> <code>${email || "-"}</code>
+<b>📱 Line ID:</b> <code>${lineId || "-"}</code>
+<b>📝 เรื่อง:</b> ${subject}
+<b>🤖 AI Score:</b> <code>${aiScoreInt}/100</code>
+
+<b>💬 ข้อความ:</b>
+${message || "-"}
+━━━━━━━━━━━━━━━━━━
+<a href="${siteConfig.url}/protected/leads/${leadId}">📂 เปิดดูในระบบ CRM</a>
+      `.trim();
+
+      await sendAdminNotification(messageText);
+    } catch (tgErr) {
+      console.error("[CONTACT] Telegram Notification failed:", tgErr);
+    }
+
+    // 🔔 Create In-App Notifications for all Admins (Using secure RPC in internal schema)
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const supabaseAdmin = createAdminClient("internal");
+      await supabaseAdmin.rpc("notify_admins_of_lead" as any, {
+        p_name: name,
+        p_subject: subject,
+        p_lead_id: leadId,
+        p_is_hot: isHotLead,
+      });
+    } catch (notifErr) {
+      console.error("[CONTACT] In-app Notification failed:", notifErr);
+    }
+
     revalidatePath("/protected/leads");
     return {
       success: true,

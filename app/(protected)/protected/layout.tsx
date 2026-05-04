@@ -27,19 +27,24 @@ export default async function ProtectedLayout({
 }) {
   const supabase = await createClient();
 
-  // [PERFORMANCE] Parallel Fetching: Core Profile & Sidebar Stats
-  const [profile, propertyStats, cookieStore] = await Promise.all([
-    getCurrentProfile(),
-    getPropertiesDashboardStatsQuery(),
-    cookies(),
-  ]);
+  // 1. First, get the profile to verify identity and role
+  const profile = await getCurrentProfile();
 
   if (!profile) {
     return redirect("/auth/login");
   }
+
+  // 2. Critical: Check staff access BEFORE running any other queries
+  // This prevents the "Error Digest" crash when unauthorized users access the page
   if (!isStaff(profile.role)) {
     return redirect("/auth/pending");
   }
+
+  // 3. Parallel Fetching: Now safe to run staff-only queries
+  const [propertyStats, cookieStore] = await Promise.all([
+    getPropertiesDashboardStatsQuery(),
+    cookies(),
+  ]);
 
   // Note: Notifications are fetched client-side inside NotificationBell
 

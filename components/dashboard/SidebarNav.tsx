@@ -39,7 +39,7 @@ import {
   ShieldCheck,
   Wallet,
   BadgeDollarSign,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { FaLine } from "react-icons/fa";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
@@ -54,12 +54,13 @@ import {
 } from "@/components/ui/tooltip";
 import { isFeatureEnabled } from "@/lib/features";
 import { RiTeamLine } from "react-icons/ri";
+import {m, AnimatePresence, LayoutGroup } from "framer-motion";
 
-export function SidebarNav({ 
-  role, 
+export function SidebarNav({
+  role,
   initialCollapsed = false,
-  aiReviewCount = 0
-}: { 
+  aiReviewCount = 0,
+}: {
   role: UserRole;
   initialCollapsed?: boolean;
   aiReviewCount?: number;
@@ -265,7 +266,6 @@ export function SidebarNav({
       description: "อนุมัติและจัดการการจ่ายค่าคอมมิชชันให้ทีมงานระดับบริหาร",
     },
   ];
- 
 
   const settingsItems: NavItem[] = [
     {
@@ -440,47 +440,85 @@ export function SidebarNav({
             }
           }}
           className={cn(
-            "flex h-11 items-center gap-3 rounded-xl px-4 transition-all duration-200 text-sm relative overflow-hidden group/nav",
+            "flex h-12 items-center gap-3 rounded-xl px-4 transition-colors duration-200 text-sm relative overflow-hidden group/nav",
             item.active
-              ? "bg-blue-600/10 text-blue-700 font-semibold shadow-[0_0_0_1px_rgba(37,99,235,0.1)]"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium",
+              ? "text-blue-700 font-semibold"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-50/50 font-medium",
             isCollapsed && "justify-center px-0",
           )}
         >
           {item.active && (
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full shadow-[0_0_10px_rgba(37,99,235,0.3)]" />
+            <>
+              <m.div
+                layoutId="active-pill"
+                className="absolute inset-0 bg-blue-600/10 shadow-[0_0_0_1px_rgba(37,99,235,0.1)] rounded-xl"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+              <m.div
+                layoutId="active-bar"
+                className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full shadow-[0_0_10px_rgba(37,99,235,0.3)] z-10"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            </>
           )}
-          {navigatingTo === item.href ? (
-            <Loader2 className="h-4.5 w-4.5 animate-spin text-blue-600" />
-          ) : (
-            <item.icon
-              className={cn(
-                "h-4.5 w-4.5 transition-all duration-300",
-                item.active
-                  ? "text-blue-600 scale-110"
-                  : "text-slate-400 group-hover/nav:text-slate-600 group-hover/nav:rotate-3",
-              )}
-            />
-          )}
-          {isCollapsed && item.badge !== undefined && (
-            <div className="absolute top-2 right-2 h-2 w-2 rounded-full bg-blue-500 border-2 border-white shadow-sm" />
-          )}
-          {!isCollapsed && <span className="truncate">{item.title}</span>}
-          {item.badge !== undefined && (
-            <span className={cn(
-              "ml-auto flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold shadow-sm",
-              item.active ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
-            )}>
-              {item.badge}
-            </span>
-          )}
+          
+          <div className={cn(
+            "relative z-10 flex items-center gap-3",
+            !isCollapsed && "w-full"
+          )}>
+            {navigatingTo === item.href ? (
+              <Loader2 className="h-4.5 w-4.5 animate-spin text-blue-600 shrink-0" />
+            ) : (
+              <item.icon
+                className={cn(
+                  "h-4.5 w-4.5 transition-all duration-300 shrink-0",
+                  item.active
+                    ? "text-blue-600 scale-110"
+                    : "text-slate-400 group-hover/nav:text-slate-600 group-hover/nav:rotate-3",
+                )}
+              />
+            )}
+            
+            {isCollapsed && item.badge !== undefined && (
+              <m.div 
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-blue-500 border-2 border-white shadow-sm" 
+              />
+            )}
+            
+            {!isCollapsed && (
+              <m.span 
+                initial={false}
+                animate={{ opacity: 1, x: 0 }}
+                className="truncate flex-1"
+              >
+                {item.title}
+              </m.span>
+            )}
+            
+            {!isCollapsed && item.badge !== undefined && (
+              <span
+                className={cn(
+                  "ml-auto flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-bold shadow-sm",
+                  item.active
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-blue-100 text-blue-700",
+                )}
+              >
+                {item.badge}
+              </span>
+            )}
+          </div>
         </Link>
       </TooltipTrigger>
-      <TooltipContent 
-        side="right" 
-        className="bg-slate-900 text-white border-none p-4 rounded-2xl shadow-2xl z-45 max-w-[240px] animate-in fade-in slide-in-from-left-2 duration-200"
+      <TooltipContent
+        side="right"
+        className="bg-slate-900 text-white border-none p-4 rounded-2xl shadow-2xl z-60 max-w-[240px] animate-in fade-in slide-in-from-left-2 duration-200"
       >
-        <div className="font-semibold text-sm mb-1 text-blue-400">{item.title}</div>
+        <div className="font-semibold text-sm mb-1 text-blue-400">
+          {item.title}
+        </div>
         <div className="text-xs text-slate-300 leading-relaxed font-semibold">
           {item.description || item.title}
         </div>
@@ -490,214 +528,248 @@ export function SidebarNav({
 
   return (
     <TooltipProvider delayDuration={300}>
-      <aside
+      <m.aside
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        initial={false}
+        animate={{ 
+          width: isCollapsed ? 80 : 288,
+        }}
+        transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
         className={cn(
-          "hidden flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-xl sm:flex shadow-sm z-40 h-screen sticky top-0",
-          hasMounted ? "transition-all duration-500 cubic-bezier(0.4, 0, 0.2, 1)" : "transition-none",
-          isCollapsed ? "w-20" : "w-72",
+          "hidden flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-xl sm:flex shadow-sm z-60 h-screen sticky top-0",
+          !hasMounted && (isCollapsed ? "w-20" : "w-72"),
         )}
       >
-        <div
-          className={cn(
-            "p-5 pb-2 relative",
-            isCollapsed && "p-4 flex justify-center",
-          )}
-        >
-          <div className="flex items-center gap-3">
-            <div className={cn("shrink-0 transition-transform duration-500", isCollapsed ? "scale-90" : "scale-100")}>
-                <Image
-                src={siteConfig.logo}
-                alt={`${siteConfig.name} Logo`}
-                width={60}
-                height={60}
-                className="rounded-xl object-contain shadow-lg shadow-slate-100"
-                />
-            </div>
-            {!isCollapsed && (
-              <div className="min-w-0 animate-in fade-in slide-in-from-left-2 duration-500">
-                <h1 className="text-lg font-bold tracking-tight text-slate-900 uppercase">
-                  {siteConfig.name}
-                </h1>
-                <p className="text-[9px] uppercase tracking-[0.2em] text-blue-600 font-bold leading-none">
-                  Ultimate CRM
-                </p>
-              </div>
+        <LayoutGroup >
+          <div
+            className={cn(
+              "py-6 relative px-4 ",
+              isCollapsed && "flex justify-center",
             )}
+          >
+            <div className="flex items-center">
+              <m.div
+                layout
+                className={cn(
+                  "shrink-0",
+                  isCollapsed ? "scale-90" : "scale-100",
+                )}
+              >
+                <Image
+                  src={siteConfig.brandCardDark}
+                  alt={`${siteConfig.name} Logo`}
+                  width={40}
+                  height={40}
+                  className="rounded-xl object-contain shadow-lg shadow-slate-100"
+                />
+              </m.div>
+              <AnimatePresence mode="wait">
+                {!isCollapsed && (
+                  <m.div 
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="min-w-0 px-4"
+                  >
+                    <h1 className="text-lg font-bold tracking-tight text-slate-900 uppercase">
+                      {siteConfig.name}
+                    </h1>
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-blue-600 font-bold leading-none">
+                      Ultimate CRM
+                    </p>
+                  </m.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <button
+              onClick={toggleCollapse}
+              className={cn(
+                "absolute -right-4 top-14 h-8 w-8 rounded-full border border-slate-200 bg-white items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 z-51 hover:scale-110 active:scale-90 group/toggle",
+                isHovered
+                  ? "opacity-100 translate-x-0"
+                  : "opacity-0 -translate-x-2 pointer-events-none",
+              )}
+              title={isCollapsed ? "ขยายเมนู" : "ย่อเมนู"}
+            >
+              {isCollapsed ? (
+                <PanelLeftOpen className="h-4 w-4 transition-transform group-hover/toggle:rotate-12" />
+              ) : (
+                <PanelLeftClose className="h-4 w-4 transition-transform group-hover/toggle:-rotate-12" />
+              )}
+            </button>
           </div>
 
-          <button
-            onClick={toggleCollapse}
-            className={cn(
-              "absolute -right-4 top-14 h-8 w-8 rounded-full border border-slate-200 bg-white items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 z-41 hover:scale-110 active:scale-90 group/toggle",
-              isHovered
-                ? "opacity-100 translate-x-0"
-                : "opacity-0 -translate-x-2 pointer-events-none",
-            )}
-            title={isCollapsed ? "ขยายเมนู" : "ย่อเมนู"}
-          >
-            {isCollapsed ? (
-              <PanelLeftOpen className="h-4 w-4 transition-transform group-hover/toggle:rotate-12" />
-            ) : (
-              <PanelLeftClose className="h-4 w-4 transition-transform group-hover/toggle:-rotate-12" />
-            )}
-          </button>
-        </div>
-
-        {/* Dashboard - Fixed Top Level */}
-        <div className="px-4 pb-2">
-          {isCollapsed ? (
+          {/* Dashboard - Fixed Top Level */}
+          <div className="px-4 pb-2">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
                   href="/protected"
                   className={cn(
-                    "flex h-11 items-center justify-center rounded-xl w-full transition-all duration-300 relative overflow-hidden group/dash",
+                    "flex h-12 items-center gap-4 rounded-xl px-4 transition-colors duration-300 font-semibold text-xs relative overflow-hidden group/dash",
                     pathname === "/protected"
-                      ? "bg-blue-600/10 text-blue-700 shadow-[0_0_0_1px_rgba(37,99,235,0.1)]"
-                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
+                      ? "text-blue-700"
+                      : "text-slate-500 hover:text-slate-900 hover:bg-slate-50/50",
+                    isCollapsed && "justify-center px-0",
                   )}
                   onClick={() => {
                     if (pathname !== "/protected") setNavigatingTo("/protected");
                   }}
                 >
                   {pathname === "/protected" && (
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full" />
+                    <>
+                      <m.div
+                        layoutId="active-pill"
+                        className="absolute inset-0 bg-blue-600/10 shadow-[0_0_0_1px_rgba(37,99,235,0.1)] rounded-xl"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                      <m.div
+                        layoutId="active-bar"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full shadow-[0_0_10px_rgba(37,99,235,0.3)] z-10"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    </>
                   )}
-                  {navigatingTo === "/protected" ? (
-                    <Loader2 className="h-4.5 w-4.5 animate-spin text-blue-600" />
-                  ) : (
-                    <BarChart3
-                      className={cn(
-                        "h-4.5 w-4.5 transition-all duration-300",
-                        pathname === "/protected"
-                          ? "text-blue-600 scale-110"
-                          : "text-slate-400 group-hover/dash:text-slate-600 group-hover/dash:rotate-6",
-                      )}
-                    />
-                  )}
+                  <div className={cn(
+                    "relative z-10 flex items-center gap-4",
+                    isCollapsed && "justify-center"
+                  )}>
+                    {navigatingTo === "/protected" ? (
+                      <Loader2 className="h-4.5 w-4.5 animate-spin text-blue-600 shrink-0" />
+                    ) : (
+                      <BarChart3
+                        className={cn(
+                          "h-4.5 w-4.5 transition-all duration-300 shrink-0",
+                          pathname === "/protected"
+                            ? "text-blue-600 scale-110"
+                            : "text-slate-400 group-hover/dash:text-slate-600 group-hover/dash:rotate-6",
+                        )}
+                      />
+                    )}
+                    {!isCollapsed && <span>แดชบอร์ด</span>}
+                  </div>
                 </Link>
               </TooltipTrigger>
-              <TooltipContent side="right" className="z-45">แดชบอร์ด</TooltipContent>
+              {isCollapsed && (
+                <TooltipContent side="right" className="z-60">
+                  แดชบอร์ด
+                </TooltipContent>
+              )}
             </Tooltip>
-          ) : (
-            <Link
-              href="/protected"
-              className={cn(
-                "flex h-11 items-center gap-4 rounded-xl px-4 transition-all duration-300 font-semibold text-xs relative overflow-hidden group/dash",
-                pathname === "/protected"
-                  ? "bg-blue-600/10 text-blue-700 shadow-[0_0_0_1px_rgba(37,99,235,0.1)]"
-                  : "text-slate-500 hover:text-slate-900 hover:bg-slate-50",
-              )}
-              onClick={() => {
-                if (pathname !== "/protected") setNavigatingTo("/protected");
-              }}
-            >
-              {pathname === "/protected" && (
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full" />
-              )}
-              {navigatingTo === "/protected" ? (
-                <Loader2 className="h-4.5 w-4.5 animate-spin text-blue-600" />
-              ) : (
-                <BarChart3
-                  className={cn(
-                    "h-4.5 w-4.5 transition-all duration-300",
-                    pathname === "/protected"
-                      ? "text-blue-600 scale-110"
-                      : "text-slate-400 group-hover/dash:text-slate-600 group-hover/dash:rotate-6",
-                  )}
-                />
-              )}
-              แดชบอร์ด
-            </Link>
-          )}
-        </div>
+          </div>
 
-        <nav className="flex flex-col gap-2 p-4 flex-1 overflow-y-auto max-h-[calc(100vh-180px)] custom-scrollbar pr-2 pb-20">
-          {/* Grouped Menus */}
-          {filteredGroups.map((group) => {
-            const isOpen = openGroups.includes(group.id);
-            const hasActiveItem = group.items.some((item) => item.active);
+          <nav className="flex flex-col gap-3 p-4 flex-1 overflow-y-auto h-[calc(100vh-200px)] custom-scrollbar pr-2 pb-20 ">
+            {/* Grouped Menus */}
+            {filteredGroups.map((group) => {
+              const isOpen = openGroups.includes(group.id);
+              const hasActiveItem = group.items.some((item) => item.active);
 
-            if (isCollapsed) {
+              if (isCollapsed) {
+                return (
+                  <div key={group.id} className="space-y-1 mb-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => toggleGroup(group.id)}
+                          className={cn(
+                            "w-full flex items-center justify-center rounded-xl h-12 transition-all duration-300 relative",
+                            hasActiveItem
+                              ? "bg-blue-100 text-blue-700 shadow-sm"
+                              : "text-slate-400 hover:text-slate-600 hover:bg-slate-50",
+                          )}
+                        >
+                          <group.icon className="h-4.5 w-4.5" />
+                          {hasActiveItem && (
+                            <div className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-blue-600 shadow-[0_0_5px_rgba(37,99,235,0.5)]" />
+                          )}
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent className="z-60" side="right">
+                        {group.title}
+                      </TooltipContent>
+                    </Tooltip>
+
+                    <AnimatePresence>
+                      {isOpen && (
+                        <m.div 
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                          className="space-y-1.5 bg-slate-50/50 rounded-2xl p-1.5 border border-slate-100/50 shadow-inner mt-1 "
+                        >
+                          {group.items.map((item) => (
+                            <NavItemContent
+                              key={item.href}
+                              item={item}
+                              isCollapsed={true}
+                            />
+                          ))}
+                        </m.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              }
+
               return (
-                <div key={group.id} className="space-y-1 mb-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button
-                        onClick={() => toggleGroup(group.id)}
+                <div key={group.id} className="space-y-1">
+                  {/* Group Header */}
+                  <button
+                    onClick={() => toggleGroup(group.id)}
+                    className={cn(
+                      "w-full flex h-12 items-center justify-between gap-3 rounded-xl px-4 transition-all duration-300 font-semibold text-[11px] uppercase tracking-[0.15em] relative group/header",
+                      hasActiveItem
+                        ? "text-blue-700 bg-blue-50/50"
+                        : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/30",
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <group.icon
                         className={cn(
-                          "w-full flex items-center justify-center rounded-xl h-11 transition-all duration-300 relative",
-                          hasActiveItem
-                            ? "bg-blue-100 text-blue-700 shadow-sm"
-                            : "text-slate-400 hover:text-slate-600 hover:bg-slate-50",
+                          "h-4 w-4 transition-transform duration-300",
+                          isOpen && "rotate-6",
                         )}
-                      >
-                        <group.icon className="h-4.5 w-4.5" />
-                        {hasActiveItem && (
-                          <div className="absolute top-2.5 right-2.5 h-1.5 w-1.5 rounded-full bg-blue-600 shadow-[0_0_5px_rgba(37,99,235,0.5)]" />
-                        )}
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="z-45" side="right">{group.title}</TooltipContent>
-                  </Tooltip>
+                      />
+                      {group.title}
+                    </div>
+                    <m.div
+                      animate={{ rotate: isOpen ? 0 : -90 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-4"
+                    >
+                      <ChevronDown className="h-3.5 w-3.5 opacity-60" />
+                    </m.div>
+                  </button>
 
-                  {isOpen && (
-                    <div className="space-y-1.5 bg-slate-50/50 rounded-2xl p-1.5 border border-slate-100/50 shadow-inner mt-1 animate-in zoom-in-95 duration-200">
-                      {group.items.map((item) => (
-                         <NavItemContent
+                  {/* Group Items */}
+                  <AnimatePresence initial={false}>
+                    {isOpen && (
+                      <m.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                        className="space-y-1 overflow-hidden"
+                      >
+                        {group.items.map((item) => (
+                          <NavItemContent
                             key={item.href}
                             item={item}
-                            isCollapsed={true}
-                         />
-                      ))}
-                    </div>
-                  )}
+                            isCollapsed={false}
+                          />
+                        ))}
+                      </m.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
-            }
-
-            return (
-              <div key={group.id} className="space-y-1">
-                {/* Group Header */}
-                <button
-                  onClick={() => toggleGroup(group.id)}
-                  className={cn(
-                    "w-full flex h-10 items-center justify-between gap-3 rounded-xl px-4 transition-all duration-300 font-semibold text-[11px] uppercase tracking-[0.15em] relative group/header",
-                    hasActiveItem
-                      ? "text-blue-700 bg-blue-50/50"
-                      : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/30",
-                  )}
-                >
-                  <div className="flex items-center gap-3">
-                    <group.icon className={cn("h-4 w-4 transition-transform duration-300", isOpen && "rotate-6")} />
-                    {group.title}
-                  </div>
-                  {isOpen ? (
-                    <ChevronDown className="h-3.5 w-3.5 opacity-60" />
-                  ) : (
-                    <ChevronRight className="h-3.5 w-3.5 opacity-40 group-hover/header:translate-x-0.5 transition-transform" />
-                  )}
-                </button>
-
-                {/* Group Items */}
-                {isOpen && (
-                  <div className="space-y-1 ml-1 pl-1 border-l-2 border-slate-50 animate-in slide-in-from-left-2 duration-300">
-                    {group.items.map((item) => (
-                      <NavItemContent
-                        key={item.href}
-                        item={item}
-                        isCollapsed={false}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </nav>
-      </aside>
+            })}
+          </nav>
+        </LayoutGroup>
+      </m.aside>
     </TooltipProvider>
   );
 }

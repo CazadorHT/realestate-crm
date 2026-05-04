@@ -62,6 +62,12 @@ import { isStaff } from "@/lib/authz";
 import { getCalendarEvents } from "@/features/calendar/queries";
 import { UpcomingEvents } from "@/features/dashboard/components/UpcomingEvents";
 import { addDays } from "date-fns";
+import { 
+  getAgentDashboardStats, 
+  getAgentTasks 
+} from "@/features/dashboard/queries/agent-dashboard";
+import { AgentStatsCards } from "@/features/dashboard/components/agent/AgentStatsCards";
+import { AgentTaskBoard } from "@/features/dashboard/components/agent/AgentTaskBoard";
 
 import type { Database } from "@/lib/database.types";
 type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
@@ -139,6 +145,18 @@ export default async function DashboardPage() {
 
         {/* 3. KPI CARDS & QUICK ACTIONS */}
         <div className="flex flex-col gap-6">
+          {/* PERSONAL AGENT DASHBOARD (Shown to Agents) */}
+          {profile?.role === "AGENT" && (
+            <div className="flex flex-col gap-6 mb-2">
+              <h2 className="text-xl font-black text-slate-900 tracking-tight px-2">
+                สรุปผลงานของคุณเดือนนี้
+              </h2>
+              <Suspense fallback={<StatsSkeleton />}>
+                <AgentStatsWrapper />
+              </Suspense>
+            </div>
+          )}
+
           {showAnalytics && <StatsSectionSuspense tenantId={tenantId} />}
           <QuickActions />
         </div>
@@ -147,6 +165,12 @@ export default async function DashboardPage() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           {/* CORE ANALYTICS (2/3 width) */}
           <div className="xl:col-span-2 flex flex-col gap-6">
+            {/* AGENT TASK BOARD (Prominent for Agents) */}
+            {profile?.role === "AGENT" && (
+              <Suspense fallback={<div className="h-40 animate-pulse bg-slate-50 rounded-[2.5rem]" />}>
+                <AgentTasksWrapper />
+              </Suspense>
+            )}
             {showAnalytics ? (
               <>
                 {/* REVENUE CHART (Priority 1) */}
@@ -297,6 +321,16 @@ async function RevenueWrapper({ tenantId }: { tenantId?: string | null }) {
 async function TopAgentsWrapper({ tenantId }: { tenantId?: string | null }) {
   const data = await getTopAgents(tenantId);
   return <TopAgents data={data} />;
+}
+
+async function AgentStatsWrapper() {
+  const stats = await getAgentDashboardStats();
+  return <AgentStatsCards stats={stats} />;
+}
+
+async function AgentTasksWrapper() {
+  const tasks = await getAgentTasks();
+  return <AgentTaskBoard tasks={tasks} />;
 }
 
 async function MarketingROIWrapper({ tenantId }: { tenantId?: string | null }) {

@@ -47,7 +47,6 @@ export async function deleteUserAction(
     }
 
     // 4) 🛡️ [ZERO-ADMIN] Dispatch background deletion event
-    // Instead of using adminClient here, we send a request to Inngest.
     try {
       await inngest.send({
         name: "user.delete.requested",
@@ -58,8 +57,20 @@ export async function deleteUserAction(
         }
       });
     } catch (inngestErr) {
-      console.error("Failed to send deletion event:", inngestErr);
-      return { success: false, message: "ระบบแจ้งลบล้มเหลว กรุณาลองใหม่ภายหลัง" };
+      console.error("Failed to send deletion event, attempting direct fallback:", inngestErr);
+      
+      // Fallback: Delete directly if background job dispatch fails
+      try {
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const supabaseAdmin = createAdminClient();
+        const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+        
+        if (deleteError) throw deleteError;
+      } catch (fallbackErr: unknown) {
+        const fallbackMessage = fallbackErr instanceof Error ? fallbackErr.message : "Unknown error";
+        console.error("Direct deletion fallback failed:", fallbackMessage);
+        return { success: false, message: "ระบบแจ้งลบล้มเหลว และการลบโดยตรงขัดข้อง กรุณาเช็คสิทธิ์ Service Role" };
+      }
     }
 
     // 5) Audit Log
@@ -78,8 +89,9 @@ export async function deleteUserAction(
         success: true, 
         message: "ระบบกำลังดำเนินการลบผู้ใช้ในเบื้องหลัง ข้อมูลจะหายไปในครู่เดียว" 
     };
-  } catch (err: any) {
-    console.error("[deleteUserAction] Error:", err);
-    return { success: false, message: err.message || "Unauthorized" };
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : "Unauthorized";
+    console.error("[deleteUserAction] Error:", errorMessage);
+    return { success: false, message: errorMessage };
   }
 }
