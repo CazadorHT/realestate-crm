@@ -59,7 +59,9 @@ export async function POST(request: Request) {
 
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ role: "AGENT" as any })
+      .update({ 
+        role: "AGENT" // Strictly typed through Database types
+      })
       .eq("id", userId);
 
     if (updateError) throw updateError;

@@ -17,53 +17,63 @@ export default function PendingApprovalPage() {
   const router = useRouter();
 
   useEffect(() => {
-    let channel: any;
+    let channel: import("@supabase/supabase-js").RealtimeChannel | undefined;
+    let isSubscribed = true;
 
     const setupRealtime = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user || !isSubscribed) return;
 
-      // 1. Initial check (in case already approved)
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .single();
+        // 1. Initial check
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single();
 
-      if (profile && profile.role !== "USER") {
-        router.push("/protected");
-        return;
-      }
+        if (isSubscribed && profile && profile.role !== "USER") {
+          router.push("/protected");
+          return;
+        }
 
-      // 2. Subscribe to Realtime updates for THIS user's profile
-      channel = supabase
-        .channel(`profile-updates-${user.id}`)
-        .on(
-          "postgres_changes",
-          {
-            event: "UPDATE",
-            schema: "public",
-            table: "profiles",
-            filter: `id=eq.${user.id}`,
-          },
-          (payload: any) => {
-            console.log("[REALTIME] Profile updated:", payload);
-            const newRole = payload.new.role;
-            if (newRole !== "USER") {
-              // 🎉 Approved! Redirect to dashboard
-              router.push("/protected");
+        // 2. Subscribe to Realtime
+        channel = supabase
+          .channel(`profile-updates-${user.id}`)
+          .on(
+            "postgres_changes",
+            {
+              event: "UPDATE",
+              schema: "public",
+              table: "profiles",
+              filter: `id=eq.${user.id}`,
+            },
+            (payload) => {
+              if (!isSubscribed) return;
+              console.log("[REALTIME] Profile updated:", payload);
+              
+              // Safely extract the new role from the payload
+              const newRole = (payload.new as { role?: string }).role;
+              if (newRole && newRole !== "USER") {
+                router.push("/protected");
+              }
             }
-          }
-        )
-        .subscribe();
+          )
+          .subscribe();
+      } catch (err) {
+        console.error("[PENDING] Error setting up realtime:", err);
+      }
     };
 
     setupRealtime();
 
     return () => {
+      isSubscribed = false;
       if (channel) supabase.removeChannel(channel);
     };
-  }, [supabase, router]);
+    // Removed supabase and router from dependencies to prevent re-runs
+    // since they are stable in the context of this page.
+  }, []); 
 
   return (
     <PremiumAuthLayout
