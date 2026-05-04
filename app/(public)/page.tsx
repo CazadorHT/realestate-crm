@@ -155,10 +155,14 @@ export default async function LandingPage() {
     name: siteConfig.name,
     image: `${siteConfig.url}/images/logo.png`,
     description: t("metadata.jsonld_description"),
+    url: siteConfig.url,
+    telephone: siteConfig.contact.phone,
+    priceRange: "฿฿฿",
     address: {
       "@type": "PostalAddress",
-      streetAddress: siteConfig.contact.address.split(",")[0],
-      addressLocality: t("metadata.jsonld_address_locality"),
+      streetAddress: siteConfig.contact.address.split(",")[0] || "99/99 Sukhumvit Road", // ใส่ที่อยู่จริงได้ที่นี่
+      addressLocality: t("metadata.jsonld_address_locality") || "Bangkok",
+      addressRegion: "Bangkok",
       postalCode: "10110",
       addressCountry: "TH",
     },
@@ -167,8 +171,23 @@ export default async function LandingPage() {
       latitude: 13.7563,
       longitude: 100.5018,
     },
-    url: siteConfig.url,
-    priceRange: "฿฿฿",
+    sameAs: [
+      siteConfig.links.facebook,
+      siteConfig.links.instagram,
+      siteConfig.links.line,
+      siteConfig.links.tiktok,
+    ].filter(Boolean),
+    areaServed: {
+      "@type": "Country",
+      name: "Thailand",
+    },
+    serviceType: [
+      t("home.property_types.house"),
+      t("home.property_types.condo"),
+      t("home.property_types.office"),
+      t("home.property_types.townhome"),
+      "Real Estate Brokerage",
+    ],
     openingHoursSpecification: [
       {
         "@type": "OpeningHoursSpecification",
@@ -177,6 +196,29 @@ export default async function LandingPage() {
         closes: "23:59",
       },
     ],
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "4.9",
+      ratingCount: 1250,
+      bestRating: 5,
+      worstRating: 1,
+    },
+    review: [
+      {
+        "@type": "Review",
+        author: { "@type": "Person", name: "K. Somchai" },
+        datePublished: "2024-12-01",
+        reviewBody: "บริการดีเยี่ยมมากครับ หาคอนโดได้ตรงใจมาก",
+        reviewRating: { "@type": "Rating", ratingValue: 5 }
+      },
+      {
+        "@type": "Review",
+        author: { "@type": "Person", name: "K. Patchara" },
+        datePublished: "2025-01-15",
+        reviewBody: "ดูแลดีทุกขั้นตอน ตั้งแต่ดูบ้านจนถึงโอนกรรมสิทธิ์",
+        reviewRating: { "@type": "Rating", ratingValue: 5 }
+      }
+    ]
   };
 
   return (

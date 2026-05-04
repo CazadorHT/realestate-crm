@@ -47,54 +47,10 @@ export function TestimonialsSection() {
     },
   ];
 
-  // Schema.org Review for SEO
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "RealEstateAgent",
-    name: siteName,
-    url: siteConfig.url,
-    image: `${siteConfig.url}${siteConfig.ogImage}`,
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "Bangkok",
-      addressLocality: "Bangkok",
-      postalCode: "10110",
-      addressCountry: "TH"
-    },
-    priceRange: "$$",
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "5.0",
-      reviewCount: TESTIMONIALS.length,
-      bestRating: "5",
-      worstRating: "1",
-    },
-    review: TESTIMONIALS.map((testimonial) => ({
-      "@type": "Review",
-      author: {
-        "@type": "Person",
-        name: testimonial.name,
-      },
-      datePublished: testimonial.date,
-      reviewBody: testimonial.comment,
-      reviewRating: {
-        "@type": "Rating",
-        ratingValue: testimonial.rating,
-        bestRating: "5",
-        worstRating: "1",
-      },
-    })),
-  };
-
   const subtitle = t("home.testimonials.subtitle");
 
   return (
     <section className="py-12 md:py-16 lg:py-20 px-4 md:px-6 lg:px-8 bg-white relative overflow-hidden z-0">
-      {/* Schema.org Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-      />
 
       {/* Decorative Background */}
       <SectionBackground pattern="blobs" intensity="low" />

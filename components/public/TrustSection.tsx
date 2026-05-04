@@ -9,29 +9,6 @@ export function TrustSection() {
   const { t } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => setIsMounted(true), []);
-  // Schema.org Service + AggregateRating for SEO
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "Service",
-    name: t("trust.schema_name"),
-    description: t("trust.schema_desc"),
-    provider: {
-      "@type": "Organization",
-      name: "Your Real Estate Company",
-    },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.8",
-      ratingCount: "1250",
-      bestRating: "5",
-      worstRating: "1",
-    },
-    serviceType: "Real Estate Service",
-    areaServed: {
-      "@type": "Place",
-      name: "Thailand",
-    },
-  };
 
   const features = [
     {
@@ -63,11 +40,6 @@ export function TrustSection() {
   return (
     <section id="trust" className="bg-white relative overflow-hidden z-0">
       <SectionBackground pattern="grid" intensity="low" />
-      {/* Schema.org Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-      />
 
       <div className="max-w-7xl mx-auto py-12 md:py-16 lg:py-20 px-4 md:px-6 lg:px-8">
         {/* SEO-Optimized Header */}

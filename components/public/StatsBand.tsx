@@ -36,29 +36,8 @@ export function StatsBand() {
     },
   ];
 
-  // Schema.org Organization/Service markup for SEO
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "RealEstateAgent",
-    name: siteName,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "4.9",
-      ratingCount: "1200",
-    },
-    numberOfEmployees: {
-      "@type": "QuantitativeValue",
-      value: "500",
-    },
-  };
-
   return (
     <section className="relative py-8 md:py-10 px-4 md:px-6 lg:px-8 overflow-hidden bg-linear-to-r from-blue-500 to-purple-500">
-      {/* Schema.org Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-      />
 
       {/* === BACKGROUND DESIGN === */}
       {/* ใช้สีเข้มเพื่อให้สถิติดูโดดเด่นและน่าเชื่อถือ */}

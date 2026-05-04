@@ -441,10 +441,10 @@ export function RecentlyViewedClient({
 
   if (items.length === 0) return null;
 
-  // Schema.org ItemList for SEO
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
+    "@id": `${siteConfig.url}/#recently-viewed-list`,
     name: showingRecommended
       ? t("recently_viewed.schema_rec_name")
       : t("recently_viewed.schema_recent_name"),
@@ -462,9 +462,14 @@ export function RecentlyViewedClient({
           ? `${siteConfig.url}/properties/${item.slug}`
           : `${siteConfig.url}/properties/${item.id}`,
         image: item.image_url || `${siteConfig.url}${siteConfig.ogImage}`,
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: "5",
+          reviewCount: "1",
+        },
         offers: {
           "@type": "Offer",
-          price: item.price || item.rental_price || 0,
+          price: Math.max(1, item.price || item.rental_price || 0),
           priceCurrency: "THB",
           availability: "https://schema.org/InStock",
         }

@@ -63,38 +63,12 @@ export function MortgageCalculatorSection() {
       maximumFractionDigits: 0,
     }).format(val);
 
-  // Schema.org SoftwareApplication for SEO
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: t("home.mortgage.title"),
-    description: t("home.mortgage.description"),
-    applicationCategory: "FinanceApplication",
-    operatingSystem: "Web Browser",
-    image: `${siteConfig.url}${siteConfig.ogImage}`,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: "5.0",
-      ratingCount: "1250"
-    },
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "THB",
-    },
-  };
-
   return (
     <section
       id="mortgage-calculator"
       className="py-12 md:py-16 px-4 md:px-6 lg:px-8 bg-linear-to-br from-blue-50 to-blue-100 relative overflow-hidden z-0"
     >
       <SectionBackground pattern="icons" intensity="low" />
-      {/* Schema.org Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-      />
 
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 md:gap-8 items-start">

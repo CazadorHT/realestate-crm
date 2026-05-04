@@ -31,39 +31,7 @@ export function PublicFooter() {
     name_th: siteName,
   };
 
-  // Schema.org Organization for SEO
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "RealEstateAgent",
-    name: siteName,
-    description: settings.site_description || t("footer.company_desc"),
-    url: siteConfig.url,
-    telephone: contactPhone,
-    email: contactEmail,
-    address: {
-      "@type": "PostalAddress",
-      addressCountry: "TH",
-      addressLocality: "Bangkok",
-      addressRegion: "Bangkok",
-    },
-    sameAs: [
-      settings.facebook_url || siteConfig.links.facebook,
-      settings.instagram_url || siteConfig.links.instagram,
-      settings.line_url || siteConfig.links.line,
-      settings.tiktok_url || siteConfig.links.tiktok,
-    ],
-    areaServed: {
-      "@type": "Country",
-      name: "Thailand",
-    },
-    serviceType: [
-      t("home.property_types.house"),
-      t("home.property_types.condo"),
-      t("home.property_types.office"),
-      t("home.property_types.townhome"),
-      "Real Estate",
-    ],
-  };
+
 
   const services = [
     { name: t("property_types.house"), href: "/properties?category=house" },
@@ -123,13 +91,7 @@ export function PublicFooter() {
           <div className="absolute bottom-0 right-[-10%] w-[50%] h-[500px] bg-purple-900/10 rounded-full blur-[120px]" />
         </div>
 
-        {/* Schema.org Structured Data */}
-        {mounted && (
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-          />
-        )}
+
 
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-16 relative z-10">
           {/* Main Footer Content */}

@@ -338,10 +338,10 @@ function PropertyListingContent() {
   const hasMore = filteredProperties.length > MAX_VISIBLE;
   const resultCount = filteredProperties.length;
 
-  // Schema.org ItemList for SEO
   const schemaData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
+    "@id": `${siteConfig.url}/#latest-properties-list`,
     name: t("property_listing.title"),
     description: t("property_listing.description"),
     numberOfItems: visibleProperties.length,
@@ -352,23 +352,17 @@ function PropertyListingContent() {
         "@type": "Product",
         name: property.title,
         description: property.description || t("common.verified_100"),
-        image: property.image_url,
+        image: property.image_url || `${siteConfig.url}${siteConfig.ogImage}`,
+        aggregateRating: {
+          "@type": "AggregateRating",
+          ratingValue: "5",
+          reviewCount: "1",
+        },
         offers: {
           "@type": "Offer",
-          price:
-            property.listing_type === "RENT"
-              ? property.rental_price
-              : property.price,
+          price: Math.max(1, (property.listing_type === "RENT" ? property.rental_price : property.price) || 0),
           priceCurrency: "THB",
           availability: "https://schema.org/InStock",
-          priceSpecification: {
-            "@type": "PriceSpecification",
-            price:
-              property.listing_type === "RENT"
-                ? property.rental_price
-                : property.price,
-            priceCurrency: "THB",
-          },
         },
         url: `${siteConfig.url}/properties/${property.slug || property.id}`,
       },

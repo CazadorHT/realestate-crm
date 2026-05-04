@@ -168,30 +168,7 @@ export function PropertyTypeGrid({
     },
   ];
 
-  // Schema.org ItemList for SEO
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    name: t("home.property_types.title"),
-    description: t("property_listing.description"),
-    itemListElement: propertyTypes.map((type, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      item: {
-        "@type": "Product",
-        name: type.title,
-        description: type.description,
-        url: `${siteConfig.url}${type.href}`,
-        image: `${siteConfig.url}${siteConfig.ogImage}`, // ✅ Fix: Added image
-        offers: { // ✅ Fix: Added generic offer
-          "@type": "Offer",
-          availability: "https://schema.org/InStock",
-          price: 0,
-          priceCurrency: "THB"
-        }
-      },
-    })),
-  };
+
 
   return (
     <section id="discover" className="pt-20 pb-10 px-4 sm:px-6 lg:px-8 bg-slate-50 relative overflow-hidden">
@@ -200,12 +177,6 @@ export function PropertyTypeGrid({
         <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-100/40 rounded-full blur-[100px]" />
       </div>
-
-      {/* Schema.org Structured Data */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-      />
 
       <div className="max-w-screen-2xl mx-auto relative z-10 px-4 md:px-6 lg:px-8  ">
         {/* SEO-Optimized Section Header */}

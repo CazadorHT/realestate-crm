@@ -10,9 +10,11 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       allow: "/",
       disallow: [
-        "/protected/", 
-        "/api/", 
+        "/protected/",
         "/admin/",
+        "/api/auth/",
+        "/api/internal/",
+        "/api/webhooks/",
         "/*?sort=",
         "/*?view=",
         "/*?minPrice=",
