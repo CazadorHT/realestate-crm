@@ -22,7 +22,7 @@ vi.mock("crypto", async (importOriginal) => {
   return { ...actual, randomUUID: () => "test-uuid-1234" };
 });
 
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }));
 
 vi.mock('@/lib/seo-utils', () => ({
   generatePropertySEO: vi.fn(() => ({
@@ -78,7 +78,22 @@ describe('Property Actions - Hardened Duplication', () => {
 
     mockSupabase.single
       .mockResolvedValueOnce({ 
-        data: { id: 'old-123', title: 'Condo', view_count: 500, verified: true, tenant_id: 't1' }, 
+        data: { 
+          id: 'old-123', title: 'Condo', view_count: 500, verified: true, tenant_id: 't1',
+          currency: 'THB', total_units: 1, sold_units: 0, near_transit: false, is_co_agent: false,
+          is_pet_friendly: false, is_foreigner_quota: false, allow_smoking: false, is_renovated: false,
+          is_fully_furnished: false, is_corner_unit: false, has_private_pool: false, is_selling_with_tenant: false,
+          is_bare_shell: false, is_exclusive: false, has_garden_view: false, has_pool_view: false,
+          has_city_view: false, has_unblocked_view: false, has_river_view: false, facing_east: false,
+          facing_north: false, facing_south: false, facing_west: false, has_multi_parking: false,
+          is_grade_a: false, is_grade_b: false, is_grade_c: false, is_column_free: false,
+          is_central_air: false, is_split_air: false, has_247_access: false, has_fiber_optic: false,
+          is_tax_registered: false, has_raised_floor: false, is_high_ceiling: false, is_cbd: false,
+          is_smart_home: false, has_private_elevator: false, is_handicapped_friendly: false,
+          is_high_floor: false, is_green_building: false, has_flexible_lease: false, is_fully_fitted: false,
+          is_never_lived_in: false, requires_ai_review: false, status: 'ACTIVE',
+          province: 'BKK', district: 'D1', subdistrict: 'S1', commission_sale_percentage: 3
+        }, 
         error: null 
       })
       .mockResolvedValueOnce({ data: { id: 'new-456' }, error: null });

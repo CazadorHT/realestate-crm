@@ -65,10 +65,7 @@ export async function generateMetadata({
       images: [COVER_IMAGE],
       type: "article",
       publishedTime: post.published_at || undefined,
-      authors:
-        typeof post.author === "object" && post.author && "name" in post.author
-          ? [(post.author as any).name]
-          : undefined,
+      authors: post.profiles?.full_name ? [post.profiles.full_name] : undefined,
     },
     twitter: {
       card: "summary_large_image",
@@ -104,7 +101,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const author = {
     name: post.profiles?.full_name || "Admin",
     avatar: post.profiles?.avatar_url || "",
-    bio: (post.author as any)?.bio || "" // Keep bio from JSONB if exists
+    bio: "" // Set to empty string since bio is not in profiles yet
   };
 
   const dateLocales: Record<string, Locale> = { th, en, zh, ru };

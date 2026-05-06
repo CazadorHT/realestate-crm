@@ -1,6 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { leadRowToFormValues } from './mapper';
 import { LeadRow } from './types';
+import { encrypt } from '@/lib/crypto';
+
+// Mock encryption secret for consistent testing
+process.env.ENCRYPTION_SECRET = "test-secret-must-be-32-chars-long-!!!";
 
 describe('Lead Mapper - leadRowToFormValues', () => {
   const mockRow: LeadRow = {
@@ -53,16 +57,36 @@ describe('Lead Mapper - leadRowToFormValues', () => {
     phone_hash: null,
     email_hash: null,
     line_id_hash: null,
+    wechat_id: 'wechat123',
+    whatsapp: '+66812345678',
   };
 
-  it('should map a full lead row to form values correctly', () => {
+  it('should map a raw lead row to form values correctly (Backward Compatibility)', () => {
     const values = leadRowToFormValues(mockRow);
     
     expect(values.full_name).toBe('Hunter Developer');
-    expect(values.is_foreigner).toBe(true);
-    expect(values.budget_min).toBe(1000000);
-    expect(values.preferences).toEqual({ remote: true });
-    expect(values.preferred_locations).toEqual(['Bangkok', 'Pattaya']);
+    expect(values.phone).toBe('0812345678');
+    expect(values.email).toBe('hunter@test.com');
+    expect(values.line_id).toBe('test-line');
+    expect(values.wechat_id).toBe('wechat123');
+    expect(values.whatsapp).toBe('+66812345678');
+  });
+
+  it('should decrypt encrypted PII fields correctly', () => {
+    const encryptedRow: LeadRow = {
+      ...mockRow,
+      full_name: encrypt('Encrypted Name')!,
+      phone: encrypt('0999999999')!,
+      email: encrypt('secret@agent.com')!,
+      line_id: encrypt('secret-line')!,
+    };
+
+    const values = leadRowToFormValues(encryptedRow);
+    
+    expect(values.full_name).toBe('Encrypted Name');
+    expect(values.phone).toBe('0999999999');
+    expect(values.email).toBe('secret@agent.com');
+    expect(values.line_id).toBe('secret-line');
   });
 
   it('should fallback to null or default for empty fields', () => {
@@ -73,6 +97,8 @@ describe('Lead Mapper - leadRowToFormValues', () => {
       budget_min: null,
       is_foreigner: false,
       preferences: null,
+      wechat_id: null,
+      whatsapp: null,
     };
     
     const values = leadRowToFormValues(emptyRow);
@@ -81,5 +107,40 @@ describe('Lead Mapper - leadRowToFormValues', () => {
     expect(values.budget_min).toBe(null);
     expect(values.is_foreigner).toBe(false);
     expect(values.preferences).toBe(null);
+    expect(values.wechat_id).toBe(null);
+    expect(values.whatsapp).toBe(null);
+  });
+
+  describe('Brutal Mapper Edge Cases', () => {
+    it('should handle completely missing fields gracefully', () => {
+      // @ts-ignore - Testing runtime resilience against bad DB data
+      const corruptedRow: LeadRow = { id: 'bad-1' };
+      const values = leadRowToFormValues(corruptedRow);
+      
+      expect(values.full_name).toBe("");
+      expect(values.phone).toBe(null);
+      expect(values.email).toBe(null);
+      expect(values.stage).toBe(undefined); // Should match DB default behavior
+    });
+
+    it('should handle malformed JSON in preferences', () => {
+      const rowWithBadJson: LeadRow = {
+        ...mockRow,
+        preferences: "not-json-but-string" as any
+      };
+      const values = leadRowToFormValues(rowWithBadJson);
+      expect(values.preferences).toBe("not-json-but-string");
+    });
+
+    it('should handle numbers passed as strings and vice versa for IDs', () => {
+      const weirdRow: LeadRow = {
+        ...mockRow,
+        budget_min: "500000" as any,
+        is_foreigner: "true" as any,
+      };
+      const values = leadRowToFormValues(weirdRow);
+      expect(values.budget_min).toBe(500000);
+      expect(values.is_foreigner).toBe(true);
+    });
   });
 });

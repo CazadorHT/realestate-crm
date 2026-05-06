@@ -45,14 +45,14 @@ export async function updatePropertyEmbeddingAction(propertyId: string) {
 
     const { error: updateErr } = await supabase
       .from("properties")
-      .update({ embedding: vector } as any)
+      .update({ embedding: vector as unknown as string })
       .eq("id", propertyId);
 
     if (updateErr) throw new Error(updateErr.message);
     return { success: true };
-  } catch (error: any) {
+  } catch (error) {
     console.error("updatePropertyEmbeddingAction error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -193,9 +193,9 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
       requirementSummary: requirementText,
       error: null,
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("runSmartMatchAction error:", error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
   }
 }
 
@@ -252,7 +252,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   // 3. Post-query Budget Filter
   let filteredProperties = properties || [];
   if (criteria.budgetMin !== undefined || criteria.budgetMax !== undefined) {
-    filteredProperties = filteredProperties.filter((p: any) => {
+    filteredProperties = filteredProperties.filter((p: Database["public"]["Tables"]["properties"]["Row"]) => {
       let price =
         criteria.purpose === "RENT"
           ? p.rental_price || p.original_rental_price
@@ -272,7 +272,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
 
   // 4. Score and Build Results
   const results: PropertyMatch[] = (filteredProperties || [])
-    .map((p: any) => {
+    .map((p: Database["public"]["Tables"]["properties"]["Row"]) => {
       const prop = p as unknown as PropertyWithImages;
       const { score, reasons, scoreBreakdown } = calculateMatchScore(
         prop,
@@ -297,7 +297,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
       let secondaryPrice: number | undefined;
       let isSqmPrice = false;
 
-      const officePrice = getOfficePrice(prop as any);
+      const officePrice = getOfficePrice(prop as Parameters<typeof getOfficePrice>[0]);
       if (officePrice?.isCalculated) {
         primaryPrice = officePrice.totalPrice ?? null;
         secondaryPrice = officePrice.sqmPrice || undefined;
@@ -378,39 +378,4 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
  * [PUBLIC] Create Lead from Match Wizard (FULL RESTORATION)
  * Handles lead creation and conversion linking.
  */
-export async function createLeadFromMatchAction(data: {
-  sessionId: string;
-  propertyId: string;
-  fullName: string;
-  phone: string;
-  email?: string;
-  lineId?: string;
-}) {
-  const supabase = await createClient();
-
-  const { encrypt, generateBlindIndex } = await import("@/lib/crypto");
-
-  // 🛡️ [PHASE 4] Encrypt PII and Generate Blind Index for Search
-  const { data: leadId, error } = await supabase.rpc(
-    "create_lead_from_match",
-    {
-      p_session_id: data.sessionId,
-      p_property_id: data.propertyId,
-      p_full_name: encrypt(data.fullName) || "Unknown",
-      p_full_name_hash: generateBlindIndex(data.fullName),
-      p_phone: encrypt(data.phone),
-      p_phone_hash: generateBlindIndex(data.phone),
-      p_email: encrypt(data.email),
-      p_email_hash: generateBlindIndex(data.email),
-      p_line_id: encrypt(data.lineId),
-      p_line_id_hash: generateBlindIndex(data.lineId),
-    },
-  );
-
-  if (error) {
-    console.error("Error creating lead from match via RPC:", error);
-    throw new Error(mapDbError(error));
-  }
-
-  return { success: true, leadId };
-}
+// createLeadFromMatchAction was moved to features/public/actions.ts for centralization and PII encryption support.

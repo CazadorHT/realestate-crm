@@ -182,7 +182,7 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
 
   let query = supabase
     .from("leads")
-    .select("id, full_name, email, phone, stage, source, budget_min, budget_max, property_id, preferred_property_types, preferred_locations, note, line_id, facebook_psid, instagram_sid, created_at, updated_at, tenant_id, created_by, assigned_to")
+    .select("id, full_name, email, phone, stage, source, budget_min, budget_max, property_id, preferred_property_types, preferred_locations, note, line_id, wechat_id, whatsapp, facebook_psid, instagram_sid, created_at, updated_at, tenant_id, created_by, assigned_to")
     .eq("id", id);
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
@@ -204,6 +204,8 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
     phone: decrypt(lead.phone),
     note: decrypt(lead.note),
     line_id: decrypt(lead.line_id),
+    wechat_id: decrypt(lead.wechat_id),
+    whatsapp: decrypt(lead.whatsapp),
     facebook_psid: decrypt(lead.facebook_psid),
     instagram_sid: decrypt(lead.instagram_sid),
   };
@@ -221,7 +223,7 @@ export async function getLeadWithActivitiesQuery(
     let query = supabase
       .from("leads")
         .select(`
-                id, full_name, email, phone, stage, source, budget_min, budget_max, property_id, preferred_property_types, preferred_locations, note, line_id, facebook_psid, instagram_sid, ai_summary_content, created_at, updated_at, tenant_id, created_by, assigned_to,
+                id, full_name, email, phone, stage, source, budget_min, budget_max, property_id, preferred_property_types, preferred_locations, note, line_id, wechat_id, whatsapp, facebook_psid, instagram_sid, ai_summary_content, created_at, updated_at, tenant_id, created_by, assigned_to,
                 lead_activities (
                   id, lead_id, property_id, activity_type, note, created_by, created_at,
                   profiles:created_by ( full_name, avatar_url ),
@@ -254,6 +256,8 @@ export async function getLeadWithActivitiesQuery(
       phone: decrypt(lead.phone),
       note: decrypt(lead.note),
       line_id: decrypt(lead.line_id),
+      wechat_id: decrypt(lead.wechat_id),
+      whatsapp: decrypt(lead.whatsapp),
       facebook_psid: decrypt(lead.facebook_psid),
       instagram_sid: decrypt(lead.instagram_sid),
     };

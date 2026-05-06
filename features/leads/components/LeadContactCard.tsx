@@ -5,10 +5,11 @@ import {
   ShieldCheck, 
   Phone, 
   Mail, 
-  MessageSquare, 
   Globe, 
   StickyNote 
 } from "lucide-react";
+import { FaLine, FaWhatsapp } from "react-icons/fa";
+import { IoLogoWechat } from "react-icons/io5";
 
 interface LeadContactCardProps {
   lead: {
@@ -19,6 +20,9 @@ interface LeadContactCardProps {
     nationality: string | null;
     is_foreigner: boolean | null;
     note: string | null;
+    line_id: string | null;
+    wechat_id: string | null;
+    whatsapp: string | null;
   };
 }
 
@@ -97,12 +101,60 @@ export function LeadContactCard({ lead }: LeadContactCardProps) {
           <div className="flex items-center justify-between group/row">
             <div className="flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 group-hover/row:bg-emerald-50 group-hover/row:text-emerald-600 transition-colors">
-                <MessageSquare className="h-4 w-4" />
+                <FaLine className="h-4 w-4" />
               </div>
               <span className="text-sm font-medium text-slate-500">Line ID</span>
             </div>
             <span className="text-sm font-semibold text-emerald-600">
-              {lead.preferences?.line_id || <span className="text-slate-300">ไม่ระบุ</span>}
+              {lead.line_id ? (
+                <a
+                  href={`https://line.me/ti/p/~${lead.line_id.replace(/^@/, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline underline-offset-4 transition-all"
+                >
+                  {lead.line_id}
+                </a>
+              ) : (
+                <span className="text-slate-300">ไม่ระบุ</span>
+              )}
+            </span>
+          </div>
+
+          {/* WeChat ID */}
+          <div className="flex items-center justify-between group/row">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 group-hover/row:bg-[#07C160]/10 group-hover/row:text-[#07C160] transition-colors">
+                <IoLogoWechat className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium text-slate-500">WeChat ID</span>
+            </div>
+            <span className="text-sm font-semibold text-[#07C160]">
+              {lead.wechat_id || <span className="text-slate-300">ไม่ระบุ</span>}
+            </span>
+          </div>
+
+          {/* WhatsApp */}
+          <div className="flex items-center justify-between group/row">
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-slate-400 group-hover/row:bg-[#25D366]/10 group-hover/row:text-[#25D366] transition-colors">
+                <FaWhatsapp className="h-4 w-4" />
+              </div>
+              <span className="text-sm font-medium text-slate-500">WhatsApp</span>
+            </div>
+            <span className="text-sm font-semibold text-[#25D366]">
+              {lead.whatsapp ? (
+                <a
+                  href={`https://wa.me/${lead.whatsapp.replace(/[^0-9]/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:underline underline-offset-4 transition-all"
+                >
+                  {lead.whatsapp}
+                </a>
+              ) : (
+                <span className="text-slate-300">ไม่ระบุ</span>
+              )}
             </span>
           </div>
 

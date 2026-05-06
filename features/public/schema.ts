@@ -3,9 +3,12 @@ import * as z from "zod";
 export const depositLeadSchema = z.object({
   fullName: z.string().min(2, "กรุณาระบุชื่อ-นามสกุล"),
   phone: z.string().length(10, "เบอร์โทรศัพท์ต้องมี 10 หลัก"),
-  lineId: z.string().optional(),
+  email: z.string().email("อีเมลไม่ถูกต้อง").optional().or(z.literal("")).nullable(),
+  lineId: z.string().optional().nullable(),
+  wechatId: z.string().optional().nullable(),
+  whatsapp: z.string().optional().nullable(),
   propertyType: z.string().min(1, "กรุณาเลือกประเภททรัพย์"),
-  details: z.string().optional(),
+  details: z.string().optional().nullable(),
 });
 
 export const publicPropertyFilterSchema = z.object({
@@ -39,9 +42,12 @@ export const publicPropertyFilterSchema = z.object({
 export const inquiryLeadSchema = z.object({
   fullName: z.string().min(2, "กรุณาระบุชื่อ-นามสกุล"),
   phone: z.string().length(10, "เบอร์โทรศัพท์ต้องมี 10 หลัก"),
-  lineId: z.string().optional(),
-  message: z.string().optional(),
-  propertyId: z.string().uuid("รหัสทรัพย์ไม่ถูกต้อง").optional(),
+  email: z.string().email("อีเมลไม่ถูกต้อง").optional().or(z.literal("")).nullable(),
+  lineId: z.string().optional().nullable(),
+  wechatId: z.string().optional().nullable(),
+  whatsapp: z.string().optional().nullable(),
+  message: z.string().optional().nullable(),
+  propertyId: z.string().uuid("รหัสทรัพย์ไม่ถูกต้อง").optional().nullable(),
   source: z
     .enum(["PORTAL", "FACEBOOK", "LINE", "WEBSITE", "REFERRAL", "OTHER"])
     .default("WEBSITE"),

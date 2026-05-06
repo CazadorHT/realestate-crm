@@ -33,6 +33,8 @@ export function DepositWizard({
       fullName: "",
       phone: "",
       lineId: "",
+      wechatId: "",
+      whatsapp: "",
       details: "",
       propertyType: undefined,
     },
@@ -140,7 +142,7 @@ export function DepositWizard({
       const res = await createDepositLeadAction(values);
       if (res.success) {
         toast.success(
-          t("deposit.success.message") || "ข้อมูลของคุณถูกส่งเรียบร้อยแล้ว",
+          t("deposit.success.message"),
         );
         console.log("GTM Debug: lead_form_success (Deposit)");
         try {
@@ -155,7 +157,7 @@ export function DepositWizard({
         console.log("GTM Debug: lead_form_error (Deposit Server Side)", {
           message: res.message,
         });
-        toast.error(res.message || "เกิดข้อผิดพลาดในการส่งข้อมูล");
+        toast.error(res.message);
         try {
           pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
             error_message: res.message,

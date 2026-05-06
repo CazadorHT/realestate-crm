@@ -1,46 +1,54 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { globalMockSupabase as mockSupabase } from '@/tests/mocks/supabase';
 
-describe('Leads Module - Definitive Resolution', () => {
-  let createLeadAction: any;
-  let updateLeadStageAction: any;
+import { createLeadAction, updateLeadStageAction } from './actions';
 
-  beforeEach(async () => {
-    vi.resetModules();
+// 🛡️ TOP-LEVEL MOCKS
+vi.mock('@/lib/actions/system-config', () => ({
+  getSystemConfig: vi.fn().mockResolvedValue({ 
+    multi_tenant_enabled: true, 
+    default_tenant_id: 'tenant-1' 
+  }),
+}));
+
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+}));
+
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: async () => mockSupabase,
+}));
+
+vi.mock('@/lib/crypto', () => ({
+  encrypt: vi.fn((v) => v),
+  decrypt: vi.fn((v) => v),
+  generateBlindIndex: vi.fn((v) => v),
+}));
+
+vi.mock("@/lib/authz", () => ({
+  requireAuthContext: vi.fn().mockResolvedValue({
+    supabase: mockSupabase,
+    user: { id: 'u1' },
+    tenantId: 'tenant-1',
+    role: 'AGENT',
+  }),
+  AuthzError: class AuthzError extends Error {
+    constructor(public code: string, message: string) {
+      super(message);
+    }
+  },
+  isStaff: vi.fn().mockReturnValue(true),
+}));
+
+vi.mock('@/lib/actions/notifications', () => ({
+  notifyAdminsAction: vi.fn().mockResolvedValue({ success: true }),
+}));
+
+describe('Leads Module - Definitive Resolution', () => {
+  beforeEach(() => {
     vi.clearAllMocks();
     mockSupabase.clear();
-
-    (globalThis as any).__MOCK_SUPABASE__ = mockSupabase;
-
-    vi.doMock('@/lib/actions/system-config', () => ({
-      getSystemConfig: vi.fn().mockResolvedValue({ 
-        multi_tenant_enabled: true, 
-        default_tenant_id: 'tenant-1' 
-      }),
-    }));
-
-    vi.doMock('next/cache', () => ({
-      revalidatePath: vi.fn(),
-    }));
-
-    vi.doMock("@/lib/authz", () => ({
-      requireAuthContext: vi.fn().mockResolvedValue({
-        supabase: mockSupabase,
-        user: { id: 'u1' },
-        tenantId: 'tenant-1',
-        role: 'AGENT',
-      }),
-      AuthzError: class AuthzError extends Error {
-        constructor(public code: string, message: string) {
-          super(message);
-        }
-      },
-      isStaff: vi.fn().mockReturnValue(true),
-    }));
-
-    const actions = await import('./actions');
-    createLeadAction = actions.createLeadAction;
-    updateLeadStageAction = actions.updateLeadStageAction;
   });
 
   it('should successfully insert lead (Valid Enum Values)', async () => {

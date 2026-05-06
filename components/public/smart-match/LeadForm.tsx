@@ -3,10 +3,12 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Phone, Mail, ChevronLeft, MessageCircle, Loader2 } from "lucide-react";
+import { Phone, Mail, ChevronLeft, Loader2 } from "lucide-react";
+import { FaLine, FaWhatsapp } from "react-icons/fa";
+import { IoLogoWechat } from "react-icons/io5";
 import { toast } from "sonner";
 import { useLanguage } from "@/components/providers/LanguageProvider";
-import { createLeadFromMatchAction } from "@/features/smart-match/actions";
+import { createLeadFromMatchAction } from "@/features/public/actions";
 import { PropertyMatch } from "@/features/smart-match/types";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
@@ -89,14 +91,18 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
     }
 
     try {
-      await createLeadFromMatchAction({
+      await createLeadFromMatchAction(
         sessionId,
-        propertyId: match.id,
-        fullName: formData.get("fullName") as string,
-        phone: formData.get("phone") as string,
-        email: formData.get("email") as string,
-        lineId: formData.get("lineId") as string,
-      });
+        match.id,
+        {
+          fullName: formData.get("fullName") as string,
+          phone: formData.get("phone") as string,
+          email: formData.get("email") as string,
+          lineId: formData.get("lineId") as string,
+          wechatId: formData.get("wechatId") as string,
+          whatsapp: formData.get("whatsapp") as string,
+        }
+      );
       toast.success(t("smart_match.lead_success"));
       onBack();
     } catch (err) {
@@ -223,12 +229,44 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
               {t("smart_match.lead_line_label")}
             </label>
             <div className="relative">
-              <MessageCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <FaLine className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#00B900]" />
               <Input
                 name="lineId"
+                onFocus={handleFormStart}
                 placeholder="line_id"
-                className="pl-9 rounded-xl border-slate-200"
+                className="pl-9 rounded-xl border-slate-200 focus:border-[#00B900]/50"
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-slate-700">
+                {t("smart_match.lead_wechat_label") || "WeChat ID"}
+              </label>
+              <div className="relative">
+                <IoLogoWechat className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#07C160]" />
+                <Input
+                  name="wechatId"
+                  onFocus={handleFormStart}
+                  placeholder="wechat_id"
+                  className="pl-9 rounded-xl border-slate-200 focus:border-[#07C160]/50"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-bold text-slate-700">
+                {t("smart_match.lead_whatsapp_label") || "WhatsApp"}
+              </label>
+              <div className="relative">
+                <FaWhatsapp className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#25D366]" />
+                <Input
+                  name="whatsapp"
+                  onFocus={handleFormStart}
+                  placeholder="phone or id"
+                  className="pl-9 rounded-xl border-slate-200 focus:border-[#25D366]/50"
+                />
+              </div>
             </div>
           </div>
 

@@ -23,6 +23,7 @@ vi.mock('@/lib/audit', () => ({
 
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
 }));
 
 vi.mock('@/lib/inngest/client', () => ({
@@ -177,6 +178,9 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
       has_private_elevator: false,
       is_handicapped_friendly: false,
       is_high_floor: false,
+      is_green_building: false,
+      has_flexible_lease: false,
+      is_fully_fitted: false,
       is_never_lived_in: false,
       requires_ai_review: true,
       status: 'ACTIVE',
@@ -259,6 +263,9 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
         has_private_elevator: false,
         is_handicapped_friendly: false,
         is_high_floor: false,
+        is_green_building: false,
+        has_flexible_lease: false,
+        is_fully_fitted: false,
         is_never_lived_in: false,
         requires_ai_review: true, // Should be overridden by action
         status: 'ACTIVE',
@@ -338,6 +345,9 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
         has_private_elevator: false,
         is_handicapped_friendly: false,
         is_high_floor: false,
+        is_green_building: false,
+        has_flexible_lease: false,
+        is_fully_fitted: false,
         is_never_lived_in: false,
         requires_ai_review: true, // Should remain true for AGENT
         status: 'ACTIVE',

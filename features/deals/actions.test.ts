@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { globalMockSupabase as mockSupabase } from '@/tests/mocks/supabase';
 import { createDealAction, updateDealAction } from './actions';
 import { requireAuthContext } from '@/lib/authz';
 
@@ -16,6 +17,25 @@ vi.mock('@/lib/audit', () => ({
 
 vi.mock('next/cache', () => ({
   revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+}));
+
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: async () => mockSupabase,
+}));
+
+vi.mock('@/lib/actions/notifications', () => ({
+  notifyAdminsAction: vi.fn().mockResolvedValue({ success: true }),
+}));
+
+vi.mock('./logic/scoped-client', () => ({
+  getScopedRevenueClient: vi.fn((supabase) => ({
+    deals: () => supabase.from('deals'),
+    commissions: () => supabase.from('deal_commissions'),
+    leads: () => supabase.from('leads'),
+    properties: () => supabase.from('properties'),
+    rpc: (name: string, args: any) => supabase.rpc(name, args),
+  })),
 }));
 
 describe('Deal Actions - Branch Isolation & Stock', () => {

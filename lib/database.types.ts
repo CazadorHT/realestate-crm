@@ -397,7 +397,6 @@ export type Database = {
       }
       blog_posts: {
         Row: {
-          author: Json | null
           author_id: string | null
           category: string | null
           content: string | null
@@ -430,7 +429,6 @@ export type Database = {
           view_count: number | null
         }
         Insert: {
-          author?: Json | null
           author_id?: string | null
           category?: string | null
           content?: string | null
@@ -463,7 +461,6 @@ export type Database = {
           view_count?: number | null
         }
         Update: {
-          author?: Json | null
           author_id?: string | null
           category?: string | null
           content?: string | null
@@ -1510,6 +1507,8 @@ export type Database = {
           utm_medium: string | null
           utm_source: string | null
           utm_term: string | null
+          wechat_id: string | null
+          whatsapp: string | null
         }
         Insert: {
           ai_score?: number | null
@@ -1563,6 +1562,8 @@ export type Database = {
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
+          wechat_id?: string | null
+          whatsapp?: string | null
         }
         Update: {
           ai_score?: number | null
@@ -1616,6 +1617,8 @@ export type Database = {
           utm_medium?: string | null
           utm_source?: string | null
           utm_term?: string | null
+          wechat_id?: string | null
+          whatsapp?: string | null
         }
         Relationships: [
           {

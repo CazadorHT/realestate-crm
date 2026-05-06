@@ -86,10 +86,7 @@ export default async function BlogListingPage({
         datePublished: post.published_at,
         author: {
           "@type": "Person",
-          name:
-            typeof post.author === "object"
-              ? (post.author as any)?.name
-              : "Admin",
+          name: post.profiles?.full_name || "Admin",
         },
         image: post.cover_image || "",
         url: `${siteConfig.url}/blog/${post.slug}`,

@@ -34,4 +34,49 @@ describe("Crypto & Blind Indexing (Phase 4)", () => {
     const decrypted = decrypt(encrypted);
     expect(decrypted).toBe(originalValue);
   });
+
+  describe("Brutal Crypto Edge Cases", () => {
+    it("should handle extremely long strings (100k+ characters)", () => {
+      const longText = "A".repeat(100000);
+      const encrypted = encrypt(longText);
+      const decrypted = decrypt(encrypted);
+      expect(decrypted).toBe(longText);
+    });
+
+    it("should handle special and multi-byte characters", () => {
+      const emojiText = "🚀 Thai: ภาษาไทย Chinese: 🚀 汉字 Unicode: \u2728";
+      const encrypted = encrypt(emojiText);
+      const decrypted = decrypt(encrypted);
+      expect(decrypted).toBe(emojiText);
+    });
+
+    it("should gracefully handle malformed encrypted strings", () => {
+      const badInputs = [
+        "not-encrypted",
+        "too:many:parts:here",
+        "not:enough",
+        "invalid:hex:characters",
+        "123:456:789",
+        "::", // Empty parts
+      ];
+
+      badInputs.forEach(input => {
+        // Should return raw input due to lazy logic
+        expect(decrypt(input)).toBe(input);
+      });
+    });
+
+    it("should return null for null/undefined inputs", () => {
+      expect(encrypt(null)).toBe(null);
+      expect(decrypt(null)).toBe(null);
+      expect(encrypt(undefined)).toBe(null);
+      expect(decrypt(undefined)).toBe(null);
+    });
+
+    it("should generate consistent blind indices for same values regardless of case/spaces", () => {
+      const v1 = "  HUNTER@Test.com  ";
+      const v2 = "hunter@test.com";
+      expect(generateBlindIndex(v1)).toBe(generateBlindIndex(v2));
+    });
+  });
 });

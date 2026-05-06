@@ -1,36 +1,41 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import {
-  bulkMarkAsReadyToPayAction,
-  markAsPaidAction,
-  createCommissionAdjustmentAction,
-  getPayoutQueueAction,
-  recalculatePayoutTotalsAction,
-  getAgentWalletStatsAction,
-  getWhtCertificateDataAction,
-} from "./actions";
-import { requireAuthContext } from "@/lib/authz";
-import { logAudit } from "@/lib/audit";
-import { revalidatePath } from "next/cache";
-import { getCommissionRulesAction } from "@/features/dashboard/actions/commission-actions";
-
 import { createMockSupabase } from "@/tests/mocks/supabase";
 
-// 1. Initialize Standardized Mock
+// Create a FRESH instance for this file
 const mockSupabase = createMockSupabase();
 
-// 2. Mock external dependencies
+// 🛡️ HOISTED MOCK REGISTRY
+const { mockRegistry } = vi.hoisted(() => ({
+  mockRegistry: {
+    user: { id: "u1", full_name: "Accountant Pro", role: "ADMIN" },
+    tenantId: "t1",
+    commissionRules: { success: true, data: { defaultWhtRate: 3 } },
+    requireAuthContext: vi.fn(),
+    logAudit: vi.fn().mockResolvedValue({}),
+    notifyAdminsAction: vi.fn(),
+  }
+}));
+
+// Use unique global key for hoisting safety
+(globalThis as any).__FINANCE_ACTIONS_MOCK__ = mockSupabase;
+
+// 🛡️ TOP-LEVEL MOCKS
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+}));
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: vi.fn(async () => (globalThis as any).__FINANCE_ACTIONS_MOCK__),
+}));
+
 vi.mock("@/lib/authz", () => ({
-  requireAuthContext: vi.fn(),
+  requireAuthContext: mockRegistry.requireAuthContext,
   assertStaff: vi.fn(),
   assertAdmin: vi.fn(),
 }));
 
 vi.mock("@/lib/audit", () => ({
-  logAudit: vi.fn().mockResolvedValue({}),
-}));
-
-vi.mock("next/cache", () => ({
-  revalidatePath: vi.fn(),
+  logAudit: mockRegistry.logAudit,
 }));
 
 vi.mock("@/lib/inngest/client", () => ({
@@ -40,35 +45,44 @@ vi.mock("@/lib/inngest/client", () => ({
 }));
 
 vi.mock("@/features/dashboard/actions/commission-actions", () => ({
-  getCommissionRulesAction: vi.fn().mockResolvedValue({
-    success: true,
-    data: { defaultWhtRate: 3 }
-  }),
+  getCommissionRulesAction: vi.fn(async () => mockRegistry.commissionRules),
 }));
 
+// Now DYNAMICALLY import actions after mocks are set
+import {
+  bulkMarkAsReadyToPayAction,
+  markAsPaidAction,
+  createCommissionAdjustmentAction,
+  getPayoutQueueAction,
+  recalculatePayoutTotalsAction,
+  getAgentWalletStatsAction,
+  getWhtCertificateDataAction,
+} from "./actions";
+
+import { logAudit } from "@/lib/audit";
+
 describe("Finance Actions - Agile Payout Hardening", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
-    mockSupabase.clear(); // 🛡️ Fix: Clear internal table mocks
-    // Default mock response
-    mockSupabase.then.mockImplementation((resolve: any) =>
-      resolve({ data: [], error: null, count: 0 }),
-    );
+    mockSupabase.clear();
+    
+    // Ensure mock is set
+    (globalThis as any).__FINANCE_ACTIONS_MOCK__ = mockSupabase;
+
+    // Default registry setups
+    mockRegistry.requireAuthContext.mockResolvedValue({
+      supabase: mockSupabase,
+      user: mockRegistry.user,
+      tenantId: mockRegistry.tenantId,
+      role: mockRegistry.user.role,
+    });
   });
 
   describe("bulkMarkAsReadyToPayAction", () => {
     it("should call high-performance RPC and return success", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: { id: "u1" },
-        tenantId: "t1",
-        role: "ADMIN",
-      });
-
-      // 🏗️ Use Table Mocks
       mockSupabase
         .mockTableResult("profiles", { full_name: "Accountant Pro" })
-        .mockTableResult("deal_commissions", { updated_count: 5 }); // RPC defaults to this if not handled
+        .mockTableResult("deal_commissions", { updated_count: 5 });
 
       const ids = ["c1", "c2"];
       const result = await bulkMarkAsReadyToPayAction(ids);
@@ -86,13 +100,6 @@ describe("Finance Actions - Agile Payout Hardening", () => {
 
   describe("markAsPaidAction - Hardened Logic", () => {
     it("should calculate net amount correctly with dynamic tax rate", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: { id: "u1" },
-        tenantId: "t1",
-        role: "ADMIN",
-      });
-
       const mockCommission = {
         id: "c1",
         amount: 10000,
@@ -103,9 +110,9 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       };
 
       mockSupabase
-        .mockTableResult("deal_commissions", mockCommission) // 1. Fetch
-        .mockTableResult("deal_commissions", { ...mockCommission, status: "PAID" }) // 2. Update
-        .mockTableResult("audit_logs", { success: true }); // 3. Audit
+        .mockTableResult("deal_commissions", mockCommission)
+        .mockTableResult("deal_commissions", { ...mockCommission, status: "PAID" })
+        .mockTableResult("audit_logs", { success: true });
 
       const result = await markAsPaidAction("c1", {
         payment_reference: "REF_DYNAMIC",
@@ -113,8 +120,6 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       });
 
       expect(result.success).toBe(true);
-      
-      // ✅ Check Audit Trail
       expect(logAudit).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ action: "finance.commission_paid" })
@@ -133,9 +138,9 @@ describe("Finance Actions - Agile Payout Hardening", () => {
        const { assertStaff } = await import("@/lib/authz");
        (assertStaff as any).mockImplementationOnce(() => { throw new Error("Unauthorized"); });
 
-       (requireAuthContext as any).mockResolvedValue({
+       mockRegistry.requireAuthContext.mockResolvedValue({
          supabase: mockSupabase,
-         user: { id: "u1" },
+         user: { id: "u1", role: "AGENT" },
          tenantId: "t1",
          role: "AGENT",
        });
@@ -153,13 +158,6 @@ describe("Finance Actions - Agile Payout Hardening", () => {
 
   describe("recalculatePayoutTotalsAction - Edge Cases", () => {
     it("should handle multiple adjustments and rounding correctly", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: { id: "u1" },
-        tenantId: "t1",
-        role: "ADMIN",
-      });
-
       const mockCommission = {
         id: "c1",
         amount: 333.33,
@@ -170,10 +168,10 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       };
 
       mockSupabase
-        .mockTableResult("deal_commissions", mockCommission) // 1. Fetch
-        .mockTableResult("deal_commissions", [{ amount: 333.33 }]) // 2. Deal sum
-        .mockTableResult("deal_commissions", { success: true }) // 3. Update result
-        .mockTableResult("audit_logs", { success: true }); // 4. Audit
+        .mockTableResult("deal_commissions", mockCommission)
+        .mockTableResult("deal_commissions", [{ amount: 333.33 }])
+        .mockTableResult("deal_commissions", { success: true })
+        .mockTableResult("audit_logs", { success: true });
 
       const result = await recalculatePayoutTotalsAction("c1");
       expect(result.success).toBe(true);
@@ -188,10 +186,11 @@ describe("Finance Actions - Agile Payout Hardening", () => {
 
   describe("getAgentWalletStatsAction - Logic Integrity", () => {
     it("should compute pending vs realized earnings with precision", async () => {
-      (requireAuthContext as any).mockResolvedValue({
+      mockRegistry.requireAuthContext.mockResolvedValue({
         supabase: mockSupabase,
-        user: { id: "a1" },
+        user: { id: "a1", role: "AGENT" },
         tenantId: "t1",
+        role: "AGENT",
       });
 
       const mockCommissions = [
@@ -211,12 +210,6 @@ describe("Finance Actions - Agile Payout Hardening", () => {
 
   describe("getWhtCertificateDataAction", () => {
     it("should format Thai currency and names correctly", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        tenantId: "t1",
-        role: "ADMIN",
-      });
-
       const mockData = {
         id: "c1",
         amount: 10000,
@@ -237,12 +230,6 @@ describe("Finance Actions - Agile Payout Hardening", () => {
 
   describe("getPayoutQueueAction - Pagination Hardening", () => {
     it("should apply range based on page and pageSize", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        tenantId: "t1",
-        role: "ADMIN",
-      });
-
       const mockQueue = [
         {
           id: "c1",
@@ -264,17 +251,15 @@ describe("Finance Actions - Agile Payout Hardening", () => {
 
   describe("Security & Cross-Tenant Protection", () => {
     it("should block createCommissionAdjustmentAction if commission belongs to another tenant", async () => {
-      (requireAuthContext as any).mockResolvedValue({
+      mockRegistry.requireAuthContext.mockResolvedValue({
         supabase: mockSupabase,
-        user: { id: "admin-1" },
+        user: { id: "admin-1", role: "ADMIN" },
         tenantId: "tenant-A",
         role: "ADMIN",
       });
 
       // Mock commission belongs to tenant-B
-      mockSupabase.then.mockImplementationOnce((resolve: any) =>
-        resolve({ data: { tenant_id: "tenant-B" }, error: null }),
-      );
+      mockSupabase.mockTableResult("deal_commissions", { tenant_id: "tenant-B" });
 
       const result = await createCommissionAdjustmentAction({
         commission_id: "c1",
@@ -291,13 +276,6 @@ describe("Finance Actions - Agile Payout Hardening", () => {
 
   describe("Idempotency & Precision Hardening", () => {
     it("should prevent double-payment using markAsPaidAction with shared reference", async () => {
-      (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        user: { id: "u1" },
-        tenantId: "t1",
-        role: "ADMIN",
-      });
-
       const mockCommission = {
         id: "c1",
         amount: 1000,
@@ -308,9 +286,9 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       };
 
       mockSupabase
-        .mockTableResult("deal_commissions", mockCommission) // 1. Fetch
-        .mockTableResult("deal_commissions", { ...mockCommission, status: "PAID" }) // 2. Update
-        .mockTableResult("audit_logs", { success: true }); // 3. Audit
+        .mockTableResult("deal_commissions", mockCommission)
+        .mockTableResult("deal_commissions", { ...mockCommission, status: "PAID" })
+        .mockTableResult("audit_logs", { success: true });
 
       const result = await markAsPaidAction("c1", {
         payment_reference: "UNIQUE_REF_123",
@@ -328,12 +306,6 @@ describe("Finance Actions - Agile Payout Hardening", () => {
     });
 
     it("should handle floating point precision in recalculatePayoutTotalsAction", async () => {
-       (requireAuthContext as any).mockResolvedValue({
-        supabase: mockSupabase,
-        tenantId: "t1",
-        role: "ADMIN",
-      });
-
       const mockCommission = {
         id: "c-float",
         amount: 1000.00000000001,
@@ -346,19 +318,17 @@ describe("Finance Actions - Agile Payout Hardening", () => {
         ],
       };
 
-      // 🏗️ Use Standardized Table Mocks for Multi-call scenarios
       mockSupabase
-        .mockTableResult("deal_commissions", mockCommission) // Call 1: Fetch
-        .mockTableResult("deal_commissions", [{ amount: 1000 }]) // Call 2: Sum check
-        .mockTableResult("deal_commissions", { success: true }) // Call 3: Update
-        .mockTableResult("audit_logs", { success: true }); // Call 4: Audit
+        .mockTableResult("deal_commissions", mockCommission)
+        .mockTableResult("deal_commissions", [{ amount: 1000 }])
+        .mockTableResult("deal_commissions", { success: true })
+        .mockTableResult("audit_logs", { success: true });
 
       const result = await recalculatePayoutTotalsAction("c-float");
       
       expect(result.error).toBeUndefined();
       expect(result.success).toBe(true);
       
-      // Verification: 1000 - (1000 * 0.03) + (0.1 + 0.2 rounded) = 1000 - 30 + 0.30 = 970.30
       expect(mockSupabase.update).toHaveBeenCalledWith(
         expect.objectContaining({
           net_amount: 970.3,

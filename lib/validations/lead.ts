@@ -50,6 +50,9 @@ export const leadFormSchema = z.object({
   budget_max: nullableNumber.optional(),
 
   note: z.string().trim().optional().nullable(),
+  line_id: z.string().trim().optional().nullable(),
+  wechat_id: z.string().trim().optional().nullable(),
+  whatsapp: z.string().trim().optional().nullable(),
 
   // ฟิลด์ใหม่ที่คุณเพิ่ม (ถ้าลงแล้ว)
   lead_type: z
@@ -80,7 +83,7 @@ export const leadFormSchema = z.object({
   has_pets: z.coerce.boolean().optional().nullable(),
   need_company_registration: z.coerce.boolean().optional().nullable(),
   allow_airbnb: z.coerce.boolean().optional().nullable(),
-  preferences: z.record(z.string(), z.any()).optional().nullable(),
+  preferences: z.record(z.string(), z.unknown()).optional().nullable(),
 });
 
 export type LeadFormValues = z.infer<typeof leadFormSchema>;

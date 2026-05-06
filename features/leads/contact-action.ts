@@ -1,5 +1,6 @@
  "use server";
 import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
 import { z } from "zod";
 import { sendLineNotification } from "@/lib/line";
 import { getTemplateConfig } from "@/features/line/utils";
@@ -9,6 +10,8 @@ const contactSchema = z.object({
   phone: z.string().min(1, "Phone is required"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   lineId: z.string().optional(),
+  wechatId: z.string().optional(),
+  whatsapp: z.string().optional(),
   subject: z.string().min(1, "Subject is required"),
   message: z.string().optional(),
   // Attribution & AI Score
@@ -71,6 +74,8 @@ export async function submitContactFormAction(
     phone: cleanPhone,
     email: formData.get("email"),
     lineId: formData.get("lineId"),
+    wechatId: formData.get("wechatId"),
+    whatsapp: formData.get("whatsapp"),
     subject: formData.get("subject"),
     message: formData.get("message"),
     utm_source: formData.get("utm_source"),
@@ -99,7 +104,7 @@ export async function submitContactFormAction(
     };
   }
 
-  const { name, phone, email, lineId, subject, message } = validatedFields.data;
+  const { name, phone, email, lineId, wechatId, whatsapp, subject, message } = validatedFields.data;
 
   const { encrypt, generateBlindIndex } = await import("@/lib/crypto");
   const { createClient } = await import("@/lib/supabase/server");
@@ -120,6 +125,8 @@ export async function submitContactFormAction(
         p_email_hash: generateBlindIndex(email),
         p_line_id: encrypt(lineId),
         p_line_id_hash: generateBlindIndex(lineId),
+        p_wechat_id: wechatId,
+        p_whatsapp: whatsapp,
         p_source: "WEBSITE",
         p_note: `Contact Form Subject: ${subject || "N/A"}\nMessage: ${message}`,
         p_utm_source: validatedFields.data.utm_source,
@@ -203,28 +210,28 @@ export async function submitContactFormAction(
       });
     }
 
-    // LINE Button
-    if (cleanLineId) {
+    // WhatsApp Button
+    if (whatsapp) {
       topButtons.push({
         type: "box",
         layout: "vertical",
         contents: [
           {
             type: "text",
-            text: "📱 ทัก LINE",
+            text: "🟢 WhatsApp",
             size: "sm",
             color: "#ffffff",
             align: "center",
             weight: "bold",
           },
         ],
-        backgroundColor: "#00B900",
+        backgroundColor: "#25D366",
         cornerRadius: "lg",
         paddingAll: "lg",
         action: {
           type: "uri",
-          label: "LINE",
-          uri: `https://line.me/ti/p/~${cleanLineId}`,
+          label: "WhatsApp",
+          uri: `https://wa.me/${whatsapp.replace(/\D/g, "")}`,
         },
       });
     }
@@ -384,7 +391,7 @@ export async function submitContactFormAction(
               contents: [
                 {
                   type: "text",
-                  text: "📱 Line ID",
+                  text: "💬 Line",
                   size: "sm",
                   color: "#555555",
                   flex: 3,
@@ -392,6 +399,48 @@ export async function submitContactFormAction(
                 {
                   type: "text",
                   text: lineId || "-",
+                  size: "sm",
+                  color: "#111111",
+                  flex: 7,
+                },
+              ],
+              margin: "md",
+            },
+            {
+              type: "box",
+              layout: "horizontal",
+              contents: [
+                {
+                  type: "text",
+                  text: "💬 WeChat",
+                  size: "sm",
+                  color: "#555555",
+                  flex: 3,
+                },
+                {
+                  type: "text",
+                  text: wechatId || "-",
+                  size: "sm",
+                  color: "#111111",
+                  flex: 7,
+                },
+              ],
+              margin: "md",
+            },
+            {
+              type: "box",
+              layout: "horizontal",
+              contents: [
+                {
+                  type: "text",
+                  text: "🟢 WhatsApp",
+                  size: "sm",
+                  color: "#555555",
+                  flex: 3,
+                },
+                {
+                  type: "text",
+                  text: whatsapp || "-",
                   size: "sm",
                   color: "#111111",
                   flex: 7,
@@ -459,11 +508,19 @@ ${message || "-"}
       console.error("[CONTACT] Telegram Notification failed:", tgErr);
     }
 
-    // 🔔 Create In-App Notifications for all Admins (Using secure RPC in internal schema)
+    // 🔔 Create In-App Notifications for all Admins (Using secure RPC)
     try {
-      const { createAdminClient } = await import("@/lib/supabase/admin");
-      const supabaseAdmin = createAdminClient("internal");
-      await supabaseAdmin.rpc("notify_admins_of_lead" as any, {
+      const supabase = await createClient();
+      
+      // 🛡️ [TYPE-SAFE HARDENING] Use extended type to call RPC not in generated types without 'any'
+      type ExtendedRpc = typeof supabase.rpc & ((name: "notify_admins_of_lead", args: { 
+        p_name: string; 
+        p_subject: string; 
+        p_lead_id: string; 
+        p_is_hot: boolean;
+      }) => Promise<{ data: string | null; error: { message: string } | null }>);
+
+      await (supabase.rpc as ExtendedRpc)("notify_admins_of_lead", {
         p_name: name,
         p_subject: subject,
         p_lead_id: leadId,

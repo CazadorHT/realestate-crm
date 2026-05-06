@@ -1,6 +1,6 @@
 "use client";
 
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { useFormContext } from "react-hook-form";
 import {
   FormControl,
   FormField,
@@ -18,51 +18,47 @@ import {
   Trees,
   Briefcase,
   Factory,
+  HomeIcon,
   Layout,
-  Home as HomeIcon,
 } from "lucide-react";
-import { FaUser, FaPhoneAlt, FaLine, FaCommentDots } from "react-icons/fa";
-import { UseFormReturn } from "react-hook-form";
-import { DepositLeadInput } from "@/features/public/types";
-import {
-  AnimatedUser,
-  AnimatedPhone,
-} from "@/components/common/animated-icons";
-import { m } from "framer-motion";
+import { FaLine, FaWhatsapp, FaCommentDots } from "react-icons/fa";
+import { IoLogoWechat } from "react-icons/io5";
+import { motion as m } from "framer-motion";
 
-export function renderNameField(
-  form: UseFormReturn<DepositLeadInput>,
-  isMobile: boolean,
-  t: (key: string) => string,
-  onFocus?: () => void,
-) {
+interface FieldProps {
+  isMobile: boolean;
+  t: (key: string) => string;
+  onFocus?: () => void;
+}
+
+export function NameField({ isMobile, t, onFocus }: FieldProps) {
+  const { control } = useFormContext();
   return (
     <FormField
-      control={form.control}
+      control={control}
       name="fullName"
       render={({ field }) => (
         <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
           <FormLabel
             className={cn(
               "text-slate-800 font-semibold flex items-center gap-2",
-              isMobile ? "text-xs" : "text-sm",
+              isMobile ? "text-[15px] xs:text-base" : "text-sm",
             )}
           >
-            {!isMobile && <AnimatedUser size={14} className="text-blue-500" />}
-            {t("deposit.form.name_label")}
-            <span className="text-red-500 text-xs ml-0.5">*</span>
+            {!isMobile && <User className="w-3.5 h-3.5 text-slate-500" />}
+            {t("deposit.form.name_label")} <span className="text-rose-500">*</span>
           </FormLabel>
           <FormControl>
             <div className="relative group">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 group-focus-within:text-blue-600 transition-colors">
-                <AnimatedUser size={15} />
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                <User className="w-3.5 h-3.5" />
               </div>
               <Input
                 placeholder={t("deposit.form.name_placeholder")}
                 className={cn(
                   "border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all",
                   isMobile
-                    ? "h-12 pl-11 bg-slate-50/50 text-base"
+                    ? "h-12 pl-12 bg-slate-50/50 text-base"
                     : "h-11 pl-11 bg-white text-sm",
                 )}
                 onFocus={onFocus}
@@ -77,40 +73,31 @@ export function renderNameField(
   );
 }
 
-export function renderPhoneField(
-  form: UseFormReturn<DepositLeadInput>,
-  isMobile: boolean,
-  t: (key: string, params?: any) => string,
-  onFocus?: () => void,
-) {
+export function PhoneField({ isMobile, t, onFocus }: FieldProps) {
+  const { control } = useFormContext();
   return (
     <FormField
-      control={form.control}
+      control={control}
       name="phone"
       render={({ field }) => (
         <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
           <FormLabel
             className={cn(
-              "text-slate-800 font-bold flex items-center gap-2",
+              "text-slate-800 font-semibold flex items-center gap-2",
               isMobile ? "text-[15px] xs:text-base" : "text-sm",
             )}
           >
-            {!isMobile && <AnimatedPhone size={14} className="text-blue-500" />}
-            {t("deposit.form.phone_label")}
-            <span className="text-red-500 text-xs ml-0.5">*</span>
+            {!isMobile && <Phone className="w-3.5 h-3.5 text-slate-500" />}
+            {t("deposit.form.phone_label")} <span className="text-rose-500">*</span>
           </FormLabel>
           <FormControl>
             <div className="relative group">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-blue-500 group-focus-within:text-blue-600 transition-colors">
-                <AnimatedPhone size={15} />
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                <Phone className="w-3.5 h-3.5" />
               </div>
               <Input
                 type="tel"
-                inputMode="numeric"
-                maxLength={10}
-                placeholder={
-                  t("deposit.form.phone_placeholder") || "08x-xxx-xxxx"
-                }
+                placeholder="0XX-XXX-XXXX"
                 className={cn(
                   "border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all",
                   isMobile
@@ -133,21 +120,60 @@ export function renderPhoneField(
   );
 }
 
-export function renderLineField(
-  form: UseFormReturn<DepositLeadInput>,
-  isMobile: boolean,
-  t: (key: string) => string,
-  onFocus?: () => void,
-) {
+export function EmailField({ isMobile, t, onFocus }: FieldProps) {
+  const { control } = useFormContext();
   return (
     <FormField
-      control={form.control}
+      control={control}
+      name="email"
+      render={({ field }) => (
+        <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
+          <FormLabel
+            className={cn(
+              "text-slate-800 font-semibold flex items-center gap-2",
+              isMobile ? "text-[15px] xs:text-base" : "text-sm",
+            )}
+          >
+            {!isMobile && <FaCommentDots className="w-3.5 h-3.5 text-slate-500" />}
+            {t("deposit.form.email_label")}
+          </FormLabel>
+          <FormControl>
+            <div className="relative group">
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+                <FaCommentDots className="w-3.5 h-3.5" />
+              </div>
+              <Input
+                type="email"
+                placeholder={t("deposit.form.email_placeholder")}
+                className={cn(
+                  "border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all",
+                  isMobile
+                    ? "h-12 pl-12 bg-slate-50/50 text-base"
+                    : "h-11 pl-11 bg-white text-sm",
+                )}
+                onFocus={onFocus}
+                {...field}
+              />
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+export function LineField({ isMobile, t, onFocus }: FieldProps) {
+  const { control } = useFormContext();
+  return (
+    <FormField
+      control={control}
       name="lineId"
       render={({ field }) => (
         <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
           <FormLabel
             className={cn(
-              "text-slate-800 font-bold flex items-center gap-2",
+              "text-slate-800 font-semibold flex items-center gap-2",
               isMobile ? "text-[15px] xs:text-base" : "text-sm",
             )}
           >
@@ -179,12 +205,92 @@ export function renderLineField(
   );
 }
 
-export function renderPropertyTypeField(
-  form: UseFormReturn<DepositLeadInput>,
-  isMobile: boolean,
-  t: (key: string) => string,
-  onFocus?: () => void,
-) {
+export function WeChatField({ isMobile, t, onFocus }: FieldProps) {
+  const { control } = useFormContext();
+  return (
+    <FormField
+      control={control}
+      name="wechatId"
+      render={({ field }) => (
+        <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
+          <FormLabel
+            className={cn(
+              "text-slate-800 font-semibold flex items-center gap-2",
+              isMobile ? "text-[15px] xs:text-base" : "text-sm",
+            )}
+          >
+            {!isMobile && <IoLogoWechat className="w-3.5 h-3.5 text-[#07C160]" />}
+            {t("deposit.form.wechat_label")}
+          </FormLabel>
+          <FormControl>
+            <div className="relative group">
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#07C160] transition-colors">
+                <IoLogoWechat className="w-3.5 h-3.5" />
+              </div>
+              <Input
+                placeholder={t("deposit.form.wechat_placeholder")}
+                className={cn(
+                  "border-slate-200 focus:border-[#07C160] focus:ring-4 focus:ring-[#07C160]/10 rounded-2xl transition-all",
+                  isMobile
+                    ? "h-12 pl-12 bg-slate-50/50 text-base"
+                    : "h-11 pl-11 bg-white text-sm",
+                )}
+                onFocus={onFocus}
+                {...field}
+              />
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+export function WhatsAppField({ isMobile, t, onFocus }: FieldProps) {
+  const { control } = useFormContext();
+  return (
+    <FormField
+      control={control}
+      name="whatsapp"
+      render={({ field }) => (
+        <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
+          <FormLabel
+            className={cn(
+              "text-slate-800 font-semibold flex items-center gap-2",
+              isMobile ? "text-[15px] xs:text-base" : "text-sm",
+            )}
+          >
+            {!isMobile && <FaWhatsapp className="w-3.5 h-3.5 text-[#25D366]" />}
+            {t("deposit.form.whatsapp_label")}
+          </FormLabel>
+          <FormControl>
+            <div className="relative group">
+              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#25D366] transition-colors">
+                <FaWhatsapp className="w-3.5 h-3.5" />
+              </div>
+              <Input
+                placeholder={t("deposit.form.whatsapp_placeholder")}
+                className={cn(
+                  "border-slate-200 focus:border-[#25D366] focus:ring-4 focus:ring-[#25D366]/10 rounded-2xl transition-all",
+                  isMobile
+                    ? "h-12 pl-12 bg-slate-50/50 text-base"
+                    : "h-11 pl-11 bg-white text-sm",
+                )}
+                onFocus={onFocus}
+                {...field}
+              />
+            </div>
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
+
+export function PropertyTypeField({ isMobile, t, onFocus }: FieldProps) {
+  const { control } = useFormContext();
 
   const propertyOptions = [
     {
@@ -233,13 +339,13 @@ export function renderPropertyTypeField(
 
   return (
     <FormField
-      control={form.control}
+      control={control}
       name="propertyType"
       render={({ field }) => (
         <FormItem className="space-y-4">
           <FormLabel
             className={cn(
-              "text-slate-800 font-bold flex items-center gap-2",
+              "text-slate-800 font-semibold flex items-center gap-2",
               isMobile ? "text-[15px] xs:text-base" : "text-sm",
             )}
           >
@@ -265,7 +371,7 @@ export function renderPropertyTypeField(
                   onFocus?.();
                 }}
                 className={cn(
-                  "relative  flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[90px] sm:min-w-0 snap-center shrink-0",
+                  "relative flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all duration-300 min-w-[90px] sm:min-w-0 snap-center shrink-0",
                   field.value === option.value
                     ? `border-transparent ${option.activeColor} shadow-[0_8px_20px_-4px_rgba(0,0,0,0.1)] ring-2`
                     : "border-slate-100 bg-slate-50/40 hover:border-slate-200 hover:bg-white text-slate-500",
@@ -298,21 +404,17 @@ export function renderPropertyTypeField(
   );
 }
 
-export function renderMessageField(
-  form: UseFormReturn<DepositLeadInput>,
-  isMobile: boolean,
-  t: (key: string) => string,
-  onFocus?: () => void,
-) {
+export function MessageField({ isMobile, t }: Pick<FieldProps, "isMobile" | "t">) {
+  const { control } = useFormContext();
   return (
     <FormField
-      control={form.control}
+      control={control}
       name="details"
       render={({ field }) => (
         <FormItem className={isMobile ? "space-y-1" : "space-y-2"}>
           <FormLabel
             className={cn(
-              "text-slate-800 font-bold flex items-center gap-2",
+              "text-slate-800 font-semibold flex items-center gap-2",
               isMobile ? "text-[15px] xs:text-base" : "text-sm",
             )}
           >

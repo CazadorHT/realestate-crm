@@ -24,7 +24,7 @@ vi.mock('@/lib/ai/gemini', () => ({
       title: "หัวข้อทดสอบ",
       slug: "test-slug",
       excerpt: "เนื้อหาเกริ่นนำ",
-      content: "<h1>เนื้อหาหลัก</h1>",
+      content: "<h1>เนื้อหาหลัก</h1><p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>",
       category: "General",
       tags: "test, mock",
       seo_score: 99,
@@ -33,6 +33,12 @@ vi.mock('@/lib/ai/gemini', () => ({
     usage: { promptTokens: 10, completionTokens: 20 }
   }),
 }));
+
+// Mock global fetch to avoid network calls in generateAndUploadAiImage
+global.fetch = vi.fn().mockResolvedValue({
+  ok: true,
+  arrayBuffer: () => Promise.resolve(new ArrayBuffer(8))
+});
 
 describe('AI Blog Service - JSON Robustness', () => {
   it('should return valid JSON structure for a standard keyword', async () => {

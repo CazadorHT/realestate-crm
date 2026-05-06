@@ -44,7 +44,7 @@ vi.mock('@/lib/inngest/client', () => ({
 }));
 
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn().mockResolvedValue(null) }));
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }));
 
 describe('Property Actions - Hardened Deletion & Atomic Integrity', () => {
   beforeEach(() => {

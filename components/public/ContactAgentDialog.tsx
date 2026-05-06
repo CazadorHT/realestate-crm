@@ -31,12 +31,14 @@ import {
   FaShieldAlt,
   FaClock,
   FaHeadset,
+  FaWhatsapp,
 } from "react-icons/fa";
 import { MdRealEstateAgent } from "react-icons/md";
 import { Loader2, ChevronRight, ChevronLeft, X, Check } from "lucide-react";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { useLanguage } from "../providers/LanguageProvider";
 import { type Language } from "@/lib/i18n";
+import { IoLogoWechat } from "react-icons/io5";
 
 interface ContactAgentDialogProps {
   propertyId?: string;
@@ -216,6 +218,8 @@ export function ContactAgentDialog({
   const [step, setStep] = useState(1);
   const [fullName, setFullName] = useState("");
   const [lineId, setLineId] = useState("");
+  const [wechatId, setWechatId] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
 
   const QUICK_MESSAGES = [
     t("property.contact_dialog.quick_messages.viewing"),
@@ -249,6 +253,8 @@ export function ContactAgentDialog({
         setFullName("");
         setPhone("");
         setLineId("");
+        setWechatId("");
+        setWhatsapp("");
         setMessage(defaultMessage || defaultQuickMessage);
         setState({});
         hasStartedRef.current = false;
@@ -482,6 +488,68 @@ export function ContactAgentDialog({
     </div>
   );
 
+  const renderWeChatField = (isMobile: boolean) => (
+    <div className={isMobile ? "space-y-3" : "space-y-2"}>
+      <Label
+        htmlFor={isMobile ? "wechatId-mobile" : "wechatId"}
+        className={
+          isMobile
+            ? "text-slate-700 font-semibold text-base"
+            : "text-slate-600 font-medium text-sm flex items-center gap-1.5"
+        }
+      >
+        {!isMobile && <IoLogoWechat className="w-3.5 h-3.5 text-[#07C160]" />}
+        {t("property.contact_dialog.wechat_label")}
+      </Label>
+      <div className="relative group w-full">
+        {isMobile && (
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#07C160] transition-colors">
+            <IoLogoWechat className="w-5 h-5" />
+          </div>
+        )}
+        <Input
+          id={isMobile ? "wechatId-mobile" : "wechatId"}
+          name="wechatId"
+          value={wechatId}
+          onChange={(e) => setWechatId(e.target.value)}
+          placeholder={t("property.contact_dialog.wechat_placeholder")}
+          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 border-slate-200 focus:border-[#07C160] focus:ring-2 focus:ring-[#07C160]/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"}`}
+        />
+      </div>
+    </div>
+  );
+
+  const renderWhatsAppField = (isMobile: boolean) => (
+    <div className={isMobile ? "space-y-3" : "space-y-2"}>
+      <Label
+        htmlFor={isMobile ? "whatsapp-mobile" : "whatsapp"}
+        className={
+          isMobile
+            ? "text-slate-700 font-semibold text-base"
+            : "text-slate-600 font-medium text-sm flex items-center gap-1.5"
+        }
+      >
+        {!isMobile && <FaWhatsapp className="w-3.5 h-3.5 text-[#25D366]" />}
+        {t("property.contact_dialog.whatsapp_label")}
+      </Label>
+      <div className="relative group w-full">
+        {isMobile && (
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#25D366] transition-colors">
+            <FaWhatsapp className="w-5 h-5" />
+          </div>
+        )}
+        <Input
+          id={isMobile ? "whatsapp-mobile" : "whatsapp"}
+          name="whatsapp"
+          value={whatsapp}
+          onChange={(e) => setWhatsapp(e.target.value)}
+          placeholder={t("property.contact_dialog.whatsapp_placeholder")}
+          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 border-slate-200 focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"}`}
+        />
+      </div>
+    </div>
+  );
+
   const renderMessageField = (isMobile: boolean) => (
     <div className={isMobile ? "space-y-4" : "space-y-2"}>
       <Label
@@ -675,6 +743,8 @@ export function ContactAgentDialog({
               <div className="grid grid-cols-2 gap-4">
                 {renderPhoneField(false)}
                 {renderLineField(false)}
+                {renderWhatsAppField(false)}
+                {renderWeChatField(false)}
               </div>
 
               {/* Message */}
@@ -782,6 +852,8 @@ export function ContactAgentDialog({
               <div className="grid grid-cols-1 gap-5">
                 {renderPhoneField(true)}
                 {renderLineField(true)}
+                {renderWhatsAppField(true)}
+                {renderWeChatField(true)}
               </div>
             </div>
 

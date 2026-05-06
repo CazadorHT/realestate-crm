@@ -7,11 +7,14 @@ import { DepositLeadInput } from "@/features/public/types";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 import {
-  renderNameField,
-  renderPhoneField,
-  renderLineField,
-  renderPropertyTypeField,
-  renderMessageField,
+  NameField,
+  PhoneField,
+  EmailField,
+  LineField,
+  WeChatField,
+  WhatsAppField,
+  PropertyTypeField,
+  MessageField,
 } from "./FormFields";
 import { SubmitButton, StepIcon } from "./SharedComponents";
 import { cn } from "@/lib/utils";
@@ -181,17 +184,20 @@ export function DepositMobileView({
                       className="relative"
                     >
                       {currentStep === 1 &&
-                        renderNameField(form, true, t, onFormStartAction)}
+                        <NameField isMobile={true} t={t} onFocus={onFormStartAction} />}
                       {currentStep === 2 && (
                         <div className="grid grid-cols-1 gap-4">
-                          {renderPhoneField(form, true, t, onFormStartAction)}
-                          {renderLineField(form, true, t, onFormStartAction)}
+                          <PhoneField isMobile={true} t={t} onFocus={onFormStartAction} />
+                          <EmailField isMobile={true} t={t} onFocus={onFormStartAction} />
+                          <LineField isMobile={true} t={t} onFocus={onFormStartAction} />
+                          <WhatsAppField isMobile={true} t={t} onFocus={onFormStartAction} />
+                          <WeChatField isMobile={true} t={t} onFocus={onFormStartAction} />
                         </div>
                       )}
                       {currentStep === 3 && (
                         <div className="space-y-2">
-                          {renderPropertyTypeField(form, true, t, onFormStartAction)}
-                          {renderMessageField(form, true, t, onFormStartAction)}
+                          <PropertyTypeField isMobile={true} t={t} onFocus={onFormStartAction} />
+                          <MessageField isMobile={true} t={t} />
                         </div>
                       )}
                     </m.div>

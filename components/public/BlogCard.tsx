@@ -22,11 +22,11 @@ const dateLocales: Record<string, Locale> = { th, en, zh, ru };
 export function BlogCard({ post, className }: BlogCardProps) {
   const { language, t } = useLanguage();
 
-  // Safe parsing for author field which is JSONB
-  const author =
-    typeof post.author === "object" && post.author !== null
-      ? (post.author as { name: string; avatar?: string })
-      : { name: "Admin", avatar: "" };
+  // Safe parsing for author field from profiles relation
+  const author = {
+    name: post.profiles?.full_name || "Admin",
+    avatar: post.profiles?.avatar_url || "",
+  };
 
   const locale = dateLocales[language === "cn" ? "zh" : language] || th;
   const formattedDate = post.published_at

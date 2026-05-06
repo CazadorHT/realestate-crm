@@ -16,11 +16,14 @@ import {
   AnimatedHeadset,
 } from "@/components/common/animated-icons";
 import {
-  renderNameField,
-  renderPhoneField,
-  renderLineField,
-  renderPropertyTypeField,
-  renderMessageField,
+  NameField,
+  PhoneField,
+  EmailField,
+  LineField,
+  WeChatField,
+  WhatsAppField,
+  PropertyTypeField,
+  MessageField,
 } from "./FormFields";
 import { SubmitButton, StepIcon } from "./SharedComponents";
 import { cn } from "@/lib/utils";
@@ -100,9 +103,9 @@ export function DepositDesktopView({
             animate={{ y: 0, opacity: 1 }}
             className="flex items-center gap-3"
           >
-            <div className="w-20 h-20 bg-white rounded-xl p-1 shadow-xl shadow-blue-900/20">
+            <div className="w-20 h-20 bg-white/20 rounded-xl p-1 shadow-xl shadow-blue-900/20">
               <Image
-                src={siteConfig.logo}
+                src={siteConfig.brandCard}
                 alt={siteName}
                 width={60}
                 height={60}
@@ -207,17 +210,26 @@ export function DepositDesktopView({
                   </div>
 
                   <div className="pt-2">
-                    {currentStep === 1 && renderNameField(form, false, t, onFormStartAction)}
+                    {currentStep === 1 && <NameField isMobile={false} t={t} onFocus={onFormStartAction} />}
                     {currentStep === 2 && (
-                      <div className="grid grid-cols-1 gap-6">
-                        {renderPhoneField(form, false, t, onFormStartAction)}
-                        {renderLineField(form, false, t, onFormStartAction)}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                        <div className="md:col-span-2">
+                          <PhoneField isMobile={false} t={t} onFocus={onFormStartAction} />
+                        </div>
+                        <div className="md:col-span-2">
+                          <EmailField isMobile={false} t={t} onFocus={onFormStartAction} />
+                        </div>
+                        <LineField isMobile={false} t={t} onFocus={onFormStartAction} />
+                        <WhatsAppField isMobile={false} t={t} onFocus={onFormStartAction} />
+                        <div className="md:col-span-2">
+                          <WeChatField isMobile={false} t={t} onFocus={onFormStartAction} />
+                        </div>
                       </div>
                     )}
                     {currentStep === 3 && (
                       <div className="space-y-6">
-                        {renderPropertyTypeField(form, false, t, onFormStartAction)}
-                        {renderMessageField(form, false, t, onFormStartAction)}
+                        <PropertyTypeField isMobile={false} t={t} onFocus={onFormStartAction} />
+                        <MessageField isMobile={false} t={t} />
                       </div>
                     )}
                   </div>

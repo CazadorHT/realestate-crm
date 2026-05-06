@@ -1,7 +1,9 @@
 "use client";
 
 import { UseFormReturn } from "react-hook-form";
-import { UserCircle, Phone as PhoneIcon, Mail, Globe } from "lucide-react";
+import { UserCircle, Phone as PhoneIcon, Mail, Globe, MessageSquare } from "lucide-react";
+import { FaLine,FaWhatsapp } from "react-icons/fa";
+import { IoLogoWechat } from "react-icons/io5";
 import {
   Card,
   CardContent,
@@ -118,25 +120,49 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
               Line ID
             </Label>
             <div className="relative group">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center text-slate-400 group-focus-within:text-[#06C755] transition-colors">
-                <span className="font-bold text-[10px]">L</span>
-              </div>
+              <FaLine className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#06C755] transition-colors" />
               <Input
                 className="pl-9 h-11 border-slate-200 focus:border-[#06C755] focus:ring-[#06C755]/20 bg-slate-50/50 rounded-xl"
                 placeholder="Line ID"
-                {...form.register("preferences.line_id")}
+                {...form.register("line_id")}
               />
             </div>
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
-              Social
+              WhatsApp
+            </Label>
+            <div className="relative group">
+              <FaWhatsapp className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#25D366] transition-colors" />
+              <Input
+                className="pl-9 h-11 border-slate-200 focus:border-[#25D366] focus:ring-[#25D366]/20 bg-slate-50/50 rounded-xl"
+                placeholder="เบอร์ WhatsApp"
+                {...form.register("whatsapp")}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              WeChat ID
+            </Label>
+            <div className="relative group">
+              <IoLogoWechat className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-[#07C160] transition-colors" />
+              <Input
+                className="pl-9 h-11 border-slate-200 focus:border-[#07C160] focus:ring-[#07C160]/20 bg-slate-50/50 rounded-xl"
+                placeholder="WeChat ID"
+                {...form.register("wechat_id")}
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              อื่นๆ (Social)
             </Label>
             <div className="relative group">
               <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
               <Input
                 className="pl-9 h-11 border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 bg-slate-50/50 rounded-xl"
-                placeholder="FB, WeChat.."
+                placeholder="FB, IG.."
                 {...form.register("preferences.online_contact")}
               />
             </div>
