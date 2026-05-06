@@ -8,10 +8,14 @@ import type { Notification } from "@/features/dashboard/queries";
 
 interface NotificationCenterProps {
   notifications: Notification[];
+  role?: string;
+  view?: string;
 }
 
 export function NotificationCenter({
   notifications: initialNotifications = [],
+  role,
+  view = "personal",
 }: NotificationCenterProps) {
   const [readIds, setReadIds] = useState<Set<string | number>>(new Set());
   const [deletedIds, setDeletedIds] = useState<Set<string | number>>(new Set());

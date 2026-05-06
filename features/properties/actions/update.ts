@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { type Database } from "@/lib/database.types";
 import {
   requireAuthContext,
@@ -304,6 +304,9 @@ export async function updatePropertyAction(
     revalidatePath("/properties");
     revalidatePath("/(public)/properties", "page");
     revalidatePath("/(public)/properties/[slug]", "page");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
 
     if (safeValues.requires_ai_review) {
       await inngest.send({ name: "property.created", data: { propertyId: id, userId: user.id, tenantId } });
@@ -412,6 +415,9 @@ export async function updatePropertyStatusAction(input: {
     // protected pages
     revalidatePath("/protected/properties");
     revalidatePath("/properties");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
 
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (e: unknown) {

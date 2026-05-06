@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import {
   requireAuthContext,
   assertAuthenticated,
@@ -136,6 +136,9 @@ export async function deletePropertyAction(formData: FormData) {
       .eq("status", "TEMP");
 
     revalidatePath("/protected/properties");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
     return { success: true, message: "ลบทรัพย์สำเร็จ" };
   } catch (error: unknown) {
     console.error("deletePropertyAction → error:", error);

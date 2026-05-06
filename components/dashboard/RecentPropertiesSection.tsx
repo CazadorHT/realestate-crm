@@ -6,7 +6,18 @@ import { PropertyStatus, PropertyType, ListingType } from "@/features/properties
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { getSystemConfig } from "@/lib/actions/system-config";
 
-export async function RecentPropertiesSection({ tenantId }: { tenantId?: string | null }) {
+interface PropertyImage {
+  url?: string;
+  image_url?: string;
+}
+
+export async function RecentPropertiesSection({ 
+  tenantId,
+  userId
+}: { 
+  tenantId?: string | null;
+  userId?: string;
+}) {
   const supabase = await createClient();
   let query = supabase
     .from("properties")
@@ -48,6 +59,10 @@ export async function RecentPropertiesSection({ tenantId }: { tenantId?: string 
     query = query.eq("tenant_id", tenantId);
   }
 
+  if (userId && userId !== "ALL") {
+    query = query.eq("assigned_to", userId);
+  }
+
   const { data: propertiesResult } = await query;
 
   // Define type for our joined query result
@@ -77,7 +92,7 @@ export async function RecentPropertiesSection({ tenantId }: { tenantId?: string 
     posted_to_line_at: string | null;
     posted_to_tiktok_at: string | null;
     requires_ai_review: boolean | null;
-    images: any;
+    images: PropertyImage[] | null;
     description: string | null;
     tenants: { name: string } | null;
   };
@@ -115,7 +130,8 @@ export async function RecentPropertiesSection({ tenantId }: { tenantId?: string 
     // Mark as NEW if it's within 7 days OR if it's the absolute latest one and none are within 7 days
     const isNew = isWithinSevenDays || (!hasRecentProperties && index === 0);
     
-    const rawImageUrl = (p.images?.[0] as any)?.url || (p.images?.[0] as any)?.image_url || null;
+    const firstImage = p.images?.[0];
+    const rawImageUrl = firstImage?.url || firstImage?.image_url || null;
     const imageUrl = rawImageUrl ? getPublicImageUrl(rawImageUrl) : null;
 
     return {
@@ -157,10 +173,16 @@ export async function RecentPropertiesSection({ tenantId }: { tenantId?: string 
   return <RecentPropertiesTable properties={properties} showBranch={showBranch} />;
 }
 
-export function RecentPropertiesSectionSuspense({ tenantId }: { tenantId?: string | null }) {
+export function RecentPropertiesSectionSuspense({ 
+  tenantId,
+  userId
+}: { 
+  tenantId?: string | null;
+  userId?: string;
+}) {
   return (
     <Suspense fallback={<ListSkeleton />}>
-      <RecentPropertiesSection tenantId={tenantId} />
+      <RecentPropertiesSection tenantId={tenantId} userId={userId} />
     </Suspense>
   );
 }

@@ -9,6 +9,12 @@ import {
   Home,
   MessageSquare,
   X,
+  UserCheck,
+  UserPlus,
+  Bell,
+  Contact,
+  Send,
+  Video,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -31,54 +37,191 @@ export interface SetupProgress {
   hasBranchProfile: boolean;
   hasStaff: boolean;
   hasProperty: boolean;
+  hasLead: boolean;
+  hasPersonalProfile: boolean;
   isLineConnected: boolean;
+  isTikTokConnected: boolean;
+  isTelegramConnected: boolean;
   isLineSkipped: boolean;
   isStaffSkipped: boolean;
+  branchCount: number;
 }
 
-export function SetupChecklist({ progress }: { progress: SetupProgress }) {
+interface Step {
+  id: string;
+  title: string;
+  description: string;
+  href: string;
+  isComplete: boolean;
+  icon: any;
+  canSkip?: boolean;
+  skipLabel?: string;
+}
+
+export function SetupChecklist({ progress, role }: { progress: SetupProgress, role?: string }) {
   const router = useRouter();
   const [isFullyComplete, setIsFullyComplete] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
 
-  const steps = [
-    {
-      id: "branch",
-      title: "สร้างโปรไฟล์สาขา",
-      description: "ใส่โลโก้และข้อมูลติดต่อสาขาเพื่อความน่าเชื่อถือ",
-      href: "/protected/settings/branches",
-      isComplete: progress.hasBranchProfile,
-      icon: Building2,
-    },
-    {
-      id: "staff",
-      title: "เพิ่มพนักงานในทีม",
-      description: "เชิญทีมงานของคุณเข้ามาช่วยจัดการระบบ",
-      href: "/protected/settings/users",
-      isComplete: progress.hasStaff || progress.isStaffSkipped,
-      icon: Users,
-      canSkip: !progress.hasStaff && !progress.isStaffSkipped,
-      skipLabel: "เพิ่มทีหลัง",
-    },
-    {
-      id: "property",
-      title: "ลงประกาศทรัพย์แรก",
-      description: "เพิ่มข้อมูลบ้าน คอนโด หรือที่ดินเข้าระบบ",
-      href: "/protected/properties/new",
-      isComplete: progress.hasProperty,
-      icon: Home,
-    },
-    {
-      id: "line",
-      title: "เชื่อมต่อ Line OA",
-      description: "เชื่อมต่อระบบตอบกลับอัตโนมัติและติดตามลูกค้า",
-      href: "/protected/settings?tab=social",
-      isComplete: progress.isLineConnected || progress.isLineSkipped,
-      icon: MessageSquare,
-      canSkip: !progress.isLineConnected && !progress.isLineSkipped,
-      skipLabel: "ข้ามไปก่อน",
-    },
-  ];
+  // 🕵️ Check for dismissal in localStorage
+  useEffect(() => {
+    const dismissed = localStorage.getItem("onboarding_dismissed");
+    if (dismissed === "true") setIsDismissed(true);
+  }, []);
 
+  const handleDismiss = () => {
+    localStorage.setItem("onboarding_dismissed", "true");
+    setIsDismissed(true);
+  };
+
+  // 📝 Define steps based on Role
+  const getSteps = (): Step[] => {
+    const isManager = role === "MANAGER";
+    const isAgent = role === "AGENT" || role === "USER";
+    const isAdmin = role === "ADMIN";
+
+    if (isAgent) {
+      return [
+        {
+          id: "profile",
+          title: "ตั้งค่าโปรไฟล์ส่วนตัว",
+          description: "ใส่รูปภาพและเบอร์โทรเพื่อให้ลูกค้าติดต่อคุณได้สะดวก",
+          href: "/protected/settings/profile",
+          isComplete: progress.hasPersonalProfile,
+          icon: UserCheck,
+        },
+        {
+          id: "property",
+          title: "ลงประกาศทรัพย์แรก",
+          description: "เพิ่มข้อมูลบ้าน คอนโด หรือที่ดินเข้าระบบเพื่อเริ่มงาน",
+          href: "/protected/properties/new",
+          isComplete: progress.hasProperty,
+          icon: Home,
+        },
+        {
+          id: "lead",
+          title: "เพิ่มข้อมูลลูกค้าคนแรก",
+          description: "บันทึกรายชื่อผู้มุ่งหวังเพื่อไม่ให้พลาดทุกโอกาส",
+          href: "/protected/leads/new",
+          isComplete: progress.hasLead,
+          icon: Contact,
+        },
+        {
+          id: "telegram",
+          title: "แจ้งเตือน Telegram",
+          description: "รับการแจ้งเตือนลูกค้าใหม่ทันทีผ่านมือถือ",
+          href: "/protected/settings/profile",
+          isComplete: progress.isTelegramConnected,
+          icon: Send,
+        },
+        {
+          id: "tiktok",
+          title: "เชื่อมต่อ TikTok",
+          description: "ตั้งค่าระบบโพสต์ทรัพย์อัตโนมัติลง TikTok",
+          href: "/protected/settings?tab=social",
+          isComplete: progress.isTikTokConnected,
+          icon: Video,
+        },
+      ];
+    }
+
+    if (isManager) {
+      return [
+        {
+          id: "branch",
+          title: "ตรวจสอบข้อมูลสาขา",
+          description: "ยืนยันความถูกต้องของข้อมูลสาขาและโลโก้",
+          href: "/protected/settings/branches",
+          isComplete: progress.hasBranchProfile,
+          icon: Building2,
+        },
+        {
+          id: "staff",
+          title: "เพิ่มพนักงานในทีม",
+          description: "เชิญทีมงานของคุณเข้ามาช่วยจัดการระบบ",
+          href: "/protected/settings/users",
+          isComplete: progress.hasStaff || progress.isStaffSkipped,
+          icon: UserPlus,
+          canSkip: true,
+          skipLabel: "ทำภายหลัง",
+        },
+        {
+          id: "tiktok",
+          title: "เชื่อมต่อ TikTok ",
+          description: "ตั้งค่าระบบโพสต์ทรัพย์อัตโนมัติของทีมลง TikTok",
+          href: "/protected/settings?tab=social",
+          isComplete: progress.isTikTokConnected,
+          icon: Video,
+        },
+        {
+          id: "telegram",
+          title: "รายงาน Telegram",
+          description: "รับรายงานสรุปยอดขายของทีมผ่าน Telegram",
+          href: "/protected/settings/profile",
+          isComplete: progress.isTelegramConnected,
+          icon: Send,
+        },
+      ];
+    }
+
+    // Default: ADMIN
+    return [
+      {
+        id: "branch",
+        title: "สร้างโปรไฟล์สาขา",
+        description: "ใส่โลโก้และข้อมูลติดต่อสาขาเพื่อความน่าเชื่อถือ",
+        href: "/protected/settings/branches",
+        isComplete: progress.hasBranchProfile,
+        icon: Building2,
+      },
+      {
+        id: "staff",
+        title: "จัดการพนักงาน",
+        description: "เชิญทีมงานของคุณเข้ามาช่วยจัดการระบบ",
+        href: "/protected/settings/users",
+        isComplete: progress.hasStaff || progress.isStaffSkipped,
+        icon: Users,
+        canSkip: true,
+        skipLabel: "ข้ามไปก่อน",
+      },
+      {
+        id: "property",
+        title: "ประกาศทรัพย์แรก",
+        description: "เพิ่มข้อมูลบ้าน คอนโด หรือที่ดินเข้าระบบ",
+        href: "/protected/properties/new",
+        isComplete: progress.hasProperty,
+        icon: Home,
+      },
+      {
+        id: "tiktok",
+        title: "เชื่อมต่อ TikTok",
+        description: "เปิดระบบ AI ช่วยโพสต์คลิปทรัพย์ลง TikTok",
+        href: "/protected/settings?tab=social",
+        isComplete: progress.isTikTokConnected,
+        icon: Video,
+      },
+      {
+        id: "telegram",
+        title: "ตั้งค่า Telegram Bot",
+        description: "เชื่อมต่อ Bot เพื่อรายงานความเคลื่อนไหวบริษัท",
+        href: "/protected/settings?tab=social",
+        isComplete: progress.isTelegramConnected,
+        icon: Send,
+      },
+      {
+        id: "line",
+        title: "เชื่อมต่อ Line OA",
+        description: "เชื่อมต่อระบบตอบกลับอัตโนมัติและติดตามลูกค้า",
+        href: "/protected/settings?tab=social",
+        isComplete: progress.isLineConnected || progress.isLineSkipped,
+        icon: MessageSquare,
+        canSkip: true,
+        skipLabel: "ข้ามไปก่อน",
+      },
+    ];
+  };
+
+  const steps = getSteps();
   const completedSteps = steps.filter((s) => s.isComplete).length;
   const totalSteps = steps.length;
   const progressPercent = Math.round((completedSteps / totalSteps) * 100);
@@ -124,7 +267,9 @@ export function SetupChecklist({ progress }: { progress: SetupProgress }) {
   }
 
   // Still show 100% for a moment or until they navigate away
-  if (completedSteps === totalSteps && isFullyComplete) return null;
+  // 🛡️ Admin can always see the checklist for verification unless they dismiss it
+  if (isDismissed) return null;
+  if (completedSteps === totalSteps && isFullyComplete && role !== "ADMIN") return null;
 
   return (
     <Card className="border-indigo-100 bg-linear-to-br from-indigo-50/50 via-white to-violet-50/50 shadow-sm relative overflow-hidden">
@@ -134,10 +279,13 @@ export function SetupChecklist({ progress }: { progress: SetupProgress }) {
 
       <CardHeader className="relative z-10 pb-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-xl text-slate-800 flex items-center gap-2">
-              ยินดีต้อนรับสู่ Real Estate CRM 🚀
-            </CardTitle>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl text-slate-800 flex items-center gap-2">
+                ยินดีต้อนรับสู่ Real Estate CRM 🚀
+              </CardTitle>
+             
+            </div>
             <CardDescription className="text-slate-500 mt-1">
               ทำตามขั้นตอนเหล่านี้เพื่อเริ่มต้นใช้งานระบบให้เต็มประสิทธิภาพ
             </CardDescription>
@@ -157,10 +305,27 @@ export function SetupChecklist({ progress }: { progress: SetupProgress }) {
               />
             </div>
           </div>
+           <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={handleDismiss}
+                className="h-8 w-8 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100/50"
+              >
+                <X className="h-4 w-4" />
+              </Button>
         </div>
       </CardHeader>
       <CardContent className="relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div
+          className={cn(
+            "grid gap-4",
+            role === "ADMIN"
+              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+              : role === "MANAGER"
+                ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+                : "grid-cols-1 md:grid-cols-2 lg:grid-cols-5",
+          )}
+        >
           {steps.map((step, index) => {
             const Icon = step.icon;
             const isSkipped =

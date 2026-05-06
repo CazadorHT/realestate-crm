@@ -1,5 +1,5 @@
 "use server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { type Database } from "@/lib/database.types";
 import { randomUUID } from "crypto";
 import { inngest } from "@/lib/inngest/client";
@@ -240,6 +240,9 @@ export async function createPropertyAction(
       },
     );
     revalidatePath("/protected/properties");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
 
     // 🚀 Step 6: Background Job (Non-blocking)
     await inngest.send({
@@ -463,6 +466,9 @@ export async function duplicatePropertyAction(
     );
 
     revalidatePath("/protected/properties");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
 
     // 🚀 Step 4.5: Background Job (Non-blocking)
     await inngest.send({

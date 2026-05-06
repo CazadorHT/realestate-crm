@@ -210,8 +210,8 @@ export function DepositPropertySection({ className }: { className?: string }) {
                 </div>
               ) : (
                 <DepositWizard
-                  onSuccess={() => setIsSuccess(true)}
-                  onCancel={() => setIsOpen(false)}
+                  onSuccessAction={() => setIsSuccess(true)}
+                  onCancelAction={() => setIsOpen(false)}
                   location="Deposit Section"
                 />
               )}

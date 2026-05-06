@@ -10,6 +10,7 @@ import { AuditActionResult, AuditLogEntry } from "./types";
 import * as Sentry from "@sentry/nextjs";
 import { logger } from "@/lib/logger";
 import { parseUserAgent } from "./utils";
+import { notifyAdminsAction } from "@/lib/actions/notifications";
 
 /**
  * 🛡️ PDPA Helper: Scrub sensitive keys from object recursively
@@ -327,6 +328,14 @@ export async function logActivityAction(
       } catch (tgErr) {
         logger.error("[AUDIT] Telegram Notification failed:", tgErr);
       }
+
+      // 🔔 New: Add In-app notification for Login
+      await notifyAdminsAction({
+        type: "INFO",
+        title: "มีการเข้าสู่ระบบ 🔑",
+        message: `ผู้ใช้ ${email} (${profile?.role || "USER"}) เข้าสู่ระบบแล้ว`,
+        link: "/protected/settings/users",
+      });
     }
   } catch (error) {
     logger.error("logActivityAction critical failure", error, { source: "audit-actions" });
@@ -458,6 +467,14 @@ export async function notifySignupAction(
     } catch (notifErr) {
       console.error("[NOTIFY] In-app Notification failed for Signup:", notifErr);
     }
+
+    // 🔔 New: Add In-app notification for Signup with Approval Hint
+    await notifyAdminsAction({
+      type: "SYSTEM",
+      title: "มีผู้สมัครสมาชิกใหม่ 🆕",
+      message: `มีผู้ใช้ใหม่สมัครสมาชิกด้วยอีเมล ${email} (รอการอนุมัติสิทธิ์ Agent 🛡️)`,
+      link: "/protected/settings/users",
+    });
   } catch (error) {
     console.error("[NOTIFY] Error in notifySignupAction:", error);
   }

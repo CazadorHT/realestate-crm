@@ -30,23 +30,23 @@ export function DepositDesktopView({
   currentStep,
   totalSteps,
   isLoading,
-  nextStep,
-  prevStep,
-  onCancel,
-  onSubmit,
-  onInvalid,
-  onFormStart,
+  nextStepAction,
+  prevStepAction,
+  onCancelAction,
+  onSubmitAction,
+  onInvalidAction,
+  onFormStartAction,
 }: {
   form: UseFormReturn<DepositLeadInput>;
   currentStep: number;
   totalSteps: number;
   isLoading: boolean;
-  nextStep: () => Promise<void>;
-  prevStep: () => void;
-  onCancel: () => void;
-  onSubmit: (values: DepositLeadInput) => Promise<void>;
-  onInvalid?: (errors: any) => void;
-  onFormStart: () => void;
+  nextStepAction: () => void;
+  prevStepAction: () => void;
+  onCancelAction: () => void;
+  onSubmitAction: (values: DepositLeadInput) => void;
+  onInvalidAction: (errors: any) => void;
+  onFormStartAction: () => void;
 }) {
   const { t } = useLanguage();
   const settings = useSiteConfig();
@@ -76,7 +76,7 @@ export function DepositDesktopView({
     if (e.key === "Enter" && !e.shiftKey) {
       if (currentStep < totalSteps) {
         e.preventDefault();
-        nextStep();
+        nextStepAction();
       }
     }
   };
@@ -181,7 +181,7 @@ export function DepositDesktopView({
 
         <div className="flex-1 overflow-y-auto no-scrollbar p-10">
           <form
-            onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+            onSubmit={form.handleSubmit(onSubmitAction, onInvalidAction)}
             onKeyDown={handleKeyDown}
             className="h-full flex flex-col"
           >
@@ -207,17 +207,17 @@ export function DepositDesktopView({
                   </div>
 
                   <div className="pt-2">
-                    {currentStep === 1 && renderNameField(form, false, t, onFormStart)}
+                    {currentStep === 1 && renderNameField(form, false, t, onFormStartAction)}
                     {currentStep === 2 && (
                       <div className="grid grid-cols-1 gap-6">
-                        {renderPhoneField(form, false, t, onFormStart)}
-                        {renderLineField(form, false, t, onFormStart)}
+                        {renderPhoneField(form, false, t, onFormStartAction)}
+                        {renderLineField(form, false, t, onFormStartAction)}
                       </div>
                     )}
                     {currentStep === 3 && (
                       <div className="space-y-6">
-                        {renderPropertyTypeField(form, false, t, onFormStart)}
-                        {renderMessageField(form, false, t, onFormStart)}
+                        {renderPropertyTypeField(form, false, t, onFormStartAction)}
+                        {renderMessageField(form, false, t, onFormStartAction)}
                       </div>
                     )}
                   </div>
@@ -231,7 +231,7 @@ export function DepositDesktopView({
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={prevStep}
+                  onClick={prevStepAction}
                   className="h-11 px-6 rounded-2xl bg-slate-50 hover:bg-slate-100 text-slate-500 font-bold text-xs"
                 >
                   <ChevronLeft className="w-4 h-4 mr-2" />
@@ -245,7 +245,7 @@ export function DepositDesktopView({
                 ) : (
                   <Button
                     type="button"
-                    onClick={nextStep}
+                    onClick={nextStepAction}
                     className="w-full h-11 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs shadow-lg transition-all"
                   >
                     {t("common.next") || "ถัดไป"}

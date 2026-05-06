@@ -14,7 +14,10 @@ import {
   Building2,
   Sparkles,
   Loader2,
+  Search,
+  Home,
 } from "lucide-react";
+import { DashboardEmptyState } from "./DashboardEmptyState";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { formatDistanceToNowThai } from "@/lib/utils";
@@ -42,6 +45,11 @@ import { PropertyStatusSelect } from "@/components/properties/PropertyStatusDrop
 import { SocialStatusBadges } from "@/components/properties/SocialStatusBadges";
 import { PropertyStatus } from "@/features/properties/types";
 import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { PropertyTableData } from "@/features/properties/types";
 
@@ -60,25 +68,31 @@ export function RecentPropertiesTable({
 }) {
   const router = useRouter();
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
+
   return (
-    <div className="space-y-6 mt-10">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-1 sm:px-0">
-        <div className="space-y-1">
-          <h3 className="text-xl font-semibold text-slate-900 tracking-tight flex items-center gap-2">
-            <span className="w-1.5 h-6 bg-blue-600 rounded-full" />
+    
+    <div className="space-y-6 mt-8 bg-linear-to-br from-white via-slate-50 to-slate-100  p-4 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm">
+      
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1.5">
+          <h3 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+            <div className="p-2 bg-blue-600 rounded-xl shadow-lg shadow-blue-200">
+              <Building2 size={20} className="text-white" />
+            </div>
             ทรัพย์มาใหม่
-            <span className="text-slate-400 font-medium text-sm hidden xs:inline">
+            <span className="text-slate-400 font-semibold text-sm hidden xs:inline mt-0.5">
               (Recent Listings)
             </span>
           </h3>
-          <p className="text-sm text-slate-500 font-medium pb-2 sm:pb-0">
+          <p className="text-sm text-slate-500 font-medium pl-12">
             รายการทรัพย์ล่าสุดที่ถูกเพิ่มเข้ามาในระบบ
           </p>
         </div>
         <Button
           variant="outline"
           size="sm"
-          className="w-fit rounded-full font-semibold border-slate-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-all"
+          className="w-fit rounded-xl font-bold border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm h-10 px-5"
           onClick={() => {
             setNavigatingId("view-all");
             router.push("/protected/properties");
@@ -86,47 +100,85 @@ export function RecentPropertiesTable({
           disabled={navigatingId === "view-all"}
         >
           {navigatingId === "view-all" ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            <Loader2 className="h-4 w-4 animate-spin mr-2 text-slate-500" />
           ) : null}
           ดูทั้งหมด →
         </Button>
       </div>
 
-      <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+      {/* 2. Table Container - ปรับขอบโค้งมนและใส่สีพื้นหลังขาว */}
+      <div className="rounded-3xl border border-slate-200/60 overflow-hidden bg-white shadow-sm">
+        
         {/* Desktop Table View */}
         <div className="hidden lg:block overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
-                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[350px]">ทรัพย์</TableHead>
-                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[100px] text-[11px]">ชนิด</TableHead>
-                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[150px] text-[11px]">ทำเล</TableHead>
-                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[120px] text-[11px]">ราคา</TableHead>
-                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[90px] text-[11px]">Leads</TableHead>
-                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[110px] text-[11px]">Update</TableHead>
-                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[120px] text-[11px]">สถานะ</TableHead>
-                <TableHead className="px-2 py-4 font-bold text-slate-700 w-[100px] text-[11px]">Social</TableHead>
-                {showBranch && <TableHead className="px-2 py-4 font-bold text-slate-700 w-[100px] text-[11px]">สาขา</TableHead>}
-                <TableHead className="px-2 py-4 text-right font-bold text-slate-700 pr-6 w-[120px] text-[11px]">จัดการ</TableHead>
+              {/* 3. ปรับ Background ของ Table Header ให้ชัดเจนขึ้น */}
+              <TableRow className="bg-slate-50/80 hover:bg-slate-50/80 border-b border-slate-200/60">
+                <TableHead className="px-4 py-4 font-bold text-slate-600 w-[350px]">
+                  ทรัพย์
+                </TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-600 w-[100px] text-xs">
+                  ชนิด
+                </TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-600 w-[150px] text-xs">
+                  ทำเล
+                </TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-600 w-[120px] text-xs">
+                  ราคา
+                </TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-600 w-[90px] text-xs">
+                  การเข้าชม
+                </TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-600 w-[110px] text-xs">
+                  อัปเดตล่าสุด
+                </TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-600 w-[120px] text-xs">
+                  สถานะ
+                </TableHead>
+                <TableHead className="px-2 py-4 font-bold text-slate-600 w-[100px] text-xs">
+                  โซเชียล
+                </TableHead>
+                {showBranch && (
+                  <TableHead className="px-2 py-4 font-bold text-slate-600 w-[100px] text-xs">
+                    สาขา
+                  </TableHead>
+                )}
+                <TableHead className="px-4 py-4 text-right font-bold text-slate-600 w-[120px] text-xs">
+                  จัดการ
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {properties.map((property) => (
                 <TableRow
                   key={property.id}
-                  className="group hover:bg-slate-50/50 transition-colors"
+                  className="group hover:bg-slate-50/40 transition-colors border-b border-slate-100 last:border-0"
                 >
-                  <TableCell className="px-2 py-4">
+                  <TableCell className="px-4 py-4">
                     <div className="flex items-start gap-4">
                       {/* Image Thumbnail with Dialog Zoom */}
-                      <div className="relative h-[65px] w-[90px] shrink-0 overflow-hidden rounded-xl bg-slate-100 group/image cursor-zoom-in">
+                      <div className="relative h-16 w-24 shrink-0 overflow-hidden rounded-2xl bg-slate-100 group/image cursor-zoom-in border border-slate-100">
                         {property.requires_ai_review && (
-                          <div className="absolute top-1 right-1 z-20 p-1 bg-white/90 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center border border-amber-200">
-                             <Sparkles className="h-3 w-3 text-amber-500" />
-                          </div>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="absolute top-1 right-1 z-20 p-1 bg-white/95 backdrop-blur-sm shadow-sm rounded-full flex items-center justify-center border border-amber-200 cursor-help">
+                                <Sparkles className="h-3 w-3 text-amber-500" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-amber-900 text-white border-amber-800">
+                              <p className="font-bold">Requires AI Review</p>
+                              <p className="text-[10px] opacity-80">รายการนี้ต้องการการตรวจสอบความถูกต้องโดย AI</p>
+                            </TooltipContent>
+                          </Tooltip>
                         )}
                         {(() => {
-                          const imageUrl = property.image_url || (property.images && (property.images as any[])[0]?.url) || (property.images && (property.images as any[])[0]?.image_url);
+                          const imageUrl =
+                            property.image_url ||
+                            (property.images &&
+                              (property.images as any[])[0]?.url) ||
+                            (property.images &&
+                              (property.images as any[])[0]?.image_url);
 
                           return imageUrl ? (
                             <Dialog>
@@ -136,12 +188,12 @@ export function RecentPropertiesTable({
                                     src={imageUrl}
                                     alt={property.title || "Property"}
                                     fill
-                                    sizes="90px"
+                                    sizes="(max-width: 768px) 100vw, 96px"
                                     className="object-cover transition-transform duration-500 group-hover/image:scale-110"
                                   />
                                 </div>
                               </DialogTrigger>
-                              <DialogContent className="max-w-3xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
+                              <DialogContent className="max-w-4xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
                                 <VisuallyHidden>
                                   <DialogTitle>
                                     {property.title || "Property Image"}
@@ -153,7 +205,7 @@ export function RecentPropertiesTable({
                                     alt={property.title || "Property Image"}
                                     fill
                                     sizes="100vw"
-                                    className="object-contain shadow-2xl rounded-2xl"
+                                    className="object-contain shadow-2xl rounded-3xl"
                                   />
                                 </div>
                               </DialogContent>
@@ -166,37 +218,44 @@ export function RecentPropertiesTable({
                         })()}
                       </div>
 
-                      <div className="flex flex-col gap-1 min-w-0">
+                      <div className="flex flex-col gap-1 min-w-0 py-0.5">
                         <div
                           onClick={() => {
                             setNavigatingId(property.id);
                             router.push(`/protected/properties/${property.id}`);
                           }}
-                          className="block font-semibold text-slate-900 hover:text-blue-600 transition-colors text-sm leading-snug cursor-pointer relative"
+                          className="block font-bold text-slate-900 hover:text-blue-600 transition-colors text-sm leading-snug cursor-pointer relative"
                         >
                           {navigatingId === property.id && (
                             <div className="absolute -left-6 top-1/2 -translate-y-1/2">
                               <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                             </div>
                           )}
-                          <span className="line-clamp-2 overflow-hidden w-[310px]">
+                          <span className="line-clamp-2 overflow-hidden w-[300px]">
                             {property.title || "ไม่ระบุชื่อ"}
                           </span>
                         </div>
-                        <span className="text-[11px] text-slate-500 line-clamp-1 opacity-90 leading-tight">
+                        <span className="text-xs text-slate-500 font-medium line-clamp-1 opacity-90">
                           {[property.popular_area, property.province]
                             .filter(Boolean)
-                            .join(" • ") || property.description || "-"}
+                            .join(" • ") ||
+                            property.description ||
+                            "-"}
                         </span>
-                        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                          <span className="text-[11px] text-slate-400 flex items-center gap-1 bg-slate-50 px-1 py-0.5 rounded border border-slate-100 shrink-0">
-                            <Clock className="h-2.5 w-2.5" />
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <span className="text-[11px] font-medium text-slate-400 flex items-center gap-1.5 bg-slate-50 px-1.5 py-0.5 rounded-md border border-slate-100 shrink-0">
+                            <Clock className="h-3 w-3" />
                             {formatDistanceToNowThai(property.created_at)}
                           </span>
                           {property.tenant_name && (
-                            <span className="text-[11px] text-blue-600 font-bold flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 max-w-[100px] truncate shrink-0" title={property.tenant_name}>
-                              <Building2 className="h-2.5 w-2.5 shrink-0" />
-                              <span className="truncate">{property.tenant_name}</span>
+                            <span
+                              className="text-[11px] text-indigo-700 font-bold flex items-center gap-1 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100 max-w-[120px] shrink-0"
+                              title={property.tenant_name}
+                            >
+                              <Building2 className="h-3 w-3 shrink-0" />
+                              <span className="truncate">
+                                {property.tenant_name}
+                              </span>
                             </span>
                           )}
                         </div>
@@ -204,27 +263,46 @@ export function RecentPropertiesTable({
                     </div>
                   </TableCell>
                   <TableCell className="px-2 py-4">
-                    <div className="flex flex-col items-start gap-1">
-                      <PropertyTypeBadge type={property.property_type} className="h-5 text-[10px] font-bold" />
-                      <span className="text-[10px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
-                        {property.listing_type === "SALE" ? "ขาย" : property.listing_type === "RENT" ? "เช่า" : "ขาย/เช่า"}
+                    <div className="flex flex-col items-start gap-1.5">
+                      <PropertyTypeBadge
+                        type={property.property_type}
+                        className="h-6 text-[11px] font-bold px-2.5"
+                      />
+                      <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200 shrink-0">
+                        {property.listing_type === "SALE"
+                          ? "ขาย"
+                          : property.listing_type === "RENT"
+                            ? "เช่า"
+                            : "ขาย/เช่า"}
                       </span>
                     </div>
                   </TableCell>
                   <TableCell className="px-2 py-4">
-                    <div className="flex flex-col gap-0.5">
-                      <div className="font-medium text-[11px] text-slate-700 line-clamp-1">
+                    <div className="flex flex-col gap-1">
+                      <div className="font-semibold text-xs text-slate-800 line-clamp-1">
                         {[property.popular_area, property.district]
                           .filter(Boolean)
                           .join(", ") || "-"}
                       </div>
-                      <div className="text-[10px] text-slate-500 flex items-center gap-1.5">
-                        {property.size_sqm ? <span className="shrink-0">{property.size_sqm} m²</span> : null}
-                        {property.land_size_sqwah ? <span className="shrink-0">{property.land_size_sqwah} w²</span> : null}
+                      <div className="text-[11px] font-medium text-slate-500 flex items-center gap-2">
+                        {property.size_sqm ? (
+                          <span className="shrink-0 bg-slate-50 px-1 rounded">
+                            {property.size_sqm} m²
+                          </span>
+                        ) : null}
+                        {property.land_size_sqwah ? (
+                          <span className="shrink-0 bg-slate-50 px-1 rounded">
+                            {property.land_size_sqwah} w²
+                          </span>
+                        ) : null}
                       </div>
-                      <div className="text-[10px] text-slate-400 flex gap-1.5">
-                        {property.bedrooms ? <span>{property.bedrooms}น</span> : null}
-                        {property.bathrooms ? <span>{property.bathrooms}น้ำ</span> : null}
+                      <div className="text-[11px] font-medium text-slate-400 flex gap-2">
+                        {property.bedrooms ? (
+                          <span className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"/>{property.bedrooms}น</span>
+                        ) : null}
+                        {property.bathrooms ? (
+                          <span className="flex items-center gap-0.5"><div className="w-1.5 h-1.5 rounded-full bg-slate-300"/>{property.bathrooms}น้ำ</span>
+                        ) : null}
                       </div>
                     </div>
                   </TableCell>
@@ -239,19 +317,37 @@ export function RecentPropertiesTable({
                     />
                   </TableCell>
                   <TableCell className="px-2 py-4">
-                    <div className="flex flex-col gap-0.5">
-                      <div className="flex items-center gap-1 text-[11px] font-medium text-slate-700">
-                        <Users className="h-2.5 w-2.5 text-blue-500" />
-                        <span>{property.leads_count || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-[11px] text-slate-400">
-                        <Eye className="h-2.5 w-2.5" />
-                        <span>{property.view_count || 0}</span>
-                      </div>
+                    <div className="flex flex-col gap-1.5 bg-slate-50 p-1.5 rounded-lg border border-slate-100 w-fit">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-help">
+                            <Users className="h-3 w-3 text-blue-500" />
+                            <span>{property.leads_count || 0}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p className="text-xs">จำนวนลีดที่สนใจทรัพย์นี้</p>
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 cursor-help">
+                            <Eye className="h-3 w-3" />
+                            <span>{property.view_count || 0}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">
+                          <p className="text-xs">จำนวนการเข้าชมทั้งหมด</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   </TableCell>
                   <TableCell className="px-2 py-4">
-                    <div className="text-[11px] text-slate-500 line-clamp-1 opacity-80 max-w-[80px] truncate" title={new Date(property.updated_at).toLocaleString("th-TH")}>
+                    <div
+                      className="text-xs font-medium text-slate-500 line-clamp-1 max-w-[80px] truncate"
+                      title={new Date(property.updated_at).toLocaleString("th-TH")}
+                    >
                       {formatDistanceToNowThai(property.updated_at)}
                     </div>
                   </TableCell>
@@ -259,7 +355,7 @@ export function RecentPropertiesTable({
                     <PropertyStatusSelect
                       id={property.id}
                       value={property.status as PropertyStatus}
-                      className="h-7 w-full max-w-[120px] text-[11px] px-2 font-bold"
+                      className="h-8 w-full max-w-[130px] text-xs px-3 font-bold bg-white shadow-sm"
                     />
                   </TableCell>
                   <TableCell className="px-2 py-4">
@@ -272,17 +368,20 @@ export function RecentPropertiesTable({
                   </TableCell>
                   {showBranch && (
                     <TableCell className="px-2 py-4">
-                      <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 line-clamp-1 max-w-[90px]" title={property.tenant_name || ""}>
+                      <span
+                        className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100 line-clamp-1 max-w-[100px]"
+                        title={property.tenant_name || ""}
+                      >
                         {property.tenant_name || "N/A"}
                       </span>
                     </TableCell>
                   )}
-                  <TableCell className="px-2 py-4 text-right pr-6">
-                    <div className="flex justify-end items-center gap-0.5">
+                  <TableCell className="px-4 py-4 text-right">
+                    <div className="flex justify-end items-center gap-1">
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
+                        className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
                         onClick={() => {
                           setNavigatingId(`eye-${property.id}`);
                           router.push(`/protected/properties/${property.id}`);
@@ -290,39 +389,41 @@ export function RecentPropertiesTable({
                         disabled={navigatingId === `eye-${property.id}`}
                       >
                         {navigatingId === `eye-${property.id}` ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
                         ) : (
-                          <Eye className="h-3.5 w-3.5" />
+                          <Eye className="h-4 w-4" />
                         )}
                       </Button>
 
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-7 w-7 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
+                        className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-colors"
                         onClick={() => {
                           setNavigatingId(`edit-${property.id}`);
-                          router.push(`/protected/properties/${property.id}/edit`);
+                          router.push(
+                            `/protected/properties/${property.id}/edit`,
+                          );
                         }}
                         disabled={navigatingId === `edit-${property.id}`}
                       >
                         {navigatingId === `edit-${property.id}` ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-600" />
+                          <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
                         ) : (
-                          <Edit3 className="h-3.5 w-3.5" />
+                          <Edit3 className="h-4 w-4" />
                         )}
                       </Button>
 
                       <DuplicatePropertyButton
                         id={property.id}
-                        className="h-7 w-7 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg"
+                        className="h-8 w-8 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors"
                       />
 
-                      <PropertyRowActions 
-                        id={property.id} 
-                        title={property.title} 
+                      <PropertyRowActions
+                        id={property.id}
+                        title={property.title}
                         status={property.status}
-                        className="h-7 w-7 text-slate-400 hover:bg-slate-100 rounded-lg"
+                        className="h-8 w-8 text-slate-400 hover:bg-slate-100 hover:text-slate-900 rounded-xl transition-colors"
                       />
                     </div>
                   </TableCell>
@@ -333,16 +434,16 @@ export function RecentPropertiesTable({
         </div>
 
         {/* Mobile & Tablet Premium Card View */}
-        <div className="lg:hidden p-3 min-[400px]:p-4 bg-slate-50/30">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div className="lg:hidden p-4 sm:p-6 bg-slate-50/50">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
             {properties.map((property) => (
               <div
                 key={property.id}
-                className="relative group bg-white rounded-2xl border border-slate-200 transition-all duration-300 shadow-sm hover:shadow-md overflow-hidden flex flex-col"
+                className="relative group bg-white rounded-3xl border border-slate-200/80 transition-all duration-300 shadow-sm hover:shadow-xl hover:-translate-y-1 overflow-hidden flex flex-col"
               >
                 {/* Actions Button Overlay */}
-                <div className="absolute top-2.5 right-2.5 z-30 flex items-center gap-1.5">
-                  <div className="p-1 bg-white/80 backdrop-blur-md rounded-xl border border-slate-200 shadow-sm">
+                <div className="absolute top-3 right-3 z-30 flex items-center gap-1.5">
+                  <div className="p-1 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200 shadow-sm">
                     <PropertyRowActions
                       id={property.id}
                       title={property.title}
@@ -351,83 +452,86 @@ export function RecentPropertiesTable({
                   </div>
                 </div>
 
-                  <div
-                    onClick={() => {
-                      setNavigatingId(`m-img-${property.id}`);
-                      router.push(`/protected/properties/${property.id}`);
-                    }}
-                    className="block relative aspect-16/10 overflow-hidden cursor-pointer"
-                  >
-                    {navigatingId === `m-img-${property.id}` && (
-                      <div className="absolute inset-0 z-40 bg-white/20 backdrop-blur-[2px] flex items-center justify-center">
-                        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+                <div
+                  onClick={() => {
+                    setNavigatingId(`m-img-${property.id}`);
+                    router.push(`/protected/properties/${property.id}`);
+                  }}
+                  className="block relative aspect-16/10 overflow-hidden cursor-pointer bg-slate-100"
+                >
+                  {navigatingId === `m-img-${property.id}` && (
+                    <div className="absolute inset-0 z-40 bg-white/30 backdrop-blur-sm flex items-center justify-center">
+                      <div className="p-3 bg-white rounded-full shadow-lg">
+                        <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
                       </div>
-                    )}
-                    {property.requires_ai_review && (
-                      <div className="absolute top-2.5 left-2.5 z-30 p-1.5 bg-white/90 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center border border-amber-200">
-                        <Sparkles className="h-4 w-4 text-amber-500" />
-                      </div>
-                    )}
-                    {(() => {
-                      const imageUrl = property.image_url || (property.images && (property.images as any[])[0]?.url) || (property.images && (property.images as any[])[0]?.image_url);
+                    </div>
+                  )}
+                  {property.requires_ai_review && (
+                    <div className="absolute top-3 left-3 z-30 p-1.5 bg-white/95 backdrop-blur-sm shadow-md rounded-full flex items-center justify-center border border-amber-200">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                    </div>
+                  )}
+                  {(() => {
+                    const imageUrl =
+                      property.image_url ||
+                      (property.images && (property.images as any[])[0]?.url) ||
+                      (property.images &&
+                        (property.images as any[])[0]?.image_url);
 
-                      return imageUrl ? (
-                        <Image
-                          src={imageUrl}
-                          alt={property.title || "Property"}
-                          fill
-                          className="object-cover transition-transform duration-700 group-hover:scale-110"
-                        />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center bg-slate-100">
-                          <ImageIcon className="h-10 w-10 text-slate-300" />
-                        </div>
-                      );
-                    })()}
-
-                    {/* Status Badges Overlay */}
-                    <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between gap-2 overflow-hidden">
-                      <div className="flex items-center gap-1.5">
-                        <PropertyTypeBadge
-                          type={property.property_type}
-                          className="h-5 text-[10px] px-2 bg-white/95 backdrop-blur-sm shadow-sm border-none font-bold"
-                        />
+                    return imageUrl ? (
+                      <Image
+                        src={imageUrl}
+                        alt={property.title || "Property"}
+                        fill
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center">
+                        <ImageIcon className="h-10 w-10 text-slate-300" />
                       </div>
-                      <PropertyStatusBadge
-                        status={property.status}
-                        className="h-5 text-[10px] px-2 font-bold shadow-md backdrop-blur-sm"
+                    );
+                  })()}
+
+                  {/* Status Badges Overlay */}
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 overflow-hidden">
+                    <div className="flex items-center gap-2">
+                      <PropertyTypeBadge
+                        type={property.property_type}
+                        className="h-6 text-[11px] px-2.5 bg-white/95 backdrop-blur-md shadow-sm border-none font-bold"
                       />
                     </div>
+                    <PropertyStatusBadge
+                      status={property.status}
+                      className="h-6 text-[11px] px-2.5 font-bold shadow-md backdrop-blur-md border-none"
+                    />
                   </div>
+                </div>
 
                 {/* Property Details */}
-                <div className="p-3 min-[400px]:p-4 space-y-3 flex-1 flex flex-col">
-                  <div className="space-y-1">
+                <div className="p-4 sm:p-5 space-y-4 flex-1 flex flex-col">
+                  <div className="space-y-1.5">
                     <div
                       onClick={() => {
                         setNavigatingId(`m-title-${property.id}`);
                         router.push(`/protected/properties/${property.id}`);
                       }}
-                      className="font-bold text-slate-900 text-sm min-[400px]:text-base leading-snug line-clamp-1 hover:text-blue-600 transition-colors cursor-pointer relative"
+                      className="font-bold text-slate-900 text-sm sm:text-base leading-snug line-clamp-2 hover:text-blue-600 transition-colors cursor-pointer relative"
                     >
-                      {navigatingId === `m-title-${property.id}` && (
-                        <div className="absolute -left-5 top-1/2 -translate-y-1/2">
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600" />
-                        </div>
-                      )}
                       {property.title || "ไม่ระบุชื่อ"}
                     </div>
-                    <div className="flex items-center gap-1 text-[10px] min-[400px]:text-xs text-slate-500 font-medium">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium bg-slate-50 w-fit px-2 py-1 rounded-md">
                       <MapPin className="h-3 w-3 shrink-0 text-slate-400" />
                       <span className="truncate">
                         {[property.popular_area, property.province]
                           .filter(Boolean)
-                          .join(" • ") || property.district || "-"}
+                          .join(" • ") ||
+                          property.district ||
+                          "-"}
                       </span>
                     </div>
                   </div>
 
-                  <div className="py-2 border-y border-slate-100">
+                  <div className="py-3 border-y border-slate-100">
                     <PropertyPrice
                       variant="card"
                       listingType={property.listing_type}
@@ -439,17 +543,16 @@ export function RecentPropertiesTable({
                   </div>
 
                   {/* Meta Stats & Social */}
-                  <div className="flex flex-col gap-2.5 pt-0.5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-1 text-[10px] min-[400px]:text-[11px] font-bold text-slate-600">
-                        <Users className="h-3 w-3 text-blue-500" />
+                  <div className="flex flex-col gap-3 pt-1">
+                    <div className="flex items-center gap-4 bg-slate-50/50 p-2 rounded-xl">
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
+                        <Users className="h-3.5 w-3.5 text-blue-500" />
                         {property.leads_count || 0}
                       </div>
-                      <div className="flex items-center gap-1 text-[10px] min-[400px]:text-[11px] font-bold text-slate-600">
-                        <Eye className="h-3 w-3 text-slate-400" />
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                        <Eye className="h-3.5 w-3.5 text-slate-400" />
                         {property.view_count || 0}
                       </div>
-
                       <SocialStatusBadges
                         facebookAt={property.posted_to_facebook_at}
                         instagramAt={property.posted_to_instagram_at}
@@ -458,19 +561,20 @@ export function RecentPropertiesTable({
                         className="ml-auto"
                       />
                     </div>
-                    
+
                     <PropertyStatusSelect
                       id={property.id}
                       value={property.status as PropertyStatus}
-                      className="h-8 w-full text-[10px] min-[400px]:text-[11px] font-bold shadow-xs transition-shadow hover:shadow-md border-slate-200 rounded-lg bg-white"
+                      className="h-10 w-full text-xs font-bold shadow-sm transition-shadow hover:shadow-md border-slate-200 rounded-xl bg-white"
                     />
 
-                    <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 mt-auto">
-                      <span className="text-[10px] text-slate-400 font-bold tracking-tight lowercase">
+                    <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 mt-auto">
+                      <span className="text-[11px] text-slate-400 font-medium flex items-center gap-1.5">
+                        <Clock className="h-3 w-3" />
                         {formatDistanceToNowThai(property.updated_at)}
                       </span>
                       {showBranch && (
-                        <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 truncate max-w-[80px]">
+                        <span className="text-[11px] font-bold text-indigo-700 bg-indigo-50 px-2 py-1 rounded-md border border-indigo-100 truncate max-w-[100px]">
                           {property.tenant_name || "N/A"}
                         </span>
                       )}
@@ -479,33 +583,30 @@ export function RecentPropertiesTable({
                 </div>
               </div>
             ))}
+
+            {/* Empty State */}
             {properties.length === 0 && (
-              <div className="col-span-full py-20 text-center text-slate-500 bg-white rounded-2xl border border-dashed border-slate-200">
-                <div className="flex flex-col items-center gap-4 max-w-xs mx-auto">
-                  <div className="p-4 bg-slate-50 rounded-full">
-                    <Building2 className="h-10 w-10 text-slate-300" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <p className="font-bold text-slate-900">ยังไม่มีทรัพย์ในระบบ</p>
-                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
-                      เริ่มสร้างทรัพย์รายการแรกของคุณวันนี้เพื่อจัดการข้อมูลทรัพย์สิน
-                    </p>
-                  </div>
-                  <Button
-                    size="sm"
-                    className="mt-2 rounded-xl bg-blue-600 font-bold shadow-md h-10 px-6"
-                    onClick={() => {
-                      setNavigatingId("new-prop");
-                      router.push("/protected/properties/new");
-                    }}
-                    disabled={navigatingId === "new-prop"}
-                  >
-                    {navigatingId === "new-prop" ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : null}
-                    เพิ่มทรัพย์ใหม่
-                  </Button>
-                </div>
+              <div className="col-span-full">
+                <DashboardEmptyState
+                  icon={Home}
+                  title="ยังไม่มีทรัพย์ในระบบ"
+                  description="เริ่มสร้างทรัพย์รายการแรกของคุณวันนี้ เพื่อเริ่มต้นการจัดการข้อมูลทรัพย์สินอย่างเป็นระบบ"
+                  action={
+                    <Button
+                      className="rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-bold shadow-md h-11 px-8 transition-all"
+                      onClick={() => {
+                        setNavigatingId("new-prop");
+                        router.push("/protected/properties/new");
+                      }}
+                      disabled={navigatingId === "new-prop"}
+                    >
+                      {navigatingId === "new-prop" && (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      )}
+                      เพิ่มทรัพย์รายการแรก
+                    </Button>
+                  }
+                />
               </div>
             )}
           </div>

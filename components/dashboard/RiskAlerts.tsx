@@ -7,11 +7,14 @@ import type { RiskDeal } from "@/features/dashboard/queries";
 
 interface RiskAlertsProps {
   deals?: RiskDeal[];
+  role?: string;
+  view?: string;
 }
 
-export function RiskAlerts({ deals = [] }: RiskAlertsProps) {
+export function RiskAlerts({ deals = [], role, view = "personal" }: RiskAlertsProps) {
   const router = useRouter();
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
+  const isAdminView = (role === "ADMIN" || role === "MANAGER") && view !== "personal";
   return (
     <Card className="shadow-sm h-full border-red-200 bg-red-50/50">
       <CardHeader className="pb-2 px-4 sm:px-6">
@@ -47,6 +50,9 @@ export function RiskAlerts({ deals = [] }: RiskAlertsProps) {
                 <div className="flex justify-between items-center mt-1">
                   <span className="text-xs text-muted-foreground">
                     Stage: {deal.stage}
+                    {isAdminView && (
+                      <span className="ml-1 text-slate-400 font-bold">• Agent 01</span>
+                    )}
                   </span>
                   <span className="text-xs font-bold text-red-600">
                     ค้าง {deal.daysInStage} วัน

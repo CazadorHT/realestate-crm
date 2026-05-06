@@ -98,6 +98,21 @@ export async function bulkDeletePropertiesAction(
       ? `ย้ายลงถังขยะสำเร็จ ${count} รายการ (ข้าม ${skipped} รายการที่ติดสถานะห้ามลบ)`
       : `ย้ายทรัพย์ลงถังขยะสำเร็จ ${count} รายการ`;
 
+    // 🔔 Notify Admins about bulk trash (if more than 5 items)
+    if (count && count > 5) {
+      try {
+        const { notifyAdminsAction } = await import("@/lib/actions/notifications");
+        await notifyAdminsAction({
+          type: "WARNING",
+          title: "มีการลบทรัพย์สินจำนวนมาก ⚠️",
+          message: `ผู้ใช้ ${user.id} ได้ย้ายทรัพย์สินลงถังขยะจำนวน ${count} รายการ`,
+          link: "/protected/properties/trash",
+        });
+      } catch (notifyErr) {
+        console.error("Failed to notify admins of bulk trash:", notifyErr);
+      }
+    }
+
     return { success: true, count: count ?? safeIds.length, message: msg };
   } catch (error) {
     console.error("bulkDelete error:", error);
@@ -253,6 +268,19 @@ export async function bulkPermanentDeletePropertiesAction(
     );
 
     revalidatePath("/protected/properties/trash");
+
+    // 🔔 Notify Admins about bulk permanent delete
+    try {
+      const { notifyAdminsAction } = await import("@/lib/actions/notifications");
+      await notifyAdminsAction({
+        type: "WARNING",
+        title: "มีการลบทรัพย์สินถาวร! 🚨",
+        message: `มีการลบข้อมูลทรัพย์สินออกจากฐานข้อมูลถาวรจำนวน ${count} รายการ โดยผู้ใช้ ${user.id}`,
+        link: "/protected/properties",
+      });
+    } catch (notifyErr) {
+      console.error("Failed to notify admins of permanent delete:", notifyErr);
+    }
 
     return { success: true, count: count ?? ids.length, message: `ลบข้อมูลถาวรสำเร็จ ${count} รายการ` };
   } catch (error) {

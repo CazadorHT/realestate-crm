@@ -1,82 +1,77 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { PipelineData } from "@/features/dashboard/queries";
+import { DashboardEmptyState } from "./DashboardEmptyState";
+import { TrendingUp } from "lucide-react";
 
 interface PipelineSummaryProps {
   data: PipelineData[];
 }
 
 export function PipelineSummary({ data = [] }: PipelineSummaryProps) {
-  if (!data) return null;
+  if (!data || data.length === 0) {
+    return (
+      <DashboardEmptyState
+        icon={TrendingUp}
+        title="ยังไม่มีข้อมูล Pipeline"
+        description="ไม่พบข้อมูลขั้นตอนงานในช่วงเวลานี้ ข้อมูลจะเริ่มแสดงเมื่อมีการบันทึกสถานะงาน"
+      />
+    );
+  }
+
   const total = data.reduce((acc, curr) => acc + curr.count, 0);
 
   return (
-    <Card className="shadow-lg border-none bg-white overflow-hidden h-full">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-            <div className="w-1.5 h-6 bg-indigo-600 rounded-full" />
-            ภาพรวม Pipeline
-          </CardTitle>
-          <div className="text-[10px] font-bold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">
-            TOTAL: {total}
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pb-6">
-        <div className="space-y-2">
-          {data.map((stage) => {
-            const percentage =
-              total > 0 ? Math.round((stage.count / total) * 100) : 0;
+    <div className="flex flex-col justify-between h-full min-h-[320px] py-2">
+      <div className="flex-1 flex flex-col justify-around gap-4 overflow-y-auto pr-1 custom-scrollbar">
+        {data.map((stage) => {
+          const percentage =
+            total > 0 ? Math.round((stage.count / total) * 100) : 0;
 
-            // Extract the color class and map to a more premium gradient if possible,
-            // or just use it with better shadow/rounding.
-            const bgClass = stage.color.includes("bg-")
-              ? stage.color
-              : `bg-${stage.color}`;
+          const bgClass = stage.color.includes("bg-")
+            ? stage.color
+            : `bg-${stage.color}`;
 
-            return (
-              <div key={stage.stage} className="space-y-1 group cursor-default">
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">
-                      {stage.label}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                      {stage.stage}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-base font-semibold text-slate-900">
-                      {stage.count}
-                    </span>
-                    <span className="text-[10px] text-slate-400 font-bold">
-                      รายการ
-                    </span>
-                  </div>
+          return (
+            <div key={stage.stage} className="space-y-2.5 group cursor-default">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="text-sm font-semibold text-slate-700 group-hover:text-indigo-600 transition-colors">
+                    {stage.label}
+                  </span>
+                  <span className="text-[11px] font-semibold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100 shadow-xs">
+                    {percentage}%
+                  </span>
                 </div>
-
-                <div className="relative h-2.5 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                  <div
-                    className={`h-full ${bgClass} rounded-full shadow-[0_0_10px_rgba(0,0,0,0.05)] transition-all duration-1000 ease-out`}
-                    style={{ width: `${percentage}%` }}
-                  />
-                  {/* Subtle shine effect on the progress bar */}
-                  <div
-                    className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent w-2/3 -skew-x-12 opacity-50"
-                    style={{ left: `${Math.max(0, percentage - 20)}%` }}
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <span className="text-[10px] font-bold text-slate-400">
-                    {percentage}% ของทั้งหมด
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl font-semibold text-slate-900 tabular-nums leading-none">
+                    {stage.count}
+                  </span>
+                  <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-tight">
+                    รายการ
                   </span>
                 </div>
               </div>
-            );
-          })}
+
+              <div className="relative h-3 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner border border-slate-50">
+                <div
+                  className={`h-full ${bgClass} rounded-full transition-all duration-1000 ease-out shadow-sm`}
+                  style={{ width: `${percentage}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">สถานะปัจจุบัน</span>
+          <span className="text-xs font-semibold text-slate-500">ข้อมูลอัปเดตเรียลไทม์</span>
         </div>
-      </CardContent>
-    </Card>
+        <div className="flex items-center gap-2 text-sm font-semibold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-2xl border border-indigo-100 shadow-sm shadow-indigo-100/50">
+           <span className="text-[10px] text-indigo-400 uppercase font-semibold">รวม</span>
+           {total.toLocaleString()} รายการ
+        </div>
+      </div>
+    </div>
   );
 }

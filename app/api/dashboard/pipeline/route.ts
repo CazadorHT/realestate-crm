@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getRevenueChartData } from "@/features/dashboard/queries/stats";
+import { getPipelineStats } from "@/features/dashboard/queries/stats";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
 
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     const tenantIdFromCookie = await getActiveTenantCookie();
     const tenantId = (tenantIdFromParam && tenantIdFromParam !== "undefined") ? tenantIdFromParam : tenantIdFromCookie;
 
-    const data = await getRevenueChartData({ 
+    const data = await getPipelineStats({ 
       tenantId, 
       range, 
       view, 
@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("API Revenue Error:", error);
+    console.error("API Pipeline Error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

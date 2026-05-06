@@ -21,23 +21,23 @@ export function DepositMobileView({
   currentStep,
   totalSteps,
   isLoading,
-  nextStep,
-  prevStep,
-  onCancel,
-  onSubmit,
-  onInvalid,
-  onFormStart,
+  nextStepAction,
+  prevStepAction,
+  onCancelAction,
+  onSubmitAction,
+  onInvalidAction,
+  onFormStartAction,
 }: {
   form: UseFormReturn<DepositLeadInput>;
   currentStep: number;
   totalSteps: number;
   isLoading: boolean;
-  nextStep: () => Promise<void>;
-  prevStep: () => void;
-  onCancel: () => void;
-  onSubmit: (values: DepositLeadInput) => Promise<void>;
-  onInvalid?: (errors: any) => void;
-  onFormStart: () => void;
+  nextStepAction: () => Promise<void>;
+  prevStepAction: () => void;
+  onCancelAction: () => void;
+  onSubmitAction: (values: DepositLeadInput) => Promise<void>;
+  onInvalidAction?: (errors: any) => void;
+  onFormStartAction: () => void;
 }) {
   const { t } = useLanguage();
 
@@ -89,7 +89,7 @@ export function DepositMobileView({
       {/* ── Mobile Form Content Area ── */}
       <div className="sm:hidden flex-1 flex flex-col min-h-0 bg-white overflow-hidden max-h-full">
         <form
-          onSubmit={form.handleSubmit(onSubmit, onInvalid)}
+          onSubmit={form.handleSubmit(onSubmitAction, onInvalidAction)}
           className="flex flex-col h-full overflow-hidden"
         >
           <m.div
@@ -181,17 +181,17 @@ export function DepositMobileView({
                       className="relative"
                     >
                       {currentStep === 1 &&
-                        renderNameField(form, true, t, onFormStart)}
+                        renderNameField(form, true, t, onFormStartAction)}
                       {currentStep === 2 && (
                         <div className="grid grid-cols-1 gap-4">
-                          {renderPhoneField(form, true, t, onFormStart)}
-                          {renderLineField(form, true, t, onFormStart)}
+                          {renderPhoneField(form, true, t, onFormStartAction)}
+                          {renderLineField(form, true, t, onFormStartAction)}
                         </div>
                       )}
                       {currentStep === 3 && (
                         <div className="space-y-2">
-                          {renderPropertyTypeField(form, true, t, onFormStart)}
-                          {renderMessageField(form, true, t, onFormStart)}
+                          {renderPropertyTypeField(form, true, t, onFormStartAction)}
+                          {renderMessageField(form, true, t, onFormStartAction)}
                         </div>
                       )}
                     </m.div>
@@ -229,7 +229,7 @@ export function DepositMobileView({
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => (currentStep === 1 ? onCancel() : prevStep())}
+                  onClick={() => (currentStep === 1 ? onCancelAction() : prevStepAction())}
                   className="h-10 flex-1 rounded-xl bg-slate-50 border border-slate-100 text-slate-500 font-semibold text-xs transition-all active:bg-slate-100"
                 >
                   {currentStep === 1 ? (
@@ -251,7 +251,7 @@ export function DepositMobileView({
                   ) : (
                     <Button
                       type="button"
-                      onClick={nextStep}
+                      onClick={nextStepAction}
                       className="w-full h-10 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold text-xs shadow-[0_6px_15px_-4px_rgba(37,99,235,0.4)] active:opacity-90 transition-all"
                     >
                       {t("common.next") || "ถัดไป"}

@@ -1,7 +1,7 @@
 // actions leads
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { createSafeAction } from "@/lib/actions/safe-action";
 import { leadFormSchema, leadActivitySchema } from "./types";
 import type {
@@ -57,6 +57,9 @@ export const createLeadAction = createSafeAction(
     }
 
     revalidatePath("/protected/leads");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
 
     // 🤖 Trigger AI Smart Match Infrastructure
     const { inngest } = await import("@/lib/inngest/client");
@@ -64,6 +67,19 @@ export const createLeadAction = createSafeAction(
       name: "lead.created",
       data: { leadId: lead.id, tenantId },
     });
+
+    // 🔔 Notify Admins about the new lead
+    try {
+      const { notifyAdminsAction } = await import("@/lib/actions/notifications");
+      await notifyAdminsAction({
+        type: "SYSTEM",
+        title: "มีลีดใหม่สนใจทรัพย์! 🆕",
+        message: `ลีดใหม่: ${data.full_name} สนใจโครงการในพื้นที่ ${data.preferred_locations || "ทั่วไป"}`,
+        link: `/protected/leads/${lead.id}`,
+      });
+    } catch (notifyErr) {
+      console.error("Failed to notify admins of new lead:", notifyErr);
+    }
 
     return { leadId: lead.id };
   },
@@ -113,7 +129,13 @@ export const updateLeadAction = createSafeAction(
     }
 
     revalidatePath("/protected/leads");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
     revalidatePath(`/protected/leads/${id}`);
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
     return { id };
   },
 );
@@ -130,6 +152,9 @@ export const deleteLeadAction = createSafeAction(
     if (error) throw new Error(mapDbError(error));
 
     revalidatePath("/protected/leads");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
     return { success: true };
   },
 );
@@ -250,6 +275,9 @@ export const updateLeadStageAction = createSafeAction(
     if (error) throw new Error(mapDbError(error));
 
     revalidatePath("/protected/leads");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
     return { success: true };
   },
 );
@@ -532,11 +560,17 @@ export const transferLeadAction = createSafeAction(
       }
     } catch (notifyErr: unknown) {
       console.error("Failed to send transfer notifications:", notifyErr);
-      // Non-blocking error for notification
+    // Non-blocking error for notification
     }
 
     revalidatePath("/protected/leads");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
     revalidatePath(`/protected/leads/${id}`);
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
 
     return { success: true };
   },

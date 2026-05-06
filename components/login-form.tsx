@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -27,6 +27,8 @@ import { SocialAuthButtons } from "./auth/social-auth-buttons";
 import { PremiumAuthLayout } from "./auth/premium-auth-layout";
 import { SiSupabase } from "react-icons/si";
 import { BsShieldFillCheck } from "react-icons/bs";
+
+import { notifyAdminsAction } from "@/lib/actions/notifications";
 
 export type AuthView = "login" | "signup" | "forgot-password";
 
@@ -54,9 +56,12 @@ const forgotSchema = z.object({
   honeypot: z.string().max(0).optional(),
 });
 
-type LoginValues = z.infer<typeof loginSchema>;
-type SignupValues = z.infer<typeof signupSchema>;
-type ForgotValues = z.infer<typeof forgotSchema>;
+interface AuthValues {
+  email: string;
+  password?: string;
+  confirmPassword?: string;
+  honeypot?: string;
+}
 
 interface LoginFormProps {
   defaultView?: AuthView;
@@ -77,14 +82,14 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<any>({
+  } = useForm<AuthValues>({
     resolver: zodResolver(
       view === "login"
         ? loginSchema
         : view === "signup"
           ? signupSchema
           : forgotSchema,
-    ),
+    ) as any,
   });
 
   const handleSetView = (newView: AuthView) => {
@@ -98,7 +103,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
     reset();
   };
 
-  const onFormSubmit = async (data: any) => {
+  const onFormSubmit: SubmitHandler<AuthValues> = async (data) => {
     // Honeypot check: If bot filled it, just silently ignore or return
     if (data.honeypot) {
       console.warn("Bot detected via honeypot");
@@ -115,7 +120,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
       if (view === "login") {
         const { error } = await supabase.auth.signInWithPassword({
           email: data.email,
-          password: data.password,
+          password: data.password || "",
         });
         if (error) {
           await logActivityAction("LOGIN_FAILURE", "user", undefined, {
@@ -127,11 +132,20 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
         await logActivityAction("LOGIN", "user", undefined, {
           email: data.email,
         });
+
+        // 🔔 Notify Admins about the login
+        await notifyAdminsAction({
+          type: "INFO",
+          title: "มีการเข้าสู่ระบบ 🔑",
+          message: `ผู้ใช้ ${data.email} เข้าสู่ระบบแล้ว`,
+          link: "/protected/settings/users", // Link to user management
+        });
+
         router.push("/protected");
       } else if (view === "signup") {
         const { error } = await supabase.auth.signUp({
           email: data.email,
-          password: data.password,
+          password: data.password || "",
           options: {
             emailRedirectTo: `${window.location.origin}/auth/confirm`,
           },
@@ -147,6 +161,14 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
 
         await logActivityAction("SIGNUP", "user", undefined, {
           email: data.email,
+        });
+
+        // 🔔 Notify Admins about the new signup
+        await notifyAdminsAction({
+          type: "SYSTEM",
+          title: "มีผู้สมัครสมาชิกใหม่ 🆕",
+          message: `มีผู้ใช้ใหม่สมัครสมาชิกด้วยอีเมล ${data.email}`,
+          link: "/protected/settings/users",
         });
         
         setSuccess("ส่งอีเมลยืนยันไปแล้วนะ! ไปเช็คดูใน Inbox ได้เลย");
@@ -277,7 +299,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                   </div>
                   {errors.email && (
                     <p className="text-[10px] text-red-500 ml-1 font-medium">
-                      {(errors.email as any).message}
+                      {errors.email.message}
                     </p>
                   )}
                 </div>
@@ -348,7 +370,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                     </div>
                     {errors.password && (
                       <p className="text-[10px] text-red-500 ml-1 font-medium">
-                        {(errors.password as any).message}
+                        {errors.password.message}
                       </p>
                     )}
                   </div>
@@ -384,7 +406,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                     </div>
                     {errors.confirmPassword && (
                       <p className="text-[10px] text-red-500 ml-1 font-medium">
-                        {(errors.confirmPassword as any).message}
+                        {errors.confirmPassword.message}
                       </p>
                     )}
                   </m.div>

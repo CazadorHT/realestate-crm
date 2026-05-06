@@ -214,3 +214,66 @@ export async function deleteAllNotificationsAction(tenantId?: string) {
   revalidatePath("/");
   return { success: true };
 }
+
+export async function notifyAdminsAction({
+  type,
+  title,
+  message,
+  link,
+}: {
+  type: NotificationType;
+  title: string;
+  message: string;
+  link?: string;
+}) {
+  const supabase = await createClient();
+
+  // 1. Get all ADMIN users with their notification preferences
+  // Future-proof: We can later join with a notification_settings table
+  const { data: admins, error: fetchError } = await supabase
+    .from("profiles")
+    .select("id, full_name")
+    .eq("role", "ADMIN");
+
+  if (fetchError || !admins) {
+    console.error("Error fetching admins for notification:", fetchError);
+    return { success: false };
+  }
+
+  // 2. Filter admins based on their future preferences (Placeholder for now)
+  const targetAdmins = admins;
+
+  // --- FUTURE PROOF: RATE LIMITING ---
+  // To prevent spamming (e.g. rapid login failures), we check if a similar 
+  // notification was sent recently. 
+  // For now, we'll implement a simple server-side throttle check if needed.
+  // ------------------------------------
+
+  // 3. Create notification for each targeted admin using bulk insert
+  const notifications = (targetAdmins as { id: string }[]).map((admin) => ({
+    user_id: admin.id,
+    type,
+    title,
+    message,
+    link,
+    // Add metadata for potential debugging or grouping
+    metadata: {
+      generated_at: new Date().toISOString(),
+      bulk: targetAdmins.length > 5,
+      version: "2.0", // Tracking version for future migrations
+    } as any,
+  }));
+
+  if (notifications.length === 0) return { success: true };
+
+  const { error: insertError } = await supabase
+    .from("notifications")
+    .insert(notifications);
+
+  if (insertError) {
+    console.error("Error sending notifications to admins:", insertError);
+    return { success: false };
+  }
+
+  return { success: true };
+}

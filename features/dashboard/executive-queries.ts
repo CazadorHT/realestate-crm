@@ -63,12 +63,31 @@ interface PropertyQueryResult {
 export async function getExecutiveStats(
   tenantId?: string | null,
   year?: number,
+  range: string = "year",
 ): Promise<ExecutiveStats> {
   try {
     const supabase = await createClient();
     const currentYear = year || new Date().getFullYear();
-    const startOfYear = new Date(currentYear, 0, 1).toISOString();
-    const endOfYear = new Date(currentYear, 11, 31, 23, 59, 59).toISOString();
+    
+    let startDate: string;
+    let endDate: string;
+
+    if (range === "year") {
+      startDate = new Date(currentYear, 0, 1).toISOString();
+      endDate = new Date(currentYear, 11, 31, 23, 59, 59).toISOString();
+    } else {
+      // Calculate based on standard ranges
+      const now = new Date();
+      const start = new Date();
+      if (range === "today") start.setHours(0, 0, 0, 0);
+      else if (range === "week") start.setDate(now.getDate() - 7);
+      else if (range === "month") start.setMonth(now.getMonth(), 1);
+      else if (range === "6months") start.setMonth(now.getMonth() - 6);
+      else start.setFullYear(currentYear, 0, 1); // fallback to year
+      
+      startDate = start.toISOString();
+      endDate = now.toISOString();
+    }
 
     const applyTenantFilter = <T extends { eq: (col: string, val: string) => T }>(query: T): T => {
       if (tenantId && tenantId !== "ALL") {
@@ -83,8 +102,8 @@ export async function getExecutiveStats(
         .from("deals")
         .select("status, deal_type, commission_amount, created_at")
         .eq("status", "CLOSED_WIN")
-        .gte("created_at", startOfYear)
-        .lte("created_at", endOfYear),
+        .gte("created_at", startDate)
+        .lte("created_at", endDate),
     );
 
   if (dealsError) {
@@ -98,8 +117,8 @@ export async function getExecutiveStats(
       .select("price, rental_price, status, updated_at")
       .in("status", ["SOLD", "RENTED"])
       .is("deleted_at", null)
-      .gte("updated_at", startOfYear)
-      .lte("updated_at", endOfYear),
+      .gte("updated_at", startDate)
+      .lte("updated_at", endDate),
   );
 
   if (propsError) {
@@ -158,6 +177,7 @@ export async function getExecutiveStats(
 export async function getMonthlyRevenueData(
   tenantId?: string | null,
   year?: number,
+  range: string = "year",
 ): Promise<MonthlyRevenue[]> {
   try {
     const supabase = await createClient();
@@ -231,8 +251,9 @@ export async function getMonthlyRevenueData(
 export async function getQuarterlyRevenueData(
   tenantId?: string | null,
   year?: number,
+  range: string = "year",
 ): Promise<QuarterlyRevenue[]> {
-  const monthlyData = await getMonthlyRevenueData(tenantId, year);
+  const monthlyData = await getMonthlyRevenueData(tenantId, year, range);
 
   const quarterlyData: QuarterlyRevenue[] = [
     { quarter: "Q1 (ม.ค.-มี.ค.)", sales: 0, rent: 0, total: 0 },

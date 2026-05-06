@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { addMonths } from "date-fns";
 import {
   requireAuthContext,
@@ -163,10 +163,26 @@ export async function createDealAction(input: CreateDealInput) {
         1,
         validated.deal_type,
       );
+
+      // 🔔 Notify Admins about the closed deal
+      try {
+        const { notifyAdminsAction } = await import("@/lib/actions/notifications");
+        await notifyAdminsAction({
+          type: "INFO",
+          title: "ปิดการขายสำเร็จ! 🏆",
+          message: `มีการปิดการขาย "${validated.deal_type === "SALE" ? "ขาย" : "เช่า"}" สำหรับทรัพย์สิน ID: ${validated.property_id}`,
+          link: `/protected/deals`,
+        });
+      } catch (notifyErr) {
+        console.error("Failed to notify admins of closed deal:", notifyErr);
+      }
     }
 
     revalidatePath(`/protected/leads/${validated.lead_id}`);
     revalidatePath("/protected/deals");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
     return { success: true, message: "สร้างดีลสำเร็จ", data };
   } catch (error: unknown) {
     if (error && typeof error === "object" && "code" in error && (error as { code: string }).code === "AUTHZ_ERROR") {
@@ -295,6 +311,19 @@ export async function updateDealAction(input: UpdateDealInput) {
           1,
           validated.deal_type || currentDeal.deal_type,
         );
+
+        // 🔔 Notify Admins about the newly closed deal
+        try {
+          const { notifyAdminsAction } = await import("@/lib/actions/notifications");
+          await notifyAdminsAction({
+            type: "INFO",
+            title: "ปิดการขายสำเร็จ! 🏆",
+            message: `มีการปิดการขาย "${currentDeal.deal_type === "SALE" ? "ขาย" : "เช่า"}" สำหรับทรัพย์สิน ID: ${nextPropertyId}`,
+            link: `/protected/deals`,
+          });
+        } catch (notifyErr) {
+          console.error("Failed to notify admins of closed deal:", notifyErr);
+        }
       } else if (isNoLongerWon) {
         await adjustPropertyStock(
           { supabase, tenantId },
@@ -306,6 +335,9 @@ export async function updateDealAction(input: UpdateDealInput) {
     }
 
     revalidatePath("/protected/deals");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
     return { success: true, message: "อัปเดตดีลสำเร็จ" };
   } catch (error: unknown) {
     if (error && typeof error === "object" && "code" in error && (error as { code: string }).code === "AUTHZ_ERROR") {
@@ -353,6 +385,9 @@ export async function deleteDealAction(dealId: string, leadId: string) {
 
     revalidatePath(`/protected/leads/${leadId}`);
     revalidatePath("/protected/deals");
+    revalidateTag("dashboard-stats", "seconds");
+    revalidateTag("dashboard-charts", "seconds");
+    revalidateTag("dashboard-performance", "seconds");
 
     return { success: true, message: "ลบดีลสำเร็จและปรับปรุงสต็อกคืนเรียบร้อย" };
   } catch (error: unknown) {

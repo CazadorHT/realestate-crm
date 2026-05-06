@@ -35,6 +35,21 @@ export async function getAgentKpiStats(
       tenantId = authTenantId;
     }
 
+    // Date Filtering based on timeframe
+    let startDate: string | null = null;
+    const now = new Date();
+    const start = new Date();
+    
+    if (timeframe === "month") start.setMonth(now.getMonth(), 1);
+    else if (timeframe === "quarter") start.setMonth(now.getMonth() - 3);
+    else if (timeframe === "year") start.setFullYear(now.getFullYear(), 0, 1);
+    else if (timeframe === "all") startDate = null;
+    else start.setMonth(now.getMonth(), 1); // default month
+    
+    if (timeframe !== "all") {
+      startDate = start.toISOString();
+    }
+
     const applyTenantFilter = <T extends any>(
       query: any,
     ) => {
@@ -83,22 +98,29 @@ export async function getAgentKpiStats(
 
     if (!agents || agents.length === 0) return [];
 
-    // Fetch all closed deals for calculating revenue
-    const { data: deals, error: dealsError } = await applyTenantFilter(
-      supabase
-        .from("deals")
-        .select("id, created_by, commission_amount, deal_type, status")
-        .eq("status", "CLOSED_WIN"),
-    );
+    // Step 3: Fetch all closed deals for calculating revenue
+    let dealsQuery = supabase
+      .from("deals")
+      .select("id, created_by, commission_amount, deal_type, status, created_at")
+      .eq("status", "CLOSED_WIN");
+    
+    dealsQuery = applyTenantFilter(dealsQuery);
+    if (startDate) {
+      dealsQuery = dealsQuery.gte("created_at", startDate);
+    }
+    const { data: deals, error: dealsError } = await dealsQuery;
 
     if (dealsError) {
       console.error("[getAgentKpiStats] Deals Error:", dealsError);
     }
 
     // Fetch assigned leads count for conversion rate
-    const { data: leads, error: leadsError } = await applyTenantFilter(
-      supabase.from("leads").select("id, assigned_to"),
-    );
+    let leadsQuery = supabase.from("leads").select("id, assigned_to, created_at");
+    leadsQuery = applyTenantFilter(leadsQuery);
+    if (startDate) {
+      leadsQuery = leadsQuery.gte("created_at", startDate);
+    }
+    const { data: leads, error: leadsError } = await leadsQuery;
 
     if (leadsError) {
       console.error("[getAgentKpiStats] Leads Error:", leadsError);

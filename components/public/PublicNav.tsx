@@ -418,8 +418,8 @@ export function PublicNav() {
                       </div>
                     ) : (
                       <DepositWizard
-                        onSuccess={() => setIsDepositSuccess(true)}
-                        onCancel={() => setIsDepositOpen(false)}
+                        onSuccessAction={() => setIsDepositSuccess(true)}
+                        onCancelAction={() => setIsDepositOpen(false)}
                         location="Navbar"
                         
                       />

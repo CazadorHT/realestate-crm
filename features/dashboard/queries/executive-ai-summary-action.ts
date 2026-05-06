@@ -1,53 +1,123 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { Database } from "@/lib/database.types";
 
-export async function getExecutiveWeeklyAISummaryAction(tenantId?: string | null) {
+type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
+type DealRow = Database["public"]["Tables"]["deals"]["Row"];
+type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+
+export interface AISummaryResult {
+  summary: string;
+  stats: {
+    totalLeads: number;
+    hotLeads: number;
+    dealsWon: number;
+    topSource: string;
+  };
+  isSample?: boolean;
+}
+
+export async function getExecutiveWeeklyAISummaryAction({
+  tenantId,
+  filters
+}: {
+  tenantId?: string | null;
+  filters?: {
+    branchId?: string | null;
+    teamId?: string | null;
+    agentId?: string | null;
+  };
+}): Promise<AISummaryResult> {
   try {
     const supabase = await createClient();
     const monthAgo = new Date();
     monthAgo.setDate(monthAgo.getDate() - 30);
     const monthAgoStr = monthAgo.toISOString();
 
-    const applyTenantFilter = (q: any) => {
-      if (tenantId && tenantId !== "ALL") {
-        return q.eq("tenant_id", tenantId);
+    const applyFilters = <T extends { eq: (col: string, val: string) => T; url: URL }>(q: T) => {
+      // 1. Branch Filter (Tenant)
+      const activeTenantId = filters?.branchId || tenantId;
+      if (activeTenantId && activeTenantId !== "ALL") {
+        q = q.eq("tenant_id", activeTenantId);
+      }
+
+      // 2. Agent Filter
+      if (filters?.agentId && filters.agentId !== "ALL") {
+        if (q.url.pathname.includes("leads")) {
+          q = q.eq("assigned_to", filters.agentId);
+        } else {
+          q = q.eq("created_by", filters.agentId);
+        }
+      }
+
+      return q;
+    };
+
+    // Special handling for Team Filter if present
+    let teamMemberIds: string[] = [];
+    if (filters?.teamId && filters.teamId !== "ALL") {
+      const { data: members } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("team_id", filters.teamId);
+      teamMemberIds = (members || []).map((m: { id: string }) => m.id);
+    }
+
+    const applyTeamFilter = <T extends { in: (col: string, vals: string[]) => T; url: URL }>(q: T) => {
+      if (teamMemberIds.length > 0) {
+        if (q.url.pathname.includes("leads")) {
+          return q.in("assigned_to", teamMemberIds);
+        } else {
+          return q.in("created_by", teamMemberIds);
+        }
       }
       return q;
     };
 
     // 1. Fetch Stats
     const [leadsRes, dealsRes, propertiesRes] = await Promise.all([
-      applyTenantFilter(supabase
-        .from("leads")
-        .select("utm_source, ai_score, created_at")
-        .gte("created_at", monthAgoStr)
-        .is("deleted_at", null)),
-      applyTenantFilter(supabase
-        .from("deals")
-        .select("status, deal_type, commission_amount, created_at")
-        .gte("created_at", monthAgoStr)
-        .is("deleted_at", null)),
-      applyTenantFilter(supabase
-        .from("properties")
-        .select("view_count, property_type")
-        .is("deleted_at", null)),
+      applyTeamFilter(
+        applyFilters(
+          supabase
+            .from("leads")
+            .select("utm_source, ai_score, created_at")
+            .gte("created_at", monthAgoStr)
+            .is("deleted_at", null),
+        ),
+      ),
+      applyTeamFilter(
+        applyFilters(
+          supabase
+            .from("deals")
+            .select("status, deal_type, commission_amount, created_at")
+            .gte("created_at", monthAgoStr)
+            .is("deleted_at", null),
+        ),
+      ),
+      applyTeamFilter(
+        applyFilters(
+          supabase
+            .from("properties")
+            .select("view_count, property_type")
+            .is("deleted_at", null),
+        ),
+      ),
     ]);
 
-
-    const leads = leadsRes.data || [];
-    const deals = dealsRes.data || [];
-    const props = propertiesRes.data || [];
+    const leads = (leadsRes.data || []) as Partial<LeadRow>[];
+    const deals = (dealsRes.data || []) as Partial<DealRow>[];
+    // const props = propertiesRes.data || []; // unused
 
     const totalLeads = leads.length;
-    const hotLeads = leads.filter((l: any) => (l.ai_score || 0) >= 80).length;
+    const hotLeads = leads.filter((l) => (l.ai_score || 0) >= 80).length;
     const dealsWon = deals.filter(
-      (d: any) => d.status === "CLOSED_WIN" || d.status === "SIGNED",
+      (d) => d.status === "CLOSED_WIN" || d.status === "SIGNED",
     ).length;
 
     // Aggregate UTMs
-    const utmMap = new Map();
-    leads.forEach((l: any) => {
+    const utmMap = new Map<string, number>();
+    leads.forEach((l) => {
       const s = l.utm_source || "Direct";
       utmMap.set(s, (utmMap.get(s) || 0) + 1);
     });
@@ -57,7 +127,8 @@ export async function getExecutiveWeeklyAISummaryAction(tenantId?: string | null
     // If no data, return a mock sample
     if (totalLeads === 0 && deals.length === 0) {
       return {
-        summary: "📊 [ข้อมูลตัวอย่างจำลอง - เนื่องจากคุณยังไม่มีข้อมูลจริงในระบบ]\n\nในรอบ 30 วันที่ผ่านมา ภาพรวมธุรกิจมีทิศทางที่เติบโตอย่างน่าสนใจ โดยเราได้ Lead ใหม่เข้ามาถึง 45 ราย ซึ่งในจำนวนนี้เป็น Hot Lead ที่ระบบประเมินว่ามีโอกาสปิดการขายสูงถึง 12 ราย\n\nในฝั่งของทีมขาย สามารถปิดดีลได้สำเร็จแล้ว 5 ดีล ซึ่งเป็นสัญญาณบวกของเดือนนี้\n\n💡 คำแนะนำเชิงกลยุทธ์จาก AI:\n- แพลตฟอร์ม Facebook ใช้งานได้ผลดีเยี่ยม นำลีดเข้ามาได้มากที่สุด ควรพิจารณาเพิ่มงบโฆษณาในส่วนนี้\n- ทีมเซลส์ควรให้ความสำคัญและเร่งเจรจากับกลุ่ม Hot Lead ทั้ง 12 ราย เพื่อเพิ่มยอดปิดการขายก่อนสิ้นเดือน",
+        summary:
+          "📊 [ข้อมูลตัวอย่างจำลอง - เนื่องจากคุณยังไม่มีข้อมูลจริงในระบบ]\n\nในรอบ 30 วันที่ผ่านมา ภาพรวมธุรกิจมีทิศทางที่เติบโตอย่างน่าสนใจ โดยเราได้ Lead ใหม่เข้ามาถึง 45 ราย ซึ่งในจำนวนนี้เป็น Hot Lead ที่ระบบประเมินว่ามีโอกาสปิดการขายสูงถึง 12 ราย\n\nในฝั่งของทีมขาย สามารถปิดดีลได้สำเร็จแล้ว 5 ดีล ซึ่งเป็นสัญญาณบวกของเดือนนี้\n\n💡 คำแนะนำเชิงกลยุทธ์จาก AI:\n- แพลตฟอร์ม Facebook ใช้งานได้ผลดีเยี่ยม นำลีดเข้ามาได้มากที่สุด ควรพิจารณาเพิ่มงบโฆษณาในส่วนนี้\n- ทีมเซลส์ควรให้ความสำคัญและเร่งเจรจากับกลุ่ม Hot Lead ทั้ง 12 ราย เพื่อเพิ่มยอดปิดการขายก่อนสิ้นเดือน",
         stats: {
           totalLeads: 45,
           hotLeads: 12,
@@ -70,9 +141,16 @@ export async function getExecutiveWeeklyAISummaryAction(tenantId?: string | null
 
     // 2. AI Generate Summary
     const { generateText } = await import("@/lib/ai/gemini");
+
+    let scopeText = "ภาพรวมบริษัท";
+    if (filters?.agentId && filters.agentId !== "ALL") scopeText = "ผลงานส่วนตัว";
+    else if (filters?.teamId && filters.teamId !== "ALL") scopeText = "ผลงานทีม";
+    else if (filters?.branchId && filters.branchId !== "ALL")
+      scopeText = "ผลงานสาขา";
+
     const prompt = `
     คุณเป็นผู้ช่วยวิเคราะห์ธุรกิจอสังหาริมทรัพย์ระดับสูง
-    สรุปผลการดำเนินงานในรอบ 30 วันที่ผ่านมาให้ผู้บริหารฟัง จากข้อมูลดังนี้:
+    สรุปผลการดำเนินงาน (${scopeText}) ในรอบ 30 วันที่ผ่านมาให้ฟัง จากข้อมูลดังนี้:
     - จำนวน Lead ใหม่: ${totalLeads} คน
     - จำนวน Hot Lead (คุณภาพสูง): ${hotLeads} คน
     - ดีลที่ปิดการขายได้สำเร็จ: ${dealsWon} ดีล

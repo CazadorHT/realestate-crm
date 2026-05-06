@@ -1,22 +1,34 @@
 import { createClient } from "@/lib/supabase/server";
 import { Notification, AgendaEvent } from "./types";
 import { formatTimeAgo } from "@/lib/utils";
+import { PostgrestFilterBuilder } from "@supabase/supabase-js";
+import { Database } from "@/lib/database.types";
+
+type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
+type DealRow = Database["public"]["Tables"]["deals"]["Row"];
+type AuditLogRow = Database["public"]["Tables"]["audit_logs"]["Row"];
+type ActivityRow = Database["public"]["Tables"]["lead_activities"]["Row"] & { leads: { full_name: string } | null };
+type ContractRow = Database["public"]["Tables"]["rental_contracts"]["Row"] & { deals: { property_id: string; properties: { title: string } | null } | null };
 
 export async function getRecentNotifications(
   preferences: Record<string, boolean> | null = null,
   tenantId?: string | null,
+  userId?: string,
 ): Promise<Notification[]> {
   try {
     const supabase = await createClient();
     const notifications: Notification[] = [];
-    
-    const applyTenantFilter = (query: any) => {
-      if (tenantId && tenantId !== "ALL") {
-        return query.eq("tenant_id", tenantId);
-      }
-      return query;
-    };
 
+    const applyFilters = <T extends { eq: (column: string, value: string) => T }>(query: T, customColumn?: string): T => {
+      let filteredQuery = query;
+      if (tenantId && tenantId !== "ALL") {
+        filteredQuery = filteredQuery.eq("tenant_id", tenantId) as unknown as T;
+      }
+      if (userId && userId !== "ALL") {
+        filteredQuery = filteredQuery.eq(customColumn || "user_id", userId) as unknown as T;
+      }
+      return filteredQuery;
+    };
 
     // Default true for legacy or unset preferences
     const checkPref = (id: string) => {
@@ -38,14 +50,15 @@ export async function getRecentNotifications(
       expiringContractsResult,
     ] = await Promise.all([
       // Website Leads
-      checkPref("new_lead")
-        ? applyTenantFilter(
+        checkPref("new_lead")
+        ? applyFilters(
             supabase
               .from("leads")
               .select("id, full_name, created_at, source")
               .eq("source", "WEBSITE")
               .gte("created_at", isoLimit)
               .order("created_at", { ascending: false }),
+            "assigned_to",
           )
         : Promise.resolve({ data: [] }),
 
@@ -57,17 +70,19 @@ export async function getRecentNotifications(
         .order("created_at", { ascending: false }),
 
       // Audit Logs (Status Updates, Price Drops, Logic Alerts)
-      applyTenantFilter(
+      applyFilters(
         supabase
           .from("audit_logs")
-          .select("id, action, created_at, metadata, user_id, entity, entity_id")
+          .select(
+            "id, action, created_at, metadata, user_id, entity, entity_id",
+          )
           .gte("created_at", isoLimit)
           .order("created_at", { ascending: false }),
       ),
 
       // Activities (New Activities)
       checkPref("activity")
-        ? applyTenantFilter(
+        ? applyFilters(
             supabase
               .from("lead_activities")
               .select(
@@ -75,6 +90,7 @@ export async function getRecentNotifications(
               )
               .gte("created_at", isoLimit)
               .order("created_at", { ascending: false }),
+            "created_by",
           )
         : Promise.resolve({ data: [] }),
 
@@ -83,7 +99,7 @@ export async function getRecentNotifications(
 
       // Contract Expiry - Check rental contracts expiring in next 30 days
       checkPref("contract_expiry")
-        ? applyTenantFilter(
+        ? applyFilters(
             supabase
               .from("rental_contracts")
               .select(
@@ -103,7 +119,7 @@ export async function getRecentNotifications(
     const recentActivities = activitiesResult.data || [];
 
     // 1. New Leads
-    recentLeads.forEach((lead: any) => {
+    (recentLeads as LeadRow[]).forEach((lead) => {
       notifications.push({
         id: `lead-${lead.id}`,
         message: `Lead ใหม่จากหน้าเว็บ: ${lead.full_name}`,
@@ -117,8 +133,8 @@ export async function getRecentNotifications(
     });
 
     // 2. Audit Logs
-    recentLogs.forEach((log: any) => {
-      const meta = log.metadata as any;
+    (recentLogs as AuditLogRow[]).forEach((log) => {
+      const meta = log.metadata as Record<string, any>;
       const timeStr = formatTimeAgo(log.created_at);
       const createdAt = new Date(log.created_at).getTime();
 
@@ -172,7 +188,7 @@ export async function getRecentNotifications(
     });
 
     // 3. New Activities
-    recentActivities.forEach((act: any) => {
+    (recentActivities as ActivityRow[]).forEach((act) => {
       notifications.push({
         id: `act-${act.id}`,
         message: `กิจกรรมใน Lead ${act.leads?.full_name}: ${act.activity_type}`,
@@ -186,7 +202,7 @@ export async function getRecentNotifications(
     });
 
     // 4. New Registrations (Profiles)
-    recentProfiles.forEach((profile: any) => {
+    (recentProfiles as (Database["public"]["Tables"]["profiles"]["Row"])[]).forEach((profile) => {
       notifications.push({
         id: `user-${profile.id}`,
         message: `สมาชิกใหม่: ${profile.full_name || profile.email}`,
@@ -201,7 +217,7 @@ export async function getRecentNotifications(
     const expiringContracts = expiringContractsResult.data || [];
     const now = new Date();
 
-    expiringContracts.forEach((contract: any) => {
+    (expiringContracts as ContractRow[]).forEach((contract) => {
       const endDate = new Date(contract.end_date);
       const daysUntilExpiry = Math.ceil(
         (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
@@ -225,37 +241,47 @@ export async function getRecentNotifications(
       }
     });
 
-    return notifications.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    return notifications.sort(
+      (a, b) => (b.createdAt || 0) - (a.createdAt || 0),
+    );
   } catch (error) {
     console.error("getRecentNotifications Error:", error);
     return [];
   }
 }
 
-export async function getTodayAgenda(tenantId?: string | null): Promise<AgendaEvent[]> {
+export async function getTodayAgenda(
+  tenantId?: string | null,
+  userId?: string,
+): Promise<AgendaEvent[]> {
   const supabase = await createClient();
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
   const todayIso = todayStart.toISOString();
 
-  const applyTenantFilter = (query: any) => {
+  const applyFilters = <T extends { eq: (column: string, value: string) => T }>(query: T, customColumn?: string): T => {
+    let filteredQuery = query;
     if (tenantId && tenantId !== "ALL") {
-      return query.eq("tenant_id", tenantId);
+      filteredQuery = filteredQuery.eq("tenant_id", tenantId) as unknown as T;
     }
-    return query;
+    if (userId && userId !== "ALL") {
+      filteredQuery = filteredQuery.eq(customColumn || "created_by", userId) as unknown as T;
+    }
+    return filteredQuery;
   };
 
   // 1. Fetch New Leads Today
-  const { data: newLeads } = await applyTenantFilter(
+  const { data: newLeads } = await applyFilters(
     supabase
       .from("leads")
       .select("id, full_name, created_at, lead_type")
       .gte("created_at", todayIso)
       .order("created_at", { ascending: false }),
+    "assigned_to",
   );
 
   // 2. Fetch New Deals Today
-  const { data: newDeals } = await applyTenantFilter(
+  const { data: newDeals } = await applyFilters(
     supabase
       .from("deals")
       .select("id, deal_type, created_at")
@@ -266,13 +292,13 @@ export async function getTodayAgenda(tenantId?: string | null): Promise<AgendaEv
   const agenda: AgendaEvent[] = [];
 
   // Map Leads to "Call" tasks
-  newLeads?.forEach((lead: any) => {
+  (newLeads as LeadRow[])?.forEach((lead) => {
     agenda.push({
       id: `lead-${lead.id}`,
-      time: new Date(lead.created_at).toLocaleTimeString("th-TH", {
+      time: lead.created_at ? new Date(lead.created_at).toLocaleTimeString("th-TH", {
         hour: "2-digit",
         minute: "2-digit",
-      }),
+      }) : "--:--",
       title: `ติดต่อลูกค้าใหม่: ${lead.full_name}`,
       type: "call",
       priority: "high",
@@ -280,13 +306,13 @@ export async function getTodayAgenda(tenantId?: string | null): Promise<AgendaEv
   });
 
   // Map Deals to "Meeting" or "Task"
-  newDeals?.forEach((deal: any) => {
+  (newDeals as DealRow[])?.forEach((deal) => {
     agenda.push({
       id: `deal-${deal.id}`,
-      time: new Date(deal.created_at).toLocaleTimeString("th-TH", {
+      time: deal.created_at ? new Date(deal.created_at).toLocaleTimeString("th-TH", {
         hour: "2-digit",
         minute: "2-digit",
-      }),
+      }) : "--:--",
       title: `ดำเนินการดีลใหม่ (${deal.deal_type})`,
       type: "meeting",
       priority: "medium",
@@ -296,3 +322,4 @@ export async function getTodayAgenda(tenantId?: string | null): Promise<AgendaEv
   // Sort by time desc
   return agenda.sort((a, b) => b.time.localeCompare(a.time));
 }
+

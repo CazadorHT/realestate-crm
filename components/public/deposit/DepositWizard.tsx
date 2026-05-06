@@ -14,12 +14,12 @@ import { DepositMobileView } from "./MobileView";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 export function DepositWizard({
-  onSuccess,
-  onCancel,
+  onSuccessAction,
+  onCancelAction,
   location = "Unknown",
 }: {
-  onSuccess: () => void;
-  onCancel: () => void;
+  onSuccessAction: () => void;
+  onCancelAction: () => void;
   location?: string;
 }) {
   const { t } = useLanguage();
@@ -52,12 +52,12 @@ export function DepositWizard({
       console.error("GTM Error:", e);
     }
   }, [location]);
- 
+
   // Capture Browser-level validation errors
   useEffect(() => {
     const wizard = wizardRef.current;
     if (!wizard) return;
- 
+
     const handleInvalid = (e: Event) => {
       const target = e.target as HTMLInputElement;
       console.log("GTM Debug: lead_form_error (Deposit Browser)", {
@@ -72,11 +72,11 @@ export function DepositWizard({
         });
       } catch (err) {}
     };
- 
+
     wizard.addEventListener("invalid", handleInvalid, true);
     return () => wizard.removeEventListener("invalid", handleInvalid, true);
   }, []);
- 
+
   // Capture Zod-level validation errors
   const onInvalid = (errors: any) => {
     const firstErrorField = Object.keys(errors)[0];
@@ -93,7 +93,7 @@ export function DepositWizard({
       });
     } catch (e) {}
   };
- 
+
   const handleFormStart = () => {
     if (!hasStartedRef.current) {
       console.log("GTM Debug: lead_form_start (Deposit) triggering");
@@ -116,7 +116,9 @@ export function DepositWizard({
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
       const next = currentStep + 1;
-      console.log(`GTM Debug: lead_form_step (Deposit) Step ${currentStep} -> ${next}`);
+      console.log(
+        `GTM Debug: lead_form_step (Deposit) Step ${currentStep} -> ${next}`,
+      );
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_STEP, {
           step: currentStep,
@@ -148,9 +150,11 @@ export function DepositWizard({
           });
         } catch (e) {}
         form.reset();
-        onSuccess();
+        onSuccessAction();
       } else {
-        console.log("GTM Debug: lead_form_error (Deposit Server Side)", { message: res.message });
+        console.log("GTM Debug: lead_form_error (Deposit Server Side)", {
+          message: res.message,
+        });
         toast.error(res.message || "เกิดข้อผิดพลาดในการส่งข้อมูล");
         try {
           pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
@@ -174,24 +178,24 @@ export function DepositWizard({
           currentStep={currentStep}
           totalSteps={totalSteps}
           isLoading={isLoading}
-          nextStep={nextStep}
-          prevStep={prevStep}
-          onCancel={onCancel}
-          onSubmit={onSubmit}
-          onInvalid={onInvalid}
-          onFormStart={handleFormStart}
+          nextStepAction={nextStep}
+          prevStepAction={prevStep}
+          onCancelAction={onCancelAction}
+          onSubmitAction={onSubmit}
+          onInvalidAction={onInvalid}
+          onFormStartAction={handleFormStart}
         />
         <DepositDesktopView
           form={form}
           currentStep={currentStep}
           totalSteps={totalSteps}
           isLoading={isLoading}
-          nextStep={nextStep}
-          prevStep={prevStep}
-          onCancel={onCancel}
-          onSubmit={onSubmit}
-          onInvalid={onInvalid}
-          onFormStart={handleFormStart}
+          nextStepAction={nextStep}
+          prevStepAction={prevStep}
+          onCancelAction={onCancelAction}
+          onSubmitAction={onSubmit}
+          onInvalidAction={onInvalid}
+          onFormStartAction={handleFormStart}
         />
       </div>
     </Form>

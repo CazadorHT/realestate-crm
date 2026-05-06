@@ -1,11 +1,30 @@
 import { createClient } from "@/lib/supabase/server";
 import { FollowUpLead, RiskDeal } from "./types";
+import { PostgrestFilterBuilder } from "@supabase/supabase-js";
 
-export async function getSetupProgress(tenantId?: string | null): Promise<{
+interface RawLead {
+  id: string;
+  full_name: string;
+  updated_at: string;
+  stage: string;
+}
+
+interface RawDeal {
+  id: string;
+  updated_at: string;
+  status: string;
+  properties: { title: string } | null;
+}
+
+export async function getSetupProgress(tenantId?: string | null, userId?: string): Promise<{
   hasBranchProfile: boolean;
   hasStaff: boolean;
   hasProperty: boolean;
+  hasLead: boolean;
+  hasPersonalProfile: boolean;
   isLineConnected: boolean;
+  isTikTokConnected: boolean;
+  isTelegramConnected: boolean;
   isLineSkipped: boolean;
   isStaffSkipped: boolean;
   branchCount: number;
@@ -13,16 +32,16 @@ export async function getSetupProgress(tenantId?: string | null): Promise<{
   try {
     const supabase = await createClient();
 
-    const applyTenantFilter = (query: any) => {
+    const applyTenantFilter = <T extends { eq: (column: string, value: string) => T }>(query: T): T => {
       if (tenantId && tenantId !== "ALL") {
-        return query.eq("tenant_id", tenantId);
+        return query.eq("tenant_id", tenantId) as unknown as T;
       }
       return query;
     };
 
     const { getSiteSettings } = await import("@/features/site-settings/actions");
 
-    const [staffRes, propRes, tenantRes, settings, profilesWithLine, invitationRes] =
+    const [staffRes, propRes, leadsRes, tenantRes, settings, profilesWithLine, invitationRes, personalProfile] =
       await Promise.all([
         applyTenantFilter(
           supabase
@@ -32,6 +51,12 @@ export async function getSetupProgress(tenantId?: string | null): Promise<{
         applyTenantFilter(
           supabase
             .from("properties")
+            .select("id", { count: "exact", head: true })
+            .is("deleted_at", null),
+        ),
+        applyTenantFilter(
+          supabase
+            .from("leads")
             .select("id", { count: "exact", head: true })
             .is("deleted_at", null),
         ),
@@ -52,11 +77,15 @@ export async function getSetupProgress(tenantId?: string | null): Promise<{
           .select("id", { count: "exact", head: true })
           .eq("tenant_id", tenantId || "")
           .eq("status", "PENDING"),
+        userId ? supabase.from("profiles").select("avatar_url, phone").eq("id", userId).single() : Promise.resolve({ data: null }),
       ]);
 
     const isLineConnected =
       !!settings.line_id ||
       (profilesWithLine.count || 0) > 0;
+
+    const isTikTokConnected = !!settings.tiktok_auth_token;
+    const isTelegramConnected = !!(personalProfile.data?.telegram_id || process.env.TELEGRAM_BOT_TOKEN);
 
     const invitationCount = invitationRes.count || 0;
 
@@ -64,7 +93,11 @@ export async function getSetupProgress(tenantId?: string | null): Promise<{
       hasBranchProfile: !!(tenantRes.data?.[0]?.name || tenantRes.data?.[0]?.logo_url),
       hasStaff: (staffRes.count || 0) > 1 || (invitationCount || 0) > 0,
       hasProperty: (propRes.count || 0) > 0,
+      hasLead: (leadsRes.count || 0) > 0,
+      hasPersonalProfile: !!(personalProfile.data?.avatar_url || personalProfile.data?.phone),
       isLineConnected,
+      isTikTokConnected,
+      isTelegramConnected,
       isLineSkipped: !!settings.onboarding_line_skipped,
       isStaffSkipped: !!settings.onboarding_staff_skipped,
       branchCount: tenantRes.count || 0,
@@ -75,7 +108,11 @@ export async function getSetupProgress(tenantId?: string | null): Promise<{
       hasBranchProfile: false,
       hasStaff: false,
       hasProperty: false,
+      hasLead: false,
+      hasPersonalProfile: false,
       isLineConnected: false,
+      isTikTokConnected: false,
+      isTelegramConnected: false,
       isLineSkipped: false,
       isStaffSkipped: false,
       branchCount: 0,
@@ -85,21 +122,26 @@ export async function getSetupProgress(tenantId?: string | null): Promise<{
 
 export async function getFollowUpLeads(
   tenantId?: string | null,
+  userId?: string,
 ): Promise<FollowUpLead[]> {
   const supabase = await createClient();
 
-  const applyTenantFilter = (query: any) => {
+  const applyFilters = <T extends { eq: (column: string, value: string) => T }>(query: T, customColumn?: string): T => {
+    let filteredQuery = query;
     if (tenantId && tenantId !== "ALL") {
-      return query.eq("tenant_id", tenantId);
+      filteredQuery = filteredQuery.eq("tenant_id", tenantId) as unknown as T;
     }
-    return query;
+    if (userId && userId !== "ALL") {
+      filteredQuery = filteredQuery.eq(customColumn || "assigned_to", userId) as unknown as T;
+    }
+    return filteredQuery;
   };
 
   const threeDaysAgo = new Date();
   threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
 
   // Fetch leads not updated in last 3 days and not closed
-  const { data: leads } = await applyTenantFilter(
+  const { data: leads } = await applyFilters(
     supabase
       .from("leads")
       .select("id, full_name, updated_at, stage")
@@ -110,7 +152,7 @@ export async function getFollowUpLeads(
 
   if (!leads) return [];
 
-  return leads.map((l: any) => {
+  return (leads as unknown as RawLead[]).map((l) => {
     const updated = new Date(l.updated_at);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - updated.getTime());
@@ -125,21 +167,28 @@ export async function getFollowUpLeads(
   });
 }
 
-export async function getRiskDeals(tenantId?: string | null): Promise<RiskDeal[]> {
+export async function getRiskDeals(
+  tenantId?: string | null,
+  userId?: string,
+): Promise<RiskDeal[]> {
   try {
     const supabase = await createClient();
 
-    const applyTenantFilter = (query: any) => {
+    const applyFilters = <T extends { eq: (column: string, value: string) => T }>(query: T): T => {
+      let filteredQuery = query;
       if (tenantId && tenantId !== "ALL") {
-        return query.eq("tenant_id", tenantId);
+        filteredQuery = filteredQuery.eq("tenant_id", tenantId) as unknown as T;
       }
-      return query;
+      if (userId && userId !== "ALL") {
+        filteredQuery = filteredQuery.eq("created_by", userId) as unknown as T;
+      }
+      return filteredQuery;
     };
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const { data: deals } = await applyTenantFilter(
+    const { data: deals } = await applyFilters(
       supabase
         .from("deals")
         .select("id, updated_at, status, properties(title)")
@@ -151,7 +200,7 @@ export async function getRiskDeals(tenantId?: string | null): Promise<RiskDeal[]
 
     if (!deals) return [];
 
-    return deals.map((d: any) => {
+    return (deals as unknown as RawDeal[]).map((d) => {
       const updated = new Date(d.updated_at);
       const now = new Date();
       const diffTime = Math.abs(now.getTime() - updated.getTime());

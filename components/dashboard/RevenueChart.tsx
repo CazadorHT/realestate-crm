@@ -19,119 +19,35 @@ import {
 import { useState, useEffect } from "react";
 import type { RevenueChartData } from "@/features/dashboard/queries";
 
+import { DashboardEmptyState } from "./DashboardEmptyState";
+import { Wallet } from "lucide-react";
+
 interface RevenueChartProps {
-  initialData: RevenueChartData[];
+  data: RevenueChartData[];
 }
 
-export function RevenueChart({ initialData }: RevenueChartProps) {
-  const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState<string>("6months");
-  const [data, setData] = useState<RevenueChartData[]>(initialData);
-  const [loading, setLoading] = useState(false);
+export function RevenueChart({ data }: RevenueChartProps) {
   const [mounted, setMounted] = useState(false);
-
-  // Generate year options (current year and 2 years back)
-  const yearOptions = Array.from({ length: 3 }, (_, i) => currentYear - i);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const res = await fetch(`/api/dashboard/revenue?year=${selectedYear}`);
-        if (res.ok) {
-          const result = await res.json();
-          setData(result.data || []);
-        }
-      } catch (error) {
-        console.error("Failed to fetch revenue data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (selectedYear !== "6months") {
-      fetchData();
-    } else {
-      setData(initialData);
-    }
-  }, [selectedYear, initialData]);
-
-  const title =
-    selectedYear === "all"
-      ? "รายได้ทั้งหมด (แบ่งตามปี)"
-      : selectedYear === "month"
-        ? "รายได้เดือนนี้"
-        : selectedYear === "6months"
-          ? "รายได้ 6 เดือนล่าสุด"
-          : selectedYear === "year"
-            ? `รายได้ปี ${currentYear}`
-            : `รายได้ปี ${selectedYear}`;
+  if (!data || data.length === 0 || data.every((d) => d.total === 0)) {
+    return (
+      <DashboardEmptyState
+        icon={Wallet}
+        title="ยังไม่มีข้อมูลรายได้"
+        description="ไม่พบข้อมูลยอดขายหรือเช่าที่ปิดงานได้ในช่วงเวลานี้ ข้อมูลจะแสดงเมื่อมีการบันทึกดีลสำเร็จ"
+      />
+    );
+  }
 
   return (
-    <Card className="shadow-lg border-none bg-white overflow-hidden group h-full flex flex-col ">
-      <CardHeader className="pb-2 shrink-0">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <CardTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
-              {title}
-            </CardTitle>
-            <p className="text-xs text-slate-500 font-medium ml-3.5">
-              แสดงข้อมูลรายได้ตามช่วงเวลาที่กำหนด
-            </p>
-          </div>
-          <Select value={selectedYear} onValueChange={setSelectedYear}>
-            <SelectTrigger className="w-full sm:w-40 h-10 rounded-xl bg-slate-50 border-slate-200 font-semibold focus:ring-blue-500">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="rounded-xl shadow-xl border-slate-100">
-              <SelectItem value="month" className="rounded-lg">
-                เดือนนี้
-              </SelectItem>
-              <SelectItem value="6months" className="rounded-lg">
-                6 เดือนล่าสุด
-              </SelectItem>
-              <SelectItem value="year" className="rounded-lg">
-                ปีนี้
-              </SelectItem>
-              {yearOptions.map((year) => (
-                <SelectItem
-                  key={year}
-                  value={year.toString()}
-                  className="rounded-lg"
-                >
-                  ปี {year}
-                </SelectItem>
-              ))}
-              <SelectItem value="all" className="rounded-lg">
-                ทั้งหมด
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-4 pb-6 sm:pb-8">
-        <div className="h-[280px] w-full relative">
-          {loading && (
-            <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] flex items-center justify-center z-10 rounded-xl">
-              <div className="animate-spin rounded-full h-10 w-10 border-4 border-blue-600 border-t-transparent shadow-lg"></div>
-            </div>
-          )}
-          {!data || data.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-              <p className="text-slate-400 text-sm font-medium">
-                ไม่มีข้อมูลรายได้ในช่วงนี้
-              </p>
-            </div>
-          ) : mounted ? (
-            <ResponsiveContainer
-              width="99%"
-              height={280}
-            >
+    <div className="h-[300px] w-full relative">
+      <div className="h-[280px] w-full relative">
+          {mounted ? (
+            <ResponsiveContainer width="99%" height={280}>
               <BarChart
                 data={data}
                 margin={{ top: 10, right: 10, left: 10, bottom: 25 }}
@@ -189,7 +105,7 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
                   dataKey="total"
                   fill="url(#revenueBarGradient)"
                   radius={[6, 6, 0, 0]}
-                  barSize={data.length > 7 ? 20 : 35}
+                  barSize={data.length > 15 ? 12 : data.length > 7 ? 20 : 35}
                   animationDuration={1000}
                   animationEasing="ease-out"
                 />
@@ -199,7 +115,6 @@ export function RevenueChart({ initialData }: RevenueChartProps) {
             <div className="h-full w-full" />
           )}
         </div>
-      </CardContent>
-    </Card>
+    </div>
   );
 }

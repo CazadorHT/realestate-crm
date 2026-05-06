@@ -14,11 +14,16 @@ const getBaseUrl = () => {
   return "https://realestate-crm-rho.vercel.app";
 };
 
+const isDev = process.env.NODE_ENV === "development";
+const siteUrl = isDev 
+  ? "http://localhost:3000" 
+  : getBaseUrl();
+
 export const siteConfig = {
   name: "VC Connect Asset",
   company: "VC Connect Asset Co., Ltd.",
   description: "ระบบจัดการอสังหาริมทรัพย์และพอร์ทัลประกาศขาย-เช่า",
-  url: getBaseUrl(),
+  url: siteUrl,
   logo: "/images/branding/vcc-asset/logo-dark.svg",
   logoDark: "/images/branding/vcc-asset/logo-light.svg",
   brandCard: "/images/branding/vcc-asset/favicon-animated-light.svg",

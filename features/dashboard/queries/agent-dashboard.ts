@@ -106,10 +106,12 @@ export async function getAgentDashboardStats(): Promise<AgentDashboardStats> {
   };
 }
 
-export async function getAgentTasks(): Promise<AgentTask[]> {
+export async function getAgentTasks(targetUserId?: string): Promise<AgentTask[]> {
   const supabase = await createClient();
   const profile = await getCurrentProfile();
   if (!profile) return [];
+
+  const effectiveUserId = targetUserId || profile.id;
 
   const threeDaysAgo = subDays(new Date(), 3).toISOString();
   const thirtyDaysFromNow = addDays(new Date(), 30).toISOString();
@@ -140,7 +142,7 @@ export async function getAgentTasks(): Promise<AgentTask[]> {
     supabase
       .from("leads")
       .select("id, full_name, updated_at, stage, phone, line_id, ai_score")
-      .eq("assigned_to", profile.id)
+      .eq("assigned_to", effectiveUserId)
       .neq("stage", "CLOSED")
       .lte("updated_at", threeDaysAgo)
       .order("ai_score", { ascending: false })
@@ -156,7 +158,7 @@ export async function getAgentTasks(): Promise<AgentTask[]> {
           property:properties (title)
         )
       `)
-      .eq("deal.created_by", profile.id)
+      .eq("deal.created_by", effectiveUserId)
       .eq("status", "ACTIVE")
       .lte("end_date", thirtyDaysFromNow)
       .gte("end_date", new Date().toISOString())

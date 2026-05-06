@@ -9,11 +9,14 @@ import type { FollowUpLead } from "@/features/dashboard/queries";
 
 interface FollowUpInsightsProps {
   leads?: FollowUpLead[];
+  role?: string;
+  view?: string;
 }
 
-export function FollowUpInsights({ leads = [] }: FollowUpInsightsProps) {
+export function FollowUpInsights({ leads = [], role, view = "personal" }: FollowUpInsightsProps) {
   const router = useRouter();
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
+  const isAdminView = (role === "ADMIN" || role === "MANAGER") && view !== "personal";
   return (
     <Card className="shadow-sm h-full border-orange-200 bg-orange-50/50">
       <CardHeader className="pb-2 px-4 sm:px-6">
@@ -43,6 +46,11 @@ export function FollowUpInsights({ leads = [] }: FollowUpInsightsProps) {
                     <span className="text-xs text-red-500 font-medium">
                       หายไป {lead.daysQuiet} วัน
                     </span>
+                    {isAdminView && (
+                      <span className="text-[10px] text-slate-400 font-bold ml-1">
+                        • โดย: Agent 01
+                      </span>
+                    )}
                   </div>
                 </div>
                 <Button

@@ -35,13 +35,33 @@ export function useNotifications() {
   const tenantId = activeTenant?.id === "ALL" ? undefined : activeTenant?.id;
   const lastStatusRef = useRef(status);
 
-  const fetchNotifications = async () => {
+  const lastFetchRef = useRef<number>(0);
+  const FETCH_THROTTLE = 3000; // 3 seconds
+
+  const fetchNotifications = async (force = false) => {
+    const now = Date.now();
+    if (!force && now - lastFetchRef.current < FETCH_THROTTLE) {
+      console.log("[useNotifications] Skipping fetch due to throttle");
+      return;
+    }
+    
+    lastFetchRef.current = now;
+    
     try {
       const data = await getNotificationsAction(tenantId);
-      setNotifications(data as DBNotification[]);
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-      toast.error("ไม่สามารถโหลดการแจ้งเตือนได้");
+      if (Array.isArray(data)) {
+        setNotifications(data as DBNotification[]);
+      }
+    } catch (error: any) {
+      // Avoid logging full Error objects in production-like environments if they are too verbose
+      const errorMessage = error?.message || "Unknown error";
+      const isTimeout = errorMessage.includes("Timeout") || error?.code === "UND_ERR_CONNECT_TIMEOUT";
+      console.error(isTimeout ? "Notification fetch timed out (Server)" : "Failed to fetch notifications:", errorMessage);
+      
+      // Only toast on manual refreshes or non-timeout errors to reduce noise
+      if (force && !isTimeout) {
+        toast.error("ไม่สามารถโหลดการแจ้งเตือนได้");
+      }
     } finally {
       setLoading(false);
     }

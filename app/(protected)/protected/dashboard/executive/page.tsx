@@ -13,12 +13,13 @@ import { getTenantsAction } from "@/lib/actions/tenant-management";
 export default async function ExecutiveDashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tenantId?: string; compareId?: string }>;
+  searchParams: Promise<{ tenantId?: string; compareId?: string; range?: string }>;
 }) {
   const { role, tenantId: authTenantId } = await requireAuthContext();
   assertAdminOrManager(role);
 
   const awaitedParams = await searchParams;
+  const range = (awaitedParams.range as string) || "month";
   
   // SECURITY: Only ADMIN can spoof or view other tenants' data.
   // Others are STRICTLY locked to their own authTenantId.
@@ -38,11 +39,11 @@ export default async function ExecutiveDashboardPage({
   // Fetch primary data in parallel
   const [stats, monthlyData, quarterlyData, agentStats, topAgents, setupProgress, forecastData] =
     await Promise.all([
-      getExecutiveStats(selectedTenantId, year),
-      getMonthlyRevenueData(selectedTenantId, year),
-      getQuarterlyRevenueData(selectedTenantId, year),
-      getAgentKpiStats(selectedTenantId),
-      getAdvancedTopAgents(selectedTenantId),
+      getExecutiveStats(selectedTenantId, year, range),
+      getMonthlyRevenueData(selectedTenantId, year, range),
+      getQuarterlyRevenueData(selectedTenantId, year, range),
+      getAgentKpiStats(selectedTenantId, undefined, (range === "year" || range === "month" || range === "quarter") ? range as any : "month"),
+      getAdvancedTopAgents({ tenantId: selectedTenantId, range }),
       getSetupProgress(selectedTenantId === "ALL" ? "" : selectedTenantId),
       import("@/features/analytics/market-intelligence").then(m => m.getRevenueForecastAction())
     ]);

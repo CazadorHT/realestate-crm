@@ -50,6 +50,21 @@ export async function bulkDeleteLeadsAction(
     );
 
     revalidatePath("/protected/leads");
+ 
+    // 🔔 Notify Admins about bulk lead deletion
+    if (count && count > 5) {
+      try {
+        const { notifyAdminsAction } = await import("@/lib/actions/notifications");
+        await notifyAdminsAction({
+          type: "WARNING",
+          title: "มีการลบรายชื่อลูกค้าจำนวนมาก ⚠️",
+          message: `ผู้ใช้ ${user.id} ได้ลบรายชื่อลูกค้า (Leads) ออกจากระบบจำนวน ${count} รายการ`,
+          link: "/protected/leads",
+        });
+      } catch (notifyErr) {
+        console.error("Failed to notify admins of bulk lead delete:", notifyErr);
+      }
+    }
 
     return {
       success: true,

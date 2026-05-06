@@ -96,6 +96,19 @@ export const onLeadCreated = inngest.createFunction(
             { chatId: agent.telegram_id },
           );
         }
+
+        // 🔔 Notify all admins via App Bell
+        try {
+          const { notifyAdminsAction } = await import("@/lib/actions/notifications");
+          await notifyAdminsAction({
+            type: "INFO",
+            title: "AI พบคู่ที่ใช่สำหรับลูกค้า! 🎯",
+            message: `ลีด "${lead.full_name}" มีทรัพย์สินที่ตรงความต้องการถึง ${matches.length} รายการ (AI Smart Match)`,
+            link: `/protected/leads/${leadId}`,
+          });
+        } catch (notifyErr) {
+          console.error("Failed to notify admins of AI match:", notifyErr);
+        }
       });
     }
 

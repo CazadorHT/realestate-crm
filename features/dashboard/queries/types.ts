@@ -20,6 +20,8 @@ export type TopAgent = {
   avatar_url: string | null;
   deals_count: number;
   total_commission: number;
+  branch_name?: string | null;
+  team_name?: string | null;
 };
 
 export type RevenueChartData = {

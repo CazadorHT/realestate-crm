@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Bar,
   BarChart,
@@ -12,10 +11,34 @@ import {
   Cell,
 } from "recharts";
 import type { FunnelData } from "@/features/dashboard/queries";
+import {
+  Tooltip as ShcnTooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+import { DashboardEmptyState } from "./DashboardEmptyState";
+import { BarChart3 } from "lucide-react";
 
 interface FunnelChartProps {
   data: FunnelData[];
 }
+
+const stepTranslation: Record<string, string> = {
+  "Leads": "ลีดใหม่",
+  "Lead": "ลีดใหม่",
+  "Contacted": "ติดต่อแล้ว",
+  "Contact": "ติดต่อแล้ว",
+  "Interested": "สนใจ/นัดชม",
+  "Viewed": "นัดชม/พาชม",
+  "Viewing": "พาชมทรัพย์",
+  "Negotiating": "เจรจาต่อรอง",
+  "Negotiation": "เจรจาต่อรอง",
+  "Closed Won": "ปิดการขาย",
+  "Closed": "ปิดการขาย",
+  "Won": "ปิดการขาย",
+};
 
 export function FunnelChart({ data }: FunnelChartProps) {
   const [mounted, setMounted] = React.useState(false);
@@ -24,97 +47,105 @@ export function FunnelChart({ data }: FunnelChartProps) {
     setMounted(true);
   }, []);
 
+  if (!data || data.length === 0 || data.every((d) => d.count === 0)) {
+    return (
+      <DashboardEmptyState
+        icon={BarChart3}
+        title="ยังไม่มีกิจกรรมในระบบ"
+        description="ไม่พบข้อมูลลีดหรือความคืบหน้าในช่วงเวลานี้ ข้อมูลจะแสดงเมื่อมีการเพิ่มลีดหรือเปลี่ยนสถานะงาน"
+      />
+    );
+  }
+
   return (
-    <Card className="shadow-sm h-full">
-      <CardHeader>
-        <CardTitle className="text-base">ช่องทางการขาย (Funnel)</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {data.every((d) => d.count === 0) ? (
-          <div className="h-[250px] w-full flex items-center justify-center text-sm text-muted-foreground bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-            ไม่มีข้อมูลการขายในขณะนี้
-          </div>
+    <div className="h-[320px] w-full flex gap-4 relative">
+        <div className="flex-1 min-w-0">
+                {mounted ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              layout="vertical"
+              margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+            >
+              <XAxis type="number" hide />
+              <YAxis
+                dataKey="step"
+                type="category"
+                width={85}
+                tickFormatter={(value) => stepTranslation[value] || value}
+                tick={{ fontSize: 11, fill: "#64748b", fontWeight: 500 }}
+                axisLine={false}
+                tickLine={false}
+                interval={0}
+              />
+              <Tooltip
+                cursor={{ fill: "rgba(0,0,0,0.02)" }}
+                contentStyle={{
+                  borderRadius: "16px",
+                  border: "none",
+                  boxShadow: "0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)",
+                  padding: "12px",
+                }}
+                formatter={(value: any, name: any, props: any) => [
+                  <span className="font-black text-indigo-600">{value} รายการ</span>,
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{stepTranslation[props.payload.step] || props.payload.step}</span>,
+                ]}
+              />
+              <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={28}>
+                {data.map((entry, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={entry.fill}
+                    fillOpacity={0.9}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
         ) : (
-          <div className="h-[250px] w-full flex gap-2">
-            <div className="flex-1 min-w-0">
-              {mounted ? (
-                <ResponsiveContainer
-                  width="99%"
-                  height={250}
-                >
-                  <BarChart
-                    data={data}
-                    layout="vertical"
-                    margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-                  >
-                    <XAxis type="number" hide />
-                    <YAxis
-                      dataKey="step"
-                      type="category"
-                      width={80}
-                      tick={{ fontSize: 10, fill: "#64748b" }}
-                      axisLine={false}
-                      tickLine={false}
-                      interval={0}
-                    />
-                    <Tooltip
-                      cursor={{ fill: "rgba(0,0,0,0.02)" }}
-                      contentStyle={{
-                        borderRadius: "8px",
-                        border: "none",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
-                      formatter={(value: any) => [
-                        <span className="font-bold">{value} รายการ</span>,
-                        "จำนวน",
-                      ]}
-                    />
-                    <Bar dataKey="count" radius={[0, 6, 6, 0]} barSize={20}>
-                      {data.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={entry.fill}
-                          fillOpacity={0.8}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full w-full" />
-              )}
-            </div>
-
-            {/* Drop-off Stats */}
-            <div className="w-[85px] shrink-0 flex flex-col justify-center space-y-4 pr-1 border-l border-slate-100 pl-2">
-              {data.map((step, index) => {
-                if (index === 0) return null;
-                const prev = data[index - 1];
-                const drop = prev.count - step.count;
-                const dropRate =
-                  prev.count > 0 ? Math.round((drop / prev.count) * 100) : 0;
-
-                if (dropRate <= 0)
-                  return <div key={step.step} className="h-8" />;
-
-                return (
-                  <div
-                    key={step.step}
-                    className="text-[9px] text-muted-foreground flex flex-col items-end py-1"
-                  >
-                    <span className="font-bold text-rose-500 bg-rose-50 px-1 rounded">
-                      -{dropRate}%
-                    </span>
-                    <span className="opacity-60 text-[8px] truncate max-w-full">
-                      ↓ {step.step}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <div className="h-full w-full" />
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Drop-off Stats - สถิติการหลุดออก */}
+      <div className="w-[100px] shrink-0 flex flex-col justify-around py-4 pr-1 border-l border-slate-100 pl-4 bg-slate-50/30 rounded-r-2xl">
+        {data.map((step, index) => {
+          if (index === 0) return null;
+          const prev = data[index - 1];
+          const drop = prev.count - step.count;
+          const dropRate =
+            prev.count > 0 ? Math.round((drop / prev.count) * 100) : 0;
+
+          if (dropRate <= 0)
+            return <div key={step.step} className="flex-1" />;
+
+          return (
+            <div
+              key={step.step}
+              className="text-[10px] text-muted-foreground flex flex-col items-end py-1 animate-in fade-in slide-in-from-right-2 duration-500"
+            >
+              <TooltipProvider>
+                <ShcnTooltip>
+                  <TooltipTrigger asChild>
+                    <div className="flex flex-col items-end cursor-help">
+                      <span className="font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-100">
+                        -{dropRate}%
+                      </span>
+                      <span className="opacity-70 text-[9px] mt-1 font-medium truncate max-w-full text-right">
+                        ↓ {stepTranslation[step.step] || step.step}
+                      </span>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="bg-rose-900 text-white border-rose-800">
+                    <p className="font-bold text-rose-100">อัตราการหลุดออก (Drop-off)</p>
+                    <p className="text-[10px] opacity-80">มีลูกค้า {drop} ราย ไม่ได้ไปต่อในขั้นตอนนี้</p>
+                  </TooltipContent>
+                </ShcnTooltip>
+              </TooltipProvider>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }

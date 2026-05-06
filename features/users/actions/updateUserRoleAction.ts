@@ -43,6 +43,19 @@ export async function updateUserRoleAction(
       metadata: { newRole },
     });
 
+    // 🔔 Notify Admins about the role change
+    try {
+      const { notifyAdminsAction } = await import("@/lib/actions/notifications");
+      await notifyAdminsAction({
+        type: "SYSTEM",
+        title: "มีการเปลี่ยนสิทธิ์ผู้ใช้งาน 🛡️",
+        message: `ผู้ใช้ ID: ${userId} ถูกเปลี่ยนบทบาทเป็น ${newRole}`,
+        link: "/protected/settings/users",
+      });
+    } catch (notifyErr) {
+      console.error("Failed to notify admins of role change:", notifyErr);
+    }
+
     revalidatePath("/protected/settings/users");
     return { success: true };
   } catch (err) {
