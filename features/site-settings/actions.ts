@@ -129,6 +129,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   meta_page_access_token: "",
   line_channel_access_token: "",
   meta_page_name: "",
+  facebook_app_id: "",
 };
 
 /**
@@ -183,7 +184,8 @@ async function getSiteSettingsInternal(): Promise<SiteSettings> {
         "contact_phone", "contact_email", "contact_address",
         "google_maps_url", "facebook_url", "instagram_url", "line_url", "tiktok_url",
         "line_id", "logo_light", "logo_dark", "favicon",
-        "google_tag_manager_id", "meta_page_access_token", "line_channel_access_token", "meta_page_name"
+        "google_tag_manager_id", "meta_page_access_token", "line_channel_access_token", "meta_page_name",
+        "facebook_app_id"
       ];
 
       if (key.includes("_post_template") || stringKeys.includes(key)) {

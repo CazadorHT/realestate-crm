@@ -82,6 +82,7 @@ export const siteConfig = {
     tiktokTerms: "OWiapI7Ko87ppBWuO7psFBTnEpxggyIk", // /terms
     tiktokPrivacy: "4jTLp4VRupfxpoJNzW7uVkA5dL0SXWTX", // /privacy-policy
     google: "", // Google Search Console verification (if needed)
+    facebookAppId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "", // Facebook App ID for Open Graph
   },
 };
 

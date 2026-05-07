@@ -89,6 +89,9 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: {
       icon: settings.favicon || "/favicon.ico",
     },
+    facebook: {
+      appId: settings.facebook_app_id || siteConfig.verificationTokens.facebookAppId || "",
+    },
   };
 }
 
