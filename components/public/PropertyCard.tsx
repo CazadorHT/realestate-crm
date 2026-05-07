@@ -260,7 +260,7 @@ function PropertyCardComponent({
       ref={cardRef} 
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[360px] md:max-w-none mx-auto bg-white shadow-md h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10 cursor-pointer"
+      className="group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[360px] md:max-w-none mx-auto bg-white shadow-md h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10"
     >
       <style jsx global>{`
         @keyframes fire-flicker {
@@ -284,13 +284,9 @@ function PropertyCardComponent({
           </div>
         </div>
       )}
-      <Link
-        href={`/properties/${property.slug || property.id}`}
-        prefetch={false}
-        className="flex flex-col h-full focus:outline-none overflow-hidden rounded-2xl sm:rounded-2xl md:rounded-3xl"
-        aria-label={`${t("common.view_all")} ${property.title}`}
-        onClick={handleCardClick}
-      >
+
+      {/* Main Image Area - Interactive but not a button/link itself (contains buttons) */}
+      <div className="relative overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl">
         <PropertyCardImage
           property={property}
           priority={priority}
@@ -301,20 +297,43 @@ function PropertyCardComponent({
           comparisonBadges={comparisonBadges}
           areaProvince={areaProvince}
         />
-        <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 mt-2 sm:mt-2 md:mt-3 gap-y-2 sm:gap-y-2 md:gap-y-3 grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col">
+        {/* Overlay Link for the Image Area */}
+        <Link 
+          href={`/properties/${property.slug || property.id}`}
+          className="absolute inset-0 z-10"
+          aria-label={`${t("common.view_all")} ${property.title}`}
+          onClick={handleCardClick}
+        />
+      </div>
+
+      <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 mt-2 sm:mt-2 md:mt-3 gap-y-2 sm:gap-y-2 md:gap-y-3 grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col relative">
+        {/* Title & Info Link Wrapper */}
+        <Link 
+          href={`/properties/${property.slug || property.id}`}
+          className="block group-hover:text-blue-600 transition-colors"
+          onClick={handleCardClick}
+        >
           <PropertyCardInfo property={property} areaProvince={areaProvince} />
-          <PropertyCardSpecs property={property} />
-          <PropertyCardFeatures features={property.features} />
-          <button
-            onClick={handleCompareClick}
-            className={`mt-3 flex items-center gap-1.5 text-xs font-medium transition-all duration-200 ${isInCompare ? "text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
-          >
-            {isInCompare ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
-            {t("common.compare")}
-          </button>
-        </div>
+        </Link>
+        
+        <PropertyCardSpecs property={property} />
+        <PropertyCardFeatures features={property.features} />
+        
+        {/* Compare Action - Outside of main links */}
+        <button
+          onClick={handleCompareClick}
+          aria-label={`${isInCompare ? t("common.compare") : t("common.compare")} ${property.title}`}
+          className={`mt-3 flex items-center gap-1.5 text-xs font-medium transition-all duration-200 z-20 w-fit ${isInCompare ? "text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
+        >
+          {isInCompare ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
+          {t("common.compare")}
+        </button>
+      </div>
+
+      {/* Footer - Contains potential separate links/actions */}
+      <div className="relative z-20">
         <PropertyCardFooter property={property} variant={footerVariant || property.footerVariant} />
-      </Link>
+      </div>
     </div>
   );
 }

@@ -289,8 +289,8 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                               className="absolute -top-4 md:-top-7 left-0 flex items-center gap-2 group/sup cursor-pointer"
                             >
                               <span className={cn(
-                                "text-[10px] md:text-xs font-black tracking-[0.3em] text-blue-400/40 uppercase transition-all duration-500 origin-left italic",
-                                isNextHovered ? "text-blue-500 tracking-[0.5em] scale-110" : "group-hover/sup:text-blue-500 group-hover/sup:tracking-[0.5em] group-hover/sup:scale-110"
+                                "text-[10px] md:text-xs font-black tracking-[0.3em] text-blue-600/70 uppercase transition-all duration-500 origin-left italic",
+                                isNextHovered ? "text-blue-600 tracking-[0.5em] scale-110" : "group-hover/sup:text-blue-600 group-hover/sup:tracking-[0.5em] group-hover/sup:scale-110"
                               )}>
                                 {t("home.popular_areas.next_label")}: {nextDisplay}
                               </span>

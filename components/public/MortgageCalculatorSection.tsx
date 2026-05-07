@@ -110,13 +110,15 @@ export function MortgageCalculatorSection() {
               {/* Input Groups */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="text-sm font-medium text-slate-600">
+                  <label htmlFor="property-price-slider" className="text-sm font-medium text-slate-600">
                     {t("home.mortgage.property_price")}
                   </label>
                   <div className="text-xl font-bold text-blue-600">
                     {propertyPrice.toLocaleString()} {t("common.baht")}
                   </div>
                   <Slider
+                    id="property-price-slider"
+                    aria-label={t("home.mortgage.property_price")}
                     value={[propertyPrice]}
                     min={1000000}
                     max={20000000}
@@ -125,13 +127,15 @@ export function MortgageCalculatorSection() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <label className="text-sm font-medium text-slate-600">
+                  <label htmlFor="down-payment-slider" className="text-sm font-medium text-slate-600">
                     {t("home.mortgage.down_payment")} ({downPaymentPercent}%)
                   </label>
                   <div className="text-xl font-bold text-slate-900">
                     {formatCurrency(downPaymentAmount)}
                   </div>
                   <Slider
+                    id="down-payment-slider"
+                    aria-label={t("home.mortgage.down_payment")}
                     value={[downPaymentPercent]}
                     min={0}
                     max={50}
@@ -143,10 +147,11 @@ export function MortgageCalculatorSection() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-500">
+                  <label htmlFor="interest-rate" className="text-xs font-medium text-slate-500">
                     {t("home.mortgage.interest_rate")}
                   </label>
                   <input
+                    id="interest-rate"
                     type="number"
                     value={interestRate}
                     onChange={(e) => setInterestRate(Number(e.target.value))}
@@ -154,10 +159,11 @@ export function MortgageCalculatorSection() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-slate-500">
+                  <label htmlFor="term-years" className="text-xs font-medium text-slate-500">
                     {t("home.mortgage.period")}
                   </label>
                   <select
+                    id="term-years"
                     value={termYears}
                     onChange={(e) => setTermYears(Number(e.target.value))}
                     className="w-full bg-slate-50 border text-slate-900 border-slate-200 rounded-lg px-3 py-2 font-bold focus:outline-none"

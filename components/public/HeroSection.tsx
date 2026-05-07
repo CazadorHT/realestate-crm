@@ -1,7 +1,18 @@
 "use client";
 
 import { HeroTitle } from "@/components/public/HeroTitle";
-import { SmartMatchWizard } from "@/components/public/SmartMatchWizard";
+import dynamic from "next/dynamic";
+import { Loader2 } from "lucide-react";
+const SmartMatchWizard = dynamic(
+  () => import("@/components/public/SmartMatchWizard").then((mod) => mod.SmartMatchWizard),
+  { 
+    loading: () => (
+      <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-5 md:p-8 border border-slate-100 h-[450px] flex flex-col items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
+      </div>
+    )
+  }
+);
 import {
   TrendingUp,
   CheckCircle2,
@@ -53,7 +64,7 @@ export function HeroSection() {
         fetchPriority="high"
         sizes="100vw"
         className="object-cover"
-        quality={80}
+        quality={70}
       />
       {/* Gradient Overlay สำหรับความคมของ text */}
       <div className="absolute inset-0 bg-linear-to-b from-black/20 via-black/50 to-black/50" />

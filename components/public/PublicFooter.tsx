@@ -102,6 +102,7 @@ export function PublicFooter() {
                 <Link
                   href="/"
                   className="block w-[280px] transition-opacity hover:opacity-90"
+                  aria-label={`${siteName} - ${t("breadcrumb.home")}`}
                 >
                   <Image
                     src={settings.logo_dark || siteConfig.logoDark}
@@ -153,9 +154,9 @@ export function PublicFooter() {
 
             {/* 2. Services (2 cols) */}
             <div className="lg:col-span-2 lg:pl-4">
-              <h4 className="font-bold text-white mb-6 text-lg tracking-tight">
+              <h3 className="font-bold text-white mb-6 text-lg tracking-tight">
                 {t("nav.services")}
-              </h4>
+              </h3>
               <ul className="space-y-3">
                 {services.map((service) => (
                   <li key={service.name}>
@@ -173,9 +174,9 @@ export function PublicFooter() {
 
             {/* 3. About (2 cols) */}
             <div className="lg:col-span-2">
-              <h4 className="font-bold text-white mb-6 text-lg tracking-tight">
+              <h3 className="font-bold text-white mb-6 text-lg tracking-tight">
                 {t("nav.about")}
-              </h4>
+              </h3>
               <ul className="space-y-3">
                 {about.map((item) => (
                   <li key={item.name}>
@@ -193,9 +194,9 @@ export function PublicFooter() {
 
             {/* 4. Newsletter & Social (4 cols) */}
             <div className="lg:col-span-4">
-              <h4 className="font-bold text-white mb-6 text-lg tracking-tight">
+              <h3 className="font-bold text-white mb-6 text-lg tracking-tight">
                 {t("footer.follow_us")}
-              </h4>
+              </h3>
 
               <NewsletterSection />
 
@@ -293,14 +294,18 @@ function NewsletterSection() {
             <span className="block text-white font-semibold text-sm">
               {t("footer.newsletter_title")}
             </span>
-            <span className="block text-xs text-slate-500">
+            <span className="block text-xs text-slate-300">
               {t("footer.newsletter_sub")}
             </span>
           </div>
         </div>
 
         <div className="relative group">
+          <label htmlFor="footer-line-id" className="sr-only">
+            {t("footer.newsletter_title")}
+          </label>
           <input
+            id="footer-line-id"
             type="text"
             value={lineId}
             onChange={(e) => setLineId(e.target.value)}

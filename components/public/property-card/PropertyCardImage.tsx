@@ -253,7 +253,7 @@ export function PropertyCardImage({
                   areaProvince ? ` ${t("nav.properties")} ${areaProvince}` : ""
                 } - Image ${index + 1}`}
                 fill
-                sizes="(max-width: 640px) 384px, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
+                sizes="(max-width: 640px) 95vw, (max-width: 1024px) 48vw, (max-width: 1280px) 31vw, 23vw"
                 className="object-cover object-top transform-gpu will-change-transform"
                 priority={priority && index === 0}
                 {...(!(priority && index === 0) && { loading: "lazy" })}
@@ -364,7 +364,8 @@ export function PropertyCardImage({
       {/* Favorite Button */}
       <button
         onClick={onFavoriteClick}
-        className={`absolute top-3 right-3 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 ${
+        aria-label={isFavorite ? t("common.remove_favorite") || "Remove from favorite" : t("common.add_favorite") || "Add to favorite"}
+        className={`absolute top-3 right-3 p-2.5 rounded-full backdrop-blur-md transition-all duration-300 z-30 ${
           isFavorite
             ? "bg-red-500 text-white"
             : "bg-white/40 text-[#1B263B] hover:bg-red-500 hover:text-white"

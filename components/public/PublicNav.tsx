@@ -438,6 +438,7 @@ export function PublicNav() {
                         variant="ghost"
                         size="icon"
                         className="text-slate-600 hover:bg-slate-100"
+                        aria-label={t("nav.change_language") || "Change language"}
                       >
                         {currentLangFlag[language]}
                       </Button>

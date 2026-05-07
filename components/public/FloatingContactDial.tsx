@@ -165,6 +165,7 @@ export function FloatingContactDial() {
                     <button
                       onClick={() => setRevealedAgentId(agent.id)}
                       className="block w-full text-left group"
+                      aria-label={`${t("common.floating.reveal_phone") || "Reveal phone for"} ${agent.agentName}`}
                     >
                       <div className="bg-slate-50 hover:bg-slate-100 px-3 py-2 rounded-lg transition-colors min-w-[160px]">
                         <div className="text-[10px] text-slate-500 font-medium whitespace-nowrap mb-0.5">
@@ -184,6 +185,7 @@ export function FloatingContactDial() {
           <button
             onClick={() => setIsPhoneListOpen(!isPhoneListOpen)}
             className="w-10 h-10 bg-green-500 rounded-full shadow-lg flex items-center justify-center text-white shrink-0 hover:bg-green-600 hover:scale-110 transition-all duration-200"
+            aria-label={isPhoneListOpen ? t("common.close") : t("common.floating.phone_list") || "View phone list"}
           >
             {isPhoneListOpen ? (
               <FaTimes className="w-5 h-5" />
