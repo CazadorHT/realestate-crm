@@ -32,8 +32,12 @@ export async function decryptValue(key: string, value: unknown): Promise<unknown
     // 🛡️ Lazy Encryption Strategy: Re-save in background to encrypt
     // Since this runs in a server action/route, we use after() for non-blocking update
     after(async () => {
-      console.log(`[LAZY-ENCRYPTION] Encrypting plaintext key on-the-fly: ${key}`);
-      await updateSiteSetting(key as SiteSettingKey, value);
+      try {
+        console.log(`[LAZY-ENCRYPTION] Encrypting plaintext key on-the-fly: ${key}`);
+        await updateSiteSettingAdmin(key as SiteSettingKey, value);
+      } catch (err) {
+        console.error(`[LAZY-ENCRYPTION-FAILED] Key: ${key}`, err);
+      }
     });
     return value; // Return plaintext for immediate use
   }
@@ -293,6 +297,40 @@ export async function updateSiteSetting(
   } catch (error) {
     console.error("Error in updateSiteSetting:", error);
     return { success: false, message: "เกิดข้อผิดพลาดที่ไม่คาดคิด" };
+  }
+}
+
+/**
+ * 🛡️ System-level update (Admin Client)
+ * Used for background maintenance tasks like lazy encryption.
+ */
+async function updateSiteSettingAdmin(
+  key: SiteSettingKey,
+  value: boolean | string[] | string | Record<string, unknown> | null | undefined,
+): Promise<{ success: boolean }> {
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const supabase = await createAdminClient();
+
+    const encryptedValue = await encryptValue(key, value);
+
+    const { error } = await supabase.from("site_settings").upsert(
+      {
+        key,
+        value: (encryptedValue ?? "") as Json,
+        updated_at: new Date().toISOString(),
+        updated_by: "SYSTEM_LAZY_ENCRYPT",
+      },
+      { onConflict: "key" },
+    );
+
+    if (error) throw error;
+    
+    revalidateTag("site-settings", "hours");
+    return { success: true };
+  } catch (error) {
+    console.error(`[ADMIN-UPDATE-FAILED] Key: ${key}`, error);
+    return { success: false };
   }
 }
 
