@@ -92,10 +92,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     notFound();
   }
 
-  const language = await getServerLanguage();
-  const { t } = await import("@/lib/i18n").then((m) =>
-    m.getServerTranslations(),
-  );
+  const { t, language } = await getServerTranslations();
 
   // 🏗️ RELATIONAL: Get real author data from profiles table
   const author = {
@@ -187,19 +184,23 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         />
       </div>
 
-      {/* Hero Header */}
+      {/* Hero Section */}
       <BlogDetailHero
         post={post}
         author={author}
         formattedDate={formattedDate}
+        language={language}
+        t={t}
       />
 
-      {/* Content Body with Sidebar */}
-      <div className="max-w-screen-2xl px-4 md:px-6 py-6 mx-auto relative z-10">
+      <div className="container px-4 md:px-6 -mt-16 relative z-20 max-w-6xl mx-auto">
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-9">
-            <BlogDetailContent post={post} author={author} />
+            <BlogDetailContent post={post} author={author} t={t} language={language} />
+
+            {/* View Counter (Client-side) */}
+            <BlogViewCounter id={post.id} />
           </div>
 
           {/* Sidebar */}
@@ -207,6 +208,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             slug={decodedSlug}
             title={post.title}
             relatedPosts={relatedPosts}
+            language={language}
+            t={t}
           />
         </div>
       </div>
@@ -222,7 +225,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {relatedPosts.slice(3, 6).map((relatedPost) => (
-              <BlogCard key={relatedPost.id} post={relatedPost} />
+              <BlogCard
+                key={relatedPost.id}
+                post={relatedPost}
+                language={language}
+                t={t}
+              />
             ))}
           </div>
         </div>

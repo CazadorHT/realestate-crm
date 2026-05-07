@@ -104,12 +104,21 @@ export default async function BlogListingPage({
 
       <div className="min-h-screen bg-slate-50 pb-20">
         {/* Premium Hero Section */}
-        <BlogHero />
+        <BlogHero
+          translations={{
+            title_main: t("blog.title_main"),
+            desc: t("blog.desc"),
+            title_highlight: t("blog.title_highlight"),
+            title_badge: t("blog.title_badge"),
+          }}
+        />
 
         {/* Content Section */}
         <section className="container mx-auto px-4 md:px-6 -mt-16 relative z-20">
           {/* Featured Post */}
-          {featuredPost && <BlogFeaturedPost post={featuredPost} />}
+          {featuredPost && (
+            <BlogFeaturedPost post={featuredPost} language={language} t={t} />
+          )}
 
           {/* Latest Posts Grid with Sidebar */}
           <div className="grid lg:grid-cols-12 gap-8">
@@ -137,7 +146,7 @@ export default async function BlogListingPage({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {remainingPosts.map((post) => (
                   <div key={post.slug} className="h-full">
-                    <BlogCard post={post} />
+                    <BlogCard post={post} language={language} t={t} />
                   </div>
                 ))}
 
@@ -151,7 +160,12 @@ export default async function BlogListingPage({
             </div>
 
             {/* Sidebar */}
-            <BlogSidebar posts={allPosts} />
+            <BlogSidebar
+              posts={allPosts}
+              t={t}
+              currentTag={tagFilter}
+              currentCategory={categoryFilter}
+            />
           </div>
         </section>
       </div>

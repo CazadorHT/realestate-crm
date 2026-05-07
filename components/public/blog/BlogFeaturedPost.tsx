@@ -1,9 +1,6 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
 import { BookOpen } from "lucide-react";
-import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
 import { format } from "date-fns";
 import { th, enUS, zhCN, ru } from "date-fns/locale";
@@ -11,21 +8,21 @@ import type { BlogPost } from "@/lib/services/blog";
 
 interface BlogFeaturedPostProps {
   post: BlogPost;
+  language: string;
+  t: (key: string, options?: any) => string;
 }
 
-export function BlogFeaturedPost({ post }: BlogFeaturedPostProps) {
-  const { t, language } = useLanguage();
-
+export function BlogFeaturedPost({ post, language, t }: BlogFeaturedPostProps) {
   if (!post) return null;
 
   const title = getLocalizedField<string>(post, "title", language);
   const excerpt = getLocalizedField<string>(post, "excerpt", language);
 
   return (
-    <div className="mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-500">
+    <div className="mb-12">
       <div className="flex items-center gap-2 mb-4">
         <div className="h-6 w-1 bg-linear-to-b from-blue-600 to-purple-600 rounded-full"></div>
-        <h2 className="text-xl font-bold text-white">
+        <h2 className="text-xl font-bold text-slate-900">
           {t("blog.featured_title")}
         </h2>
       </div>

@@ -6,7 +6,6 @@ import { User, ChevronDown, ChevronUp } from "lucide-react";
 import { useRef, useEffect, useState } from "react";
 import { ContactAgentDialog } from "@/components/public/ContactAgentDialog";
 import { ShareButtons } from "@/components/public/ShareButtons";
-import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -33,10 +32,16 @@ interface BlogDetailContentProps {
     avatar?: string;
     bio?: string;
   };
+  t: (key: string, options?: any) => string;
+  language: string;
 }
 
-export function BlogDetailContent({ post, author }: BlogDetailContentProps) {
-  const { t, language } = useLanguage();
+export function BlogDetailContent({
+  post,
+  author,
+  t,
+  language,
+}: BlogDetailContentProps) {
   const [contactOpen, setContactOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 

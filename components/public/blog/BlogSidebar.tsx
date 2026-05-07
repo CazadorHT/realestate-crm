@@ -1,20 +1,19 @@
-"use client";
-
 import { BookOpen } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface BlogSidebarProps {
   posts: any[];
+  t: (key: string, options?: any) => string;
+  currentTag?: string;
+  currentCategory?: string;
 }
 
-export function BlogSidebar({ posts }: BlogSidebarProps) {
-  const { t } = useLanguage();
-  const searchParams = useSearchParams();
-  const currentTag = searchParams.get("tag");
-  const currentCategory = searchParams.get("category");
-
+export function BlogSidebar({
+  posts,
+  t,
+  currentTag,
+  currentCategory,
+}: BlogSidebarProps) {
   return (
     <aside className="lg:col-span-4 lg:col-start-9">
       <div className="sticky top-24 space-y-6">

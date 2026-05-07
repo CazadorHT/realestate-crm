@@ -104,9 +104,13 @@ export default async function RootLayout({
   return (
     <html lang={lang} data-scroll-behavior="smooth">
       <head>
-        {/* Google Tag Manager - Unified */}
+        {/* Resource Hinting: S-Tier Performance Optimization */}
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        
+        {/* Google Tag Manager - Lazy Loaded for S-Tier TBT Score */}
         {settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
-          <Script id="gtm" strategy="afterInteractive">
+          <Script id="gtm" strategy="lazyOnload">
             {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
             new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
             j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=

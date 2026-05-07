@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Share2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { ShareButtons } from "@/components/public/ShareButtons";
-import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
 import { siteConfig } from "@/lib/site-config";
 
@@ -12,14 +11,17 @@ interface BlogDetailSidebarProps {
   slug: string;
   title: string;
   relatedPosts: any[];
+  t: (key: string, options?: any) => string;
+  language: string;
 }
 
 export function BlogDetailSidebar({
   slug,
   title,
   relatedPosts,
+  t,
+  language,
 }: BlogDetailSidebarProps) {
-  const { t, language } = useLanguage();
   const [currentUrl, setCurrentUrl] = useState("");
 
   useEffect(() => {

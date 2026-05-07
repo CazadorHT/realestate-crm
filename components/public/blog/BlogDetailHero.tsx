@@ -1,9 +1,6 @@
-"use client";
-
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock } from "lucide-react";
-import { useLanguage } from "@/components/providers/LanguageProvider";
+import { Calendar } from "lucide-react";
 import { getLocalizedField } from "@/lib/i18n";
 
 interface BlogDetailHeroProps {
@@ -20,14 +17,17 @@ interface BlogDetailHeroProps {
     avatar?: string;
   };
   formattedDate: string;
+  language: string;
+  t: (key: string, options?: any) => string;
 }
 
 export function BlogDetailHero({
   post,
   author,
   formattedDate,
+  language,
+  t,
 }: BlogDetailHeroProps) {
-  const { language, t } = useLanguage();
   const title = getLocalizedField<string>(post, "title", language);
 
   return (
@@ -39,6 +39,7 @@ export function BlogDetailHero({
           fill
           className="object-cover brightness-50"
           priority
+          sizes="100vw"
         />
       ) : (
         <div className="w-full h-full bg-linear-to-br from-slate-800 to-slate-900 flex items-center justify-center">
@@ -73,6 +74,7 @@ export function BlogDetailHero({
                     alt={author.name}
                     fill
                     className="object-cover"
+                    sizes="32px"
                   />
                 </div>
               )}
