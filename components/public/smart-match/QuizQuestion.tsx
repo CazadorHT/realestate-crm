@@ -41,17 +41,19 @@ export function QuizQuestion({
                 {!isDisabled && (
                   <div className="absolute inset-0 bg-blue-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
                 )}
-                <div className={`relative z-10 ${!isDisabled ? "group-hover:text-blue-600 transition-colors" : ""}`}>
-                  {!isDisabled && availableOptions && (
-                    <span className="absolute top-2 right-2 flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                  )}
-                  <span className="line-clamp-2 wrap-break-word text-balance">
+                <div className={`relative z-10 h-full flex flex-col items-center justify-center ${!isDisabled ? "group-hover:text-blue-600 transition-colors" : ""}`}>
+                  <span className="line-clamp-2 wrap-break-word text-balance px-1">
                     {option}
                   </span>
                 </div>
+
+                {/* 🟢 [FIX] Status dot moved to button corner to avoid text overlap */}
+                {!isDisabled && availableOptions && (
+                  <span className="absolute top-3 right-3 flex h-2 w-2 z-20">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]"></span>
+                  </span>
+                )}
               </button>
             );
           })}
