@@ -16,14 +16,19 @@ interface AnimationProviderProps {
  */
 export function AnimationProvider({ children }: AnimationProviderProps) {
   useEffect(() => {
-    // Initialize AOS globally with professional "snappy" defaults
+    // 🚀 Performance Optimization: Check for mobile to reduce overhead
+    const isMobile = window.innerWidth < 768;
+
     AOS.init({
-      duration: 400,
-      easing: "ease-out-quart",
+      duration: 350, // Slightly faster for snappier feel
+      easing: "ease-out-quad", // Less complex math than quart
       once: true,
       mirror: false,
-      offset: 50,
-      disableMutationObserver: false, // 🛠️ Fix: Allow AOS to detect data-aos added after mount
+      offset: 40,
+      throttleDelay: 200, // 🚀 Boost: Reduce reflow frequency during scroll
+      // 🛠️ HARDENING: Disable MutationObserver on mobile to prevent Forced Reflows
+      disableMutationObserver: isMobile, 
+      disable: false, 
     });
   }, []);
 

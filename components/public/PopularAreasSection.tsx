@@ -97,7 +97,10 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
 
   // Initialize AOS & Fetch Provinces if not provided
   useEffect(() => {
-    if (initialProvinces) return;
+    if (initialProvinces) {
+      setIsMounted(true);
+      return;
+    }
 
     async function fetchProvinces() {
       try {
@@ -119,10 +122,6 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
 
     fetchProvinces();
     setIsMounted(true);
-    // 🚀 Refresh AOS to detect the data-aos attributes we just applied
-    setTimeout(() => {
-      import("aos").then((AOS) => AOS.refresh());
-    }, 150);
   }, [initialProvinces]);
 
   // Handle data fetching for province changes
@@ -144,7 +143,6 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
         setItems(areaCache.current[activeProvince]);
         setIsLoading(false);
         setHasError(false);
-        AOS.refresh();
         return;
       }
 
@@ -169,7 +167,6 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
         
         setItems(data);
         setHasError(false);
-        AOS.refresh();
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
         setHasError(true);

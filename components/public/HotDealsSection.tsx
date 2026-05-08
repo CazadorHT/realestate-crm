@@ -10,6 +10,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { FaFire, FaFireBurner } from "react-icons/fa6";
 import { getTopInterest, useSectionTracking } from "@/hooks/use-section-tracking";
 import { useMemo } from "react";
+import { m } from "framer-motion";
 
 type ApiProperty = PropertyCardProps;
 
@@ -71,10 +72,6 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
   };
 
   const handleTouchEnd = () => {
-    // Re-enable horizontal scroll after touch ends
-    if (scrollRef.current) {
-      scrollRef.current.style.overflowX = "auto";
-    }
     isHorizontalSwipe.current = null;
   };
 
@@ -108,10 +105,6 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
     }
     loadHotDeals();
     setIsMounted(true);
-    // 🚀 Refresh AOS to detect the data-aos attributes we just applied
-    setTimeout(() => {
-      import("aos").then((AOS) => AOS.refresh());
-    }, 100);
   }, [initialProperties]);
 
   if (isEmpty && !isLoading) return null;
@@ -171,20 +164,25 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2 md:px-4 md:gap-12 mb-8 md:mb-12">
           <div className="space-y-4 max-w-screen-2xl">
             {/* Badge ที่ดู Modern ขึ้น */}
-            <div
+            <m.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
               className="inline-flex items-center gap-2 bg-linear-to-r from-red-500 to-orange-500 text-white pl-2 pr-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-lg shadow-red-500/50 hover:shadow-xl hover:shadow-red-500/60 transform hover:scale-105 transition-all animate-pulse-scale"
-              {...(isMounted ? { "data-aos": "fade-right" } : {})}
             >
               <div className="bg-white/20 p-1 rounded-full">
                 <Flame className="h-3.5 w-3.5 fill-yellow-200 animate-pulse" />
               </div>
               <span>{t("home.hot_deals.title")}</span>
-            </div>
+            </m.div>
 
             {/* SEO-Optimized Heading */}
-            <h2
+            <m.h2
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
               className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold text-white tracking-tight leading-[1.1]"
-              {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "100" } : {})}
             >
               {t("home.hot_deals.subtitle")
                 .split("!")
@@ -211,21 +209,25 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
                       .join(" ")
                   : t("home.hot_deals.description")}
               </span>
-            </h2>
+            </m.h2>
 
-            {/* SEO-Enhanced Description */}
-            <div
+            <m.div
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
               className="flex items-start gap-3 text-slate-300 text-sm sm:text-base md:text-base"
-              {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "200" } : {})}
             >
               <TrendingDown className="h-5 w-5  md:h-6 md:w-6 text-red-500 mt-0.5 md:mt-1 shrink-0" />
               <p>{t("home.hot_deals.description")}</p>
-            </div>
+            </m.div>
           </div>
 
-          <div
+          <m.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
             className="flex gap-3 w-full md:w-auto"
-            {...(isMounted ? { "data-aos": "fade-left", "data-aos-delay": "300" } : {})}
           >
             {/* Fixed CTA Button */}
             <Button
@@ -237,7 +239,7 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
                 <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </Button>
-          </div>
+          </m.div>
         </div>
 
         {/* === CARDS SECTION === */}
@@ -262,18 +264,25 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
             onTouchEnd={handleTouchEnd}
           >
             {displayProperties.slice(0, 4).map((property, index) => (
-              <div
+              <m.div
                 key={property.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-50px" }}
+                transition={{ 
+                  duration: 0.6, 
+                  delay: index * 0.15,
+                  ease: [0.21, 1.02, 0.73, 1] // Custom premium elastic-out
+                }}
                 className="w-[85vw] max-w-[340px] sm:max-w-[360px] md:w-auto md:max-w-none snap-start shrink-0 relative group"
-                {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": index * 100 } : {})}
               >
                 {/* Card Wrapper with Premium Glow Effect */}
                 <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-0 lg:p-1 lg:bg-linear-to-b from-white/80 to-white/40 lg:shadow-xl lg:shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">
                   <div className="md:group-hover:scale-[1.02] transition-all duration-500 ">
-                    <PropertyCard property={property} priority={index === 0} />
+                    <PropertyCard property={property} />
                   </div>
                 </div>
-              </div>
+              </m.div>
             ))}
           </div>
         )}

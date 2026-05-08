@@ -62,9 +62,9 @@ export function HeroSection() {
         priority
         // @ts-ignore
         fetchPriority="high"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
+        sizes="(max-width: 640px) 750px, (max-width: 768px) 1024px, (max-width: 1536px) 1440px, 1920px"
         className="object-cover"
-        quality={50} // Lower slightly for mobile perf, visually indistinguishable with overlays
+        quality={40} // Optimized for mobile TBT/LCP
       />
       {/* Gradient Overlay สำหรับความคมของ text */}
       <div className="absolute inset-0 bg-linear-to-b from-black/20 via-black/50 to-black/50" />
@@ -86,7 +86,7 @@ export function HeroSection() {
             className={`grid grid-cols-1 ${showSmartMatch ? "lg:grid-cols-12" : ""} gap-6 sm:gap-8 lg:gap-12 xl:gap-16 items-center`}
           >
             <div
-              className={`space-y-4 sm:space-y-5 md:space-y-6 animate-in fade-in-0 duration-700 slide-in-from-bottom-4 flex flex-col items-center md:items-center lg:items-start text-center md:text-center lg:text-left ${showSmartMatch ? "lg:col-span-8" : "w-full mx-auto"}`}
+              className={`space-y-4 sm:space-y-5 md:space-y-6 flex flex-col items-center md:items-center lg:items-start text-center md:text-center lg:text-left ${showSmartMatch ? "lg:col-span-8" : "w-full mx-auto"}`}
             >
               {/* Premium Glass Badge */}
               <div

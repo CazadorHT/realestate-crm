@@ -1,17 +1,17 @@
 import type { Metadata, Viewport } from "next";
 import { Prompt, Noto_Sans_Thai } from "next/font/google";
+import dynamic from "next/dynamic";
 import Script from "next/script";
 import "./globals.css";
 import "flag-icons/css/flag-icons.min.css";
 import { Toaster } from "@/components/ui/sonner";
-import { CookieConsent } from "@/components/common/CookieConsent";
 import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { TenantProvider } from "@/components/providers/TenantProvider";
 import { AnimationProvider } from "@/components/providers/AnimationProvider";
 import { SiteConfigProvider } from "@/components/providers/SiteConfigProvider";
 import { GTMInteractionLoader } from "@/components/providers/GTMInteractionLoader";
-import { GTMScrollTracker } from "@/components/providers/GTMScrollTracker";
 import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
+import { DynamicClientProviders } from "@/components/providers/DynamicClientProviders";
 import { getServerTranslations } from "@/lib/i18n";
 import { AnalyticsTracker } from "@/components/providers/AnalyticsTracker";
 import { Suspense } from "react";
@@ -21,14 +21,14 @@ import { getSiteSettings } from "@/features/site-settings/actions";
 // Removed force-dynamic to allow Next.js to optimize routing and enable SSG where possible.
 // Next.js will still dynamically render where cookies() or other dynamic functions are used.
 const prompt = Prompt({
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600", "700"],
   subsets: ["thai", "latin"],
   display: "swap",
   variable: "--font-prompt",
 });
 
 const notoThai = Noto_Sans_Thai({
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "600", "700"],
   subsets: ["thai", "latin"],
   display: "swap",
   variable: "--font-noto-thai",
@@ -113,10 +113,20 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://connect.facebook.net" />
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
         
         {/* Supabase Preconnect */}
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
+
+        {/* LCP Preload - The most aggressive optimization for Hero LCP Score */}
+        <link 
+          rel="preload" 
+          as="image" 
+          href="/_next/image?url=%2Fimages%2Fhero-realestate.png&w=1200&q=40" 
+          fetchPriority="high"
+        />
         
         {/* Google Tag Manager - Deferred until Interaction for S-Tier TBT Score */}
         {gtmId && <GTMInteractionLoader gtmId={gtmId} />}
@@ -126,9 +136,6 @@ export default async function RootLayout({
         className={`${prompt.className} ${notoThai.variable} antialiased`}
         style={{ scrollbarGutter: "stable" }}
       >
-        <Suspense fallback={null}>
-          <AnalyticsTracker />
-        </Suspense>
         {/* Google Tag Manager (noscript) */}
         {settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
           <noscript>
@@ -140,19 +147,21 @@ export default async function RootLayout({
             ></iframe>
           </noscript>
         )}
-        <GTMScrollTracker />
 
         <LanguageProvider initialLanguage={lang as any}>
+          <Suspense fallback={null}>
+            <AnalyticsTracker />
+          </Suspense>
           <SiteConfigProvider initialSettings={settings}>
             <AnimationProvider>
               <TenantProvider>
                 <div vaul-drawer-wrapper="" className="min-h-screen bg-white">
                   {children}
                 </div>
-                <NavigationProgressBar />
-                <Toaster />
-                <CookieConsent />
-              </TenantProvider>
+                  <DynamicClientProviders />
+                  <NavigationProgressBar />
+                  <Toaster />
+                </TenantProvider>
             </AnimationProvider>
           </SiteConfigProvider>
         </LanguageProvider>

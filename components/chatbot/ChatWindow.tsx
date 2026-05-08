@@ -150,6 +150,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
           size="icon"
           className="text-white/80 hover:text-white hover:bg-white/10 rounded-full"
           onClick={onClose}
+          aria-label={t("common.close") || "Close chat"}
         >
           <X className="h-5 w-5" />
         </Button>
@@ -304,6 +305,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
             size="icon"
             disabled={!input.trim() || isLoading}
             className="rounded-full bg-blue-600 hover:bg-blue-700  shrink-0"
+            aria-label={t("chat.send") || "Send message"}
           >
             <Send className="h-4 w-4 text-white" />
           </Button>

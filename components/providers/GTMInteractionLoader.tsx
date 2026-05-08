@@ -36,8 +36,8 @@ export function GTMInteractionLoader({ gtmId }: GTMInteractionLoaderProps) {
     window.addEventListener("mousemove", loadGTM, { passive: true });
     window.addEventListener("touchstart", loadGTM, { passive: true });
 
-    // Fallback: load GTM after 5 seconds if no interaction (to ensure analytics)
-    const timer = setTimeout(loadGTM, 5000);
+    // Fallback: load GTM after 10 seconds if no interaction (to ensure analytics)
+    const timer = setTimeout(loadGTM, 10000);
 
     return () => {
       removeEventListeners();

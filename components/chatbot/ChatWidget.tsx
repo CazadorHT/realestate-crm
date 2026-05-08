@@ -21,6 +21,7 @@ export function ChatWidget() {
         {/* Toggle Button */}
         <Button
           onClick={() => setIsOpen(!isOpen)}
+          aria-label={isOpen ? "Close AI Assistant" : "Open AI Assistant"}
           className={cn(
             "h-10 w-10 rounded-full shadow-xl transition-all duration-300 hover:scale-105 active:scale-95",
             isOpen

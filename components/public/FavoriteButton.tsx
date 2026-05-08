@@ -81,6 +81,9 @@ export function FavoriteButton({
       title={
         favorited ? t("property.favorite.remove") : t("property.favorite.save")
       }
+      aria-label={
+        favorited ? t("property.favorite.remove") : t("property.favorite.save")
+      }
     >
       <Heart
         className={cn(

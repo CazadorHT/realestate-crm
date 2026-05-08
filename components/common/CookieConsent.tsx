@@ -95,7 +95,7 @@ export function CookieConsent() {
   useEffect(() => {
     const savedConsent = localStorage.getItem("cookie_consent_preferences");
     if (!savedConsent) {
-      const timer = setTimeout(() => setIsVisible(true), 1500);
+      const timer = setTimeout(() => setIsVisible(true), 3000);
       return () => clearTimeout(timer);
     } else {
       try {

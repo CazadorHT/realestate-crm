@@ -214,11 +214,11 @@ function getCardPrice(
 }
 
 export function RecentlyViewedClient({
-  recommendedProperties,
+  recommendedProperties = [],
   containerClassName,
   disableAos = false,
 }: {
-  recommendedProperties: RecommendedProperty[];
+  recommendedProperties?: RecommendedProperty[];
   containerClassName?: string;
   disableAos?: boolean;
 }) {
