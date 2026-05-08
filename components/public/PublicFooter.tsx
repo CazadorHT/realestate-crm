@@ -114,7 +114,7 @@ export function PublicFooter() {
                   />
                 </Link>
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed max-w-sm">
+              <p className="text-slate-300 text-sm leading-relaxed max-w-sm">
                 {t("footer.company_desc")}
               </p>
 
@@ -201,9 +201,9 @@ export function PublicFooter() {
               <NewsletterSection />
 
               <div className="mt-8">
-                <h5 className="text-sm font-semibold text-white mb-4">
+                <h4 className="text-sm font-semibold text-white mb-4">
                   {t("footer.follow_us")}
-                </h5>
+                </h4>
                 <div className="flex gap-3">
                   {socialMedia.map((social) => (
                     <a
@@ -237,7 +237,7 @@ export function PublicFooter() {
           </div>
 
           <div className="pt-8 border-t border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-slate-500 text-sm">
+            <p className="text-slate-400 text-sm">
               &copy; {currentYear} {companyMeta.name_th}. {t("footer.rights")}
             </p>
             <div className="flex gap-6 text-sm font-medium text-slate-400">

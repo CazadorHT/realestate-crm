@@ -219,14 +219,15 @@ export function PublicNav() {
                   href="/"
                   className="hover:scale-105 transition-transform block"
                 >
-                  <Image
-                    src={settings.logo_light || siteConfig.logo}
-                    alt={`${siteName} Logo`}
-                    width={280}
-                    height={80}
-                    className="h-13 sm:h-16 w-auto -mx-2 mt-1"
-                    priority
-                  />
+                    <Image
+                      src={settings.logo_light || siteConfig.logo}
+                      alt={`${siteName} Logo`}
+                      width={280}
+                      height={80}
+                      className="h-13 sm:h-16 w-auto -mx-2 mt-1"
+                      priority
+                      fetchPriority="high"
+                    />
                 </Link>
               </div>
 
@@ -252,6 +253,7 @@ export function PublicNav() {
                         variant="ghost"
                         size="sm"
                         className="gap-2 text-slate-600 font-medium px-2 hover:bg-slate-100"
+                        aria-label={t("nav.select_language") || "Select language"}
                       >
                         {currentLangFlag[language]}
                         <span className="uppercase text-xs font-semibold text-slate-500">
@@ -326,6 +328,7 @@ export function PublicNav() {
                     variant="ghost"
                     size="sm"
                     className="gap-2 text-slate-600 font-medium opacity-50 cursor-wait px-2"
+                    aria-label="Loading language"
                   >
                     <span className="fi fi-th h-3 w-4 rounded-sm shadow-sm" />
                     <span className="uppercase text-xs font-bold text-slate-500">

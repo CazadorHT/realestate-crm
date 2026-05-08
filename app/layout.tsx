@@ -9,6 +9,7 @@ import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { TenantProvider } from "@/components/providers/TenantProvider";
 import { AnimationProvider } from "@/components/providers/AnimationProvider";
 import { SiteConfigProvider } from "@/components/providers/SiteConfigProvider";
+import { GTMInteractionLoader } from "@/components/providers/GTMInteractionLoader";
 import { GTMScrollTracker } from "@/components/providers/GTMScrollTracker";
 import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
 import { getServerTranslations } from "@/lib/i18n";
@@ -117,20 +118,8 @@ export default async function RootLayout({
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
         
-        {/* Google Tag Manager - Lazy Loaded for S-Tier TBT Score */}
-        {gtmId && (
-          <Script
-            id="gtm-script"
-            strategy="lazyOnload"
-            dangerouslySetInnerHTML={{
-              __html: `(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-              new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-              j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-              'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-              })(window,document,'script','dataLayer','${gtmId}');`,
-            }}
-          />
-        )}
+        {/* Google Tag Manager - Deferred until Interaction for S-Tier TBT Score */}
+        {gtmId && <GTMInteractionLoader gtmId={gtmId} />}
         {/* End Google Tag Manager */}
       </head>
       <body

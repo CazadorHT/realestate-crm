@@ -18,20 +18,14 @@ export function AnimationProvider({ children }: AnimationProviderProps) {
   useEffect(() => {
     // Initialize AOS globally with professional "snappy" defaults
     AOS.init({
-      duration: 300, // Reduced duration for snappier feel
+      duration: 300,
       easing: "ease-out-quart",
       once: true,
       mirror: false,
-      offset: 100, // Reduced offset for better mobile performance
+      offset: 50, // Smaller offset for faster triggering
+      disable: "mobile", // 🚀 Hardening: Disable on mobile for massive TBT boost
+      disableMutationObserver: true, // 🚀 Performance: Don't watch DOM changes
     });
-
-    // Handle dynamic route changes if needed
-    const refreshAos = () => AOS.refresh();
-    window.addEventListener("load", refreshAos);
-    
-    return () => {
-      window.removeEventListener("load", refreshAos);
-    };
   }, []);
 
   return (

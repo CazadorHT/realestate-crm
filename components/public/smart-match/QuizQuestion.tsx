@@ -32,21 +32,26 @@ export function QuizQuestion({
                 key={option}
                 disabled={isDisabled}
                 onClick={() => onSelect(option)}
-                className={`px-3 py-6 rounded-xl border-2 transition-all text-sm font-medium h-full cursor-pointer relative ${
+                className={`group px-3 py-6 rounded-xl border-2 text-sm font-medium h-full cursor-pointer relative overflow-hidden transition-colors duration-200 ${
                   isDisabled
                     ? "border-slate-100 bg-slate-50 text-slate-300 cursor-not-allowed"
-                    : "border-slate-200 hover:border-blue-500 hover:bg-blue-50 text-slate-700 hover:text-blue-600"
+                    : "border-slate-200 text-slate-700 active:scale-95 transition-transform"
                 } ${isLoading ? "opacity-60" : ""}`}
               >
-                {!isDisabled && availableOptions && (
-                  <span className="absolute top-2 right-2 flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                  </span>
+                {!isDisabled && (
+                  <div className="absolute inset-0 bg-blue-50 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none" />
                 )}
-                <span className="line-clamp-2 wrap-break-word text-balance">
-                  {option}
-                </span>
+                <div className={`relative z-10 ${!isDisabled ? "group-hover:text-blue-600 transition-colors" : ""}`}>
+                  {!isDisabled && availableOptions && (
+                    <span className="absolute top-2 right-2 flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                  )}
+                  <span className="line-clamp-2 wrap-break-word text-balance">
+                    {option}
+                  </span>
+                </div>
               </button>
             );
           })}

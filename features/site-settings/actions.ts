@@ -328,7 +328,9 @@ async function updateSiteSettingAdmin(
 
     if (error) throw error;
     
-    revalidateTag("site-settings", "hours");
+    // 🛡️ Note: We skip revalidateTag here because this is often called 
+    // from within a render/unstable_cache (Lazy Encryption).
+    // The data is updated in DB, and will be fresh on next revalidation cycle.
     return { success: true };
   } catch (error) {
     console.error(`[ADMIN-UPDATE-FAILED] Key: ${key}`, error);

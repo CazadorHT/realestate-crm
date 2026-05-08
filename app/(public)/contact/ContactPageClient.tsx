@@ -11,9 +11,6 @@ import { ContactSidebar } from "@/components/public/contact/ContactSidebar";
 import { ContactFAQ } from "@/components/public/contact/ContactFAQ";
 import { ContactMap } from "@/components/public/contact/ContactMap";
 import { m } from "framer-motion";
-import AOS from "aos";
-import "aos/dist/aos.css";
-import { useEffect } from "react";
 
 export default function ContactPageClient({
   googleMapsUrl,
@@ -21,14 +18,6 @@ export default function ContactPageClient({
   googleMapsUrl?: string;
 }) {
   const { t } = useLanguage();
-
-  useEffect(() => {
-    AOS.init({
-      duration: 800,
-      easing: "ease-out-cubic",
-      once: true,
-    });
-  }, []);
 
   return (
     <main className="min-h-screen bg-slate-50 relative overflow-hidden">

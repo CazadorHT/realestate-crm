@@ -62,9 +62,9 @@ export function HeroSection() {
         priority
         // @ts-ignore
         fetchPriority="high"
-        sizes="100vw"
+        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 100vw, 100vw"
         className="object-cover"
-        quality={60}
+        quality={50} // Lower slightly for mobile perf, visually indistinguishable with overlays
       />
       {/* Gradient Overlay สำหรับความคมของ text */}
       <div className="absolute inset-0 bg-linear-to-b from-black/20 via-black/50 to-black/50" />
