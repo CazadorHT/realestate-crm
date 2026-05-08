@@ -16,6 +16,7 @@ import {
 
 import type { PropertyStatus } from "@/features/properties/types";
 import { updatePropertyStatusAction } from "@/features/properties/actions";
+import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +42,7 @@ export function PropertyStatusSelect(props: {
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
 
+  const router = useRouter();
   const label = useMemo(() => PROPERTY_STATUS_LABELS[value], [value]);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -67,6 +69,7 @@ export function PropertyStatusSelect(props: {
       }
 
       toast.success("อัปเดตสถานะเรียบร้อย");
+      router.refresh();
     });
   };
 

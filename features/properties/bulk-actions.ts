@@ -90,9 +90,13 @@ export async function bulkDeletePropertiesAction(
       }
     );
 
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
     revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
+    revalidateTag("dashboard-stats", "seconds");
 
     const skipped = blockedIds.size;
     const msg = skipped > 0 
@@ -161,9 +165,13 @@ export async function bulkRestorePropertiesAction(
       }
     );
 
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
     revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
+    revalidateTag("dashboard-stats", "seconds");
 
     return { success: true, count: count ?? ids.length, message: `กู้คืนทรัพย์สำเร็จ ${count} รายการ` };
   } catch (error) {
@@ -269,8 +277,13 @@ export async function bulkPermanentDeletePropertiesAction(
       }
     );
 
+    revalidatePath("/", "layout");
+    revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
     revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
+    revalidateTag("dashboard-stats", "seconds");
 
     // 🔔 Notify Admins about bulk permanent delete
     try {
@@ -331,8 +344,12 @@ export async function bulkMovePropertiesToTenantAction(
       },
     );
 
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
+    revalidateTag("dashboard-stats", "seconds");
 
     return { success: true, count: count ?? 0, message: `ดึงข้อมูลมายังสาขาของคุณสำเร็จ ${count} รายการ` };
   } catch (error) {
@@ -411,8 +428,12 @@ export async function bulkApproveAiReviewAction(
       }
     );
 
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
+    revalidateTag("dashboard-stats", "seconds");
 
     return { 
       success: true, 
@@ -467,9 +488,11 @@ export async function bulkUpdateStatusAction(
       }
     );
 
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
-    revalidatePath("/");
     revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
 
     return { 

@@ -67,12 +67,14 @@ import {
   bulkMovePropertiesToTenantAction,
   bulkApproveAiReviewAction,
   getAllPropertyIdsAction,
+  bulkUpdateStatusAction,
 } from "@/features/properties/bulk-actions";
 import { exportPropertiesAction } from "@/features/properties/export-action";
 import { toast } from "sonner";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { Button } from "@/components/ui/button";
 import { DuplicatePropertyButton } from "./DuplicatePropertyButton";
+import { BulkPropertyStatusDropdown } from "./BulkPropertyStatusDropdown";
 import type {
   PropertyStatus,
   PropertyType,
@@ -442,6 +444,15 @@ export function PropertiesTable({
         onPullConfirmMessage={pullConfirmMessage}
         onAiApprove={hasAiReviewItems ? handleBulkApproveAiReview : undefined}
         onAiApproveLabel="ยืนยันข้อมูล AI"
+        extraActions={
+          <BulkPropertyStatusDropdown
+            selectedIds={Array.from(selectedIds)}
+            onSuccess={() => {
+              clearSelection();
+              handleSuccessFeedback();
+            }}
+          />
+        }
         entityName="ทรัพย์"
         actionableCount={selectedCount - blockedCount}
         className={isTransitionPending ? "opacity-50 pointer-events-none" : ""}

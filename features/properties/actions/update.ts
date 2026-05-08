@@ -300,15 +300,15 @@ export async function updatePropertyAction(
     }
 
     // Cache clearing
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
-    revalidatePath("/properties");
-    revalidatePath("/(public)/properties", "page");
-    revalidatePath("/(public)/properties/[slug]", "page");
-    revalidatePath("/");
+    revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
+    revalidateTag("provinces", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
-    revalidateTag("properties", "seconds");
 
     if (safeValues.requires_ai_review) {
       await inngest.send({ name: "property.created", data: { propertyId: id, userId: user.id, tenantId } });
@@ -414,9 +414,11 @@ export async function updatePropertyStatusAction(input: {
       );
     }
 
-    // protected pages
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
-    revalidatePath("/properties");
+    revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");

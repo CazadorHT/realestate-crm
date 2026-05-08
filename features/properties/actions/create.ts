@@ -3,7 +3,12 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { type Database } from "@/lib/database.types";
 import { randomUUID } from "crypto";
 import { inngest } from "@/lib/inngest/client";
-import { requireAuthContext, assertStaff, authzFail, AuthzError } from "@/lib/authz";
+import {
+  requireAuthContext,
+  assertStaff,
+  authzFail,
+  AuthzError,
+} from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { getPublicImageUrl } from "../image-utils";
 import { PropertyFormValues } from "../schema";
@@ -66,7 +71,9 @@ export async function createPropertyAction(
 
     if (propertyData.requires_ai_review) {
       propertyData.status = "DRAFT";
-    } else if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
+    } else if (
+      (propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)
+    ) {
       if (propertyData.listing_type === "RENT") {
         propertyData.status = "RENTED";
       } else {
@@ -124,9 +131,12 @@ export async function createPropertyAction(
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,
         meta_keywords: mergedKeywords,
-        structured_data: seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
-        nearby_places: (propertyData.nearby_places || []) as Database["public"]["Tables"]["properties"]["Insert"]["nearby_places"],
-        nearby_transits: (propertyData.nearby_transits || []) as Database["public"]["Tables"]["properties"]["Insert"]["nearby_transits"],
+        structured_data:
+          seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
+        nearby_places: (propertyData.nearby_places ||
+          []) as Database["public"]["Tables"]["properties"]["Insert"]["nearby_places"],
+        nearby_transits: (propertyData.nearby_transits ||
+          []) as Database["public"]["Tables"]["properties"]["Insert"]["nearby_transits"],
       })
       .select("id")
       .single();
@@ -239,27 +249,30 @@ export async function createPropertyAction(
         },
       },
     );
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
+    revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
-    revalidateTag("properties", "seconds");
 
     // 🚀 Step 6: Background Job (Non-blocking)
     await inngest.send({
       name: "property.created",
-      data: { 
+      data: {
         propertyId: property.id,
         userId: user.id,
-        tenantId: tenantId
+        tenantId: tenantId,
       },
     });
 
-    return { 
-      success: true, 
+    return {
+      success: true,
       message: "สร้างทรัพย์ใหม่สำเร็จ",
-      propertyId: property.id, 
-      slug: seoData.slug 
+      propertyId: property.id,
+      slug: seoData.slug,
     };
   } catch (err: unknown) {
     console.error("createPropertyAction → error:", err);
@@ -283,7 +296,8 @@ export async function duplicatePropertyAction(
 
     const { data: src, error: srcErr } = await supabase
       .from("properties")
-      .select(`
+      .select(
+        `
         id, title, title_en, title_cn, title_ru,
         property_type, listing_type, status, 
         price, original_price, rental_price, original_rental_price, 
@@ -299,7 +313,8 @@ export async function duplicatePropertyAction(
         meta_description, meta_description_en, meta_description_cn, meta_description_ru,
         meta_keywords, tenant_id, 
         property_images(image_url, is_cover, storage_path)
-      `)
+      `,
+      )
       .eq("id", id)
       .eq("tenant_id", tenantId)
       .single();
@@ -327,7 +342,13 @@ export async function duplicatePropertyAction(
       address_line1: src.address_line1 ?? undefined,
       postal_code: src.postal_code ?? undefined,
       description: src.description ?? undefined,
-      main_image: (src.property_images as unknown as { is_cover: boolean; image_url: string }[])?.find((img) => img.is_cover)?.image_url || undefined, // Carry over cover image if available
+      main_image:
+        (
+          src.property_images as unknown as {
+            is_cover: boolean;
+            image_url: string;
+          }[]
+        )?.find((img) => img.is_cover)?.image_url || undefined, // Carry over cover image if available
     });
 
     const uniqueSlug = `${seoData.slug}-${randomUUID().slice(0, 8)}`;
@@ -367,7 +388,8 @@ export async function duplicatePropertyAction(
         meta_title: seoData.metaTitle,
         meta_description: seoData.metaDescription,
         meta_keywords: seoData.metaKeywords,
-        structured_data: seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
+        structured_data:
+          seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
         // ✨ Reset metrics & shares
         view_count: 0,
         verified: false,
@@ -406,7 +428,10 @@ export async function duplicatePropertyAction(
           .copy(img.storage_path, newPath);
 
         if (copyErr) {
-          console.error("duplicatePropertyAction: storage copy failed", copyErr);
+          console.error(
+            "duplicatePropertyAction: storage copy failed",
+            copyErr,
+          );
           return null;
         }
 
@@ -435,9 +460,9 @@ export async function duplicatePropertyAction(
       .eq("property_id", id);
 
     if (agents?.length) {
-      const agentRows = agents.map(a => ({
+      const agentRows = agents.map((a) => ({
         property_id: newPropertyId,
-        agent_id: a.agent_id
+        agent_id: a.agent_id,
       }));
       await supabase.from("property_agents").insert(agentRows);
     }
@@ -449,9 +474,9 @@ export async function duplicatePropertyAction(
       .eq("property_id", id);
 
     if (features?.length) {
-      const featureRows = features.map(f => ({
+      const featureRows = features.map((f) => ({
         property_id: newPropertyId,
-        feature_id: f.feature_id
+        feature_id: f.feature_id,
       }));
       await supabase.from("property_features").insert(featureRows);
     }
@@ -466,23 +491,30 @@ export async function duplicatePropertyAction(
       },
     );
 
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
+    revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
-    revalidateTag("properties", "seconds");
 
     // 🚀 Step 4.5: Background Job (Non-blocking)
     await inngest.send({
       name: "property.created",
-      data: { 
+      data: {
         propertyId: newPropertyId,
         userId: user.id,
-        tenantId: tenantId
+        tenantId: tenantId,
       },
     });
 
-    return { success: true, message: "คัดลอกทรัพย์สำเร็จ", propertyId: newPropertyId };
+    return {
+      success: true,
+      message: "คัดลอกทรัพย์สำเร็จ",
+      propertyId: newPropertyId,
+    };
   } catch (err: unknown) {
     console.error("duplicatePropertyAction → error:", err);
     if (err instanceof AuthzError) {

@@ -64,9 +64,11 @@ export async function softDeleteProperty(id: string) {
       metadata: { status: prop.status },
     });
 
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
-    revalidatePath("/");
     revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -94,9 +96,11 @@ export async function restoreProperty(id: string) {
       entity: "properties",
       entityId: id,
     });
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
-    revalidatePath("/");
     revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -144,8 +148,12 @@ export async function permanentDeleteProperty(id: string) {
       entity: "properties",
       entityId: id,
     });
+    revalidatePath("/", "layout");
+    revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
     revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };

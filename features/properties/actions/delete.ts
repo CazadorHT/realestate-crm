@@ -135,12 +135,14 @@ export async function deletePropertyAction(formData: FormData) {
       .eq("user_id", user.id)
       .eq("status", "TEMP");
 
+    revalidatePath("/", "layout");
     revalidatePath("/protected/properties");
-    revalidatePath("/");
+    revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
+    revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
-    revalidateTag("properties", "seconds");
     return { success: true, message: "ลบทรัพย์สำเร็จ" };
   } catch (error: unknown) {
     console.error("deletePropertyAction → error:", error);
