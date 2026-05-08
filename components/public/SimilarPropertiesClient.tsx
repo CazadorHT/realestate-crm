@@ -3,19 +3,16 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { MdMapsHomeWork } from "react-icons/md";
-import { PropertyCard } from "./PropertyCard";
+import { PropertyCard, PropertyCardProps } from "./PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
-import type { Database } from "@/lib/database.types";
 import { 
-  PropertyWithImages, 
   PropertyType 
 } from "@/features/properties/types";
-import { getCoverImage, getSafeImages } from "@/lib/property-hardened-utils";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
 
 interface SimilarPropertiesClientProps {
-  properties: PropertyWithImages[];
+  properties: PropertyCardProps[];
   propertyType: PropertyType;
   compareData?: {
     price: number | null;
@@ -69,16 +66,7 @@ export function SimilarPropertiesClient({
               }}
             >
               <PropertyCard
-                property={{
-                  ...property,
-                  image_url: getCoverImage(property.images),
-                  images: getSafeImages(property.images).map((img) => img.url),
-                  verified: property.verified ?? undefined,
-                  listing_type: property.listing_type as any,
-                  features: (property.property_features || [])
-                    .map((pf: any) => pf.features)
-                    .filter((f) => !!f),
-                }}
+                property={property}
                 compareWith={compareData}
                 footerVariant="minimal"
               />

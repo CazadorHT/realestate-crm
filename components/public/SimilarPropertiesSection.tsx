@@ -1,7 +1,8 @@
 import { SimilarPropertiesClient } from "./SimilarPropertiesClient";
 import { getPublicProperties } from "@/lib/services/properties";
-import { PropertyWithImages, PropertyType } from "@/features/properties/types";
+import { PropertyType } from "@/features/properties/types";
 import { unstable_cache } from "next/cache";
+import { PropertyCardProps } from "./PropertyCard";
 
 interface SimilarPropertiesSectionProps {
   currentPropertyId: string;
@@ -74,7 +75,7 @@ export async function SimilarPropertiesSection({
       if (filteredFallback.length > 0) {
         return (
           <SimilarPropertiesClient
-            properties={filteredFallback as PropertyWithImages[]}
+            properties={filteredFallback}
             propertyType={propertyType}
             compareData={compareData}
           />
@@ -86,7 +87,7 @@ export async function SimilarPropertiesSection({
 
   return (
     <SimilarPropertiesClient
-      properties={filteredProperties as PropertyWithImages[]}
+      properties={filteredProperties}
       propertyType={propertyType}
       compareData={compareData}
     />
