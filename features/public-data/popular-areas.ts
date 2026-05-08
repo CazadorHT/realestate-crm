@@ -1,8 +1,10 @@
+"use server";
 import { createClient } from "@/lib/supabase/server";
 import { unstable_cache } from "next/cache";
 
 export type PopularAreaItem = {
   key: string;
+  name: string; // Compatibility with legacy code
   popular_area: string;
   popular_area_en: string | null;
   popular_area_cn: string | null;
@@ -10,6 +12,9 @@ export type PopularAreaItem = {
   province: string;
   count: number;
   cover: string | null;
+  name_en?: string | null; // Compatibility
+  name_cn?: string | null; // Compatibility
+  name_ru?: string | null; // Compatibility
 };
 
 /**
@@ -46,21 +51,33 @@ export const getPublicProvincesAction = unstable_cache(
       return [];
     }
   },
-  ["public-provinces-list-v2"],
-  { revalidate: 86400, tags: ["provinces"] } // Cache for 24h as provinces rarely change
+  ["public-provinces-list-v3"],
+  { revalidate: 86400, tags: ["provinces"] }
 );
 
 /**
  * [S-Tier] Highly Optimized Popular Areas Fetcher
- * - Wrapped with unstable_cache for extreme performance
- * - Pre-filters valid areas from the database
+ * - Supports both Public (Optimized) and Admin (Full List) modes
+ * - Dual-layer filtering and sorting
  */
 export const getPopularAreasAction = unstable_cache(
-  async (province?: string): Promise<PopularAreaItem[]> => {
+  async (params?: string | { onlyActive?: boolean; province?: string }): Promise<any> => {
     try {
       const client = await createClient();
+      
+      // Parse params
+      const onlyActive = typeof params === "object" ? params.onlyActive !== false : true;
+      const province = typeof params === "string" ? params : params?.province;
 
-      // Map English keys to Thai DB values
+      // 🛡️ Admin Mode: Just return strings of all area names (Unoptimized but complete)
+      if (!onlyActive) {
+        let query = client.from("popular_areas").select("name").order("name");
+        if (province) query = query.eq("province", province);
+        const { data } = await query;
+        return (data || []).map((item: any) => item.name);
+      }
+
+      // 🚀 Public Mode: Full optimization for landing page
       const provinceMap: Record<string, string[]> = {
         Bangkok: ["กรุงเทพมหานคร"],
         Phuket: ["ภูเก็ต", "Phuket"],
@@ -82,50 +99,36 @@ export const getPopularAreasAction = unstable_cache(
         .limit(300);
 
       if (propErr) throw propErr;
-
       const properties = Array.isArray(props) ? props : [];
       const ids = properties.map((p: any) => p.id).filter(Boolean);
 
       if (ids.length === 0) return [];
 
-      const { data: covers, error: coverErr } = await client
+      const { data: covers } = await client
         .from("property_images")
         .select("property_id, image_url, sort_order, is_cover")
         .in("property_id", ids)
         .order("is_cover", { ascending: false })
         .order("sort_order", { ascending: true });
 
-      if (coverErr) console.error("popular-areas images error:", coverErr);
-
       const coverByPropertyId = new Map<string, string>();
       for (const img of (covers ?? []) as any[]) {
-        const pid = img?.property_id;
-        const url = img?.image_url;
-        if (!pid || !url) continue;
-        if (!coverByPropertyId.has(pid)) coverByPropertyId.set(pid, url);
+        if (img?.property_id && img?.image_url && !coverByPropertyId.has(img.property_id)) {
+          coverByPropertyId.set(img.property_id, img.image_url);
+        }
       }
 
       const map = new Map<string, PopularAreaItem>();
-
-      let areasQuery = client
-        .from("popular_areas")
-        .select("name, name_en, name_cn, name_ru, province");
+      let areasQuery = client.from("popular_areas").select("name, name_en, name_cn, name_ru, province");
 
       if (province && provinceMap[province]) {
-        const names = provinceMap[province];
-        areasQuery = areasQuery.or(
-          `province.in.(${names.join(",")}),province.is.null`,
-        );
+        areasQuery = areasQuery.or(`province.in.(${provinceMap[province].join(",")}),province.is.null`);
       } else if (province) {
         areasQuery = areasQuery.or(`province.eq.${province},province.is.null`);
       }
 
       const { data: validAreasData } = await areasQuery;
-
-      const areaTranslations = new Map<
-        string,
-        { en: string | null; cn: string | null; ru: string | null }
-      >();
+      const areaTranslations = new Map<string, any>();
       (validAreasData || []).forEach((a: any) => {
         areaTranslations.set(a.name, { en: a.name_en, cn: a.name_cn, ru: a.name_ru });
       });
@@ -135,21 +138,23 @@ export const getPopularAreasAction = unstable_cache(
       for (const p of properties as any[]) {
         const area = (p?.popular_area ?? "").trim();
         const prov = (p?.province ?? "").trim();
-        if (!area || !prov) continue;
-        if (validAreaNames.size > 0 && !validAreaNames.has(area)) continue;
+        if (!area || !prov || (validAreaNames.size > 0 && !validAreaNames.has(area))) continue;
 
-        const key = area;
-        const cover = coverByPropertyId.get(p.id) ?? null;
         const trans = areaTranslations.get(area);
+        const cover = coverByPropertyId.get(p.id) ?? null;
 
-        const existing = map.get(key);
+        const existing = map.get(area);
         if (!existing) {
-          map.set(key, {
+          map.set(area, {
             key: `${area}__${prov}`,
+            name: area, // Legacy Support
             popular_area: area,
             popular_area_en: trans?.en ?? null,
             popular_area_cn: trans?.cn ?? null,
             popular_area_ru: trans?.ru ?? null,
+            name_en: trans?.en ?? null, // Legacy Support
+            name_cn: trans?.cn ?? null, // Legacy Support
+            name_ru: trans?.ru ?? null, // Legacy Support
             province: prov,
             count: 1,
             cover,
@@ -160,14 +165,12 @@ export const getPopularAreasAction = unstable_cache(
         }
       }
 
-      return Array.from(map.values())
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 8);
+      return Array.from(map.values()).sort((a, b) => b.count - a.count).slice(0, 8);
     } catch (e) {
       console.error("getPopularAreasAction error:", e);
       return [];
     }
   },
-  ["popular-areas-cache-v2"],
-  { revalidate: 3600, tags: ["popular-areas"] } // Cache for 1h as per user insight
+  ["popular-areas-cache-v5"],
+  { revalidate: 3600, tags: ["popular-areas"] }
 );

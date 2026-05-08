@@ -24,11 +24,11 @@ export {
 export {
   getPropertyById,
   getPropertyWithImages,
-  getPopularAreasAction,
   addPopularAreaAction,
   getRecommendedPropertiesAction,
   getGlobalPropertiesTableDataAction,
   getGlobalInventoryFilterCountsAction,
 } from "./actions/fetch";
+export { getPopularAreasAction } from "@/features/public-data/popular-areas";
 export { postPropertyToMetaAction } from "./actions/social";
 export { incrementPropertyView } from "./actions/view";

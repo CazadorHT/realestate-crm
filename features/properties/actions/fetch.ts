@@ -132,57 +132,6 @@ export async function getPropertyWithImages(
   };
 }
 
-/**
- * Get all popular areas from database
- */
-export async function getPopularAreasAction(
-  params: { onlyActive?: boolean; province?: string } = {
-    onlyActive: true,
-  },
-) {
-  // Allow public access (no auth required)
-  const supabase = await createClient();
-
-  let query = supabase
-    .from("popular_areas")
-    .select("name, name_cn, name_en, name_ru, province")
-    .order("name");
-
-  if (params.province) {
-    query = query.eq("province", params.province);
-  }
-
-  const { data: allAreas, error } = await query;
-
-  if (error) {
-    console.error("getPopularAreasAction error:", error);
-    return [];
-  }
-
-  // If we want ALL areas (for Admin/Form), return everything
-  if (params.onlyActive === false) {
-    return allAreas.map((item: { name: string }) => item.name);
-  }
-
-  // Check which areas actually have active properties
-  const { data: activeProps } = await supabase
-    .from("properties")
-    .select("popular_area")
-    .eq("status", "ACTIVE")
-    .not("popular_area", "is", null);
-
-  const activeSet = new Set((activeProps || []).map((p: { popular_area: string | null }) => p.popular_area));
-
-  // Return intersection
-  return allAreas
-    .filter((area: { name: string }) => activeSet.has(area.name))
-    .map((item: { name: string; name_en: string | null; name_cn: string | null; name_ru: string | null }) => ({
-      name: item.name,
-      name_en: item.name_en,
-      name_cn: item.name_cn,
-      name_ru: item.name_ru,
-    }));
-}
 
 /**
  * Add a new popular area to the database

@@ -17,7 +17,8 @@ const nextConfig: NextConfig = {
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 3600, // แคชรูปไว้อย่างน้อย 1 ชม. เพื่อลดภาระเซิร์ฟเวอร์
+    minimumCacheTTL: 3600,
+    qualities: [60, 75, 80, 90],
     remotePatterns: (() => {
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
       if (!supabaseUrl) return [];
