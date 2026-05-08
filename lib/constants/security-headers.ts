@@ -8,6 +8,7 @@ export const CSP_DIRECTIVES = {
     "'self'",
     "'unsafe-eval'",
     "'unsafe-inline'",
+    "blob:",
     "https://www.googletagmanager.com",
     "https://www.google-analytics.com",
     "https://connect.facebook.net",
@@ -48,6 +49,7 @@ export const CSP_DIRECTIVES = {
   ],
   "media-src": ["'self'"],
   "worker-src": ["'self'", "blob:"],
+  "child-src": ["'self'", "blob:"],
   "object-src": ["'none'"],
   "base-uri": ["'self'"],
   "form-action": ["'self'", "https://www.facebook.com"],
@@ -58,9 +60,13 @@ export const CSP_DIRECTIVES = {
 /**
  * Helper to generate CSP string from directives object
  */
-export const generateCSP = (directives: typeof CSP_DIRECTIVES): string => {
+export const generateCSP = (directives: any): string => {
   return Object.entries(directives)
-    .map(([key, values]) => `${key} ${values.join(" ")}`)
+    .map(([key, values]) => {
+      const vals = values as string[];
+      if (vals.length === 0) return key;
+      return `${key} ${vals.join(" ")}`;
+    })
     .join("; ");
 };
 
