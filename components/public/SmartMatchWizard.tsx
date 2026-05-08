@@ -142,15 +142,7 @@ export function SmartMatchWizard() {
                 isLoading={isInventoryLoading}
                 options={purposeOptions.map((o) => o.label)}
                 availableOptions={purposeOptions
-                  .filter((o) => {
-                    if (o.value === "OFFICE")
-                      return availablePurposes.includes("OFFICE");
-                    // Fallback: if purpose is available
-                    return (
-                      availablePurposes.length === 0 ||
-                      availablePurposes.includes(o.value)
-                    );
-                  })
+                  .filter((o) => availablePurposes.includes(o.value))
                   .map((o) => o.label)}
                 onSelect={(val) => {
                   const selected = purposeOptions.find((o) => o.label === val);
@@ -182,18 +174,16 @@ export function SmartMatchWizard() {
                     return res === key ? pt.label : res;
                   })}
                 availableOptions={
-                  availablePropertyTypes.length > 0
-                    ? currentPropertyTypes
-                        .filter((t) =>
-                          !isOfficeMode ? t.value !== "OFFICE_BUILDING" : true,
-                        )
-                        .filter((t) => availablePropertyTypes.includes(t.value))
-                        .map((pt) => {
-                          const key = `property_types.${pt.value.toLowerCase()}`;
-                          const res = t(key);
-                          return res === key ? pt.label : res;
-                        })
-                    : undefined
+                  currentPropertyTypes
+                    .filter((t) =>
+                      !isOfficeMode ? t.value !== "OFFICE_BUILDING" : true,
+                    )
+                    .filter((t) => availablePropertyTypes.includes(t.value))
+                    .map((pt) => {
+                      const key = `property_types.${pt.value.toLowerCase()}`;
+                      const res = t(key);
+                      return res === key ? pt.label : res;
+                    })
                 }
                 onSelect={(val) => {
                   const selectedType = currentPropertyTypes.find((pt) => {
@@ -235,15 +225,13 @@ export function SmartMatchWizard() {
                   return res === key ? r.label : res;
                 })}
                 availableOptions={
-                  availableBudgetIds.length > 0
-                    ? currentBudgetRanges
-                        .filter((r) => availableBudgetIds.includes(r.id))
-                        .map((r) => {
-                          const key = `smart_match.budget_labels.${r.id}`;
-                          const res = t(key);
-                          return res === key ? r.label : res;
-                        })
-                    : undefined
+                  currentBudgetRanges
+                    .filter((r) => availableBudgetIds.includes(r.id))
+                    .map((r) => {
+                      const key = `smart_match.budget_labels.${r.id}`;
+                      const res = t(key);
+                      return res === key ? r.label : res;
+                    })
                 }
                 onSelect={(val) => {
                   const selected = currentBudgetRanges.find((r) => {

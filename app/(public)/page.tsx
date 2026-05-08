@@ -239,7 +239,7 @@ export default async function LandingPage() {
       
       {/* ABOVE THE FOLD: Static for maximum First Impression & Zero CLS */}
       <div className="relative">
-        <HeroSection />
+        <HeroSection hasProperties={!!(initialProperties && initialProperties.length > 0)} />
       </div>
       
       <div className="min-h-[300px] md:min-h-[350px]">
@@ -255,25 +255,43 @@ export default async function LandingPage() {
       </div>
       
       {/* STRATEGIC CONVERSION: Hot Deals with optimized skeleton height */}
-      <div className="min-h-[700px] md:min-h-[800px]">
-        <HotDealsSection initialProperties={hotDeals} />
-      </div>
+      {hotDeals && hotDeals.length > 0 && (
+        <div className="min-h-[700px] md:min-h-[800px]">
+          <HotDealsSection initialProperties={hotDeals} />
+        </div>
+      )}
       
       {/* NAVIGATION & SEO: Popular Areas */}
-      <div className="min-h-[450px] md:min-h-[500px]">
-        <PopularAreasSection initialItems={popularAreas} initialProvinces={provinces} />
-      </div>
+      {popularAreas && popularAreas.length > 0 && (
+        <div className="min-h-[450px] md:min-h-[500px]">
+          <PopularAreasSection initialItems={popularAreas} initialProvinces={provinces} />
+        </div>
+      )}
       
       {/* BELOW THE FOLD: Dynamic / Lazy with realistic height placeholders */}
-      <div className="min-h-[1200px] md:min-h-[1400px]">
-        <PropertyListingSection initialProperties={initialProperties} />
+      <div className={initialProperties && initialProperties.length > 0 ? "min-h-[1200px] md:min-h-[1400px] flex flex-col" : "py-12 flex flex-col"}>
+        {initialProperties && initialProperties.length > 0 ? (
+          <PropertyListingSection initialProperties={initialProperties} />
+        ) : (
+          <div className="flex flex-col items-center justify-center p-8 text-center bg-white/50 backdrop-blur-sm rounded-3xl border border-slate-100 mx-4 md:mx-8">
+            <div className="w-16 h-16 mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+              <svg className="w-8 h-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-slate-700 mb-2">{t("properties.not_found") || "ยังไม่ได้ลงประกาศทรัพย์"}</h3>
+            <p className="text-slate-500 max-w-md">
+              {t("properties.check_back_later") || "ขณะนี้ยังไม่มีรายการทรัพย์อัปเดตในระบบ โปรดกลับมาตรวจสอบใหม่อีกครั้งในภายหลัง"}
+            </p>
+          </div>
+        )}
       </div>
       
       <div className="min-h-[400px] md:min-h-[450px]">
         <MortgageCalculatorSection />
       </div>
       
-      <div className="min-h-[450px] md:min-h-[500px]">
+      <div>
         <RecentlyViewedSection />
       </div>
       

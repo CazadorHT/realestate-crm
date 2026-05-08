@@ -8,7 +8,7 @@ interface RecentlyViewedSkeletonProps {
 
 export function RecentlyViewedSkeleton({ containerClassName }: RecentlyViewedSkeletonProps) {
   return (
-    <section className="py-10 md:py-12 px-4 md:px-6 lg:px-8 bg-slate-50 border-t border-slate-100 overflow-hidden relative z-0">
+    <section className="min-h-[450px] md:min-h-[500px] py-10 md:py-12 px-4 md:px-6 lg:px-8 bg-slate-50 border-t border-slate-100 overflow-hidden relative z-0">
       <SectionBackground pattern="blobs" intensity="low" />
       <div className={cn("max-w-7xl mx-auto px-4 md:px-6 lg:px-8", containerClassName)}>
         {/* Header Skeleton */}

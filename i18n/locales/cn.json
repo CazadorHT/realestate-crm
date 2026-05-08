@@ -13,7 +13,6 @@
     "privacy_policy": "隐私政策",
     "support": "帮助与支持",
     "select_language": "选择语言"
-
   },
   "breadcrumb": {
     "home": "首页",
@@ -262,7 +261,6 @@
       "land_desc": "极具投资潜力的土地",
       "commercial_building": "商业建筑"
     },
-
     "stats": {
       "properties_label": "优质房源",
       "properties_sub": "经过核实的房源",
@@ -1038,11 +1036,11 @@
       "fiber_optic": "光纤网络",
       "multi_parking": "多车位",
       "hot_deal": "特价房 (Hot Deal)",
-    "near_train": "靠近地铁",
-    "select_station": "选择站点",
-    "all_stations": "所有站点",
-    "clear": "清除",
-    "more": "更多",
+      "near_train": "靠近地铁",
+      "select_station": "选择站点",
+      "all_stations": "所有站点",
+      "clear": "清除",
+      "more": "更多",
       "verified": "已认证",
       "cbd": "CBD 核心地段",
       "new_listing": "全新/未入住",
@@ -1140,7 +1138,7 @@
     "clear": "清空",
     "compare_btn": "开始对比"
   },
- "chat": {
+  "chat": {
     "welcome_message": "你好！正在寻找任何特定区域的房子或公寓？或者需要抵押贷款方面的建议？随时提问！🏠",
     "input_placeholder": "输入消息...",
     "error_message": "抱歉，连接出现错误。请稍后再试。",
@@ -1274,5 +1272,9 @@
       "uptime_detail": "通过高度稳定的基础设施确保您的业务连续性。",
       "response_detail": "我们优先处理您的问题。我们的支持团队随时准备迅速采取行动。"
     }
+  },
+  "properties": {
+    "not_found": "未找到房产",
+    "check_back_later": "目前系统中没有更新的房产。请稍后再来查看。"
   }
 }

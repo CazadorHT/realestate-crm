@@ -15,7 +15,6 @@
     "terms_of_use": "Terms of Use",
     "support": "Help & Support",
     "select_language": "Select Language"
-
   },
   "breadcrumb": {
     "home": "Home",
@@ -798,7 +797,6 @@
     "customer_service": "{company_name} Customer Service",
     "customer_service_desc": "Ready to assist and answer questions regarding personal data.",
     "contact_button": "Contact Us",
-
     "section7_title": "7. Data Retention Period",
     "section7_p1": "We will retain your personal data for as long as necessary to fulfill the purposes outlined in this policy, or for the period required by law (typically 10 years after the end of the relationship). After that, we will securely delete or destroy your data.",
     "section8_title": "8. Disclosure to Third Parties",
@@ -1268,5 +1266,9 @@
       "uptime_detail": "Ensures your business continuity with highly stable infrastructure.",
       "response_detail": "We prioritize your issues. Our support team is ready to act quickly."
     }
+  },
+  "properties": {
+    "not_found": "No Properties Found",
+    "check_back_later": "There are currently no updated properties in the system. Please check back later."
   }
 }

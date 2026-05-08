@@ -35,7 +35,7 @@ import { DepositWizard } from "@/components/public/deposit/DepositWizard";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
-export function HeroSection() {
+export function HeroSection({ hasProperties = true }: { hasProperties?: boolean }) {
   const { t } = useLanguage();
   const settings = useSiteConfig();
   const showSmartMatch = settings.smart_match_wizard_enabled;
@@ -197,8 +197,22 @@ export function HeroSection() {
             </div>
 
             {showSmartMatch && (
-              <div className="lg:col-span-4  w-full max-w-md mx-auto lg:max-w-none relative z-20">
-                <SmartMatchWizard />
+              <div className="lg:col-span-4 w-full max-w-md mx-auto lg:max-w-none relative z-20">
+                {!hasProperties && (
+                  <div className="absolute inset-0 z-50 bg-white/40 backdrop-blur-[2px] rounded-2xl flex items-center justify-center">
+                    <div className="bg-white px-6 py-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100/50 text-center transform -translate-y-4">
+                      <div className="w-12 h-12 mb-3 rounded-full bg-slate-50 flex items-center justify-center mx-auto">
+                        <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                      </div>
+                      <h4 className="font-semibold text-slate-800 mb-1">{t("properties.not_found") || "ยังไม่ได้ลงประกาศทรัพย์"}</h4>
+                    </div>
+                  </div>
+                )}
+                <div className={!hasProperties ? "opacity-60 select-none pointer-events-none transition-opacity duration-300" : ""}>
+                  <SmartMatchWizard />
+                </div>
               </div>
             )}
           </div>
