@@ -321,7 +321,7 @@ async function updateSiteSettingAdmin(
         key,
         value: (encryptedValue ?? "") as Json,
         updated_at: new Date().toISOString(),
-        updated_by: "SYSTEM_LAZY_ENCRYPT",
+        updated_by: null,
       },
       { onConflict: "key" },
     );
