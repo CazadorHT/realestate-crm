@@ -58,14 +58,14 @@ export function FunnelChart({ data }: FunnelChartProps) {
   }
 
   return (
-    <div className="h-[320px] w-full flex gap-4 relative">
-        <div className="flex-1 min-w-0">
+    <div className="h-[350px] w-full flex gap-4 relative">
+        <div className="flex-1 min-w-0 h-full">
                 {mounted ? (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
               layout="vertical"
-              margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+              margin={{ top: 0, right: 30, left: 0, bottom: 0 }}
             >
               <XAxis type="number" hide />
               <YAxis
@@ -91,7 +91,7 @@ export function FunnelChart({ data }: FunnelChartProps) {
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{stepTranslation[props.payload.step] || props.payload.step}</span>,
                 ]}
               />
-              <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={28}>
+              <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={35}>
                 {data.map((entry, index) => (
                   <Cell
                     key={`cell-${index}`}
@@ -108,30 +108,38 @@ export function FunnelChart({ data }: FunnelChartProps) {
       </div>
 
       {/* Drop-off Stats - สถิติการหลุดออก */}
-      <div className="w-[100px] shrink-0 flex flex-col justify-around py-4 pr-1 border-l border-slate-100 pl-4 bg-slate-50/30 rounded-r-2xl">
-        {data.map((step, index) => {
-          if (index === 0) return null;
-          const prev = data[index - 1];
-          const drop = prev.count - step.count;
-          const dropRate =
-            prev.count > 0 ? Math.round((drop / prev.count) * 100) : 0;
+      <div className="w-[110px] shrink-0 flex flex-col h-full border-l border-slate-100 bg-slate-50/30 rounded-r-2xl overflow-hidden">
+        {/* รายการที่ 1: ลีดใหม่ เพื่อให้ขนานกับแท่งที่ 1 */}
+        <div className="h-1/5 flex flex-col items-end justify-center px-4 border-b border-slate-100/50">
+          <div className="flex flex-col items-end">
+            <span className="font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded-md border border-slate-200 text-[11px]">
+              {data[0].count}
+            </span>
+            <span className="opacity-70 text-[9px] mt-1 font-medium text-right leading-tight">
+              ★ ลีดใหม่
+            </span>
+          </div>
+        </div>
 
-          if (dropRate <= 0)
-            return <div key={step.step} className="flex-1" />;
+        {/* รายการที่ 2-5: อัตราการหลุดออก */}
+        {data.slice(1).map((step, index) => {
+          const prev = data[index];
+          const drop = prev.count - step.count;
+          const dropRate = prev.count > 0 ? Math.round((drop / prev.count) * 100) : 0;
 
           return (
             <div
               key={step.step}
-              className="text-[10px] text-muted-foreground flex flex-col items-end py-1 animate-in fade-in slide-in-from-right-2 duration-500"
+              className="h-1/5 flex flex-col items-end justify-center px-4 border-b border-slate-100/50 last:border-0"
             >
               <TooltipProvider>
                 <ShcnTooltip>
                   <TooltipTrigger asChild>
                     <div className="flex flex-col items-end cursor-help">
-                      <span className="font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-100">
+                      <span className="font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-100 text-[11px]">
                         -{dropRate}%
                       </span>
-                      <span className="opacity-70 text-[9px] mt-1 font-medium truncate max-w-full text-right">
+                      <span className="opacity-70 text-[9px] mt-1 font-medium truncate max-w-full text-right leading-tight">
                         ↓ {stepTranslation[step.step] || step.step}
                       </span>
                     </div>

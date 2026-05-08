@@ -330,7 +330,7 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
 
                 <div className="relative shrink-0">
                   <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
-                    <AvatarImage src={agent.avatar_url || ""} />
+                    <AvatarImage src={agent.avatar_url || ""} alt={agent.name} />
                     <AvatarFallback className="bg-slate-200 font-bold text-slate-600">
                       {agent.name.slice(0, 2).toUpperCase()}
                     </AvatarFallback>

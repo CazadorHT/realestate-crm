@@ -300,6 +300,7 @@ export function SetupChecklist({ progress, role }: { progress: SetupProgress, ro
               </div>
               <Progress
                 value={progressPercent}
+                aria-label="ความคืบหน้าการตั้งค่าระบบ"
                 className="h-2 bg-slate-100"
                 indicatorClassName="bg-linear-to-r from-indigo-600 to-violet-600 transition-all duration-500"
               />

@@ -181,7 +181,7 @@ export function StatsOverview({
     }
 
     const diff = val - compVal;
-    const diffColor = diff >= 0 ? "text-emerald-600 bg-emerald-50" : "text-rose-600 bg-rose-50";
+    const diffColor = diff >= 0 ? "text-emerald-800 bg-emerald-100" : "text-rose-800 bg-rose-100";
     const diffText = `${diff >= 0 ? "+" : ""}${isCurrency ? `฿${Math.abs(diff).toLocaleString()}` : Math.abs(diff).toLocaleString()}`;
 
     return (
@@ -324,10 +324,10 @@ export function StatsOverview({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className={cn(
-                        "flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold shadow-xs cursor-help",
+                        "flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold shadow-xs cursor-help",
                         item.change.startsWith("+") 
-                          ? "bg-emerald-50 text-emerald-600 border border-emerald-100" 
-                          : "bg-rose-50 text-rose-600 border border-rose-100"
+                          ? "bg-emerald-100 text-emerald-800 border border-emerald-200" 
+                          : "bg-rose-100 text-rose-800 border border-rose-200"
                       )}>
                         {item.change.startsWith("+") ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
                         {item.change}
@@ -343,9 +343,9 @@ export function StatsOverview({
 
               {/* Value & Title */}
               <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{item.title}</p>
+                <p className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">{item.title}</p>
                 {renderValue(item.value, item.compareValue, item.isCurrency)}
-                <p className="text-[11px] font-medium text-slate-400 mt-2">{item.context}</p>
+                <p className="text-[11px] font-medium text-slate-500 mt-2">{item.context}</p>
               </div>
 
             </CardContent>

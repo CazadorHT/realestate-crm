@@ -88,53 +88,63 @@ export async function getDashboardStats({
       ? targetId 
       : (!tenantId || tenantId.toUpperCase() === "ALL" ? null : tenantId);
 
+    // 🛡️ RBAC: Only fallback to profileTenantId if NOT an admin selecting "ALL"
     if (!activeTenantId) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase.from("profiles")
-          .select("team:teams!profiles_team_id_fkey(tenant_id)")
+          .select("role, team:teams!profiles_team_id_fkey(tenant_id)")
           .eq("id", user.id)
           .single();
+        
+        const isAdmin = profile?.role === "ADMIN" || profile?.role === "MANAGER";
         const profileTenantId = (profile as any)?.team?.tenant_id;
-        if (profileTenantId) activeTenantId = profileTenantId;
+        
+        if (!isAdmin && profileTenantId) {
+          activeTenantId = profileTenantId;
+        }
       }
     }
 
     let revCurQuery = supabase.from("properties").select("price, rental_price, status").in("status", ["SOLD", "RENTED"]).is("deleted_at", null);
     let leadsCurQuery = supabase.from("leads").select("id", { count: "exact", head: true });
-    let commissionDealsQuery = supabase.from("deals").select("commission_amount").eq("status", "CLOSED_WIN");
+    let commissionDealsQuery = supabase.from("deals").select("commission_amount, created_at, closed_at").eq("status", "CLOSED_WIN");
     
     if (range !== "all" && range !== "ALL" && startDate) {
       revCurQuery = revCurQuery.gte("updated_at", startDate);
       leadsCurQuery = leadsCurQuery.gte("created_at", startDate);
-      commissionDealsQuery = commissionDealsQuery.gte("created_at", startDate);
+      // We don't filter deals here by date yet to avoid missing null closed_at, 
+      // we will filter them in memory after fetching
       if (endDate) {
         revCurQuery = revCurQuery.lte("updated_at", endDate);
         leadsCurQuery = leadsCurQuery.lte("created_at", endDate);
-        commissionDealsQuery = commissionDealsQuery.lte("created_at", endDate);
       }
-    }
-
-    if (activeTenantId) {
-      revCurQuery = revCurQuery.eq("tenant_id", activeTenantId);
-      leadsCurQuery = leadsCurQuery.eq("tenant_id", activeTenantId);
-      commissionDealsQuery = commissionDealsQuery.eq("tenant_id", activeTenantId);
     }
 
     const [
       { data: revenueCurrent },
       { count: leadsCurrent },
-      { data: commissionDeals }
+      { data: commissionDealsRaw }
     ] = await Promise.all([
       revCurQuery, leadsCurQuery, commissionDealsQuery
     ]);
+
+    // Filter deals in memory to handle fallback date (closed_at || created_at)
+    const commissionDeals = (commissionDealsRaw || []).filter((d: any) => {
+      if (range === "all" || range === "ALL" || !startDate) return true;
+      const dealDate = d.closed_at || d.created_at;
+      const start = new Date(startDate).getTime();
+      const end = endDate ? new Date(endDate).getTime() : new Date().getTime();
+      const current = new Date(dealDate).getTime();
+      return current >= start && (endDate ? current <= end : true);
+    });
 
     const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, p: Partial<PropertyRow>) => sum + (p.status === "SOLD" ? (p.price || 0) : (p.rental_price || 0)), 0);
     const totalCommission = (commissionDeals || []).reduce((sum: number, d: Partial<DealRow>) => sum + (d.commission_amount || 0), 0);
     const dealsWon = (commissionDeals || []).length;
 
     return {
-      revenueThisMonth: (view === "personal" || view === "team") ? totalCommission : totalRevenueCurrent,
+      revenueThisMonth: totalCommission,
       revenueChange: "+0%",
       leadsThisMonth: leadsCurrent || 0,
       leadsChange: "+0%",
@@ -165,52 +175,68 @@ export async function getRevenueChartData(args: any): Promise<RevenueChartData[]
     const now = new Date();
     const { start: startDate, end: endDate } = await calculateDateRange(args.range || "month");
     
-    // Default to 6 months if range is "all" or "year" to keep chart readable
-    const fallbackStart = new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString();
-    const actualStart = startDate || fallbackStart;
-
-    let query = supabase.from("properties")
-      .select("price, rental_price, status, updated_at")
-      .in("status", ["SOLD", "RENTED"])
-      .is("deleted_at", null)
-      .gte("updated_at", actualStart);
-
-    if (endDate) {
-      query = query.lte("updated_at", endDate);
-    }
+    // 🗓️ For "all" range, we want to show a longer history (e.g., 12 months) 
+    // or start from the beginning of time if we don't have a specific start date.
+    const isAllRange = args.range === "all" || args.range === "ALL";
+    const fallbackMonths = isAllRange ? 11 : 5; // Show 12 months for "all", 6 months otherwise
+    const fallbackStart = new Date(now.getFullYear(), now.getMonth() - fallbackMonths, 1).toISOString();
+    const actualStart = startDate || (isAllRange ? null : fallbackStart);
 
     let activeTenantId = (args.view === "branch" && args.targetId && args.targetId.toUpperCase() !== "ALL") 
       ? args.targetId 
       : (!args.tenantId || args.tenantId.toUpperCase() === "ALL" ? null : args.tenantId);
 
+    // 🛡️ RBAC: Only fallback to profileTenantId if NOT an admin selecting "ALL"
     if (!activeTenantId) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase.from("profiles")
-          .select("team:teams!profiles_team_id_fkey(tenant_id)")
+          .select("role, team:teams!profiles_team_id_fkey(tenant_id)")
           .eq("id", user.id)
           .single();
+        
+        const isAdmin = profile?.role === "ADMIN" || profile?.role === "MANAGER";
         const profileTenantId = (profile as any)?.team?.tenant_id;
-        if (profileTenantId) activeTenantId = profileTenantId;
+        
+        if (!isAdmin && profileTenantId) {
+          activeTenantId = profileTenantId;
+        }
       }
     }
 
+    let query = supabase.from("deals")
+      .select("commission_amount, status, created_at, closed_at")
+      .eq("status", "CLOSED_WIN");
+
+    // We will filter by date in memory to support fallback
     if (activeTenantId) query = query.eq("tenant_id", activeTenantId);
 
-    const { data } = await query;
+    const { data: rawData } = await query;
+
+    // Filter by date in memory to handle fallback (closed_at || created_at)
+    const data = (rawData || []).filter((d: any) => {
+      if (isAllRange || !actualStart) return true;
+      const dealDate = d.closed_at || d.created_at;
+      const start = new Date(actualStart).getTime();
+      const end = endDate ? new Date(endDate).getTime() : new Date().getTime();
+      const current = new Date(dealDate).getTime();
+      return current >= start && (endDate ? current <= end : true);
+    });
+
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const grouped = new Map<string, number>();
     
-    // 🏷️ Determine labels based on range
+    // 🏷️ Determine labels and start date based on data and range
     const isDaily = args.range === "week" || args.range === "month" || args.range === "today";
-    const startObj = new Date(actualStart);
-    let temp = new Date(startObj.getFullYear(), startObj.getMonth(), startObj.getDate());
+    const chartStartDate = actualStart ? new Date(actualStart) : null;
     
-    // Prevent infinite loops and set reasonable limits
-    const maxPoints = isDaily ? 35 : 12;
-    let points = 0;
-
-    while (temp <= now && points < maxPoints) {
+    // For "all" range, we want to ensure the most recent months are shown.
+    // We'll generate labels for the last X months leading up to now.
+    const maxPoints = isDaily ? 35 : (isAllRange ? 24 : 12);
+    const labelList: string[] = [];
+    let temp = new Date(now.getFullYear(), now.getMonth(), isDaily ? now.getDate() : 1);
+    
+    for (let i = 0; i < maxPoints; i++) {
       let label = "";
       if (isDaily) {
         const isToday = temp.getDate() === now.getDate() && 
@@ -221,18 +247,23 @@ export async function getRevenueChartData(args: any): Promise<RevenueChartData[]
         label = `${months[temp.getMonth()]} ${temp.getFullYear().toString().slice(2)}`;
       }
       
+      labelList.push(label);
       grouped.set(label, 0);
       
-      if (isDaily) temp.setDate(temp.getDate() + 1);
-      else temp.setMonth(temp.getMonth() + 1);
-      
-      points++;
+      if (isDaily) temp.setDate(temp.getDate() - 1);
+      else temp.setMonth(temp.getMonth() - 1);
+
+      // If we have a startDate and we've reached it, we can stop (unless we want to fill the chart)
+      if (chartStartDate && temp < chartStartDate && !isAllRange) break;
     }
+
+    // Reverse the labels so they go from past to present
+    const sortedLabels = labelList.reverse();
 
     const todayLabel = `${now.getDate()}/${now.getMonth() + 1} (วันนี้)`;
 
-    (data || []).forEach((p: Partial<PropertyRow>) => {
-      const date = new Date(p.updated_at!);
+    (data || []).forEach((d: any) => {
+      const date = new Date(d.closed_at || d.created_at);
       let label = "";
       if (isDaily) {
         const isToday = date.getDate() === now.getDate() && 
@@ -244,12 +275,12 @@ export async function getRevenueChartData(args: any): Promise<RevenueChartData[]
       }
       
       if (grouped.has(label)) {
-        const val = p.status === "SOLD" ? (p.price || 0) : (p.rental_price || 0);
+        const val = Number(d.commission_amount) || 0;
         grouped.set(label, (grouped.get(label) || 0) + val);
       }
     });
 
-    return Array.from(grouped.entries()).map(([name, total]) => ({ name, total }));
+    return sortedLabels.map(name => ({ name, total: grouped.get(name) || 0 }));
   } catch (error) { console.error("getRevenueChartData Error:", error); return []; }
 }
 
@@ -272,15 +303,21 @@ export async function getFunnelStats(args: any): Promise<FunnelData[]> {
       ? args.targetId 
       : (!args.tenantId || args.tenantId.toUpperCase() === "ALL" ? null : args.tenantId);
 
+    // 🛡️ RBAC: Only fallback to profileTenantId if NOT an admin selecting "ALL"
     if (!activeTenantId) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase.from("profiles")
-          .select("team:teams!profiles_team_id_fkey(tenant_id)")
+          .select("role, team:teams!profiles_team_id_fkey(tenant_id)")
           .eq("id", user.id)
           .single();
+        
+        const isAdmin = profile?.role === "ADMIN" || profile?.role === "MANAGER";
         const profileTenantId = (profile as any)?.team?.tenant_id;
-        if (profileTenantId) activeTenantId = profileTenantId;
+        
+        if (!isAdmin && profileTenantId) {
+          activeTenantId = profileTenantId;
+        }
       }
     }
 
@@ -319,7 +356,7 @@ export const getFunnelStatsAction = getFunnelStats;
 export async function getPipelineStats(args: any): Promise<PipelineData[]> {
   try {
     const supabase = await createClient();
-    let query = supabase.from("properties").select("status, updated_at").is("deleted_at", null);
+    let query = supabase.from("properties").select("id, status, updated_at, deals!property_id(status)").is("deleted_at", null);
     const { start: startDate, end: endDate } = await calculateDateRange(args.range);
 
     if (args.range !== "all" && args.range !== "ALL" && startDate) {
@@ -329,19 +366,39 @@ export async function getPipelineStats(args: any): Promise<PipelineData[]> {
       }
     }
 
-    const activeTenantId = (args.view === "branch" && args.targetId && args.targetId.toUpperCase() !== "ALL") 
+    let activeTenantId = (args.view === "branch" && args.targetId && args.targetId.toUpperCase() !== "ALL") 
       ? args.targetId 
       : (!args.tenantId || args.tenantId.toUpperCase() === "ALL" ? null : args.tenantId);
+
+    // 🛡️ RBAC: Only fallback to profileTenantId if NOT an admin selecting "ALL"
+    if (!activeTenantId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from("profiles")
+          .select("role, team:teams!profiles_team_id_fkey(tenant_id)")
+          .eq("id", user.id)
+          .single();
+        
+        const isAdmin = profile?.role === "ADMIN" || profile?.role === "MANAGER";
+        const profileTenantId = (profile as any)?.team?.tenant_id;
+        
+        if (!isAdmin && profileTenantId) {
+          activeTenantId = profileTenantId;
+        }
+      }
+    }
 
     if (activeTenantId) query = query.eq("tenant_id", activeTenantId);
 
     const { data: properties } = await query;
     const counts = { ACTIVE: 0, UNDER_OFFER: 0, RESERVED: 0, SOLD: 0 };
-    (properties || []).forEach((p: Partial<PropertyRow>) => {
-      if (p.status === "ACTIVE") counts.ACTIVE++;
-      if (p.status === "UNDER_OFFER") counts.UNDER_OFFER++;
-      if (p.status === "RESERVED") counts.RESERVED++;
-      if (p.status === "SOLD" || p.status === "RENTED") counts.SOLD++;
+    (properties || []).forEach((p: any) => {
+      const hasWonDeal = (p.deals || []).some((d: any) => d.status === "CLOSED_WIN");
+      
+      if (p.status === "SOLD" || p.status === "RENTED" || hasWonDeal) counts.SOLD++;
+      else if (p.status === "RESERVED") counts.RESERVED++;
+      else if (p.status === "UNDER_OFFER") counts.UNDER_OFFER++;
+      else if (p.status === "ACTIVE") counts.ACTIVE++;
     });
 
     return [

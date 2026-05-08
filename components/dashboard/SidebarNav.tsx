@@ -434,6 +434,7 @@ export function SidebarNav({
       <TooltipTrigger asChild>
         <Link
           href={item.href}
+          aria-label={item.title}
           onClick={() => {
             if (item.href !== pathname && !item.href.startsWith("tel:")) {
               setNavigatingTo(item.href);
@@ -586,6 +587,7 @@ export function SidebarNav({
 
             <button
               onClick={toggleCollapse}
+              aria-label={isCollapsed ? "ขยายเมนู" : "ย่อเมนู"}
               className={cn(
                 "absolute -right-4 top-14 h-8 w-8 rounded-full border border-slate-200 bg-white items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 z-51 hover:scale-110 active:scale-90 group/toggle",
                 isHovered
@@ -608,6 +610,7 @@ export function SidebarNav({
               <TooltipTrigger asChild>
                 <Link
                   href="/protected"
+                  aria-label="แดชบอร์ด"
                   className={cn(
                     "flex h-12 items-center gap-4 rounded-xl px-4 transition-colors duration-300 font-semibold text-xs relative overflow-hidden group/dash",
                     pathname === "/protected"
@@ -674,6 +677,7 @@ export function SidebarNav({
                       <TooltipTrigger asChild>
                         <button
                           onClick={() => toggleGroup(group.id)}
+                          aria-label={group.title}
                           className={cn(
                             "w-full flex items-center justify-center rounded-xl h-12 transition-all duration-300 relative",
                             hasActiveItem
@@ -719,6 +723,7 @@ export function SidebarNav({
                   {/* Group Header */}
                   <button
                     onClick={() => toggleGroup(group.id)}
+                    aria-label={group.title}
                     className={cn(
                       "w-full flex h-12 items-center justify-between gap-3 rounded-xl px-4 transition-all duration-300 font-semibold text-[11px] uppercase tracking-[0.15em] relative group/header",
                       hasActiveItem

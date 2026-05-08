@@ -183,7 +183,7 @@ export function RecentPropertiesTable({
                           return imageUrl ? (
                             <Dialog>
                               <DialogTrigger asChild>
-                                <div className="w-full h-full overflow-hidden relative">
+                                <button className="w-full h-full overflow-hidden relative" aria-label={`ดูรูปภาพ ${property.title}`}>
                                   <Image
                                     src={imageUrl}
                                     alt={property.title || "Property"}
@@ -191,7 +191,7 @@ export function RecentPropertiesTable({
                                     sizes="(max-width: 768px) 100vw, 96px"
                                     className="object-cover transition-transform duration-500 group-hover/image:scale-110"
                                   />
-                                </div>
+                                </button>
                               </DialogTrigger>
                               <DialogContent className="max-w-4xl border-none bg-transparent shadow-none p-0 flex items-center justify-center">
                                 <VisuallyHidden>
@@ -381,6 +381,7 @@ export function RecentPropertiesTable({
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="ดูรายละเอียด"
                         className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
                         onClick={() => {
                           setNavigatingId(`eye-${property.id}`);
@@ -398,6 +399,7 @@ export function RecentPropertiesTable({
                       <Button
                         variant="ghost"
                         size="icon"
+                        aria-label="แก้ไข"
                         className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-xl transition-colors"
                         onClick={() => {
                           setNavigatingId(`edit-${property.id}`);

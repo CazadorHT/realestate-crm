@@ -179,7 +179,7 @@ export default async function DashboardPage(props: {
 
       <>
         {/* 4. ภาพรวมระบบวิเคราะห์ Card */}
-        <div className="flex flex-col gap-6  ">
+        <div className="flex flex-col gap-6 min-h-[180px]">
           <ErrorBoundary>
             <StatsSectionSuspense
               tenantId={tenantId}
@@ -199,7 +199,7 @@ export default async function DashboardPage(props: {
           </ErrorBoundary>
         </div>
 
-        <div className="space-y-6 bg-linear-to-br from-blue-50/50 via-indigo-50 to-blue-50/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-indigo-100/50 shadow-sm">
+        <div className="space-y-6 bg-linear-to-br from-blue-50/50 via-indigo-50 to-blue-50/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-indigo-100/50 shadow-sm min-h-[600px]">
           {/* ตัวกรอง */}
           <ErrorBoundary fallback={<div className="p-4 bg-white rounded-2xl shadow-sm border border-red-100 text-red-500 text-xs">ตัวกรองขัดข้อง</div>}>
             <DashboardFilters
@@ -215,7 +215,7 @@ export default async function DashboardPage(props: {
               {showSmartSummary ? (
                 <ErrorBoundary fallback={<MiniErrorFallback />}>
                   <Suspense
-                    fallback={<Skeleton className="h-14 w-full rounded-2xl" />}
+                    fallback={<Skeleton className="h-32 w-full rounded-2xl" />}
                   >
                     <SmartSummaryWrapper
                       tenantId={tenantId}
@@ -381,7 +381,7 @@ export default async function DashboardPage(props: {
           </div>
         </div>
         {/* 5. ตารางอสังหาริมทรัพย์ล่าสุด (เต็มความกว้าง) */}
-        <div className="mt-2">
+        <div className="mt-2 min-h-[300px]">
           <ErrorBoundary>
             <RecentPropertiesSectionSuspense 
               tenantId={tenantId} 
