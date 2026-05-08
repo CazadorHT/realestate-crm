@@ -8,7 +8,21 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
-import { DepositWizard } from "./deposit/DepositWizard";
+import dynamic from "next/dynamic";
+const DepositWizard = dynamic(
+  () =>
+    import("./deposit/DepositWizard").then(
+      (mod) => mod.DepositWizard,
+    ),
+  {
+    loading: () => (
+      <div className="flex flex-col items-center justify-center p-12 min-h-[400px]">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600/20 border-t-blue-600 mb-4" />
+        <p className="text-slate-500 animate-pulse font-medium">Loading Form...</p>
+      </div>
+    ),
+  },
+);
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 export function DepositPropertySection({ className }: { className?: string }) {
   const { t } = useLanguage();
@@ -126,7 +140,7 @@ export function DepositPropertySection({ className }: { className?: string }) {
                   <item.icon className="w-6 h-6" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">
+                  <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">
                     {t("common.step")} {item.step}
                   </div>
                   <p className="text-base font-semibold text-slate-800 leading-snug">

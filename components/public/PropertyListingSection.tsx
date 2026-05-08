@@ -14,8 +14,6 @@ import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PropertyCard, type PropertyCardProps } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
-import AOS from "aos";
-import "aos/dist/aos.css";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { getProvinceName } from "@/lib/utils/provinces";
@@ -23,6 +21,7 @@ import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { PropertyListingSkeleton } from "./PropertyListingSkeleton";
 import { useSectionTracking } from "@/hooks/use-section-tracking";
 import type { PropertySearchResponse } from "@/features/properties/types/search";
+import { m } from "framer-motion";
 
 type FilterType =
   | "ALL"
@@ -85,10 +84,6 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
 
   useEffect(() => {
     setIsMounted(true);
-    // 🚀 Refresh AOS to detect the data-aos attributes we just applied
-    setTimeout(() => {
-      import("aos").then((AOS) => AOS.refresh());
-    }, 200);
   }, []);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -305,10 +300,10 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
     );
   }, [filter, properties, areaFilter, provinceFilter]);
   
-  // Refresh AOS when properties load or change
+  // Removed AOS refresh effect as we migrated to Framer Motion
   useEffect(() => {
     if (!isLoading) {
-      AOS.refresh();
+      // No-op
     }
   }, [isLoading, filteredProperties.length]);
 
@@ -352,8 +347,11 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
   };
 
   return (
-    <section
+    <m.section
       id="latest-properties"
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      viewport={{ once: true, margin: "-100px" }}
       className="py-12 md:py-16 lg:py-20  bg-white border-y border-slate-100"
     >
       {/* Schema.org Structured Data */}
@@ -365,9 +363,12 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
       <div className="max-w-screen-2xl px-6 lg:px-8 mx-auto">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 md:gap-6 mb-8 md:mb-10 ">
           {/* SEO-Optimized Header */}
-          <div
+          <m.div
             className="space-y-3"
-            {...(isMounted ? { "data-aos": "fade-right" } : {})}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
           >
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 leading-tight">
               <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 via-purple-600 to-blue-600">
@@ -398,12 +399,15 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
                 </div>
               )}
             </div>
-          </div>
+          </m.div>
 
           {/* Right Side: Filters & Navigation */}
-          <div
+          <m.div
             className="w-full lg:w-auto flex flex-col items-start lg:items-end gap-3 md:gap-4 text-sm"
-            {...(isMounted ? { "data-aos": "fade-left" } : {})}
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
           >
             {/* Upper Action Row: See More & Active Filters */}
             <div className="flex flex-row flex-wrap items-center justify-start lg:justify-end gap-3 md:gap-4 w-full">
@@ -571,9 +575,9 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
                   </svg>
                 </button>
               </div>
-            </div>
-          </div>
-          {error ? (
+          </m.div>
+        </div>
+        {error ? (
             <div className="rounded-2xl border border-rose-100 bg-rose-50 p-6 text-rose-700">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>{error}</div>
@@ -621,15 +625,18 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
                       property.original_rental_price > property.rental_price);
 
                   return (
-                    <div
+                    <m.div
                       key={property.id}
-                      {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": index * 50 } : {})}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: (index % 4) * 0.1 }}
                       className="relative group"
                     >
                       <PropertyCard property={property} priority={index === 0} />
-                    </div>
+                    </m.div>
                   );
-                })}
+                }) }
               </div>
 
               <div className="flex justify-center">
@@ -647,6 +654,6 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
             </div>
           )}
         </div>
-      </section>
+      </m.section>
     );
   }

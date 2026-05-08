@@ -1,8 +1,23 @@
-"use client";
-
 import { HeroTitle } from "@/components/public/HeroTitle";
 import dynamic from "next/dynamic";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  TrendingUp,
+  ArrowRight,
+  CheckCircle2,
+  Shield,
+  Clock,
+} from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ScrollDownButton } from "@/components/public/ScrollDownButton";
+import Image from "next/image";
+import { getServerTranslations } from "@/lib/i18n";
+import { getSiteSettings } from "@/features/site-settings/actions";
+import { siteConfig as defaultSiteConfig } from "@/lib/site-config";
+import { HeroActions } from "./HeroActions";
+
+// Client-only components that are heavy or interactive
 const SmartMatchWizard = dynamic(
   () =>
     import("@/components/public/SmartMatchWizard").then(
@@ -16,45 +31,28 @@ const SmartMatchWizard = dynamic(
     ),
   },
 );
-import {
-  TrendingUp,
-  CheckCircle2,
-  Shield,
-  Clock,
-  ArrowRight,
-  CheckCircle,
-} from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ScrollDownButton } from "@/components/public/ScrollDownButton";
-import { useState } from "react";
-import { useLanguage } from "@/components/providers/LanguageProvider";
-import Image from "next/image";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import { DepositWizard } from "@/components/public/deposit/DepositWizard";
-import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
-import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
-export function HeroSection({ hasProperties = true }: { hasProperties?: boolean }) {
-  const { t } = useLanguage();
-  const settings = useSiteConfig();
-  const showSmartMatch = settings.smart_match_wizard_enabled;
-  const [isDepositOpen, setIsDepositOpen] = useState(false);
-  const [isDepositSuccess, setIsDepositSuccess] = useState(false);
+export async function HeroSection({
+  hasProperties = true,
+}: {
+  hasProperties?: boolean;
+}) {
+  const { t } = await getServerTranslations();
+  const config = await getSiteSettings();
 
-  const handleScrollToDeposit = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const element = document.getElementById("deposit-section");
-    if (element) {
-      const offset = 80;
-      const elementPosition =
-        element.getBoundingClientRect().top + window.scrollY;
-      window.scrollTo({
-        top: elementPosition - offset,
-        behavior: "smooth",
-      });
-    }
+  const siteName = config.site_name || defaultSiteConfig.name;
+  const showSmartMatch = config.smart_match_wizard_enabled;
+
+  // Prepare translations for Client Component
+  const heroActionsT = {
+    cta_deposit: t("home.hero.cta_deposit"),
+    success_title: t("deposit.success.title"),
+    success_message: t("deposit.success.message"),
+    close: t("common.close"),
   };
+
+  const words = (t("home.hero.words") as unknown as string[]) || [];
+  const initialWord = words[0] || "";
 
   return (
     <div className="relative min-h-screen bg-slate-900 overflow-x-hidden">
@@ -69,7 +67,7 @@ export function HeroSection({ hasProperties = true }: { hasProperties?: boolean 
         className="object-cover"
         quality={40} // Optimized for mobile TBT/LCP
       />
-      {/* Gradient Overlay สำหรับความคมของ text */}
+      {/* Gradient Overlay */}
       <div className="absolute inset-0 bg-linear-to-b from-black/20 via-black/50 to-black/50" />
 
       {/* Optional Vignette Effect */}
@@ -101,7 +99,7 @@ export function HeroSection({ hasProperties = true }: { hasProperties?: boolean 
                 </span>
               </div>
 
-              <HeroTitle />
+              <HeroTitle initialWord={initialWord} />
 
               <h2 className="text-sm sm:text-base font-light md:text-lg lg:text-xl text-white/80 leading-relaxed max-w-2xl drop-shadow-md mx-auto md:mx-0">
                 {t("home.hot_deals.description")}
@@ -121,55 +119,7 @@ export function HeroSection({ hasProperties = true }: { hasProperties?: boolean 
                   </Link>
                 </Button>
 
-                <ResponsiveDialog
-                  open={isDepositOpen}
-                  onOpenChange={(open) => {
-                    setIsDepositOpen(open);
-                    if (!open) setIsDepositSuccess(false);
-                  }}
-                  trigger={
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="w-full sm:w-auto md:w-auto h-11 sm:h-12 md:h-14 px-5 sm:px-6 md:px-8 text-sm sm:text-base md:text-lg rounded-xl bg-white/90 hover:bg-white! border-slate-200 text-slate-700 hover:text-blue-600! shadow-sm transition-all animate-in fade-in-0 duration-200 slide-in-from-bottom-2"
-                    >
-                      {t("home.hero.cta_deposit")}
-                    </Button>
-                  }
-                  className="sm:max-w-[720px]  p-0 border-0 gap-0 rounded-3xl"
-                >
-                  {isDepositSuccess ? (
-                    <div className="text-center py-20 px-6 space-y-8 animate-in fade-in zoom-in duration-500">
-                      <div className="w-24 h-24 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                        <CheckCircle className="h-12 w-12" />
-                      </div>
-                      <div className="space-y-3">
-                        <h3 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
-                          {t("deposit.success.title")}
-                        </h3>
-                        <p className="text-slate-500 text-base md:text-lg max-w-sm mx-auto">
-                          {t("deposit.success.message")}
-                        </p>
-                      </div>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setIsDepositSuccess(false);
-                          setIsDepositOpen(false);
-                        }}
-                        className="mt-6 border-slate-200 hover:bg-slate-50 rounded-2xl px-12 py-7 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-sm"
-                      >
-                        {t("common.close")}
-                      </Button>
-                    </div>
-                  ) : (
-                    <DepositWizard
-                      onSuccessAction={() => setIsDepositSuccess(true)}
-                      onCancelAction={() => setIsDepositOpen(false)}
-                      location="Hero Section"
-                    />
-                  )}
-                </ResponsiveDialog>
+                <HeroActions t={heroActionsT} />
               </div>
 
               <div
@@ -202,15 +152,33 @@ export function HeroSection({ hasProperties = true }: { hasProperties?: boolean 
                   <div className="absolute inset-0 z-50 bg-white/40 backdrop-blur-[2px] rounded-2xl flex items-center justify-center">
                     <div className="bg-white px-6 py-4 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100/50 text-center transform -translate-y-4">
                       <div className="w-12 h-12 mb-3 rounded-full bg-slate-50 flex items-center justify-center mx-auto">
-                        <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        <svg
+                          className="w-6 h-6 text-slate-400"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
+                          />
                         </svg>
                       </div>
-                      <h4 className="font-semibold text-slate-800 mb-1">{t("properties.not_found") || "ยังไม่ได้ลงประกาศทรัพย์"}</h4>
+                      <p className="font-semibold text-slate-800 mb-1">
+                        {t("properties.not_found") || "ยังไม่ได้ลงประกาศทรัพย์"}
+                      </p>
                     </div>
                   </div>
                 )}
-                <div className={!hasProperties ? "opacity-60 select-none pointer-events-none transition-opacity duration-300" : ""}>
+                <div
+                  className={
+                    !hasProperties
+                      ? "opacity-60 select-none pointer-events-none transition-opacity duration-300"
+                      : ""
+                  }
+                >
                   <SmartMatchWizard />
                 </div>
               </div>

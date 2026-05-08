@@ -6,6 +6,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import Image from "next/image";
+import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 type Partner = {
@@ -71,28 +72,38 @@ export function PartnerSection() {
 
       <div className="max-w-screen-2xl mx-auto">
         {/* SEO-Optimized Header Section */}
-        <div className="text-center mb-8 md:mb-10 lg:mb-12" data-aos="fade-up">
+        <m.div 
+          className="text-center mb-8 md:mb-10 lg:mb-12"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <h2 className="text-2xl md:text-4xl font-bold text-slate-900 mb-3">
             <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600 mr-2">
               {t("home.partners.title").split(" ")[0]}
             </span>
             {t("home.partners.title").split(" ").slice(1).join(" ")}
           </h2>
-          <p
+          <m.p
             className="text-sm md:text-base text-slate-400 mb-4 uppercase tracking-wider font-semibold"
-            data-aos="fade-up"
-            data-aos-delay="100"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
           >
             {t("home.partners.subtitle")}
-          </p>
-          <p
+          </m.p>
+          <m.p
             className="max-w-2xl mx-auto text-slate-600 text-base md:text-lg leading-relaxed"
-            data-aos="fade-up"
-            data-aos-delay="200"
+            initial={{ opacity: 0, y: 10 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
           >
             {t("home.partners.description")}
-          </p>
-        </div>
+          </m.p>
+        </m.div>
 
         {/* Partner Logos Marquee */}
         <div
@@ -111,14 +122,16 @@ export function PartnerSection() {
                     </div>
                   ))
                 : partners.map((partner, idx) => (
-                    <div
+                    <m.div
                       key={partner.id}
-                      data-aos="fade-up"
-                      data-aos-delay={idx * 50}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: idx * 0.05 }}
                       className="group relative flex items-center justify-center transition-all duration-500 ease-in-out px-4 h-16 w-32 md:h-20 md:w-40"
                     >
                       <PartnerLogo partner={partner} t={t} />
-                    </div>
+                    </m.div>
                   ))}
             </div>
             {/* Duplicate for seamless loop */}
@@ -137,14 +150,16 @@ export function PartnerSection() {
                     </div>
                   ))
                 : partners.map((partner, idx) => (
-                    <div
+                    <m.div
                       key={`duplicate-${partner.id}`}
-                      data-aos="fade-up"
-                      data-aos-delay={idx * 50}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: idx * 0.05 }}
                       className="group relative flex items-center justify-center transition-all duration-500 ease-in-out px-4 h-16 w-32 md:h-20 md:w-40"
                     >
                       <PartnerLogo partner={partner} t={t} />
-                    </div>
+                    </m.div>
                   ))}
             </div>
           </div>

@@ -125,29 +125,44 @@ export function DepositDesktopView({
           {/* Vertical Step Indicator */}
           <div className="space-y-8 pt-4">
             {STEPS.map((step) => {
-              const isCompleted = currentStep > step.id || (step.id === 1 && isStep1Done) || (step.id === 2 && isStep2Done);
+              const isCompleted =
+                currentStep > step.id ||
+                (step.id === 1 && isStep1Done) ||
+                (step.id === 2 && isStep2Done);
               const isActive = currentStep === step.id;
-              
+
               return (
-                <div key={step.id} className="flex items-center gap-4 group cursor-default">
-                  <StepIcon 
-                    stepNum={step.id} 
-                    currentStep={isCompleted && !isActive ? step.id + 1 : currentStep} 
-                    isDesktop 
+                <div
+                  key={step.id}
+                  className="flex items-center gap-4 group cursor-default"
+                >
+                  <StepIcon
+                    stepNum={step.id}
+                    currentStep={
+                      isCompleted && !isActive ? step.id + 1 : currentStep
+                    }
+                    isDesktop
                   />
                   <div>
-                    <p className={cn(
-                      "text-sm font-bold transition-all duration-300",
-                      isActive ? "text-white" : isCompleted ? "text-emerald-400" : "text-blue-200/50"
-                    )}>
+                    <p
+                      className={cn(
+                        "text-sm font-bold transition-all duration-300",
+                        isActive
+                          ? "text-white"
+                          : isCompleted
+                            ? "text-emerald-400"
+                            : "text-blue-200/50",
+                      )}
+                    >
                       {step.label}
                     </p>
                     <p className="text-[10px] text-blue-200/40 uppercase tracking-wider font-semibold mt-0.5">
-                      {isActive 
-                        ? (t("deposit.wizard.currently_editing") || "Currently Editing") 
-                        : isCompleted 
-                          ? (t("deposit.wizard.completed") || "Completed") 
-                          : (t("deposit.wizard.pending") || "Pending")}
+                      {isActive
+                        ? t("deposit.wizard.currently_editing") ||
+                          "Currently Editing"
+                        : isCompleted
+                          ? t("deposit.wizard.completed") || "Completed"
+                          : t("deposit.wizard.pending") || "Pending"}
                     </p>
                   </div>
                 </div>
@@ -210,25 +225,55 @@ export function DepositDesktopView({
                   </div>
 
                   <div className="pt-2">
-                    {currentStep === 1 && <NameField isMobile={false} t={t} onFocus={onFormStartAction} />}
+                    {currentStep === 1 && (
+                      <NameField
+                        isMobile={false}
+                        t={t}
+                        onFocus={onFormStartAction}
+                      />
+                    )}
                     {currentStep === 2 && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                         <div className="md:col-span-2">
-                          <PhoneField isMobile={false} t={t} onFocus={onFormStartAction} />
+                          <PhoneField
+                            isMobile={false}
+                            t={t}
+                            onFocus={onFormStartAction}
+                          />
                         </div>
                         <div className="md:col-span-2">
-                          <EmailField isMobile={false} t={t} onFocus={onFormStartAction} />
+                          <EmailField
+                            isMobile={false}
+                            t={t}
+                            onFocus={onFormStartAction}
+                          />
                         </div>
-                        <LineField isMobile={false} t={t} onFocus={onFormStartAction} />
-                        <WhatsAppField isMobile={false} t={t} onFocus={onFormStartAction} />
+                        <LineField
+                          isMobile={false}
+                          t={t}
+                          onFocus={onFormStartAction}
+                        />
+                        <WhatsAppField
+                          isMobile={false}
+                          t={t}
+                          onFocus={onFormStartAction}
+                        />
                         <div className="md:col-span-2">
-                          <WeChatField isMobile={false} t={t} onFocus={onFormStartAction} />
+                          <WeChatField
+                            isMobile={false}
+                            t={t}
+                            onFocus={onFormStartAction}
+                          />
                         </div>
                       </div>
                     )}
                     {currentStep === 3 && (
                       <div className="space-y-6">
-                        <PropertyTypeField isMobile={false} t={t} onFocus={onFormStartAction} />
+                        <PropertyTypeField
+                          isMobile={false}
+                          t={t}
+                          onFocus={onFormStartAction}
+                        />
                         <MessageField isMobile={false} t={t} />
                       </div>
                     )}
@@ -250,7 +295,7 @@ export function DepositDesktopView({
                   {t("common.back") || "ย้อนกลับ"}
                 </Button>
               )}
-              
+
               <div className="flex-1">
                 {currentStep === totalSteps ? (
                   <SubmitButton isLoading={isLoading} />
@@ -266,7 +311,7 @@ export function DepositDesktopView({
                 )}
               </div>
             </div>
-            
+
             <p className="text-center text-[10px] text-slate-400 mt-6 font-medium italic opacity-60">
               {t("deposit.wizard.press_enter") || "Press Enter to continue"}
             </p>

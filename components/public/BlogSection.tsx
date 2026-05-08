@@ -11,20 +11,37 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
-import { format } from "date-fns";
-import { th, enUS, zhCN, ru } from "date-fns/locale";
+// Removed date-fns imports to reduce bundle size. Using native Intl API instead.
 import { siteConfig } from "@/lib/site-config";
 
 import { BlogPost } from "@/lib/services/blog";
+import { m } from "framer-motion";
 
-export function BlogSection() {
+const getCategoryKey = (category: string) => {
+  const map: Record<string, string> = {
+    "ทั่วไป": "General",
+    "การลงทุน": "Investment",
+    "ไลฟ์สไตล์": "Lifestyle",
+    "แนวโน้มตลาด": "Market Trends",
+    "เคล็ดลับและเทคนิค": "Tips & Tricks",
+    "เคล็ดลับและสาระน่ารู้": "Tips & Tricks",
+  };
+  return map[category] || category;
+};
+
+export function BlogSection({ initialPosts = [] }: { initialPosts?: BlogPost[] }) {
   const { t, language } = useLanguage();
-  const [posts, setPosts] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState<BlogPost[]>(initialPosts);
+  const [loading, setLoading] = useState(initialPosts.length === 0);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     async function fetchPosts() {
+      if (initialPosts.length > 0) {
+        setIsMounted(true);
+        return;
+      }
+      
       const supabase = createClient();
       const { data } = await supabase
         .from("blog_posts")
@@ -46,9 +63,8 @@ export function BlogSection() {
       setIsMounted(true);
     }
     fetchPosts();
-  }, []);
+  }, [initialPosts]);
 
-  // if (loading) return null; // Removed to prevent layout shift
   if (!loading && posts.length === 0) return null;
 
   // Schema.org Blog for SEO
@@ -72,10 +88,13 @@ export function BlogSection() {
   };
 
   return (
-    <section
+    <m.section
       id="blog"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.6 }}
       className="py-10 md:py-12 px-4 md:px-6 lg:px-8 bg-slate-50 relative overflow-hidden z-0"
-      {...(isMounted ? { "data-aos": "fade-up" } : {})}
     >
       <SectionBackground pattern="icons" intensity="low" />
       {/* Schema.org Structured Data */}
@@ -173,9 +192,12 @@ export function BlogSection() {
                 );
 
                 return (
-                  <div
+                  <m.div
                     key={post.id}
-                    {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (index * 100).toString() } : {})}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
                     itemScope
                     itemType="https://schema.org/BlogPosting"
                     className="w-[260px] flex-none md:w-full lg:flex-1 snap-center shrink-0 mr-4 md:mr-0 h-full"
@@ -216,9 +238,9 @@ export function BlogSection() {
                         )}
                         {post.category && (
                           <Badge className="absolute top-4 left-4 bg-white/90 text-slate-900 backdrop-blur-sm hover:bg-white border border-white/50">
-                            {t(`blog.categories.${post.category}`) !==
-                            `blog.categories.${post.category}`
-                              ? t(`blog.categories.${post.category}`)
+                            {t(`blog.categories.${getCategoryKey(post.category)}`) !==
+                            `blog.categories.${getCategoryKey(post.category)}`
+                              ? t(`blog.categories.${getCategoryKey(post.category)}`)
                               : post.category}
                           </Badge>
                         )}
@@ -236,23 +258,19 @@ export function BlogSection() {
                               dateTime={post.published_at || ""}
                             >
                               {post.published_at
-                                ? format(new Date(post.published_at), "PPP", {
-                                    locale:
-                                      language === "th"
-                                        ? th
-                                        : language === "cn"
-                                          ? zhCN
-                                          : language === "ru"
-                                            ? ru
-                                            : enUS,
-                                  })
+                                ? new Intl.DateTimeFormat(
+                                    language === "th" ? "th-TH" : 
+                                    language === "cn" ? "zh-CN" : 
+                                    language === "ru" ? "ru-RU" : "en-US",
+                                    { dateStyle: "long" }
+                                  ).format(new Date(post.published_at))
                                 : ""}
                             </time>
                           </div>
                         </div>
 
                         <h3
-                          className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300"
+                          className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 line-clamp-2 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-700 group-hover:to-purple-700 transition-all duration-300"
                           itemProp="name"
                         >
                           {title}
@@ -298,11 +316,11 @@ export function BlogSection() {
                         </div>
                       </div>
                     </Link>
-                  </div>
+                  </m.div>
                 );
               })}
         </div>
       </div>
-    </section>
+    </m.section>
   );
 }

@@ -2,8 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { BookOpen } from "lucide-react";
 import { getLocalizedField } from "@/lib/i18n";
-import { format } from "date-fns";
-import { th, enUS, zhCN, ru } from "date-fns/locale";
+// Removed date-fns imports for bundle optimization. Using native Intl API.
 import type { BlogPost } from "@/lib/services/blog";
 
 interface BlogFeaturedPostProps {
@@ -11,6 +10,18 @@ interface BlogFeaturedPostProps {
   language: string;
   t: (key: string, options?: any) => string;
 }
+
+const getCategoryKey = (category: string) => {
+  const map: Record<string, string> = {
+    "ทั่วไป": "General",
+    "การลงทุน": "Investment",
+    "ไลฟ์สไตล์": "Lifestyle",
+    "แนวโน้มตลาด": "Market Trends",
+    "เคล็ดลับและเทคนิค": "Tips & Tricks",
+    "เคล็ดลับและสาระน่ารู้": "Tips & Tricks",
+  };
+  return map[category] || category;
+};
 
 export function BlogFeaturedPost({ post, language, t }: BlogFeaturedPostProps) {
   if (!post) return null;
@@ -65,16 +76,16 @@ export function BlogFeaturedPost({ post, language, t }: BlogFeaturedPostProps) {
           <div className="flex items-center gap-3 mb-4">
             {post.category && (
               <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full uppercase tracking-wide border border-blue-100">
-                {t(`blog.categories.${post.category}`) !==
-                `blog.categories.${post.category}`
-                  ? t(`blog.categories.${post.category}`)
+                {t(`blog.categories.${getCategoryKey(post.category)}`) !==
+                `blog.categories.${getCategoryKey(post.category)}`
+                  ? t(`blog.categories.${getCategoryKey(post.category)}`)
                   : post.category}
               </span>
             )}
           </div>
           <Link href={`/blog/${post.slug}`} className="block">
             <h3
-              className="text-xl lg:text-2xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all leading-tight"
+              className="text-xl lg:text-2xl font-bold text-slate-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-700 group-hover:to-purple-700 transition-all leading-tight"
               itemProp="name"
             >
               {title}
@@ -119,16 +130,12 @@ export function BlogFeaturedPost({ post, language, t }: BlogFeaturedPostProps) {
                       dateTime={post.published_at || ""}
                     >
                       {post.published_at
-                        ? format(new Date(post.published_at), "PPP", {
-                            locale:
-                              language === "th"
-                                ? th
-                                : language === "cn"
-                                  ? zhCN
-                                  : language === "ru"
-                                    ? ru
-                                    : enUS,
-                          })
+                        ? new Intl.DateTimeFormat(
+                            language === "th" ? "th-TH" : 
+                            language === "cn" ? "zh-CN" : 
+                            language === "ru" ? "ru-RU" : "en-US",
+                            { dateStyle: "long" }
+                          ).format(new Date(post.published_at))
                         : ""}
                     </time>
                   </p>

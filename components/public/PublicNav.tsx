@@ -222,9 +222,10 @@ export function PublicNav() {
                     <Image
                       src={settings.logo_light || siteConfig.logo}
                       alt={`${siteName} Logo`}
-                      width={280}
-                      height={80}
-                      className="h-13 sm:h-16 w-auto -mx-2 mt-1"
+                      width={300}
+                      height={86}
+                      className="h-13 sm:h-16 w-auto -mx-2 mt-1 object-contain"
+                      style={{ aspectRatio: '300 / 86' }}
                       priority
                       fetchPriority="high"
                     />

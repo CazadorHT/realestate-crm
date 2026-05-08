@@ -3,6 +3,7 @@
 import { Shield, CheckCircle2, Clock, Star, Award } from "lucide-react";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { m } from "framer-motion";
 import { useState, useEffect } from "react";
 
 export function TrustSection() {
@@ -43,9 +44,12 @@ export function TrustSection() {
 
       <div className="max-w-7xl mx-auto py-12 md:py-16 lg:py-20 px-4 md:px-6 lg:px-8">
         {/* SEO-Optimized Header */}
-        <div
+        <m.div
           className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
-          {...(isMounted ? { "data-aos": "fade-up" } : {})}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100">
             <Award className="w-4 h-4 text-blue-600" />
@@ -69,19 +73,22 @@ export function TrustSection() {
           <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
             {t("trust.desc")}
           </p>
-        </div>
+        </m.div>
 
         {/* Enhanced Feature Cards */}
         <div className="flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-hide gap-4 md:gap-6 lg:gap-8 pb-8 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
           {features.map((feature, index) => (
-            <div
+            <m.div
               key={index}
-              className="group relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all! duration-500! hover:-translate-y-2! overflow-hidden shrink-0 w-[85vw] md:w-full snap-center"
-              {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (index * 100).toString() } : {})}
+              className="group relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 border border-slate-200 hover:border-slate-300 shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-2 overflow-hidden shrink-0 w-[85vw] md:w-full snap-center"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
             >
               {/* Gradient Background on Hover */}
               <div
-                className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity! duration-500!`}
+                className={`absolute inset-0 bg-linear-to-br ${feature.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-500`}
               />
 
               <div className="relative z-10">
@@ -95,7 +102,7 @@ export function TrustSection() {
                 </div>
 
                 {/* Content */}
-                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
+                <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-700 group-hover:to-purple-700 transition-all duration-300">
                   {feature.title}
                 </h3>
                 <p className="text-sm md:text-base text-slate-600 leading-relaxed">
@@ -105,14 +112,17 @@ export function TrustSection() {
 
               {/* Decorative Corner */}
               <div className="absolute top-0 right-0 w-20 h-20 bg-linear-to-br from-blue-500/5 to-purple-500/5 rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            </div>
+            </m.div>
           ))}
         </div>
 
         {/* Enhanced Trust Badge */}
-        <div
+        <m.div
           className="mt-10 md:mt-16 flex flex-col sm:flex-row items-center justify-center gap-3 md:gap-4"
-          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "300" } : {})}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
         >
           <div className="flex items-center gap-2 px-4 md:px-6 py-2 md:py-3 bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200/50 rounded-full">
             <div className="flex items-center gap-1">
@@ -135,7 +145,7 @@ export function TrustSection() {
           <span className="text-sm text-slate-500 font-medium">
             {t("trust.rating_footer")}
           </span>
-        </div>
+        </m.div>
       </div>
     </section>
   );

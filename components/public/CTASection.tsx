@@ -126,7 +126,7 @@ export function CTASection() {
             <Button
               size="lg"
               variant="outline"
-              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 hover:border-green-600 hover:bg-green-500 hover:text-white  text-green-600  border-green-600 transition-all w-full sm:w-auto shadow-xl hover:shadow-2xl hover:scale-105"
+              className="text-base md:text-lg px-6 md:px-8 py-5 md:py-6 hover:border-green-700 hover:bg-green-600 hover:text-white  text-green-700  border-green-700 transition-all w-full sm:w-auto shadow-xl hover:shadow-2xl hover:scale-105"
             >
               <MessageCircle className="h-4 w-4 md:h-5 md:w-5 mr-2" />
               {t("common.contact_line")}

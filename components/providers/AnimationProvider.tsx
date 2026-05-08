@@ -27,8 +27,8 @@ export function AnimationProvider({ children }: AnimationProviderProps) {
       offset: 40,
       throttleDelay: 200, // 🚀 Boost: Reduce reflow frequency during scroll
       // 🛠️ HARDENING: Disable MutationObserver on mobile to prevent Forced Reflows
-      disableMutationObserver: isMobile, 
-      disable: false, 
+      disableMutationObserver: isMobile,
+      disable: false,
     });
   }, []);
 

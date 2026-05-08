@@ -4,10 +4,8 @@ import { BlogPost } from "@/lib/services/blog";
 import { Calendar, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { th, enUS as en, zhCN as zh, ru } from "date-fns/locale";
+// Removed date-fns imports for bundle optimization
 import { getLocalizedField } from "@/lib/i18n";
-import type { Locale } from "date-fns";
 
 interface BlogCardProps {
   post: BlogPost;
@@ -17,7 +15,19 @@ interface BlogCardProps {
   priority?: boolean;
 }
 
-const dateLocales: Record<string, Locale> = { th, en, zh, ru };
+const getCategoryKey = (category: string) => {
+  const map: Record<string, string> = {
+    "ทั่วไป": "General",
+    "การลงทุน": "Investment",
+    "ไลฟ์สไตล์": "Lifestyle",
+    "แนวโน้มตลาด": "Market Trends",
+    "เคล็ดลับและเทคนิค": "Tips & Tricks",
+    "เคล็ดลับและสาระน่ารู้": "Tips & Tricks",
+  };
+  return map[category] || category;
+};
+
+// Removed unused dateLocales after migrating to Intl API.
 
 export function BlogCard({ post, className, language, t, priority = false }: BlogCardProps) {
   // Safe parsing for author field from profiles relation
@@ -26,9 +36,13 @@ export function BlogCard({ post, className, language, t, priority = false }: Blo
     avatar: post.profiles?.avatar_url || "",
   };
 
-  const locale = dateLocales[language === "cn" ? "zh" : language] || th;
   const formattedDate = post.published_at
-    ? format(new Date(post.published_at), "d MMM yyyy", { locale })
+    ? new Intl.DateTimeFormat(
+        language === "th" ? "th-TH" : 
+        language === "cn" ? "zh-CN" : 
+        language === "ru" ? "ru-RU" : "en-US",
+        { day: "numeric", month: "short", year: "numeric" }
+      ).format(new Date(post.published_at))
     : "";
 
   const title = getLocalizedField<string>(post, "title", language);
@@ -66,9 +80,9 @@ export function BlogCard({ post, className, language, t, priority = false }: Blo
                   getCategoryColor(post.category),
                 )}
               >
-                {t(`blog.categories.${post.category}`) !==
-                `blog.categories.${post.category}`
-                  ? t(`blog.categories.${post.category}`)
+                {t(`blog.categories.${getCategoryKey(post.category)}`) !==
+                `blog.categories.${getCategoryKey(post.category)}`
+                  ? t(`blog.categories.${getCategoryKey(post.category)}`)
                   : post.category}
               </Badge>
             </div>

@@ -203,30 +203,26 @@ export function ResponsiveDialog({
           onOpenAutoFocus={onOpenAutoFocus}
           onCloseAutoFocus={onCloseAutoFocus}
         >
-          <DrawerHeader className="shrink-0 text-left px-6 pt-5 pb-5 border-b border-slate-100 relative z-20 bg-white">
-            {title ? (
-              <>
-                <DrawerTitle>{title}</DrawerTitle>
-                {description && (
-                  <DrawerDescription
-                    className="mt-1 text-[13px] leading-relaxed"
-                    asChild
-                  >
-                    <div>{description}</div>
-                  </DrawerDescription>
-                )}
-              </>
-            ) : (
-              <>
-                <VisuallyHidden>
-                  <DrawerTitle>Dialog</DrawerTitle>
-                  <DrawerDescription>
-                    Dialog description for accessibility
-                  </DrawerDescription>
-                </VisuallyHidden>
-              </>
-            )}
-          </DrawerHeader>
+          {title ? (
+            <DrawerHeader className="shrink-0 text-left px-6 pt-5 pb-5 border-b border-slate-100 relative z-20 bg-white">
+              <DrawerTitle>{title}</DrawerTitle>
+              {description && (
+                <DrawerDescription
+                  className="mt-1 text-[13px] leading-relaxed"
+                  asChild
+                >
+                  <div>{description}</div>
+                </DrawerDescription>
+              )}
+            </DrawerHeader>
+          ) : (
+            <VisuallyHidden>
+              <DrawerTitle>Dialog</DrawerTitle>
+              <DrawerDescription>
+                Dialog description for accessibility
+              </DrawerDescription>
+            </VisuallyHidden>
+          )}
           {!description && title && (
             <VisuallyHidden>
               <DrawerDescription>
@@ -261,32 +257,28 @@ export function ResponsiveDialog({
         onCloseAutoFocus={onCloseAutoFocus}
         showCloseButton={showCloseButton}
       >
-        <DialogHeader className="shrink-0 px-6 pt-6 pb-5 pr-6 border-b border-slate-100">
-          {title ? (
-            <>
-              <DialogTitle className="text-xl font-bold tracking-tight text-slate-900 leading-snug">
-                {title}
-              </DialogTitle>
-              {description && (
-                <DialogDescription
-                  className="mt-1 text-[13px] text-slate-500 font-medium leading-relaxed"
-                  asChild
-                >
-                  <div>{description}</div>
-                </DialogDescription>
-              )}
-            </>
-          ) : (
-            <>
-              <VisuallyHidden>
-                <DialogTitle>Dialog</DialogTitle>
-                <DialogDescription>
-                  Dialog description for accessibility
-                </DialogDescription>
-              </VisuallyHidden>
-            </>
-          )}
-        </DialogHeader>
+        {title ? (
+          <DialogHeader className="shrink-0 px-6 pt-6 pb-5 pr-6 border-b border-slate-100">
+            <DialogTitle className="text-xl font-bold tracking-tight text-slate-900 leading-snug">
+              {title}
+            </DialogTitle>
+            {description && (
+              <DialogDescription
+                className="mt-1 text-[13px] text-slate-500 font-medium leading-relaxed"
+                asChild
+              >
+                <div>{description}</div>
+              </DialogDescription>
+            )}
+          </DialogHeader>
+        ) : (
+          <VisuallyHidden>
+            <DialogTitle>Dialog</DialogTitle>
+            <DialogDescription>
+              Dialog description for accessibility
+            </DialogDescription>
+          </VisuallyHidden>
+        )}
         {!description && title && (
           <VisuallyHidden>
             <DialogDescription>

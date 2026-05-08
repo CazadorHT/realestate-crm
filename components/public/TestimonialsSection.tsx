@@ -116,7 +116,7 @@ export function TestimonialsSection() {
                 {t_item.verified && (
                   <div className="absolute top-4 left-4 flex items-center gap-1 px-3 py-1 bg-green-50 border border-green-200 rounded-full">
                     <CheckCircle2 className="h-3 w-3 text-green-600" />
-                    <span className="text-xs font-bold text-green-700">
+                    <span className="text-xs font-bold text-green-800">
                       {t("home.testimonials.verified_client")}
                     </span>
                   </div>
@@ -135,7 +135,7 @@ export function TestimonialsSection() {
 
                 {/* Property Info */}
                 <div className="mb-3">
-                  <span className="inline-block px-3 py-1 text-xs font-bold bg-blue-50 text-blue-700 rounded-full border border-blue-200">
+                  <span className="inline-block px-3 py-1 text-xs font-bold bg-blue-50 text-blue-800 rounded-full border border-blue-200">
                     {t_item.property}
                   </span>
                 </div>

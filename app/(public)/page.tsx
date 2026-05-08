@@ -14,6 +14,7 @@ import {
   getPublicProvincesAction 
 } from "@/features/public-data/popular-areas";
 import { getPublicProperties } from "@/lib/services/properties";
+import { getBlogPosts } from "@/lib/services/blog";
 
 // Critical Above-the-Fold components (Stay static for visual stability)
 import { HeroSection } from "@/components/public/HeroSection";
@@ -157,6 +158,9 @@ export default async function LandingPage() {
   // 5. Hot Deals for Promotion (Pre-loaded)
   const hotDealsData = await getPublicProperties({ filter: 'hot_deals', limit: 4 });
   const hotDeals = hotDealsData.properties;
+
+  // 6. Latest Blog Posts for SSR Performance
+  const initialPosts = await getBlogPosts(undefined, 4);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -308,7 +312,7 @@ export default async function LandingPage() {
       </div>
       
       <div className="min-h-[500px] md:min-h-[600px]">
-        <BlogSection />
+        <BlogSection initialPosts={initialPosts} />
       </div>
       
       <div className="min-h-[400px] md:min-h-[500px]">

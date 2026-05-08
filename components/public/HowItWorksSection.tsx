@@ -184,7 +184,7 @@ export function HowItWorksSection() {
                     </div>
 
                     {/* Content */}
-                    <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-linear-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all duration-300">
+                    <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2 md:mb-3 group-hover:text-blue-700 transition-all duration-300">
                       {item.title}
                     </h3>
                     <p className="text-sm md:text-base text-slate-600 leading-relaxed mb-3 md:mb-4">

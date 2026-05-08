@@ -5,13 +5,13 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 
 import { m, AnimatePresence } from "framer-motion";
 
-export function HeroTitle() {
+export function HeroTitle({ initialWord }: { initialWord?: string }) {
   const { t } = useLanguage();
   const [index, setIndex] = useState(0);
   const [isInitial, setIsInitial] = useState(true);
 
   // Get words from translation, fallback to empty array if not found or not array
-  const words = (t("home.hero.words") as unknown as string[]) || [];
+  const words = (t("home.hero.words") as unknown as string[]) || (initialWord ? [initialWord] : []);
 
   useEffect(() => {
     if (words.length <= 1) return;

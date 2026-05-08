@@ -2,8 +2,7 @@
 import React from "react";
 
 import { Clock } from "lucide-react";
-import { format } from "date-fns";
-import { th, enUS, zhCN, ru } from "date-fns/locale";
+// Removed date-fns imports to reduce bundle size. Using native Intl API instead.
 import { formatPrice, getOfficePrice } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -23,7 +22,6 @@ export function PropertyCardFooter({
     setMounted(true);
   }, []);
 
-  const dateLocale = language === "th" ? th : language === "cn" ? zhCN : language === "ru" ? ru : enUS;
   const prices = getEffectivePrice(property);
 
   if (variant === "minimal") {
@@ -79,9 +77,12 @@ export function PropertyCardFooter({
             <Clock className="w-3 h-3" />
             <span className="min-w-[60px]">
               {mounted && property.updated_at
-                ? format(new Date(property.updated_at), "d MMM yyyy", {
-                    locale: dateLocale,
-                  })
+                ? new Intl.DateTimeFormat(
+                    language === "th" ? "th-TH" : 
+                    language === "cn" ? "zh-CN" : 
+                    language === "ru" ? "ru-RU" : "en-US",
+                    { day: "numeric", month: "short", year: "numeric" }
+                  ).format(new Date(property.updated_at))
                 : "-"}
             </span>
           </div>
@@ -232,9 +233,12 @@ export function PropertyCardFooter({
               <Clock className="h-3 w-3 mr-1" />
               <span className="text-slate-400 font-normal min-w-[70px]">
                 {mounted
-                  ? format(new Date(property.updated_at), "d MMM yyyy", {
-                      locale: dateLocale,
-                    })
+                  ? new Intl.DateTimeFormat(
+                      language === "th" ? "th-TH" : 
+                      language === "cn" ? "zh-CN" : 
+                      language === "ru" ? "ru-RU" : "en-US",
+                      { day: "numeric", month: "short", year: "numeric" }
+                    ).format(new Date(property.updated_at))
                   : ""}
               </span>
             </>

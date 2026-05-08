@@ -107,9 +107,9 @@ export function PublicFooter() {
                   <Image
                     src={settings.logo_dark || siteConfig.logoDark}
                     alt={`${siteName} Logo`}
-                    width={180}
-                    height={60}
-                    className="w-auto h-26"
+                    width={300}
+                    height={86}
+                    className="w-auto h-26 object-contain"
                     priority
                   />
                 </Link>
