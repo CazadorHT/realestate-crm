@@ -110,9 +110,9 @@ export function MortgageCalculatorSection() {
               {/* Input Groups */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label htmlFor="property-price-slider" className="text-sm font-medium text-slate-600">
+                  <div className="text-sm font-medium text-slate-600">
                     {t("home.mortgage.property_price")}
-                  </label>
+                  </div>
                   <div className="text-xl font-bold text-blue-600">
                     {propertyPrice.toLocaleString()} {t("common.baht")}
                   </div>
@@ -127,9 +127,9 @@ export function MortgageCalculatorSection() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <label htmlFor="down-payment-slider" className="text-sm font-medium text-slate-600">
+                  <div className="text-sm font-medium text-slate-600">
                     {t("home.mortgage.down_payment")} ({downPaymentPercent}%)
-                  </label>
+                  </div>
                   <div className="text-xl font-bold text-slate-900">
                     {formatCurrency(downPaymentAmount)}
                   </div>
