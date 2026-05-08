@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff, isAdmin } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { PROPERTY_IMAGES_BUCKET } from "./logic/images";
 import { mapDbError } from "@/lib/db-error";
 
@@ -92,6 +92,7 @@ export async function bulkDeletePropertiesAction(
 
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
+    revalidateTag("properties", "seconds");
 
     const skipped = blockedIds.size;
     const msg = skipped > 0 
@@ -162,6 +163,7 @@ export async function bulkRestorePropertiesAction(
 
     revalidatePath("/protected/properties");
     revalidatePath("/protected/properties/trash");
+    revalidateTag("properties", "seconds");
 
     return { success: true, count: count ?? ids.length, message: `กู้คืนทรัพย์สำเร็จ ${count} รายการ` };
   } catch (error) {
@@ -268,6 +270,7 @@ export async function bulkPermanentDeletePropertiesAction(
     );
 
     revalidatePath("/protected/properties/trash");
+    revalidateTag("properties", "seconds");
 
     // 🔔 Notify Admins about bulk permanent delete
     try {
@@ -329,6 +332,7 @@ export async function bulkMovePropertiesToTenantAction(
     );
 
     revalidatePath("/protected/properties");
+    revalidateTag("properties", "seconds");
 
     return { success: true, count: count ?? 0, message: `ดึงข้อมูลมายังสาขาของคุณสำเร็จ ${count} รายการ` };
   } catch (error) {
@@ -408,6 +412,7 @@ export async function bulkApproveAiReviewAction(
     );
 
     revalidatePath("/protected/properties");
+    revalidateTag("properties", "seconds");
 
     return { 
       success: true, 
@@ -416,6 +421,64 @@ export async function bulkApproveAiReviewAction(
     };
   } catch (error) {
     console.error("bulkApproveAiReview error:", error);
+    return { success: false, count: 0, message: mapDbError(error) };
+  }
+}
+
+/**
+ * 7. Bulk Update Status - เปลี่ยนสถานะทรัพย์พร้อมกันหลายรายการ
+ */
+export async function bulkUpdateStatusAction(
+  ids: string[],
+  status: string
+): Promise<BulkActionResult> {
+  try {
+    const { supabase, user, role, tenantId } = await requireAuthContext();
+    assertStaff(role);
+
+    if (!ids || ids.length === 0) {
+      return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
+    }
+
+    // กรองทรัพย์ที่เจ้าของสาขามีสิทธิ์จัดการ
+    let query = supabase
+      .from("properties")
+      .update({ 
+        status: status as any,
+        updated_at: new Date().toISOString()
+      })
+      .in("id", ids);
+      
+    if (role !== "ADMIN" && tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { error, count } = await query;
+
+    if (error) throw error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "property.bulk_update_status",
+        entity: "properties",
+        entityId: ids.join(","),
+        metadata: { count, newStatus: status },
+      }
+    );
+
+    revalidatePath("/protected/properties");
+    revalidatePath("/");
+    revalidateTag("properties", "seconds");
+    revalidateTag("dashboard-stats", "seconds");
+
+    return { 
+      success: true, 
+      count: count ?? ids.length, 
+      message: `อัปเดตสถานะเป็น ${status} สำเร็จ ${count} รายการ` 
+    };
+  } catch (error) {
+    console.error("bulkUpdateStatus error:", error);
     return { success: false, count: 0, message: mapDbError(error) };
   }
 }

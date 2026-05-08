@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAuthContext } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
@@ -65,6 +65,8 @@ export async function softDeleteProperty(id: string) {
     });
 
     revalidatePath("/protected/properties");
+    revalidatePath("/");
+    revalidateTag("properties", "seconds");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -93,6 +95,8 @@ export async function restoreProperty(id: string) {
       entityId: id,
     });
     revalidatePath("/protected/properties");
+    revalidatePath("/");
+    revalidateTag("properties", "seconds");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };
@@ -140,7 +144,8 @@ export async function permanentDeleteProperty(id: string) {
       entity: "properties",
       entityId: id,
     });
-    revalidatePath("/protected/properties");
+    revalidatePath("/protected/properties/trash");
+    revalidateTag("properties", "seconds");
     return { success: true };
   } catch (err: unknown) {
     return { success: false, error: mapDbError(err) };

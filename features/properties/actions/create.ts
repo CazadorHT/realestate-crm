@@ -243,6 +243,7 @@ export async function createPropertyAction(
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
+    revalidateTag("properties", "seconds");
 
     // 🚀 Step 6: Background Job (Non-blocking)
     await inngest.send({
@@ -469,6 +470,7 @@ export async function duplicatePropertyAction(
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
+    revalidateTag("properties", "seconds");
 
     // 🚀 Step 4.5: Background Job (Non-blocking)
     await inngest.send({

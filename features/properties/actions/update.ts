@@ -304,9 +304,11 @@ export async function updatePropertyAction(
     revalidatePath("/properties");
     revalidatePath("/(public)/properties", "page");
     revalidatePath("/(public)/properties/[slug]", "page");
+    revalidatePath("/");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
+    revalidateTag("properties", "seconds");
 
     if (safeValues.requires_ai_review) {
       await inngest.send({ name: "property.created", data: { propertyId: id, userId: user.id, tenantId } });
@@ -418,6 +420,7 @@ export async function updatePropertyStatusAction(input: {
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
+    revalidateTag("properties", "seconds");
 
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (e: unknown) {

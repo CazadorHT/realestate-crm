@@ -136,9 +136,11 @@ export async function deletePropertyAction(formData: FormData) {
       .eq("status", "TEMP");
 
     revalidatePath("/protected/properties");
+    revalidatePath("/");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
+    revalidateTag("properties", "seconds");
     return { success: true, message: "ลบทรัพย์สำเร็จ" };
   } catch (error: unknown) {
     console.error("deletePropertyAction → error:", error);
