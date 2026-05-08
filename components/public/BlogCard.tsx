@@ -14,11 +14,12 @@ interface BlogCardProps {
   className?: string;
   language: string;
   t: (key: string, options?: any) => string;
+  priority?: boolean;
 }
 
 const dateLocales: Record<string, Locale> = { th, en, zh, ru };
 
-export function BlogCard({ post, className, language, t }: BlogCardProps) {
+export function BlogCard({ post, className, language, t, priority = false }: BlogCardProps) {
   // Safe parsing for author field from profiles relation
   const author = {
     name: post.profiles?.full_name || "Admin",
@@ -46,6 +47,7 @@ export function BlogCard({ post, className, language, t }: BlogCardProps) {
               src={post.cover_image}
               alt={title || post.title}
               fill
+              priority={priority}
               className="object-cover transition-transform duration-700 group-hover:scale-110"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />

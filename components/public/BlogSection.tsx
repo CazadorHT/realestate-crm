@@ -204,6 +204,7 @@ export function BlogSection() {
                             src={post.cover_image}
                             alt={title}
                             fill
+                            priority={index < 4}
                             className="object-cover group-hover:scale-110 transition-transform duration-700"
                             itemProp="image"
                             sizes="(max-width: 768px) 260px, (max-width: 1024px) 50vw, 25vw"

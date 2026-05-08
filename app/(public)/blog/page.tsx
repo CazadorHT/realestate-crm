@@ -144,9 +144,9 @@ export default async function BlogListingPage({
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {remainingPosts.map((post) => (
+                {remainingPosts.map((post, index) => (
                   <div key={post.slug} className="h-full">
-                    <BlogCard post={post} language={language} t={t} />
+                    <BlogCard post={post} language={language} t={t} priority={index < 3} />
                   </div>
                 ))}
 
