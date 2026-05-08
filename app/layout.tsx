@@ -17,9 +17,8 @@ import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { siteConfig } from "@/lib/site-config";
 import { getSiteSettings } from "@/features/site-settings/actions";
-export const dynamic = 'force-dynamic';
-// Removed force-dynamic to allow Next.js to optimize routing. 
-// Next.js will still dynamically render where cookies() are used.
+// Removed force-dynamic to allow Next.js to optimize routing and enable SSG where possible.
+// Next.js will still dynamically render where cookies() or other dynamic functions are used.
 const prompt = Prompt({
   weight: ["400", "500", "600", "700"],
   subsets: ["thai", "latin"],
@@ -110,6 +109,10 @@ export default async function RootLayout({
         {/* Resource Hinting: S-Tier Performance Optimization */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+        
+        {/* Supabase Preconnect */}
+        <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
         
         {/* Google Tag Manager - Lazy Loaded for S-Tier TBT Score */}
         {settings.google_tag_manager_enabled && settings.google_tag_manager_id && (

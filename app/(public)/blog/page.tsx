@@ -17,7 +17,7 @@ import { siteConfig } from "@/lib/site-config";
 
 import { Metadata } from "next";
 
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 86400; // S-Tier Hardening: Revalidate every 24 hours
 
 interface BlogListingPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

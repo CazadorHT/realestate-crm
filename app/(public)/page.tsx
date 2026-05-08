@@ -13,6 +13,7 @@ import {
   getPopularAreasAction, 
   getPublicProvincesAction 
 } from "@/features/public-data/popular-areas";
+import { getPublicProperties } from "@/lib/services/properties";
 
 // Critical Above-the-Fold components (Stay static for visual stability)
 import { HeroSection } from "@/components/public/HeroSection";
@@ -149,6 +150,10 @@ export default async function LandingPage() {
   // 3. Edge-Cached Popular Areas
   const popularAreas = await getPopularAreasAction(initialProvinceId);
 
+  // 4. Initial Properties for SSR Speed (S-Tier Performance)
+  const initialPropertiesData = await getPublicProperties({ limit: 8 });
+  const initialProperties = initialPropertiesData.properties;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
@@ -257,7 +262,7 @@ export default async function LandingPage() {
       
       {/* BELOW THE FOLD: Dynamic / Lazy with realistic height placeholders */}
       <div className="min-h-[1200px] md:min-h-[1400px]">
-        <PropertyListingSection />
+        <PropertyListingSection initialProperties={initialProperties} />
       </div>
       
       <div className="min-h-[400px] md:min-h-[450px]">

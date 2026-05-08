@@ -12,7 +12,7 @@ import Link from "next/link";
 import { ArrowRight, Sparkles, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, useRouter } from "next/navigation";
-import { PropertyCard } from "./PropertyCard";
+import { PropertyCard, type PropertyCardProps } from "./PropertyCard";
 import { PropertyCardSkeleton } from "./PropertyCardSkeleton";
 import AOS from "aos";
 import "aos/dist/aos.css";
@@ -22,6 +22,7 @@ import { getProvinceName } from "@/lib/utils/provinces";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { PropertyListingSkeleton } from "./PropertyListingSkeleton";
 import { useSectionTracking } from "@/hooks/use-section-tracking";
+import type { PropertySearchResponse } from "@/features/properties/types/search";
 
 type FilterType =
   | "ALL"
@@ -40,38 +41,9 @@ const WAREHOUSE_TYPES = new Set(["WAREHOUSE"]);
 
 const MAX_VISIBLE = 8;
 
-type ApiProperty = {
-  id: string;
-  slug?: string | null;
-  title: string;
-  description: string | null;
-  property_type: string | null;
-  price: number | null;
-  rental_price: number | null;
-  bedrooms: number | null;
-  bathrooms: number | null;
-  size_sqm: number | null;
-  popular_area: string | null;
-  province: string | null;
-  district: string | null;
-  subdistrict: string | null;
-  address_line1: string | null;
-  created_at: string;
-  updated_at: string;
-  listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
-  image_url: string | null;
-  location: string | null;
-  original_price: number | null;
-  original_rental_price: number | null;
-  features?: { id: string; name: string; icon_key: string }[];
-};
+// Property Filtering Logic
 
-type ApiResponse = {
-  properties: ApiProperty[];
-  facets: Record<string, any> | null;
-};
-
-function matchesFilter(item: ApiProperty, filter: FilterType) {
+function matchesFilter(item: PropertyCardProps, filter: FilterType) {
   if (filter === "ALL") return true;
 
   const pt = item.property_type ?? "";
@@ -96,18 +68,18 @@ type PopularArea = {
 };
 
 // Inside component:
-export function PropertyListingSection() {
+export function PropertyListingSection({ initialProperties }: { initialProperties?: PropertyCardProps[] }) {
   return (
     <Suspense fallback={<PropertyListingSkeleton />}>
-      <PropertyListingContent />
+      <PropertyListingContent initialProperties={initialProperties} />
     </Suspense>
   );
 }
 
-function PropertyListingContent() {
+function PropertyListingContent({ initialProperties }: { initialProperties?: PropertyCardProps[] }) {
   const { t, language } = useLanguage();
-  const [properties, setProperties] = useState<ApiProperty[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [properties, setProperties] = useState<PropertyCardProps[]>(initialProperties || []);
+  const [isLoading, setIsLoading] = useState(!initialProperties);
   const [isMounted, setIsMounted] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -236,6 +208,12 @@ function PropertyListingContent() {
     const controller = new AbortController();
 
     async function loadProperties() {
+      // Skip initial fetch if we already have properties from server
+      if (initialProperties && initialProperties.length > 0 && reloadKey === 0) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         setError(null);
@@ -249,7 +227,7 @@ function PropertyListingContent() {
           throw new Error(`Failed to load properties (${res.status})`);
         }
 
-        const data = (await res.json()) as ApiResponse;
+        const data = (await res.json()) as PropertySearchResponse;
         const propertiesArray = data.properties || [];
         setProperties(Array.isArray(propertiesArray) ? propertiesArray : []);
       } catch (err) {
