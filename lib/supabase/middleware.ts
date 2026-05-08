@@ -35,10 +35,15 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  // refreshing the auth token
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // 🛡️ [PERFORMANCE] Check for auth cookie presence before calling getUser()
+  // This prevents noisy AuthSessionMissingError logs for public visitors.
+  const hasAuthCookie = request.cookies.getAll().some(c => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+  
+  let user = null;
+  if (hasAuthCookie) {
+    const { data } = await supabase.auth.getUser();
+    user = data.user;
+  }
 
   // 1. Auth Protection (Basic Login)
   if (request.nextUrl.pathname.startsWith("/protected") && !user) {

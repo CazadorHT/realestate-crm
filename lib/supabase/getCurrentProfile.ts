@@ -16,7 +16,10 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    console.error("auth.getUser error", userError);
+    // Only log if it's a real error, not just a missing session
+    if (userError && userError.name !== "AuthSessionMissingError") {
+      console.error("auth.getUser error", userError);
+    }
     return null;
   }
 
