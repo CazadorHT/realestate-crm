@@ -18,13 +18,12 @@ export function AnimationProvider({ children }: AnimationProviderProps) {
   useEffect(() => {
     // Initialize AOS globally with professional "snappy" defaults
     AOS.init({
-      duration: 300,
+      duration: 400,
       easing: "ease-out-quart",
       once: true,
       mirror: false,
-      offset: 50, // Smaller offset for faster triggering
-      disable: "mobile", // 🚀 Hardening: Disable on mobile for massive TBT boost
-      disableMutationObserver: true, // 🚀 Performance: Don't watch DOM changes
+      offset: 50,
+      disableMutationObserver: false, // 🛠️ Fix: Allow AOS to detect data-aos added after mount
     });
   }, []);
 

@@ -108,6 +108,10 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
     }
     loadHotDeals();
     setIsMounted(true);
+    // 🚀 Refresh AOS to detect the data-aos attributes we just applied
+    setTimeout(() => {
+      import("aos").then((AOS) => AOS.refresh());
+    }, 100);
   }, [initialProperties]);
 
   if (isEmpty && !isLoading) return null;
@@ -261,8 +265,7 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
               <div
                 key={property.id}
                 className="w-[85vw] max-w-[340px] sm:max-w-[360px] md:w-auto md:max-w-none snap-start shrink-0 relative group"
-                data-aos="fade-up"
-                data-aos-delay={index * 100}
+                {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": index * 100 } : {})}
               >
                 {/* Card Wrapper with Premium Glow Effect */}
                 <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-0 lg:p-1 lg:bg-linear-to-b from-white/80 to-white/40 lg:shadow-xl lg:shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">

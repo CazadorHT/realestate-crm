@@ -119,6 +119,10 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
 
     fetchProvinces();
     setIsMounted(true);
+    // 🚀 Refresh AOS to detect the data-aos attributes we just applied
+    setTimeout(() => {
+      import("aos").then((AOS) => AOS.refresh());
+    }, 150);
   }, [initialProvinces]);
 
   // Handle data fetching for province changes

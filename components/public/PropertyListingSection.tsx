@@ -85,6 +85,10 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
 
   useEffect(() => {
     setIsMounted(true);
+    // 🚀 Refresh AOS to detect the data-aos attributes we just applied
+    setTimeout(() => {
+      import("aos").then((AOS) => AOS.refresh());
+    }, 200);
   }, []);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -619,10 +623,8 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
                   return (
                     <div
                       key={property.id}
-                      data-aos="fade-up"
-                      data-aos-delay={index * 50}
+                      {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": index * 50 } : {})}
                       className="relative group"
-                      suppressHydrationWarning
                     >
                       <PropertyCard property={property} priority={index === 0} />
                     </div>
