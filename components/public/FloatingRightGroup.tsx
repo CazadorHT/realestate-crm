@@ -34,18 +34,18 @@ export function FloatingRightGroup() {
     return () => observer.disconnect();
   }, []);
   
-  // Decide bottom position based on page
+  // Decide bottom offset based on page (using transform to avoid CLS)
   const normalizedPath = pathname?.replace(/^\/(th|en|cn)/, "") || "/";
   const isPropertyRelated = normalizedPath.startsWith("/properties/");
-  const bottomClass = isPropertyRelated ? "bottom-28 md:bottom-22 xl:bottom-6" : "bottom-6";
+  const transformClass = isPropertyRelated ? "-translate-y-22 xl:-translate-y-0" : "translate-y-0";
 
   if (isModalOpen) return null;
 
   return (
     <div 
       className={cn(
-        "fixed right-4 md:right-6 z-40 flex flex-col-reverse items-end gap-3 transition-all duration-500",
-        bottomClass
+        "fixed right-4 md:right-6 bottom-6 z-40 flex flex-col-reverse items-end gap-3 transition-all duration-500 w-10 md:w-12",
+        transformClass
       )}
     >
       <FloatingActionMenu />

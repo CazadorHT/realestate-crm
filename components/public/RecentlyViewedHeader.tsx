@@ -64,6 +64,7 @@ export function RecentlyViewedHeader({
           variant="ghost"
           size="sm"
           onClick={handleClear}
+          aria-label={t("recently_viewed.clear_history") || "Clear History"}
           className="text-slate-400 hover:text-red-500 transition-colors rounded-md gap-2 self-end sm:self-auto"
         >
           <Trash2 className="h-5 w-4" />

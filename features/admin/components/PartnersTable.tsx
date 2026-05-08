@@ -55,11 +55,13 @@ interface Partner {
 interface PartnersTableProps {
   partners: Partner[];
   isSuperAdmin?: boolean;
+  onRefresh?: () => void;
 }
 
 export function PartnersTable({ 
   partners: initialPartners,
-  isSuperAdmin = false 
+  isSuperAdmin = false,
+  onRefresh
 }: PartnersTableProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -127,7 +129,11 @@ export function PartnersTable({
       const result = await reorderPartnersAction(ids, offset);
       if (result.success) {
         toast.success(result.message);
-        router.refresh();
+        if (onRefresh) {
+          onRefresh();
+        } else {
+          router.refresh();
+        }
       } else {
         toast.error(result.message);
         setPartners(initialPartners); // Rollback
@@ -142,7 +148,11 @@ export function PartnersTable({
     const params = new URLSearchParams(searchParams.toString());
     params.set("success", "true");
     router.push(`${pathname}?${params.toString()}`);
-    router.refresh();
+    if (onRefresh) {
+      onRefresh();
+    } else {
+      router.refresh();
+    }
   };
 
   const handleBulkDelete = async () => {

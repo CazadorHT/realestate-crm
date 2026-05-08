@@ -199,7 +199,11 @@ export function PartnersContent({
           <TableSkeleton rowCount={pageSize} columnCount={5} />
         ) : partners.length > 0 ? (
           <div className="space-y-4">
-            <PartnersTable partners={partners} isSuperAdmin={isSuperAdmin} />
+            <PartnersTable 
+              partners={partners} 
+              isSuperAdmin={isSuperAdmin} 
+              onRefresh={() => fetchPartners(currentPage, searchQuery)}
+            />
             <PaginationControls
               totalCount={totalCount}
               pageSize={pageSize}
