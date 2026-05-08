@@ -13,10 +13,10 @@ import { useMemo } from "react";
 
 type ApiProperty = PropertyCardProps;
 
-export function HotDealsSection() {
+export function HotDealsSection({ initialProperties }: { initialProperties?: ApiProperty[] }) {
   const { language, t } = useLanguage();
-  const [properties, setProperties] = useState<ApiProperty[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [properties, setProperties] = useState<ApiProperty[]>(initialProperties || []);
+  const [isLoading, setIsLoading] = useState(!initialProperties);
   const [isMounted, setIsMounted] = useState(false);
   const [isEmpty, setIsEmpty] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -80,6 +80,12 @@ export function HotDealsSection() {
 
   useEffect(() => {
     async function loadHotDeals() {
+      // 🛡️ Performance: Skip fetch if server already provided data
+      if (initialProperties && initialProperties.length > 0) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
         const res = await fetch("/api/public/properties?filter=hot_deals", {
@@ -102,7 +108,7 @@ export function HotDealsSection() {
     }
     loadHotDeals();
     setIsMounted(true);
-  }, []);
+  }, [initialProperties]);
 
   if (isEmpty && !isLoading) return null;
 

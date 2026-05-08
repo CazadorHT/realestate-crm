@@ -153,204 +153,214 @@ export interface GetPropertiesOptions {
   includeFacets?: boolean;
 }
 
-export const getPublicProperties = cache(
-  async (options: GetPropertiesOptions = {}): Promise<PropertySearchResponse> => {
-    const supabase = await createClient();
+import { unstable_cache } from "next/cache";
 
-    let query = supabase
-      .from("properties")
-      .select(PUBLIC_COLUMNS)
-      .eq("status", "ACTIVE")
-      .is("deleted_at", null);
+export const getPublicProperties = cache(async (options: GetPropertiesOptions = {}) => {
+    return unstable_cache(
+      async () => {
+        const supabase = await createClient();
 
-    if (options.ids && options.ids.length > 0)
-      query = query.in("id", options.ids);
-    
-    if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal")
-      query = query.eq("is_hot_deal", true);
+        let query = supabase
+          .from("properties")
+          .select(PUBLIC_COLUMNS)
+          .eq("status", "ACTIVE")
+          .is("deleted_at", null);
 
-    if (options.province && options.province !== "ALL") {
-      query = query.eq("province", options.province);
-    }
-    if (options.area && options.area !== "ALL") {
-      query = query.or(`subdistrict.ilike.%${options.area}%,popular_area.ilike.%${options.area}%`);
-    }
-
-    if (options.propertyType && options.propertyType !== "ALL") {
-      query = query.eq("property_type", options.propertyType);
-    }
-
-    if (options.listingType && options.listingType !== "ALL") {
-      if (options.listingType === "SALE")
-        query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
-      else if (options.listingType === "RENT")
-        query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
-      else if (options.listingType === "SALE_AND_RENT")
-        query = query.eq("listing_type", "SALE_AND_RENT");
-    }
-
-    const effectivePriceType = options.priceType || options.listingType;
-    if (options.minPrice || options.maxPrice) {
-      const min = Number(options.minPrice) || 0;
-      const max = Number(options.maxPrice) || 2000000000;
-      if (effectivePriceType === "RENT") {
-        query = query.gte("rental_price", min).lte("rental_price", max);
-      } else {
-        query = query.gte("price", min).lte("price", max);
-      }
-    }
-
-    if (options.minSize || options.maxSize) {
-      const minS = Number(options.minSize) || 0;
-      const maxS = Number(options.maxSize) || 100000;
-      query = query.gte("size_sqm", minS).lte("size_sqm", maxS);
-    }
-
-    if (options.nearTrain) query = query.eq("near_transit", true);
-    if (options.petFriendly) query = query.eq("is_pet_friendly", true);
-    if (options.fullyFurnished) query = query.eq("is_fully_furnished", true);
-    if (options.isForeigner) query = query.eq("is_foreigner_quota", true);
-    if (options.companyRegistered) query = query.eq("is_tax_registered", true);
-
-    if (options.transitStation) {
-      const station = options.transitStation;
-      query = query.or(
-        `nearby_transits.cs.[{"station_name":"${station}"}],nearby_transits.cs.[{"station_name_en":"${station}"}],nearby_transits.cs.[{"station_name_cn":"${station}"}],nearby_transits.cs.[{"station_name_ru":"${station}"}]`
-      );
-    }
-
-    if (options.q) {
-      const searchTerm = options.q.trim();
-      const tokens = searchTerm.split(/\s+/).filter(t => t.length > 0);
-      
-      const fuzzyQuery = searchTerm
-        .replace(/([ก-ฮ\u0E30-\u0E4Ea-zA-Z\u0400-\u04FF\u4e00-\u9fa5])(\d)/g, '$1%$2')
-        .replace(/(\d)([ก-ฮ\u0E30-\u0E4Ea-zA-Z\u0400-\u04FF\u4e00-\u9fa5])/g, '$1%$2')
-        .replace(/\s+/g, "%");
+        if (options.ids && options.ids.length > 0)
+          query = query.in("id", options.ids);
         
-      const pctTerm = `%${fuzzyQuery}%`;
+        if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal")
+          query = query.eq("is_hot_deal", true);
 
-      const textConditions = [
-        `title.ilike.${pctTerm}`,
-        `title_en.ilike.${pctTerm}`,
-        `title_cn.ilike.${pctTerm}`,
-        `title_ru.ilike.${pctTerm}`,
-        `description.ilike.${pctTerm}`,
-        `description_en.ilike.${pctTerm}`,
-        `description_cn.ilike.${pctTerm}`,
-        `description_ru.ilike.${pctTerm}`,
-        `ai_summary_content.ilike.${pctTerm}`,
-        `popular_area.ilike.${pctTerm}`,
-        `province.ilike.${pctTerm}`,
-        `district.ilike.${pctTerm}`,
-        `meta_keywords.cs.{"${searchTerm}"}`
-      ];
-
-      // [Diamond-Tier] Unified Intent Detection
-      const { 
-        targetCategories, targetListing, targetBeds, 
-        targetBaths, targetMinSize, targetLandSize, isSearchingPool 
-      } = detectSearchIntent(tokens);
-
-      if (targetListing === "SALE") query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
-      else if (targetListing === "RENT") query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
-      else if (targetListing === "SALE_AND_RENT") query = query.eq("listing_type", "SALE_AND_RENT");
-
-      if (targetCategories.length > 0) {
-        if (targetCategories.includes("OFFICE_BUILDING") || targetCategories.includes("COMMERCIAL_BUILDING")) {
-           query = query.in("property_type", ["OFFICE_BUILDING", "COMMERCIAL_BUILDING"]);
-        } else if (targetCategories.includes("VILLA")) {
-           if (isSearchingPool) query = query.eq("property_type", "POOL_VILLA");
-           else query = query.in("property_type", ["VILLA", "POOL_VILLA"]);
-        } else {
-           query = query.in("property_type", targetCategories);
+        if (options.province && options.province !== "ALL") {
+          query = query.eq("province", options.province);
         }
+        if (options.area && options.area !== "ALL") {
+          query = query.or(`subdistrict.ilike.%${options.area}%,popular_area.ilike.%${options.area}%`);
+        }
+
+        if (options.propertyType && options.propertyType !== "ALL") {
+          query = query.eq("property_type", options.propertyType);
+        }
+
+        if (options.listingType && options.listingType !== "ALL") {
+          if (options.listingType === "SALE")
+            query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+          else if (options.listingType === "RENT")
+            query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+          else if (options.listingType === "SALE_AND_RENT")
+            query = query.eq("listing_type", "SALE_AND_RENT");
+        }
+
+        const effectivePriceType = options.priceType || options.listingType;
+        if (options.minPrice || options.maxPrice) {
+          const min = Number(options.minPrice) || 0;
+          const max = Number(options.maxPrice) || 2000000000;
+          if (effectivePriceType === "RENT") {
+            query = query.gte("rental_price", min).lte("rental_price", max);
+          } else {
+            query = query.gte("price", min).lte("price", max);
+          }
+        }
+
+        if (options.minSize || options.maxSize) {
+          const minS = Number(options.minSize) || 0;
+          const maxS = Number(options.maxSize) || 100000;
+          query = query.gte("size_sqm", minS).lte("size_sqm", maxS);
+        }
+
+        if (options.nearTrain) query = query.eq("near_transit", true);
+        if (options.petFriendly) query = query.eq("is_pet_friendly", true);
+        if (options.fullyFurnished) query = query.eq("is_fully_furnished", true);
+        if (options.isForeigner) query = query.eq("is_foreigner_quota", true);
+        if (options.companyRegistered) query = query.eq("is_tax_registered", true);
+
+        if (options.transitStation) {
+          const station = options.transitStation;
+          query = query.or(
+            `nearby_transits.cs.[{"station_name":"${station}"}],nearby_transits.cs.[{"station_name_en":"${station}"}],nearby_transits.cs.[{"station_name_cn":"${station}"}],nearby_transits.cs.[{"station_name_ru":"${station}"}]`
+          );
+        }
+
+        if (options.q) {
+          const searchTerm = options.q.trim();
+          const tokens = searchTerm.split(/\s+/).filter(t => t.length > 0);
+          
+          const fuzzyQuery = searchTerm
+            .replace(/([ก-ฮ\u0E30-\u0E4Ea-zA-Z\u0400-\u04FF\u4e00-\u9fa5])(\d)/g, '$1%$2')
+            .replace(/(\d)([ก-ฮ\u0E30-\u0E4Ea-zA-Z\u0400-\u04FF\u4e00-\u9fa5])/g, '$1%$2')
+            .replace(/\s+/g, "%");
+            
+          const pctTerm = `%${fuzzyQuery}%`;
+
+          const textConditions = [
+            `title.ilike.${pctTerm}`,
+            `title_en.ilike.${pctTerm}`,
+            `title_cn.ilike.${pctTerm}`,
+            `title_ru.ilike.${pctTerm}`,
+            `description.ilike.${pctTerm}`,
+            `description_en.ilike.${pctTerm}`,
+            `description_cn.ilike.${pctTerm}`,
+            `description_ru.ilike.${pctTerm}`,
+            `ai_summary_content.ilike.${pctTerm}`,
+            `popular_area.ilike.${pctTerm}`,
+            `province.ilike.${pctTerm}`,
+            `district.ilike.${pctTerm}`,
+            `meta_keywords.cs.{"${searchTerm}"}`
+          ];
+
+          // [Diamond-Tier] Unified Intent Detection
+          const { 
+            targetCategories, targetListing, targetBeds, 
+            targetBaths, targetMinSize, targetLandSize, isSearchingPool 
+          } = detectSearchIntent(tokens);
+
+          if (targetListing === "SALE") query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
+          else if (targetListing === "RENT") query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+          else if (targetListing === "SALE_AND_RENT") query = query.eq("listing_type", "SALE_AND_RENT");
+
+          if (targetCategories.length > 0) {
+            if (targetCategories.includes("OFFICE_BUILDING") || targetCategories.includes("COMMERCIAL_BUILDING")) {
+               query = query.in("property_type", ["OFFICE_BUILDING", "COMMERCIAL_BUILDING"]);
+            } else if (targetCategories.includes("VILLA")) {
+               if (isSearchingPool) query = query.eq("property_type", "POOL_VILLA");
+               else query = query.in("property_type", ["VILLA", "POOL_VILLA"]);
+            } else {
+               query = query.in("property_type", targetCategories);
+            }
+          }
+
+          if (targetBeds !== null) query = query.eq("bedrooms", targetBeds);
+          if (targetBaths !== null) query = query.eq("bathrooms", targetBaths);
+          if (targetMinSize !== null) query = query.gte("size_sqm", targetMinSize);
+          if (targetLandSize !== null) query = query.gte("land_size_sqwah", targetLandSize);
+
+          query = query.or(textConditions.join(","));
+        }
+
+        const itemsPerPage = options.limit || 60;
+
+        if (options.filter === "hot_deals") {
+          query = query.order("updated_at", { ascending: false });
+        } else if (options.listingType === "RENT") {
+          query = query.order("rental_price", { ascending: true, nullsFirst: false });
+        } else {
+          query = query.order("price", { ascending: true, nullsFirst: false });
+        }
+
+        const { data: propertiesData, error } = await query.limit(itemsPerPage);
+        
+        if (error) {
+          console.error("Error fetching properties:", error);
+          return { properties: [], facets: null };
+        }
+
+        let facets: PropertyFacets | null = null;
+        if (options.includeFacets) {
+          const rpcParams: FacetRPCParams = {
+            p_q: options.q || null,
+            p_province: options.province || null,
+            p_property_type: options.propertyType || null,
+            p_listing_type: options.listingType || null
+          };
+          const { data: facetData } = await supabase.rpc('get_public_property_facets_v2', rpcParams);
+          facets = (facetData as unknown) as PropertyFacets | null;
+        }
+
+        const popularAreaNames = Array.from(
+          new Set(
+            (propertiesData || [])
+              .map((row: PropertyRow) => row.popular_area)
+              .filter((area: string | null): area is string => !!area),
+          ),
+        );
+        const areaTranslationsMap = new Map<
+          string,
+          { en: string | null; cn: string | null; ru: string | null }
+        >();
+
+        if (popularAreaNames.length > 0) {
+          const { data: areaData } = await supabase
+            .from("popular_areas")
+            .select("name, name_en, name_cn, name_ru")
+            .in("name", popularAreaNames);
+          (areaData || []).forEach((a: { name: string; name_en: string | null; name_cn: string | null; name_ru: string | null }) =>
+            areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn, ru: a.name_ru }),
+          );
+        }
+
+        const finalProperties = (propertiesData as unknown as PropertyRow[] ?? []).map((row: PropertyRow) => {
+          const trans = areaTranslationsMap.get(row.popular_area || "");
+          const { structured_data: _, property_features: __, property_images: pi, images: legacyImages, ...cardBase } = row;
+          
+          const finalImages = (pi && pi.length > 0) 
+            ? pi.map((img: NonNullable<PropertyRow['property_images']>[number]) => ({ ...img, url: img.image_url })) 
+            : getSafeImages(legacyImages);
+
+          return {
+            ...cardBase,
+            popular_area_en: trans?.en ?? null,
+            popular_area_cn: trans?.cn ?? null,
+            popular_area_ru: trans?.ru ?? null,
+            created_at_time: new Date(row.created_at).getTime(),
+            image_url: getCoverImage(finalImages),
+            images: finalImages,
+            location: buildLocation(row),
+            features: (row.property_features || []).map((pf: NonNullable<PropertyRow['property_features']>[number]) => pf.features).filter((f): f is NonNullable<typeof f> => !!f),
+            verified: row.verified === true ? true : row.verified === false ? false : undefined,
+            nearby_places: getSafeNearbyPlaces(row.nearby_places),
+            nearby_transits: getSafeNearbyTransits(row.nearby_transits),
+          };
+        });
+
+        return { properties: finalProperties, facets };
+      },
+      [`public-properties-${JSON.stringify(options)}`],
+      {
+        revalidate: 3600,
+        tags: ["properties", "public-data"],
       }
-
-      if (targetBeds !== null) query = query.eq("bedrooms", targetBeds);
-      if (targetBaths !== null) query = query.eq("bathrooms", targetBaths);
-      if (targetMinSize !== null) query = query.gte("size_sqm", targetMinSize);
-      if (targetLandSize !== null) query = query.gte("land_size_sqwah", targetLandSize);
-
-      query = query.or(textConditions.join(","));
-    }
-
-    const itemsPerPage = options.limit || 60;
-
-    if (options.filter === "hot_deals") {
-      query = query.order("updated_at", { ascending: false });
-    } else if (options.listingType === "RENT") {
-      query = query.order("rental_price", { ascending: true, nullsFirst: false });
-    } else {
-      query = query.order("price", { ascending: true, nullsFirst: false });
-    }
-
-    const { data: propertiesData, error } = await query.limit(itemsPerPage);
-    
-    if (error) {
-      console.error("Error fetching properties:", error);
-      return { properties: [], facets: null };
-    }
-
-    let facets: PropertyFacets | null = null;
-    if (options.includeFacets) {
-      const rpcParams: FacetRPCParams = {
-        p_q: options.q || null,
-        p_province: options.province || null,
-        p_property_type: options.propertyType || null,
-        p_listing_type: options.listingType || null
-      };
-      const { data: facetData } = await supabase.rpc('get_public_property_facets_v2', rpcParams);
-      facets = (facetData as unknown) as PropertyFacets | null;
-    }
-
-    const popularAreaNames = Array.from(
-      new Set(
-        (propertiesData || [])
-          .map((row: PropertyRow) => row.popular_area)
-          .filter((area: string | null): area is string => !!area),
-      ),
-    );
-    const areaTranslationsMap = new Map<
-      string,
-      { en: string | null; cn: string | null; ru: string | null }
-    >();
-
-    if (popularAreaNames.length > 0) {
-      const { data: areaData } = await supabase
-        .from("popular_areas")
-        .select("name, name_en, name_cn, name_ru")
-        .in("name", popularAreaNames);
-      (areaData || []).forEach((a: { name: string; name_en: string | null; name_cn: string | null; name_ru: string | null }) =>
-        areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn, ru: a.name_ru }),
-      );
-    }
-
-    const finalProperties = (propertiesData as unknown as PropertyRow[] ?? []).map((row: PropertyRow) => {
-      const trans = areaTranslationsMap.get(row.popular_area || "");
-      const { structured_data: _, property_features: __, property_images: pi, images: legacyImages, ...cardBase } = row;
-      
-      const finalImages = (pi && pi.length > 0) 
-        ? pi.map((img: NonNullable<PropertyRow['property_images']>[number]) => ({ ...img, url: img.image_url })) 
-        : getSafeImages(legacyImages);
-
-      return {
-        ...cardBase,
-        popular_area_en: trans?.en ?? null,
-        popular_area_cn: trans?.cn ?? null,
-        popular_area_ru: trans?.ru ?? null,
-        created_at_time: new Date(row.created_at).getTime(),
-        image_url: getCoverImage(finalImages),
-        images: finalImages,
-        location: buildLocation(row),
-        features: (row.property_features || []).map((pf: NonNullable<PropertyRow['property_features']>[number]) => pf.features).filter((f): f is NonNullable<typeof f> => !!f),
-        verified: row.verified === true ? true : row.verified === false ? false : undefined,
-        nearby_places: getSafeNearbyPlaces(row.nearby_places),
-        nearby_transits: getSafeNearbyTransits(row.nearby_transits),
-      };
-    });
-
-    return { properties: finalProperties, facets };
+    )();
   },
 );
 

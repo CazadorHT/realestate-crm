@@ -154,6 +154,10 @@ export default async function LandingPage() {
   const initialPropertiesData = await getPublicProperties({ limit: 8 });
   const initialProperties = initialPropertiesData.properties;
 
+  // 5. Hot Deals for Promotion (Pre-loaded)
+  const hotDealsData = await getPublicProperties({ filter: 'hot_deals', limit: 4 });
+  const hotDeals = hotDealsData.properties;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "RealEstateAgent",
@@ -252,7 +256,7 @@ export default async function LandingPage() {
       
       {/* STRATEGIC CONVERSION: Hot Deals with optimized skeleton height */}
       <div className="min-h-[700px] md:min-h-[800px]">
-        <HotDealsSection />
+        <HotDealsSection initialProperties={hotDeals} />
       </div>
       
       {/* NAVIGATION & SEO: Popular Areas */}

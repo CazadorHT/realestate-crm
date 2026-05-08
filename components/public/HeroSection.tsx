@@ -64,7 +64,7 @@ export function HeroSection() {
         fetchPriority="high"
         sizes="100vw"
         className="object-cover"
-        quality={70}
+        quality={60}
       />
       {/* Gradient Overlay สำหรับความคมของ text */}
       <div className="absolute inset-0 bg-linear-to-b from-black/20 via-black/50 to-black/50" />
