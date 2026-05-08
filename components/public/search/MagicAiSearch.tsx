@@ -52,7 +52,8 @@ export function MagicAiSearch({
         </div>
         
         <Input
-        
+          id="magic-search"
+          name="keyword"
           placeholder={
             language === "th" 
               ? "ค้นหาทำเล, ประเภททรัพย์, จำนวนห้อง (เช่น คอนโดอารีย์ 2นอน)" 

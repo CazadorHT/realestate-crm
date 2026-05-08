@@ -84,7 +84,10 @@ export function PublicFooter() {
 
   return (
     <Suspense fallback={null}>
-      <footer className="bg-[#0B1120] text-slate-300 relative overflow-hidden font-sans">
+      <footer 
+        suppressHydrationWarning
+        className="bg-[#0B1120] text-slate-300 relative overflow-hidden font-sans"
+      >
         {/* Background Effects */}
         <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-[-10%] w-[50%] h-[500px] bg-blue-900/10 rounded-full blur-[120px]" />
@@ -306,6 +309,7 @@ function NewsletterSection() {
           </label>
           <input
             id="footer-line-id"
+            name="lineId"
             type="text"
             value={lineId}
             onChange={(e) => setLineId(e.target.value)}

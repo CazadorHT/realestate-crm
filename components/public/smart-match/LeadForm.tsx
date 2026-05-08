@@ -187,6 +187,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
               <span className="text-red-500">*</span>
             </label>
             <Input
+              id="match-fullname"
               name="fullName"
               required
               onFocus={handleFormStart}
@@ -202,6 +203,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
+                id="match-phone"
                 name="phone"
                 required
                 onFocus={handleFormStart}
@@ -217,6 +219,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
               <Input
+                id="match-email"
                 name="email"
                 type="email"
                 placeholder="email@example.com"
@@ -231,6 +234,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
             <div className="relative">
               <FaLine className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#00B900]" />
               <Input
+                id="match-lineid"
                 name="lineId"
                 onFocus={handleFormStart}
                 placeholder="line_id"
@@ -247,6 +251,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
               <div className="relative">
                 <IoLogoWechat className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#07C160]" />
                 <Input
+                  id="match-wechatid"
                   name="wechatId"
                   onFocus={handleFormStart}
                   placeholder="wechat_id"
@@ -261,6 +266,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
               <div className="relative">
                 <FaWhatsapp className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#25D366]" />
                 <Input
+                  id="match-whatsapp"
                   name="whatsapp"
                   onFocus={handleFormStart}
                   placeholder="phone or id"

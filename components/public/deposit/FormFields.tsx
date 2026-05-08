@@ -48,11 +48,11 @@ export function NameField({ isMobile, t, onFocus }: FieldProps) {
             {!isMobile && <User className="w-3.5 h-3.5 text-slate-500" />}
             {t("deposit.form.name_label")} <span className="text-rose-500">*</span>
           </FormLabel>
-          <FormControl>
-            <div className="relative group">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
-                <User className="w-3.5 h-3.5" />
-              </div>
+          <div className="relative group">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+              <User className="w-3.5 h-3.5" />
+            </div>
+            <FormControl>
               <Input
                 placeholder={t("deposit.form.name_placeholder")}
                 className={cn(
@@ -64,8 +64,8 @@ export function NameField({ isMobile, t, onFocus }: FieldProps) {
                 onFocus={onFocus}
                 {...field}
               />
-            </div>
-          </FormControl>
+            </FormControl>
+          </div>
           <FormMessage />
         </FormItem>
       )}
@@ -90,11 +90,11 @@ export function PhoneField({ isMobile, t, onFocus }: FieldProps) {
             {!isMobile && <Phone className="w-3.5 h-3.5 text-slate-500" />}
             {t("deposit.form.phone_label")} <span className="text-rose-500">*</span>
           </FormLabel>
-          <FormControl>
-            <div className="relative group">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
-                <Phone className="w-3.5 h-3.5" />
-              </div>
+          <div className="relative group">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+              <Phone className="w-3.5 h-3.5" />
+            </div>
+            <FormControl>
               <Input
                 type="tel"
                 placeholder="0XX-XXX-XXXX"
@@ -111,8 +111,8 @@ export function PhoneField({ isMobile, t, onFocus }: FieldProps) {
                   field.onChange(value);
                 }}
               />
-            </div>
-          </FormControl>
+            </FormControl>
+          </div>
           <FormMessage />
         </FormItem>
       )}
@@ -137,11 +137,11 @@ export function EmailField({ isMobile, t, onFocus }: FieldProps) {
             {!isMobile && <FaCommentDots className="w-3.5 h-3.5 text-slate-500" />}
             {t("deposit.form.email_label")}
           </FormLabel>
-          <FormControl>
-            <div className="relative group">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
-                <FaCommentDots className="w-3.5 h-3.5" />
-              </div>
+          <div className="relative group">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+              <FaCommentDots className="w-3.5 h-3.5" />
+            </div>
+            <FormControl>
               <Input
                 type="email"
                 placeholder={t("deposit.form.email_placeholder")}
@@ -154,8 +154,8 @@ export function EmailField({ isMobile, t, onFocus }: FieldProps) {
                 onFocus={onFocus}
                 {...field}
               />
-            </div>
-          </FormControl>
+            </FormControl>
+          </div>
           <FormMessage />
         </FormItem>
       )}
@@ -180,11 +180,11 @@ export function LineField({ isMobile, t, onFocus }: FieldProps) {
             {!isMobile && <FaLine className="w-3.5 h-3.5 text-[#00B900]" />}
             {t("deposit.form.line_label")}
           </FormLabel>
-          <FormControl>
-            <div className="relative group">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00B900] transition-colors">
-                <FaLine className="w-3.5 h-3.5" />
-              </div>
+          <div className="relative group">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00B900] transition-colors">
+              <FaLine className="w-3.5 h-3.5" />
+            </div>
+            <FormControl>
               <Input
                 placeholder={t("deposit.form.line_placeholder")}
                 className={cn(
@@ -196,8 +196,8 @@ export function LineField({ isMobile, t, onFocus }: FieldProps) {
                 onFocus={onFocus}
                 {...field}
               />
-            </div>
-          </FormControl>
+            </FormControl>
+          </div>
           <FormMessage />
         </FormItem>
       )}
@@ -222,11 +222,11 @@ export function WeChatField({ isMobile, t, onFocus }: FieldProps) {
             {!isMobile && <IoLogoWechat className="w-3.5 h-3.5 text-[#07C160]" />}
             {t("deposit.form.wechat_label")}
           </FormLabel>
-          <FormControl>
-            <div className="relative group">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#07C160] transition-colors">
-                <IoLogoWechat className="w-3.5 h-3.5" />
-              </div>
+          <div className="relative group">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#07C160] transition-colors">
+              <IoLogoWechat className="w-3.5 h-3.5" />
+            </div>
+            <FormControl>
               <Input
                 placeholder={t("deposit.form.wechat_placeholder")}
                 className={cn(
@@ -238,8 +238,8 @@ export function WeChatField({ isMobile, t, onFocus }: FieldProps) {
                 onFocus={onFocus}
                 {...field}
               />
-            </div>
-          </FormControl>
+            </FormControl>
+          </div>
           <FormMessage />
         </FormItem>
       )}
@@ -264,11 +264,11 @@ export function WhatsAppField({ isMobile, t, onFocus }: FieldProps) {
             {!isMobile && <FaWhatsapp className="w-3.5 h-3.5 text-[#25D366]" />}
             {t("deposit.form.whatsapp_label")}
           </FormLabel>
-          <FormControl>
-            <div className="relative group">
-              <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#25D366] transition-colors">
-                <FaWhatsapp className="w-3.5 h-3.5" />
-              </div>
+          <div className="relative group">
+            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#25D366] transition-colors">
+              <FaWhatsapp className="w-3.5 h-3.5" />
+            </div>
+            <FormControl>
               <Input
                 placeholder={t("deposit.form.whatsapp_placeholder")}
                 className={cn(
@@ -280,8 +280,8 @@ export function WhatsAppField({ isMobile, t, onFocus }: FieldProps) {
                 onFocus={onFocus}
                 {...field}
               />
-            </div>
-          </FormControl>
+            </FormControl>
+          </div>
           <FormMessage />
         </FormItem>
       )}

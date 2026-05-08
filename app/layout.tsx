@@ -120,21 +120,6 @@ export default async function RootLayout({
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
 
-        {/* 🚀 LCP Optimization: Preload Hero Background with responsive sizes to match HeroSection.tsx */}
-        <link 
-          rel="preload" 
-          as="image" 
-          href="/_next/image?url=%2Fimages%2Fhero-realestate.png&w=1080&q=40" 
-          media="(max-width: 768px)"
-          fetchPriority="high"
-        />
-        <link 
-          rel="preload" 
-          as="image" 
-          href="/_next/image?url=%2Fimages%2Fhero-realestate.png&w=1920&q=40" 
-          media="(min-width: 769px)"
-          fetchPriority="high"
-        />
         
         {/* Google Tag Manager - Deferred until Interaction for S-Tier TBT Score */}
         {gtmId && <GTMInteractionLoader gtmId={gtmId} />}
