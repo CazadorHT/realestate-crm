@@ -3,6 +3,8 @@ import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { requireAuthContext } from "@/lib/authz";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewPropertyPage() {
   const config = await getSystemConfig();
   const { role } = await requireAuthContext();

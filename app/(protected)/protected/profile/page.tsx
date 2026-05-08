@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "โปรไฟล์",
   description: "จัดการข้อมูลส่วนตัวและการตั้งค่าบัญชี",

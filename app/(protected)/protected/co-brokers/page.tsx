@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   description: "จัดการพาร์ทเนอร์และ Co-brokers ในเครือข่ายธุรกิจของคุณ",
 };
 
+// 🛡️ [HARDENING] Force dynamic rendering to prevent "Unauthorized" errors during build
+// This page requires a user session to fetch co-broker data.
+export const dynamic = "force-dynamic";
+
 export default async function CoBrokersPage() {
   return (
     <div className="flex-1 space-y-6 p-8 pt-6">
