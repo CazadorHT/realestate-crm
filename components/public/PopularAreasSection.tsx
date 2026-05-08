@@ -5,7 +5,6 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, ArrowRight } from "lucide-react";
 import AOS from "aos";
-import "aos/dist/aos.css";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";

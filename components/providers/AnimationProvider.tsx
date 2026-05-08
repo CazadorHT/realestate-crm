@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, ReactNode } from "react";
-import { LazyMotion, domMax } from "framer-motion";
+import { LazyMotion, domAnimation } from "framer-motion";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -11,7 +11,7 @@ interface AnimationProviderProps {
 
 /**
  * AnimationProvider centralizes heavy UI initializations for better performance.
- * 1. LazyMotion: Reduces the initial framer-motion bundle size (~25KB).
+ * 1. LazyMotion: Reduces the initial framer-motion bundle size (~15KB).
  * 2. AOS: Centralized scroll-animation initialization.
  */
 export function AnimationProvider({ children }: AnimationProviderProps) {
@@ -33,7 +33,7 @@ export function AnimationProvider({ children }: AnimationProviderProps) {
   }, []);
 
   return (
-    <LazyMotion features={domMax} strict>
+    <LazyMotion features={domAnimation} strict>
       {children}
     </LazyMotion>
   );
