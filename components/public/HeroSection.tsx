@@ -4,14 +4,17 @@ import { HeroTitle } from "@/components/public/HeroTitle";
 import dynamic from "next/dynamic";
 import { Loader2 } from "lucide-react";
 const SmartMatchWizard = dynamic(
-  () => import("@/components/public/SmartMatchWizard").then((mod) => mod.SmartMatchWizard),
-  { 
+  () =>
+    import("@/components/public/SmartMatchWizard").then(
+      (mod) => mod.SmartMatchWizard,
+    ),
+  {
     loading: () => (
       <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-5 md:p-8 border border-slate-100 h-[450px] flex flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-blue-600 mb-4" />
       </div>
-    )
-  }
+    ),
+  },
 );
 import {
   TrendingUp,
@@ -93,7 +96,9 @@ export function HeroSection() {
                 className={`inline-flex items-center gap-2 sm:gap-2.5 bg-white/10 backdrop-blur-md text-white/80 px-3 sm:px-5 md:px-5 py-1.5 md:py-2 rounded-full text-xs sm:text-sm md:text-base font-semibold border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)] transition-all duration-200 hover:text-white hover:bg-white/20 ${!showSmartMatch ? "mx-auto" : "md:mx-0"}`}
               >
                 <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 text-blue-400" />
-                <span className="font-semibold tracking-tight">{t("common.verified_100")}</span>
+                <span className="font-semibold tracking-tight">
+                  {t("common.verified_100")}
+                </span>
               </div>
 
               <HeroTitle />

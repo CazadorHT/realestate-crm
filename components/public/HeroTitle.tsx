@@ -15,31 +15,33 @@ export function HeroTitle() {
 
   useEffect(() => {
     if (words.length <= 1) return;
-    
+
     const timer = setInterval(() => {
       setIsInitial(false);
       setIndex((prev) => (prev + 1) % words.length);
     }, 2500);
-    
+
     return () => clearInterval(timer);
   }, [words.length]);
 
   return (
     <div className="flex justify-center lg:justify-start text-center lg:text-left w-full">
       <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold leading-tight flex flex-col items-center lg:block">
-        <span className="text-white lg:inline-block">{t("home.hero.hero_find")}</span>
-        <span className="relative inline-flex items-center lg:ml-3 h-[1.1em] md:h-[1.2em] overflow-hidden align-middle">
+        <span className="text-white lg:inline-block">
+          {t("home.hero.hero_find")}
+        </span>
+        <span className="relative inline-flex items-center lg:ml-3 h-[1.4em] md:h-[1.5em] overflow-hidden align-middle py-2">
           <AnimatePresence mode="wait">
             <m.span
               key={index}
               initial={isInitial ? false : { y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
-              transition={{ 
-                duration: 0.4, 
-                ease: [0.23, 1, 0.32, 1] // Premium ease-out
+              transition={{
+                duration: 0.4,
+                ease: [0.23, 1, 0.32, 1], // Premium ease-out
               }}
-              className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent leading-none whitespace-nowrap inline-block"
+              className="bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent leading-tight whitespace-nowrap inline-block pb-2"
             >
               {words[index] || words[0] || ""}
             </m.span>
