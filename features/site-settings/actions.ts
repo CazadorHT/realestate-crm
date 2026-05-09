@@ -117,7 +117,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   line_id: siteConfig.contact.lineId,
   logo_light: siteConfig.logo,
   logo_dark: siteConfig.logoDark,
-  favicon: "/favicon.ico",
+  favicon: "/favicon.png",
   onboarding_line_skipped: false,
   onboarding_staff_skipped: false,
   google_tag_manager_id: "GTM-NBG46JLN",

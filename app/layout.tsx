@@ -87,7 +87,8 @@ export async function generateMetadata(): Promise<Metadata> {
       }),
     },
     icons: {
-      icon: settings.favicon || "/favicon.ico",
+      icon: settings.favicon || "/favicon.png",
+      apple: "/apple-touch-icon.png",
     },
     facebook: {
       appId: settings.facebook_app_id || siteConfig.verificationTokens.facebookAppId || "",

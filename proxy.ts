@@ -101,18 +101,31 @@ export async function proxy(request: NextRequest) {
   const isWhitelistedIp = isWhitelisted(ip);
   const isBypassed = isInternalBypass(request);
   
-  // [SAFETY] Critical Webhooks/Callbacks should NEVER be blocked by Rate Limit
+  // [SAFETY] Critical Webhooks/Callbacks & Crawlers should NEVER be blocked by Rate Limit
+  const ua = request.headers.get("user-agent")?.toLowerCase() || "";
+  const isCrawler = 
+    ua.includes("googlebot") || 
+    ua.includes("bingbot") || 
+    ua.includes("tiktokbot") || 
+    ua.includes("facebookexternalhit") || 
+    ua.includes("facebot") || 
+    ua.includes("facebookplatform") || 
+    ua.includes("linebot");
+
   const isWebhook = 
     path.startsWith("/api/webhook") || 
     path.startsWith("/api/callback") || 
     path.startsWith("/auth/callback") ||
     path.startsWith("/api/line-webhook");
 
+  const isBypassPath = isWebhook || isCrawler;
+
   // 4. 🚦 Rate Limiting Check
+  // Special handling for search engine crawlers and social scrapers to prevent 403/429
   const HEAVY_RESOURCE_KEYWORDS = ["analytics", "audit-logs", "executive", "inventory"];
   const PUBLIC_API_PREFIX = "/api/public";
 
-  if (!isWhitelistedIp && !isBypassed && !isWebhook) {
+  if (!isWhitelistedIp && !isBypassed && !isBypassPath) {
     // A. Select Identifier and Limiter
     let identifier = user?.id || ip || getFingerprint(request);
     let limiter = ratelimitGeneral;

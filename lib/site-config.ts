@@ -78,9 +78,9 @@ export const siteConfig = {
   verificationTokens: {
     // TikTok domain verification tokens (TikTok Developer Portal → Verify domains)
     // Each token is tied to the specific URL that was verified
-    tiktok: "D0uyXuS1UJ3oH5abBBbzzMSHQ6SK5ooO", // https://vccasset.com
-    tiktokTerms: "OWiapI7Ko87ppBWuO7psFBTnEpxggyIk", // /terms
-    tiktokPrivacy: "4jTLp4VRupfxpoJNzW7uVkA5dL0SXWTX", // /privacy-policy
+    tiktok: "E6rcb6VwOKMyZdCIb2Rhv8daRZFnseIs", // https://vccasset.com
+    tiktokTerms: "THmI1159aIMINgBLwHXndjlEg1RiEErv", // /terms
+    tiktokPrivacy: "jboAcFQJ7goXNfp0CPmq9vN4AqI0nfuK", // /privacy-policy
     google: "", // Google Search Console verification (if needed)
     facebookAppId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "", // Facebook App ID for Open Graph
   },
