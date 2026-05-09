@@ -7,11 +7,11 @@ const getBaseUrl = () => {
   
   // High Priority: Use the verified production domain if in production environment
   if (process.env.NEXT_PUBLIC_VERCEL_ENV === "production" || process.env.VERCEL_ENV === "production") {
-    return "https://realestate-crm-rho.vercel.app";
+    return "https://vccasset.com";
   }
 
   if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
-  return "https://realestate-crm-rho.vercel.app";
+  return "https://vccasset.com";
 };
 
 const isDev = process.env.NODE_ENV === "development";
@@ -78,7 +78,7 @@ export const siteConfig = {
   verificationTokens: {
     // TikTok domain verification tokens (TikTok Developer Portal → Verify domains)
     // Each token is tied to the specific URL that was verified
-    tiktok: "D0uyXuS1UJ3oH5abBBbzzMSHQ6SK5ooO", // https://realestate-crm-rho.vercel.app
+    tiktok: "D0uyXuS1UJ3oH5abBBbzzMSHQ6SK5ooO", // https://vccasset.com
     tiktokTerms: "OWiapI7Ko87ppBWuO7psFBTnEpxggyIk", // /terms
     tiktokPrivacy: "4jTLp4VRupfxpoJNzW7uVkA5dL0SXWTX", // /privacy-policy
     google: "", // Google Search Console verification (if needed)

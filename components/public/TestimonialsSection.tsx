@@ -1,5 +1,6 @@
 "use client";
 
+import { m } from "framer-motion";
 import { Star, Quote, CheckCircle2, Award } from "lucide-react";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -57,9 +58,12 @@ export function TestimonialsSection() {
 
       <div className="max-w-7xl mx-auto py-12 md:py-16 lg:py-24 px-4 md:px-6 lg:px-8">
         {/* SEO-Optimized Header */}
-        <div
+        <m.div
           className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
-          {...(isMounted ? { "data-aos": "fade-up" } : {})}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-amber-50 to-yellow-50 border border-amber-200/50">
             <Award className="w-4 h-4 text-amber-600" />
@@ -96,15 +100,18 @@ export function TestimonialsSection() {
               {t("home.testimonials.review_stat")}
             </span>
           </div>
-        </div>
+        </m.div>
 
         {/* Enhanced Testimonial Cards */}
         <div className="flex md:grid md:grid-cols-3 overflow-x-auto md:overflow-x-visible snap-x snap-mandatory scrollbar-hide gap-4 md:gap-6 lg:gap-8 pb-8 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
           {TESTIMONIALS.map((t_item, idx) => (
-            <div
+            <m.div
               key={idx}
               className="group relative shrink-0 w-[85vw] md:w-full snap-center"
-              {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (idx * 100).toString() } : {})}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
             >
               <div className="relative bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 shadow-lg border border-slate-200 hover:border-amber-200 hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 hover:-translate-y-2 overflow-hidden">
                 {/* Quote Icon Background */}
@@ -163,14 +170,17 @@ export function TestimonialsSection() {
                 {/* Gradient Overlay on Hover */}
                 <div className="absolute inset-0 bg-linear-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl" />
               </div>
-            </div>
+            </m.div>
           ))}
         </div>
 
         {/* Bottom Trust Signal */}
-        <div
+        <m.div
           className="mt-10 md:mt-16 text-center"
-          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "400" } : {})}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
         >
           <div className="inline-flex items-center gap-2 md:gap-3 px-4 md:px-6 py-3 md:py-4 bg-linear-to-r from-slate-50 to-slate-100 border border-slate-200 rounded-xl md:rounded-2xl">
             <CheckCircle2 className="h-5 w-5 md:h-6 md:w-6 text-green-600" />
@@ -178,7 +188,7 @@ export function TestimonialsSection() {
               {t("home.testimonials.footer_desc")}
             </span>
           </div>
-        </div>
+        </m.div>
       </div>
     </section>
   );

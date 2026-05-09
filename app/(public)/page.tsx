@@ -76,8 +76,8 @@ const FAQSection = dynamic(
   { loading: () => <SectionSkeleton /> }
 );
 
-// S-Tier Scaling: Static generation with one-day revalidation (The Long-Cache Hardening)
-export const revalidate = 86400;
+// S-Tier Scaling: Static generation with one-minute revalidation (The Development Hardening)
+export const revalidate = 60;
 
 /**
  * [S-Tier] Hardened Metadata Generator

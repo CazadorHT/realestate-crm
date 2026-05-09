@@ -1,5 +1,6 @@
 "use client";
 
+import { m } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import {
   Search,
@@ -108,9 +109,12 @@ export function HowItWorksSection() {
 
       <div className="max-w-7xl mx-auto  px-4 md:px-6 lg:px-8">
         {/* SEO-Optimized Header */}
-        <div
+        <m.div
           className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"
-          {...(isMounted ? { "data-aos": "fade-up" } : {})}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
         >
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-linear-to-r from-blue-50 to-purple-50 border border-blue-100">
             <Sparkles className="w-4 h-4 text-blue-600" />
@@ -143,7 +147,7 @@ export function HowItWorksSection() {
           <p className="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto">
             {t("home.how_it_works.description")}
           </p>
-        </div>
+        </m.div>
 
         {/* Steps with Connectors */}
         <div className="relative">
@@ -160,10 +164,13 @@ export function HowItWorksSection() {
               const tone = STEP_TONES[item.tone];
 
               return (
-                <div
+                <m.div
                   key={idx}
                   className="relative group shrink-0 w-[85vw] md:w-full snap-center"
-                  {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (idx * 100).toString() } : {})}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: idx * 0.1 }}
                   id={`step-${idx + 1}`}
                 >
                   <div className="bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 lg:p-8 shadow-lg border border-slate-200 hover:border-slate-300 hover:shadow-2xl transition-all hover:-translate-y-2 duration-500 relative overflow-hidden">
@@ -207,16 +214,19 @@ export function HowItWorksSection() {
                       )} opacity-0 group-hover:opacity-5 rounded-bl-full transition-opacity duration-500`}
                     />
                   </div>
-                </div>
+                </m.div>
               );
             })}
           </div>
         </div>
 
         {/* Bottom CTA */}
-        <div
+        <m.div
           className="mt-10 md:mt-16 text-center"
-          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "300" } : {})}
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
         >
           <p className="text-sm md:text-base text-slate-600 mb-3 md:mb-4">
             {t("home.how_it_works.ready_q")}
@@ -225,7 +235,7 @@ export function HowItWorksSection() {
             {t("common.start_search")}
             <ArrowRight className="h-4 w-4 md:h-5 md:w-5" />
           </button>
-        </div>
+        </m.div>
       </div>
     </section>
   );

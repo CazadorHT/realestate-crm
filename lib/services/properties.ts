@@ -357,7 +357,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
       },
       [`public-properties-${JSON.stringify(options)}`],
       {
-        revalidate: 3600,
+        revalidate: 60,
         tags: ["properties", "public-data"],
       }
     )();
