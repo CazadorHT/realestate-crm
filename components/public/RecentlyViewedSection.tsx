@@ -5,6 +5,6 @@ import { RecentlyViewedClient } from "@/components/public/RecentlyViewedClient";
  * Server Component Wrapper
  * Fetches data on the server and passes it to the client component
  */
-export async function RecentlyViewedSection() {
+export function RecentlyViewedSection() {
   return <RecentlyViewedClient />;
 }

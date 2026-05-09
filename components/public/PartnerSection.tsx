@@ -8,6 +8,7 @@ import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 import Image from "next/image";
 import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { PartnerLogo } from "@/components/public/PartnerLogo";
 
 type Partner = {
   id: string;
@@ -130,7 +131,7 @@ export function PartnerSection() {
                       transition={{ duration: 0.5, delay: idx * 0.05 }}
                       className="group relative flex items-center justify-center transition-all duration-500 ease-in-out px-4 h-16 w-32 md:h-20 md:w-40"
                     >
-                      <PartnerLogo partner={partner} t={t} />
+                      <PartnerLogo partner={partner} />
                     </m.div>
                   ))}
             </div>
@@ -158,7 +159,7 @@ export function PartnerSection() {
                       transition={{ duration: 0.5, delay: idx * 0.05 }}
                       className="group relative flex items-center justify-center transition-all duration-500 ease-in-out px-4 h-16 w-32 md:h-20 md:w-40"
                     >
-                      <PartnerLogo partner={partner} t={t} />
+                      <PartnerLogo partner={partner} />
                     </m.div>
                   ))}
             </div>
@@ -169,54 +170,3 @@ export function PartnerSection() {
   );
 }
 
-function PartnerLogo({ 
-  partner, 
-  t 
-}: { 
-  partner: Partner; 
-  t: (key: string, params?: Record<string, string | number>) => string;
-}) {
-  const [error, setError] = useState(false);
-
-  // 🛡️ Enterprise-Grade Hostname Validation
-  // Check if the URL is from an allowed domain to prevent Next.js Image unconfigured host error
-  const isAllowedHost = (url: string) => {
-    try {
-      const parsedUrl = new URL(url);
-      const host = parsedUrl.hostname;
-      const allowedHosts = [
-        "images.unsplash.com",
-        "api.dicebear.com",
-        "livinginsider.com",
-        "pgimgs.com",
-        "wikimedia.org",
-        "freepik.com"
-      ];
-      
-      return allowedHosts.some(allowed => host === allowed || host.endsWith("." + allowed)) || 
-             host.includes("supabase.co");
-    } catch {
-      return false;
-    }
-  };
-
-  // Immediate fallback if host is not in our known list
-  const finalSrc = (!error && isAllowedHost(partner.logo_url)) 
-    ? partner.logo_url 
-    : siteConfig.logo;
-
-  return (
-    <Image
-      src={finalSrc}
-      alt={`${partner.name} - ${t("home.partners.title")}`}
-      title={partner.name}
-      fill
-      className={cn(
-        "object-contain hover:scale-110 transition-transform duration-300",
-        (error || !isAllowedHost(partner.logo_url)) && "opacity-20 grayscale scale-90"
-      )}
-      onError={() => setError(true)}
-      sizes="(max-width: 768px) 120px, 160px"
-    />
-  );
-}

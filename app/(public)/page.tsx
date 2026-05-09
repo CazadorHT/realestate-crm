@@ -22,6 +22,11 @@ import { PropertyTypeGrid } from "@/components/public/PropertyTypeGrid";
 import { StatsBand } from "@/components/public/StatsBand";
 import { PartnerSection } from "@/components/public/PartnerSection";
 import { PropertyListingSkeleton } from "@/components/public/PropertyListingSkeleton";
+import { 
+  RecentlyViewedSection, 
+  MortgageCalculatorSection, 
+  CTASection 
+} from "@/components/public/PublicClientSections";
 
 // Lazy loaded components (Scroll-driven or heavy)
 const HotDealsSection = dynamic(
@@ -39,15 +44,6 @@ const PropertyListingSection = dynamic(
   { loading: () => <PropertyListingSkeleton /> }
 );
 
-const RecentlyViewedSection = dynamic(
-  () => import("@/components/public/RecentlyViewedSection").then((mod) => mod.RecentlyViewedSection),
-  { loading: () => <RecentlyViewedSkeleton /> }
-);
-
-const MortgageCalculatorSection = dynamic(
-  () => import("@/components/public/MortgageCalculatorSection").then((mod) => mod.MortgageCalculatorSection),
-  { loading: () => <MortgageCalculatorSkeleton /> }
-);
 
 const TrustSection = dynamic(
   () => import("@/components/public/TrustSection").then((mod) => mod.TrustSection),
@@ -69,10 +65,6 @@ const TestimonialsSection = dynamic(
   { loading: () => <SectionSkeleton /> }
 );
 
-const CTASection = dynamic(
-  () => import("@/components/public/CTASection").then((mod) => mod.CTASection),
-  { loading: () => <div className="h-[400px] w-full bg-slate-50 animate-pulse" /> }
-);
 
 const BlogSection = dynamic(
   () => import("@/components/public/BlogSection").then((mod) => mod.BlogSection),
