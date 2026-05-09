@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { readFavoriteIds, clearFavorites } from "@/lib/favorite-store";
 import { toast } from "sonner";
-import { RecentlyViewedClient } from "@/components/public/RecentlyViewedClient";
+import { RecentlyViewedSection } from "@/components/public/RecentlyViewedSection";
 import { PropertyCardProps } from "@/components/public/PropertyCard";
 
 // Modular components
@@ -95,7 +95,7 @@ export default function FavoritesPageClient() {
         )}
       </div>
       <div>
-        <RecentlyViewedClient
+        <RecentlyViewedSection
           recommendedProperties={[]}
           containerClassName="max-w-screen-2xl px-4 sm:px-6 lg:px-8"
           disableAos

@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { RecentlyViewedClient } from "@/components/public/RecentlyViewedClient";
+import { RecentlyViewedSection } from "@/components/public/RecentlyViewedSection";
 import { SectionBackground } from "@/components/public/SectionBackground";
 
 // New modular components
@@ -108,7 +108,7 @@ function ComparePageContent() {
       </div>
 
       <div className="relative z-10 mt-12 md:mt-20">
-        <RecentlyViewedClient
+        <RecentlyViewedSection
           recommendedProperties={[]}
           containerClassName="max-w-screen-2xl px-4 md:px-6 lg:px-8"
           disableAos
