@@ -58,7 +58,7 @@ export default function TermsPageClient() {
           <div className="p-6 md:p-10 prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-800 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-strong:text-slate-700">
             <section className="mb-10 last:mb-0">
               <div className="p-4 bg-blue-50 border-l-4 border-blue-500 rounded-r-lg mb-6 not-prose">
-                <p className="text-blue-900 font-medium">
+                <p className="text-blue-900! font-medium">
                   {t("terms.welcome_title")} {t("terms.welcome_p1")}
                 </p>
               </div>
