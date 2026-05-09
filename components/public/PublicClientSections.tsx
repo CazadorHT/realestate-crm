@@ -1,3 +1,5 @@
+"use client";
+
 import dynamic from "next/dynamic";
 import { RecentlyViewedSkeleton } from "@/components/public/RecentlyViewedSkeleton";
 import { MortgageCalculatorSkeleton } from "@/components/public/MortgageCalculatorSkeleton";
