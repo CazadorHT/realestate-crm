@@ -205,6 +205,18 @@ async function getSiteSettingsInternal(): Promise<SiteSettings> {
       (settings as Record<string, unknown>)[key] = val === true || val === "true";
     }
 
+    // 6. Post-process URLs to ensure they are absolute (Elite Hardening)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (supabaseUrl) {
+      const urlKeys: SiteSettingKey[] = ["logo_light", "logo_dark", "favicon"];
+      for (const key of urlKeys) {
+        const val = (settings as Record<string, unknown>)[key];
+        if (typeof val === "string" && val.startsWith("/storage/v1/object/public/")) {
+          (settings as Record<string, unknown>)[key] = `${supabaseUrl}${val}`;
+        }
+      }
+    }
+
     return settings;
   } catch (error: unknown) {
     console.error("Error in getSiteSettings:", error);
