@@ -12,9 +12,10 @@ function Counter({ value }: { value: string }) {
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true, margin: "-50px" });
   
-  // Extract number and suffix (e.g., "500+" -> 500, "+")
-  const numericValue = parseInt(value.replace(/[^0-9]/g, "")) || 0;
-  const suffix = value.replace(/[0-9]/g, "");
+  // Extract number and suffix (e.g., "500+" -> 500, "+", "24/7" -> 24, "/7")
+  const numericMatch = value.match(/^\d+/);
+  const numericValue = numericMatch ? parseInt(numericMatch[0]) : 0;
+  const suffix = value.replace(/^\d+/, "");
   
   const motionValue = useMotionValue(0);
   const springValue = useSpring(motionValue, {
