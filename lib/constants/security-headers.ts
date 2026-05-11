@@ -31,6 +31,10 @@ export const CSP_DIRECTIVES = {
     "https://*.facebook.net",
     "https://*.google.com",
     "https://*.gstatic.com",
+    "https://*.livinginsider.com",
+    "https://*.pgimgs.com",
+    "https://*.wikimedia.org",
+    "https://*.freepik.com",
   ],
   "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
   "connect-src": [
