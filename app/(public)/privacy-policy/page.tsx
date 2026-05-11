@@ -1,9 +1,12 @@
 import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
-import PrivacyPolicyPageClient from "./PrivacyPolicyPageClient";
+import { getServerTranslations } from "@/lib/i18n";
+import { Shield, Lock, FileText, Info, Phone as PhoneIcon } from "lucide-react";
+import { format } from "date-fns";
+import { th, enUS, zhCN, ru } from "date-fns/locale";
 
 export const metadata: Metadata = {
-  title: "นโยบายความเป็นส่วนตัว",
+  title: "นโยบายความเป็นส่วนตัว (Privacy Policy)",
   description:
     "นโยบายความเป็นส่วนตัวและการคุ้มครองข้อมูลส่วนบุคคล อ่านรายละเอียดการเก็บและใช้ข้อมูลของเรา",
   other: {
@@ -13,6 +16,280 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PrivacyPolicyPage() {
-  return <PrivacyPolicyPageClient />;
+export default async function PrivacyPolicyPage() {
+  const { t, language } = await getServerTranslations();
+  const company_name = siteConfig.company;
+  
+  const lastUpdated = format(new Date(), "PPP", {
+    locale: language === "th" ? th : language === "cn" ? zhCN : language === "ru" ? ru : enUS,
+  });
+
+  return (
+    <div className="min-h-screen bg-slate-50">
+      {/* Header Background */}
+      <div className="bg-slate-900 text-white pb-24 pt-12 md:pt-16">
+        <div className="container mx-auto px-4 md:px-6">
+          <div className="max-w-4xl mx-auto text-center space-y-4">
+            <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-blue-500/10 text-blue-400 mb-2">
+              <Shield className="w-8 h-8" />
+            </div>
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
+              {t("privacy.title")}
+            </h1>
+            <p className="text-slate-400 text-lg max-w-2xl mx-auto">
+              {t("privacy.hero_desc")}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="container mx-auto px-4 md:px-6 -mt-16 pb-20">
+        <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
+          {/* Content Header */}
+          <div className="p-6 md:p-10 border-b border-slate-100 bg-slate-50/50">
+            <div className="flex items-center gap-2 text-sm text-slate-500">
+              <Info className="w-4 h-4" />
+              <span>
+                {t("privacy.update_label")}: {lastUpdated}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-6 md:p-10 prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-800 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-strong:text-slate-700">
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  1
+                </span>
+                {t("privacy.section1_title")}
+              </h2>
+              <p>{t("privacy.section1_p1", { company_name })}</p>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  2
+                </span>
+                {t("privacy.section2_title")}
+              </h2>
+              <p>{t("privacy.section2_p1")}</p>
+              <div className="grid sm:grid-cols-2 gap-4 mt-4">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-start gap-3">
+                    <FileText className="w-5 h-5 text-blue-500 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 text-sm">
+                        {t("privacy.identity_title")}
+                      </h4>
+                      <p className="text-slate-500 text-sm">{t("privacy.identity_desc")}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-start gap-3">
+                    <PhoneIcon className="w-5 h-5 text-blue-500 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 text-sm">
+                        {t("privacy.contact_info_title")}
+                      </h4>
+                      <p className="text-slate-500 text-sm">{t("privacy.contact_info_desc")}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-start gap-3">
+                    <Lock className="w-5 h-5 text-blue-500 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 text-sm">
+                        {t("privacy.tech_info_title")}
+                      </h4>
+                      <p className="text-slate-500 text-sm">{t("privacy.tech_info_desc")}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="flex items-start gap-3">
+                    <Info className="w-5 h-5 text-blue-500 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-slate-800 text-sm">
+                        {t("privacy.trans_info_title")}
+                      </h4>
+                      <p className="text-slate-500 text-sm">{t("privacy.trans_info_desc")}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  3
+                </span>
+                {t("privacy.section3_title")}
+              </h2>
+              <ul>
+                <li>{t("privacy.section3_l1")}</li>
+                <li>{t("privacy.section3_l2")}</li>
+                <li>{t("privacy.section3_l3", { company_name })}</li>
+                <li>{t("privacy.section3_l4")}</li>
+              </ul>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  4
+                </span>
+                {t("privacy.section4_title")}
+              </h2>
+              <p>{t("privacy.section4_p1")}</p>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  5
+                </span>
+                {t("privacy.section5_title")}
+              </h2>
+              <p>{t("privacy.section5_p1")}</p>
+              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 space-y-2">
+                {[
+                  t("privacy.right1"),
+                  t("privacy.right2"),
+                  t("privacy.right3"),
+                  t("privacy.right4"),
+                ].map((right, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 text-slate-700 text-sm"
+                  >
+                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                    {right}
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  6
+                </span>
+                {t("privacy.section6_title")}
+              </h2>
+              <p>{t("privacy.section6_p1", { company_name })}</p>
+              
+              <div className="mt-6 p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-blue-600" />
+                      {t("privacy.customer_service", { company_name })}
+                    </h4>
+                    <p className="text-slate-600 text-sm leading-relaxed">
+                      {t("privacy.customer_service_desc", { company_name })}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-slate-700">
+                      <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-blue-600">
+                        <PhoneIcon className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-medium">{siteConfig.contact.phone}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-slate-700">
+                      <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-blue-600">
+                        <FileText className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm font-medium">{siteConfig.contact.email}</span>
+                    </div>
+                    <div className="flex items-start gap-3 text-slate-700">
+                      <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-blue-600 mt-1 shrink-0">
+                        <Info className="w-4 h-4" />
+                      </div>
+                      <span className="text-sm leading-relaxed">{siteConfig.contact.address}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  7
+                </span>
+                {t("privacy.section7_title")}
+              </h2>
+              <p>{t("privacy.section7_p1")}</p>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  8
+                </span>
+                {t("privacy.section8_title")}
+              </h2>
+              <p>{t("privacy.section8_p1")}</p>
+              <ul className="space-y-2">
+                <li>{t("privacy.section8_l1")}</li>
+                <li>{t("privacy.section8_l2")}</li>
+                <li>{t("privacy.section8_l3")}</li>
+              </ul>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  9
+                </span>
+                {t("privacy.section9_title")}
+              </h2>
+              <p>{t("privacy.section9_p1")}</p>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  10
+                </span>
+                {t("privacy.section10_title")}
+              </h2>
+              <p>{t("privacy.section10_p1")}</p>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  11
+                </span>
+                {t("privacy.section11_title")}
+              </h2>
+              <p>{t("privacy.section11_p1")}</p>
+              <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>{t("privacy.section11_l1")}</li>
+                <li>{t("privacy.section11_l2")}</li>
+                <li>{t("privacy.section11_l3")}</li>
+              </ul>
+            </section>
+
+            <section className="mb-10 last:mb-0">
+              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
+                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
+                  12
+                </span>
+                {t("privacy.section12_title")}
+              </h2>
+              <p>{t("privacy.section12_p1")}</p>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }

@@ -65,9 +65,9 @@ export const siteConfig = {
   },
   contact: {
     email: "vcconnect.asset@gmail.com",
-    phone: "0XX-XXX-XXXX",
+    phone: "02-096-2588",
     lineId: "@vcconnectasset",
-    address: "ที่ตั้งออฟฟิศของคุณ...",
+    address: "20th Floor, G Tower, Ratchadaphisek Road, Huai Khwang Subdistrict, Huai Khwang District, Bangkok 10310",
   },
   companySignature: "/images/branding/vcc-asset/logo-dark.svg",
   companyStamp: "/images/branding/vcc-asset/logo-light.svg",
