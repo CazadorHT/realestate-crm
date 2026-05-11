@@ -7,8 +7,8 @@ import { enUS, th, zhCN, ru } from "date-fns/locale";
 import { getSiteSettings } from "@/features/site-settings/actions";
 import Link from "next/link";
 
-// 🚀 Force static rendering for best SEO and crawler visibility
-export const dynamic = "force-static";
+// ✅ Always use production URL — siteConfig.url returns localhost in dev mode
+const PRODUCTION_URL = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
@@ -20,7 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t("terms.hero_desc"),
     applicationName: siteName,
     alternates: {
-      canonical: `${siteConfig.url}/terms`,
+      // ✅ FIX: Use PRODUCTION_URL so canonical is always the production domain
+      canonical: `${PRODUCTION_URL}/terms`,
     },
     robots: "index, follow",
   };
@@ -44,7 +45,7 @@ export default async function TermsPage() {
             <span className="text-sm font-medium">{t("nav.home")}</span>
           </Link>
           <div className="text-xs text-slate-400 font-mono tracking-tighter">
-            {siteConfig.url}/terms
+            {PRODUCTION_URL}/terms
           </div>
         </div>
       </nav>
