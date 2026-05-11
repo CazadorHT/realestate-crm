@@ -42,9 +42,15 @@ const DEFAULT_MODEL = "gemini-flash-latest";
  */
 function normalizeModelName(modelName: string): string {
   const unstableModels: Record<string, string> = {
-    "gemini-2-flash": "gemini-2.0-flash",
-    "gemini-2.0-flash-exp": "gemini-2.0-flash",
-    "gemini-flash-latest": "gemini-1.5-flash",
+    "gemini-3.1-pro": "gemini-3.1-pro-preview",
+    "gemini-3-flash": "gemini-3-flash-preview",
+    "gemini-3.1-flash-lite": "gemini-3.1-flash-lite",
+    "gemini-pro-latest": "gemini-3.1-pro-preview",
+    "gemini-flash-latest": "gemini-3-flash-preview",
+    "gemini-flash-lite-latest": "gemini-3.1-flash-lite",
+    "gemini-2.5-pro": "gemini-2.5-pro",
+    "gemini-2.5-flash": "gemini-2.5-flash",
+    "gemini-2.0-flash": "gemini-2.0-flash",
     "gemini-1.5-pro": "gemini-1.5-pro",
     "gemini-1.5-flash": "gemini-1.5-flash",
   };

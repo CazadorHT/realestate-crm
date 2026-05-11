@@ -6,32 +6,32 @@ import { Zap, Sparkles, Cpu, Bot } from "lucide-react";
  */
 export const ALLOWED_MODELS = [
   {
-    id: "gemini-flash-latest",
-    label: "Gemini Flash (Stable)",
-    description: "รุ่นที่เสถียรที่สุดและแนะนำให้ใช้เป็นหลักครับ",
-    color: "bg-blue-50 text-blue-700 border-blue-200",
-    icon: Zap,
-  },
-  {
-    id: "gemini-2.0-flash",
-    label: "Gemini 2.0 Flash",
-    description: "เร็วและฉลาดขึ้นมาก รองรับงานได้หลากหลายและแม่นยำกว่าเดิม",
+    id: "gemini-flash-lite-latest",
+    label: "Gemini 3.1 Flash-Lite (แนะนำสุดๆ)",
+    description: "รุ่นที่ประหยัดและคุ้มค่าที่สุดในตอนนี้ (Stable) เหมาะกับงานแปลและสรุปข้อมูลปริมาณมาก",
     color: "bg-emerald-50 text-emerald-700 border-emerald-200",
     icon: Zap,
   },
   {
-    id: "gemini-1.5-flash",
-    label: "Gemini 1.5 Flash",
-    description: "รุ่นที่เสถียรที่สุด แนะนำให้ใช้เป็นหลักเพื่อความประหยัดและแม่นยำครับ",
-    color: "bg-indigo-50 text-indigo-700 border-indigo-200",
-    icon: Cpu,
+    id: "gemini-flash-latest",
+    label: "Gemini 3 Flash",
+    description: "รุ่นที่สมดุลที่สุด เร็วและฉลาดมาก เหมาะกับงานเขียนคำบรรยายทรัพย์และแชทบอท",
+    color: "bg-blue-50 text-blue-700 border-blue-200",
+    icon: Sparkles,
   },
   {
-    id: "gemini-1.5-pro",
-    label: "Gemini 1.5 Pro (Legacy)",
-    description: "รุ่นฉลาดพิเศษ (ปัจจุบันจะใช้ Flash-Latest เป็นตัวสำรองหากไม่พบ)",
+    id: "gemini-pro-latest",
+    label: "Gemini 3.1 Pro",
+    description: "รุ่นที่ฉลาดที่สุดในโลก (Preview) สำหรับงานเขียน Blog ยาวๆ หรืองานวิจัยข้อมูลที่ซับซ้อน",
     color: "bg-purple-50 text-purple-700 border-purple-200",
     icon: Bot,
+  },
+  {
+    id: "gemini-1.5-flash",
+    label: "Gemini 1.5 Flash (Legacy)",
+    description: "รุ่นเก่ามาตรฐานเดิมที่ยังคงใช้งานได้ดี (แนะนำให้เปลี่ยนเป็นรุ่น 3.1 เพื่อความคุ้มค่า)",
+    color: "bg-slate-50 text-slate-700 border-slate-200",
+    icon: Cpu,
   },
 ] as const;
 
@@ -57,9 +57,9 @@ export type AiModelConfig = {
 };
 
 export const DEFAULT_CONFIG: AiModelConfig = {
-  chatbot_model: "gemini-1.5-flash",
-  blog_generator_model: "gemini-1.5-flash",
-  translation_model: "gemini-1.5-flash",
-  description_model: "gemini-1.5-flash",
-  lead_model: "gemini-1.5-flash",
+  chatbot_model: "gemini-flash-latest",
+  blog_generator_model: "gemini-pro-latest",
+  translation_model: "gemini-flash-lite-latest",
+  description_model: "gemini-flash-latest",
+  lead_model: "gemini-flash-lite-latest",
 };

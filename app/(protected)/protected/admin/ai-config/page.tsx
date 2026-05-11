@@ -36,6 +36,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { HelpCircle } from "lucide-react";
 
 export default function AiConfigPage() {
   const [loading, setLoading] = useState(true);
@@ -44,11 +51,11 @@ export default function AiConfigPage() {
     null,
   );
   const [config, setConfig] = useState<AiModelConfig>({
-    chatbot_model: "gemini-1.5-flash",
-    blog_generator_model: "gemini-1.5-flash",
-    translation_model: "gemini-1.5-flash",
-    description_model: "gemini-1.5-flash",
-    lead_model: "gemini-1.5-flash",
+    chatbot_model: "gemini-flash-latest",
+    blog_generator_model: "gemini-pro-latest",
+    translation_model: "gemini-flash-lite-latest",
+    description_model: "gemini-flash-latest",
+    lead_model: "gemini-flash-lite-latest",
   });
 
   useEffect(() => {
@@ -59,7 +66,7 @@ export default function AiConfigPage() {
       Object.keys(validatedConfig).forEach((key) => {
         const k = key as keyof AiModelConfig;
         if (!MODEL_INFO[validatedConfig[k]]) {
-          validatedConfig[k] = "gemini-1.5-flash"; // Fallback to safe default
+          validatedConfig[k] = "gemini-flash-lite-latest"; // Fallback to safe default
         }
       });
       setConfig(validatedConfig);
@@ -183,10 +190,10 @@ export default function AiConfigPage() {
               เกร็ดความรู้เรื่อง Quota 💡
             </h4>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Gemini 1.5 Flash เป็นรุ่นที่แนะนำที่สุดในขณะนี้
-              เพราะให้ความแม่นยำสูงในราคาที่ประหยัดที่สุด และโควต้าฟรีมีให้เยอะมาก
-              หากต้องการเน้นความคุ้มค่าและรวดเร็ว แนะนำให้ใช้รุ่น Flash 
-              เป็นหลักในทุกบริการครับ
+              <strong className="text-indigo-600">Gemini 3.1 Flash-Lite</strong> เป็นรุ่นที่แนะนำที่สุด
+              เพราะโควต้าฟรีให้สูงถึง <span className="font-bold text-emerald-600 underline">500 ครั้ง/วัน</span> (RPD) 
+              ในขณะที่รุ่นอื่นให้เพียง 20 ครั้ง/วัน เท่านั้น หากต้องการงานที่ไหลลื่นและประหยัด 
+              ควรตั้งค่ารุ่น Flash-Lite เป็นหลักในทุกบริการครับ
             </p>
           </div>
         </div>
@@ -205,10 +212,10 @@ export default function AiConfigPage() {
             </p>
             <ul className="text-[11px] md:text-xs text-amber-700 space-y-1.5 ml-4 list-disc font-medium">
               <li>
-                ใช้ <strong>AI Monitor</strong> เพื่อดูประวัติ Error ย้อนหลัง
+                ตรวจสอบ <strong>AI Monitor</strong> เพื่อดู Error (Code 429) ย้อนหลัง
               </li>
-              <li>ทางแก้: สลับไปใช้ Model รุ่นอื่น (เช่น จาก 1.5 เป็น 2.0)</li>
-              <li>สลับรุ่นแล้วระบบจะกลับมาใช้งานได้ทันทีครับ</li>
+              <li>ทางแก้: สลับไปใช้ <strong>Flash-Lite</strong> (หากยังไม่ได้ใช้) หรือสลับไปรุ่น 1.5 Flash</li>
+              <li>หากเต็มทุกรุ่น: แนะนำให้เพิ่ม <strong>API Key</strong> อีก 1 ชุดในไฟล์ .env ครับ</li>
             </ul>
           </div>
         </div>
@@ -230,7 +237,7 @@ function ConfigCard({
   value: AiModelChoice;
   onChange: (val: AiModelChoice) => void;
 }) {
-  const selectedInfo = MODEL_INFO[value] || MODEL_INFO["gemini-2.0-flash"];
+  const selectedInfo = MODEL_INFO[value] || MODEL_INFO["gemini-flash-lite-latest"];
   const Icon = selectedInfo.icon || Zap;
 
   return (
@@ -255,7 +262,7 @@ function ConfigCard({
           {ALLOWED_MODELS.map((model) => {
             const isSelected = model.id === value;
             const ModelIcon = model.icon;
-            const isRecommended = model.id === "gemini-1.5-flash";
+            const isRecommended = model.id === "gemini-flash-lite-latest";
 
             return (
               <button
@@ -302,6 +309,36 @@ function ConfigCard({
                 <p className={cn("text-[11px] md:text-xs text-slate-500 font-medium leading-relaxed line-clamp-2",isSelected ? "text-white" : "text-slate-500")}>
                   {model.description}
                 </p>
+
+                {/* Quota Info Tooltip */}
+                <div className="absolute bottom-4 right-4">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className={cn(
+                          "p-1 rounded-full transition-colors",
+                          isSelected ? "hover:bg-white/20" : "hover:bg-slate-100"
+                        )}>
+                          <HelpCircle className={cn("w-3.5 h-3.5", isSelected ? "text-white/70" : "text-slate-400")} />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[280px] p-3 bg-slate-900 text-white border-slate-800 shadow-xl">
+                        <div className="space-y-2">
+                          <p className="font-bold text-xs border-b border-white/10 pb-1">รายละเอียดโควต้า & ราคา</p>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[10px]">
+                            <span className="text-white/60">ราคา (Input):</span>
+                            <span>{model.id.includes('lite') ? '$0.25' : model.id.includes('pro') ? '$1.25' : '$0.30'} / 1M Tokens</span>
+                            <span className="text-white/60">โควต้าฟรี (RPD):</span>
+                            <span className="text-emerald-400 font-bold">{model.id === 'gemini-flash-lite-latest' ? '500' : '20-50'} ครั้ง/วัน</span>
+                            <span className="text-white/60">ความเร็ว (RPM):</span>
+                            <span>{model.id === 'gemini-flash-lite-latest' ? '15' : '2-5'} ครั้ง/นาที</span>
+                          </div>
+                          <p className="text-[9px] text-white/40 italic pt-1">* ข้อมูลโดยประมาณจากหน้า Rate Limit</p>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
 
                 {/* Hover/Active states indicator */}
                 {!isSelected && (
