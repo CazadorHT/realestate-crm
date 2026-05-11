@@ -118,7 +118,7 @@ export default async function PrivacyPolicyPage() {
               <p className="mb-6">{t("privacy.section5_p1")}</p>
               <div className="grid gap-3 not-prose">
                 {[t("privacy.right1"), t("privacy.right2"), t("privacy.right3"), t("privacy.right4")].map((right, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-4 rounded-xl bg-slate-100 border border-slate-200 !text-slate-900 text-sm font-bold shadow-sm" style={{ color: '#0f172a' }}>
+                  <div key={idx} className="flex items-center gap-3 p-4 rounded-xl bg-slate-100 border border-slate-200 text-slate-900! text-sm font-bold shadow-sm" style={{ color: '#0f172a' }}>
                     <div className="w-2 h-2 rounded-full bg-blue-500 shadow-sm shadow-blue-500/20" />
                     {right}
                   </div>
