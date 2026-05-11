@@ -1,13 +1,13 @@
 import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations } from "@/lib/i18n";
-import { Shield, FileText, Info, Phone as PhoneIcon, Home } from "lucide-react";
+import { getSiteSettings } from "@/features/site-settings/actions";
 import { format } from "date-fns";
 import { enUS, th, zhCN, ru } from "date-fns/locale";
-import { getSiteSettings } from "@/features/site-settings/actions";
+import { Shield, FileText, Info, Phone as PhoneIcon, Home } from "lucide-react";
 import Link from "next/link";
 
-// ✅ Always use NEXT_PUBLIC_APP_URL — never siteConfig.url which returns localhost in dev
+// ✅ Always use production URL — siteConfig.url returns localhost in dev mode
 const PRODUCTION_URL = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -20,16 +20,10 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t("privacy.hero_desc"),
     applicationName: siteName,
     alternates: {
-      // ✅ FIX: Use NEXT_PUBLIC_APP_URL so canonical is always the production domain
       canonical: `${PRODUCTION_URL}/privacy-policy`,
     },
     robots: "index, follow",
   };
-}
-
-function TransparentEmail({ email }: { email: string }) {
-  // Plain text — ensures Google OAuth bot reads the exact email string
-  return <span>{email}</span>;
 }
 
 export default async function PrivacyPolicyPage() {
@@ -47,7 +41,7 @@ export default async function PrivacyPolicyPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Breadcrumb nav — shows production URL */}
+      {/* Navigation */}
       <nav className="border-b bg-slate-50/50">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <Link
@@ -63,7 +57,7 @@ export default async function PrivacyPolicyPage() {
         </div>
       </nav>
 
-      {/* Hero Header */}
+      {/* Hero */}
       <header className="bg-slate-900 text-white py-16 md:py-20 border-b border-slate-800">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-4xl mx-auto">
@@ -156,7 +150,7 @@ export default async function PrivacyPolicyPage() {
               </div>
             </section>
 
-            {/* ✅ Contact Section — plain text email for Google bot visibility */}
+            {/* ✅ Contact — plain text email for Google OAuth bot */}
             <section className="mb-12">
               <h2 className="text-2xl mb-6">{t("privacy.section6_title")}</h2>
               <p className="mb-8">{t("privacy.section6_p1", { company_name })}</p>
@@ -179,9 +173,7 @@ export default async function PrivacyPolicyPage() {
                         <PhoneIcon className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">
-                          Phone
-                        </p>
+                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Phone</p>
                         <p className="font-semibold">{contact_phone}</p>
                       </div>
                     </div>
@@ -190,12 +182,9 @@ export default async function PrivacyPolicyPage() {
                         <FileText className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">
-                          Email
-                        </p>
-                        <p className="font-semibold">
-                          <TransparentEmail email={contact_email} />
-                        </p>
+                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Email</p>
+                        {/* ✅ Plain text email — no obfuscation, no span splitting */}
+                        <p className="font-semibold">{contact_email}</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-4">
@@ -203,12 +192,8 @@ export default async function PrivacyPolicyPage() {
                         <Info className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">
-                          Office
-                        </p>
-                        <p className="text-sm leading-relaxed text-slate-300">
-                          {contact_address}
-                        </p>
+                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Office</p>
+                        <p className="text-sm leading-relaxed text-slate-300">{contact_address}</p>
                       </div>
                     </div>
                   </div>

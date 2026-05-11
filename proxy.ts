@@ -43,6 +43,11 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // ✅ Forward pathname to all responses so layout.tsx can detect legal pages
+  // This allows suppressing the GTM noscript iframe on /privacy-policy and /terms
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+
   // 1.5 🌏 Auto-Language Detection (IP & Locale based)
   // [PREMIUM] Automatically serve localized experience to international visitors
   const hasLangCookie = request.cookies.has("app-language");
@@ -221,6 +226,9 @@ export async function proxy(request: NextRequest) {
       sameSite: "lax",
     });
   }
+
+  // ✅ Forward pathname on response — allows layout.tsx to detect legal pages via headers()
+  response.headers.set("x-pathname", pathname);
 
   return response;
 }

@@ -15,7 +15,7 @@ import { DynamicClientProviders } from "@/components/providers/DynamicClientProv
 import { getServerTranslations } from "@/lib/i18n";
 import { AnalyticsTracker } from "@/components/providers/AnalyticsTracker";
 import { Suspense } from "react";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { siteConfig } from "@/lib/site-config";
 import { getSiteSettings } from "@/features/site-settings/actions";
 // Removed force-dynamic to allow Next.js to optimize routing and enable SSG where possible.
@@ -106,6 +106,11 @@ export default async function RootLayout({
   const settings = await getSiteSettings();
   const gtmId = settings.google_tag_manager_enabled ? settings.google_tag_manager_id : null;
 
+  // ✅ Suppress GTM iframe on legal pages — Google OAuth bot marks iframes as "improperly formatted"
+  const headersList = await headers();
+  const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
+  const isLegalPage = pathname.startsWith("/privacy-policy") || pathname.startsWith("/terms");
+
   return (
     <html lang={lang} data-scroll-behavior="smooth">
       <head>
@@ -130,8 +135,8 @@ export default async function RootLayout({
         className={`${prompt.className} ${notoThai.variable} antialiased`}
         style={{ scrollbarGutter: "stable" }}
       >
-        {/* Google Tag Manager (noscript) */}
-        {settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
+        {/* Google Tag Manager (noscript) — suppressed on legal pages to pass Google OAuth verification */}
+        {!isLegalPage && settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
           <noscript>
             <iframe
               src={`https://www.googletagmanager.com/ns.html?id=${settings.google_tag_manager_id}`}
