@@ -133,26 +133,28 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function LandingPage() {
   const { t } = await getServerTranslations();
 
-  // 1. Edge-Cached Province Data
-  const provinces = await getPublicProvincesAction();
-  
+  // ⚡️ Parallel execution for maximum performance (S-Tier Speed)
+  const [
+    provinces,
+    initialPropertiesData,
+    hotDealsData,
+    initialPosts
+  ] = await Promise.all([
+    getPublicProvincesAction(),
+    getPublicProperties({ limit: 8 }),
+    getPublicProperties({ filter: 'hot_deals', limit: 4 }),
+    getBlogPosts(undefined, 4)
+  ]);
+
   // 2. Resolve Initial Province (Prefer BKK)
   const bkkIndex = provinces.findIndex(p => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร");
   const initialProvinceId = bkkIndex !== -1 ? provinces[bkkIndex].id : provinces[0]?.id;
   
-  // 3. Edge-Cached Popular Areas
+  // 3. Popular Areas can follow after we have initialProvinceId
   const popularAreas = await getPopularAreasAction(initialProvinceId);
 
-  // 4. Initial Properties for SSR Speed (S-Tier Performance)
-  const initialPropertiesData = await getPublicProperties({ limit: 8 });
   const initialProperties = initialPropertiesData.properties;
-
-  // 5. Hot Deals for Promotion (Pre-loaded)
-  const hotDealsData = await getPublicProperties({ filter: 'hot_deals', limit: 4 });
   const hotDeals = hotDealsData.properties;
-
-  // 6. Latest Blog Posts for SSR Performance
-  const initialPosts = await getBlogPosts(undefined, 4);
 
   const jsonLd = {
     "@context": "https://schema.org",

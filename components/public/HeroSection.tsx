@@ -37,9 +37,13 @@ export async function HeroSection({
 }: {
   hasProperties?: boolean;
 }) {
-  const { t } = await getServerTranslations();
-  const config = await getSiteSettings();
-
+  // ⚡️ Parallel fetch for faster TTFB
+  const [translations, config] = await Promise.all([
+    getServerTranslations(),
+    getSiteSettings()
+  ]);
+  
+  const { t } = translations;
   const siteName = config.site_name || defaultSiteConfig.name;
   const showSmartMatch = config.smart_match_wizard_enabled;
 

@@ -40,7 +40,13 @@ export async function proxy(request: NextRequest) {
     isStaticExtension;
 
   if (isExcludedPath) {
-    return NextResponse.next();
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-pathname", pathname);
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
   // ✅ Forward pathname to all responses so layout.tsx can detect legal pages
@@ -227,10 +233,24 @@ export async function proxy(request: NextRequest) {
     });
   }
 
-  // ✅ Forward pathname on response — allows layout.tsx to detect legal pages via headers()
-  response.headers.set("x-pathname", pathname);
+  // ✅ [CRITICAL] Apply the request headers to the response via rewrite or next
+  // This is the ONLY way to pass headers to layout.tsx in Next.js Middleware properly
+  // without losing the response body/cookies.
+  const finalResponse = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 
-  return response;
+  // Copy cookies and headers from our processed response to the final response
+  response.cookies.getAll().forEach((cookie) => {
+    finalResponse.cookies.set(cookie.name, cookie.value, cookie);
+  });
+  response.headers.forEach((value, key) => {
+    finalResponse.headers.set(key, value);
+  });
+
+  return finalResponse;
 }
 
 export const config = {
