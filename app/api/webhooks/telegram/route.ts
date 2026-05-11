@@ -65,6 +65,52 @@ export async function POST(request: Request) {
       .eq("id", userId);
 
     if (updateError) throw updateError;
+    
+    // 🛡️ [AUTO-TENANT ASSIGNMENT]
+    let autoBranchText = "";
+    try {
+      const { data: membership } = await supabase
+        .from("tenant_members")
+        .select("id")
+        .eq("profile_id", userId)
+        .maybeSingle();
+
+      if (!membership) {
+        // Find default or first branch
+        const { data: settings } = await supabase
+          .from("site_settings")
+          .select("value")
+          .eq("key", "system_config")
+          .single();
+        
+        let targetTenantId = (settings?.value as any)?.default_tenant_id;
+
+        if (!targetTenantId) {
+          const { data: firstTenant } = await supabase
+            .from("tenants")
+            .select("id, name")
+            .eq("is_deleted", false)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .maybeSingle();
+          if (firstTenant) targetTenantId = firstTenant.id;
+        }
+
+        if (targetTenantId) {
+          await supabase.from("tenant_members").insert({
+            tenant_id: targetTenantId,
+            profile_id: userId,
+            role: "AGENT",
+          });
+          
+          const { data: tenant } = await supabase.from("tenants").select("name").eq("id", targetTenantId).single();
+          autoBranchText = `\n🏢 เข้าสาขาอัตโนมัติ: <b>${tenant?.name || "สาขาหลัก"}</b>`;
+          console.log(`✅ [Telegram-Auto-Tenant] User ${userId} assigned to tenant ${targetTenantId}`);
+        }
+      }
+    } catch (atErr) {
+      console.error("[TELEGRAM_WEBHOOK] Auto-Tenant Error:", atErr);
+    }
 
     // 📝 Log Audit
     await supabase.from("audit_logs").insert({
@@ -74,12 +120,13 @@ export async function POST(request: Request) {
       metadata: {
         role: "AGENT",
         admin_telegram_user: message.from?.username || message.from?.id,
+        auto_branch: autoBranchText.includes("🏢")
       },
     });
 
     // 💬 Reply back to Telegram to confirm
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    const confirmationText = `✅ อนุมัติสำเร็จ!\n\n👤 <b>${profile.full_name || profile.email}</b>\n🎭 ปรับบทบาทเป็น: <b>AGENT</b>\n\n<i>ดำเนินการโดย: @${message.from?.username || message.from?.first_name}</i>`;
+    const confirmationText = `✅ อนุมัติสำเร็จ!\n\n👤 <b>${profile.full_name || profile.email}</b>\n🎭 ปรับบทบาทเป็น: <b>AGENT</b>${autoBranchText}\n\n<i>ดำเนินการโดย: @${message.from?.username || message.from?.first_name}</i>`;
     
     await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
       method: "POST",

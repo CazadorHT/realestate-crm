@@ -135,7 +135,13 @@ export async function createOwnerAction(input: CreateOwnerInput) {
     const validated = ownerSchema.parse(input);
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
-    if (!ctx.tenantId) throw new Error("Tenant context required");
+    
+    // 🛡️ Fallback for tenantId if not in context
+    let targetTenantId = ctx.tenantId;
+    if (!targetTenantId) {
+      const config = await getSystemConfig();
+      targetTenantId = config.default_tenant_id ?? undefined;
+    }
 
     const { data: owner, error } = await ctx.supabase
       .from("owners")
@@ -149,7 +155,7 @@ export async function createOwnerAction(input: CreateOwnerInput) {
         facebook_url: encrypt(validated.facebook_url),
         other_contact: encrypt(validated.other_contact),
         created_by: ctx.user.id,
-        tenant_id: ctx.tenantId,
+        tenant_id: targetTenantId,
         updated_at: new Date().toISOString(),
       })
       .select("id")

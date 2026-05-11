@@ -47,7 +47,7 @@ export function Step1BasicInfo({
  
         {/* Quick Info Section */}
         {isQuickInfoOpen && (
-          <div className="pt-2 col-span-1 md:col-span-2 lg:col-span-3">
+          <div className="pt-2 col-span-1 md:col-span-1 lg:col-span-3">
             <QuickInfoSection
               popularAreas={popularAreas}
               isAddingArea={isAddingArea}

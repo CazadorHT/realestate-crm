@@ -46,7 +46,9 @@ export async function translateTextAction(
     const { getAiModelConfig } = await import("@/features/ai-settings/actions");
     const aiConfig = await getAiModelConfig();
     modelName = aiConfig.translation_model;
-
+    
+    console.log(`🌐 [AI Translation] Translating ${text.length} chars using model: ${modelName || "default"}`);
+    
     const result = await generateText(prompt, modelName);
     const responseText = result.text;
 

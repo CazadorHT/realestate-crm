@@ -8,10 +8,17 @@ const getApiKeys = () => {
   const keys = process.env.GEMINI_API_KEYS
     ? process.env.GEMINI_API_KEYS.split(",").map((k) => k.trim())
     : [];
-  const singleKey = process.env.GEMINI_API_KEY;
+  const singleKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
   // Combine and deduplicate
   const allKeys = Array.from(new Set([...keys, singleKey].filter(Boolean)));
+  
+  if (allKeys.length === 0) {
+    console.error("❌ [Gemini AI] No API keys found! Please set GEMINI_API_KEY or GOOGLE_API_KEY in .env");
+  } else {
+    console.log(`✅ [Gemini AI] Loaded ${allKeys.length} API keys for rotation`);
+  }
+  
   return allKeys as string[];
 };
 
@@ -36,8 +43,9 @@ const DEFAULT_MODEL = "gemini-flash-latest";
 function normalizeModelName(modelName: string): string {
   const unstableModels: Record<string, string> = {
     "gemini-2-flash": "gemini-2.0-flash",
-    "gemini-1.5-pro": "gemini-flash-latest",
-    "gemini-1.5-flash": "gemini-flash-latest",
+    "gemini-2.0-flash-exp": "gemini-2.0-flash",
+    "gemini-1.5-pro": "gemini-1.5-pro",
+    "gemini-1.5-flash": "gemini-1.5-flash",
   };
 
   return unstableModels[modelName] || modelName;

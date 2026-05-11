@@ -446,7 +446,7 @@ export function PropertyImageUploader({
             disabled && "opacity-50 cursor-not-allowed",
           )}
         >
-          <input {...getInputProps({ capture: "environment" } as any)} />
+          <input {...getInputProps()} />
           <Upload className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-muted-foreground mb-3 sm:mb-4" />
           <p className="text-xs sm:text-sm text-muted-foreground mb-1.5 sm:mb-2 font-medium">
             {isDragActive
