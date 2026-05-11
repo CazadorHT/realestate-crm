@@ -1,14 +1,14 @@
 import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations } from "@/lib/i18n";
-import { Shield, Lock, FileText, Info, Phone as PhoneIcon, Home } from "lucide-react";
+import { Shield, FileText, Info, Phone as PhoneIcon, Home } from "lucide-react";
 import { format } from "date-fns";
 import { enUS, th, zhCN, ru } from "date-fns/locale";
 import { getSiteSettings } from "@/features/site-settings/actions";
 import Link from "next/link";
 
-// 🚀 Force static rendering for best SEO and crawler visibility
-export const dynamic = "force-static";
+// ✅ Always use NEXT_PUBLIC_APP_URL — never siteConfig.url which returns localhost in dev
+const PRODUCTION_URL = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";
 
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
@@ -20,43 +20,45 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t("privacy.hero_desc"),
     applicationName: siteName,
     alternates: {
-      canonical: `${siteConfig.url}/privacy-policy`,
+      // ✅ FIX: Use NEXT_PUBLIC_APP_URL so canonical is always the production domain
+      canonical: `${PRODUCTION_URL}/privacy-policy`,
     },
     robots: "index, follow",
   };
 }
 
-/**
- * A small component to display email in a way that bypasses standard obfuscation 
- * but remains readable to bots.
- */
 function TransparentEmail({ email }: { email: string }) {
+  // Plain text — ensures Google OAuth bot reads the exact email string
   return <span>{email}</span>;
 }
 
 export default async function PrivacyPolicyPage() {
   const { t, language } = await getServerTranslations();
   const settings = await getSiteSettings();
-  
+
   const company_name = settings.company_name || siteConfig.company;
   const contact_phone = settings.contact_phone || siteConfig.contact.phone;
   const contact_email = settings.contact_email || siteConfig.contact.email;
   const contact_address = settings.contact_address || siteConfig.contact.address;
 
-  const dateLocale = language === "th" ? th : language === "cn" ? zhCN : language === "ru" ? ru : enUS;
+  const dateLocale =
+    language === "th" ? th : language === "cn" ? zhCN : language === "ru" ? ru : enUS;
   const lastUpdated = format(new Date(), "MMMM dd, yyyy", { locale: dateLocale });
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navigation */}
+      {/* Breadcrumb nav — shows production URL */}
       <nav className="border-b bg-slate-50/50">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors"
+          >
             <Home className="w-4 h-4" />
             <span className="text-sm font-medium">{t("nav.home")}</span>
           </Link>
           <div className="text-xs text-slate-400 font-mono tracking-tighter">
-            {siteConfig.url}/privacy-policy
+            {PRODUCTION_URL}/privacy-policy
           </div>
         </div>
       </nav>
@@ -81,7 +83,7 @@ export default async function PrivacyPolicyPage() {
 
       <main className="container mx-auto px-4 md:px-6 py-12">
         <div className="max-w-4xl mx-auto">
-          {/* Last Updated - Critical for Compliance */}
+          {/* Last Updated */}
           <div className="mb-12 flex items-center gap-2 text-slate-500 border-b border-slate-200 pb-6">
             <Info className="w-4 h-4" />
             <span className="text-sm font-medium uppercase tracking-wider">
@@ -90,8 +92,7 @@ export default async function PrivacyPolicyPage() {
           </div>
 
           <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-strong:text-slate-800 prose-a:text-blue-600">
-            
-            {/* 🛡️ Section 1: Removed manual "1." to prevent double-digits if i18n has them */}
+
             <section className="mb-12">
               <h2 className="text-2xl mb-6">{t("privacy.section1_title")}</h2>
               <p>{t("privacy.section1_p1", { company_name })}</p>
@@ -103,12 +104,16 @@ export default async function PrivacyPolicyPage() {
               <div className="grid sm:grid-cols-2 gap-6 not-prose">
                 <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 shadow-sm">
                   <FileText className="w-6 h-6 text-blue-600 mb-4" />
-                  <h3 className="font-bold text-slate-900 mb-2 leading-tight">{t("privacy.identity_title")}</h3>
+                  <h3 className="font-bold text-slate-900 mb-2 leading-tight">
+                    {t("privacy.identity_title")}
+                  </h3>
                   <p className="text-slate-500 text-sm">{t("privacy.identity_desc")}</p>
                 </div>
                 <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 shadow-sm">
                   <PhoneIcon className="w-6 h-6 text-blue-600 mb-4" />
-                  <h3 className="font-bold text-slate-900 mb-2 leading-tight">{t("privacy.contact_info_title")}</h3>
+                  <h3 className="font-bold text-slate-900 mb-2 leading-tight">
+                    {t("privacy.contact_info_title")}
+                  </h3>
                   <p className="text-slate-500 text-sm">{t("privacy.contact_info_desc")}</p>
                 </div>
               </div>
@@ -133,8 +138,17 @@ export default async function PrivacyPolicyPage() {
               <h2 className="text-2xl mb-6">{t("privacy.section5_title")}</h2>
               <p className="mb-6">{t("privacy.section5_p1")}</p>
               <div className="grid gap-3 not-prose">
-                {[t("privacy.right1"), t("privacy.right2"), t("privacy.right3"), t("privacy.right4")].map((right, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-4 rounded-xl bg-slate-100 border border-slate-200 text-slate-900! text-sm font-bold shadow-sm" style={{ color: '#0f172a' }}>
+                {[
+                  t("privacy.right1"),
+                  t("privacy.right2"),
+                  t("privacy.right3"),
+                  t("privacy.right4"),
+                ].map((right, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-3 p-4 rounded-xl bg-slate-100 border border-slate-200 text-sm font-bold shadow-sm"
+                    style={{ color: "#0f172a" }}
+                  >
                     <div className="w-2 h-2 rounded-full bg-blue-500 shadow-sm shadow-blue-500/20" />
                     {right}
                   </div>
@@ -142,10 +156,11 @@ export default async function PrivacyPolicyPage() {
               </div>
             </section>
 
+            {/* ✅ Contact Section — plain text email for Google bot visibility */}
             <section className="mb-12">
               <h2 className="text-2xl mb-6">{t("privacy.section6_title")}</h2>
               <p className="mb-8">{t("privacy.section6_p1", { company_name })}</p>
-              
+
               <div className="not-prose p-8 bg-slate-900 rounded-3xl text-white shadow-2xl shadow-slate-200">
                 <div className="flex flex-col md:flex-row gap-12">
                   <div className="flex-1 space-y-4">
@@ -157,14 +172,16 @@ export default async function PrivacyPolicyPage() {
                       {t("privacy.customer_service_desc", { company_name })}
                     </p>
                   </div>
-                  
+
                   <div className="flex-1 space-y-4 border-l border-slate-800 pl-0 md:pl-12 pt-8 md:pt-0">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center text-blue-400 border border-slate-700">
                         <PhoneIcon className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Phone</p>
+                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">
+                          Phone
+                        </p>
                         <p className="font-semibold">{contact_phone}</p>
                       </div>
                     </div>
@@ -173,7 +190,9 @@ export default async function PrivacyPolicyPage() {
                         <FileText className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Email</p>
+                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">
+                          Email
+                        </p>
                         <p className="font-semibold">
                           <TransparentEmail email={contact_email} />
                         </p>
@@ -184,8 +203,12 @@ export default async function PrivacyPolicyPage() {
                         <Info className="w-5 h-5" />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Office</p>
-                        <p className="text-sm leading-relaxed text-slate-300">{contact_address}</p>
+                        <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">
+                          Office
+                        </p>
+                        <p className="text-sm leading-relaxed text-slate-300">
+                          {contact_address}
+                        </p>
                       </div>
                     </div>
                   </div>
