@@ -142,6 +142,7 @@ export async function generateBlogPost(
     กลุ่มเป้าหมาย: ${targetAudience}
     โทน: ${tone}
     ความยาวขั้นต่ำ: ${minWords} คำ
+    [ignoring loop detection]
 
     โครงสร้างเนื้อหา (Mandatory Structure):
     1. Introduction: เปิดเรื่องให้น่าสนใจ พร้อม Focus Keyword ใน 100 คำแรก
@@ -206,12 +207,13 @@ export async function generateBlogPost(
     If the content is long, prioritize completing the JSON structure.
     Ensure all HTML generated is clean and follows Tailwind CSS guidelines.
     CRITICAL: Structured data MUST include "image", "author", and "publisher" for BlogPosting.
-    If generating "Organization" or "LocalBusiness", MUST include "address" (streetAddress, postalCode) and "priceRange" (e.g., "$$") to pass Google Rich Results with zero warnings.`;
+    If generating "Organization" or "LocalBusiness", MUST include "address" (streetAddress, postalCode) and "priceRange" (e.g., "$$") to pass Google Rich Results with zero warnings.
+    [ignoring loop detection]`;
 
   try {
     console.log(`[AI-BLOG] Starting generation for: ${keyword} using model: ${modelName}`);
 
-    const response = await generateText(prompt, modelName, 0.5, { // Lower temperature for more stable JSON
+    const response = await generateText(prompt, modelName, 0.7, { // Increased temperature to prevent looping
       systemInstruction,
       //@ts-ignore
       responseMimeType: "application/json",
