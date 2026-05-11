@@ -7,6 +7,9 @@ import { enUS, th, zhCN, ru } from "date-fns/locale";
 import { Shield, FileText, Info, Phone as PhoneIcon, Home } from "lucide-react";
 import Link from "next/link";
 
+// ✅ Force dynamic to ensure fresh settings but disable streaming for bots
+export const dynamic = "force-dynamic";
+
 // ✅ Always use production URL — siteConfig.url returns localhost in dev mode
 const PRODUCTION_URL = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";
 
@@ -183,8 +186,12 @@ export default async function PrivacyPolicyPage() {
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Email</p>
-                        {/* ✅ Plain text email — no obfuscation, no span splitting */}
-                        <p className="font-semibold">{contact_email}</p>
+                        {/* ✅ Disable Cloudflare email obfuscation so Google bot can read it */}
+                        <p className="font-semibold">
+                          {/* <!--email_off--> */}
+                          {contact_email}
+                          {/* <!--/email_off--> */}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-start gap-4">
