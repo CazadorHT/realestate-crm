@@ -32,13 +32,11 @@ export default async function PrivacyPolicyPage() {
   const contact_email = settings.contact_email || siteConfig.contact.email;
   const contact_address = settings.contact_address || siteConfig.contact.address;
 
-  // Use standard date format for compliance (e.g., May 11, 2026)
   const dateLocale = language === "th" ? th : language === "cn" ? zhCN : language === "ru" ? ru : enUS;
   const lastUpdated = format(new Date(), "MMMM dd, yyyy", { locale: dateLocale });
 
   return (
     <div className="min-h-screen bg-white">
-      {/* 🛡️ Standard Navigation for Compliance */}
       <nav className="border-b bg-slate-50/50">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors">
@@ -51,7 +49,6 @@ export default async function PrivacyPolicyPage() {
         </div>
       </nav>
 
-      {/* Hero Header */}
       <header className="bg-slate-900 text-white py-16 md:py-20 border-b border-slate-800">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-4xl mx-auto">
@@ -71,8 +68,7 @@ export default async function PrivacyPolicyPage() {
 
       <main className="container mx-auto px-4 md:px-6 py-12">
         <div className="max-w-4xl mx-auto">
-          {/* 📅 Vital for Google Verification: Clear effective date */}
-          <div className="mb-12 flex items-center gap-2 text-slate-500 border-b pb-6">
+          <div className="mb-12 flex items-center gap-2 text-slate-500 border-b border-slate-200 pb-6">
             <Info className="w-4 h-4" />
             <span className="text-sm font-medium uppercase tracking-wider">
               {t("privacy.update_label")}: {lastUpdated}
@@ -122,7 +118,7 @@ export default async function PrivacyPolicyPage() {
               <p className="mb-6">{t("privacy.section5_p1")}</p>
               <div className="grid gap-3 not-prose">
                 {[t("privacy.right1"), t("privacy.right2"), t("privacy.right3"), t("privacy.right4")].map((right, idx) => (
-                  <div key={idx} className="flex items-center gap-3 p-4 rounded-xl bg-blue-50/50 border border-blue-100 text-blue-900 text-sm font-medium">
+                  <div key={idx} className="flex items-center gap-3 p-4 rounded-xl bg-slate-100 border border-slate-200 !text-slate-900 text-sm font-bold shadow-sm" style={{ color: '#0f172a' }}>
                     <div className="w-2 h-2 rounded-full bg-blue-500 shadow-sm shadow-blue-500/20" />
                     {right}
                   </div>
@@ -197,7 +193,7 @@ export default async function PrivacyPolicyPage() {
         </div>
       </main>
 
-      <footer className="bg-slate-50 border-t py-12 mt-20">
+      <footer className="bg-slate-50 border-t border-slate-200 py-12 mt-20">
         <div className="container mx-auto px-4 text-center">
           <p className="text-slate-400 text-sm">
             &copy; {new Date().getFullYear()} {company_name}. All rights reserved.

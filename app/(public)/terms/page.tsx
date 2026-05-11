@@ -67,7 +67,7 @@ export default async function TermsPage() {
       <main className="container mx-auto px-4 md:px-6 py-12">
         <div className="max-w-4xl mx-auto">
           {/* Last Updated */}
-          <div className="mb-12 flex items-center gap-2 text-slate-500 border-b pb-6">
+          <div className="mb-12 flex items-center gap-2 text-slate-500 border-b border-slate-200 pb-6">
             <FileText className="w-4 h-4" />
             <span className="text-sm font-medium uppercase tracking-wider">
               {t("terms.update_label")}: {lastUpdated}
@@ -75,9 +75,9 @@ export default async function TermsPage() {
           </div>
 
           <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-strong:text-slate-800 prose-a:text-blue-600">
-            <section className="mb-12 p-8 bg-blue-50/50 rounded-3xl border border-blue-100 not-prose">
-              <h2 className="text-xl font-bold text-blue-900 mb-4">{t("terms.welcome_title")}</h2>
-              <p className="text-blue-800 leading-relaxed font-medium">
+            <section className="mb-12 p-8 bg-blue-50/80 rounded-3xl border border-blue-100 not-prose shadow-sm">
+              <h2 className="text-xl font-bold text-slate-900 mb-4">{t("terms.welcome_title")}</h2>
+              <p className="text-slate-800 leading-relaxed font-semibold">
                 {t("terms.welcome_p1")}
               </p>
             </section>
@@ -188,7 +188,7 @@ export default async function TermsPage() {
         </div>
       </main>
 
-      <footer className="bg-slate-50 border-t py-12 mt-20">
+      <footer className="bg-slate-50 border-t border-slate-200 py-12 mt-20">
         <div className="container mx-auto px-4 text-center">
           <p className="text-slate-400 text-sm">
             &copy; {new Date().getFullYear()} {company_name}. All rights reserved.
