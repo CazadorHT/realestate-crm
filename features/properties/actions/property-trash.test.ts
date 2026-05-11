@@ -50,6 +50,12 @@ vi.mock("@/lib/audit", () => ({
   logAudit: vi.fn().mockResolvedValue(null),
 }));
 
+vi.mock("next/cache", () => ({
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+  unstable_cache: vi.fn((fn) => fn),
+}));
+
 describe("Property Actions - Trash & Revenue Protection", () => {
   beforeEach(() => {
     vi.clearAllMocks();

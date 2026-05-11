@@ -14,7 +14,11 @@ vi.mock('@/lib/authz', () => ({
 }));
 
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn().mockResolvedValue(null) }));
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+vi.mock('next/cache', () => ({ 
+  revalidatePath: vi.fn(), 
+  revalidateTag: vi.fn(),
+  unstable_cache: vi.fn((fn) => fn),
+}));
 
 vi.mock('@/lib/inngest/client', () => ({
   inngest: {

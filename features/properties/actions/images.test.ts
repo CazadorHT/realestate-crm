@@ -16,6 +16,12 @@ vi.mock('@/lib/authz', () => ({
   }
 }));
 
+vi.mock('next/cache', () => ({
+  revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
+  unstable_cache: vi.fn((fn) => fn),
+}));
+
 vi.mock('@/lib/file-validation', () => ({
   validateImageFile: vi.fn(() => Promise.resolve({ valid: true })),
 }));
