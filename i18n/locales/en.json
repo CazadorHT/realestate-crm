@@ -850,10 +850,12 @@
     "section6_l1": "Meta: https://www.facebook.com/terms",
     "section6_l2": "TikTok: https://www.tiktok.com/legal/terms-of-service",
     "section6_l3": "LINE: https://terms.line.me",
-    "section7_title": "Suspension and Termination",
-    "section7_p1": "The company reserves the right to suspend or terminate user accounts that violate these terms or engage in actions that may harm the system, other users' data, or the company's reputation, without prior notice.",
-    "section8_title": "Amendments to Terms",
-    "section8_p1": "The company may amend these terms and conditions at any time by notifying through the website or email. Continued use after amendments constitutes acceptance of the new terms.",
+    "section7_title": "Google User Data & OAuth",
+    "section7_p1": "By using our Google OAuth login, you agree to allow us to access your name, email, and profile picture. This data is used solely for identity verification and account creation. We do not transfer this data to any third parties for purposes other than improving our service, and we strictly adhere to Google's Limited Use Policy.",
+    "section8_title": "Suspension and Termination",
+    "section8_p1": "The company reserves the right to suspend or terminate user accounts that violate these terms or engage in actions that may harm the system, other users' data, or the company's reputation, without prior notice.",
+    "section9_title": "Amendments to Terms",
+    "section9_p1": "The company may amend these terms and conditions at any time by notifying through the website or email. Continued use after amendments constitutes acceptance of the new terms.",
     "pdpa_note": "Note: This agreement complies with the Personal Data Protection Act B.E. 2562 (PDPA)."
   },
   "property_types": {

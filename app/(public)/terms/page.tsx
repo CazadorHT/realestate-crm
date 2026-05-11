@@ -13,7 +13,8 @@ const PRODUCTION_URL = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com"
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
   const settings = await getSiteSettings();
-  const siteName = settings.site_name || siteConfig.name;
+  // ✅ FORCE: Match Google Cloud Console App Name exactly
+  const siteName = "VC Connect Asset Co., Ltd.";
 
   return {
     title: `${t("terms.title")} | ${siteName}`,
@@ -31,7 +32,8 @@ export default async function TermsPage() {
   const { t, language } = await getServerTranslations();
   const settings = await getSiteSettings();
   
-  const company_name = settings.company_name || siteConfig.company;
+  // ✅ FORCE: Match Google Cloud Console App Name exactly
+  const company_name = "VC Connect Asset Co., Ltd.";
   const dateLocale = language === "th" ? th : language === "cn" ? zhCN : language === "ru" ? ru : enUS;
   const lastUpdated = format(new Date(), "MMMM dd, yyyy", { locale: dateLocale });
 
@@ -169,6 +171,21 @@ export default async function TermsPage() {
                   </a>
                 </li>
               </ul>
+            </section>
+
+            <section className="mb-12">
+              <h2 className="text-2xl mb-6">{t("terms.section7_title")}</h2>
+              <p>{t("terms.section7_p1")}</p>
+            </section>
+
+            <section className="mb-12">
+              <h2 className="text-2xl mb-6">{t("terms.section8_title")}</h2>
+              <p>{t("terms.section8_p1")}</p>
+            </section>
+
+            <section className="mb-12">
+              <h2 className="text-2xl mb-6">{t("terms.section9_title")}</h2>
+              <p>{t("terms.section9_p1")}</p>
             </section>
 
             <div className="pt-8 border-t border-slate-100 italic text-slate-400 text-sm">

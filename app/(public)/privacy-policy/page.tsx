@@ -16,7 +16,8 @@ const PRODUCTION_URL = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com"
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
   const settings = await getSiteSettings();
-  const siteName = settings.site_name || siteConfig.name;
+  // ✅ FORCE: Match Google Cloud Console App Name exactly
+  const siteName = "VC Connect Asset Co., Ltd."; 
 
   return {
     title: `${t("privacy.title")} | ${siteName}`,
@@ -33,7 +34,9 @@ export default async function PrivacyPolicyPage() {
   const { t, language } = await getServerTranslations();
   const settings = await getSiteSettings();
 
-  const company_name = settings.company_name || siteConfig.company;
+  // ✅ FORCE: Match Google Cloud Console App Name exactly
+  const company_name = "VC Connect Asset Co., Ltd.";
+  
   const contact_phone = settings.contact_phone || siteConfig.contact.phone;
   const contact_email = settings.contact_email || siteConfig.contact.email;
   const contact_address = settings.contact_address || siteConfig.contact.address;
