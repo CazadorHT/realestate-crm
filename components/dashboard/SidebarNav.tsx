@@ -515,7 +515,7 @@ export function SidebarNav({
       </TooltipTrigger>
       <TooltipContent
         side="right"
-        className="bg-slate-900 text-white border-none p-4 rounded-2xl shadow-2xl z-60 max-w-[240px] animate-in fade-in slide-in-from-left-2 duration-200"
+        className="bg-slate-900 text-white border-none p-4 rounded-2xl shadow-2xl z-50 max-w-[240px] animate-in fade-in slide-in-from-left-2 duration-200"
       >
         <div className="font-semibold text-sm mb-1 text-blue-400">
           {item.title}
@@ -538,7 +538,7 @@ export function SidebarNav({
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
         className={cn(
-          "hidden flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-xl sm:flex shadow-sm z-60 h-screen sticky top-0",
+          "hidden flex-col border-r border-slate-200/60 bg-white/80 backdrop-blur-xl sm:flex shadow-sm z-40 h-screen sticky top-0",
           !hasMounted && (isCollapsed ? "w-20" : "w-72"),
         )}
       >
@@ -589,10 +589,8 @@ export function SidebarNav({
               onClick={toggleCollapse}
               aria-label={isCollapsed ? "ขยายเมนู" : "ย่อเมนู"}
               className={cn(
-                "absolute -right-4 top-14 h-8 w-8 rounded-full border border-slate-200 bg-white items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 z-51 hover:scale-110 active:scale-90 group/toggle",
-                isHovered
-                  ? "opacity-100 translate-x-0"
-                  : "opacity-0 -translate-x-2 pointer-events-none",
+                "absolute -right-4 top-14 h-8 w-8 rounded-full border border-slate-200 bg-white items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 z-52 hover:scale-110 active:scale-90 group/toggle",
+                isHovered ? "opacity-100 translate-x-0" : "opacity-40 translate-x-0",
               )}
               title={isCollapsed ? "ขยายเมนู" : "ย่อเมนู"}
             >
@@ -657,7 +655,7 @@ export function SidebarNav({
                 </Link>
               </TooltipTrigger>
               {isCollapsed && (
-                <TooltipContent side="right" className="z-60">
+                <TooltipContent side="right" className="z-50">
                   แดชบอร์ด
                 </TooltipContent>
               )}
@@ -691,7 +689,7 @@ export function SidebarNav({
                           )}
                         </button>
                       </TooltipTrigger>
-                      <TooltipContent className="z-60" side="right">
+                      <TooltipContent className="z-50" side="right">
                         {group.title}
                       </TooltipContent>
                     </Tooltip>

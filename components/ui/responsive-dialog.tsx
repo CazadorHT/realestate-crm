@@ -202,9 +202,6 @@ export function ResponsiveDialog({
           )}
           onOpenAutoFocus={onOpenAutoFocus}
           onCloseAutoFocus={onCloseAutoFocus}
-          aria-describedby={description ? undefined : undefined} 
-          /* Note: Radix Drawer handles this slightly differently, but for consistency: */
-          {...(!description && { "aria-describedby": undefined })}
         >
           {title ? (
             <DrawerHeader className="shrink-0 text-left px-6 pt-5 pb-5 border-b border-slate-100 relative z-20 bg-white">
@@ -259,7 +256,6 @@ export function ResponsiveDialog({
         onOpenAutoFocus={onOpenAutoFocus}
         onCloseAutoFocus={onCloseAutoFocus}
         showCloseButton={showCloseButton}
-        {...(!description && { "aria-describedby": undefined })}
       >
         {title ? (
           <DialogHeader className="shrink-0 px-6 pt-6 pb-5 pr-6 border-b border-slate-100">

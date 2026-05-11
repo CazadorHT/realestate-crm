@@ -40,7 +40,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
       id: user.id,
       email: user.email ?? null,
       role: (user.user_metadata?.role as UserRole) ?? "USER", // Default to USER for new signups
-      avatar_url: user.user_metadata?.avatar_url ?? null, // รูปจาก Google
+      avatar_url: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null, // รองรับทั้ง avatar_url และ picture จาก Google
       full_name:
         user.user_metadata?.full_name ?? user.user_metadata?.name ?? null, // ชื่อจาก Google
       phone: null,
@@ -77,6 +77,6 @@ export async function getCurrentProfile(): Promise<Profile | null> {
       user.user_metadata?.full_name ||
       user.user_metadata?.name ||
       null,
-    avatar_url: dbProfile.avatar_url || user.user_metadata?.avatar_url || null,
+    avatar_url: dbProfile.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
   };
 }

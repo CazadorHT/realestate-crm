@@ -19,6 +19,7 @@ import {
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -177,6 +178,9 @@ export function UserNav({ profile }: UserNavProps) {
           <SheetContent side="bottom" className="h-auto max-h-[90vh] p-0 overflow-y-auto rounded-t-[2.5rem] border-t-0 shadow-2xl">
             <SheetHeader className="p-6 text-left border-b border-slate-200 bg-slate-50/50">
               <SheetTitle className="text-lg font-bold">ข้อมูลผู้ใช้งาน</SheetTitle>
+              <SheetDescription className="sr-only">
+                เมนูจัดการข้อมูลส่วนตัวและตั้งค่าบัญชีสำหรับผู้ใช้งาน
+              </SheetDescription>
               <div className="flex items-center gap-4 mt-4">
                 <Avatar className="h-12 w-12 border-2 border-white shadow-sm">
                   <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || ""} />

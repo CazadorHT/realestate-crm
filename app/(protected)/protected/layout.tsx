@@ -63,7 +63,7 @@ export default async function ProtectedLayout({
           />
 
           <div className="flex flex-1 flex-col min-w-0">
-            <header className="sticky top-0 z-50 flex h-16 items-center gap-1 sm:gap-4 bg-white px-4 md:px-6 backdrop-blur-md border-b border-slate-100 shadow-sm">
+            <header className="sticky top-0 z-30 flex h-16 items-center gap-1 sm:gap-4 bg-white px-4 md:px-6 backdrop-blur-md border-b border-slate-100 shadow-sm">
               <div className="flex items-center gap-1 sm:gap-4">
                 <MobileNav role={profile.role} profile={profile} />
 

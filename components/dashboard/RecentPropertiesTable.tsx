@@ -26,6 +26,7 @@ import {
   DialogContent,
   DialogTrigger,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import {
@@ -198,6 +199,9 @@ export function RecentPropertiesTable({
                                   <DialogTitle>
                                     {property.title || "Property Image"}
                                   </DialogTitle>
+                                  <DialogDescription>
+                                    การแสดงผลรูปภาพทรัพย์สินแบบขยายใหญ่
+                                  </DialogDescription>
                                 </VisuallyHidden>
                                 <div className="relative w-full h-[80vh] flex items-center justify-center bg-transparent">
                                   <Image
