@@ -4,30 +4,58 @@ import { getServerTranslations } from "@/lib/i18n";
 import { Shield, Lock, FileText, Info, Phone as PhoneIcon } from "lucide-react";
 import { format } from "date-fns";
 import { th, enUS, zhCN, ru } from "date-fns/locale";
+import { getSiteSettings } from "@/features/site-settings/actions";
 
-export const metadata: Metadata = {
-  title: "นโยบายความเป็นส่วนตัว (Privacy Policy)",
-  description:
-    "นโยบายความเป็นส่วนตัวและการคุ้มครองข้อมูลส่วนบุคคล อ่านรายละเอียดการเก็บและใช้ข้อมูลของเรา",
-  other: {
-    "tiktok-developers-site-verification":
-      siteConfig.verificationTokens.tiktokPrivacy,
-    "tiktok-site-verification": siteConfig.verificationTokens.tiktokPrivacy,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getServerTranslations();
+  const settings = await getSiteSettings();
+  const siteName = settings.site_name || siteConfig.name;
+
+  return {
+    title: `${t("privacy.title")} | ${siteName}`,
+    description: t("privacy.hero_desc"),
+    applicationName: siteName,
+    authors: [{ name: siteName }],
+    alternates: {
+      canonical: `${siteConfig.url}/privacy-policy`,
+    },
+    // Essential for Google Bot to understand the content structure
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
+    other: {
+      "tiktok-developers-site-verification":
+        siteConfig.verificationTokens.tiktokPrivacy,
+      "tiktok-site-verification": siteConfig.verificationTokens.tiktokPrivacy,
+    },
+  };
+}
 
 export default async function PrivacyPolicyPage() {
   const { t, language } = await getServerTranslations();
-  const company_name = siteConfig.company;
+  const settings = await getSiteSettings();
   
+  const company_name = settings.company_name || siteConfig.company;
+  const contact_phone = settings.contact_phone || siteConfig.contact.phone;
+  const contact_email = settings.contact_email || siteConfig.contact.email;
+  const contact_address = settings.contact_address || siteConfig.contact.address;
+
   const lastUpdated = format(new Date(), "PPP", {
     locale: language === "th" ? th : language === "cn" ? zhCN : language === "ru" ? ru : enUS,
   });
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <article className="min-h-screen bg-slate-50" lang={language}>
       {/* Header Background */}
-      <div className="bg-slate-900 text-white pb-24 pt-12 md:pt-16">
+      <header className="bg-slate-900 text-white pb-24 pt-12 md:pt-16">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-4xl mx-auto text-center space-y-4">
             <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-blue-500/10 text-blue-400 mb-2">
@@ -41,9 +69,9 @@ export default async function PrivacyPolicyPage() {
             </p>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="container mx-auto px-4 md:px-6 -mt-16 pb-20">
+      <main className="container mx-auto px-4 md:px-6 -mt-16 pb-20">
         <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100">
           {/* Content Header */}
           <div className="p-6 md:p-10 border-b border-slate-100 bg-slate-50/50">
@@ -56,32 +84,24 @@ export default async function PrivacyPolicyPage() {
           </div>
 
           <div className="p-6 md:p-10 prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-800 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-strong:text-slate-700">
+            {/* 🛡️ Standardizing Header Structure: No spans inside H2 for better bot parsing */}
+            
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  1
-                </span>
-                {t("privacy.section1_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">1. {t("privacy.section1_title")}</h2>
               <p>{t("privacy.section1_p1", { company_name })}</p>
             </section>
 
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  2
-                </span>
-                {t("privacy.section2_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">2. {t("privacy.section2_title")}</h2>
               <p>{t("privacy.section2_p1")}</p>
-              <div className="grid sm:grid-cols-2 gap-4 mt-4">
+              <div className="grid sm:grid-cols-2 gap-4 mt-4 not-prose">
                 <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
                   <div className="flex items-start gap-3">
                     <FileText className="w-5 h-5 text-blue-500 mt-0.5" />
                     <div>
-                      <h4 className="font-semibold text-slate-800 text-sm">
+                      <h3 className="font-semibold text-slate-800 text-sm">
                         {t("privacy.identity_title")}
-                      </h4>
+                      </h3>
                       <p className="text-slate-500 text-sm">{t("privacy.identity_desc")}</p>
                     </div>
                   </div>
@@ -90,9 +110,9 @@ export default async function PrivacyPolicyPage() {
                   <div className="flex items-start gap-3">
                     <PhoneIcon className="w-5 h-5 text-blue-500 mt-0.5" />
                     <div>
-                      <h4 className="font-semibold text-slate-800 text-sm">
+                      <h3 className="font-semibold text-slate-800 text-sm">
                         {t("privacy.contact_info_title")}
-                      </h4>
+                      </h3>
                       <p className="text-slate-500 text-sm">{t("privacy.contact_info_desc")}</p>
                     </div>
                   </div>
@@ -101,9 +121,9 @@ export default async function PrivacyPolicyPage() {
                   <div className="flex items-start gap-3">
                     <Lock className="w-5 h-5 text-blue-500 mt-0.5" />
                     <div>
-                      <h4 className="font-semibold text-slate-800 text-sm">
+                      <h3 className="font-semibold text-slate-800 text-sm">
                         {t("privacy.tech_info_title")}
-                      </h4>
+                      </h3>
                       <p className="text-slate-500 text-sm">{t("privacy.tech_info_desc")}</p>
                     </div>
                   </div>
@@ -112,9 +132,9 @@ export default async function PrivacyPolicyPage() {
                   <div className="flex items-start gap-3">
                     <Info className="w-5 h-5 text-blue-500 mt-0.5" />
                     <div>
-                      <h4 className="font-semibold text-slate-800 text-sm">
+                      <h3 className="font-semibold text-slate-800 text-sm">
                         {t("privacy.trans_info_title")}
-                      </h4>
+                      </h3>
                       <p className="text-slate-500 text-sm">{t("privacy.trans_info_desc")}</p>
                     </div>
                   </div>
@@ -123,12 +143,7 @@ export default async function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  3
-                </span>
-                {t("privacy.section3_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">3. {t("privacy.section3_title")}</h2>
               <ul>
                 <li>{t("privacy.section3_l1")}</li>
                 <li>{t("privacy.section3_l2")}</li>
@@ -138,24 +153,14 @@ export default async function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  4
-                </span>
-                {t("privacy.section4_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">4. {t("privacy.section4_title")}</h2>
               <p>{t("privacy.section4_p1")}</p>
             </section>
 
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  5
-                </span>
-                {t("privacy.section5_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">5. {t("privacy.section5_title")}</h2>
               <p>{t("privacy.section5_p1")}</p>
-              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 space-y-2">
+              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-5 space-y-2 not-prose">
                 {[
                   t("privacy.right1"),
                   t("privacy.right2"),
@@ -174,21 +179,16 @@ export default async function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  6
-                </span>
-                {t("privacy.section6_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">6. {t("privacy.section6_title")}</h2>
               <p>{t("privacy.section6_p1", { company_name })}</p>
               
-              <div className="mt-6 p-6 bg-slate-50 rounded-2xl border border-slate-200">
+              <div className="mt-6 p-6 bg-slate-50 rounded-2xl border border-slate-200 not-prose">
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="space-y-4">
-                    <h4 className="font-bold text-slate-900 flex items-center gap-2">
+                    <h3 className="font-bold text-slate-900 flex items-center gap-2">
                       <Shield className="w-5 h-5 text-blue-600" />
                       {t("privacy.customer_service", { company_name })}
-                    </h4>
+                    </h3>
                     <p className="text-slate-600 text-sm leading-relaxed">
                       {t("privacy.customer_service_desc", { company_name })}
                     </p>
@@ -199,19 +199,19 @@ export default async function PrivacyPolicyPage() {
                       <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-blue-600">
                         <PhoneIcon className="w-4 h-4" />
                       </div>
-                      <span className="text-sm font-medium">{siteConfig.contact.phone}</span>
+                      <span className="text-sm font-medium">{contact_phone}</span>
                     </div>
                     <div className="flex items-center gap-3 text-slate-700">
                       <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-blue-600">
                         <FileText className="w-4 h-4" />
                       </div>
-                      <span className="text-sm font-medium">{siteConfig.contact.email}</span>
+                      <span className="text-sm font-medium">{contact_email}</span>
                     </div>
                     <div className="flex items-start gap-3 text-slate-700">
                       <div className="w-8 h-8 rounded-full bg-white shadow-sm border border-slate-100 flex items-center justify-center text-blue-600 mt-1 shrink-0">
                         <Info className="w-4 h-4" />
                       </div>
-                      <span className="text-sm leading-relaxed">{siteConfig.contact.address}</span>
+                      <span className="text-sm leading-relaxed">{contact_address}</span>
                     </div>
                   </div>
                 </div>
@@ -219,22 +219,12 @@ export default async function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  7
-                </span>
-                {t("privacy.section7_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">7. {t("privacy.section7_title")}</h2>
               <p>{t("privacy.section7_p1")}</p>
             </section>
 
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  8
-                </span>
-                {t("privacy.section8_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">8. {t("privacy.section8_title")}</h2>
               <p>{t("privacy.section8_p1")}</p>
               <ul className="space-y-2">
                 <li>{t("privacy.section8_l1")}</li>
@@ -244,32 +234,17 @@ export default async function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  9
-                </span>
-                {t("privacy.section9_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">9. {t("privacy.section9_title")}</h2>
               <p>{t("privacy.section9_p1")}</p>
             </section>
 
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  10
-                </span>
-                {t("privacy.section10_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">10. {t("privacy.section10_title")}</h2>
               <p>{t("privacy.section10_p1")}</p>
             </section>
 
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  11
-                </span>
-                {t("privacy.section11_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">11. {t("privacy.section11_title")}</h2>
               <p>{t("privacy.section11_p1")}</p>
               <ul className="list-disc pl-5 mt-2 space-y-1">
                 <li>{t("privacy.section11_l1")}</li>
@@ -279,17 +254,12 @@ export default async function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-10 last:mb-0">
-              <h2 className="flex items-center gap-3 text-2xl mb-4 group">
-                <span className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50 text-blue-600 text-sm">
-                  12
-                </span>
-                {t("privacy.section12_title")}
-              </h2>
+              <h2 className="text-2xl mb-4">12. {t("privacy.section12_title")}</h2>
               <p>{t("privacy.section12_p1")}</p>
             </section>
           </div>
         </div>
-      </div>
-    </div>
+      </main>
+    </article>
   );
 }
