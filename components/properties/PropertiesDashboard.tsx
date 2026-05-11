@@ -47,11 +47,13 @@ const TYPE_CONFIG: Record<string, { label: string; color: string }> = {
 const STATUS_CONFIG: Record<string, { label: string; color: string }> = {
   ACTIVE: { label: "ว่าง (Active)", color: "#10b981" }, // Green
   AVAILABLE: { label: "ว่าง (Active)", color: "#10b981" }, // Green (Fallback)
+  UNDER_OFFER: { label: "ติดจอง (Offer)", color: "#f59e0b" }, // Amber
+  RESERVED: { label: "จองแล้ว (Reserved)", color: "#f59e0b" }, // Amber
   SOLD: { label: "ขายแล้ว (Sold)", color: "#ef4444" }, // Red
   RENTED: { label: "เช่าแล้ว (Rented)", color: "#3b82f6" }, // Blue
-  RESERVED: { label: "จองแล้ว (Reserved)", color: "#f59e0b" }, // Amber
-  Biocked: { label: "ระงับชั่วคราว", color: "#6b7280" },
   DRAFT: { label: "ร่าง (Draft)", color: "#fcd34d" }, // Yellow
+  ARCHIVED: { label: "ยกเลิก (Archived)", color: "#64748b" }, // Slate
+  BLOCKED: { label: "ระงับชั่วคราว", color: "#6b7280" },
   CLOSED: { label: "ปิดการขาย", color: "#64748b" }, // Slate
   Unknown: { label: "ไม่ระบุ", color: "#cbd5e1" },
 };

@@ -30,8 +30,10 @@ const PROPERTY_TYPE_TH = {
   HOUSE: "บ้านเดี่ยว",
   TOWNHOME: "ทาวน์โฮม",
   LAND: "ที่ดิน",
-  COMMERCIAL: "อาคารพาณิชย์",
-  OFFICE: "ออฟฟิศ",
+  VILLA: "วิลล่า",
+  POOL_VILLA: "พูลวิลล่า",
+  COMMERCIAL_BUILDING: "อาคารพาณิชย์",
+  OFFICE_BUILDING: "ออฟฟิศ",
   WAREHOUSE: "โกดัง",
   OTHER: "อื่นๆ"
 };
@@ -43,19 +45,23 @@ const LISTING_TYPE_TH = {
 };
 
 const STATUS_TH = {
+  DRAFT: "ฉบับร่าง",
   ACTIVE: "ออนไลน์",
   UNDER_OFFER: "ติดจอง",
+  RESERVED: "จองแล้ว",
   SOLD: "ขายแล้ว",
   RENTED: "เช่าแล้ว",
-  WITHDRAWN: "ปิดประกาศ"
+  ARCHIVED: "ปิดประกาศ"
 };
 
 const STATUS_COLORS = {
+  DRAFT: "bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-500 hover:text-white! hover:border-slate-500",
   ACTIVE: "bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-600 hover:text-white! hover:border-emerald-600",
   UNDER_OFFER: "bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-600 hover:text-white! hover:border-amber-600",
+  RESERVED: "bg-orange-50 text-orange-600 border-orange-100 hover:bg-orange-600 hover:text-white! hover:border-orange-600",
   SOLD: "bg-rose-50 text-rose-600 border-rose-100 hover:bg-rose-600 hover:text-white! hover:border-rose-600",
   RENTED: "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white! hover:border-blue-600",
-  WITHDRAWN: "bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-500 hover:text-white! hover:border-slate-500"
+  ARCHIVED: "bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-500 hover:text-white! hover:border-slate-500"
 };
 
 // 🛡️ Performance Polish: Memoized to prevent re-renders during search typing
@@ -188,7 +194,7 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
                   <TableCell>
                     <Badge className={cn(
                       "font-semibold px-3 py-1 rounded-full text-[9px] uppercase border shadow-2xs transition-all cursor-default",
-                      STATUS_COLORS[item.status as keyof typeof STATUS_COLORS] || STATUS_COLORS.WITHDRAWN
+                      STATUS_COLORS[item.status as keyof typeof STATUS_COLORS] || STATUS_COLORS.ARCHIVED
                     )}>
                       {STATUS_TH[item.status as keyof typeof STATUS_TH] || item.status}
                     </Badge>
@@ -278,7 +284,7 @@ export const InventoryTable = React.memo(({ data, isLoading, onReset }: Inventor
                     </div>
                     <Badge variant="outline" className={cn(
                       "text-[9px] font-semibold uppercase border transition-all",
-                      STATUS_COLORS[item.status as keyof typeof STATUS_COLORS] || STATUS_COLORS.WITHDRAWN
+                      STATUS_COLORS[item.status as keyof typeof STATUS_COLORS] || STATUS_COLORS.ARCHIVED
                     )}>
                       {STATUS_TH[item.status as keyof typeof STATUS_TH] || item.status}
                     </Badge>
