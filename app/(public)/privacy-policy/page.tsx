@@ -31,17 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
  * but remains readable to bots.
  */
 function TransparentEmail({ email }: { email: string }) {
-  const [user, domain] = email.split("@");
-  if (!user || !domain) return <span>{email}</span>;
-  
-  return (
-    <span className="inline-flex">
-      {user}
-      <span className="hidden">no-bot</span>
-      @
-      {domain}
-    </span>
-  );
+  return <span>{email}</span>;
 }
 
 export default async function PrivacyPolicyPage() {
