@@ -7,6 +7,9 @@ import { enUS, th, zhCN, ru } from "date-fns/locale";
 import { getSiteSettings } from "@/features/site-settings/actions";
 import Link from "next/link";
 
+// 🚀 Force static rendering for best SEO and crawler visibility
+export const dynamic = "force-static";
+
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
   const settings = await getSiteSettings();
@@ -75,7 +78,9 @@ export default async function TermsPage() {
           </div>
 
           <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-strong:text-slate-800 prose-a:text-blue-600">
-            <section className="mb-12 p-8 bg-blue-50/80 rounded-3xl border border-blue-100 not-prose shadow-sm">
+            
+            {/* 🛡️ Terms Content: Removed numeric prefixes for cleaner structure */}
+            <section className="mb-12 p-8 bg-blue-50 border border-blue-100 rounded-3xl not-prose shadow-sm">
               <h2 className="text-xl font-bold text-slate-900 mb-4">{t("terms.welcome_title")}</h2>
               <p className="text-slate-800 leading-relaxed font-semibold">
                 {t("terms.welcome_p1")}
@@ -83,16 +88,16 @@ export default async function TermsPage() {
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">1. {t("terms.section1_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("terms.section1_title")}</h2>
               <p>{t("terms.section1_p1")}</p>
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">2. {t("terms.section2_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("terms.section2_title")}</h2>
               <p className="mb-6">{t("terms.section2_p1")}</p>
               <div className="grid sm:grid-cols-2 gap-6 not-prose">
-                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
-                  <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200">
+                  <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 leading-tight">
                     <span className="text-red-500 font-black">✕</span>
                     {t("terms.cant_do")}
                   </h3>
@@ -102,8 +107,8 @@ export default async function TermsPage() {
                     <li>{t("terms.cant3")}</li>
                   </ul>
                 </div>
-                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100">
-                  <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200">
+                  <h3 className="font-bold text-slate-900 mb-4 flex items-center gap-2 leading-tight">
                     <span className="text-green-500 font-black">✓</span>
                     {t("terms.can_do")}
                   </h3>
@@ -117,7 +122,7 @@ export default async function TermsPage() {
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">3. {t("terms.section3_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("terms.section3_title")}</h2>
               <div className="flex items-start gap-4 p-6 bg-amber-50 rounded-2xl not-prose border border-amber-100">
                 <AlertCircle className="w-6 h-6 text-amber-500 shrink-0 mt-1" />
                 <div className="space-y-2">
@@ -134,31 +139,31 @@ export default async function TermsPage() {
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">4. {t("terms.section4_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("terms.section4_title")}</h2>
               <p>{t("terms.section4_p1")}</p>
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">5. {t("terms.section5_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("terms.section5_title")}</h2>
               <p>{t("terms.section5_p1", { company_name })}</p>
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">6. {t("terms.section6_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("terms.section6_title")}</h2>
               <p className="mb-6">{t("terms.section6_p1")}</p>
               <ul className="grid sm:grid-cols-3 gap-4 not-prose">
                 <li>
-                  <a href="https://www.facebook.com/terms" target="_blank" rel="noopener noreferrer" className="block p-4 rounded-xl bg-slate-50 border border-slate-100 text-center text-sm font-bold text-blue-600 hover:bg-white hover:shadow-md transition-all">
+                  <a href="https://www.facebook.com/terms" target="_blank" rel="noopener noreferrer" className="block p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-sm font-bold text-blue-600 hover:bg-white hover:shadow-md transition-all">
                     Meta Terms
                   </a>
                 </li>
                 <li>
-                  <a href="https://www.tiktok.com/legal/terms-of-service" target="_blank" rel="noopener noreferrer" className="block p-4 rounded-xl bg-slate-50 border border-slate-100 text-center text-sm font-bold text-blue-600 hover:bg-white hover:shadow-md transition-all">
+                  <a href="https://www.tiktok.com/legal/terms-of-service" target="_blank" rel="noopener noreferrer" className="block p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-sm font-bold text-blue-600 hover:bg-white hover:shadow-md transition-all">
                     TikTok Terms
                   </a>
                 </li>
                 <li>
-                  <a href="https://terms.line.me" target="_blank" rel="noopener noreferrer" className="block p-4 rounded-xl bg-slate-50 border border-slate-100 text-center text-sm font-bold text-blue-600 hover:bg-white hover:shadow-md transition-all">
+                  <a href="https://terms.line.me" target="_blank" rel="noopener noreferrer" className="block p-4 rounded-xl bg-slate-50 border border-slate-200 text-center text-sm font-bold text-blue-600 hover:bg-white hover:shadow-md transition-all">
                     LINE Terms
                   </a>
                 </li>

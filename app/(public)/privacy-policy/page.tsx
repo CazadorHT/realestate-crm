@@ -7,6 +7,9 @@ import { enUS, th, zhCN, ru } from "date-fns/locale";
 import { getSiteSettings } from "@/features/site-settings/actions";
 import Link from "next/link";
 
+// 🚀 Force static rendering for best SEO and crawler visibility
+export const dynamic = "force-static";
+
 export async function generateMetadata(): Promise<Metadata> {
   const { t } = await getServerTranslations();
   const settings = await getSiteSettings();
@@ -23,6 +26,24 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/**
+ * A small component to display email in a way that bypasses standard obfuscation 
+ * but remains readable to bots.
+ */
+function TransparentEmail({ email }: { email: string }) {
+  const [user, domain] = email.split("@");
+  if (!user || !domain) return <span>{email}</span>;
+  
+  return (
+    <span className="inline-flex">
+      {user}
+      <span className="hidden">no-bot</span>
+      @
+      {domain}
+    </span>
+  );
+}
+
 export default async function PrivacyPolicyPage() {
   const { t, language } = await getServerTranslations();
   const settings = await getSiteSettings();
@@ -37,6 +58,7 @@ export default async function PrivacyPolicyPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Navigation */}
       <nav className="border-b bg-slate-50/50">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition-colors">
@@ -49,6 +71,7 @@ export default async function PrivacyPolicyPage() {
         </div>
       </nav>
 
+      {/* Hero Header */}
       <header className="bg-slate-900 text-white py-16 md:py-20 border-b border-slate-800">
         <div className="container mx-auto px-4 md:px-6">
           <div className="max-w-4xl mx-auto">
@@ -68,6 +91,7 @@ export default async function PrivacyPolicyPage() {
 
       <main className="container mx-auto px-4 md:px-6 py-12">
         <div className="max-w-4xl mx-auto">
+          {/* Last Updated - Critical for Compliance */}
           <div className="mb-12 flex items-center gap-2 text-slate-500 border-b border-slate-200 pb-6">
             <Info className="w-4 h-4" />
             <span className="text-sm font-medium uppercase tracking-wider">
@@ -76,30 +100,32 @@ export default async function PrivacyPolicyPage() {
           </div>
 
           <div className="prose prose-slate max-w-none prose-headings:font-bold prose-headings:text-slate-900 prose-p:text-slate-600 prose-p:leading-relaxed prose-li:text-slate-600 prose-strong:text-slate-800 prose-a:text-blue-600">
+            
+            {/* 🛡️ Section 1: Removed manual "1." to prevent double-digits if i18n has them */}
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">1. {t("privacy.section1_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("privacy.section1_title")}</h2>
               <p>{t("privacy.section1_p1", { company_name })}</p>
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">2. {t("privacy.section2_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("privacy.section2_title")}</h2>
               <p className="mb-6">{t("privacy.section2_p1")}</p>
               <div className="grid sm:grid-cols-2 gap-6 not-prose">
-                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm">
+                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 shadow-sm">
                   <FileText className="w-6 h-6 text-blue-600 mb-4" />
-                  <h3 className="font-bold text-slate-900 mb-2">{t("privacy.identity_title")}</h3>
+                  <h3 className="font-bold text-slate-900 mb-2 leading-tight">{t("privacy.identity_title")}</h3>
                   <p className="text-slate-500 text-sm">{t("privacy.identity_desc")}</p>
                 </div>
-                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-100 shadow-sm">
+                <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 shadow-sm">
                   <PhoneIcon className="w-6 h-6 text-blue-600 mb-4" />
-                  <h3 className="font-bold text-slate-900 mb-2">{t("privacy.contact_info_title")}</h3>
+                  <h3 className="font-bold text-slate-900 mb-2 leading-tight">{t("privacy.contact_info_title")}</h3>
                   <p className="text-slate-500 text-sm">{t("privacy.contact_info_desc")}</p>
                 </div>
               </div>
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">3. {t("privacy.section3_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("privacy.section3_title")}</h2>
               <ul className="space-y-2">
                 <li>{t("privacy.section3_l1")}</li>
                 <li>{t("privacy.section3_l2")}</li>
@@ -109,12 +135,12 @@ export default async function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">4. {t("privacy.section4_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("privacy.section4_title")}</h2>
               <p>{t("privacy.section4_p1")}</p>
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">5. {t("privacy.section5_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("privacy.section5_title")}</h2>
               <p className="mb-6">{t("privacy.section5_p1")}</p>
               <div className="grid gap-3 not-prose">
                 {[t("privacy.right1"), t("privacy.right2"), t("privacy.right3"), t("privacy.right4")].map((right, idx) => (
@@ -127,7 +153,7 @@ export default async function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">6. {t("privacy.section6_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("privacy.section6_title")}</h2>
               <p className="mb-8">{t("privacy.section6_p1", { company_name })}</p>
               
               <div className="not-prose p-8 bg-slate-900 rounded-3xl text-white shadow-2xl shadow-slate-200">
@@ -158,7 +184,9 @@ export default async function PrivacyPolicyPage() {
                       </div>
                       <div>
                         <p className="text-xs text-slate-500 uppercase tracking-widest font-bold">Email</p>
-                        <p className="font-semibold">{contact_email}</p>
+                        <p className="font-semibold">
+                          <TransparentEmail email={contact_email} />
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-start gap-4">
@@ -176,12 +204,12 @@ export default async function PrivacyPolicyPage() {
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">7. {t("privacy.section7_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("privacy.section7_title")}</h2>
               <p>{t("privacy.section7_p1")}</p>
             </section>
 
             <section className="mb-12">
-              <h2 className="text-2xl mb-6">8. {t("privacy.section8_title")}</h2>
+              <h2 className="text-2xl mb-6">{t("privacy.section8_title")}</h2>
               <p>{t("privacy.section8_p1")}</p>
               <ul className="space-y-2">
                 <li>{t("privacy.section8_l1")}</li>
