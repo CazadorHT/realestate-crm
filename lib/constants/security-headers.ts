@@ -14,6 +14,7 @@ export const CSP_DIRECTIVES = {
     "https://connect.facebook.net",
     "https://maps.googleapis.com",
     "https://maps.gstatic.com",
+    "https://static.cloudflareinsights.com",
   ],
   "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
   "img-src": [
@@ -26,6 +27,8 @@ export const CSP_DIRECTIVES = {
     "https://www.google-analytics.com",
     "https://www.googletagmanager.com",
     "https://www.facebook.com",
+    "https://*.facebook.com",
+    "https://*.facebook.net",
     "https://*.google.com",
     "https://*.gstatic.com",
   ],
@@ -38,7 +41,10 @@ export const CSP_DIRECTIVES = {
     "https://stats.g.doubleclick.net",
     "https://api.dicebear.com",
     "https://www.facebook.com",
+    "https://*.facebook.com",
+    "https://www.google.com",
     "https://maps.googleapis.com",
+    "https://cloudflareinsights.com",
     "wss://*.supabase.co",
   ],
   "frame-src": [
