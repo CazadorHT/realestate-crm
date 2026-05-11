@@ -44,11 +44,11 @@ export default function AiConfigPage() {
     null,
   );
   const [config, setConfig] = useState<AiModelConfig>({
-    chatbot_model: "gemini-2.0-flash",
-    blog_generator_model: "gemini-2.0-flash",
+    chatbot_model: "gemini-1.5-flash",
+    blog_generator_model: "gemini-1.5-flash",
     translation_model: "gemini-1.5-flash",
-    description_model: "gemini-2.0-flash",
-    lead_model: "gemini-2.0-flash",
+    description_model: "gemini-1.5-flash",
+    lead_model: "gemini-1.5-flash",
   });
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function AiConfigPage() {
       Object.keys(validatedConfig).forEach((key) => {
         const k = key as keyof AiModelConfig;
         if (!MODEL_INFO[validatedConfig[k]]) {
-          validatedConfig[k] = "gemini-2.0-flash"; // Fallback to safe default
+          validatedConfig[k] = "gemini-1.5-flash"; // Fallback to safe default
         }
       });
       setConfig(validatedConfig);
@@ -183,10 +183,10 @@ export default function AiConfigPage() {
               เกร็ดความรู้เรื่อง Quota 💡
             </h4>
             <p className="text-sm text-slate-600 leading-relaxed">
-              Gemini 2.0 Flash เป็นรุ่นที่แนะนำที่สุดในขณะนี้
-              เพราะให้ประสิทธิภาพสูงในขณะที่โควต้าการใช้งานฟรีมีให้มากกว่ารุ่นอื่นๆ
-              หากระบบมีการใช้งานหนัก แนะนำให้ใช้ Flash หรือ Flash-Lite
-              เป็นหลักครับ
+              Gemini 1.5 Flash เป็นรุ่นที่แนะนำที่สุดในขณะนี้
+              เพราะให้ความแม่นยำสูงในราคาที่ประหยัดที่สุด และโควต้าฟรีมีให้เยอะมาก
+              หากต้องการเน้นความคุ้มค่าและรวดเร็ว แนะนำให้ใช้รุ่น Flash 
+              เป็นหลักในทุกบริการครับ
             </p>
           </div>
         </div>
@@ -255,7 +255,7 @@ function ConfigCard({
           {ALLOWED_MODELS.map((model) => {
             const isSelected = model.id === value;
             const ModelIcon = model.icon;
-            const isRecommended = model.id.includes("2.0-flash");
+            const isRecommended = model.id === "gemini-1.5-flash";
 
             return (
               <button

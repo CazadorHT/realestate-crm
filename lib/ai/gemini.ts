@@ -44,6 +44,7 @@ function normalizeModelName(modelName: string): string {
   const unstableModels: Record<string, string> = {
     "gemini-2-flash": "gemini-2.0-flash",
     "gemini-2.0-flash-exp": "gemini-2.0-flash",
+    "gemini-flash-latest": "gemini-1.5-flash",
     "gemini-1.5-pro": "gemini-1.5-pro",
     "gemini-1.5-flash": "gemini-1.5-flash",
   };

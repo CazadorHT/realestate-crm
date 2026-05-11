@@ -22,7 +22,7 @@ export const ALLOWED_MODELS = [
   {
     id: "gemini-1.5-flash",
     label: "Gemini 1.5 Flash",
-    description: "รุ่นมาตรฐานเดิมที่ยังคงความเสถียรสูง",
+    description: "รุ่นที่เสถียรที่สุด แนะนำให้ใช้เป็นหลักเพื่อความประหยัดและแม่นยำครับ",
     color: "bg-indigo-50 text-indigo-700 border-indigo-200",
     icon: Cpu,
   },
@@ -57,9 +57,9 @@ export type AiModelConfig = {
 };
 
 export const DEFAULT_CONFIG: AiModelConfig = {
-  chatbot_model: "gemini-flash-latest",
-  blog_generator_model: "gemini-flash-latest",
-  translation_model: "gemini-flash-latest",
-  description_model: "gemini-flash-latest",
-  lead_model: "gemini-flash-latest",
+  chatbot_model: "gemini-1.5-flash",
+  blog_generator_model: "gemini-1.5-flash",
+  translation_model: "gemini-1.5-flash",
+  description_model: "gemini-1.5-flash",
+  lead_model: "gemini-1.5-flash",
 };
