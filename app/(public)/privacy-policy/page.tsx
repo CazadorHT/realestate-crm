@@ -214,6 +214,35 @@ export default async function PrivacyPolicyPage() {
                 <li>{t("privacy.section8_l2")}</li>
                 <li>{t("privacy.section8_l3")}</li>
               </ul>
+              {/* ✅ Google OAuth Verification — explicit no-sell / no-ad-targeting statement */}
+              <p className="mt-4 font-semibold text-slate-800">
+                {t("privacy.section8_no_sell")}
+              </p>
+            </section>
+
+            <section className="mb-12">
+              <h2 className="text-2xl mb-6">{t("privacy.section9_title")}</h2>
+              <p>{t("privacy.section9_p1")}</p>
+            </section>
+
+            <section className="mb-12">
+              <h2 className="text-2xl mb-6">{t("privacy.section10_title")}</h2>
+              <p>{t("privacy.section10_p1")}</p>
+            </section>
+
+            <section className="mb-12">
+              <h2 className="text-2xl mb-6">{t("privacy.section11_title")}</h2>
+              <p className="mb-4">{t("privacy.section11_p1")}</p>
+              <ul className="space-y-2">
+                <li>{t("privacy.section11_l1")}</li>
+                <li>{t("privacy.section11_l2")}</li>
+                <li>{t("privacy.section11_l3")}</li>
+              </ul>
+            </section>
+
+            <section className="mb-12">
+              <h2 className="text-2xl mb-6">{t("privacy.section12_title")}</h2>
+              <p>{t("privacy.section12_p1")}</p>
             </section>
           </div>
         </div>
