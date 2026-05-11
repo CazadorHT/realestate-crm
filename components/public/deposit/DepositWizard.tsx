@@ -32,6 +32,7 @@ export function DepositWizard({
     defaultValues: {
       fullName: "",
       phone: "",
+      email: "",
       lineId: "",
       wechatId: "",
       whatsapp: "",
@@ -113,7 +114,8 @@ export function DepositWizard({
   const nextStep = async () => {
     let fieldsToValidate: (keyof DepositLeadInput)[] = [];
     if (currentStep === 1) fieldsToValidate = ["fullName"];
-    if (currentStep === 2) fieldsToValidate = ["phone"];
+    if (currentStep === 2)
+      fieldsToValidate = ["phone", "email", "lineId", "whatsapp", "wechatId"];
 
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {

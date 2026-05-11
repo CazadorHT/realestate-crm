@@ -28,7 +28,11 @@ export async function updateSession(request: NextRequest) {
             request,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
+            response.cookies.set(name, value, {
+              ...options,
+              sameSite: "lax",
+              path: "/",
+            }),
           );
         },
       },
@@ -36,8 +40,7 @@ export async function updateSession(request: NextRequest) {
   );
 
   // 🛡️ [PERFORMANCE] Check for auth cookie presence before calling getUser()
-  // This prevents noisy AuthSessionMissingError logs for public visitors.
-  const hasAuthCookie = request.cookies.getAll().some(c => c.name.startsWith("sb-") && c.name.endsWith("-auth-token"));
+  const hasAuthCookie = request.cookies.getAll().some(c => c.name.includes("-auth-token"));
   
   let user = null;
   if (hasAuthCookie) {
@@ -47,6 +50,10 @@ export async function updateSession(request: NextRequest) {
 
   // 1. Auth Protection (Basic Login)
   if (request.nextUrl.pathname.startsWith("/protected") && !user) {
+    console.log("[AUTH DEBUG] No user found for protected path, redirecting to login", {
+      path: request.nextUrl.pathname,
+      hasCookie: hasAuthCookie
+    });
     return { 
       response: NextResponse.redirect(new URL("/auth/login", request.url)), 
       user: null 

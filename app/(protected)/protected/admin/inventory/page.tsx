@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { 
+import {
   getGlobalPropertiesTableDataAction,
-  getGlobalInventoryFilterCountsAction 
+  getGlobalInventoryFilterCountsAction,
 } from "@/features/properties/actions";
 import { getTenantsAction } from "@/lib/actions/tenant-management";
 import { toast } from "sonner";
@@ -35,7 +35,9 @@ export default function GlobalInventoryPage() {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
-  const [filterCounts, setFilterCounts] = useState<InventoryFilterCounts | undefined>();
+  const [filterCounts, setFilterCounts] = useState<
+    InventoryFilterCounts | undefined
+  >();
 
   const fetchTenants = async () => {
     try {
@@ -114,23 +116,25 @@ export default function GlobalInventoryPage() {
         breadcrumbs={[
           { label: "หน้าแรก", href: "/protected" },
           { label: "ผู้ดูแลระบบ", href: "/protected/admin/analytics" },
-          { label: "คลังทรัพย์สินรวม" }
+          { label: "คลังทรัพย์สินรวม" },
         ]}
       />
 
       <div className="max-w-screen-2xl mx-auto space-y-8">
         {/* 🚀 Layer 1: Intelligence Stats (Interactive) */}
-        <InventoryStats 
+        <InventoryStats
           totalCount={count}
-          activeCount={data.filter(i => i.status === "ACTIVE").length}
+          activeCount={data.filter((i) => i.status === "ACTIVE").length}
           branchCount={tenants.length}
           isLoading={loading}
           currentStatus={status}
-          onFilterClick={(update: Record<string, string | null>) => updateFilters(update)}
+          onFilterClick={(update: Record<string, string | null>) =>
+            updateFilters(update)
+          }
         />
 
         {/* 🔍 Layer 2: Strategic Filters (Debounced & Quick) */}
-        <InventoryFilters 
+        <InventoryFilters
           query={query}
           propertyType={propertyType}
           listingType={listingType}
@@ -144,9 +148,9 @@ export default function GlobalInventoryPage() {
 
         {/* 🏢 Layer 3: Adaptive Inventory Matrix (Dual-View) */}
         <div className="space-y-6">
-          <InventoryTable 
-            data={data} 
-            isLoading={loading} 
+          <InventoryTable
+            data={data}
+            isLoading={loading}
             onReset={resetFilters}
           />
 

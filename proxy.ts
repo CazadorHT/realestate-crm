@@ -116,6 +116,7 @@ export async function proxy(request: NextRequest) {
     path.startsWith("/api/webhook") || 
     path.startsWith("/api/callback") || 
     path.startsWith("/auth/callback") ||
+    path.startsWith("/api/auth/callback") ||
     path.startsWith("/api/line-webhook");
 
   const isBypassPath = isWebhook || isCrawler;

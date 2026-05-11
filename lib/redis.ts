@@ -55,7 +55,7 @@ export function getFingerprintFromHeaders(headersList: Headers): string {
 // A. Auth: Brute-force protection (Login, OTP, etc.)
 export const ratelimitAuth = redis ? new Ratelimit({
   redis,
-  limiter: Ratelimit.slidingWindow(5, "60 s"),
+  limiter: Ratelimit.slidingWindow(20, "60 s"),
   analytics: true,
   prefix: "@upstash/ratelimit/auth",
 }) : null;

@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, Key, Loader2, LogOut } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { toast } from "sonner";
 
 export default function MfaVerifyPage() {
@@ -76,7 +76,7 @@ export default function MfaVerifyPage() {
 
   return (
     <div className="flex min-h-[80vh] items-center justify-center p-4">
-      <motion.div
+      <m.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-md"
@@ -148,7 +148,7 @@ export default function MfaVerifyPage() {
         <p className="text-center mt-6 text-sm text-muted-foreground">
           &copy; {new Date().getFullYear()} Real Estate CRM. Secure Enterprise Access.
         </p>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import { FaLine, FaWhatsapp, FaCommentDots } from "react-icons/fa";
 import { IoLogoWechat } from "react-icons/io5";
-import { motion as m } from "framer-motion";
+import { m } from "framer-motion";
 
 interface FieldProps {
   isMobile: boolean;
@@ -49,7 +49,7 @@ export function NameField({ isMobile, t, onFocus }: FieldProps) {
             {t("deposit.form.name_label")} <span className="text-rose-500">*</span>
           </FormLabel>
           <div className="relative group">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+            <div className="absolute left-3.5 inset-y-0 flex items-center text-slate-400 group-focus-within:text-blue-500 transition-colors">
               <User className="w-3.5 h-3.5" />
             </div>
             <FormControl>
@@ -91,7 +91,7 @@ export function PhoneField({ isMobile, t, onFocus }: FieldProps) {
             {t("deposit.form.phone_label")} <span className="text-rose-500">*</span>
           </FormLabel>
           <div className="relative group">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+            <div className="absolute left-3.5 inset-y-0 flex items-center text-slate-400 group-focus-within:text-blue-500 transition-colors">
               <Phone className="w-3.5 h-3.5" />
             </div>
             <FormControl>
@@ -138,7 +138,7 @@ export function EmailField({ isMobile, t, onFocus }: FieldProps) {
             {t("deposit.form.email_label")}
           </FormLabel>
           <div className="relative group">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors">
+            <div className="absolute left-3.5 inset-y-0 flex items-center text-slate-400 group-focus-within:text-blue-500 transition-colors">
               <FaCommentDots className="w-3.5 h-3.5" />
             </div>
             <FormControl>
@@ -181,7 +181,7 @@ export function LineField({ isMobile, t, onFocus }: FieldProps) {
             {t("deposit.form.line_label")}
           </FormLabel>
           <div className="relative group">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00B900] transition-colors">
+            <div className="absolute left-3.5 inset-y-0 flex items-center text-slate-400 group-focus-within:text-[#00B900] transition-colors">
               <FaLine className="w-3.5 h-3.5" />
             </div>
             <FormControl>
@@ -223,7 +223,7 @@ export function WeChatField({ isMobile, t, onFocus }: FieldProps) {
             {t("deposit.form.wechat_label")}
           </FormLabel>
           <div className="relative group">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#07C160] transition-colors">
+            <div className="absolute left-3.5 inset-y-0 flex items-center text-slate-400 group-focus-within:text-[#07C160] transition-colors">
               <IoLogoWechat className="w-3.5 h-3.5" />
             </div>
             <FormControl>
@@ -265,7 +265,7 @@ export function WhatsAppField({ isMobile, t, onFocus }: FieldProps) {
             {t("deposit.form.whatsapp_label")}
           </FormLabel>
           <div className="relative group">
-            <div className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#25D366] transition-colors">
+            <div className="absolute left-3.5 inset-y-0 flex items-center text-slate-400 group-focus-within:text-[#25D366] transition-colors">
               <FaWhatsapp className="w-3.5 h-3.5" />
             </div>
             <FormControl>

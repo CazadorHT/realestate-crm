@@ -7,12 +7,12 @@ export function StatsSkeleton() {
       {Array.from({ length: 4 }).map((_, i) => (
         <Card key={i} className="border-slate-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-4 rounded-full" />
+            <Skeleton className="h-4 w-24 animate-shimmer" />
+            <Skeleton className="h-4 w-4 rounded-full animate-shimmer" />
           </CardHeader>
           <CardContent>
-            <Skeleton className="h-8 w-16 mb-1" />
-            <Skeleton className="h-3 w-32" />
+            <Skeleton className="h-8 w-16 mb-1 animate-shimmer" />
+            <Skeleton className="h-3 w-32 animate-shimmer" />
           </CardContent>
         </Card>
       ))}

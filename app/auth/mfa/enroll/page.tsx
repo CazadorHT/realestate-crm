@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShieldCheck, ShieldAlert, QrCode, Key, Loader2, CheckCircle2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 
 export default function MfaEnrollPage() {
@@ -75,7 +75,7 @@ export default function MfaEnrollPage() {
   return (
     <div className="flex min-h-[80vh] items-center justify-center p-4">
       <AnimatePresence mode="wait">
-        <motion.div
+        <m.div
           key={step}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -180,7 +180,7 @@ export default function MfaEnrollPage() {
               )}
             </CardFooter>
           </Card>
-        </motion.div>
+        </m.div>
       </AnimatePresence>
     </div>
   );

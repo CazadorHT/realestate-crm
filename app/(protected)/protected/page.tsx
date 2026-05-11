@@ -103,12 +103,16 @@ type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
 // การควบคุมฟีเจอร์
 import { isFeatureEnabled } from "@/lib/features";
 
-// ตัวหุ้มสำหรับการดึงข้อมูลแบบสตรีมมิ่ง
 import { RecentPropertiesSectionSuspense } from "@/components/dashboard/RecentPropertiesSection";
 import { Suspense } from "react";
 import { StatsSkeleton } from "@/components/dashboard/skeletons/StatsSkeleton";
 import { ListSkeleton } from "@/components/dashboard/skeletons/ListSkeleton";
 import { ChartSkeleton } from "@/components/dashboard/skeletons/ChartSkeleton";
+import {
+  MotionSection,
+  MotionStaggerContainer,
+  MotionStaggerItem,
+} from "@/components/shared/MotionSection";
 
 export default async function DashboardPage(props: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -163,23 +167,31 @@ export default async function DashboardPage(props: {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-2 pb-20">
+    <div className="flex flex-col gap-6 p-2 pb-20 overflow-x-hidden">
       {/* 1. ส่วนหัวและการค้นหา */}
-      <DashboardHeader email={user?.email} name={profile?.full_name} />
+      <MotionSection duration={0.6}>
+        <DashboardHeader email={user?.email} name={profile?.full_name} />
+      </MotionSection>
+
       {/* 2. สถานะระบบและการเชื่อมต่อ */}
-      <SystemStatus />
+      <MotionSection delay={0.1}>
+        <SystemStatus />
+      </MotionSection>
+
       {/* 3. สถานะการตั้งค่า setup เริ่มต้น */}
       <Suspense
         fallback={
-          <div className="h-20 animate-pulse bg-slate-50 rounded-2xl" />
+          <div className="h-24 animate-shimmer bg-slate-50 rounded-3xl" />
         }
       >
-        <SetupSectionWrapper promise={setupPromise} role={profile?.role} />
+        <MotionSection delay={0.15}>
+          <SetupSectionWrapper promise={setupPromise} role={profile?.role} />
+        </MotionSection>
       </Suspense>
 
-      <>
+      <MotionStaggerContainer delayChildren={0.2} staggerChildren={0.1}>
         {/* 4. ภาพรวมระบบวิเคราะห์ Card */}
-        <div className="flex flex-col gap-6 min-h-[180px]">
+        <MotionStaggerItem className="flex flex-col gap-6 min-h-[180px]">
           <ErrorBoundary>
             <StatsSectionSuspense
               tenantId={tenantId}
@@ -197,9 +209,9 @@ export default async function DashboardPage(props: {
               teamId={teamId}
             />
           </ErrorBoundary>
-        </div>
+        </MotionStaggerItem>
 
-        <div className="space-y-6 bg-linear-to-br from-blue-50/50 via-indigo-50 to-blue-50/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-indigo-100/50 shadow-sm min-h-[600px]">
+        <MotionStaggerItem className="space-y-6 bg-linear-to-br from-blue-50/50 via-indigo-50 to-blue-50/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-indigo-100/50 shadow-sm min-h-[600px]">
           {/* ตัวกรอง */}
           <ErrorBoundary fallback={<div className="p-4 bg-white rounded-2xl shadow-sm border border-red-100 text-red-500 text-xs">ตัวกรองขัดข้อง</div>}>
             <DashboardFilters
@@ -215,7 +227,7 @@ export default async function DashboardPage(props: {
               {showSmartSummary ? (
                 <ErrorBoundary fallback={<MiniErrorFallback />}>
                   <Suspense
-                    fallback={<Skeleton className="h-32 w-full rounded-2xl" />}
+                    fallback={<Skeleton className="h-32 w-full rounded-3xl animate-shimmer" />}
                   >
                     <SmartSummaryWrapper
                       tenantId={tenantId}
@@ -235,7 +247,7 @@ export default async function DashboardPage(props: {
                 <ErrorBoundary fallback={<MiniErrorFallback />}>
                   <Suspense
                     fallback={
-                      <div className="h-40 animate-pulse bg-slate-50 rounded-[2.5rem]" />
+                      <div className="h-40 animate-shimmer bg-slate-50 rounded-[2.5rem]" />
                     }
                   >
                     <AgentTasksWrapper userId={view === "staff" ? agentId : user?.id} />
@@ -261,7 +273,7 @@ export default async function DashboardPage(props: {
                     <ErrorBoundary fallback={<MiniErrorFallback />}>
                       <Suspense
                         fallback={
-                          <div className="h-40 animate-pulse bg-slate-50 rounded-2xl" />
+                          <div className="h-48 animate-shimmer bg-slate-50 rounded-3xl" />
                         }
                       >
                         <FollowUpWrapper
@@ -274,7 +286,7 @@ export default async function DashboardPage(props: {
                     <ErrorBoundary fallback={<MiniErrorFallback />}>
                       <Suspense
                         fallback={
-                          <div className="h-40 animate-pulse bg-slate-50 rounded-2xl" />
+                          <div className="h-48 animate-shimmer bg-slate-50 rounded-3xl" />
                         }
                       >
                         <RiskWrapper
@@ -302,7 +314,7 @@ export default async function DashboardPage(props: {
                 </>
               ) : (
                 <div className="p-8 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col items-center justify-center text-center">
-                  <div className="text-slate-400 mb-2">
+                  <div className="text-slate-400 mb-2 font-medium">
                     ยังไม่ได้เปิดใช้งานการวิเคราะห์
                   </div>
                   <p className="text-xs text-slate-500 max-w-xs">
@@ -341,7 +353,7 @@ export default async function DashboardPage(props: {
               <ErrorBoundary fallback={<MiniErrorFallback />}>
                 <Suspense
                   fallback={
-                    <div className="h-40 animate-pulse bg-slate-50 rounded-2xl" />
+                    <div className="h-40 animate-shimmer bg-slate-50 rounded-3xl" />
                   }
                 >
                   <UpcomingEventsWrapper
@@ -354,7 +366,7 @@ export default async function DashboardPage(props: {
               <ErrorBoundary fallback={<MiniErrorFallback />}>
                 <Suspense
                   fallback={
-                    <div className="h-40 animate-pulse bg-slate-50 rounded-2xl" />
+                    <div className="h-40 animate-shimmer bg-slate-50 rounded-3xl" />
                   }
                 >
                   <AgendaWrapper
@@ -367,7 +379,7 @@ export default async function DashboardPage(props: {
               <ErrorBoundary fallback={<MiniErrorFallback />}>
                 <Suspense
                   fallback={
-                    <div className="h-40 animate-pulse bg-slate-50 rounded-2xl" />
+                    <div className="h-40 animate-shimmer bg-slate-50 rounded-3xl" />
                   }
                 >
                   <NotificationsWrapper
@@ -379,17 +391,17 @@ export default async function DashboardPage(props: {
               </ErrorBoundary>
             </div>
           </div>
-        </div>
+        </MotionStaggerItem>
         {/* 5. ตารางอสังหาริมทรัพย์ล่าสุด (เต็มความกว้าง) */}
-        <div className="mt-2 min-h-[300px]">
+        <MotionStaggerItem className="mt-2 min-h-[300px]">
           <ErrorBoundary>
             <RecentPropertiesSectionSuspense 
               tenantId={tenantId} 
               userId={view === "staff" ? agentId : (view === "personal" ? user?.id : undefined)} 
             />
           </ErrorBoundary>
-        </div>
-      </>
+        </MotionStaggerItem>
+      </MotionStaggerContainer>
     </div>
 
   );

@@ -39,6 +39,7 @@ import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { useLanguage } from "../providers/LanguageProvider";
 import { type Language } from "@/lib/i18n";
 import { IoLogoWechat } from "react-icons/io5";
+import { m, AnimatePresence } from "framer-motion";
 
 interface ContactAgentDialogProps {
   propertyId?: string;
@@ -391,7 +392,7 @@ export function ContactAgentDialog({
         className={`relative group ${isMobile ? "w-full max-w-sm mx-auto" : "w-full"}`}
       >
         {isMobile && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-blue-600 transition-colors">
+          <div className="absolute left-4 inset-y-0 flex items-center text-blue-400 group-focus-within:text-blue-600 transition-colors">
             <FaUser className="w-4 h-4" />
           </div>
         )}
@@ -434,7 +435,7 @@ export function ContactAgentDialog({
       </Label>
       <div className="relative group w-full">
         {isMobile && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-blue-600 transition-colors">
+          <div className="absolute left-4 inset-y-0 flex items-center text-blue-400 group-focus-within:text-blue-600 transition-colors">
             <FaPhoneAlt className="w-4 h-4" />
           </div>
         )}
@@ -472,7 +473,7 @@ export function ContactAgentDialog({
       </Label>
       <div className="relative group w-full">
         {isMobile && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#00B900] transition-colors">
+          <div className="absolute left-4 inset-y-0 flex items-center text-slate-400 group-focus-within:text-[#00B900] transition-colors">
             <FaLine className="w-5 h-5" />
           </div>
         )}
@@ -503,7 +504,7 @@ export function ContactAgentDialog({
       </Label>
       <div className="relative group w-full">
         {isMobile && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#07C160] transition-colors">
+          <div className="absolute left-4 inset-y-0 flex items-center text-slate-400 group-focus-within:text-[#07C160] transition-colors">
             <IoLogoWechat className="w-5 h-5" />
           </div>
         )}
@@ -534,7 +535,7 @@ export function ContactAgentDialog({
       </Label>
       <div className="relative group w-full">
         {isMobile && (
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#25D366] transition-colors">
+          <div className="absolute left-4 inset-y-0 flex items-center text-slate-400 group-focus-within:text-[#25D366] transition-colors">
             <FaWhatsapp className="w-5 h-5" />
           </div>
         )}
@@ -610,6 +611,7 @@ export function ContactAgentDialog({
       <DialogContent
         onOpenAutoFocus={(e) => e.preventDefault()}
         overlayClassName="z-150"
+        aria-describedby={undefined}
         className="fixed z-150 w-full gap-0 p-0 border-0 duration-300
         data-[state=open]:animate-in data-[state=closed]:animate-out
         data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
@@ -831,37 +833,49 @@ export function ContactAgentDialog({
               value={getAIScore()} 
             />
 
-            {/* Step Description */}
-            <div className="text-center -mt-1">
-              <p className="text-sm text-slate-500 font-medium">
-                {STEP_DESCS[step - 1]}
-              </p>
-            </div>
+            {/* Step Wizard Container */}
+            <div className="flex-1 relative min-h-[280px]">
+              <AnimatePresence mode="wait">
+                <m.div
+                  key={step}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, ease: [0.21, 0.47, 0.32, 0.98] }}
+                  className="space-y-5"
+                >
+                  {/* Step Description */}
+                  <div className="text-center">
+                    <p className="text-sm text-slate-500 font-medium">
+                      {STEP_DESCS[step - 1]}
+                    </p>
+                  </div>
 
-            {/* Step 1: Name */}
-            <div
-              className={`transition-all duration-500 ease-in-out ${step === 1 ? "block animate-in fade-in slide-in-from-right-8" : "hidden"}`}
-            >
-              {renderNameField(true)}
-            </div>
+                  {/* Step 1: Name */}
+                  {step === 1 && (
+                    <div className="w-full">
+                      {renderNameField(true)}
+                    </div>
+                  )}
 
-            {/* Step 2: Phone & Line */}
-            <div
-              className={`transition-all duration-500 ease-in-out ${step === 2 ? "block animate-in fade-in slide-in-from-right-8" : "hidden"}`}
-            >
-              <div className="grid grid-cols-1 gap-5">
-                {renderPhoneField(true)}
-                {renderLineField(true)}
-                {renderWhatsAppField(true)}
-                {renderWeChatField(true)}
-              </div>
-            </div>
+                  {/* Step 2: Phone & Line */}
+                  {step === 2 && (
+                    <div className="grid grid-cols-1 gap-5">
+                      {renderPhoneField(true)}
+                      {renderLineField(true)}
+                      {renderWhatsAppField(true)}
+                      {renderWeChatField(true)}
+                    </div>
+                  )}
 
-            {/* Step 3: Message */}
-            <div
-              className={`transition-all duration-500 ease-in-out ${step === 3 ? "block animate-in fade-in slide-in-from-right-8" : "hidden"}`}
-            >
-              {renderMessageField(true)}
+                  {/* Step 3: Message */}
+                  {step === 3 && (
+                    <div className="w-full">
+                      {renderMessageField(true)}
+                    </div>
+                  )}
+                </m.div>
+              </AnimatePresence>
             </div>
 
             {/* Mobile Footer */}
