@@ -48,6 +48,28 @@ export async function GET(request: Request) {
 
     if (profileError) throw profileError;
 
+    // 🛡️ 1.1 Sync to Auth Metadata (The RLS Fast-Path)
+    // First, get the tenant_id for this user
+    const { data: membership } = await supabase
+      .from("tenant_members")
+      .select("tenant_id")
+      .eq("profile_id", userId)
+      .maybeSingle();
+
+    if (membership?.tenant_id) {
+      const { error: authError } = await supabase.auth.admin.updateUserById(
+        userId,
+        { 
+          app_metadata: { 
+            role: role,
+            tenant_id: membership.tenant_id 
+          } 
+        }
+      );
+      if (authError) console.error("⚠️ [AuthSyncError]", authError);
+      else console.log(`✅ [AuthSync] Metadata updated for user ${userId}`);
+    }
+
     // 2. Log Activity (Strict Typing)
     const { error: auditError } = await supabase.from("audit_logs").insert({
       action: "ADMIN_APPROVE_USER",
@@ -55,6 +77,7 @@ export async function GET(request: Request) {
       entity_id: userId,
       metadata: {
         new_role: role,
+        tenant_id: membership?.tenant_id,
         method: "ONE_CLICK_APPROVAL"
       }
     });

@@ -103,6 +103,22 @@ async function handleNewSignup(supabase: any, user: any) {
             profile_id: user.id,
             role: "AGENT", 
           });
+          
+          // 🛡️ [SYNC TO AUTH METADATA]
+          try {
+            const { createAdminClient } = await import("@/lib/supabase/admin");
+            const adminSupabase = createAdminClient();
+            await adminSupabase.auth.admin.updateUserById(user.id, {
+              app_metadata: {
+                tenant_id: targetTenantId,
+                role: "AGENT"
+              }
+            });
+            console.log(`✅ [AuthSync] Initial metadata set for user ${user.id}`);
+          } catch (syncErr) {
+            console.error("❌ [AuthSync] Error:", syncErr);
+          }
+
           console.log(`✅ [Auto-Tenant] User ${user.id} assigned to tenant ${targetTenantId}`);
         }
       } catch (err) {

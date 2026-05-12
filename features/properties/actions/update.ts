@@ -50,7 +50,11 @@ export async function updatePropertyAction(
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
-    if (!tenantId) throw new Error("Tenant ID is required but missing");
+    
+    // 🛡️ Admin bypass for tenant isolation
+    if (role !== "ADMIN" && !tenantId) {
+      throw new Error("Tenant ID is required but missing");
+    }
 
     // 1) Validate form data
     const parsed = FormSchema.safeParse(values);
@@ -61,8 +65,7 @@ export async function updatePropertyAction(
     const { images, agent_ids, feature_ids, ...propertyData } = safeValues;
 
     // 2) Fetch current state (for security check and Diff)
-
-    const { data: existing, error: findErr } = await supabase
+    let query = supabase
       .from("properties")
       .select(`
         id, tenant_id, created_by, meta_keywords, price, rental_price, 
@@ -72,28 +75,34 @@ export async function updatePropertyAction(
         size_sqm, land_size_sqwah,
         property_agents(agent_id), property_features(feature_id)
       `)
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
-      .single() as unknown as { 
-        data: {
-          id: string; tenant_id: string; created_by: string; meta_keywords: string[] | null;
-          price: number | null; rental_price: number | null; original_price: number | null;
-          original_rental_price: number | null; status: string; title: string;
-          description: string | null; listing_type: string | null; version: number;
-          images: unknown[] | null; property_type: string | null; is_exclusive: boolean | null;
-          requires_ai_review: boolean | null; address_line1: string | null;
-          district: string | null; province: string | null; subdistrict: string | null;
-          bedrooms: number | null; bathrooms: number | null; size_sqm: number | null;
-          land_size_sqwah: number | null;
-          property_agents: { agent_id: string }[];
-          property_features: { feature_id: string }[];
-        } | null;
-        error: { message: string } | null;
-      };
+      .eq("id", id);
+
+    // Apply tenant filter only if not ADMIN
+    if (role !== "ADMIN" && tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data, error: findErr } = await query.single();
       
-    if (findErr || !existing) {
+    if (findErr || !data) {
       return { success: false, message: "Property not found" };
     }
+
+    interface ExistingProperty {
+      id: string; tenant_id: string; created_by: string; meta_keywords: string[] | null;
+      price: number | null; rental_price: number | null; original_price: number | null;
+      original_rental_price: number | null; status: string; title: string;
+      description: string | null; listing_type: string | null; version: number;
+      images: unknown[] | null; property_type: string | null; is_exclusive: boolean | null;
+      requires_ai_review: boolean | null; address_line1: string | null;
+      district: string | null; province: string | null; subdistrict: string | null;
+      bedrooms: number | null; bathrooms: number | null; size_sqm: number | null;
+      land_size_sqwah: number | null;
+      property_agents: { agent_id: string }[];
+      property_features: { feature_id: string }[];
+    }
+
+    const existing = data as unknown as ExistingProperty;
 
     // ✅ Strict Ownership Check (Accepts Owner, Admin, or Manager)
     const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
@@ -109,7 +118,6 @@ export async function updatePropertyAction(
     // Auto-Clear logic: if Admin/Manager edits manually, we assume they reviewed it.
     let auditUpdates: Partial<PropertyUpdate> = {};
     if (canBypassOwnership) {
-      // Check if any significant field in propertyData has changed
       const significantFields = [
         "title", "description", "price", "rental_price", "original_price", "original_rental_price",
         "status", "listing_type", "property_type", "address_line1", "district", "province",
@@ -117,14 +125,11 @@ export async function updatePropertyAction(
       ] as const;
       const hasChanged = significantFields.some(key => {
         const newVal = propertyData[key as keyof typeof propertyData];
-        const oldVal = (existing as Record<string, unknown>)[key];
+        const oldVal = (existing as any)[key];
         
         if (newVal === undefined) return false;
-
-        // Normalize null and undefined for comparison
         const normalizedNew = newVal === null ? undefined : newVal;
         const normalizedOld = oldVal === null ? undefined : oldVal;
-
         return normalizedNew !== normalizedOld;
       });
 
@@ -164,7 +169,7 @@ export async function updatePropertyAction(
 
     const { data: updatedRow, error: rpcError } = await supabase.rpc("update_property_elite", {
       p_id: id,
-      p_tenant_id: tenantId,
+      p_tenant_id: existing.tenant_id,
       p_user_id: user.id,
       p_is_admin: canBypassOwnership,
       p_version: safeValues.version ?? existing.version ?? 1,
@@ -200,26 +205,20 @@ export async function updatePropertyAction(
     }
 
     // 5) GRANULAR AUDIT (Diffing)
-    // Safely extract junction table IDs ensuring they are arrays of strings
     const oldAgents = Array.isArray(existing.property_agents) 
       ? existing.property_agents.map((a) => String(a.agent_id))
       : [];
-      
     const oldFeatures = Array.isArray(existing.property_features)
       ? existing.property_features.map((f) => String(f.feature_id))
       : [];
     
-    // Fetch labels for semantic diff
     interface ProfileLabel { id: string; full_name: string | null }
     interface FeatureLabel { id: string; label: string }
     
     let agentLabels: { id: string; full_name: string }[] = [];
     let featureLabels: FeatureLabel[] = [];
-    
-    // Check if we actually need to fetch labels (any changes in junction tables?)
     const normalizedAgentIds = (agent_ids || []).map(id => String(id));
     const normalizedFeatureIds = (feature_ids || []).map(id => String(id));
-
     const needsLabels = JSON.stringify(oldAgents.sort()) !== JSON.stringify(normalizedAgentIds.sort()) || 
                         JSON.stringify(oldFeatures.sort()) !== JSON.stringify(normalizedFeatureIds.sort());
 
@@ -228,12 +227,7 @@ export async function updatePropertyAction(
         supabase.from("profiles").select("id, full_name").in("id", [...new Set([...oldAgents, ...(agent_ids || [])])]),
         supabase.from("features").select("id, name").in("id", [...new Set([...oldFeatures, ...(feature_ids || [])])])
       ]);
-      // Explicitly map null full_names to empty strings for Type Safety
-      agentLabels = (agents || []).map((a) => ({ 
-        id: a.id, 
-        full_name: a.full_name || "Unknown Agent" 
-      }));
-      // Map 'name' to 'label' for compatibility with getPropertyDiff
+      agentLabels = (agents || []).map((a) => ({ id: a.id, full_name: a.full_name || "Unknown Agent" }));
       featureLabels = (features || []).map(f => ({ id: f.id, label: f.name }));
     }
 
@@ -259,67 +253,48 @@ export async function updatePropertyAction(
       },
     );
 
-    // 6) POST-UPDATE SIDE EFFECTS
-    if (images !== undefined) {
-      await finalizeUploadSession({ supabase, userId: user.id, sessionId, propertyId: id, usedPaths: images });
-
-      // 🛡️ [PHASE 3] Trigger Malware Scan for all images associated with this property
-      const { data: currentImages } = await supabase
-        .from("property_images")
-        .select("id, storage_path")
-        .eq("property_id", id);
-      
-      if (currentImages && currentImages.length > 0) {
-        const scanEvents = currentImages.map((img) => ({
-          name: "app/property.image.created",
-          data: {
-            imageId: img.id,
-            storagePath: img.storage_path,
-          },
-        }));
-        await inngest.send(scanEvents);
+    // 6) POST-UPDATE SIDE EFFECTS (Wrapped in try-catch to prevent failure of main action)
+    try {
+      if (images !== undefined) {
+        await finalizeUploadSession({ supabase, userId: user.id, sessionId, propertyId: id, usedPaths: images });
+        const { data: currentImages } = await supabase.from("property_images").select("id, storage_path").eq("property_id", id);
+        if (currentImages && currentImages.length > 0) {
+          const scanEvents = currentImages.map((img) => ({
+            name: "app/property.image.created",
+            data: { imageId: img.id, storagePath: img.storage_path },
+          }));
+          await inngest.send(scanEvents).catch(e => console.warn("Inngest image scan skip:", e.message));
+        }
       }
+      
+      // Notifications
+      const updatedStatus = safeValues.status;
+      if ((updatedStatus === "SOLD" || updatedStatus === "RENTED") && existing.status !== updatedStatus) {
+        await sendStatusUpdateNotification({ id, title: existing.title }, updatedStatus as "SOLD" | "RENTED").catch(e => console.warn("Notification skip:", e.message));
+      }
+      
+      // Price Drop Logic (Sale & Rent)
+      const currentSalePrice = Number(safeValues.price || safeValues.original_price || 0);
+      const oldSalePrice = Number(existing.price || existing.original_price || 0);
+      const currentRentPrice = Number(safeValues.rental_price || safeValues.original_rental_price || 0);
+      const oldRentPrice = Number(existing.rental_price || existing.original_rental_price || 0);
+  
+      if (currentSalePrice > 0 && oldSalePrice > 0 && currentSalePrice < oldSalePrice) {
+        await sendPriceDropNotification(existing as any, oldSalePrice, currentSalePrice, "SALE").catch(e => console.warn("Price Drop Notif skip:", e.message));
+      } else if (currentRentPrice > 0 && oldRentPrice > 0 && currentRentPrice < oldRentPrice) {
+        await sendPriceDropNotification(existing as any, oldRentPrice, currentRentPrice, "RENT").catch(e => console.warn("Price Drop Notif skip:", e.message));
+      }
+  
+      if (safeValues.requires_ai_review) {
+        await inngest.send({ name: "property.created", data: { propertyId: id, userId: user.id, tenantId } }).catch(e => console.warn("Inngest AI review skip:", e.message));
+      }
+    } catch (sideEffectError) {
+      console.warn("Post-update side effects partially failed (non-critical):", sideEffectError);
     }
 
-    // Notifications
-    const newStatus = safeValues.status;
-    if ((newStatus === "SOLD" || newStatus === "RENTED") && existing.status !== newStatus) {
-      await sendStatusUpdateNotification({ id, title: existing.title }, newStatus);
-    }
-    
-    // Price Drop Logic (Sale & Rent)
-    const currentSalePrice = Number(safeValues.price || safeValues.original_price || 0);
-    const oldSalePrice = Number(existing.price || existing.original_price || 0);
-    const currentRentPrice = Number(safeValues.rental_price || safeValues.original_rental_price || 0);
-    const oldRentPrice = Number(existing.rental_price || existing.original_rental_price || 0);
-
-    if (currentSalePrice > 0 && oldSalePrice > 0 && currentSalePrice < oldSalePrice) {
-      await sendPriceDropNotification(existing as any, oldSalePrice, currentSalePrice, "SALE");
-    } else if (currentRentPrice > 0 && oldRentPrice > 0 && currentRentPrice < oldRentPrice) {
-      await sendPriceDropNotification(existing as any, oldRentPrice, currentRentPrice, "RENT");
-    }
-
-    // Cache clearing
     revalidatePath("/", "layout");
-    revalidatePath("/protected/properties");
-    revalidateTag("properties", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidateTag("popular-areas", "seconds");
-    revalidateTag("provinces", "seconds");
-    revalidateTag("dashboard-stats", "seconds");
-    revalidateTag("dashboard-charts", "seconds");
-    revalidateTag("dashboard-performance", "seconds");
 
-    if (safeValues.requires_ai_review) {
-      await inngest.send({ name: "property.created", data: { propertyId: id, userId: user.id, tenantId } });
-    }
-
-    return { 
-      success: true, 
-      message: "อัปเดตข้อมูลสำเร็จ", 
-      propertyId: id, 
-      slug: updatedRow?.slug || "" 
-    };
+    return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: updatedRow?.slug || "" };
   } catch (err: unknown) {
     console.error("updatePropertyAction error:", err);
     const errorWithCode = err as { code?: string };
@@ -341,26 +316,28 @@ export async function updatePropertyStatusAction(input: {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
-    if (!tenantId) throw new Error("Tenant ID is required but missing");
+    if (role !== "ADMIN" && !tenantId) {
+      throw new Error("Tenant ID is required but missing");
+    }
 
-    const UUID_RE =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!input?.id || !UUID_RE.test(input.id)) {
       return { success: false, message: "รูปแบบรหัสทรัพย์ไม่ถูกต้อง" };
     }
-
     if (!PROPERTY_STATUS_ENUM.includes(input.status)) {
       return { success: false, message: "สถานะไม่ถูกต้อง" };
     }
 
-    const { data: existing, error: fetchErr } = await supabase
+    let query = supabase
       .from("properties")
-      .select("id, title, status, listing_type, requires_ai_review, version")
-      .eq("id", input.id)
-      .eq("tenant_id", tenantId)
-      .single();
+      .select("id, title, tenant_id, status, listing_type, requires_ai_review, version")
+      .eq("id", input.id);
 
+    if (role !== "ADMIN" && tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data: existing, error: fetchErr } = await query.single();
     if (fetchErr || !existing) {
       return { success: false, message: "ไม่พบข้อมูลทรัพย์" };
     }
@@ -373,7 +350,7 @@ export async function updatePropertyStatusAction(input: {
 
     const { data: updatedRow, error: rpcError } = await supabase.rpc("update_property_status_elite", {
       p_id: input.id,
-      p_tenant_id: tenantId,
+      p_tenant_id: existing?.tenant_id || tenantId || "",
       p_user_id: user.id,
       p_is_admin: canBypassOwnership,
       p_status: input.status,
@@ -383,35 +360,18 @@ export async function updatePropertyStatusAction(input: {
     if (rpcError) {
       console.error("RPC update_property_status_elite failed:", rpcError);
       if (rpcError.message?.includes("VC409") || rpcError.code === "P4090") {
-        return { 
-          success: false, 
-          errorType: "VERSION_CONFLICT", 
-          message: "ข้อมูลถูกแก้ไขไปแล้วโดยเอเจนต์ท่านอื่น กรุณาดึงข้อมูลล่าสุด" 
-        };
+        return { success: false, errorType: "VERSION_CONFLICT", message: "ข้อมูลถูกแก้ไขไปแล้วโดยเอเจนต์ท่านอื่น กรุณาดึงข้อมูลล่าสุด" };
       }
       return { success: false, message: mapDbError(rpcError) };
     }
 
     await logAudit(
       { supabase, user, role },
-      {
-        action: "property.status.update",
-        entity: "properties",
-        entityId: input.id,
-        metadata: { status: input.status },
-      },
+      { action: "property.status.update", entity: "properties", entityId: input.id, metadata: { status: input.status } }
     );
 
-    // Workflow Notification: Sold or Rented (Simplified for status update)
-    if (
-      existing &&
-      (input.status === "SOLD" || input.status === "RENTED") &&
-      existing.status !== input.status
-    ) {
-      await sendStatusUpdateNotification(
-        { id: existing.id, title: existing.title },
-        input.status as "SOLD" | "RENTED",
-      );
+    if (existing && (input.status === "SOLD" || input.status === "RENTED") && existing.status !== input.status) {
+      await sendStatusUpdateNotification({ id: existing.id, title: existing.title }, input.status as "SOLD" | "RENTED");
     }
 
     revalidatePath("/", "layout");
@@ -422,7 +382,6 @@ export async function updatePropertyStatusAction(input: {
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
-    revalidateTag("properties", "seconds");
 
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (e: unknown) {
@@ -432,7 +391,6 @@ export async function updatePropertyStatusAction(input: {
 
 /**
  * 🚀 Elite Tool: Manual AI Review Trigger
- * Allows admins to manually request an AI re-analysis for any property.
  */
 export async function triggerPropertyAiReviewAction(propertyId: string) {
   try {
@@ -440,30 +398,11 @@ export async function triggerPropertyAiReviewAction(propertyId: string) {
     assertStaff(role);
     if (!tenantId) throw new Error("Tenant context required");
 
-    // 1. Mark as requiring review in DB
-    const { error } = await supabase
-      .from("properties")
-      .update({ requires_ai_review: true, status: "DRAFT" })
-      .eq("id", propertyId)
-      .eq("tenant_id", tenantId);
-
+    const { error } = await supabase.from("properties").update({ requires_ai_review: true, status: "DRAFT" }).eq("id", propertyId).eq("tenant_id", tenantId);
     if (error) throw error;
 
-    // 2. Send to Inngest
-    await inngest.send({
-      name: "property.created",
-      data: { propertyId, userId: user.id, tenantId }
-    });
-
-    await logAudit(
-      { supabase, user, role },
-      {
-        action: "property.ai_refresh",
-        entity: "properties",
-        entityId: propertyId,
-      }
-    );
-
+    await inngest.send({ name: "property.created", data: { propertyId, userId: user.id, tenantId } });
+    await logAudit({ supabase, user, role }, { action: "property.ai_refresh", entity: "properties", entityId: propertyId });
     revalidatePath("/protected/properties");
     return { success: true, message: "กำลังเริ่มการประมวลผล AI หลังบ้าน..." };
   } catch (e: unknown) {

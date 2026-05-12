@@ -12,6 +12,15 @@ export default async function EditPropertyPage({
   const { id } = await params;
 
   const property = await getPropertyWithImages(id);
+  if (!property) {
+    return (
+      <div className="p-10 text-center">
+        <h1 className="text-xl font-bold text-red-600">ไม่พบข้อมูลทรัพย์สิน</h1>
+        <p className="text-slate-500">ทรัพย์สินรายการนี้อาจถูกลบไปแล้ว หรือคุณไม่มีสิทธิ์เข้าถึง</p>
+      </div>
+    );
+  }
+
   const config = await getSystemConfig();
   const { role } = await requireAuthContext();
 

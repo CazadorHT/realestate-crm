@@ -29,9 +29,13 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
-    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
-    const { data: property, error: propErr } = await supabase
+    // 🛡️ Elite Hardening: Admins can bypass tenantId filter, others cannot.
+    if (role !== "ADMIN" && !tenantId) {
+      throw new Error("Tenant ID is required but missing for staff roles");
+    }
+
+    let query = supabase
       .from("properties")
       .select(`
         id, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru,
@@ -45,12 +49,18 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
         tenant_id, created_by, owner_id, co_agent_sale_commission_percent,
         co_agent_name, co_agent_phone, co_agent_contact_id,
         popular_area, popular_area_en, popular_area_cn, popular_area_ru, property_source,
-        ai_summary_content, ai_reviewed_at,
+        ai_summary_content,
+        ai_reviewed_at,
         ai_reviewed_by, version, images, nearby_places, nearby_transits
       `)
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
-      .single();
+      .eq("id", id);
+
+    // Apply tenant filter only if not ADMIN or if tenantId is explicitly provided
+    if (role !== "ADMIN" && tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data: property, error: propErr } = await query.single();
 
     if (propErr) throw propErr;
 
@@ -81,9 +91,13 @@ export async function getPropertyWithImages(
 ): Promise<PropertyWithImages> {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
-  if (!tenantId) throw new Error("Tenant ID is required but missing");
 
-  const { data, error } = await supabase
+  // 🛡️ Elite Hardening: Admins can bypass tenantId filter
+  if (role !== "ADMIN" && !tenantId) {
+    throw new Error("Tenant ID is required but missing");
+  }
+
+  let query = supabase
     .from("properties")
     .select(`
       id, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru,
@@ -97,7 +111,8 @@ export async function getPropertyWithImages(
       tenant_id, created_by, owner_id, co_agent_sale_commission_percent,
       co_agent_name, co_agent_phone, co_agent_contact_id,
       popular_area, popular_area_en, popular_area_cn, popular_area_ru, property_source,
-      ai_summary_content, ai_reviewed_at,
+      ai_summary_content,
+      ai_reviewed_at,
       ai_reviewed_by, version, images, nearby_places, nearby_transits,
       property_agents (
         agent_id
@@ -109,9 +124,13 @@ export async function getPropertyWithImages(
         full_name
       )
     `)
-    .eq("id", id)
-    .eq("tenant_id", tenantId)
-    .single();
+    .eq("id", id);
+
+  if (role !== "ADMIN" && tenantId) {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data, error } = await query.single();
 
   if (error || !data) throw error;
 

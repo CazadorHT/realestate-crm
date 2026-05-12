@@ -14,9 +14,13 @@ import {
 
 /**
  * 🔒 Centralized Security Middleware (Auth -> Rate Limit -> CSP)
+ * [PREMIUM HARDENING] This middleware protects against:
+ * 1. Brute-force (Auth rate limits)
+ * 2. AI Scraping & Cost Abuse (AI rate limits)
+ * 3. Crawler blocking issues (White-listing Google/FB bots)
+ * 4. CSP Violations (Centralized security headers)
  */
 export async function middleware(request: NextRequest) {
-
   const { pathname } = request.nextUrl;
   const path = pathname.toLowerCase();
 
@@ -48,16 +52,21 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set("x-pathname", pathname);
+  // 2. 🔑 Supabase Session Management (Auth Refresh)
+  // [OPTIMIZATION] Returns both response and user context
+  const { response: authResponse, user } = await updateSession(request);
+  let response = authResponse;
+  
+  if (response.status === 307 || response.status === 308) {
+    return response;
+  }
 
-  // 1.5 🌏 Auto-Language Detection
+  // 🌏 Auto-Language Detection (IP & Locale based)
   const hasLangCookie = request.cookies.has("app-language");
-  let detectedLang: string | null = null;
-
   if (!hasLangCookie) {
     const acceptLang = request.headers.get("accept-language")?.toLowerCase();
     const country = request.headers.get("x-vercel-ip-country")?.toUpperCase();
+    let detectedLang: string | null = null;
 
     if (country) {
       if (country === "CN" || country === "HK" || country === "TW") detectedLang = "cn";
@@ -73,7 +82,6 @@ export async function middleware(request: NextRequest) {
       else if (primaryLang.startsWith("zh")) detectedLang = "cn";
       else if (primaryLang.startsWith("ru")) detectedLang = "ru";
       
-      // Fallback: Check if supported languages are mentioned anywhere in the string
       if (!detectedLang) {
         if (acceptLang.includes("th")) detectedLang = "th";
         else if (acceptLang.includes("en")) detectedLang = "en";
@@ -81,17 +89,17 @@ export async function middleware(request: NextRequest) {
         else if (acceptLang.includes("ru")) detectedLang = "ru";
       }
     }
+
+    if (detectedLang) {
+      response.cookies.set("app-language", detectedLang, {
+        path: "/",
+        maxAge: 31536000,
+        sameSite: "lax",
+      });
+    }
   }
 
-  // 2. 🔑 Supabase Session
-  const { response: authResponse, user } = await updateSession(request);
-  let response = authResponse;
-  
-  if (response.status === 307 || response.status === 308) {
-    return response;
-  }
-
-  // 3. 🛡️ Identification & Bypass
+  // 3. 🛡️ Identification & Bypass Logic
   const ip = getClientIp(request);
   const isWhitelistedIp = isWhitelisted(ip);
   const isBypassed = isInternalBypass(request);
@@ -108,16 +116,10 @@ export async function middleware(request: NextRequest) {
     ua.includes("facebookplatform") || 
     ua.includes("linebot");
 
-  const isWebhook = 
-    path.startsWith("/api/webhook") || 
-    path.startsWith("/api/callback") || 
-    path.startsWith("/auth/callback") ||
-    path.startsWith("/api/auth/callback") ||
-    path.startsWith("/api/line-webhook");
-
+  const isWebhook = ["/api/webhook", "/api/callback", "/auth/callback", "/api/auth/callback", "/api/line-webhook"].some(p => path.startsWith(p));
   const isBypassPath = isWebhook || isCrawler;
 
-  // 4. 🚦 Rate Limiting
+  // 4. 🚦 Rate Limiting Check
   if (!isWhitelistedIp && !isBypassed && !isBypassPath) {
     let identifier = user?.id || ip || getFingerprint(request);
     let limiter = ratelimitGeneral;
@@ -142,7 +144,6 @@ export async function middleware(request: NextRequest) {
       limiter = ratelimitActions;
       limiterName = "actions";
     } else {
-      // Priority 5: General Navigation (Compound Identifier to prevent global lockout)
       identifier = `${identifier}:${path}`;
     }
 
@@ -154,6 +155,16 @@ export async function middleware(request: NextRequest) {
         response.headers.set("X-RateLimit-Reset", reset.toString());
 
         if (!success) {
+          // 📊 [SECURITY LOG] Stdout Logging for "Elite" Monitoring
+          console.error(JSON.stringify({
+            event: "rate_limit_blocked",
+            ip,
+            userId: user?.id || "anonymous",
+            path: pathname,
+            limiter: limiterName,
+            timestamp: new Date().toISOString(),
+          }));
+
           const retryAfterSeconds = Math.ceil((reset - Date.now()) / 1000);
           const url = request.nextUrl.clone();
           url.pathname = "/blocking";
@@ -166,39 +177,49 @@ export async function middleware(request: NextRequest) {
           
           blockingResponse.headers.set("Retry-After", retryAfterSeconds.toString());
           blockingResponse.headers.set("Cache-Control", "no-store");
+
+          // 🛡️ [ELITE HARDENING] Apply Security Headers even to the blocking response
           return applySecurityHeaders(request, blockingResponse);
         }
-      } catch (e) {
-        console.error("[SECURITY] Rate Limit Error:", e);
+      } catch (redisError) {
+        console.error("[SECURITY] Redis Rate Limit Error (Fail-open):", redisError);
       }
     }
   }
 
-  // 5. 🛡️ Security Headers
-  response = applySecurityHeaders(request, response);
+  // 5. 🛡️ Final Prep: Apply Security Headers & Pass x-pathname
+  try {
+    // [CRITICAL] Create a fresh next response to modify request headers safely
+    const requestHeaders = new Headers(request.headers);
+    requestHeaders.set("x-pathname", pathname);
 
-  if (detectedLang) {
-    response.cookies.set("app-language", detectedLang, {
-      path: "/",
-      maxAge: 31536000,
-      sameSite: "lax",
+    const finalResponse = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
     });
+
+    // Sync cookies from authResponse/language logic to the final response
+    response.cookies.getAll().forEach((cookie) => {
+      finalResponse.cookies.set(cookie.name, cookie.value, cookie);
+    });
+
+    // Sync security headers
+    applySecurityHeaders(request, finalResponse);
+    
+    // Sync ratelimit headers if they exist
+    const rateLimitHeaders = ["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"];
+    rateLimitHeaders.forEach(h => {
+      const val = response.headers.get(h);
+      if (val) finalResponse.headers.set(h, val);
+    });
+
+    return finalResponse;
+  } catch (syncError) {
+    console.error("[SECURITY] Middleware Final Sync Error (Fail-open):", syncError);
+    // 🛡️ [FAIL-OPEN] Return the original response if sync fails to prevent 500 error
+    return response;
   }
-
-  const finalResponse = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
-
-  response.cookies.getAll().forEach((cookie) => {
-    finalResponse.cookies.set(cookie.name, cookie.value, cookie);
-  });
-  response.headers.forEach((value, key) => {
-    finalResponse.headers.set(key, value);
-  });
-
-  return finalResponse;
 }
 
 export default middleware;
