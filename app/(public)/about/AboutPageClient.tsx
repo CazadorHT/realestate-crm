@@ -257,6 +257,7 @@ export default function AboutPageClient() {
                       src={settings.brand_card || siteConfig.brandCard}
                       alt={siteConfig.name}
                       fill
+                      sizes="(max-width: 768px) 100vw, 280px"
                       className="object-contain   group-hover:opacity-100 transition-opacity"
                     />
                   </div>

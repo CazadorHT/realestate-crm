@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useId } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
@@ -22,6 +22,7 @@ export function MagicAiSearch({
   isLoading: globalLoading = false,
 }: MagicAiSearchProps) {
   const { language } = useLanguage();
+  const searchId = useId();
   const [inputValue, setInputValue] = useState(keyword);
 
   // Auto-search with 500ms debounce
@@ -52,7 +53,7 @@ export function MagicAiSearch({
         </div>
         
         <Input
-          id="magic-search"
+          id={searchId}
           name="keyword"
           placeholder={
             language === "th" 

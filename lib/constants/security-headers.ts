@@ -35,6 +35,8 @@ export const CSP_DIRECTIVES = {
     "https://*.pgimgs.com",
     "https://*.wikimedia.org",
     "https://*.freepik.com",
+    "https://www.transparenttextures.com",
+    "https://*.transparenttextures.com",
   ],
   "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
   "connect-src": [

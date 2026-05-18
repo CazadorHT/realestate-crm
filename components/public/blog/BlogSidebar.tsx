@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { BookOpen } from "lucide-react";
 import Link from "next/link";
 
@@ -14,6 +15,7 @@ export function BlogSidebar({
   currentTag,
   currentCategory,
 }: BlogSidebarProps) {
+  const newsletterId = useId();
   return (
     <aside className="lg:col-span-4 lg:col-start-9">
       <div className="sticky top-24 space-y-6">
@@ -154,6 +156,8 @@ export function BlogSidebar({
           </p>
           <div className="flex gap-2">
             <input
+              id={newsletterId}
+              name="newsletter_email"
               type="email"
               placeholder={t("blog.newsletter_placeholder")}
               className="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"

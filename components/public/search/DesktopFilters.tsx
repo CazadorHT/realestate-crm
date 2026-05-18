@@ -395,7 +395,7 @@ export function DesktopFilters({
         </div>
 
         <div className="col-span-3">
-          <div className="grid grid-cols-4 gap-1 h-10 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
+          <div className="grid grid-cols-4 gap-1 h-10! bg-white  rounded-xl border border-slate-200 shadow-sm">
             {[
               {
                 val: "ALL",

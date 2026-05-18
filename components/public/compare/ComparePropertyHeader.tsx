@@ -34,6 +34,7 @@ export function ComparePropertyHeader({
             src={property.image_url}
             alt={title}
             fill
+            sizes="(max-width: 768px) 50vw, 33vw"
             className="object-cover"
           />
         ) : (

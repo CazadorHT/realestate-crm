@@ -242,7 +242,7 @@ export function ContactForm() {
     }),
   };
 
-  const renderStepContent = () => {
+  const renderStepContent = (idSuffix: string) => {
     switch (step) {
       case 1:
         return (
@@ -257,9 +257,9 @@ export function ContactForm() {
             className="space-y-4"
           >
             <div className="space-y-3">
-              <Label className="text-sm font-medium text-white block">
+              <div className="text-sm font-medium text-white block">
                 {t("contact.subject_label")} <span className="text-rose-400">*</span>
-              </Label>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
                 {INTEREST_OPTIONS.map((option) => (
                   <button
@@ -311,12 +311,12 @@ export function ContactForm() {
             className="space-y-4"
           >
             <div className="space-y-4">
-               <Label className="text-sm font-medium text-white block">
+               <div className="text-sm font-medium text-white block">
                 {t("contact.info_labels_title") || "Your Contact Information"} <span className="text-rose-400">*</span>
-              </Label>
+              </div>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1">
+                  <Label htmlFor={`name-${idSuffix}`} className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1">
                     {t("contact.name_label")}
                   </Label>
                   <div className="relative group">
@@ -324,7 +324,7 @@ export function ContactForm() {
                       <User className="h-5 w-5" />
                     </div>
                     <Input
-                      id="name"
+                      id={`name-${idSuffix}`}
                       name="name"
                       required
                       autoFocus
@@ -338,7 +338,7 @@ export function ContactForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1">
+                  <Label htmlFor={`phone-${idSuffix}`} className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1">
                     {t("contact.phone_label")}
                   </Label>
                   <div className="relative group">
@@ -346,7 +346,7 @@ export function ContactForm() {
                       <Phone className="h-5 w-5" />
                     </div>
                     <Input
-                      id="phone"
+                      id={`phone-${idSuffix}`}
                       name="phone"
                       type="tel"
                       required
@@ -394,13 +394,13 @@ export function ContactForm() {
             className="space-y-4"
           >
             <div className="space-y-4">
-              <Label className="text-sm font-medium text-white block">
+              <div className="text-sm font-medium text-white block">
                 {t("contact.additional_details_title") || "Anything else?"}
-              </Label>
+              </div>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 mb-2 block">
+                  <Label htmlFor={`email-${idSuffix}`} className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 mb-2 block">
                     {t("contact.email_label")}
                   </Label>
                   <div className="relative group">
@@ -408,7 +408,7 @@ export function ContactForm() {
                       <Mail className="h-5 w-5" />
                     </div>
                     <Input
-                      id="email"
+                      id={`email-${idSuffix}`}
                       name="email"
                       type="email"
                       onFocus={handleFormStart}
@@ -419,7 +419,7 @@ export function ContactForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="lineId" className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 mb-2 block">
+                  <Label htmlFor={`lineId-${idSuffix}`} className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 mb-2 block">
                     {t("contact.line_id_label")}
                   </Label>
                   <div className="relative group">
@@ -427,7 +427,7 @@ export function ContactForm() {
                       <FaLine className="h-5 w-5" />
                     </div>
                     <Input
-                      id="lineId"
+                      id={`lineId-${idSuffix}`}
                       name="lineId"
                       onFocus={handleFormStart}
                       placeholder={t("contact.line_id_placeholder")}
@@ -437,7 +437,7 @@ export function ContactForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="wechatId" className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 mb-2 block">
+                  <Label htmlFor={`wechatId-${idSuffix}`} className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 mb-2 block">
                     {t("contact.wechat_label") || "WeChat ID"}
                   </Label>
                   <div className="relative group">
@@ -445,7 +445,7 @@ export function ContactForm() {
                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8.05 4.31c.21 0 .42.01.62.02a7.33 7.33 0 0 1 7.21 6.55c0 .06.01.12.01.19a7.35 7.35 0 0 1-7.14 7.35 7.4 7.4 0 0 1-3.13-.69l-3.32.96.98-3.23a7.34 7.34 0 0 1 4.77-11.15m10.16 3.12a7.08 7.08 0 0 1 5.76 6.94c0 1.94-.8 3.69-2.09 4.95l.8 2.66-2.73-.79a7.07 7.07 0 0 1-8.52-1.34 7.6 7.6 0 0 0 1.25.1c3.15 0 5.72-2.52 5.82-5.67.4 0 .8.01 1.21.01.24 0 .48-.01.71-.02a7.58 7.58 0 0 0-2.21-6.84z"/></svg>
                     </div>
                     <Input
-                      id="wechatId"
+                      id={`wechatId-${idSuffix}`}
                       name="wechatId"
                       onFocus={handleFormStart}
                       placeholder={t("contact.wechat_placeholder") || "Your WeChat ID"}
@@ -455,7 +455,7 @@ export function ContactForm() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="whatsapp" className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 mb-2 block">
+                  <Label htmlFor={`whatsapp-${idSuffix}`} className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 mb-2 block">
                     {t("contact.whatsapp_label") || "WhatsApp"}
                   </Label>
                   <div className="relative group">
@@ -463,7 +463,7 @@ export function ContactForm() {
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.42 1.56 1.56 2.41 3.63 2.41 5.83 0 4.54-3.7 8.23-8.24 8.23-1.48 0-2.93-.39-4.19-1.15l-.3-.17-3.12.82.83-3.04-.19-.3a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24zm-4.53 3.19c-.24 0-.48.01-.7.12-.22.11-.42.27-.58.48-.32.41-.63 1.05-.63 1.93 0 .88.33 1.74 1.01 2.64 1.37 1.83 3.03 3.16 5.1 4.02.58.24 1.14.39 1.66.45.52.06 1.08.01 1.54-.15.46-.16.92-.48 1.13-.88.21-.4.21-.88.15-1.18-.06-.3-.21-.45-.48-.57l-1.63-.73c-.27-.12-.54-.18-.79-.18-.25 0-.48.06-.67.24l-.56.69c-.21.26-.45.33-.76.19-.31-.14-.73-.34-1.22-.67-.49-.33-.94-.74-1.35-1.22-.26-.31-.3-.59-.14-.85l.55-.71c.15-.19.2-.39.14-.58l-.66-1.58c-.11-.27-.27-.45-.54-.51-.13-.03-.28-.05-.44-.05z"/></svg>
                     </div>
                     <Input
-                      id="whatsapp"
+                      id={`whatsapp-${idSuffix}`}
                       name="whatsapp"
                       onFocus={handleFormStart}
                       placeholder={t("contact.whatsapp_placeholder") || "Phone or ID"}
@@ -474,7 +474,7 @@ export function ContactForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="message" className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 block">
+                <Label htmlFor={`message-${idSuffix}`} className="text-white/40 font-medium text-xs uppercase tracking-wider ml-1 block">
                   {t("contact.more_details_label")}
                 </Label>
                 <div className="relative group">
@@ -482,7 +482,7 @@ export function ContactForm() {
                     <MessageSquare className="h-5 w-5" />
                   </div>
                   <Textarea
-                    id="message"
+                    id={`message-${idSuffix}`}
                     name="message"
                     onFocus={handleFormStart}
                     placeholder={t("contact.more_details_placeholder")}
@@ -521,8 +521,8 @@ export function ContactForm() {
     }
   };
 
-  const renderFormContent = () => (
-    <form ref={formElementRef} id="contact-form" action={clientAction} className="relative min-h-[280px]">
+  const renderFormContent = (idSuffix: string) => (
+    <form ref={idSuffix === "desktop" ? formElementRef : undefined} id={`contact-form-${idSuffix}`} action={clientAction} className="relative min-h-[280px]">
       <input type="hidden" name="subject" value={selectedSubject} />
       {(() => {
         const marketingData = getStoredMarketingData();
@@ -545,7 +545,7 @@ export function ContactForm() {
 
       <div className="relative overflow-hidden">
         <AnimatePresence mode="wait" initial={false}>
-          {isSuccess ? renderSuccess() : renderStepContent()}
+          {isSuccess ? renderSuccess() : renderStepContent(idSuffix)}
         </AnimatePresence>
       </div>
 
@@ -575,7 +575,7 @@ export function ContactForm() {
     <>
       {/* Desktop Version */}
       <div className="hidden lg:block">
-        {renderFormContent()}
+        {renderFormContent("desktop")}
       </div>
 
       {/* Mobile/Tablet Version */}
@@ -608,7 +608,7 @@ export function ContactForm() {
               </div>
             </SheetHeader>
             <div className="flex-1 overflow-y-auto px-5 py-6" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' }}>
-              {renderFormContent()}
+              {renderFormContent("mobile")}
             </div>
           </SheetContent>
         </Sheet>
