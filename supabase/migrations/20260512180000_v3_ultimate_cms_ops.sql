@@ -94,3 +94,18 @@ CREATE TABLE public.system_task_queue (
 );
 
 CREATE INDEX idx_task_queue_status ON public.system_task_queue(status, run_at);
+
+-- ==========================================
+-- 4. REALTIME PUBLICATION CONFIG
+-- ==========================================
+-- เปิดใช้งาน Realtime สำหรับ notifications_v3
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_publication_tables 
+        WHERE pubname = 'supabase_realtime' AND tablename = 'notifications_v3'
+    ) THEN
+        ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications_v3;
+    END IF;
+END
+$$;
