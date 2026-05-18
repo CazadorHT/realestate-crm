@@ -1736,6 +1736,7 @@ export type Database = {
           rent_price: number | null
           sale_price: number | null
           search_vector: unknown
+          slug: string | null
           status: number | null
           tenant_id: string | null
           updated_at: string | null
@@ -1766,6 +1767,7 @@ export type Database = {
           rent_price?: number | null
           sale_price?: number | null
           search_vector?: unknown
+          slug?: string | null
           status?: number | null
           tenant_id?: string | null
           updated_at?: string | null
@@ -1796,6 +1798,7 @@ export type Database = {
           rent_price?: number | null
           sale_price?: number | null
           search_vector?: unknown
+          slug?: string | null
           status?: number | null
           tenant_id?: string | null
           updated_at?: string | null
@@ -3743,6 +3746,7 @@ export type Database = {
           province: string | null
           rental_price: number | null
           size_sqm: number | null
+          slug: string | null
           status: string | null
           status_int: number | null
           structured_data: string | null
@@ -4557,6 +4561,8 @@ export type Database = {
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
       refresh_executive_dashboard: { Args: never; Returns: undefined }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       st_3dclosestpoint: {
         Args: { geom1: unknown; geom2: unknown }
         Returns: unknown

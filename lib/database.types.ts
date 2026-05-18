@@ -204,9 +204,37 @@ export type Database = Omit<GeneratedDatabase, "public"> & {
           ai_reviewed_by: string | null;
           version: number | null;
           co_agent_sale_commission_percent: number | null;
-          nearby_transits: any;
-          nearby_places: any;
-          features: any;
+          nearby_transits: {
+            type: string;
+            station_name: string;
+            distance_meters?: number | null;
+            time?: string | null;
+            station_name_en?: string | null;
+            station_name_cn?: string | null;
+            station_name_ru?: string | null;
+            [key: string]: unknown;
+          }[] | null;
+          nearby_places: {
+            category: string;
+            name: string;
+            distance_meters?: number | null;
+            time?: string | null;
+            name_en?: string | null;
+            name_cn?: string | null;
+            name_ru?: string | null;
+            distance?: string | null;
+            [key: string]: unknown;
+          }[] | null;
+          features: {
+            id: string;
+            name: string;
+            name_en?: string | null;
+            name_cn?: string | null;
+            name_ru?: string | null;
+            icon_key?: string | null;
+            category?: string | null;
+            [key: string]: unknown;
+          }[] | null;
           main_image: string | null;
         }>; 
         Insert: Record<string, any>; 
@@ -287,9 +315,37 @@ export type Database = Omit<GeneratedDatabase, "public"> & {
           ai_reviewed_by: string | null;
           version: number | null;
           co_agent_sale_commission_percent: number | null;
-          nearby_transits: any;
-          nearby_places: any;
-          features: any;
+          nearby_transits: {
+            type: string;
+            station_name: string;
+            distance_meters?: number | null;
+            time?: string | null;
+            station_name_en?: string | null;
+            station_name_cn?: string | null;
+            station_name_ru?: string | null;
+            [key: string]: unknown;
+          }[] | null;
+          nearby_places: {
+            category: string;
+            name: string;
+            distance_meters?: number | null;
+            time?: string | null;
+            name_en?: string | null;
+            name_cn?: string | null;
+            name_ru?: string | null;
+            distance?: string | null;
+            [key: string]: unknown;
+          }[] | null;
+          features: {
+            id: string;
+            name: string;
+            name_en?: string | null;
+            name_cn?: string | null;
+            name_ru?: string | null;
+            icon_key?: string | null;
+            category?: string | null;
+            [key: string]: unknown;
+          }[] | null;
           main_image: string | null;
         }>; 
         Insert: Record<string, any>; 
