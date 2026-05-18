@@ -127,3 +127,52 @@ export async function deleteMasterDataAction(type: string, code: string) {
     return { success: false, message: mapDbError(err) };
   }
 }
+
+/**
+ * Fetch all active nearby place categories from ref_master_data
+ */
+export async function getNearbyPlaceCategoriesAction(): Promise<MasterDataTransitType[]> {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from("ref_master_data")
+    .select("code, label, metadata")
+    .eq("type", "NEARBY_PLACE_CATEGORY")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching nearby place categories:", error);
+    return [];
+  }
+
+  type MasterDataRow = Database["public"]["Tables"]["ref_master_data"]["Row"];
+
+  return (data as MasterDataRow[] || []).map((item: MasterDataRow) => ({
+    code: item.code,
+    label: (item.label as MasterDataTransitType["label"]) || { 
+      th: item.code, 
+      en: item.code, 
+      cn: item.code, 
+      ru: item.code 
+    },
+    metadata: item.metadata as MasterDataTransitType["metadata"]
+  }));
+}
+
+/**
+ * Fetch all master data rows (Admin Management)
+ */
+export async function getAllMasterDataAction(typeFilter?: string) {
+  const supabase = await createClient();
+  let query = supabase.from("ref_master_data").select("*").order("sort_order", { ascending: true });
+  if (typeFilter) {
+    query = query.eq("type", typeFilter);
+  }
+  const { data, error } = await query;
+  if (error) {
+    console.error("Error fetching all master data:", error);
+    return [];
+  }
+  return data || [];
+}

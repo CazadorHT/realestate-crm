@@ -196,8 +196,46 @@ export function PropertyFilters({
   }, [searchParams]);
 
   return (
-    <div className="relative flex flex-col lg:flex-row items-center gap-2 w-full">
-      <div className="flex items-center gap-2 w-full lg:w-auto flex-1">
+    <div className="space-y-4 w-full">
+      {/* 🌟 Premium Status Tab Filter (Phase 1 Quick Win) */}
+      <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-2xl w-full max-w-fit border border-slate-200/60 shadow-inner overflow-x-auto">
+        {[
+          { id: "ALL", label: "🌐 ทั้งหมด (All)", activeClass: "bg-white text-slate-800 shadow-sm font-bold" },
+          { id: "ACTIVE", label: "🟢 ใช้งาน (Active)", activeClass: "bg-emerald-500 text-white shadow-md shadow-emerald-100 font-bold" },
+          { id: "DRAFT", label: "⚠️ แบบร่าง (Draft)", activeClass: "bg-amber-500 text-white shadow-md shadow-amber-100 font-bold" },
+          { id: "ARCHIVED", label: "📦 เก็บถาวร (Archived)", activeClass: "bg-slate-700 text-white shadow-md shadow-slate-200 font-bold" },
+          { id: "SOLD", label: "🤝 ปิดการขาย (Sold)", activeClass: "bg-blue-600 text-white shadow-md shadow-blue-100 font-bold" },
+        ].map((tab) => {
+          const isActive = filters.status === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => {
+                setFilters({ ...filters, status: tab.id });
+                const params = new URLSearchParams(searchParams.toString());
+                if (tab.id === "ALL") params.delete("status");
+                else params.set("status", tab.id);
+                params.delete("page");
+                startTransition(() => {
+                  router.push(`/protected/properties?${params.toString()}#table`, { scroll: false });
+                });
+              }}
+              className={cn(
+                "px-4 py-2 rounded-xl text-xs font-medium transition-all duration-300 shrink-0 flex items-center gap-2 cursor-pointer",
+                isActive
+                  ? tab.activeClass
+                  : "text-slate-600 hover:text-slate-900 hover:bg-white/50",
+              )}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="relative flex flex-col lg:flex-row items-center gap-2 w-full">
+        <div className="flex items-center gap-2 w-full lg:w-auto flex-1">
         <div id="tour-property-search" className="flex-1">
           <QuickSearch
             value={filters.q}
@@ -391,6 +429,7 @@ export function PropertyFilters({
         )}
         <TrashButton />
       </div>
+    </div>
     </div>
   );
 }

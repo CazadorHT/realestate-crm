@@ -40,6 +40,7 @@ import {
   Wallet,
   BadgeDollarSign,
   Loader2,
+  Database,
 } from "lucide-react";
 import { FaLine } from "react-icons/fa";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
@@ -221,7 +222,7 @@ export function SidebarNav({
       href: "/protected/services",
       icon: Layout,
       active: pathname?.startsWith("/protected/services") ?? false,
-      roles: ["ADMIN", "AGENT"],
+      roles: ["ADMIN", "MANAGER"],
       description: "ปรับแต่งข้อมูลบริการและโซลูชันเพื่อดึงดูดลูกค้า",
     },
     {
@@ -243,8 +244,16 @@ export function SidebarNav({
       href: "/protected/admin/popular-areas",
       icon: MapPin,
       active: pathname?.startsWith("/protected/admin/popular-areas") ?? false,
-      roles: ["AGENT", "ADMIN"],
+      roles: ["AGENT", "ADMIN" ,"MANAGER" ],
       description: "กำหนดจุดทำเลทองและพื้นที่ยอดนิยมในคลังข้อมูลแบรนด์",
+    },
+    {
+      title: "ข้อมูลการเดินทางและสถานที่",
+      href: "/protected/admin/master-data",
+      icon: Database,
+      active: pathname?.startsWith("/protected/admin/master-data") ?? false,
+      roles: ["ADMIN", "MANAGER", "AGENT"],
+      description: "จัดการสายรถไฟฟ้าและหมวดหมู่สถานที่ใกล้เคียงแบบเรียลไทม์",
     },
   ];
 
@@ -381,7 +390,11 @@ export function SidebarNav({
     return items.filter((item) => {
       // Role Check
       if (item.roles && item.roles.length > 0) {
-        if (!role || !item.roles.includes(role)) return false;
+        if (!role) return false;
+        const r = role.toUpperCase();
+        if (r === "ADMIN") return true;
+        if (r === "OWNER" && (item.roles.includes("MANAGER") || item.roles.includes("AGENT") || item.roles.includes("OWNER"))) return true;
+        if (!item.roles.includes(role) && !item.roles.includes(r as any)) return false;
       }
 
       // Feature Gating Checks
@@ -415,7 +428,11 @@ export function SidebarNav({
         // Only show group if it has items and user has permission
         if (group.items.length === 0) return false;
         if (group.roles && group.roles.length > 0) {
-          if (!role || !group.roles.includes(role)) return false;
+          if (!role) return false;
+          const r = role.toUpperCase();
+          if (r === "ADMIN") return true;
+          if (r === "OWNER" && (group.roles.includes("MANAGER") || group.roles.includes("AGENT") || group.roles.includes("OWNER"))) return true;
+          if (!group.roles.includes(role) && !group.roles.includes(r as any)) return false;
         }
         return isStaff(role);
       });

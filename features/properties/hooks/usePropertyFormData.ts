@@ -63,7 +63,12 @@ export function usePropertyFormData(
           .from("branches_v3")
           .select("id, name")
           .eq("is_active", true);
-        if (branchesData) setBranches(branchesData);
+        if (branchesData) {
+          setBranches(branchesData);
+          if (mode === "create" && !form.getValues("branch_id") && branchesData.length > 0) {
+            form.setValue("branch_id", branchesData[0].id, { shouldValidate: true });
+          }
+        }
 
         // Load owners
         await fetchOwners(showAllOwners);

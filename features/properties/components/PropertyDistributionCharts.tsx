@@ -15,7 +15,7 @@ import {
   Legend,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, TrendingUp } from "lucide-react";
+import { Building2, TrendingUp, BarChart3, PieChart as PieChartIcon } from "lucide-react";
 
 interface PropertyDistributionChartsProps {
   typeData: any[];
@@ -66,6 +66,9 @@ export default function PropertyDistributionCharts({
     );
   }
 
+  const hasTypeData = typeData && typeData.length > 0 && typeData.some(item => item.value > 0);
+  const hasStatusData = statusData && statusData.length > 0 && statusData.some(item => item.value > 0);
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Type Distribution - Pie Chart */}
@@ -86,91 +89,84 @@ export default function PropertyDistributionCharts({
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="h-[300px] w-full relative">
-            <ResponsiveContainer
-              width="99%"
-              height={300}
-            >
-              <PieChart>
-                <defs>
-                  {typeData.map((entry, index) => (
-                    <linearGradient
-                      key={`gradient-${index}`}
-                      id={`colorGradient-${index}`}
-                      x1="0"
-                      y1="0"
-                      x2="0"
-                      y2="1"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor={entry.color}
-                        stopOpacity={1}
+          {hasTypeData ? (
+            <div className="h-[300px] w-full relative">
+              <ResponsiveContainer width="99%" height={300}>
+                <PieChart>
+                  <defs>
+                    {typeData.map((entry, index) => (
+                      <linearGradient
+                        key={`gradient-${index}`}
+                        id={`colorGradient-${index}`}
+                        x1="0"
+                        y1="0"
+                        x2="0"
+                        y2="1"
+                      >
+                        <stop offset="0%" stopColor={entry.color} stopOpacity={1} />
+                        <stop offset="100%" stopColor={entry.color} stopOpacity={0.7} />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <Pie
+                    data={typeData}
+                    cx="50%"
+                    cy="45%"
+                    innerRadius={55}
+                    outerRadius={90}
+                    paddingAngle={3}
+                    dataKey="value"
+                    label={renderCustomLabel}
+                    labelLine={false}
+                    onClick={handleTypeClick}
+                    className="cursor-pointer outline-none drop-shadow-md"
+                    stroke="none"
+                  >
+                    {typeData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={`url(#colorGradient-${index})`}
+                        className="hover:opacity-90 transition-all duration-200 hover:drop-shadow-lg"
+                        style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))" }}
                       />
-                      <stop
-                        offset="100%"
-                        stopColor={entry.color}
-                        stopOpacity={0.7}
-                      />
-                    </linearGradient>
-                  ))}
-                </defs>
-                <Pie
-                  data={typeData}
-                  cx="50%"
-                  cy="45%"
-                  innerRadius={55}
-                  outerRadius={90}
-                  paddingAngle={3}
-                  dataKey="value"
-                  label={renderCustomLabel}
-                  labelLine={false}
-                  onClick={handleTypeClick}
-                  className="cursor-pointer outline-none drop-shadow-md"
-                  stroke="none"
-                >
-                  {typeData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={`url(#colorGradient-${index})`}
-                      className="hover:opacity-90 transition-all duration-200 hover:drop-shadow-lg"
-                      style={{
-                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
-                      }}
-                    />
-                  ))}
-                </Pie>
-                <Tooltip
-                  formatter={(value: any, name: any) => [
-                    <span key="val" className="font-bold">
-                      {value} รายการ
-                    </span>,
-                    name,
-                  ]}
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "none",
-                    boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
-                    padding: "12px 16px",
-                    background: "white",
-                  }}
-                  itemStyle={{ color: "#334155", fontWeight: 500 }}
-                />
-                <Legend
-                  verticalAlign="bottom"
-                  height={40}
-                  iconType="circle"
-                  iconSize={10}
-                  formatter={(value) => (
-                    <span className="text-sm text-slate-600 font-medium ml-1">
-                      {value}
-                    </span>
-                  )}
-                  wrapperStyle={{ paddingTop: "16px" }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: any, name: any) => [
+                      <span key="val" className="font-bold">{value} รายการ</span>,
+                      name,
+                    ]}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
+                      padding: "12px 16px",
+                      background: "white",
+                    }}
+                    itemStyle={{ color: "#334155", fontWeight: 500 }}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    height={40}
+                    iconType="circle"
+                    iconSize={10}
+                    formatter={(value) => (
+                      <span className="text-sm text-slate-600 font-medium ml-1">{value}</span>
+                    )}
+                    wrapperStyle={{ paddingTop: "16px" }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-[300px] w-full flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-6 text-center animate-in fade-in duration-300">
+              <div className="p-3 bg-slate-100 text-slate-400 rounded-full mb-3 shadow-inner">
+                <PieChartIcon className="h-6 w-6" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-700 mb-1">ยังไม่มีข้อมูลประเภททรัพย์</h4>
+              <p className="text-xs text-slate-500 max-w-xs">ไม่พบรายการอสังหาริมทรัพย์สำหรับตัวกรองหรือช่วงเวลาที่คุณเลือกในขณะนี้</p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -192,101 +188,96 @@ export default function PropertyDistributionCharts({
           </div>
         </CardHeader>
         <CardContent className="pt-4">
-          <div className="h-[300px] w-full relative">
-            <ResponsiveContainer
-              width="99%"
-              height={300}
-            >
-              <BarChart
-                data={statusData}
-                layout="vertical"
-                margin={{ left: 10, right: 24, top: 8, bottom: 8 }}
-                onClick={handleStatusClick}
-                className="cursor-pointer"
-              >
-                <defs>
-                  {statusData.map((entry, index) => (
-                    <linearGradient
-                      key={`bar-gradient-${index}`}
-                      id={`barGradient-${index}`}
-                      x1="0"
-                      y1="0"
-                      x2="1"
-                      y2="0"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor={entry.color}
-                        stopOpacity={0.85}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor={entry.color}
-                        stopOpacity={1}
-                      />
-                    </linearGradient>
-                  ))}
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  horizontal={false}
-                  stroke="#e2e8f0"
-                  strokeOpacity={0.5}
-                />
-                <XAxis
-                  type="number"
-                  allowDecimals={false}
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#94a3b8", fontSize: 12 }}
-                />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  width={110}
-                  fontSize={12}
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fill: "#475569", fontWeight: 500 }}
-                />
-                <Tooltip
-                  cursor={{ fill: "rgba(59, 130, 246, 0.05)", radius: 8 }}
-                  formatter={(value: any) => [
-                    <span key="val" className="font-bold">
-                      {value} รายการ
-                    </span>,
-                    "จำนวน",
-                  ]}
-                  contentStyle={{
-                    borderRadius: "12px",
-                    border: "none",
-                    boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
-                    padding: "12px 16px",
-                    background: "white",
-                  }}
-                  itemStyle={{ color: "#334155", fontWeight: 500 }}
-                />
-                <Bar
-                  dataKey="value"
-                  radius={[0, 8, 8, 0]}
-                  barSize={28}
-                  animationDuration={800}
-                  animationEasing="ease-out"
+          {hasStatusData ? (
+            <div className="h-[300px] w-full relative">
+              <ResponsiveContainer width="99%" height={300}>
+                <BarChart
+                  data={statusData}
+                  layout="vertical"
+                  margin={{ left: 10, right: 24, top: 8, bottom: 8 }}
+                  onClick={handleStatusClick}
+                  className="cursor-pointer"
                 >
-                  {statusData.map((entry, index) => (
-                    <Cell
-                      key={`cell-status-${index}`}
-                      fill={`url(#barGradient-${index})`}
-                      className="hover:brightness-110 transition-all duration-200"
-                      style={{
-                        filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.08))",
-                      }}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+                  <defs>
+                    {statusData.map((entry, index) => (
+                      <linearGradient
+                        key={`bar-gradient-${index}`}
+                        id={`barGradient-${index}`}
+                        x1="0"
+                        y1="0"
+                        x2="1"
+                        y2="0"
+                      >
+                        <stop offset="0%" stopColor={entry.color} stopOpacity={0.85} />
+                        <stop offset="100%" stopColor={entry.color} stopOpacity={1} />
+                      </linearGradient>
+                    ))}
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    horizontal={false}
+                    stroke="#e2e8f0"
+                    strokeOpacity={0.5}
+                  />
+                  <XAxis
+                    type="number"
+                    allowDecimals={false}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#94a3b8", fontSize: 12 }}
+                  />
+                  <YAxis
+                    dataKey="name"
+                    type="category"
+                    width={110}
+                    fontSize={12}
+                    axisLine={false}
+                    tickLine={false}
+                    tick={{ fill: "#475569", fontWeight: 500 }}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "rgba(59, 130, 246, 0.05)", radius: 8 }}
+                    formatter={(value: any) => [
+                      <span key="val" className="font-bold">{value} รายการ</span>,
+                      "จำนวน",
+                    ]}
+                    contentStyle={{
+                      borderRadius: "12px",
+                      border: "none",
+                      boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
+                      padding: "12px 16px",
+                      background: "white",
+                    }}
+                    itemStyle={{ color: "#334155", fontWeight: 500 }}
+                  />
+                  <Bar
+                    dataKey="value"
+                    radius={[0, 8, 8, 0]}
+                    barSize={28}
+                    animationDuration={800}
+                    animationEasing="ease-out"
+                  >
+                    {statusData.map((entry, index) => (
+                      <Cell
+                        key={`cell-status-${index}`}
+                        fill={`url(#barGradient-${index})`}
+                        className="hover:brightness-110 transition-all duration-200"
+                        style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.08))" }}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          ) : (
+            <div className="h-[300px] w-full flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl border border-dashed border-slate-200 p-6 text-center animate-in fade-in duration-300">
+              <div className="p-3 bg-slate-100 text-slate-400 rounded-full mb-3 shadow-inner">
+                <BarChart3 className="h-6 w-6" />
+              </div>
+              <h4 className="text-sm font-bold text-slate-700 mb-1">ยังไม่มีข้อมูลสถานะทรัพย์สิน</h4>
+              <p className="text-xs text-slate-500 max-w-xs">ไม่พบการระบุสถานะทรัพย์สินสำหรับตัวกรองหรือช่วงเวลาที่คุณเลือกในขณะนี้</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

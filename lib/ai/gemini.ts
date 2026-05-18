@@ -95,7 +95,11 @@ export function getModel(modelName: string = DEFAULT_MODEL, options?: {
     };
   }
 
-  return genAI.getGenerativeModel(modelOptions);
+  return genAI.getGenerativeModel(modelOptions, {
+    customHeaders: {
+      Referer: "https://vccasset.com",
+    },
+  });
 }
 
 // Keep core model for simple legacy calls
@@ -130,7 +134,11 @@ export async function generateEmbedding(text: string): Promise<number[] | null> 
   if (!genAI) return null;
 
   try {
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const model = genAI.getGenerativeModel({ model: "text-embedding-004" }, {
+      customHeaders: {
+        Referer: "https://vccasset.com",
+      },
+    });
     const result = await model.embedContent(text.replace(/\n/g, " ").trim());
     return result.embedding.values;
   } catch (error: any) {

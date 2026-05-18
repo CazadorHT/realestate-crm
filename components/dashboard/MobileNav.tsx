@@ -34,6 +34,7 @@ import {
   Bell,
   Wallet,
   BadgeDollarSign,
+  Database,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -210,7 +211,7 @@ export function MobileNav({
       href: "/protected/services",
       icon: Layout,
       active: pathname?.startsWith("/protected/services") ?? false,
-      roles: ["ADMIN", "AGENT"],
+      roles: ["ADMIN","MANAGER"],
     },
     {
       title: "คำถามที่พบบ่อย",
@@ -229,7 +230,14 @@ export function MobileNav({
       href: "/protected/admin/popular-areas",
       icon: MapPin,
       active: pathname?.startsWith("/protected/admin/popular-areas") ?? false,
-      roles: ["AGENT", "ADMIN"],
+      roles: ["AGENT", "ADMIN","MANAGER"],
+    },
+    {
+      title: "ข้อมูลการเดินทางและสถานที่",
+      href: "/protected/admin/master-data",
+      icon: Database,
+      active: pathname?.startsWith("/protected/admin/master-data") ?? false,
+      roles: ["ADMIN", "MANAGER","AGENT"],
     },
   ];
 
@@ -315,7 +323,11 @@ export function MobileNav({
   const filterItems = (items: NavItem[]) => {
     return items.filter((item) => {
       if (item.roles && item.roles.length > 0) {
-        if (!role || !item.roles.includes(role)) return false;
+        if (!role) return false;
+        const r = role.toUpperCase();
+        if (r === "ADMIN") return true;
+        if (r === "OWNER" && (item.roles.includes("MANAGER") || item.roles.includes("AGENT") || item.roles.includes("OWNER"))) return true;
+        if (!item.roles.includes(role) && !item.roles.includes(r as any)) return false;
       }
       return true;
     });
@@ -330,7 +342,11 @@ export function MobileNav({
       .filter((group) => {
         if (group.items.length === 0) return false;
         if (group.roles && group.roles.length > 0) {
-          if (!role || !group.roles.includes(role)) return false;
+          if (!role) return false;
+          const r = role.toUpperCase();
+          if (r === "ADMIN") return true;
+          if (r === "OWNER" && (group.roles.includes("MANAGER") || group.roles.includes("AGENT") || group.roles.includes("OWNER"))) return true;
+          if (!group.roles.includes(role) && !group.roles.includes(r as any)) return false;
         }
         return isStaff(role);
       });

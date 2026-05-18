@@ -38,7 +38,7 @@ export function Step1BasicInfo({
       className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 origin-top"
       style={{ zoom: "0.80" }}
     >
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         {/* Branch Section */}
         <BranchSection branches={branches} />
 
@@ -47,12 +47,24 @@ export function Step1BasicInfo({
  
         {/* Property Type Section */}
         <PropertyTypeSection
-          onPropertyTypeSelect={() => setIsQuickInfoOpen(true)}
+          onPropertyTypeSelect={() => {
+            setIsQuickInfoOpen(true);
+            setTimeout(() => {
+              const el = document.getElementById("quick-info-section");
+              if (el) {
+                el.scrollIntoView({ behavior: "smooth", block: "start" });
+                const firstInput = el.querySelector("input");
+                if (firstInput) {
+                  firstInput.focus({ preventScroll: true });
+                }
+              }
+            }, 100);
+          }}
         />
  
         {/* Quick Info Section */}
         {isQuickInfoOpen && (
-          <div className="pt-2 col-span-1 md:col-span-1 lg:col-span-3">
+          <div id="quick-info-section" className="pt-2 col-span-1 md:col-span-2 lg:col-span-2 scroll-mt-6">
             <QuickInfoSection
               popularAreas={popularAreas}
               isAddingArea={isAddingArea}

@@ -213,16 +213,28 @@ export function PropertyForm({
             action: {
               label: "กู้คืน",
               onClick: () => {
-                form.reset(draft.values);
+                const currentBranchId = form.getValues("branch_id");
+                form.reset({
+                  ...draft.values,
+                  branch_id: currentBranchId || draft.values.branch_id,
+                  currency: draft.values.currency || "THB",
+                });
                 toast.success("กู้คืนข้อมูลเรียบร้อย");
               },
             },
-            duration: 8000,
+            cancel: {
+              label: "ลบทิ้ง",
+              onClick: () => {
+                clearDraft();
+                toast.info("ลบแบบร่างเรียบร้อย");
+              },
+            },
+            duration: 10000,
           },
         );
       }
     }
-  }, [mode, checkAndRestoreDraft, form]);
+  }, [mode, checkAndRestoreDraft, form, clearDraft]);
 
   // Initialize Quick Info for edit mode
   React.useEffect(() => {
@@ -436,6 +448,7 @@ export function PropertyForm({
 
       if (result.success) {
         toast.success("เพิ่มทรัพย์ใหม่สำเร็จ (ยืนยันข้อมูลซ้ำ)");
+        clearDraft();
         setPersistImages(true);
         
         // Match the same logic as onSubmit to prevent clearing in edit mode (though duplicate is mostly create-only)
