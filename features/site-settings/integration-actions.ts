@@ -39,7 +39,7 @@ export async function disconnectIntegrationAction(
     }
 
     if (keysToRemove.length > 0) {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from("site_settings")
         .delete()
         .in("key", keysToRemove);

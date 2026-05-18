@@ -14,7 +14,7 @@ import {
   updateTenantAction,
   createTenantInvitationAction,
 } from "@/lib/actions/tenant-management";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 import { toast } from "sonner";
 import { useTenant } from "@/components/providers/TenantProvider";
 import { SettingsHeader } from "@/components/settings/SettingsHeader";
@@ -56,22 +56,40 @@ type TenantBranch = {
   name: string;
   slug: string;
   logo_url: string | null;
-  created_at: string;
+  created_at: string | null;
   memberCount: number;
 };
-type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-type TenantMember = {
+
+// V3 Identity Engine
+type IdentityV3 = {
   id: string;
-  profile_id: string;
-  role: string | null;
-  profiles: {
+  display_name: string | null;
+  full_name: string | null;
+  nickname: string | null;
+  email: string | null;
+  phone: string | null;
+  avatar_url: string | null;
+  role: string;
+};
+
+type TenantMember = {
+  id: string; // tenant_member_id
+  identity_id: string;
+  role: string;
+  joined_at: string | null;
+  identity: {
     id: string;
+    display_name: string | null;
     full_name: string | null;
+    nickname: string | null;
     email: string | null;
+    phone: string | null;
     avatar_url: string | null;
+    is_active: boolean | null;
+    line_id?: string | null;
+    whatsapp_user_id?: string | null;
+    wechat_user_id?: string | null;
   } | null;
-  created_at?: string;
-  tenant_id?: string;
 };
 
 type TenantInvitation = {
@@ -100,7 +118,7 @@ export default function BranchDetailPage({
   const [branches, setBranches] = useState<TenantBranch[]>([]);
   const [members, setMembers] = useState<TenantMember[]>([]);
   const [invitations, setInvitations] = useState<TenantInvitation[]>([]);
-  const [allProfiles, setAllProfiles] = useState<Profile[]>([]);
+  const [allProfiles, setAllProfiles] = useState<IdentityV3[]>([]);
   const [stats, setStats] = useState({ memberCount: 0, inviteCount: 0, propertyCount: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -141,9 +159,9 @@ export default function BranchDetailPage({
         setBranches(bRes.data.filter(b => b.id !== id));
       }
       if (sRes.data) setStats(sRes.data);
-      if (mRes.data) setMembers(mRes.data as TenantMember[]);
-      if (pRes.data) setAllProfiles(pRes.data as Profile[]);
-      if (iRes.data) setInvitations(iRes.data as TenantInvitation[]);
+      if (mRes.data) setMembers(mRes.data as unknown as TenantMember[]);
+      if (pRes.data) setAllProfiles(pRes.data as unknown as IdentityV3[]);
+      if (iRes.data) setInvitations(iRes.data as unknown as TenantInvitation[]);
       
     } catch (err) {
       toast.error("ไม่สามารถโหลดข้อมูลได้ กรุณาลองใหม่อีกครั้ง");
@@ -221,7 +239,7 @@ export default function BranchDetailPage({
 
     if (type === "MEMBER") {
       const member = data as TenantMember;
-      const res = await removeTenantMemberAction(id, member.profile_id);
+      const res = await removeTenantMemberAction(id, member.identity_id);
       if (res.success) {
         toast.success("ลบสมาชิกเรียบร้อย");
         fetchData();
@@ -281,7 +299,14 @@ export default function BranchDetailPage({
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
             <div className="lg:col-span-1">
-              <BranchInfoSidebar branch={branch} onEdit={() => setEditOpen(true)} />
+              <BranchInfoSidebar 
+                branch={branch ? {
+                  name: branch.name,
+                  slug: branch.slug,
+                  created_at: branch.created_at || new Date().toISOString()
+                } : null} 
+                onEdit={() => setEditOpen(true)} 
+              />
             </div>
 
             <div className="lg:col-span-2 space-y-10">
@@ -289,10 +314,10 @@ export default function BranchDetailPage({
                 members={members} 
                 onTransfer={(m) => {
                   setTransferMember({ 
-                    profileId: m.profile_id, 
+                    profileId: m.identity_id, 
                     role: m.role || "AGENT", 
-                    name: m.profiles?.full_name || "ไม่ระบุชื่อ", 
-                    avatarUrl: m.profiles?.avatar_url 
+                    name: m.identity?.display_name || m.identity?.full_name || "ไม่ระบุชื่อ", 
+                    avatarUrl: m.identity?.avatar_url
                   });
                   setTransferOpen(true);
                 }}
@@ -313,7 +338,7 @@ export default function BranchDetailPage({
         open={addOpen} 
         onOpenChange={setAddOpen} 
         allProfiles={allProfiles} 
-        currentMembers={members}
+        currentMembers={members.map(m => ({ identity_id: m.identity_id }))}
         branchName={branch?.name || ""}
         onAdd={handleAddMember}
       />
@@ -342,7 +367,7 @@ export default function BranchDetailPage({
         title={deleteConfirm.type === "MEMBER" ? "ลบพนักงานออกจากสาขา" : "ยกเลิกคำเชิญพนักงาน"}
         description={
             deleteConfirm.type === "MEMBER" 
-            ? `คุณแน่ใจหรือไม่ว่าต้องการลบ ${(deleteConfirm.data as TenantMember)?.profiles?.full_name} ออกจากสาขานี้?` 
+            ? `คุณแน่ใจหรือไม่ว่าต้องการลบ ${(deleteConfirm.data as TenantMember)?.identity?.display_name || (deleteConfirm.data as TenantMember)?.identity?.full_name} ออกจากสาขานี้?` 
             : `คุณแน่ใจหรือไม่ว่าต้องการยกเลิกคำเชิญของ ${(deleteConfirm.data as TenantInvitation)?.email}?`
         }
         onConfirm={handleConfirmDelete}

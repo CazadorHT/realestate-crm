@@ -2,8 +2,7 @@
 
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
- import Link from "next/link";
-import { Edit, Eye, Loader2 } from "lucide-react";
+import { Copy, Edit, Eye, Layers, Loader2, MoreVertical, ShieldCheck, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { QuickShareButton } from "@/features/properties/components/QuickShareButton";
@@ -11,38 +10,68 @@ import { FacebookPostButton } from "@/features/properties/components/FacebookPos
 import { InstagramPostButton } from "@/features/properties/components/InstagramPostButton";
 import { LinePostButton } from "@/features/properties/components/LinePostButton";
 import { TikTokPostButton } from "@/features/properties/components/TikTokPostButton";
-import type { PropertyImage } from "@/features/properties/types";
+import { type Language } from "@/lib/i18n";
+import { Badge } from "@/components/ui/badge";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import type { PropertyWithDetails, PropertyImageV3 } from "@/features/properties/types/v3";
+import { cn } from "@/lib/utils";
+import {toast} from "sonner";
+import { m } from "framer-motion";
 
 interface PropertyAdminHeaderProps {
-  property: {
-    id: string;
-    title: string;
-    slug?: string | null;
-  };
-  images: PropertyImage[];
+  property: PropertyWithDetails;
+  images: PropertyImageV3[];
+  language?: Language;
 }
 
- export function PropertyAdminHeader({ property, images }: PropertyAdminHeaderProps) {
+export function PropertyAdminHeader({ property, images, language = "th" }: PropertyAdminHeaderProps) {
   const router = useRouter();
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
+
+  const coverImage = images.find((img) => img.is_cover)?.url || images[0]?.url;
+
   return (
-    <>
-      {/* 1. Admin Breadcrumb & Edit Button */}
-      <div className="pt-6 px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4">
-        <div className="flex items-center gap-4">
+    <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-xs">
+      {/* 1. Command Bar: Title, ID & Primary Actions */}
+      <div className="px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto py-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <m.div 
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex flex-col gap-1"
+        >
           <Breadcrumb
             backHref={`/protected/properties`}
             items={[
               { label: "โครงการและทรัพย์สิน", href: "/protected/properties" },
-              { label: property.title || "รายละเอียด" },
+              { label: "จัดการทรัพย์สิน" },
             ]}
           />
-        </div>
-        <div className="flex items-center gap-3 lg:gap-4">
-           <Button
-            variant="outline"
+          <div className="flex items-center gap-3 mt-1">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight max-w-[300px] sm:max-w-[500px] truncate">
+              {property.title || "ไม่มีชื่อทรัพย์"}
+            </h1>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="bg-slate-100 text-slate-500 font-mono text-[10px] px-2 py-0">
+                ID: {property.id.slice(0, 8).toUpperCase()}
+              </Badge>
+              {property.verified && (
+                <ShieldCheck className="h-4 w-4 text-blue-500" />
+              )}
+            </div>
+          </div>
+        </m.div>
+
+        <div className="flex items-center gap-2 lg:gap-3">
+          <Button
+            variant="ghost"
             size="sm"
-            className="flex-1 lg:flex-none rounded-full bg-white text-slate-600 hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+            className="flex-1 md:flex-none rounded-xl text-slate-500 hover:bg-slate-100 transition-all duration-200 h-10 px-4 font-bold"
             onClick={() => {
               setNavigatingId("view");
               window.open(`/properties/${property.slug || property.id}`, "_blank");
@@ -55,13 +84,14 @@ interface PropertyAdminHeaderProps {
             ) : (
               <Eye className="h-4 w-4 mr-2" />
             )}
-            ดูหน้าเว็บ
+            <span className="hidden sm:inline">ดูหน้าเว็บ</span>
+            <span className="sm:hidden">พรีวิว</span>
           </Button>
 
-           <Button
-            variant="outline"
+          <Button
+            variant="default"
             size="sm"
-            className="flex-1 lg:flex-none rounded-full bg-white text-slate-600 hover:bg-blue-500 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
+            className="flex-1 md:flex-none rounded-xl bg-slate-900 hover:bg-blue-600 text-white transition-all duration-300 shadow-lg shadow-slate-200/50 h-10 px-5 font-bold"
             onClick={() => {
               setNavigatingId("edit");
               router.push(`/protected/properties/${property.id}/edit`);
@@ -73,50 +103,79 @@ interface PropertyAdminHeaderProps {
             ) : (
               <Edit className="h-4 w-4 mr-2" />
             )}
-            แก้ไข
+            แก้ไขทรัพย์สิน
           </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-slate-100 transition-colors">
+                <MoreVertical className="h-5 w-5 text-slate-400" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-xl border-slate-100">
+              <DropdownMenuItem 
+                className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success("คัดลอกลิงก์เรียบร้อย");
+                }}
+              >
+                <Copy className="h-4 w-4 text-slate-400" /> คัดลอกลิงก์ภายใน
+              </DropdownMenuItem>
+              <DropdownMenuItem className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer">
+                <Layers className="h-4 w-4 text-slate-400" /> สร้างรายการที่คล้ายกัน
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-slate-50" />
+              <DropdownMenuItem className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50">
+                <Trash2 className="h-4 w-4" /> ลบทรัพย์สินนี้
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-      <div className="lg:gap-4 flex items-center justify-end px-4 sm:px-6 lg:px-8 border-t pt-4 border-slate-100 gap-2 flex-wrap">
-        <QuickShareButton
-          property={
-            {
-              ...(property as any),
-              cover_image_url:
-                images.find((img) => img.is_cover)?.image_url ||
-                images[0]?.image_url,
-            }
-          }
-          className="flex-1 lg:flex-none h-10 px-6"
-        />
-        <FacebookPostButton
-          propertyId={property.id}
-          propertyTitle={property.title}
-          variant="outline"
-          className="flex-1 lg:flex-none rounded-full bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
-        />
 
-        <InstagramPostButton
-          propertyId={property.id}
-          propertyTitle={property.title}
-          variant="outline"
-          className="flex-1 lg:flex-none rounded-full bg-pink-50 text-pink-600 border-pink-100 hover:bg-pink-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
-        />
+      {/* 2. Social Action Bar: Optimized for Multi-channel */}
+      <div className="bg-slate-50/50 py-3 border-t border-slate-100/50">
+        <div className="px-4 sm:px-6 lg:px-8 max-w-screen-2xl mx-auto flex items-center justify-between gap-4 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-3">
+            <QuickShareButton
+              property={{
+                ...property,
+                title: property.title || "-",
+                cover_image_url: coverImage || undefined,
+              }}
+              className="h-9 px-5 rounded-full shadow-sm hover:shadow-md transition-all font-bold text-xs"
+            />
+            <div className="w-px h-4 bg-slate-200 mx-1 hidden sm:block" />
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest hidden lg:block">Social Posting</p>
+          </div>
 
-        <LinePostButton
-          propertyId={property.id}
-          propertyTitle={property.title}
-          variant="outline"
-          className="flex-1 lg:flex-none rounded-full bg-green-50 text-green-600 border-green-100 hover:bg-green-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
-        />
-
-        <TikTokPostButton
-          propertyId={property.id}
-          propertyTitle={property.title}
-          variant="outline"
-          className="flex-1 lg:flex-none rounded-full bg-slate-50 text-slate-900 border-slate-200 hover:bg-slate-900 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md h-10 px-4"
-        />
+          <m.div 
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2"
+          >
+            {[
+              { component: FacebookPostButton, color: "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-600" },
+              { component: InstagramPostButton, color: "bg-pink-50 text-pink-600 border-pink-100 hover:bg-pink-600" },
+              { component: LinePostButton, color: "bg-green-50 text-green-600 border-green-100 hover:bg-green-600" },
+              { component: TikTokPostButton, color: "bg-slate-900 text-white border-slate-800 hover:bg-black" }
+            ].map((btn, idx) => (
+              <m.div key={idx} whileHover={{ y: -2 }} whileTap={{ scale: 0.95 }}>
+                <btn.component
+                  propertyId={property.id}
+                  propertyTitle={property.title || ""}
+                  variant="outline"
+                  className={cn(
+                    "rounded-full transition-all duration-300 shadow-none hover:text-white h-9 px-3.5 sm:px-4 text-[10px] sm:text-xs font-bold",
+                    btn.color
+                  )}
+                />
+              </m.div>
+            ))}
+          </m.div>
+        </div>
       </div>
-    </>
+    </div>
   );
 }

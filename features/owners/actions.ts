@@ -47,9 +47,10 @@ export async function getOwnersAction(allBranches = false) {
     assertStaff(ctx.role);
 
     let query = ctx.supabase
-      .from("owners")
-      .select("id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by")
-      .order("full_name");
+      .from("identities_v3")
+      .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
+      .eq("category", 2)
+      .order("display_name");
 
     const config = await getSystemConfig();
     const isMultiTenant = config.multi_tenant_enabled;
@@ -61,14 +62,8 @@ export async function getOwnersAction(allBranches = false) {
     } else if (ctx.tenantId && ctx.tenantId !== "ALL") {
       query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);
     } else if (isMultiTenant && !allBranches) {
-      // Defensive: if multi-tenant is on but no tenantId and not allBranches, show nothing or just global
       query = query.is("tenant_id", null);
     }
-
-    // Allow all authenticated users (Agents/Admins) to see all owners
-    // if (ctx.role !== "ADMIN") {
-    //   query = query.eq("created_by", ctx.user.id);
-    // }
 
     const { data: owners, error } = await query;
 
@@ -77,16 +72,24 @@ export async function getOwnersAction(allBranches = false) {
       return [];
     }
 
-    return (owners ?? []).map((o) => ({
-      ...o,
-      full_name: decrypt(o.full_name) || "Unknown",
-      phone: decrypt(o.phone),
-      line_id: decrypt(o.line_id),
-      facebook_url: decrypt(o.facebook_url),
-      other_contact: decrypt(o.other_contact),
-    }));
+    return (owners ?? []).map((o: any) => {
+      const social = (o.social_links as Record<string, any>) || {};
+      return {
+        id: o.id,
+        full_name: decrypt(o.display_name) || o.display_name || "Unknown",
+        phone: decrypt(o.phone) || o.phone,
+        line_id: decrypt(o.line_id) || o.line_id,
+        facebook_url: decrypt(social.facebook_url) || social.facebook_url,
+        other_contact: decrypt(social.other_contact) || social.other_contact,
+        company_name: social.company_name,
+        owner_type: social.owner_type,
+        created_at: o.created_at,
+        updated_at: o.updated_at,
+        tenant_id: o.tenant_id,
+        created_by: social.created_by,
+      };
+    });
   } catch (err) {
-    // ถ้าไม่ได้ login ให้ return [] ไปก่อน (เพราะหน้า protected ปกติก็กันไว้แล้ว)
     console.error("getOwnersAction auth error:", err);
     return [];
   }
@@ -100,9 +103,10 @@ export async function getOwnerByIdAction(id: string) {
   const isMultiTenant = config.multi_tenant_enabled;
 
   let query = ctx.supabase
-    .from("owners")
-    .select("id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by")
-    .eq("id", id);
+    .from("identities_v3")
+    .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
+    .eq("id", id)
+    .eq("category", 2);
 
   if (isMultiTenant && ctx.tenantId) {
     query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);
@@ -120,13 +124,21 @@ export async function getOwnerByIdAction(id: string) {
     role: ctx.role,
   });
 
+  const social = (owner.social_links as Record<string, any>) || {};
+
   return {
-    ...owner,
-    full_name: decrypt(owner.full_name) || "Unknown",
-    phone: decrypt(owner.phone),
-    line_id: decrypt(owner.line_id),
-    facebook_url: decrypt(owner.facebook_url),
-    other_contact: decrypt(owner.other_contact),
+    id: owner.id,
+    full_name: decrypt(owner.display_name) || owner.display_name || "Unknown",
+    phone: decrypt(owner.phone) || owner.phone,
+    line_id: decrypt(owner.line_id) || owner.line_id,
+    facebook_url: decrypt(social.facebook_url) || social.facebook_url,
+    other_contact: decrypt(social.other_contact) || social.other_contact,
+    company_name: social.company_name,
+    owner_type: social.owner_type,
+    created_at: owner.created_at,
+    updated_at: owner.updated_at,
+    tenant_id: owner.tenant_id,
+    created_by: social.created_by,
   };
 }
 
@@ -136,25 +148,31 @@ export async function createOwnerAction(input: CreateOwnerInput) {
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
     
-    // 🛡️ Fallback for tenantId if not in context
     let targetTenantId = ctx.tenantId;
     if (!targetTenantId) {
       const config = await getSystemConfig();
       targetTenantId = config.default_tenant_id ?? undefined;
     }
 
+    const socialLinks = {
+      facebook_url: encrypt(validated.facebook_url),
+      other_contact: encrypt(validated.other_contact),
+      company_name: validated.company_name,
+      owner_type: validated.owner_type,
+      created_by: ctx.user.id,
+      full_name_hash: generateBlindIndex(validated.full_name),
+      phone_hash: generateBlindIndex(validated.phone),
+    };
+
     const { data: owner, error } = await ctx.supabase
-      .from("owners")
+      .from("identities_v3")
       .insert({
-        ...validated,
-        full_name: encrypt(validated.full_name) || "Unknown",
-        full_name_hash: generateBlindIndex(validated.full_name),
+        display_name: encrypt(validated.full_name) || "Unknown",
         phone: encrypt(validated.phone),
-        phone_hash: generateBlindIndex(validated.phone),
         line_id: encrypt(validated.line_id),
-        facebook_url: encrypt(validated.facebook_url),
-        other_contact: encrypt(validated.other_contact),
-        created_by: ctx.user.id,
+        category: 2,
+        role: "OWNER",
+        social_links: socialLinks,
         tenant_id: targetTenantId,
         updated_at: new Date().toISOString(),
       })
@@ -165,7 +183,7 @@ export async function createOwnerAction(input: CreateOwnerInput) {
 
     await logAudit(ctx, {
       action: "owner.create",
-      entity: "owners",
+      entity: "identities_v3",
       entityId: owner.id,
       metadata: {},
     });
@@ -192,9 +210,10 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
     const { data: existing, error: findError } = await ctx.supabase
-      .from("owners")
-      .select("id, tenant_id")
+      .from("identities_v3")
+      .select("id, tenant_id, social_links")
       .eq("id", id)
+      .eq("category", 2)
       .single();
 
     if (findError || !existing) {
@@ -206,17 +225,24 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
       return { success: false, message: "คุณไม่มีสิทธิ์แก้ไขข้อมูลของสาขาอื่น" };
     }
 
+    const existingSocial = (existing.social_links as Record<string, any>) || {};
+    const socialLinks = {
+      ...existingSocial,
+      facebook_url: encrypt(validated.facebook_url),
+      other_contact: encrypt(validated.other_contact),
+      company_name: validated.company_name,
+      owner_type: validated.owner_type,
+      full_name_hash: generateBlindIndex(validated.full_name),
+      phone_hash: generateBlindIndex(validated.phone),
+    };
+
     const { error } = await ctx.supabase
-      .from("owners")
+      .from("identities_v3")
       .update({
-        ...validated,
-        full_name: encrypt(validated.full_name) || "Unknown",
-        full_name_hash: generateBlindIndex(validated.full_name),
+        display_name: encrypt(validated.full_name) || "Unknown",
         phone: encrypt(validated.phone),
-        phone_hash: generateBlindIndex(validated.phone),
         line_id: encrypt(validated.line_id),
-        facebook_url: encrypt(validated.facebook_url),
-        other_contact: encrypt(validated.other_contact),
+        social_links: socialLinks,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
@@ -226,7 +252,7 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
 
     await logAudit(ctx, {
       action: "owner.update",
-      entity: "owners",
+      entity: "identities_v3",
       entityId: id,
       metadata: {},
     });
@@ -253,9 +279,10 @@ export async function deleteOwnerAction(id: string) {
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
     const { data: existing, error: findError } = await ctx.supabase
-      .from("owners")
+      .from("identities_v3")
       .select("id, tenant_id")
       .eq("id", id)
+      .eq("category", 2)
       .single();
 
     if (findError || !existing) {
@@ -268,7 +295,7 @@ export async function deleteOwnerAction(id: string) {
     }
 
     const { count, error: countErr } = await ctx.supabase
-      .from("properties")
+      .from("properties_core")
       .select("id", { count: "exact", head: true })
       .eq("owner_id", id);
 
@@ -281,7 +308,7 @@ export async function deleteOwnerAction(id: string) {
     }
 
     const { error } = await ctx.supabase
-      .from("owners")
+      .from("identities_v3")
       .delete()
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId);
@@ -290,7 +317,7 @@ export async function deleteOwnerAction(id: string) {
 
     await logAudit(ctx, {
       action: "owner.delete",
-      entity: "owners",
+      entity: "identities_v3",
       entityId: id,
       metadata: {},
     });
@@ -313,22 +340,24 @@ export async function getOwnersWithPropertyCountAction() {
   const isMultiTenant = config.multi_tenant_enabled;
 
   let query = ctx.supabase
-    .from("owners")
-    .select("id, full_name, phone, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by")
-    .order("full_name");
+    .from("identities_v3")
+    .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
+    .eq("category", 2)
+    .order("display_name");
+    
   if (isMultiTenant && ctx.tenantId && ctx.tenantId !== "ALL") {
     query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);
   }
 
-  const { data: owners, error: ownersError } = await query;
+  const { data: ownersRaw, error: ownersError } = await query;
 
-  if (ownersError || !owners) {
+  if (ownersError || !ownersRaw) {
     console.error("Error fetching owners:", ownersError);
     return [];
   }
 
   let countsQuery = ctx.supabase
-    .from("properties")
+    .from("properties_core")
     .select("owner_id");
 
   if (isMultiTenant && ctx.tenantId && ctx.tenantId !== "ALL") {
@@ -337,27 +366,31 @@ export async function getOwnersWithPropertyCountAction() {
 
   const { data: propertyCounts, error: countsError } = await countsQuery;
 
+  const decryptedOwners = ownersRaw.map((o: any) => {
+    const social = (o.social_links as Record<string, any>) || {};
+    return {
+      id: o.id,
+      full_name: decrypt(o.display_name) || o.display_name || "Unknown",
+      phone: decrypt(o.phone) || o.phone,
+      line_id: decrypt(o.line_id) || o.line_id,
+      facebook_url: decrypt(social.facebook_url) || social.facebook_url,
+      other_contact: decrypt(social.other_contact) || social.other_contact,
+      company_name: social.company_name,
+      owner_type: social.owner_type,
+      created_at: o.created_at,
+      updated_at: o.updated_at,
+      tenant_id: o.tenant_id,
+      created_by: social.created_by,
+    };
+  });
+
   if (countsError) {
     console.error("Error fetching property counts:", countsError);
-    return owners.map((o) => ({
+    return decryptedOwners.map((o) => ({
       ...o,
-      full_name: decrypt(o.full_name) || "Unknown",
-      phone: decrypt(o.phone),
-      line_id: decrypt(o.line_id),
-      facebook_url: decrypt(o.facebook_url),
-      other_contact: decrypt(o.other_contact),
       property_count: 0,
     }));
   }
-
-  const decryptedOwners = owners.map((o) => ({
-    ...o,
-    full_name: decrypt(o.full_name) || "Unknown",
-    phone: decrypt(o.phone),
-    line_id: decrypt(o.line_id),
-    facebook_url: decrypt(o.facebook_url),
-    other_contact: decrypt(o.other_contact),
-  }));
 
   return calculatePropertyCounts(decryptedOwners, propertyCounts ?? []);
 }

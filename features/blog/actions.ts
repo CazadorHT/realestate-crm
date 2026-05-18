@@ -12,7 +12,7 @@ import { z } from "zod";
 import { generateBlogPost, refineBlogContent } from "./services/ai-service";
 import { uploadBlogImage } from "./services/storage-service";
 import { generateBlogSlug, ensureUniqueSlug, generateBlogJsonLd } from "./blog-utils";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 import { v4 as uuidv4 } from "uuid";
 import { createBackgroundTaskAction } from "@/lib/background-tasks/actions";
 import { inngest } from "@/lib/inngest/client";
@@ -90,33 +90,30 @@ export async function createBlogPostAction(
     // 🛡️ HARDENING: AI Draft Enforcement
     const isPublishedFinal = !!validated.is_published;
 
-    const { error, data } = await supabase.from("blog_posts").insert({
-      title: validated.title,
-      title_en: validated.title_en || null,
-      title_cn: validated.title_cn || null,
-      title_ru: validated.title_ru || null,
+    const { error, data } = await supabase.from("cms_content_v3").insert({
+      content_type: "BLOG",
+      title: { th: validated.title, en: validated.title_en || null, cn: validated.title_cn || null, ru: validated.title_ru || null },
       slug: finalSlug,
-      content: validated.content || "",
-      content_en: validated.content_en || null,
-      content_cn: validated.content_cn || null,
-      content_ru: validated.content_ru || null,
-      excerpt: validated.excerpt || "",
-      excerpt_en: validated.excerpt_en || null,
-      excerpt_cn: validated.excerpt_cn || null,
-      excerpt_ru: validated.excerpt_ru || null,
-      category: validated.category,
+      content: { th: validated.content || "", en: validated.content_en || null, cn: validated.content_cn || null, ru: validated.content_ru || null },
       cover_image: validated.cover_image || null,
-      is_published: isPublishedFinal,
-      published_at:
-        validated.published_at ||
-        (isPublishedFinal ? new Date().toISOString() : null),
-      tags: tagsArray,
+      status: isPublishedFinal ? "PUBLISHED" : "DRAFT",
+      published_at: validated.published_at || (isPublishedFinal ? new Date().toISOString() : null),
       author_id, // 🏗️ RELATIONAL
-      structured_data: structuredData, // ⚡ AUTOMATED
-      requires_ai_review: validated.requires_ai_review,
+      tenant_id: (user as any).tenant_id || (user as any).tenantId || "ALL",
       seo_score: validated.seo_score || null,
-      seo_feedback: validated.seo_feedback || null,
-      social_snippets: validated.social_snippets || null,
+      meta_data: {
+        excerpt: validated.excerpt || "",
+        excerpt_en: validated.excerpt_en || null,
+        excerpt_cn: validated.excerpt_cn || null,
+        excerpt_ru: validated.excerpt_ru || null,
+        category: validated.category,
+        tags: tagsArray,
+        structured_data: structuredData, // ⚡ AUTOMATED
+        requires_ai_review: validated.requires_ai_review,
+        seo_feedback: validated.seo_feedback || null,
+        social_snippets: validated.social_snippets || null,
+        view_count: 0
+      }
     }).select("id, slug").single();
 
     if (error) throw error;
@@ -207,35 +204,30 @@ export async function updateBlogPostAction(
     const isPublishedFinal = !!validated.is_published;
 
     const { error } = await supabase
-      .from("blog_posts")
+      .from("cms_content_v3")
       .update({
-        title: validated.title,
-        title_en: validated.title_en,
-        title_cn: validated.title_cn,
-        title_ru: validated.title_ru,
+        title: { th: validated.title, en: validated.title_en || null, cn: validated.title_cn || null, ru: validated.title_ru || null },
         slug: finalSlug,
-        content: validated.content,
-        content_en: validated.content_en,
-        content_cn: validated.content_cn,
-        content_ru: validated.content_ru,
-        excerpt: validated.excerpt,
-        excerpt_en: validated.excerpt_en,
-        excerpt_cn: validated.excerpt_cn,
-        excerpt_ru: validated.excerpt_ru,
-        category: validated.category,
-        cover_image: validated.cover_image,
-        is_published: isPublishedFinal,
-        published_at:
-          validated.published_at ||
-          (isPublishedFinal ? new Date().toISOString() : validated.published_at),
-        tags: tagsArray,
-        structured_data: structuredData,
-        requires_ai_review: validated.requires_ai_review,
+        content: { th: validated.content || "", en: validated.content_en || null, cn: validated.content_cn || null, ru: validated.content_ru || null },
+        cover_image: validated.cover_image || null,
+        status: isPublishedFinal ? "PUBLISHED" : "DRAFT",
+        published_at: validated.published_at || (isPublishedFinal ? new Date().toISOString() : validated.published_at),
         seo_score: validated.seo_score || null,
-        seo_feedback: validated.seo_feedback || null,
-        social_snippets: validated.social_snippets || null,
         updated_at: new Date().toISOString(),
+        meta_data: {
+          excerpt: validated.excerpt || "",
+          excerpt_en: validated.excerpt_en || null,
+          excerpt_cn: validated.excerpt_cn || null,
+          excerpt_ru: validated.excerpt_ru || null,
+          category: validated.category,
+          tags: tagsArray,
+          structured_data: structuredData,
+          requires_ai_review: validated.requires_ai_review,
+          seo_feedback: validated.seo_feedback || null,
+          social_snippets: validated.social_snippets || null
+        }
       })
+      .eq("content_type", "BLOG")
       .eq("id", id);
 
     if (error) throw error;
@@ -280,11 +272,12 @@ export async function deleteBlogPostAction(id: string): Promise<ActionResponse> 
     }
 
     const { error } = await supabase
-      .from("blog_posts")
+      .from("cms_content_v3")
       .update({ 
-        deleted_at: new Date().toISOString(),
-        is_published: false // Unpublish when moving to trash
+        status: "TRASH",
+        updated_at: new Date().toISOString()
       })
+      .eq("content_type", "BLOG")
       .eq("id", id);
 
     if (error) throw error;
@@ -314,17 +307,67 @@ export async function getDeletedBlogPostsAction(): Promise<ActionResponse<BlogPo
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from("blog_posts")
-      .select("id, title, title_en, title_cn, title_ru, slug, content, content_en, content_cn, content_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, category, cover_image, is_published, published_at, tags, author_id, view_count, created_at, updated_at, deleted_at, profiles(full_name, avatar_url)")
-      .not("deleted_at", "is", null)
-      .order("deleted_at", { ascending: false });
+      .from("cms_content_v3")
+      .select("id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data")
+      .eq("content_type", "BLOG")
+      .eq("status", "TRASH")
+      .order("updated_at", { ascending: false });
 
     if (error) throw error;
+
+    // 🏗️ Map to legacy BlogPost shape for UI compatibility
+    const authorIds = Array.from(new Set((data || []).map((r: any) => r.author_id).filter(Boolean))) as string[];
+    let profilesMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
+    if (authorIds.length > 0) {
+      const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", authorIds);
+      (profs || []).forEach((p: any) => {
+        profilesMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
+      });
+    }
+
+    const mappedData = (data || []).map((row: any) => {
+      const titleObj = (row.title || {}) as Record<string, any>;
+      const contentObj = (row.content || {}) as Record<string, any>;
+      const metaObj = (row.meta_data || {}) as Record<string, any>;
+
+      return {
+        id: row.id,
+        slug: row.slug,
+        title: titleObj.th || "",
+        title_en: titleObj.en || null,
+        title_cn: titleObj.cn || null,
+        title_ru: titleObj.ru || null,
+        content: contentObj.th || "",
+        content_en: contentObj.en || null,
+        content_cn: contentObj.cn || null,
+        content_ru: contentObj.ru || null,
+        excerpt: metaObj.excerpt || "",
+        excerpt_en: metaObj.excerpt_en || null,
+        excerpt_cn: metaObj.excerpt_cn || null,
+        excerpt_ru: metaObj.excerpt_ru || null,
+        category: metaObj.category || null,
+        cover_image: row.cover_image || null,
+        is_published: row.status === "PUBLISHED",
+        published_at: row.published_at || null,
+        tags: metaObj.tags || [],
+        author_id: row.author_id,
+        view_count: metaObj.view_count || 0,
+        created_at: row.created_at || null,
+        updated_at: row.updated_at || null,
+        deleted_at: row.status === "TRASH" ? row.updated_at : null,
+        requires_ai_review: !!metaObj.requires_ai_review,
+        seo_score: row.seo_score || null,
+        seo_feedback: metaObj.seo_feedback || null,
+        social_snippets: metaObj.social_snippets || null,
+        structured_data: metaObj.structured_data || null,
+        profiles: row.author_id ? (profilesMap[row.author_id] || null) : null
+      } as BlogPost;
+    });
 
     return {
       success: true,
       message: "ดึงข้อมูลถังขยะสำเร็จ",
-      data
+      data: mappedData
     };
   } catch (error: unknown) {
     return {
@@ -347,10 +390,12 @@ export async function restoreBlogPostAction(id: string): Promise<ActionResponse>
     }
 
     const { error } = await supabase
-      .from("blog_posts")
+      .from("cms_content_v3")
       .update({ 
-        deleted_at: null,
+        status: "DRAFT",
+        updated_at: new Date().toISOString()
       })
+      .eq("content_type", "BLOG")
       .eq("id", id);
 
     if (error) throw error;
@@ -388,8 +433,9 @@ export async function permanentDeleteBlogPostAction(id: string): Promise<ActionR
     
     // 🛡️ Step 2: Delete the actual blog post
     const { error, count } = await supabase
-      .from("blog_posts")
+      .from("cms_content_v3")
       .delete({ count: 'exact' }) // 👈 ขอเช็คจำนวนแถวที่ลบได้
+      .eq("content_type", "BLOG")
       .eq("id", id);
 
     if (error) throw error;
@@ -442,8 +488,9 @@ export async function bulkPermanentDeleteBlogAction(ids: string[]): Promise<Acti
     
     // 🛡️ Step 2: Delete the actual blog posts
     const { error, count } = await supabase
-      .from("blog_posts")
+      .from("cms_content_v3")
       .delete({ count: 'exact' })
+      .eq("content_type", "BLOG")
       .in("id", ids);
 
     if (error) throw error;
@@ -484,8 +531,8 @@ export async function bulkUpdateBlogStatusAction(
       return { success: false, message: "Unauthorized" };
     }
 
-    const updateData: { is_published: boolean; updated_at: string; published_at?: string } = {
-      is_published: isPublished,
+    const updateData: { status: string; updated_at: string; published_at?: string } = {
+      status: isPublished ? "PUBLISHED" : "DRAFT",
       updated_at: new Date().toISOString(),
     };
 
@@ -494,10 +541,11 @@ export async function bulkUpdateBlogStatusAction(
     }
 
     const { error } = await supabase
-      .from("blog_posts")
+      .from("cms_content_v3")
       .update(updateData)
+      .eq("content_type", "BLOG")
       .in("id", ids)
-      .is("deleted_at", null);
+      .neq("status", "TRASH");
 
     if (error) throw error;
 
@@ -599,20 +647,34 @@ export async function uploadBlogImageAction(
 /**
  * Fetches all blog categories.
  */
-export async function getCategoriesAction(): Promise<ActionResponse<Database["public"]["Tables"]["blog_categories"]["Row"][]>> {
+export async function getCategoriesAction(): Promise<ActionResponse<any[]>> {
   try {
     const supabase = await createClient();
     const { data, error } = await supabase
-      .from("blog_categories")
-      .select("id, name, name_en, name_cn, name_ru, slug, created_at")
-      .order("name", { ascending: true });
+      .from("cms_content_v3")
+      .select("id, slug, title, created_at")
+      .eq("content_type", "CATEGORY")
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
+
+    const mappedData = (data || []).map((row: any) => {
+      const titleObj = (row.title || {}) as Record<string, any>;
+      return {
+        id: row.id,
+        name: titleObj.th || "",
+        name_en: titleObj.en || null,
+        name_cn: titleObj.cn || null,
+        name_ru: titleObj.ru || null,
+        slug: row.slug,
+        created_at: row.created_at || new Date().toISOString()
+      };
+    });
 
     return { 
       success: true, 
       message: "ดึงข้อมูลหมวดหมู่สำเร็จ",
-      data: data 
+      data: mappedData 
     };
   } catch (error: unknown) {
     console.error("Get categories error:", error);
@@ -649,15 +711,15 @@ export async function createCategoryAction(
       .replace(/\s+/g, "-");
 
     const { data, error } = await supabase
-      .from("blog_categories")
+      .from("cms_content_v3")
       .insert({ 
-        name: validated.name, 
-        name_en: validated.name_en, 
-        name_cn: validated.name_cn, 
-        name_ru: validated.name_ru, 
-        slug 
+        content_type: "CATEGORY",
+        title: { th: validated.name, en: validated.name_en || null, cn: validated.name_cn || null, ru: validated.name_ru || null },
+        slug,
+        status: "PUBLISHED",
+        tenant_id: (user as any).tenant_id || (user as any).tenantId || "ALL"
       })
-      .select("id, name, slug")
+      .select("id, slug, title")
       .single();
 
     if (error) throw error;
@@ -667,7 +729,11 @@ export async function createCategoryAction(
     return { 
       success: true, 
       message: "สร้างหมวดหมู่สำเร็จ",
-      data: data 
+      data: {
+        id: data.id,
+        name: ((data.title || {}) as Record<string, any>).th || "",
+        slug: data.slug
+      }
     };
   } catch (error: unknown) {
     console.error("Create category error:", error);
@@ -700,8 +766,9 @@ export async function deleteCategoryAction(id: string): Promise<ActionResponse> 
     }
 
     const { error } = await supabase
-      .from("blog_categories")
+      .from("cms_content_v3")
       .delete()
+      .eq("content_type", "CATEGORY")
       .eq("id", id);
 
     if (error) throw error;

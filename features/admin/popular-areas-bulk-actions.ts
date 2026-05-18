@@ -20,7 +20,7 @@ export async function bulkDeletePopularAreasAction(
   search?: string,
 ): Promise<BulkDeleteResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     if (!selectAll && (!ids || ids.length === 0)) {
@@ -32,13 +32,17 @@ export async function bulkDeletePopularAreasAction(
     }
 
     let query = supabase
-      .from("popular_areas")
+      .from("popular_areas_v3")
       .delete({ count: "exact" });
+
+    if (tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
 
     if (selectAll) {
       // If selectAll is true, we apply the same filters as the list view
       if (search) {
-        query = query.or(`name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%,name_ru.ilike.%${search}%`);
+        query = query.or(`name->>th.ilike.%${search}%,name->>en.ilike.%${search}%,name->>cn.ilike.%${search}%,name->>ru.ilike.%${search}%`);
       }
       // Note: We don't limit because we want to delete ALL matching items
     } else if (ids && ids.length > 0) {
@@ -53,7 +57,7 @@ export async function bulkDeletePopularAreasAction(
       { supabase, user, role },
       {
         action: "popular_area.bulk_delete",
-        entity: "popular_areas",
+        entity: "popular_areas_v3",
         entityId: selectAll ? "all" : (ids?.join(",") || ""),
         metadata: { deletedCount: count, selectAll, search },
       },
@@ -76,3 +80,4 @@ export async function bulkDeletePopularAreasAction(
     };
   }
 }
+

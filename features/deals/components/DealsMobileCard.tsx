@@ -36,7 +36,7 @@ export function DealsMobileCard({
 }: DealsMobileCardProps) {
   const router = useRouter();
   const [isNavigating, setIsNavigating] = useState(false);
-  const refCode = deal.property_id.slice(0, 8);
+  const refCode = (deal.property_id || "").slice(0, 8);
 
   const statusLabelMap: Record<string, string> = {
     NEGOTIATING: "กำลังต่อรอง",
@@ -78,7 +78,7 @@ export function DealsMobileCard({
             const hasImage = images?.[0]?.image_url;
             
             if (hasImage) {
-              const coverImage = images.find((img) => img.is_cover)?.image_url || images[0].image_url;
+               const coverImage = images.find((img) => img.is_cover)?.image_url || images[0].image_url;
               return (
                 <img
                   src={coverImage}
@@ -239,7 +239,7 @@ export function DealsMobileCard({
                 </div>
 
                 <DealFormDialog
-                  leadId={deal.lead_id}
+                  leadId={deal.lead_id || ""}
                   deal={deal}
                   properties={properties}
                   refreshOnSuccess
@@ -260,7 +260,7 @@ export function DealsMobileCard({
 
                 <DeleteDealButton
                   dealId={deal.id}
-                  leadId={deal.lead_id}
+                  leadId={deal.lead_id || ""}
                   onSuccess={() => {
                     router.refresh();
                     onRefresh?.();

@@ -1,9 +1,9 @@
 import { PropertyFormValues } from "../schema";
 import { generatePropertySEO, PropertyDataForSEO } from "@/lib/seo-utils";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
-type PropertyType = Database["public"]["Enums"]["property_type"];
-type ListingType = Database["public"]["Enums"]["listing_type"];
+type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL_BUILDING" | "WAREHOUSE" | "OFFICE_BUILDING" | "VILLA" | "POOL_VILLA" | "OTHER";
+type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
 
 export function generateKeywords(
   safeValues: PropertyFormValues,
@@ -74,8 +74,8 @@ export function prepareSEOData(
 ) {
   return generatePropertySEO(
     {
-      id: propertyData.id as string | undefined,
-      slug: propertyData.slug as string | undefined,
+      id: (propertyData.id as string) || "",
+      slug: (propertyData.slug as string | null) ?? null,
       title: propertyData.title as string,
       title_en: propertyData.title_en as string | undefined,
       title_cn: propertyData.title_cn as string | undefined,

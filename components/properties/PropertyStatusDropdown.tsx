@@ -43,7 +43,7 @@ export function PropertyStatusSelect(props: {
   const [open, setOpen] = useState(false);
 
   const router = useRouter();
-  const label = useMemo(() => PROPERTY_STATUS_LABELS[value], [value]);
+  const label = useMemo(() => PROPERTY_STATUS_LABELS[value]?.th || value, [value]);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<PropertyStatus | null>(
@@ -121,10 +121,10 @@ export function PropertyStatusSelect(props: {
               value === s && "text-blue-600",
             )}
           >
-            {PROPERTY_STATUS_LABELS[s]}
+            {PROPERTY_STATUS_LABELS[s]?.th || s}
           </span>
           <p className="text-[10px] text-slate-400 font-medium text-left truncate max-w-[200px]">
-            เปลี่ยนสถานะเป็น {PROPERTY_STATUS_LABELS[s]}
+            เปลี่ยนสถานะเป็น {PROPERTY_STATUS_LABELS[s]?.th || s}
           </p>
         </div>
       </div>

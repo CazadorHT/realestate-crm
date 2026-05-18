@@ -27,7 +27,7 @@ export function QuickType({ value, onValueChange }: QuickTypeProps) {
         <SelectItem value="ALL">ทุกประเภท</SelectItem>
         {PROPERTY_TYPE_ORDER.map((t) => (
           <SelectItem key={t} value={t}>
-            {PROPERTY_TYPE_LABELS[t]}
+            {PROPERTY_TYPE_LABELS[t].th}
           </SelectItem>
         ))}
       </SelectContent>

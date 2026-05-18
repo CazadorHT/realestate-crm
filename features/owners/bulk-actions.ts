@@ -32,8 +32,9 @@ export async function bulkDeleteOwnersAction(
 
     // Delete owners (cascade will handle related records)
     const { error, count } = await supabase
-      .from("owners")
+      .from("identities_v3")
       .delete({ count: "exact" })
+      .eq("category", 2)
       .in("id", ids);
 
     if (error) throw error;
@@ -43,7 +44,7 @@ export async function bulkDeleteOwnersAction(
       { supabase, user, role },
       {
         action: "owner.bulk_delete",
-        entity: "owners",
+        entity: "identities_v3",
         entityId: ids.join(","),
         metadata: { deletedCount: count },
       }
@@ -86,11 +87,12 @@ export async function bulkMoveOwnersToTenantAction(
 
     // Only move owners that don't have a tenant_id yet
     const { data: updated, error } = await ctx.supabase
-      .from("owners")
+      .from("identities_v3")
       .update({
         tenant_id: ctx.tenantId,
         updated_at: new Date().toISOString(),
       })
+      .eq("category", 2)
       .in("id", ids)
       .is("tenant_id", null)
       .select("id");
@@ -102,7 +104,7 @@ export async function bulkMoveOwnersToTenantAction(
     // Audit log
     await logAudit(ctx, {
       action: "owner.bulk_move",
-      entity: "owners",
+      entity: "identities_v3",
       entityId: ids.join(","),
       metadata: { movedCount: count, targetTenantId: ctx.tenantId },
     });

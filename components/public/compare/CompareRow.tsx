@@ -379,7 +379,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                         <span
                           className={`inline-flex px-2 py-0.5 rounded text-md font-bold border shadow-sm uppercase ${style.bg} ${style.text} border-slate-100`}
                         >
-                          {TRANSIT_TYPE_LABELS[type] || type}{" "}
+                          {(TRANSIT_TYPE_LABELS[type] as any)?.[language] || (TRANSIT_TYPE_LABELS[type] as any)?.th || type}{" "}
                           {getLocalizedField<string>(
                             p,
                             "transit_station_name",
@@ -425,7 +425,7 @@ export function CompareRow({ row, properties, idx }: CompareRowProps) {
                                     <span
                                       className={`inline-flex px-1.5 py-0 rounded text-md font-bold border ${style.bg} ${style.text} border-slate-100 uppercase`}
                                     >
-                                      {TRANSIT_TYPE_LABELS[type] || type}
+                                      {(TRANSIT_TYPE_LABELS[type] as any)?.[language] || (TRANSIT_TYPE_LABELS[type] as any)?.th || type}
                                     </span>
                                     <span className="text-slate-600 truncate">
                                       {getLocalizedField(

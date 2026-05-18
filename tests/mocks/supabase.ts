@@ -19,6 +19,8 @@ export const createMockSupabase = () => {
     order: vi.fn(),
     limit: vi.fn(),
     maybeSingle: vi.fn(),
+    in: vi.fn(),
+    not: vi.fn(),
   };
 
   const createQueryBuilder = (table: string) => {
@@ -35,18 +37,19 @@ export const createMockSupabase = () => {
       order: spies.order.mockReturnThis(),
       limit: spies.limit.mockReturnThis(),
       maybeSingle: spies.maybeSingle.mockReturnThis(),
+      in: spies.in.mockReturnThis(),
+      not: spies.not.mockReturnThis(),
       
       gt: vi.fn().mockReturnThis(),
       lt: vi.fn().mockReturnThis(),
       gte: vi.fn().mockReturnThis(),
       lte: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
       is: vi.fn().mockReturnThis(),
       or: vi.fn().mockReturnThis(),
 
       // Builder THEN implementation
       then: (resolve: any) => {
-        let result = { data: [], error: null };
+        let result = { data: [], error: null, count: undefined };
         if (tableMocks[table] && tableMocks[table].length > 0) {
           result = tableMocks[table].shift()!;
         } else if (tableMocks["_global"] && tableMocks["_global"].length > 0) {
@@ -78,15 +81,21 @@ export const createMockSupabase = () => {
       upload: vi.fn().mockResolvedValue({ data: { path: "test.jpg" }, error: null }),
       remove: vi.fn().mockResolvedValue({ data: [], error: null }),
       createSignedUrl: vi.fn().mockResolvedValue({ data: { signedUrl: "http://signed.com/img.jpg" }, error: null }),
+      getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: "http://public.com/img.jpg" } }),
     },
-    mockTableResult: (table: string, data: any) => {
+    mockTableResult: (table: string, data: any, count?: number) => {
       tableMocks[table] = tableMocks[table] || [];
-      tableMocks[table].push({ data, error: null });
+      tableMocks[table].push({ data, count, error: null } as any);
+      return mock; // 🛡️ Enable Chaining
+    },
+    mockTableError: (table: string, error: any) => {
+      tableMocks[table] = tableMocks[table] || [];
+      tableMocks[table].push({ data: null, count: undefined, error } as any);
       return mock; // 🛡️ Enable Chaining
     },
     mockSuccess: (data: any) => {
       tableMocks["_global"] = tableMocks["_global"] || [];
-      tableMocks["_global"].push({ data, error: null });
+      tableMocks["_global"].push({ data, error: null } as any);
       return mock; // 🛡️ Enable Chaining
     },
     clear: () => {

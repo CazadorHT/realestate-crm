@@ -1,8 +1,8 @@
 import { HelpCircle, CheckCircle, XCircle, FolderOpen, Eye, History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Database } from "@/lib/database.types";
+import { FAQItem } from "@/features/admin/faqs-actions";
 
-type FAQ = Database["public"]["Tables"]["faqs"]["Row"];
+type FAQ = FAQItem;
 
 interface FAQStatsProps {
   faqs: FAQ[];

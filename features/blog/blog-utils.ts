@@ -63,8 +63,9 @@ export async function ensureUniqueSlug(
 
   while (!isUnique) {
     let query = supabase
-      .from("blog_posts")
+      .from("cms_content_v3")
       .select("id")
+      .eq("content_type", "BLOG")
       .eq("slug", slug);
 
     if (excludeId) {

@@ -1,7 +1,15 @@
 import { PropertyAdminHeader } from "./_components/PropertyAdminHeader";
 import { PropertyCRMDetails } from "./_components/PropertyCRMDetails";
 import { PropertyAdminSidebar } from "./_components/PropertyAdminSidebar";
-import type { PropertyRow, PropertyImage } from "@/features/properties/types";
+import type { ListingType, PropertyType, PropertyStatus } from "@/features/properties/types";
+import type { 
+  PropertyWithDetails, 
+  PropertyAmenitiesV3, 
+  PropertyAddressV3, 
+  PropertyMetaDataV3, 
+  PropertyPricingV3, 
+  PropertyTransitV3
+} from "@/features/properties/types/v3";
 import { NearbyPlaces } from "@/components/public/NearbyPlaces";
 import { PropertyAmenities } from "@/components/public/property-detail/PropertyAmenities";
 import { PropertyBadgesSection } from "@/components/public/property-detail/PropertyBadgesSection";
@@ -18,96 +26,50 @@ import { Suspense } from "react";
 import { PropertyRelatedDealsSection } from "./_components/PropertyRelatedDealsSection";
 import { PropertyCRMDetailsSkeleton } from "@/components/skeletons/PropertyDetailSkeleton";
 import { PropertyDetailTour } from "@/features/properties/_components/PropertyDetailTour";
+import type { Database } from "@/lib/database.types.generated";
 
-interface PropertyWithDetails extends PropertyRow {
-  owner: {
-    id: string;
-    full_name: string;
-    phone: string | null;
-    line_id: string | null;
-    facebook_url: string | null;
-    other_contact: string | null;
-  } | null;
-  agent: {
-    id: string;
-    full_name: string | null;
-    phone: string | null;
-    email: string | null;
-    line_id: string | null;
-    facebook_url: string | null;
-    other_contact: string | null;
-    avatar_url: string | null;
-  } | null;
-  property_images: PropertyImage[];
-  property_features: {
-    features: {
-      id: string;
-      name: string;
-      icon_key: string | null;
-      category: string | null;
-    } | null;
-  }[];
-}
-
-interface RelatedDeal {
-  id: string;
-  deal_type: string;
-  commission_amount: number | null;
-  commission_percent: number | null;
-  created_by: string | null;
-  status: string;
-  lead: {
-    id: string;
-    full_name: string;
-  } | null;
-}
+// --- Robust Mapping Constants ---
+const STATUS_MAP: PropertyStatus[] = ["DRAFT", "ACTIVE", "UNDER_OFFER", "RESERVED", "SOLD", "RENTED", "ARCHIVED"];
+const LISTING_TYPE_MAP: ListingType[] = ["SALE", "RENT", "SALE_AND_RENT"];
+const PROPERTY_TYPE_MAP: PropertyType[] = ["OTHER", "CONDO", "HOUSE", "TOWNHOME", "LAND", "COMMERCIAL_BUILDING", "WAREHOUSE", "OFFICE_BUILDING", "VILLA", "POOL_VILLA"];
 
 export default async function PropertyDetailsPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const lang = "th"; // Centralized language
   const { id } = await params;
   const supabase = await createClient();
 
   // [PERFORMANCE] Parallel Fetching: Break the Waterfall
-  const [authContext, propertyResponse] = await Promise.all([
+  const [authContext, rawResponse] = await Promise.all([
     requireAuthContext(),
     supabase
-      .from("properties")
+      .from("properties_core")
       .select(
         `
-        *,
-        owner:owners!owner_id (
-          id,
-          full_name,
-          phone,
-          line_id,
-          facebook_url,
-          other_contact
+        id, status, listing_type, property_type, sale_price, rent_price, currency, bedrooms, bathrooms, floor_area, land_area, location, created_at, updated_at,
+        is_featured, is_hot_deal, verified, property_source,
+        tenant:tenants_v3 (id, name, slug),
+        branch:branches_v3 (id, name),
+        details:properties_details (
+          title, description, amenities, address_info, transit_info, meta_data
         ),
-        agent:profiles!assigned_to (
-          id,
-          full_name,
-          phone,
-          email,
-          line_id,
-          facebook_url,
-          other_contact,
-          avatar_url
+        ai:properties_ai (
+          ai_metadata, last_embedded_at
+        ),
+        agents:property_agents (
+          identity:identities_v3 (
+            id, display_name, phone, email, avatar_url, line_id, wechat_user_id, whatsapp_user_id, is_active
+          )
         ),
         property_images (
-          id,
-          image_url,
-          is_cover,
-          sort_order
+          id, url, image_url:url, is_cover, sort_order, media_type, ai_scan_status, ai_scan_result, storage_path, created_at, property_id
         ),
         property_features (
           features (
-            id,
-            name,
-            icon_key,
-            category
+            id, name, icon_key, category
           )
         )
       `,
@@ -117,11 +79,9 @@ export default async function PropertyDetailsPage({
   ]);
 
   const { tenantId } = authContext;
-  const { data: propertyData, error } = propertyResponse;
+  const { data: rawData, error } = rawResponse;
 
-  const property = propertyData as unknown as PropertyWithDetails | null;
-
-  if (error || !property) {
+  if (error || !rawData) {
     return (
       <div className="p-8 text-center text-red-500">
         ไม่พบข้อมูลทรัพย์ หรือเกิดข้อผิดพลาดในการโหลดข้อมูล
@@ -129,20 +89,171 @@ export default async function PropertyDetailsPage({
     );
   }
 
-  // Process Images (from join)
-  const images = (property.property_images || []).sort(
-    (a: PropertyImage, b: PropertyImage) =>
-      (a.sort_order ?? 0) - (b.sort_order ?? 0),
-  );
+  // V3 Native Data Processing: Strict Type Casting
+  const details = rawData.details;
+  const titleObj = (details?.title || {}) as Record<string, string>;
+  const descObj = (details?.description || {}) as Record<string, string>;
+  const amenities = (details?.amenities || {}) as PropertyAmenitiesV3;
+  const addressInfo = (details?.address_info || {}) as PropertyAddressV3;
+  const transitInfo = ((details?.transit_info || []) as PropertyTransitV3[]).map(t => ({
+    ...t,
+    distance_meters: t.distance_meters === null ? undefined : t.distance_meters
+  })) as PropertyTransitV3[];
+  const metaData = (details?.meta_data || {}) as PropertyMetaDataV3;
+  
+  const mainAgentIdentity = rawData.agents?.[0]?.identity;
+  const ownerIdFromMeta = metaData?.owner_id;
+  const popularAreaIdFromAddress = addressInfo?.popular_area_id;
+
+  // Fetch Owner & Popular Area separately
+  const [ownerResponse, popularAreaResponse] = await Promise.all([
+    ownerIdFromMeta
+      ? supabase
+          .from("owners")
+          .select("id, full_name, phone, line_id, facebook_url, other_contact")
+          .eq("id", ownerIdFromMeta)
+          .single()
+      : Promise.resolve({ data: null }),
+    popularAreaIdFromAddress
+      ? supabase
+          .from("popular_areas_v3")
+          .select("id, name")
+          .eq("id", popularAreaIdFromAddress)
+          .single()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const ownerData = ownerResponse.data;
+  const popularAreaV3 = popularAreaResponse.data;
+
+  const pricingDetails = (details?.pricing_details || {}) as PropertyPricingV3;
+
+  const property: PropertyWithDetails = {
+    ...rawData,
+    id: rawData.id,
+    slug: null, // V3 Core uses ID for admin; SEO slugs live in cms_content_v3
+    verified: !!rawData.verified,
+    is_featured: !!rawData.is_featured,
+    is_hot_deal: !!rawData.is_hot_deal,
+    
+    // Branch & Tenant info
+    branch_name: (rawData.branch as { name?: { th?: string } | string } | null)?.name?.toString() || null,
+    tenant_name: rawData.tenant?.name || null,
+
+    // Map V3 names to Legacy UI names
+    price: rawData.sale_price,
+    rental_price: rawData.rent_price,
+    original_price: pricingDetails?.original_price || null,
+    original_rental_price: pricingDetails?.original_rental_price || null,
+    min_contract_months: pricingDetails?.min_contract_months || null,
+    rent_price_per_sqm: pricingDetails?.rent_price_per_sqm || null,
+    price_per_sqm: pricingDetails?.price_per_sqm || null,
+    size_sqm: rawData.floor_area,
+    land_size_sqwah: rawData.land_area,
+    status: STATUS_MAP[rawData.status || 0] || "DRAFT",
+    listing_type: LISTING_TYPE_MAP[rawData.listing_type || 0] || "SALE",
+    property_type: PROPERTY_TYPE_MAP[rawData.property_type || 0] || "OTHER",
+
+    // Unroll details (Strict Mapping & Localization Extraction)
+    title: titleObj?.th || titleObj?.en || "-",
+    description: descObj?.th || descObj?.en || null,
+    province: typeof addressInfo?.province === "object" ? (addressInfo?.province as any)?.th || (addressInfo?.province as any)?.en : addressInfo?.province || null,
+    district: typeof addressInfo?.district === "object" ? (addressInfo?.district as any)?.th || (addressInfo?.district as any)?.en : addressInfo?.district || null,
+    subdistrict: typeof addressInfo?.subdistrict === "object" ? (addressInfo?.subdistrict as any)?.th || (addressInfo?.subdistrict as any)?.en : addressInfo?.subdistrict || null,
+    address_line1: addressInfo?.address_line1 || null,
+    address_line1_en: addressInfo?.address_line1_en || null,
+    postal_code: addressInfo?.postal_code || null,
+    google_maps_link: addressInfo?.google_maps_link || null,
+
+    // Amenities from typed interface
+    floor: amenities.floor || null,
+    parking_slots: amenities.parking_slots || null,
+    office_capacity: amenities.office_capacity || null,
+    is_pet_friendly: !!amenities.is_pet_friendly,
+    is_corner_unit: !!amenities.is_corner_unit,
+    is_renovated: !!amenities.is_renovated,
+    is_fully_furnished: !!amenities.is_fully_furnished,
+    is_bare_shell: !!amenities.is_bare_shell,
+    has_city_view: !!amenities.has_city_view,
+    has_pool_view: !!amenities.has_pool_view,
+    has_garden_view: !!amenities.has_garden_view,
+    has_private_pool: !!amenities.has_private_pool,
+    has_river_view: !!amenities.has_river_view,
+    has_unblocked_view: !!amenities.has_unblocked_view,
+    is_selling_with_tenant: !!amenities.is_selling_with_tenant,
+    is_tax_registered: !!amenities.is_tax_registered,
+    is_foreigner_quota: !!amenities.is_foreigner_quota,
+    allow_smoking: !!amenities.allow_smoking,
+    is_high_ceiling: !!amenities.is_high_ceiling,
+    is_column_free: !!amenities.is_column_free,
+    is_exclusive: !!amenities.is_exclusive,
+    is_grade_a: !!amenities.is_grade_a,
+    is_grade_b: !!amenities.is_grade_b,
+    is_grade_c: !!amenities.is_grade_c,
+    has_raised_floor: !!amenities.has_raised_floor,
+    is_central_air: !!amenities.is_central_air,
+    is_split_air: !!amenities.is_split_air,
+    has_247_access: !!amenities.has_247_access,
+    has_fiber_optic: !!amenities.has_fiber_optic,
+    has_multi_parking: !!amenities.has_multi_parking,
+    facing_east: !!amenities.facing_east,
+    facing_north: !!amenities.facing_north,
+    facing_south: !!amenities.facing_south,
+    facing_west: !!amenities.facing_west,
+
+    // AI Data Mapping
+    ai_summary_content: (rawData.ai as { ai_metadata?: { summary?: string } } | null)?.ai_metadata?.summary || metaData?.ai_summary_content || null,
+    requires_ai_review: !!((rawData.ai as { ai_metadata?: { requires_review?: boolean } } | null)?.ai_metadata?.requires_review || rawData.requires_ai_review),
+    meta_keywords: metaData?.meta_keywords || [],
+
+    // Smart Location
+    popular_area: (popularAreaV3?.name as { th?: string; en?: string } | null)?.th || (popularAreaV3?.name as { th?: string; en?: string } | null)?.en || addressInfo?.popular_area || null,
+
+    // Agent mapping (Strict)
+    agent: mainAgentIdentity
+      ? {
+          id: mainAgentIdentity.id,
+          full_name: mainAgentIdentity.display_name,
+          phone: mainAgentIdentity.phone,
+          email: mainAgentIdentity.email,
+          line_id: mainAgentIdentity.line_id,
+          avatar_url: mainAgentIdentity.avatar_url,
+          wechat_user_id: mainAgentIdentity.wechat_user_id,
+          whatsapp_user_id: mainAgentIdentity.whatsapp_user_id,
+          facebook_url: null,
+          other_contact: null,
+          is_active: !!mainAgentIdentity.is_active,
+        }
+      : null,
+
+    owner: ownerData ? {
+      ...ownerData,
+      is_active: true, // Legacy owners fallback to active
+    } : null,
+    
+    // Transit & Nearby
+    near_transit: !!(transitInfo.length > 0 || metaData?.meta_keywords?.some(k => k.toLowerCase().includes("transit"))),
+    transit_station_name: transitInfo[0]?.station_name || null,
+    transit_type: transitInfo[0]?.type || null,
+    transit_distance_meters: transitInfo[0]?.distance_meters || null,
+    nearby_places: addressInfo?.nearby_places || [],
+    nearby_transits: transitInfo,
+  };
+
+  // Process Images: PropertyGallery handles sorting internally (Cover first + SortOrder)
+  const images = property.property_images || [];
 
   // Create similar structure for Lightbox if needed, or PropertyGallery
   // PropertyGallery expects strict types, we might need a little casting
 
   // Process Features
-  const rawFeatures = property.property_features || [];
-  const features = rawFeatures
-    .map((pf: { features: any }) => pf.features)
-    .filter((f: any): f is NonNullable<typeof f> => !!f);
+  const features = (property.property_features || [])
+    .map((pf) => pf.features)
+    .filter((f): f is NonNullable<typeof f> => !!f)
+    .map(f => ({
+      ...f,
+      icon_key: f.icon_key || "check", // Provide fallback for component requirement
+    }));
 
   // Helper for Location
   const locationParts = [
@@ -198,7 +309,7 @@ export default async function PropertyDetailsPage({
   return (
     <div className="min-h-screen bg-white pb-24 lg:pb-32 font-sans ">
       <PropertyDetailTour />
-      <PropertyAdminHeader property={property} images={images} />
+      <PropertyAdminHeader property={property} images={images} language={lang} />
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-8 sm:pb-12 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
           <div className="mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-8">
@@ -212,22 +323,22 @@ export default async function PropertyDetailsPage({
           </div>
           {/* 2. Public Header Component */}
           <PropertyHeader
-            property={property as PropertyWithDetails}
+            property={property}
             className="pt-4 lg:pt-6"
             hideBreadcrumbs={true}
-            language="th"
+            language={lang}
           />
 
           <div className="max-w-screen-2xl mx-auto px-6 lg:px-8 mt-4 lg:mt-8">
             {/* 3. Gallery */}
             <section className="mb-6 lg:mb-10">
-              <PropertyGallery
+            <PropertyGallery
                 images={images}
-                title={property.title ?? ""}
-                isHot={false}
+                title={property.title ?? "-"}
+                isHot={property.is_hot_deal}
                 verified={!!property.verified}
-                petFriendly={!!property.meta_keywords?.includes("Pet Friendly")}
-                language="th"
+                petFriendly={property.is_pet_friendly}
+                language={lang}
               />
             </section>
 
@@ -245,64 +356,37 @@ export default async function PropertyDetailsPage({
                   landSize={property.land_size_sqwah}
                   floor={property.floor}
                   type={property.property_type}
-                  language="th"
+                  language={lang}
                 />
 
                 {/* Badges ticker */}
-                <PropertyBadgesSection
-                  property={property}
-                  language="th"
-                />
+                <PropertyBadgesSection property={property} language={lang} />
 
                 {/* Description */}
-                <PropertyDescription property={property} language="th" />
+                <PropertyDescription property={property} language={lang} />
 
                 {/* Nearby */}
                 <NearbyPlaces
                   location={property.popular_area || undefined}
-                  data={[
-                    ...((property.nearby_places as {
-                      category: string;
-                      name: string;
-                      distance?: string;
-                    }[]) || []),
-                    ...(property.near_transit && property.transit_station_name
-                      ? [
-                          {
-                            category: "Transport",
-                            name: `${property.transit_type || "BTS/MRT"} ${
-                              property.transit_station_name
-                            }`,
-                            distance: property.transit_distance_meters
-                              ? (
-                                  property.transit_distance_meters / 1000
-                                ).toString()
-                              : undefined,
-                          },
-                        ]
-                      : []),
-                    ...((property.nearby_transits as any[]) || []).map((t) => ({
-                      category: "Transport",
-                      name: `${t.type} ${t.station_name}`,
-                      distance: t.distance_meters
-                        ? (t.distance_meters / 1000).toString()
-                        : undefined,
-                    })),
-                  ]}
-                  language="th"
+                  
+                  propertyId={property.id}
+                  propertyTitle={property.title}
+                  data={property.nearby_places || []}
+                  transits={property.nearby_transits || []}
+                  language={lang}
                 />
 
                 <hr className="border-slate-100" />
 
                 {/* Amenities */}
-                <PropertyAmenities features={features} language="th" />
+                <PropertyAmenities features={features} language={lang} />
 
                 <hr className="border-slate-100" />
 
                 {/* Map */}
                 <PropertyMapSection
                   googleMapsLink={property.google_maps_link}
-                  language="th"
+                  language={lang}
                 />
 
                 {/* Deal & Contracts (CRM only) - Streamed via Suspense */}
@@ -319,7 +403,7 @@ export default async function PropertyDetailsPage({
               </div>
 
               {/* Right Column (Sidebar) */}
-              <PropertyAdminSidebar property={property} />
+              <PropertyAdminSidebar property={property} language={lang} />
             </div>
           </div>
         </div>

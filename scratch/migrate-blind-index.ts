@@ -17,6 +17,7 @@ async function migrate() {
   
   if (leads) {
     for (const lead of leads) {
+      if (!lead.id) continue;
       const decryptedName = decrypt(lead.full_name);
       const decryptedPhone = decrypt(lead.phone);
       const decryptedEmail = decrypt(lead.email);
@@ -38,6 +39,7 @@ async function migrate() {
   
   if (owners) {
     for (const owner of owners) {
+      if (!owner.id) continue;
       const decryptedName = decrypt(owner.full_name);
       const decryptedPhone = decrypt(owner.phone);
 
@@ -55,6 +57,7 @@ async function migrate() {
   
   if (properties) {
     for (const p of properties) {
+      if (!p.id) continue;
       const decryptedName = decrypt(p.co_agent_name);
       const decryptedPhone = decrypt(p.co_agent_phone);
 

@@ -33,8 +33,17 @@ import { MdOutlinePets } from "react-icons/md";
 
 import { type Language } from "@/lib/i18n";
 
+export interface GalleryImage {
+  id?: string;
+  url?: string;
+  image_url?: string;
+  is_cover?: boolean | null;
+  sort_order?: number | null;
+  storage_path?: string;
+}
+
 interface PropertyGalleryProps {
-  images: PropertyImage[];
+  images: GalleryImage[];
   title: string;
   isHot?: boolean;
   verified?: boolean;
@@ -57,7 +66,7 @@ const ImageWithFallback = ({
   failedImages,
   showFallback = true,
 }: {
-  img: PropertyImage;
+  img: GalleryImage;
   alt: string;
   className?: string;
   containerClassName?: string;
@@ -68,8 +77,11 @@ const ImageWithFallback = ({
   failedImages: Set<string>;
   showFallback?: boolean;
 }) => {
+  const srcUrl = img.url || img.image_url;
+  const imgId = img.id || img.storage_path || srcUrl || "unknown";
+
   // If URL is empty, show fallback immediately
-  if (!img.image_url) {
+  if (!srcUrl) {
     if (!showFallback) return null;
     return (
       <div
@@ -84,7 +96,7 @@ const ImageWithFallback = ({
     );
   }
 
-  const hasFailed = failedImages.has(img.id);
+  const hasFailed = failedImages.has(imgId);
 
   if (hasFailed) {
     if (!showFallback) return null;
@@ -109,8 +121,8 @@ const ImageWithFallback = ({
       )}
     >
       <Image
-        key={img.image_url}
-        src={img.image_url}
+        key={srcUrl}
+        src={srcUrl}
         alt={alt}
         fill={fill}
         priority={priority}
@@ -119,7 +131,7 @@ const ImageWithFallback = ({
         loading={priority ? "eager" : "lazy"}
         className={cn("transition-all duration-500", className)}
         sizes={sizes}
-        onError={() => onImageError(img.id)}
+        onError={() => onImageError(imgId)}
       />
     </div>
   );
@@ -333,7 +345,7 @@ export function PropertyGallery({
           >
             {sortedImages.map((img, idx) => (
               <div
-                key={`${img.id}-${idx}`}
+                key={`${img.id || img.storage_path || img.url || img.image_url || idx}-${idx}`}
                 className="shrink-0 w-full h-full snap-center relative overflow-hidden"
                 onClick={() => {
                   setCurrentIndex(idx);
@@ -423,7 +435,7 @@ export function PropertyGallery({
           <div className="grid grid-cols-2 gap-2 col-span-2 row-span-2 max-h-full">
             {subImages.map((img, idx) => (
               <div
-                key={`${img.id}-${idx}`}
+                key={`${img.id || img.storage_path || img.url || img.image_url || idx}-${idx}`}
                 className="relative cursor-pointer overflow-hidden group/sub"
                 onClick={() => {
                   setCurrentIndex(idx + 1);
@@ -520,7 +532,7 @@ export function PropertyGallery({
           {/* Lightbox Header - Split Design matching screenshot but refined */}
           <div className="absolute top-4 left-4 right-16 z-50 flex flex-col gap-2 pointer-events-none">
             <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-lg border border-white/10 w-fit max-w-full">
-              <span className="text-white font-bold text-sm md:text-base line-clamp-1">
+               <span className="text-white font-bold text-sm md:text-base line-clamp-1">
                 {title}
               </span>
             </div>
@@ -627,7 +639,7 @@ export function PropertyGallery({
           <div className="absolute bottom-2 md:bottom-4 left-0 right-0 flex justify-center gap-1.5 md:gap-2 overflow-x-auto px-2 md:px-4 py-2 md:py-3 no-scrollbar z-50">
             {sortedImages.map((img, idx) => (
               <button
-                key={`${img.id}-${idx}`}
+                key={`${img.id || img.storage_path || img.url || img.image_url || idx}-${idx}`}
                 onClick={() => setCurrentIndex(idx)}
                 className={cn(
                   "relative w-12 h-12 md:w-20 md:h-20 rounded-md md:rounded-lg overflow-hidden border-2 transition-all shrink-0",

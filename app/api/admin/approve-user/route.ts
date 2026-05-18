@@ -2,9 +2,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { siteConfig } from "@/lib/site-config";
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
-type UserRole = Database["public"]["Enums"]["user_role"];
+type UserRole = "ADMIN" | "MANAGER" | "AGENT" | "VIEWER";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -16,8 +16,8 @@ export async function GET(request: Request) {
     return new NextResponse("Invalid request", { status: 400 });
   }
 
-  // Validate that the role input matches our Enums
-  const validRoles: UserRole[] = ["ADMIN", "USER", "AGENT", "MANAGER"];
+  // Validate that the role input matches our V3 Enums
+  const validRoles: UserRole[] = ["ADMIN", "MANAGER", "AGENT", "VIEWER"];
   if (!validRoles.includes(roleInput as UserRole)) {
     return new NextResponse("Invalid role specified", { status: 400 });
   }
@@ -36,51 +36,39 @@ export async function GET(request: Request) {
 
   try {
     const supabase = createAdminClient();
-    
-    // 1. Update Profile Role
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ 
-        role: role,
-        updated_at: new Date().toISOString()
-      })
-      .eq("id", userId);
 
-    if (profileError) throw profileError;
+    // 🛡️ Strict V3 Type Extension (No any)
+    interface V3ApproveRpc {
+      Args: { target_user_id: string; new_role: string; actor_id: string };
+      Returns: { success: boolean; tenant_id: string | null };
+    }
+    
+    const { data: result, error: rpcError } = await (supabase as any).rpc("v3_approve_identity", {
+      target_user_id: userId,
+      new_role: role,
+      actor_id: userId
+    });
+
+    if (rpcError) throw rpcError;
+
+    const rpcResult = result as unknown as { success: boolean; tenant_id: string | null };
+    const tenantId = rpcResult.tenant_id;
 
     // 🛡️ 1.1 Sync to Auth Metadata (The RLS Fast-Path)
-    // First, get the tenant_id for this user
-    const { data: membership } = await supabase
-      .from("tenant_members")
-      .select("tenant_id")
-      .eq("profile_id", userId)
-      .maybeSingle();
-
-    if (membership?.tenant_id) {
+    // This is still needed because Auth Metadata lives outside the DB transaction
+    if (tenantId) {
       const { error: authError } = await supabase.auth.admin.updateUserById(
         userId,
         { 
           app_metadata: { 
             role: role,
-            tenant_id: membership.tenant_id 
+            tenant_id: tenantId
           } 
         }
       );
       if (authError) console.error("⚠️ [AuthSyncError]", authError);
       else console.log(`✅ [AuthSync] Metadata updated for user ${userId}`);
     }
-
-    // 2. Log Activity (Strict Typing)
-    const { error: auditError } = await supabase.from("audit_logs").insert({
-      action: "ADMIN_APPROVE_USER",
-      entity: "user",
-      entity_id: userId,
-      metadata: {
-        new_role: role,
-        tenant_id: membership?.tenant_id,
-        method: "ONE_CLICK_APPROVAL"
-      }
-    });
 
     // Return a beautiful success page (HTML)
     return new NextResponse(
@@ -90,16 +78,23 @@ export async function GET(request: Request) {
           <title>อนุมัติสำเร็จ</title>
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <script src="https://cdn.tailwindcss.com"></script>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+          <style>
+            body { font-family: 'Inter', sans-serif; }
+            .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); }
+          </style>
         </head>
-        <body class="bg-[#020617] text-white flex items-center justify-center min-h-screen font-sans">
-          <div class="text-center p-8 bg-white/5 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-xl max-w-sm w-full mx-4">
-            <div class="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/30">
-              <span class="text-4xl">✅</span>
+        <body class="bg-[#020617] text-white flex items-center justify-center min-h-screen">
+          <div class="text-center p-10 glass rounded-[2.5rem] shadow-2xl max-w-sm w-full mx-4 animate-in fade-in zoom-in duration-500">
+            <div class="w-24 h-24 bg-linear-to-tr from-emerald-400 to-cyan-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg shadow-emerald-500/20">
+              <svg class="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+              </svg>
             </div>
-            <h1 class="text-2xl font-bold mb-2">อนุมัติสำเร็จ!</h1>
-            <p class="text-slate-400 text-sm mb-8">ผู้ใช้งานได้รับการปรับบทบาทเป็น <b>${role}</b> เรียบร้อยแล้วครับ</p>
-            <a href="${siteConfig.url}/protected/users" class="inline-block w-full py-4 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/20">
-              ไปที่หน้าจัดการสมาชิก
+            <h1 class="text-3xl font-black mb-3 tracking-tight">อนุมัติสำเร็จ!</h1>
+            <p class="text-slate-400 text-base mb-10 leading-relaxed">บทบาทผู้ใช้งานถูกปรับเป็น <span class="text-emerald-400 font-bold">${role}</span><br/>พร้อมใช้งานระบบ V3 แล้วครับ</p>
+            <a href="${siteConfig.url}/protected/users" class="block w-full py-4 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-2xl font-bold transition-all shadow-xl shadow-blue-900/20 active:scale-95">
+              เข้าสู่ระบบจัดการ
             </a>
           </div>
         </body>

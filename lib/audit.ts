@@ -35,14 +35,14 @@ export async function recordAuditLog(options: AuditLogOptions) {
       }
     }
 
-    // 2. Record to Database (audit_logs table)
-    const { error } = await supabase.from("audit_logs").insert({
+    // 2. Record to Database (system_audit_logs_v3 table)
+    const { error } = await supabase.from("system_audit_logs_v3").insert({
       action,
-      entity,
+      entity_table: entity,
       entity_id: entityId,
-      metadata,
+      new_data: metadata,
       tenant_id: finalTenantId,
-      user_id: finalUserId,
+      actor_id: finalUserId,
     });
 
     if (error) {

@@ -43,14 +43,9 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-interface Partner {
-  id: string;
-  name: string;
-  logo_url: string;
-  website_url: string | null;
-  sort_order: number | null;
-  is_active: boolean | null;
-}
+import { PartnerRow } from "@/features/admin/partners-actions";
+
+type Partner = PartnerRow;
 
 interface PartnersTableProps {
   partners: Partner[];

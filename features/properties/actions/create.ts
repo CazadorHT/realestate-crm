@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { type Database } from "@/lib/database.types";
+import { type Database } from "@/lib/database.types.generated";
 import { randomUUID } from "crypto";
 import { inngest } from "@/lib/inngest/client";
 import {
@@ -18,6 +18,13 @@ import {
   PropertyRow,
 } from "../types";
 import {
+  PROPERTY_STATUS_DB_VALUE,
+  LISTING_TYPE_DB_VALUE,
+  PROPERTY_TYPE_DB_VALUE,
+  getListingTypeFromDb,
+  getPropertyTypeFromDb,
+} from "../labels";
+import {
   finalizeUploadSession,
   validatePropertyImagePaths,
   PROPERTY_IMAGES_BUCKET,
@@ -26,6 +33,7 @@ import { generateKeywords, prepareSEOData } from "../logic/seo";
 import { FormSchema } from "../schema";
 import { mapDbError } from "@/lib/db-error";
 import { encrypt, generateBlindIndex } from "@/lib/crypto";
+
 
 /**
  * Create property with images
@@ -71,20 +79,6 @@ export async function createPropertyAction(
 
     if (propertyData.requires_ai_review) {
       propertyData.status = "DRAFT";
-    } else if (
-      (propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)
-    ) {
-      if (propertyData.listing_type === "RENT") {
-        propertyData.status = "RENTED";
-      } else {
-        propertyData.status = "SOLD";
-      }
-    } else if (
-      propertyData.status === "SOLD" ||
-      propertyData.status === "RENTED"
-    ) {
-      // If stock remains, force ACTIVE (prevent premature SOLD/RENTED status)
-      propertyData.status = "ACTIVE";
     }
 
     // ✅ image paths ต้องอยู่ภายใต้ properties/
@@ -114,135 +108,184 @@ export async function createPropertyAction(
       new Set([...(seoData.metaKeywords || []), ...finalKeywords]),
     );
 
-    const { data: property, error } = await supabase
-      .from("properties")
+    // --- V3 SMART ORCHESTRATOR: ATOMIC INSERTION ---
+    
+    // 1. Insert into properties_core (Hot Table)
+    const { data: core, error: coreError } = await supabase
+      .from("properties_core")
       .insert({
-        ...propertyData,
-        co_agent_name: encrypt(co_agent_name),
-        co_agent_name_hash: generateBlindIndex(co_agent_name),
-        co_agent_phone: encrypt(co_agent_phone),
-        co_agent_phone_hash: generateBlindIndex(co_agent_phone),
-        co_agent_contact_id: encrypt(co_agent_contact_id),
         tenant_id: tenantId,
-        original_price: propertyData.original_price, // Force include
-        original_rental_price: propertyData.original_rental_price,
+        branch_id: safeValues.branch_id,
+        status: PROPERTY_STATUS_DB_VALUE[propertyData.status || "DRAFT"],
+        listing_type: LISTING_TYPE_DB_VALUE[propertyData.listing_type || "SALE"],
+        property_type: PROPERTY_TYPE_DB_VALUE[propertyData.property_type || "CONDO"],
+        sale_price: propertyData.price ?? propertyData.original_price,
+        rent_price: propertyData.rental_price ?? propertyData.original_rental_price,
+        currency: propertyData.currency || "THB",
+        bedrooms: propertyData.bedrooms,
+        bathrooms: propertyData.bathrooms,
+        floor_area: propertyData.size_sqm,
+        land_area: propertyData.land_size_sqwah,
+        owner_id: safeValues.owner_id,
+        assigned_to: safeValues.assigned_to,
         created_by: user.id,
-        slug: seoData.slug,
-        meta_title: seoData.metaTitle,
-        meta_description: seoData.metaDescription,
-        meta_keywords: mergedKeywords,
-        structured_data:
-          seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
-        nearby_places: (propertyData.nearby_places ||
-          []) as Database["public"]["Tables"]["properties"]["Insert"]["nearby_places"],
-        nearby_transits: (propertyData.nearby_transits ||
-          []) as Database["public"]["Tables"]["properties"]["Insert"]["nearby_transits"],
+        is_exclusive: !!safeValues.is_exclusive,
+        verified: !!safeValues.verified,
+        h3_index_res8: safeValues.h3_index_res8,
+        price_per_sqm: safeValues.price_per_sqm,
       })
       .select("id")
       .single();
 
-    if (error) {
-      return { success: false, message: mapDbError(error) };
+    if (coreError || !core) {
+      return { success: false, message: mapDbError(coreError) };
     }
 
-    if (images && images.length > 0) {
-      // 1) Validate path format
-      const valid = validatePropertyImagePaths(images);
-      if (!valid.ok) {
-        await supabase
-          .from("properties")
-          .delete()
-          .eq("id", property.id)
-          .eq("tenant_id", tenantId);
-        return { success: false, message: valid.message };
-      }
+    // 2. Insert into properties_details (Warm Layer / JSONB)
+    const { error: detailsError } = await supabase
+      .from("properties_details")
+      .insert({
+        property_id: core.id,
+        title: {
+          th: propertyData.title,
+          en: propertyData.title_en,
+          cn: propertyData.title_cn,
+          ru: propertyData.title_ru,
+        },
+        description: {
+          th: propertyData.description,
+          en: propertyData.description_en,
+          cn: propertyData.description_cn,
+          ru: propertyData.description_ru,
+        },
+        address_info: {
+          th: propertyData.address_line1,
+          en: propertyData.address_line1_en,
+          cn: propertyData.address_line1_cn,
+          ru: propertyData.address_line1_ru,
+          province: propertyData.province,
+          district: propertyData.district,
+          subdistrict: propertyData.subdistrict,
+          postal_code: propertyData.postal_code,
+          maps_link: propertyData.google_maps_link,
+          slug: seoData.slug, // V3 Standard: Store slug in address_info too
+        },
+        amenities: {
+          floor: safeValues.floor,
+          parking_slots: safeValues.parking_slots,
+          is_pet_friendly: safeValues.is_pet_friendly,
+          is_fully_furnished: safeValues.is_fully_furnished,
+          is_renovated: safeValues.is_renovated,
+          has_private_pool: safeValues.has_private_pool,
+          is_exclusive: safeValues.is_exclusive,
+          is_fully_fitted: safeValues.is_fully_fitted,
+          is_green_building: safeValues.is_green_building,
+          has_flexible_lease: safeValues.has_flexible_lease,
+          is_cbd: safeValues.is_cbd,
+          is_smart_home: safeValues.is_smart_home,
+          has_private_elevator: safeValues.has_private_elevator,
+          is_handicapped_friendly: safeValues.is_handicapped_friendly,
+          is_high_floor: safeValues.is_high_floor,
+          is_never_lived_in: safeValues.is_never_lived_in,
+          is_grade_a: safeValues.is_grade_a,
+          is_grade_b: safeValues.is_grade_b,
+          is_grade_c: safeValues.is_grade_c,
+          is_column_free: safeValues.is_column_free,
+          is_central_air: safeValues.is_central_air,
+          is_split_air: safeValues.is_split_air,
+          has_247_access: safeValues.has_247_access,
+          has_fiber_optic: safeValues.has_fiber_optic,
+          is_tax_registered: safeValues.is_tax_registered,
+          has_raised_floor: safeValues.has_raised_floor,
+          is_high_ceiling: safeValues.is_high_ceiling,
+          ceiling_height: safeValues.ceiling_height,
+          office_capacity: safeValues.office_capacity,
+          orientation: safeValues.orientation,
+          parking_type: safeValues.parking_type,
+        },
+        pricing_details: {
+          maintenance_fee: propertyData.maintenance_fee,
+          parking_fee: propertyData.parking_fee_additional,
+          electricity_charge: propertyData.electricity_charge,
+          water_charge: propertyData.water_charge,
+          commission_sale: propertyData.commission_sale_percentage,
+          commission_rent: propertyData.commission_rent_months,
+          original_price: propertyData.original_price,
+          original_rental_price: propertyData.original_rental_price,
+        },
+        transit_info: safeValues.nearby_transits || [],
+        meta_data: {
+          slug: seoData.slug,
+          meta_title: seoData.metaTitle,
+          meta_description: seoData.metaDescription,
+          keywords: mergedKeywords,
+          agent_ids: agent_ids,
+          co_agent: {
+            is_co_agent: safeValues.is_co_agent,
+            name: co_agent_name,
+            phone: co_agent_phone,
+            contact_id: co_agent_contact_id,
+          },
+          requires_ai_review: propertyData.requires_ai_review,
+          created_by: user.id,
+          property_source: propertyData.property_source,
+          video_url: safeValues.video_url,
+          floor_plan_url: safeValues.floor_plan_url,
+          version: 1,
+        },
+      });
 
-      // 3) Insert rows
-      const imageRows = images.map((storagePath, index) => ({
-        property_id: property.id,
+    if (detailsError) {
+      // Rollback core insert on details failure
+      await supabase.from("properties_core").delete().eq("id", core.id);
+      return { success: false, message: mapDbError(detailsError) };
+    }
+
+    // 3. Insert Relations (Agents/Features Bridge)
+    if (agent_ids && agent_ids.length > 0) {
+      await supabase.from("property_agents").insert(agent_ids.map(aId => ({ property_id: core.id, agent_id: aId })));
+    }
+    if (feature_ids && feature_ids.length > 0) {
+      await supabase.from("property_features").insert(feature_ids.map(fId => ({ property_id: core.id, feature_id: fId })));
+    }
+
+    // 4. Insert into property_media_v3
+    if (images && images.length > 0) {
+      const mediaRows = images.map((storagePath, index) => ({
+        property_id: core.id,
         storage_path: storagePath,
-        image_url: getPublicImageUrl(storagePath),
+        url: getPublicImageUrl(storagePath),
         is_cover: index === 0,
         sort_order: index,
+        media_type: "image",
       }));
 
-      const { data: insertedImages, error: imagesError } = await supabase
-        .from("property_images")
-        .insert(imageRows)
-        .select("id, storage_path");
+      const { error: mediaError } = await supabase
+        .from("property_media_v3")
+        .insert(mediaRows);
 
-      if (imagesError) {
-        console.error("Images insertion error:", imagesError);
-
-        // ✅ Rollback: ลบ property เพื่อไม่ให้เกิด half-created data
-        await supabase
-          .from("properties")
-          .delete()
-          .eq("id", property.id)
-          .eq("tenant_id", tenantId);
-
-        return { success: false, message: "Failed to attach images" };
-      }
-
-      // 🛡️ [PHASE 3] Trigger Malware Scan for each image
-      if (insertedImages && insertedImages.length > 0) {
-        const scanEvents = insertedImages.map((img) => ({
-          name: "app/property.image.created",
-          data: {
-            imageId: img.id,
-            storagePath: img.storage_path,
-          },
-        }));
-        await inngest.send(scanEvents);
+      if (mediaError) {
+        // Critical rollback if media fails
+        await supabase.from("properties_details").delete().eq("property_id", core.id);
+        await supabase.from("properties_core").delete().eq("id", core.id);
+        return { success: false, message: "บันทึกรูปภาพไม่สำเร็จ: " + mapDbError(mediaError) };
       }
     }
+
     await finalizeUploadSession({
       supabase,
       userId: user.id,
       sessionId,
-      propertyId: property.id,
+      propertyId: core.id,
       usedPaths: images ?? [],
     });
-
-    // 4) Insert agents
-    if (agent_ids && agent_ids.length > 0) {
-      const agentRows = agent_ids.map((agentId) => ({
-        property_id: property.id,
-        agent_id: agentId,
-      }));
-
-      const { error: agentsError } = await supabase
-        .from("property_agents")
-        .insert(agentRows);
-
-      if (agentsError) {
-        console.error("Agents insertion error:", agentsError);
-      }
-    }
-
-    // 5) Insert features/amenities
-    if (feature_ids && feature_ids.length > 0) {
-      const featureRows = feature_ids.map((featureId) => ({
-        property_id: property.id,
-        feature_id: featureId,
-      }));
-
-      const { error: featuresError } = await supabase
-        .from("property_features")
-        .insert(featureRows);
-
-      if (featuresError) {
-        console.error("Features insertion error:", featuresError);
-        // Non-blocking: continue even if features fail to save
-      }
-    }
 
     await logAudit(
       { supabase, user, role },
       {
         action: "property.create",
-        entity: "properties",
-        entityId: property.id,
+        entity: "properties_core",
+        entityId: core.id,
         metadata: {
           imagesCount: images?.length ?? 0,
           sessionId,
@@ -262,7 +305,7 @@ export async function createPropertyAction(
     await inngest.send({
       name: "property.created",
       data: {
-        propertyId: property.id,
+        propertyId: core.id,
         userId: user.id,
         tenantId: tenantId,
       },
@@ -271,7 +314,7 @@ export async function createPropertyAction(
     return {
       success: true,
       message: "สร้างทรัพย์ใหม่สำเร็จ",
-      propertyId: property.id,
+      propertyId: core.id,
       slug: seoData.slug,
     };
   } catch (err: unknown) {
@@ -294,202 +337,140 @@ export async function duplicatePropertyAction(
     assertStaff(role);
     if (!tenantId) throw new Error("Tenant ID is required but missing");
 
-    const { data: src, error: srcErr } = await supabase
-      .from("properties")
-      .select(
-        `
-        id, title, title_en, title_cn, title_ru,
-        property_type, listing_type, status, 
-        price, original_price, rental_price, original_rental_price, 
-        bedrooms, bathrooms, size_sqm, floor,
-        district, subdistrict, province, 
-        near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru,
-        is_pet_friendly, is_corner_unit, is_renovated, is_fully_furnished, 
-        has_city_view, has_pool_view, has_garden_view, 
-        is_selling_with_tenant, is_tax_registered, is_foreigner_quota, 
-        google_maps_link, address_line1, address_line1_en, address_line1_cn, address_line1_ru, postal_code, 
-        description, description_en, description_cn, description_ru,
-        meta_title, meta_title_en, meta_title_cn, meta_title_ru,
-        meta_description, meta_description_en, meta_description_cn, meta_description_ru,
-        meta_keywords, tenant_id, 
-        property_images(image_url, is_cover, storage_path)
-      `,
-      )
+
+    const { data: core } = await supabase
+      .from("properties_core")
+      .select("branch_id, listing_type, property_type, sale_price, rent_price, currency, bedrooms, bathrooms, floor_area, land_area, price_per_sqm, owner_id, assigned_to, is_exclusive, verified, h3_index_res8")
       .eq("id", id)
-      .eq("tenant_id", tenantId)
       .single();
+    const { data: details } = await supabase
+      .from("properties_details")
+      .select("title, description, address_info, amenities, pricing_details, transit_info, meta_data")
+      .eq("property_id", id)
+      .single();
+    const { data: media } = await supabase
+      .from("property_media_v3")
+      .select("storage_path, url, is_cover, sort_order, media_type")
+      .eq("property_id", id)
+      .order("sort_order");
 
-    if (srcErr || !src)
-      return { success: false, message: "ไม่พบทรัพย์ต้นฉบับ" };
+    if (!core) return { success: false, message: "Property not found" };
 
-    const newTitle = `${src.title ?? "ไม่ระบุชื่อ"} (คัดลอก)`;
+    const oldTitle = (details?.title as Record<string, string>)?.th || "";
+    const newTitle = `(Copy) ${oldTitle}`;
 
-    // regenerate SEO + slug (กันชน unique)
-    const { generatePropertySEO } = await import("@/lib/seo-utils");
-    const seoData = generatePropertySEO({
+    // Synthetic safeValues for duplication
+    const syntheticSafeValues = {
+      listing_type: getListingTypeFromDb(core.listing_type),
+      property_type: getPropertyTypeFromDb(core.property_type),
+      is_pet_friendly: (details?.amenities as Record<string, boolean>)?.is_pet_friendly,
+      is_fully_furnished: (details?.amenities as Record<string, boolean>)?.is_fully_furnished,
+    } as PropertyFormValues;
+    
+    const seoData = prepareSEOData({
       title: newTitle,
-      property_type: src.property_type ?? undefined,
-      listing_type: src.listing_type ?? undefined,
+      listing_type: syntheticSafeValues.listing_type,
+      property_type: syntheticSafeValues.property_type,
+      address_line1: (details?.address_info as Record<string, string>)?.th || "",
+      province: (details?.address_info as Record<string, string>)?.province || "",
+      district: (details?.address_info as Record<string, string>)?.district || "",
+      description: (details?.description as Record<string, string>)?.th || "",
+      main_image: media?.find((img) => img.is_cover)?.url || undefined,
+    } as Record<string, unknown>, syntheticSafeValues);
+    const uniqueSlug = `${seoData.slug}-copy-${crypto.randomUUID().slice(0, 4)}`;
 
-      bedrooms: src.bedrooms ?? undefined,
-      bathrooms: src.bathrooms ?? undefined,
-      size_sqm: src.size_sqm ?? undefined,
-      price: src.price ?? undefined,
-      rental_price: src.rental_price ?? undefined,
-
-      district: src.district ?? undefined,
-      province: src.province ?? undefined,
-      address_line1: src.address_line1 ?? undefined,
-      postal_code: src.postal_code ?? undefined,
-      description: src.description ?? undefined,
-      main_image:
-        (
-          src.property_images as unknown as {
-            is_cover: boolean;
-            image_url: string;
-          }[]
-        )?.find((img) => img.is_cover)?.image_url || undefined, // Carry over cover image if available
-    });
-
-    const uniqueSlug = `${seoData.slug}-${randomUUID().slice(0, 8)}`;
-
-    const {
-      id: _id,
-      tenant_id: _tenant_id,
-      created_at: _created_at,
-      updated_at: _updated_at,
-      created_by: _created_by,
-      slug: _slug,
-      meta_title: _meta_title,
-      meta_description: _meta_description,
-      meta_keywords: _meta_keywords,
-      structured_data: _structured_data,
-      // ✨ Hardening: รีเซ็ตข้อมูลส่วนตัวของทรัพย์ต้นฉบับ
-      view_count: _view_count,
-      posted_to_facebook_at: _posted_to_facebook_at,
-      posted_to_line_at: _posted_to_line_at,
-      posted_to_instagram_at: _posted_to_instagram_at,
-      posted_to_tiktok_at: _posted_to_tiktok_at,
-      ai_reviewed_at: _ai_reviewed_at,
-      ai_reviewed_by: _ai_reviewed_by,
-      verified: _verified,
-      ...rest
-    } = src as unknown as PropertyRow;
-
-    const { data: inserted, error: insErr } = await supabase
-      .from("properties")
+    // --- V3 ARCHITECTURE DUPLICATION ---
+    // 1. Insert into properties_core
+    const { data: insertedCore, error: coreErr } = await supabase
+      .from("properties_core")
       .insert({
-        ...rest,
-        title: newTitle,
-        status: "DRAFT", // แนะนำให้เป็น draft เสมอ
         tenant_id: tenantId,
-        created_by: user.id,
-        slug: uniqueSlug,
-        meta_title: seoData.metaTitle,
-        meta_description: seoData.metaDescription,
-        meta_keywords: seoData.metaKeywords,
-        structured_data:
-          seoData.structuredData as Database["public"]["Tables"]["properties"]["Insert"]["structured_data"],
-        // ✨ Reset metrics & shares
-        view_count: 0,
-        verified: false,
-        posted_to_facebook_at: null,
-        posted_to_line_at: null,
-        posted_to_instagram_at: null,
-        posted_to_tiktok_at: null,
-        ai_reviewed_at: null,
-        ai_reviewed_by: null,
+        branch_id: core.branch_id,
+        status: PROPERTY_STATUS_DB_VALUE["DRAFT"],
+        listing_type: core.listing_type,
+        property_type: core.property_type,
+        sale_price: core.sale_price,
+        rent_price: core.rent_price,
+        currency: core.currency,
+        bedrooms: core.bedrooms,
+        bathrooms: core.bathrooms,
+        floor_area: core.floor_area,
+        land_area: core.land_area,
+        price_per_sqm: core.price_per_sqm,
+        owner_id: core.owner_id,
+        assigned_to: core.assigned_to,
+        is_exclusive: core.is_exclusive,
+        verified: core.verified,
+        h3_index_res8: core.h3_index_res8,
       })
       .select("id")
       .single();
 
-    if (insErr || !inserted) {
-      return {
-        success: false,
-        message: mapDbError(insErr) ?? "Duplicate ไม่สำเร็จ",
-      };
+    if (coreErr || !insertedCore) {
+      return { success: false, message: mapDbError(coreErr) ?? "Duplicate Core ไม่สำเร็จ" };
     }
-    const newPropertyId = inserted.id;
-    // ✅ Step 4.2: copy images rows & files
-    const { data: imgs } = await supabase
-      .from("property_images")
-      .select("image_url, storage_path, is_cover, sort_order")
-      .eq("property_id", id)
-      .order("sort_order", { ascending: true });
 
-    if (imgs?.length) {
-      const copyPromises = imgs.map(async (img) => {
-        if (!img.storage_path) return null;
-        const ext = img.storage_path.split(".").pop() || "webp";
-        const newPath = `properties/${user.id}/dup-${randomUUID()}.${ext}`;
+    const newPropertyId = insertedCore.id;
 
-        const { error: copyErr } = await supabase.storage
-          .from(PROPERTY_IMAGES_BUCKET)
-          .copy(img.storage_path, newPath);
-
-        if (copyErr) {
-          console.error(
-            "duplicatePropertyAction: storage copy failed",
-            copyErr,
-          );
-          return null;
-        }
-
-        return {
-          property_id: newPropertyId,
-          image_url: getPublicImageUrl(newPath),
-          storage_path: newPath,
-          is_cover: img.is_cover,
-          sort_order: img.sort_order,
-        };
+    // 2. Insert into properties_details
+    const { error: detailsErr } = await supabase
+      .from("properties_details")
+      .insert({
+        property_id: newPropertyId,
+        title: {
+          ...((details?.title as Record<string, any>) || {}),
+          th: newTitle,
+        },
+        description: details?.description || {},
+        address_info: {
+          ...((details?.address_info as Record<string, any>) || {}),
+          slug: uniqueSlug,
+        },
+        amenities: details?.amenities || {},
+        pricing_details: details?.pricing_details || {},
+        transit_info: details?.transit_info || [],
+        meta_data: {
+          ...((details?.meta_data as Record<string, any>) || {}),
+          slug: uniqueSlug,
+          meta_title: seoData.metaTitle,
+          meta_description: seoData.metaDescription,
+          keywords: seoData.metaKeywords,
+          created_by: user.id,
+          version: 1,
+        },
       });
 
-      const newRows = (await Promise.all(copyPromises)).filter(
-        (r): r is NonNullable<typeof r> => !!r,
-      );
-
-      if (newRows.length > 0) {
-        await supabase.from("property_images").insert(newRows);
-      }
+    if (detailsErr) {
+      // Rollback core
+      await supabase.from("properties_core").delete().eq("id", newPropertyId);
+      return { success: false, message: mapDbError(detailsErr) ?? "Duplicate Details ไม่สำเร็จ" };
     }
 
-    // ✅ Step 4.3: copy agents
-    const { data: agents } = await supabase
-      .from("property_agents")
-      .select("agent_id")
-      .eq("property_id", id);
-
-    if (agents?.length) {
-      const agentRows = agents.map((a) => ({
+    // ✅ Step 4.2: copy images rows & files
+    if (media && media.length > 0) {
+      const newMedia = media.map((img) => ({
         property_id: newPropertyId,
-        agent_id: a.agent_id,
+        storage_path: img.storage_path,
+        url: img.url,
+        is_cover: img.is_cover,
+        sort_order: img.sort_order,
+        media_type: img.media_type,
       }));
-      await supabase.from("property_agents").insert(agentRows);
+      await supabase.from("property_media_v3").insert(newMedia);
     }
 
-    // ✅ Step 4.4: copy features (amenities)
-    const { data: features } = await supabase
-      .from("property_features")
-      .select("feature_id")
-      .eq("property_id", id);
+    // ✅ Step 4.3: copy agent & feature relations
+    const [{ data: oldAgents }, { data: oldFeatures }] = await Promise.all([
+      supabase.from("property_agents").select("agent_id").eq("property_id", id),
+      supabase.from("property_features").select("feature_id").eq("property_id", id)
+    ]);
 
-    if (features?.length) {
-      const featureRows = features.map((f) => ({
-        property_id: newPropertyId,
-        feature_id: f.feature_id,
-      }));
-      await supabase.from("property_features").insert(featureRows);
+    if (oldAgents && oldAgents.length > 0) {
+      await supabase.from("property_agents").insert(oldAgents.map(a => ({ property_id: newPropertyId, agent_id: a.agent_id })));
     }
-
-    await logAudit(
-      { supabase, user, role },
-      {
-        action: "property.create",
-        entity: "properties",
-        entityId: newPropertyId,
-        metadata: { duplicated_from: id },
-      },
-    );
+    if (oldFeatures && oldFeatures.length > 0) {
+      await supabase.from("property_features").insert(oldFeatures.map(f => ({ property_id: newPropertyId, feature_id: f.feature_id })));
+    }
 
     revalidatePath("/", "layout");
     revalidatePath("/protected/properties");

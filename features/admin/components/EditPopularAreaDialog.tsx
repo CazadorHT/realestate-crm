@@ -4,9 +4,10 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { PopularAreaForm } from "./PopularAreaForm";
 import { updatePopularArea } from "../popular-areas-actions";
 import { Edit, MapPin } from "lucide-react";
+import { type PopularArea } from "./PopularAreasTable";
 
 interface EditPopularAreaDialogProps {
-  area: any;
+  area: PopularArea | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;

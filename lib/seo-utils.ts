@@ -1,19 +1,14 @@
 /**
  * SEO/AEO/GEO/AIO utilities
- * - Auto-generate SEO metadata
- * - Create slugs
- * - Generate structured data (Schema.org)
  */
-
-import slugify from "slugify";
 import { createClient } from "@/lib/supabase/server";
-import type { Database } from "@/lib/database.types";
+import type { Database } from "@/lib/database.types.generated";
 
 import { siteConfig } from "@/lib/site-config";
 import { getLocalizedField } from "@/lib/i18n";
 
-type PropertyType = Database["public"]["Enums"]["property_type"];
-type ListingType = Database["public"]["Enums"]["listing_type"];
+type PropertyType = "HOUSE" | "CONDO" | "TOWNHOME" | "LAND" | "OFFICE_BUILDING" | "COMMERCIAL_BUILDING" | "VILLA" | "POOL_VILLA" | "WAREHOUSE" | "OTHER";
+type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
 
 export interface PropertySEOData {
   slug: string;
@@ -24,60 +19,60 @@ export interface PropertySEOData {
   structuredData: Record<string, unknown>; // Schema.org JSON-LD
   faqSchema?: Record<string, unknown>;
   breadcrumbSchema?: Record<string, unknown>; // Schema.org BreadcrumbList
-  ogPriceAmount?: number;
+  ogPriceAmount?: number | null;
   ogPriceCurrency?: string;
 }
 
 export interface PropertyDataForSEO {
-  id?: string;
-  slug?: string;
+  id: string;
+  slug: string | null;
   title: string;
-  title_en?: string;
-  title_cn?: string;
-  title_ru?: string;
+  title_en?: string | null;
+  title_cn?: string | null;
+  title_ru?: string | null;
   property_type: PropertyType;
   listing_type: ListingType;
-  bedrooms?: number;
-  bathrooms?: number;
-  size_sqm?: number;
-  price?: number;
-  original_price?: number;
-  rental_price?: number;
-  original_rental_price?: number;
-  popular_area?: string;
-  popular_area_en?: string;
-  popular_area_cn?: string;
-  popular_area_ru?: string;
-  subdistrict?: string;
-  subdistrict_en?: string;
-  subdistrict_cn?: string;
-  subdistrict_ru?: string;
-  district?: string;
-  district_en?: string;
-  district_cn?: string;
-  district_ru?: string;
-  province?: string;
-  province_en?: string;
-  province_cn?: string;
-  province_ru?: string;
-  address_line1?: string;
-  address_line1_en?: string;
-  address_line1_cn?: string;
-  address_line1_ru?: string;
-  postal_code?: string;
-  description?: string;
-  description_en?: string;
-  description_cn?: string;
-  description_ru?: string;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  size_sqm?: number | null;
+  price?: number | null;
+  original_price?: number | null;
+  rental_price?: number | null;
+  original_rental_price?: number | null;
+  popular_area?: string | null;
+  popular_area_en?: string | null;
+  popular_area_cn?: string | null;
+  popular_area_ru?: string | null;
+  subdistrict?: string | null;
+  subdistrict_en?: string | null;
+  subdistrict_cn?: string | null;
+  subdistrict_ru?: string | null;
+  district?: string | null;
+  district_en?: string | null;
+  district_cn?: string | null;
+  district_ru?: string | null;
+  province?: string | null;
+  province_en?: string | null;
+  province_cn?: string | null;
+  province_ru?: string | null;
+  address_line1?: string | null;
+  address_line1_en?: string | null;
+  address_line1_cn?: string | null;
+  address_line1_ru?: string | null;
+  postal_code?: string | null;
+  description?: string | null;
+  description_en?: string | null;
+  description_cn?: string | null;
+  description_ru?: string | null;
   // SEO Flags for Keyword-Rich Slugs
-  is_pet_friendly?: boolean;
-  is_corner_unit?: boolean;
-  is_renovated?: boolean;
-  is_fully_furnished?: boolean;
-  is_selling_with_tenant?: boolean;
-  is_foreigner_quota?: boolean;
-  is_hot_sale?: boolean;
-  near_transit?: boolean;
+  is_pet_friendly?: boolean | null;
+  is_corner_unit?: boolean | null;
+  is_renovated?: boolean | null;
+  is_fully_furnished?: boolean | null;
+  is_selling_with_tenant?: boolean | null;
+  is_foreigner_quota?: boolean | null;
+  is_hot_sale?: boolean | null;
+  near_transit?: boolean | null;
   transit_station_name?: string; // Legacy/Single field
   transit_station_name_en?: string;
   transit_station_name_cn?: string;
@@ -88,15 +83,17 @@ export interface PropertyDataForSEO {
     station_name_en?: string | null;
     station_name_cn?: string | null;
     station_name_ru?: string | null;
-  }[]; // Full list from Step 3
+    distance_meters?: number | null;
+  }[]; 
   nearby_places?: {
     category: string;
     name: string;
     name_en?: string | null;
     name_cn?: string | null;
     name_ru?: string | null;
+    distance_meters?: number | null;
   }[];
-  features?: string[];
+  features?: string[] | any[];
 }
 
 /**
@@ -438,18 +435,14 @@ export function generateMetaTitle(
   const title = getLocalizedField<string>(data, "title", language) || data.title;
   const parts = [title];
 
+  const lang = (language === "ru" ? "ru" : language === "cn" ? "cn" : language === "en" ? "en" : "th") as "th" | "en" | "cn" | "ru";
+
   if (data.listing_type === "RENT") {
-    parts.push(
-      SEO_LABELS.FOR_RENT[
-        language === "ru" ? "ru" : language === "cn" ? "cn" : language === "en" ? "en" : "th"
-      ],
-    );
+    parts.push(SEO_LABELS.FOR_RENT[lang]);
+  } else if (data.listing_type === "SALE") {
+    parts.push(SEO_LABELS.FOR_SALE[lang]);
   } else {
-    parts.push(
-      SEO_LABELS.FOR_SALE[
-        language === "ru" ? "ru" : language === "cn" ? "cn" : language === "en" ? "en" : "th"
-      ],
-    );
+    parts.push(SEO_LABELS.FOR_SALE_RENT[lang]);
   }
 
   // Prioritize Popular Area (e.g., "Sukhumvit") > District > Province
@@ -524,23 +517,33 @@ export function generateMetaDescription(
 
   let description = parts.join(" ");
 
-  // Add price
+  // Add price (Optimized for SALE_AND_RENT)
+  const priceParts: string[] = [];
+  const unit = ` ${SEO_LABELS.CURRENCY[lang]}`;
+
   if (data.price) {
-    const label = ` ${SEO_LABELS.PRICE[lang]} `;
-    const unit = ` ${SEO_LABELS.CURRENCY[lang]}`;
-    description += `${label}${data.price.toLocaleString()}${unit}`;
+    const label = `${SEO_LABELS.PRICE[lang]} `;
+    let p = `${label}${data.price.toLocaleString()}${unit}`;
     if (data.original_price && data.original_price > data.price) {
       const discountLabel = lang === "en" ? " (Reduced from " : lang === "cn" ? " (降价自 " : lang === "ru" ? " (Снижено с " : " (ลดจาก ";
-      description += `${discountLabel}${data.original_price.toLocaleString()}${unit})`;
+      p += `${discountLabel}${data.original_price.toLocaleString()}${unit})`;
     }
-  } else if (data.rental_price) {
-    const label = ` ${SEO_LABELS.RENT[lang]} `;
-    const unit = ` ${SEO_LABELS.CURRENCY[lang]}${SEO_LABELS.PER_MONTH[lang]}`;
-    description += `${label}${data.rental_price.toLocaleString()}${unit}`;
+    priceParts.push(p);
+  }
+  
+  if (data.rental_price) {
+    const label = `${SEO_LABELS.RENT[lang]} `;
+    const rUnit = `${unit}${SEO_LABELS.PER_MONTH[lang]}`;
+    let r = `${label}${data.rental_price.toLocaleString()}${rUnit}`;
     if (data.original_rental_price && data.original_rental_price > data.rental_price) {
       const discountLabel = lang === "en" ? " (Reduced from " : lang === "cn" ? " (降价自 " : lang === "ru" ? " (Снижено с " : " (ลดจาก ";
-      description += `${discountLabel}${data.original_rental_price.toLocaleString()}${unit})`;
+      r += `${discountLabel}${data.original_rental_price.toLocaleString()}${rUnit})`;
     }
+    priceParts.push(r);
+  }
+
+  if (priceParts.length > 0) {
+    description += " " + priceParts.join(" | ");
   }
 
   // Truncate if too long (max 160)
@@ -579,7 +582,9 @@ export function generateMetaKeywords(
   const actionLabel =
     data.listing_type === "RENT"
       ? SEO_LABELS.FOR_RENT[language]
-      : SEO_LABELS.FOR_SALE[language];
+      : data.listing_type === "SALE"
+        ? SEO_LABELS.FOR_SALE[language]
+        : SEO_LABELS.FOR_SALE_RENT[language];
   // Prioritize Popular Area (Sukhumvit > Wattana)
   const popular_area = getLocalizedField<string>(data, "popular_area", language) || data.popular_area;
   const locationPart =
@@ -822,9 +827,9 @@ export function generateStructuredData(
     name: data.title,
     address: {
       "@type": "PostalAddress",
-      streetAddress: data.address_line1,
-      addressLocality: data.district,
-      addressRegion: data.province,
+      streetAddress: getLocalizedField<string>(data, "address_line1", "th"),
+      addressLocality: getLocalizedField<string>(data, "district", "th"),
+      addressRegion: getLocalizedField<string>(data, "province", "th"),
       postalCode: data.postal_code,
       addressCountry: "TH",
     },

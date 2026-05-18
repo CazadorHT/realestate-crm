@@ -14,6 +14,8 @@ export const EMPTY_VALUES: PropertyFormValues = {
   property_type: "HOUSE",
   listing_type: "SALE",
   status: "DRAFT",
+  branch_id: "", 
+  tenant_id: undefined,
   price: undefined,
   original_price: undefined,
   rental_price: undefined,
@@ -23,9 +25,9 @@ export const EMPTY_VALUES: PropertyFormValues = {
   size_sqm: undefined,
   land_size_sqwah: undefined,
   floor: undefined,
-  min_contract_months: 12, // Default to 1 year
+  min_contract_months: 12,
   verified: false,
-
+  
   maintenance_fee: undefined,
   parking_slots: undefined,
   zoning: undefined,
@@ -33,21 +35,39 @@ export const EMPTY_VALUES: PropertyFormValues = {
   electricity_charge: "",
   water_charge: "",
   rent_free_period_days: undefined,
+  office_capacity: undefined,
+  total_units: 1,
+  sold_units: 0,
   parking_type: "COMMON",
   parking_fee_additional: undefined,
   orientation: undefined,
-  is_bare_shell: false,
-  is_exclusive: false,
-  has_raised_floor: false,
+  price_per_sqm: undefined,
+  rent_price_per_sqm: undefined,
   currency: "THB",
-  property_source: "",
+  
+  address_line1: "",
+  address_line1_en: "",
+  address_line1_cn: "",
+  address_line1_ru: "",
+  province: "",
+  district: "",
+  subdistrict: "",
+  postal_code: "",
+  google_maps_link: "",
+  popular_area: undefined,
+  popular_area_en: "",
+  popular_area_cn: "",
+  popular_area_ru: "",
+  
   owner_id: null,
   assigned_to: null,
   agent_ids: [],
+  feature_ids: [],
   images: [],
+  
   commission_sale_percentage: 3,
   commission_rent_months: 1,
-  popular_area: undefined,
+  
   near_transit: false,
   transit_station_name: "",
   transit_station_name_en: "",
@@ -55,6 +75,9 @@ export const EMPTY_VALUES: PropertyFormValues = {
   transit_station_name_ru: "",
   transit_type: "BTS",
   transit_distance_meters: undefined,
+  nearby_transits: [],
+  nearby_places: [],
+  
   is_co_agent: false,
   co_agent_name: "",
   co_agent_phone: "",
@@ -62,15 +85,18 @@ export const EMPTY_VALUES: PropertyFormValues = {
   co_agent_contact_id: "",
   co_agent_sale_commission_percent: undefined,
   co_agent_rent_commission_months: undefined,
+  
   is_pet_friendly: false,
-  is_foreigner_quota: false, // Default
-  allow_smoking: false, // Default
+  is_foreigner_quota: false,
+  allow_smoking: false,
   is_renovated: false,
-  // is_unfurnished removed
   is_fully_furnished: false,
   is_corner_unit: false,
   has_private_pool: false,
   is_selling_with_tenant: false,
+  is_bare_shell: false,
+  is_exclusive: false,
+  
   has_garden_view: false,
   has_pool_view: false,
   has_city_view: false,
@@ -90,49 +116,42 @@ export const EMPTY_VALUES: PropertyFormValues = {
   has_247_access: false,
   has_fiber_optic: false,
   is_tax_registered: false,
+  has_raised_floor: false,
   is_high_ceiling: false,
   is_cbd: false,
   is_smart_home: false,
   has_private_elevator: false,
   is_handicapped_friendly: false,
   is_high_floor: false,
-  is_never_lived_in: false,
-  requires_ai_review: false,
   is_green_building: false,
   has_flexible_lease: false,
   is_fully_fitted: false,
-  floor_plan_url: null,
-  office_capacity: undefined,
-  feature_ids: [],
-  nearby_places: [],
-  nearby_transits: [],
-
-  // Location
-  province: "กรุงเทพมหานคร",
-  district: "",
-  subdistrict: "",
-  address_line1: "",
-  address_line1_en: "",
-  address_line1_cn: "",
-  address_line1_ru: "",
-  postal_code: "",
-  google_maps_link: "",
-
-  // Stock Management
-  total_units: 1,
-  sold_units: 0,
+  is_never_lived_in: false,
   
-  // Versioning
+  view_count: 0,
+  trust_score: 1.0,
+  has_nearby_places: false,
+  requires_ai_review: false,
+  property_source: "",
+  video_url: "",
+  floor_plan_url: "",
   version: 1,
 };
 
+
 export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
-  1: ["listing_type", "property_type", "province", "title", "popular_area"],
+  1: [
+    "branch_id", "listing_type", "property_type", "province", "popular_area",
+    "title", "title_en", "title_cn", "title_ru",
+    "popular_area_en", "popular_area_cn", "popular_area_ru"
+  ],
   2: [
     "price",
     "original_price",
     "rental_price",
     "original_rental_price",
+    "price_per_sqm",
+    "rent_price_per_sqm",
     "commission_sale_percentage",
     "commission_rent_months",
     // Property Details
@@ -163,22 +182,23 @@ export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
     "co_agent_contact_id",
     "co_agent_sale_commission_percent",
     "co_agent_rent_commission_months",
+    "office_capacity",
   ],
   3: [
     "district",
     "subdistrict",
-    "address_line1",
+    "address_line1", "address_line1_en", "address_line1_cn", "address_line1_ru",
     "postal_code",
     "google_maps_link",
     // Transit Fields
     "near_transit",
-    "transit_station_name",
+    "transit_station_name", "transit_station_name_en", "transit_station_name_cn", "transit_station_name_ru",
     "transit_type",
     "transit_distance_meters",
     "nearby_transits",
     "nearby_places",
   ],
-  4: ["images", "owner_id", "assigned_to", "agent_ids", "property_source"],
+  4: ["images", "owner_id", "assigned_to", "agent_ids", "property_source", "video_url", "floor_plan_url"],
   5: [
     "feature_ids",
     // Boolean tags
@@ -220,22 +240,33 @@ export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
     "is_handicapped_friendly",
     "is_high_floor",
     "is_never_lived_in",
+    "is_green_building",
+    "has_flexible_lease",
+    "is_fully_fitted",
   ],
-  6: ["description", "status"],
+  6: ["description", "description_en", "description_cn", "description_ru", "status"],
 };
 
-export const FIELD_LABELS: Record<keyof PropertyFormValues | string, string> = {
+export const FIELD_LABELS: Record<string, string> = {
   // Step 1
   listing_type: "รูปแบบประกาศ",
   property_type: "ประเภททรัพย์",
-  title: "ชื่อทรัพย์",
-  popular_area: "ย่าน/โครงการ",
+  title: "ชื่อทรัพย์ (TH)",
+  title_en: "Title (EN)",
+  title_cn: "物业名称 (CN)",
+  title_ru: "Название (RU)",
+  popular_area: "ย่าน/โครงการ (TH)",
+  popular_area_en: "Area (EN)",
+  popular_area_cn: "区域 (CN)",
+  popular_area_ru: "Район (RU)",
 
   // Step 2 - Price & Details
   price: "ราคาขาย",
   original_price: "ราคาตั้งขาย (เต็ม)",
   rental_price: "ค่าเช่า",
   original_rental_price: "ค่าเช่าต่อเดือน (เต็ม)",
+  price_per_sqm: "ราคาขายต่อ ตร.ม.",
+  rent_price_per_sqm: "ราคาเช่าต่อ ตร.ม.",
   commission_sale_percentage: "% คอมมิชชั่นขาย",
   commission_rent_months: "คอมมิชชั่นเช่า (เดือน)",
   bedrooms: "ห้องนอน",
@@ -256,6 +287,7 @@ export const FIELD_LABELS: Record<keyof PropertyFormValues | string, string> = {
   orientation: "ทิศทาง",
   total_units: "จำนวนยูนิต",
   sold_units: "ยูนิตที่ขายแล้ว",
+  office_capacity: "รองรับที่นั่งออฟฟิศ",
 
   // Co-Agent
   is_co_agent: "Co-Agent",
@@ -270,11 +302,17 @@ export const FIELD_LABELS: Record<keyof PropertyFormValues | string, string> = {
   province: "จังหวัด",
   district: "อำเภอ/เขต",
   subdistrict: "ตำบล/แขวง",
-  address_line1: "ที่อยู่",
+  address_line1: "ที่อยู่ (TH)",
+  address_line1_en: "Address (EN)",
+  address_line1_cn: "地址 (CN)",
+  address_line1_ru: "Адрес (RU)",
   postal_code: "รหัสไปรษณีย์",
   google_maps_link: "ลิงก์ Google Maps",
   near_transit: "ใกล้ระบบขนส่ง",
-  transit_station_name: "ชื่อสถานี",
+  transit_station_name: "ชื่อสถานี (TH)",
+  transit_station_name_en: "Station (EN)",
+  transit_station_name_cn: "车站 (CN)",
+  transit_station_name_ru: "Станция (RU)",
   transit_type: "ประเภทระบบขนส่ง",
   transit_distance_meters: "ระยะทางถึงสถานี",
   nearby_places: "สถานที่ใกล้เคียง",
@@ -286,6 +324,8 @@ export const FIELD_LABELS: Record<keyof PropertyFormValues | string, string> = {
   assigned_to: "ผู้ดูแล",
   agent_ids: "เอเจนต์",
   property_source: "แหล่งที่มา",
+  video_url: "ลิงก์วิดีโอ",
+  floor_plan_url: "ผังอาคาร (Floor Plan)",
 
   // Step 5 - Features
   feature_ids: "สิ่งอำนวยความสะดวก",
@@ -306,168 +346,189 @@ export const FIELD_LABELS: Record<keyof PropertyFormValues | string, string> = {
   is_handicapped_friendly: "รองรับผู้พิการ",
   is_high_floor: "ชั้นสูง (High Floor)",
   is_never_lived_in: "ไม่เคยเข้าอยู่",
+  is_green_building: "อาคารสีเขียว (Green Building)",
+  has_flexible_lease: "สัญญาเช่ายืดหยุ่น",
+  is_fully_fitted: "กั้นห้องแล้ว (Fully Fitted)",
 
   // Step 6 - Review
-  description: "คำอธิบาย",
+  description: "คำอธิบาย (TH)",
+  description_en: "Description (EN)",
+  description_cn: "说明 (CN)",
+  description_ru: "Описание (RU)",
   status: "สถานะ",
 };
 
-// Helper: Convert DB row to form values
+// Helper: Convert DB row to form values (V3 Smart Version)
 export function mapRowToFormValues(
-  row: PropertyRow & {
-    property_agents?: { agent_id: string }[];
-    property_features?: { feature_id: string }[];
-  },
+  row: Record<string, any>, 
 ): PropertyFormValues {
-  const structuredData = row.structured_data as unknown as {
-    is_co_agent?: boolean;
-    co_agent_name?: string;
-    co_agent_phone?: string;
-    co_agent_contact_channel?: "LINE" | "FB" | "TEL";
-    co_agent_contact_id?: string;
-    co_agent_sale_commission_percent?: number;
-    co_agent_rent_commission_months?: number;
-  } | null;
+  // Extract JSONB blocks with fallback to empty objects
+  const amenities = (row.amenities || {}) as Record<string, any>;
+  const meta = (row.meta_data || {}) as Record<string, any>;
+  const pricing = (row.pricing_details || {}) as Record<string, any>;
+  const address = (row.address_info || {}) as Record<string, any>;
+  const transit = (row.transit_info || []) as any[];
+
+  // 🧠 Smart Lookup Helper: Try core column first, then JSONB blocks
+  const get = <T>(key: string, defaultValue: T): T => {
+    const value = row[key] ?? amenities[key] ?? meta[key] ?? pricing[key] ?? address[key];
+    return (value !== null && value !== undefined) ? (value as T) : defaultValue;
+  };
 
   return {
-    title: row.title ?? "",
-    title_en: row.title_en || row.title || "",
-    title_cn: row.title_cn || "",
-    title_ru: row.title_ru || "",
-    description: row.description ?? undefined,
-    description_en: row.description_en || row.description || "",
-    description_cn: row.description_cn || "",
-    description_ru: row.description_ru || "",
-    property_type: row.property_type ?? "HOUSE",
-    listing_type: row.listing_type ?? "SALE",
-    status: row.status ?? "DRAFT",
-    price: row.price ?? undefined,
-    original_price: row.original_price ?? undefined,
-    rental_price: row.rental_price ?? undefined,
-    original_rental_price: row.original_rental_price ?? undefined,
-    bedrooms: row.bedrooms ?? undefined,
-    bathrooms: row.bathrooms ?? undefined,
-    size_sqm: row.size_sqm ?? undefined,
-    land_size_sqwah: row.land_size_sqwah ?? undefined,
-    floor: row.floor ?? undefined,
-    min_contract_months: row.min_contract_months ?? undefined,
-    maintenance_fee: row.maintenance_fee ?? undefined,
-    parking_slots: row.parking_slots ?? undefined,
-    zoning: row.zoning ?? undefined,
-    currency: row.currency ?? "THB",
-    address_line1: row.address_line1 ?? "",
-    address_line1_en: row.address_line1_en || row.address_line1 || "",
-    address_line1_cn: row.address_line1_cn || "",
-    address_line1_ru: row.address_line1_ru || "",
-    province: row.province ?? "",
-    district: row.district ?? "",
-    subdistrict: row.subdistrict ?? "",
-    postal_code: row.postal_code ?? "",
-    google_maps_link: row.google_maps_link ?? "",
-    popular_area: row.popular_area ?? undefined,
-    owner_id: row.owner_id ?? undefined,
-    property_source: row.property_source ?? "",
-    assigned_to: row.assigned_to ?? undefined,
-    agent_ids: row.property_agents?.map((a) => a.agent_id) ?? [],
-    images: getSafeImages(row.images).map((img) => img.storage_path || img.url),
-    commission_sale_percentage: row.commission_sale_percentage ?? 3,
-    commission_rent_months: row.commission_rent_months ?? 1,
-    near_transit: row.near_transit ?? false,
-    transit_station_name: row.transit_station_name ?? "",
-    transit_station_name_en: row.transit_station_name_en || row.transit_station_name || "",
-    transit_station_name_cn: row.transit_station_name_cn || "",
-    transit_station_name_ru: row.transit_station_name_ru || "",
-    transit_type: (row.transit_type as "BTS" | "MRT" | "MRT2" | "ARL" | "SRT" | "SRT2" | "SRT3" | "MRT3" | "OTHER") ?? "BTS",
-    transit_distance_meters: row.transit_distance_meters ?? undefined,
-    is_co_agent: row.is_co_agent ?? structuredData?.is_co_agent ?? false,
-    co_agent_name: row.co_agent_name ?? structuredData?.co_agent_name ?? "",
-    co_agent_phone: row.co_agent_phone ?? structuredData?.co_agent_phone ?? "",
-    co_agent_contact_channel:
-      (row.co_agent_contact_channel as "LINE" | "FB" | "TEL") ??
-      structuredData?.co_agent_contact_channel ??
-      "LINE",
-    co_agent_contact_id:
-      row.co_agent_contact_id ?? structuredData?.co_agent_contact_id ?? "",
-    co_agent_sale_commission_percent:
-      row.co_agent_sale_commission_percent ??
-      structuredData?.co_agent_sale_commission_percent ??
-      undefined,
-    co_agent_rent_commission_months:
-      row.co_agent_rent_commission_months ??
-      structuredData?.co_agent_rent_commission_months ??
-      undefined,
+    // 1. Core Identification
+    title: get("title", ""),
+    title_en: get("title_en", ""),
+    title_cn: get("title_cn", ""),
+    title_ru: get("title_ru", ""),
+    description: get("description", ""),
+    description_en: get("description_en", ""),
+    description_cn: get("description_cn", ""),
+    description_ru: get("description_ru", ""),
+    
+    // 2. Core Specs (Hot Table)
+    property_type: (row.property_type as any) || "HOUSE",
+    listing_type: (row.listing_type as any) || "SALE",
+    status: (row.status as any) || "DRAFT",
+    branch_id: String(row.branch_id || ""),
+    tenant_id: (row.tenant_id as any),
+    
+    price: Number(row.price || pricing.price || 0) || undefined,
+    original_price: Number(get("original_price", 0)) || undefined,
+    rental_price: Number(row.rental_price || pricing.rental_price || 0) || undefined,
+    original_rental_price: Number(get("original_rental_price", 0)) || undefined,
+    
+    price_per_sqm: Number(get("price_per_sqm", 0)) || 
+      (row.price && row.size_sqm ? Math.round(Number(row.price) / Number(row.size_sqm)) : undefined),
+    rent_price_per_sqm: Number(get("rent_price_per_sqm", 0)) ||
+      (row.rental_price && row.size_sqm ? Math.round(Number(row.rental_price) / Number(row.size_sqm)) : undefined),
+    
+    bedrooms: Number(row.bedrooms || 0) || undefined,
+    bathrooms: Number(row.bathrooms || 0) || undefined,
+    size_sqm: Number(row.size_sqm || 0) || undefined,
+    land_size_sqwah: Number(row.land_size_sqwah || 0) || undefined,
+    floor: Number(get("floor", 0)) || undefined,
+    
+    // 3. Details (Warm Blocks)
+    min_contract_months: Number(get("min_contract_months", 12)),
+    maintenance_fee: Number(get("maintenance_fee", 0)) || undefined,
+    parking_slots: Number(get("parking_slots", 0)) || undefined,
+    zoning: get("zoning", undefined),
+    ceiling_height: Number(get("ceiling_height", 0)) || undefined,
+    electricity_charge: get("electricity_charge", ""),
+    water_charge: get("water_charge", ""),
+    rent_free_period_days: Number(get("rent_free_period_days", 0)) || undefined,
+    parking_type: get("parking_type", "COMMON"),
+    parking_fee_additional: Number(get("parking_fee_additional", 0)) || undefined,
+    orientation: get("orientation", undefined),
+    is_bare_shell: Boolean(get("is_bare_shell", false)),
+    is_exclusive: Boolean(get("is_exclusive", false)),
+    has_raised_floor: Boolean(get("has_raised_floor", false)),
+    currency: String(row.currency || "THB"),
+    
+    // 4. Address (Warm Block)
+    address_line1: get("address_line1", ""),
+    address_line1_en: get("address_line1_en", ""),
+    address_line1_cn: get("address_line1_cn", ""),
+    address_line1_ru: get("address_line1_ru", ""),
+    province: get("province", ""),
+    district: get("district", ""),
+    subdistrict: get("subdistrict", ""),
+    postal_code: get("postal_code", ""),
+    google_maps_link: get("google_maps_link", ""),
+    
+    // 5. Management & Meta
+    popular_area: get("popular_area", ""),
+    popular_area_en: get("popular_area_en", ""),
+    popular_area_cn: get("popular_area_cn", ""),
+    popular_area_ru: get("popular_area_ru", ""),
+    owner_id: (row.owner_id as any),
+    property_source: get("property_source", ""),
+    assigned_to: (row.assigned_to as any),
+    agent_ids: (meta.agent_ids as string[]) || (row.property_agents as any[])?.map((a: any) => a.agent_id) || [],
+    feature_ids: (row.property_features as any[])?.map((f: any) => f.feature_id) || [],
+    
+    // Media handled separately but providing fallback
+    images: getSafeImages(row.images || []).map((img) => img.storage_path || img.url),
+    
+    commission_sale_percentage: Number(get("commission_sale_percentage", 3)),
+    commission_rent_months: Number(get("commission_rent_months", 1)),
+    
+    // Transit
+    near_transit: Boolean(get("near_transit", false)),
+    transit_station_name: get("transit_station_name", ""),
+    transit_station_name_en: get("transit_station_name_en", ""),
+    transit_station_name_cn: get("transit_station_name_cn", ""),
+    transit_station_name_ru: get("transit_station_name_ru", ""),
+    transit_type: (get("transit_type", "BTS") as any),
+    transit_distance_meters: Number(get("transit_distance_meters", 0)) || undefined,
+    nearby_transits: transit,
+    nearby_places: getSafeNearbyPlaces(row.nearby_places || []),
+    
+    // Co-Agent (Nested in meta)
+    is_co_agent: Boolean(get("is_co_agent", false)),
+    co_agent_name: get("co_agent_name", ""),
+    co_agent_phone: get("co_agent_phone", ""),
+    co_agent_contact_channel: (get("co_agent_contact_channel", "Line") as any),
+    co_agent_contact_id: get("co_agent_contact_id", ""),
+    co_agent_sale_commission_percent: Number(get("co_agent_sale_commission_percent", 0)) || undefined,
+    co_agent_rent_commission_months: Number(get("co_agent_rent_commission_months", 0)) || undefined,
 
-    // Tags
-    verified: row.verified ?? false,
-    is_pet_friendly: (row.meta_keywords || []).includes("Pet Friendly"),
-    is_foreigner_quota: (row.meta_keywords || []).includes(
-      "Foreigner Friendly",
-    ),
-    allow_smoking: (row.meta_keywords || []).includes("Smoking Allowed"),
-    is_renovated: (row.meta_keywords || []).includes("Renovated"),
-    // is_unfurnished removed
-    is_fully_furnished: (row.meta_keywords || []).includes("Fully Furnished"),
-    is_corner_unit: (row.meta_keywords || []).includes("Corner Unit"),
-    has_private_pool: (row.meta_keywords || []).includes("Private Pool"),
-    is_selling_with_tenant: (row.meta_keywords || []).includes(
-      "Selling with Tenant",
-    ),
-    has_garden_view: (row.meta_keywords || []).includes("Garden View"),
-    has_pool_view: (row.meta_keywords || []).includes("Pool View"),
-    has_city_view: (row.meta_keywords || []).includes("City View"),
-    has_unblocked_view: (row.meta_keywords || []).includes("Unblocked View"),
-    has_river_view: (row.meta_keywords || []).includes("River View"),
-    facing_east: (row.meta_keywords || []).includes("East Facing"),
-    facing_north: (row.meta_keywords || []).includes("North Facing"),
-    facing_south: (row.meta_keywords || []).includes("South Facing"),
-    facing_west: (row.meta_keywords || []).includes("West Facing"),
-    has_multi_parking: (row.meta_keywords || []).includes("Multi-Parking"),
-    is_grade_a: (row.meta_keywords || []).includes("Grade A Building"),
-    is_grade_b: (row.meta_keywords || []).includes("Grade B Building"),
-    is_grade_c: (row.meta_keywords || []).includes("Grade C Building"),
-    is_column_free: (row.meta_keywords || []).includes("Column-Free"),
-    is_central_air: (row.meta_keywords || []).includes("Central Air-con"),
-    is_split_air: (row.meta_keywords || []).includes("Split Air-con"),
-    has_247_access: (row.meta_keywords || []).includes("24/7 Access"),
-    has_fiber_optic: (row.meta_keywords || []).includes(
-      "High-Speed Fiber Optic",
-    ),
-    is_tax_registered: (row.meta_keywords || []).includes("Tax Registered"),
-    is_high_ceiling:
-      row.is_high_ceiling ?? (row.meta_keywords || []).includes("High Ceiling"),
-    is_cbd: (row.meta_keywords || []).includes("CBD Zone"),
-    is_smart_home: (row.meta_keywords || []).includes("Smart Home"),
-    has_private_elevator: (row.meta_keywords || []).includes("Private Elevator"),
-    is_handicapped_friendly: (row.meta_keywords || []).includes(
-      "Handicapped Friendly",
-    ),
-    is_high_floor: (row.meta_keywords || []).includes("High Floor"),
-    is_never_lived_in: (row.meta_keywords || []).includes("Never Lived In"),
-    is_green_building: row.is_green_building ?? false,
-    has_flexible_lease: row.has_flexible_lease ?? false,
-    is_fully_fitted: row.is_fully_fitted ?? false,
-    floor_plan_url: row.floor_plan_url ?? null,
-    office_capacity: row.office_capacity ?? undefined,
-    feature_ids: row.property_features?.map((f) => f.feature_id) ?? [],
-    nearby_places: getSafeNearbyPlaces(row.nearby_places),
-    nearby_transits: getSafeNearbyTransits(row.nearby_transits),
-    requires_ai_review: row.requires_ai_review ?? false,
-    ceiling_height: row.ceiling_height ?? undefined,
-    electricity_charge: row.electricity_charge ?? "",
-    water_charge: row.water_charge ?? "",
-    rent_free_period_days: row.rent_free_period_days ?? undefined,
-    parking_type: (row.parking_type as "COMMON" | "FIXED" | "AUTO") ?? "COMMON",
-    parking_fee_additional: row.parking_fee_additional ?? undefined,
-    orientation: (row.orientation as "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW") ?? undefined,
-    is_bare_shell: row.is_bare_shell ?? false,
-    is_exclusive: row.is_exclusive ?? false,
-    has_raised_floor: row.has_raised_floor ?? false,
-
+    // 6. Tags & Boolean Flags
+    verified: Boolean(get("verified", false)),
+    is_pet_friendly: Boolean(get("is_pet_friendly", false)),
+    is_foreigner_quota: Boolean(get("is_foreigner_quota", false)),
+    allow_smoking: Boolean(get("allow_smoking", false)),
+    is_renovated: Boolean(get("is_renovated", false)),
+    is_fully_furnished: Boolean(get("is_fully_furnished", false)),
+    is_corner_unit: Boolean(get("is_corner_unit", false)),
+    has_private_pool: Boolean(get("has_private_pool", false)),
+    is_selling_with_tenant: Boolean(get("is_selling_with_tenant", false)),
+    has_garden_view: Boolean(get("has_garden_view", false)),
+    has_pool_view: Boolean(get("has_pool_view", false)),
+    has_city_view: Boolean(get("has_city_view", false)),
+    has_unblocked_view: Boolean(get("has_unblocked_view", false)),
+    has_river_view: Boolean(get("has_river_view", false)),
+    facing_east: Boolean(get("facing_east", false)),
+    facing_north: Boolean(get("facing_north", false)),
+    facing_south: Boolean(get("facing_south", false)),
+    facing_west: Boolean(get("facing_west", false)),
+    has_multi_parking: Boolean(get("has_multi_parking", false)),
+    is_grade_a: Boolean(get("is_grade_a", false)),
+    is_grade_b: Boolean(get("is_grade_b", false)),
+    is_grade_c: Boolean(get("is_grade_c", false)),
+    is_column_free: Boolean(get("is_column_free", false)),
+    is_central_air: Boolean(get("is_central_air", false)),
+    is_split_air: Boolean(get("is_split_air", false)),
+    has_247_access: Boolean(get("has_247_access", false)),
+    has_fiber_optic: Boolean(get("has_fiber_optic", false)),
+    is_tax_registered: Boolean(get("is_tax_registered", false)),
+    is_high_ceiling: Boolean(get("is_high_ceiling", false)),
+    is_cbd: Boolean(get("is_cbd", false)),
+    is_smart_home: Boolean(get("is_smart_home", false)),
+    has_private_elevator: Boolean(get("has_private_elevator", false)),
+    is_handicapped_friendly: Boolean(get("is_handicapped_friendly", false)),
+    is_high_floor: Boolean(get("is_high_floor", false)),
+    is_never_lived_in: Boolean(get("is_never_lived_in", false)),
+    is_green_building: Boolean(get("is_green_building", false)),
+    has_flexible_lease: Boolean(get("has_flexible_lease", false)),
+    is_fully_fitted: Boolean(get("is_fully_fitted", false)),
+    
+    floor_plan_url: String(get("floor_plan_url", "")),
+    video_url: String(get("video_url", "")),
+    office_capacity: Number(get("office_capacity", 0)) || undefined,
+    
+    // Extra Info
+    view_count: Number(row.view_count || meta.view_count || 0),
+    trust_score: Number(row.trust_score || meta.trust_score || 1.0),
+    has_nearby_places: Boolean(row.has_nearby_places || meta.has_nearby_places || false),
+    requires_ai_review: Boolean(row.requires_ai_review || meta.requires_ai_review || false),
+    
     // Stock Management
-    total_units: row.total_units ?? 1,
-    sold_units: row.sold_units ?? 0,
+    total_units: Number(get("total_units", 1)),
+    sold_units: Number(get("sold_units", 0)),
 
     // Versioning
-    version: row.version ?? 1,
+    version: Number(row.version || meta.version || 1),
   };
 }

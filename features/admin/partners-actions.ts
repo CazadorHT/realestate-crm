@@ -7,7 +7,8 @@ import { requireAuthContext, assertSystemAdmin } from "@/lib/authz";
 import { calculateNewSortOrders } from "./partners-utils";
 import { redis } from "@/lib/redis";
 import { z } from "zod";
-import { Database } from "@/lib/database.types";
+import { logAudit } from "@/lib/audit";
+import { Database } from "@/lib/database.types.generated";
 
 const partnerSchema = z.object({
   name: z.string().min(1, "กรุณาระบุชื่อพาร์ทเนอร์"),
@@ -24,6 +25,17 @@ const updatePartnerSchema = partnerSchema.partial().extend({
 type CreatePartnerInput = z.infer<typeof partnerSchema>;
 type UpdatePartnerInput = z.infer<typeof updatePartnerSchema>;
 
+export interface PartnerRow {
+  id: string;
+  name: string;
+  logo_url: string;
+  website_url?: string | null;
+  sort_order: number;
+  is_active: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
 export async function getPartners(params?: {
   page?: number;
   pageSize?: number;
@@ -36,35 +48,68 @@ export async function getPartners(params?: {
   if (redis) {
     try {
       const cached = await redis.get(cacheKey);
-      if (cached) return cached as { success: boolean; data: Database["public"]["Tables"]["partners"]["Row"][]; totalCount: number };
+      if (cached) return cached as { success: boolean; data: PartnerRow[]; totalCount: number };
     } catch (e: unknown) {
       console.warn("[Redis] Partners Cache read error:", e);
     }
   }
 
+  const { tenantId } = await requireAuthContext();
   const supabase = await createClient();
 
   try {
     let query = supabase
-      .from("partners")
-      .select("id, name, logo_url, website_url, sort_order, is_active, created_at, updated_at", { count: "exact" });
+      .from("cms_content_v3")
+      .select("id, title, cover_image, meta_data, status, created_at, updated_at", { count: "exact" })
+      .eq("content_type", "PARTNER")
+      .neq("status", "trash");
+
+    if (tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
 
     if (search) {
-      query = query.ilike("name", `%${search}%`);
+      query = query.textSearch("fts_vector", search, {
+        config: "simple",
+        type: "plain",
+      });
     }
 
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
     const { data, error, count } = await query
-      .order("sort_order", { ascending: true })
+      .order("meta_data->sort_order", { ascending: true })
+      .order("created_at", { ascending: false })
       .range(from, to);
 
     if (error) throw error;
 
+    const mappedData: PartnerRow[] = (data || []).map((item: any) => {
+      const meta = item.meta_data as Record<string, unknown> | null;
+      let nameStr = "";
+      if (item.title && typeof item.title === "object") {
+        const t = item.title as Record<string, unknown>;
+        nameStr = (t.th as string) || (t.default as string) || (Object.values(t)[0] as string) || "";
+      } else {
+        nameStr = String(item.title || "");
+      }
+
+      return {
+        id: item.id,
+        name: nameStr,
+        logo_url: item.cover_image || "",
+        website_url: (meta?.website_url as string) || null,
+        sort_order: (meta?.sort_order as number) || 0,
+        is_active: item.status === "published",
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+      };
+    });
+
     const result = {
       success: true,
-      data: data || [],
+      data: mappedData,
       totalCount: count || 0,
     };
 
@@ -104,37 +149,89 @@ async function clearPartnerCache() {
   }
 }
 
-export async function getPartner(id: string) {
+export async function getPartner(id: string): Promise<PartnerRow> {
+  const { tenantId } = await requireAuthContext();
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("partners")
-    .select("id, name, logo_url, website_url, sort_order, is_active, created_at, updated_at")
+  let query = supabase
+    .from("cms_content_v3")
+    .select("id, title, cover_image, meta_data, status, created_at, updated_at")
     .eq("id", id)
-    .single();
+    .eq("content_type", "PARTNER")
+    .neq("status", "trash");
+
+  if (tenantId) {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data, error } = await query.single();
 
   if (error) throw new Error(mapDbError(error));
-  return data;
+
+  const meta = data.meta_data as Record<string, unknown> | null;
+  let nameStr = "";
+  if (data.title && typeof data.title === "object") {
+    const t = data.title as Record<string, unknown>;
+    nameStr = (t.th as string) || (t.default as string) || (Object.values(t)[0] as string) || "";
+  } else {
+    nameStr = String(data.title || "");
+  }
+
+  return {
+    id: data.id,
+    name: nameStr,
+    logo_url: data.cover_image || "",
+    website_url: (meta?.website_url as string) || null,
+    sort_order: (meta?.sort_order as number) || 0,
+    is_active: data.status === "published",
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+  };
 }
 
 async function resequencePartners() {
+  const { tenantId } = await requireAuthContext();
   const supabase = await createClient();
 
-  // Fetch all partners sorted by sort_order, then by updated_at (most recently changed first in case of collision)
-  const { data: partners } = await supabase
-    .from("partners")
-    .select("id, sort_order")
-    .order("sort_order", { ascending: true })
+  let query = supabase
+    .from("cms_content_v3")
+    .select("id, meta_data, updated_at")
+    .eq("content_type", "PARTNER")
+    .neq("status", "trash");
+
+  if (tenantId) {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data: partners } = await query
+    .order("meta_data->sort_order", { ascending: true })
     .order("updated_at", { ascending: false });
 
   if (!partners) return;
 
-  const updates = calculateNewSortOrders(partners);
+  const mappedForResequence = partners.map((p: any) => ({
+    id: p.id,
+    sort_order: ((p.meta_data as Record<string, unknown> | null)?.sort_order as number) ?? 0,
+    meta_data: p.meta_data as Record<string, unknown> | null
+  }));
 
+  const updates = calculateNewSortOrders(mappedForResequence);
 
   if (updates.length > 0) {
-    const promises = updates.map(u => 
-      supabase.from("partners").update({ sort_order: u.sort_order }).eq("id", u.id)
-    );
+    const promises = updates.map(u => {
+      const existing = mappedForResequence.find((m: any) => m.id === u.id);
+      const newMeta = { ...(existing?.meta_data || {}), sort_order: u.sort_order };
+      let updateQuery = supabase
+        .from("cms_content_v3")
+        .update({ meta_data: newMeta, updated_at: new Date().toISOString() })
+        .eq("id", u.id)
+        .eq("content_type", "PARTNER");
+
+      if (tenantId) {
+        updateQuery = updateQuery.eq("tenant_id", tenantId);
+      }
+
+      return updateQuery;
+    });
     await Promise.all(promises);
   }
 }
@@ -143,30 +240,63 @@ export async function createPartner(input: CreatePartnerInput) {
   try {
     const validated = partnerSchema.parse(input);
 
-    const { role } = await requireAuthContext();
+    const { role, user, supabase, tenantId } = await requireAuthContext();
     assertSystemAdmin(role);
 
-    const supabase = await createClient();
-
     // 1. Get the current maximum sort_order to place the new partner at the end
-    const { data: maxOrderData } = await supabase
-      .from("partners")
-      .select("sort_order")
-      .order("sort_order", { ascending: false })
-      .limit(1)
-      .single();
+    let maxQuery = supabase
+      .from("cms_content_v3")
+      .select("meta_data")
+      .eq("content_type", "PARTNER")
+      .neq("status", "trash");
 
-    const nextOrder = (maxOrderData?.sort_order || 0) + 1;
+    if (tenantId) {
+      maxQuery = maxQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: maxOrderData } = await maxQuery
+      .order("meta_data->sort_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const currentMax = ((maxOrderData?.meta_data as Record<string, unknown> | null)?.sort_order as number) || 0;
+    const nextOrder = currentMax + 1;
+
+    const partnerId = crypto.randomUUID();
 
     // 2. Insert with the calculated order
-    const { error } = await supabase.from("partners").insert([
-      {
-        ...validated,
-        sort_order: nextOrder,
-      },
-    ]);
+    const { data: newPartner, error } = await supabase
+      .from("cms_content_v3")
+      .insert([
+        {
+          id: partnerId,
+          content_type: "PARTNER",
+          tenant_id: tenantId ?? null,
+          author_id: user.id,
+          title: { th: validated.name, default: validated.name },
+          cover_image: validated.logo_url,
+          status: validated.is_active ? "published" : "draft",
+          slug: `partner-${partnerId.slice(0, 8)}`,
+          meta_data: {
+            website_url: validated.website_url,
+            sort_order: nextOrder,
+          },
+        },
+      ])
+      .select("id, title")
+      .single();
 
     if (error) throw error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "partner.create",
+        entity: "cms_content_v3",
+        entityId: newPartner.id,
+        metadata: { name: validated.name },
+      }
+    );
 
     // 3. Clean up order after insert to ensure no duplicates/gaps
     await resequencePartners();
@@ -190,18 +320,69 @@ export async function updatePartner(input: UpdatePartnerInput) {
   try {
     const validated = updatePartnerSchema.parse(input);
 
-    const { role } = await requireAuthContext();
+    const { role, user, supabase, tenantId } = await requireAuthContext();
     assertSystemAdmin(role);
 
-    const supabase = await createClient();
     const { id, ...updates } = validated;
 
-    const { error } = await supabase
-      .from("partners")
-      .update(updates)
-      .eq("id", id);
+    // First fetch existing meta_data to preserve other fields if any
+    let getQuery = supabase
+      .from("cms_content_v3")
+      .select("meta_data")
+      .eq("id", id)
+      .eq("content_type", "PARTNER");
+
+    if (tenantId) {
+      getQuery = getQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: existing } = await getQuery.single();
+
+    const oldMeta = (existing?.meta_data as Record<string, unknown> | null) || {};
+    const newMeta = {
+      ...oldMeta,
+      ...(updates.website_url !== undefined ? { website_url: updates.website_url } : {}),
+      ...(updates.sort_order !== undefined ? { sort_order: updates.sort_order } : {}),
+    };
+
+    const updatePayload: Database["public"]["Tables"]["cms_content_v3"]["Update"] = {
+      meta_data: newMeta,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (updates.name !== undefined) {
+      updatePayload.title = { th: updates.name, default: updates.name };
+    }
+    if (updates.logo_url !== undefined) {
+      updatePayload.cover_image = updates.logo_url;
+    }
+    if (updates.is_active !== undefined) {
+      updatePayload.status = updates.is_active ? "published" : "draft";
+    }
+
+    let updateQuery = supabase
+      .from("cms_content_v3")
+      .update(updatePayload)
+      .eq("id", id)
+      .eq("content_type", "PARTNER");
+
+    if (tenantId) {
+      updateQuery = updateQuery.eq("tenant_id", tenantId);
+    }
+
+    const { error } = await updateQuery;
 
     if (error) throw error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "partner.update",
+        entity: "cms_content_v3",
+        entityId: id,
+        metadata: { updates },
+      }
+    );
 
     // Clean up order after update
     await resequencePartners();
@@ -223,13 +404,31 @@ export async function updatePartner(input: UpdatePartnerInput) {
 
 export async function deletePartner(id: string) {
   try {
-    const { role } = await requireAuthContext();
+    const { role, user, supabase, tenantId } = await requireAuthContext();
     assertSystemAdmin(role);
 
-    const supabase = await createClient();
-    const { error } = await supabase.from("partners").delete().eq("id", id);
+    let query = supabase
+      .from("cms_content_v3")
+      .delete()
+      .eq("id", id)
+      .eq("content_type", "PARTNER");
+
+    if (tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "partner.delete",
+        entity: "cms_content_v3",
+        entityId: id,
+      }
+    );
 
     // Re-sequence after delete to fill gaps
     await resequencePartners();
@@ -245,21 +444,44 @@ export async function deletePartner(id: string) {
 }
 
 export async function getPartnersDashboardStats() {
+  const { tenantId } = await requireAuthContext();
   const supabase = await createClient();
 
-  const { count: totalPartners } = await supabase
-    .from("partners")
-    .select("id", { count: "exact", head: true });
-
-  const { count: activePartners } = await supabase
-    .from("partners")
+  let baseQuery = supabase
+    .from("cms_content_v3")
     .select("id", { count: "exact", head: true })
-    .eq("is_active", true);
+    .eq("content_type", "PARTNER")
+    .neq("status", "trash");
 
-  const { count: inactivePartners } = await supabase
-    .from("partners")
+  if (tenantId) {
+    baseQuery = baseQuery.eq("tenant_id", tenantId);
+  }
+
+  const { count: totalPartners } = await baseQuery;
+
+  let activeQuery = supabase
+    .from("cms_content_v3")
     .select("id", { count: "exact", head: true })
-    .eq("is_active", false);
+    .eq("content_type", "PARTNER")
+    .eq("status", "published");
+
+  if (tenantId) {
+    activeQuery = activeQuery.eq("tenant_id", tenantId);
+  }
+
+  const { count: activePartners } = await activeQuery;
+
+  let inactiveQuery = supabase
+    .from("cms_content_v3")
+    .select("id", { count: "exact", head: true })
+    .eq("content_type", "PARTNER")
+    .eq("status", "draft");
+
+  if (tenantId) {
+    inactiveQuery = inactiveQuery.eq("tenant_id", tenantId);
+  }
+
+  const { count: inactivePartners } = await inactiveQuery;
 
   return {
     totalPartners: totalPartners || 0,
@@ -270,26 +492,56 @@ export async function getPartnersDashboardStats() {
 
 export async function reorderPartnersAction(ids: string[], offset: number = 0) {
   try {
-    const { role } = await requireAuthContext();
+    const { role, user, supabase, tenantId } = await requireAuthContext();
     assertSystemAdmin(role);
 
-    const supabase = await createClient();
+    // First fetch existing meta_data for these partners to preserve other fields
+    let getQuery = supabase
+      .from("cms_content_v3")
+      .select("id, meta_data")
+      .in("id", ids)
+      .eq("content_type", "PARTNER");
 
-    // Use a Promise.all to update all partners in the new order
-    // We add the offset to ensure correct ordering across pages
-    const updates = ids.map((id, index) =>
-      supabase
-        .from("partners")
+    if (tenantId) {
+      getQuery = getQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: existingRecords } = await getQuery;
+    const existingMap = new Map((existingRecords || []).map(r => [r.id, r.meta_data as Record<string, unknown> | null]));
+
+    const updates = ids.map((id, index) => {
+      const rawMeta = existingMap.get(id);
+      const oldMeta = (rawMeta && typeof rawMeta === "object" ? rawMeta : {}) as Record<string, unknown>;
+      const newMeta = { ...oldMeta, sort_order: offset + index + 1 };
+      
+      let updateQuery = supabase
+        .from("cms_content_v3")
         .update({ 
-          sort_order: offset + index + 1, 
+          meta_data: newMeta, 
           updated_at: new Date().toISOString() 
         })
-        .eq("id", id),
-    );
+        .eq("id", id)
+        .eq("content_type", "PARTNER");
+
+      if (tenantId) {
+        updateQuery = updateQuery.eq("tenant_id", tenantId);
+      }
+
+      return updateQuery;
+    });
 
     const results = await Promise.all(updates);
     const error = results.find((r) => r.error);
     if (error) throw error.error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "partner.reorder",
+        entity: "cms_content_v3",
+        metadata: { ids, offset },
+      }
+    );
 
     revalidatePath("/admin/partners");
     revalidatePath("/");

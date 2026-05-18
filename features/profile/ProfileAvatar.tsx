@@ -74,10 +74,10 @@ export function ProfileAvatar({ avatarUrl, fullName }: ProfileAvatarProps) {
             "Compression failed, trying original if size permits",
             compressionError,
           );
-          // Still must check the 2MB limit for the final upload
-          if (file.size > 2 * 1024 * 1024) {
+          // Still must check the 5MB limit for the final upload
+          if (file.size > 5 * 1024 * 1024) {
             toast.error(
-              "ไฟล์มีขนาดใหญ่เกินไปและไม่สามารถบีบอัดได้ (ต้องไม่เกิน 2MB)",
+              "ไฟล์มีขนาดใหญ่เกินไปและไม่สามารถบีบอัดได้ (ต้องไม่เกิน 5MB)",
             );
             setIsUploading(false);
             return;

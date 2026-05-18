@@ -2,6 +2,10 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { TopAgent, MarketingPerformanceData } from "./types";
+import { Database } from "@/lib/database.types.generated";
+
+type LedgerRow = Database["public"]["Tables"]["financial_ledger_v3"]["Row"];
+type LeadRow = Database["public"]["Tables"]["crm_leads_v3"]["Row"];
 
 export async function calculateDateRange(range: string) {
   const now = new Date();
@@ -89,27 +93,27 @@ export async function getTopAgents({
     const isAllTeam = !teamId || teamId.toUpperCase() === "ALL";
 
     let query = supabase
-      .from("deals")
+      .from("financial_ledger_v3")
       .select(`
-        created_by,
-        commission_amount,
+        to_identity_id,
+        amount_total,
         tenant_id,
         created_at,
-        agent:profiles!created_by${!isAllTeam ? "!inner" : ""} (
+        agent:profiles!to_identity_id${!isAllTeam ? "!inner" : ""} (
           id,
           full_name,
           avatar_url,
           team_id,
-          team:teams!profiles_team_id_fkey (
+          team:teams_v3!inner (
             id,
             name,
-            tenants (
+            tenants:tenants_v3 (
               name
             )
           )
         )
       `)
-      .eq("status", "CLOSED_WIN");
+      .eq("transaction_type", "commission_payout");
     
     if (range !== "all" && range !== "ALL" && startDate) {
       query = query.gte("created_at", startDate);
@@ -124,12 +128,13 @@ export async function getTopAgents({
 
     if (user) {
       const { data: profile } = await supabase.from("profiles")
-        .select("role, team:teams!profiles_team_id_fkey(tenant_id)")
+        .select("role, team:teams_v3!inner(tenant_id)")
         .eq("id", user.id)
         .single();
       
       isAdmin = profile?.role === "ADMIN" || profile?.role === "MANAGER";
-      profileTenantId = (profile as any)?.team?.tenant_id;
+      const profileTeam = profile?.team as { tenant_id: string } | null;
+      profileTenantId = profileTeam?.tenant_id || null;
     }
 
     const isAllTenant = !tenantId || tenantId.toUpperCase() === "ALL";
@@ -154,11 +159,36 @@ export async function getTopAgents({
       return [];
     }
 
-    const agentStats = new Map<string, any>();
+    interface AgentDataJoin {
+      id: string;
+      full_name: string | null;
+      avatar_url: string | null;
+      team_id: string | null;
+      team: {
+        id: string;
+        name: string;
+        tenants: { name: string }[] | { name: string } | null;
+      } | null;
+    }
 
-    (deals || []).forEach((d: any) => {
-      const agentData = d.agent;
-      const agentId = d.created_by || "unknown";
+    type LedgerWithAgent = LedgerRow & {
+      agent: AgentDataJoin | null;
+    };
+
+    interface AgentStatRecord {
+      count: number;
+      commission: number;
+      name: string;
+      avatar: string | null;
+      branchName: string;
+      teamName: string;
+    }
+
+    const agentStats = new Map<string, AgentStatRecord>();
+
+    (deals as unknown as LedgerWithAgent[] || []).forEach((d) => {
+      const agentData = d.agent; 
+      const agentId = d.to_identity_id || "unknown";
 
       const teamData = agentData?.team;
       const tenantData = teamData?.tenants ? (Array.isArray(teamData.tenants) ? teamData.tenants[0] : teamData.tenants) : null;
@@ -167,7 +197,7 @@ export async function getTopAgents({
         count: 0,
         commission: 0,
         name: agentData?.full_name || "Unknown Agent",
-        avatar: agentData?.avatar_url,
+        avatar: agentData?.avatar_url || null,
         branchName: tenantData?.name || "ยังไม่ได้สังกัด",
         teamName: teamData?.name || "ไม่มีทีม",
       };
@@ -175,7 +205,7 @@ export async function getTopAgents({
       agentStats.set(agentId, {
         ...current,
         count: current.count + 1,
-        commission: current.commission + (Number(d.commission_amount) || 0),
+        commission: current.commission + (Number(d.amount_total) || 0),
       });
     });
 
@@ -214,8 +244,8 @@ export async function getMarketingPerformanceData({
     const { start: startDate } = await calculateDateRange(range);
 
     let query = supabase
-      .from("leads")
-      .select("utm_source, ai_score, created_at");
+      .from("crm_leads_v3")
+      .select("source, ai_score, created_at");
     
     if (range !== "all" && range !== "ALL" && startDate) {
       query = query.gte("created_at", startDate);
@@ -234,8 +264,8 @@ export async function getMarketingPerformanceData({
 
     const statsMap = new Map<string, { count: number; totalScore: number; hotLeads: number }>();
 
-    leads.forEach((l: any) => {
-      const source = l.utm_source || "Direct / Unknown";
+    leads.forEach((l: LeadRow) => {
+      const source = l.source || "Direct / Unknown";
       const score = l.ai_score || 0;
       const isHot = score >= 80;
 

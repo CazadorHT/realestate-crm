@@ -1,4 +1,4 @@
-"use client";
+  "use client";
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -37,7 +37,7 @@ import {
 import { cn } from "@/lib/utils";
 import { CoBroker } from "../schema";
 import { 
-  PROPERTY_TYPE_LABELS, 
+  PROPERTY_TYPE_CONFIG, 
   PROPERTY_TYPE_ORDER, 
   PROPERTY_TYPE_ICONS 
 } from "../../properties/labels";
@@ -513,7 +513,7 @@ export function CreateCoBrokerDialog({
                                   <Icon className="h-5 w-5" />
                                 </div>
                                 <span className={cn("text-[11px] font-bold text-center leading-tight", isSelected ? "text-indigo-700" : "text-slate-500")}>
-                                  {PROPERTY_TYPE_LABELS[type]}
+                                  {PROPERTY_TYPE_CONFIG[type].label.th}
                                 </span>
                                 
                                 {isSelected && (

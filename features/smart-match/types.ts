@@ -1,7 +1,7 @@
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
 export type SearchPurpose = "BUY" | "RENT" | "INVEST";
-export type PropertyType = Database["public"]["Enums"]["property_type"];
+export type PropertyType = string;
 
 export interface ScoreBreakdown {
   label: string;

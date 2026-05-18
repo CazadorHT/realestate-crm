@@ -1,4 +1,4 @@
-import { Json } from "@/lib/database.types";
+import { Json } from "@/lib/database.types.generated";
 
 export interface OmniMessagePayload {
   field?: "comments" | string;

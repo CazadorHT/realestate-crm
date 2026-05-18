@@ -1,9 +1,9 @@
 import { z } from "zod";
-import type { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
-export type PropertyType = Database["public"]["Enums"]["property_type"];
-export type ListingType = Database["public"]["Enums"]["listing_type"];
-export type PropertyStatus = Database["public"]["Enums"]["property_status"];
+export type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL_BUILDING" | "WAREHOUSE" | "OFFICE_BUILDING" | "VILLA" | "POOL_VILLA" | "OTHER";
+export type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
+export type PropertyStatus = "DRAFT" | "ACTIVE" | "UNDER_OFFER" | "RESERVED" | "SOLD" | "RENTED" | "ARCHIVED";
 
 import {
   PROPERTY_TYPE_ENUM,
@@ -91,9 +91,20 @@ export const PropertySchema = z
     popular_area_cn: z.string().optional().nullable(),
     popular_area_ru: z.string().optional().nullable(),
 
+    // 🏢 V3 Hierarchy & Operations
+    tenant_id: z.string().uuid().optional(),
+    branch_id: z.string().uuid({ message: "กรุณาเลือกสาขาที่ดูแลทรัพย์นี้" }),
+    
     owner_id: z.string().uuid().nullable().optional(),
-    assigned_to: z.string().uuid().nullable().optional(), // For primary agent / backward compatibility
+    assigned_to: z.string().uuid().nullable().optional(), // For primary agent
     agent_ids: z.array(z.string()).optional(), // For multiple agents
+    created_by: z.string().uuid().optional(),
+    
+    // 📈 Analytics & Smart Search
+    view_count: z.number().default(0),
+    trust_score: z.number().default(1.0),
+    h3_index_res8: z.string().optional().nullable(),
+    fingerprint: z.string().optional().nullable(),
 
     property_source: z.string().optional().nullable(),
     images: z.array(z.string()).optional(),
@@ -179,6 +190,7 @@ export const PropertySchema = z
     is_fully_fitted: z.boolean(),
     is_never_lived_in: z.boolean(),
     requires_ai_review: z.boolean(),
+    has_nearby_places: z.boolean(),
     version: z.number().optional(),
 
     feature_ids: z.array(z.string()).optional(),
@@ -189,7 +201,7 @@ export const PropertySchema = z
         z.object({
           category: z.string().min(1, "Required"),
           name: z.string().min(1, "Required"),
-          distance: z.string().optional(),
+          distance_meters: z.coerce.number().optional(),
           time: z.string().optional(),
           name_en: z.string().optional(),
           name_cn: z.string().optional(),

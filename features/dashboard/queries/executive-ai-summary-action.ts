@@ -1,11 +1,10 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
-type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
-type DealRow = Database["public"]["Tables"]["deals"]["Row"];
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+type LeadRow = Database["public"]["Tables"]["crm_leads_v3"]["Row"];
+type LedgerRow = Database["public"]["Tables"]["financial_ledger_v3"]["Row"];
 
 export interface AISummaryResult {
   summary: string;
@@ -46,8 +45,8 @@ export async function getExecutiveWeeklyAISummaryAction({
       if (filters?.agentId && filters.agentId !== "ALL") {
         if (q.url.pathname.includes("leads")) {
           q = q.eq("assigned_to", filters.agentId);
-        } else {
-          q = q.eq("created_by", filters.agentId);
+        } else if (q.url.pathname.includes("financial_ledger")) {
+          q = q.eq("to_identity_id", filters.agentId);
         }
       }
 
@@ -58,67 +57,56 @@ export async function getExecutiveWeeklyAISummaryAction({
     let teamMemberIds: string[] = [];
     if (filters?.teamId && filters.teamId !== "ALL") {
       const { data: members } = await supabase
-        .from("profiles")
-        .select("id")
+        .from("tenant_members_v3")
+        .select("identity_id")
         .eq("team_id", filters.teamId);
-      teamMemberIds = (members || []).map((m: { id: string }) => m.id);
+      teamMemberIds = (members || []).map((m: { identity_id: string }) => m.identity_id);
     }
 
     const applyTeamFilter = <T extends { in: (col: string, vals: string[]) => T; url: URL }>(q: T) => {
       if (teamMemberIds.length > 0) {
         if (q.url.pathname.includes("leads")) {
           return q.in("assigned_to", teamMemberIds);
-        } else {
-          return q.in("created_by", teamMemberIds);
+        } else if (q.url.pathname.includes("financial_ledger")) {
+          return q.in("to_identity_id", teamMemberIds);
         }
       }
       return q;
     };
 
-    // 1. Fetch Stats
-    const [leadsRes, dealsRes, propertiesRes] = await Promise.all([
+    // 1. Fetch Stats (Optimized: Removed unused properties query)
+    const [leadsRes, dealsRes] = await Promise.all([
       applyTeamFilter(
         applyFilters(
           supabase
-            .from("leads")
-            .select("utm_source, ai_score, created_at")
-            .gte("created_at", monthAgoStr)
-            .is("deleted_at", null),
+            .from("crm_leads_v3")
+            .select("source, ai_score, created_at")
+            .gte("created_at", monthAgoStr),
         ),
       ),
       applyTeamFilter(
         applyFilters(
           supabase
-            .from("deals")
-            .select("status, deal_type, commission_amount, created_at")
-            .gte("created_at", monthAgoStr)
-            .is("deleted_at", null),
-        ),
-      ),
-      applyTeamFilter(
-        applyFilters(
-          supabase
-            .from("properties")
-            .select("view_count, property_type")
-            .is("deleted_at", null),
+            .from("financial_ledger_v3")
+            .select("status, transaction_type, amount_total, created_at")
+            .gte("created_at", monthAgoStr),
         ),
       ),
     ]);
 
     const leads = (leadsRes.data || []) as Partial<LeadRow>[];
-    const deals = (dealsRes.data || []) as Partial<DealRow>[];
-    // const props = propertiesRes.data || []; // unused
+    const deals = (dealsRes.data || []) as Partial<LedgerRow>[];
 
     const totalLeads = leads.length;
     const hotLeads = leads.filter((l) => (l.ai_score || 0) >= 80).length;
     const dealsWon = deals.filter(
-      (d) => d.status === "CLOSED_WIN" || d.status === "SIGNED",
+      (d) => d.transaction_type === "deal_closed",
     ).length;
 
     // Aggregate UTMs
     const utmMap = new Map<string, number>();
     leads.forEach((l) => {
-      const s = l.utm_source || "Direct";
+      const s = l.source || "Direct";
       utmMap.set(s, (utmMap.get(s) || 0) + 1);
     });
     const topSource =

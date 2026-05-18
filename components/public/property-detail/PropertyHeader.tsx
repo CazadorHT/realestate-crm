@@ -30,7 +30,7 @@ import { Copy } from "lucide-react";
 interface PropertyHeaderProps {
   property: {
     id: string;
-    title: string;
+    title: { th?: string; en?: string; cn?: string; ru?: string } | string;
     listing_type: "SALE" | "RENT" | "SALE_AND_RENT" | null;
     price: number | null;
     original_price: number | null;
@@ -42,10 +42,10 @@ interface PropertyHeaderProps {
     min_contract_months: number | null;
     slug?: string | null;
     property_type?: string | null;
-    province?: string | null;
-    district?: string | null;
-    subdistrict?: string | null;
-    popular_area?: string | null;
+    province?: { th?: string; en?: string; cn?: string; ru?: string } | string | null;
+    district?: { th?: string; en?: string; cn?: string; ru?: string } | string | null;
+    subdistrict?: { th?: string; en?: string; cn?: string; ru?: string } | string | null;
+    popular_area?: { th?: string; en?: string; cn?: string; ru?: string } | string | null;
     is_fully_furnished?: boolean | null;
     is_bare_shell?: boolean | null;
     floor?: number | null;
@@ -79,22 +79,6 @@ interface PropertyHeaderProps {
     facing_north?: boolean | null;
     facing_south?: boolean | null;
     facing_west?: boolean | null;
-    // Localized fields
-    title_en?: string | null;
-    title_cn?: string | null;
-    province_en?: string | null;
-    province_cn?: string | null;
-    popular_area_en?: string | null;
-    popular_area_cn?: string | null;
-    district_en?: string | null;
-    district_cn?: string | null;
-    subdistrict_en?: string | null;
-    subdistrict_cn?: string | null;
-    title_ru?: string | null;
-    province_ru?: string | null;
-    popular_area_ru?: string | null;
-    district_ru?: string | null;
-    subdistrict_ru?: string | null;
   };
   features?: Array<{
     id: string;
@@ -124,32 +108,44 @@ export function PropertyHeader({
   const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
 
-  // Custom t function for language override
-  const t = (key: string, params?: Record<string, string | number>) => {
+  // Custom t function with explicit string return to prevent unknown propagation
+  const t = (key: string, params?: Record<string, string | number>): string => {
     if (!customLanguage) return globalT(key, params);
-    const dict = dictionaries[language as keyof typeof dictionaries] as any;
-    let value =
-      key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+    const dict = dictionaries[language as keyof typeof dictionaries] as Record<string, unknown>;
+    
+    // Safely traverse the dictionary object
+    const value = key.split(".").reduce((prev: unknown, curr) => {
+      if (prev && typeof prev === "object" && curr in (prev as Record<string, unknown>)) {
+        return (prev as Record<string, unknown>)[curr];
+      }
+      return undefined;
+    }, dict);
 
-    if (params && typeof value === "string") {
+    let result = typeof value === "string" ? value : key;
+
+    if (params && typeof result === "string") {
       Object.entries(params).forEach(([k, v]) => {
-        value = value.replace(`{${k}}`, String(v));
+        result = result.replace(`{${k}}`, String(v));
       });
     }
-    return value;
+    return result;
   };
 
+  const provinceStr = getLocaleValue(property, "province", language);
+  const districtStr = getLocaleValue(property, "district", language);
+  const subdistrictStr = getLocaleValue(property, "subdistrict", language);
+
   const { localized, loading: locationLoading } = useAddressLocalization(
-    property.province,
-    property.district,
-    property.subdistrict,
+    provinceStr,
+    districtStr,
+    subdistrictStr,
     language,
   );
 
   const displayProvince =
-    getProvinceName(property.province || "", language) || localized.province;
-  const displayDistrict = localized.district || property.district;
-  const displaySubdistrict = localized.subdistrict || property.subdistrict;
+    getProvinceName(provinceStr || "", language) || localized.province;
+  const displayDistrict = localized.district || districtStr;
+  const displaySubdistrict = localized.subdistrict || subdistrictStr;
 
   const locationParts =
     incomingLocationParts ||
@@ -434,8 +430,8 @@ export function PropertyHeader({
                     ...(property.province
                       ? [
                           {
-                            label: displayProvince || property.province,
-                            href: `/properties?province=${property.province}`,
+                            label: displayProvince || provinceStr || "...",
+                            href: `/properties?province=${provinceStr}`,
                           },
                         ]
                       : []),

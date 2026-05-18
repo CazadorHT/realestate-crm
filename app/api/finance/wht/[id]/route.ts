@@ -34,47 +34,51 @@ export async function GET(
 
     // 1. Fetch Commission Record + adjustments
     // 🛡️ ใส่ Type Casting ให้ Supabase Query เพื่อลดตัวแดงใน Property
-    const { data: commission, error: commErr } = await supabase
-      .from("deal_commissions")
-      .select(`
-        *,
-        agent:profiles!deal_commissions_agent_id_fkey (full_name, tax_address),
-        tenant:tenants (name),
-        adjustments:commission_adjustments(*)
-      `)
+    const { data: rawCommission, error: commErr } = await supabase
+      .from("crm_deal_commissions_v3")
+      .select("*, recipient:identities_v3!crm_deal_commissions_v3_recipient_id_fkey(display_name, metadata), tenant:tenants_v3(name)")
       .eq("id", id)
       .eq("tenant_id", tenantId)
       .single();
 
-    if (commErr || !commission) {
+    if (commErr || !rawCommission) {
       return NextResponse.json({ error: "ไม่พบข้อมูลรายการคอมมิชชัน" }, { status: 404 });
     }
 
+    const commission = rawCommission as any;
+
+    // Fetch adjustments explicitly from financial_ledger_v3
+    const { data: adjustmentsData } = await supabase
+      .from("financial_ledger_v3")
+      .select("*")
+      .eq("reference_entity", "COMMISSION")
+      .eq("reference_id", id);
+    const adjustments = (adjustmentsData || []).map((a: any) => ({ amount: a.amount_net || a.amount || 0 }));
+
     // 2. Authorization Guard
-    if (role !== "ADMIN" && commission.agent_id !== user.id) {
+    if (role !== "ADMIN" && commission.recipient_id !== user.id) {
       return NextResponse.json({ error: "คุณไม่มีสิทธิ์เข้าถึงเอกสารนี้" }, { status: 403 });
     }
 
     // 3. Precision Calculation
-    // Ensure adjustments match FinanceMath expectations
-    const adjustments = (commission.adjustments as { amount: number | string | null | undefined }[]) || [];
     const netPayout = FinanceMath.calculateNetPayout(
-      commission.amount,
-      commission.wht_amount,
+      commission.amount || 0,
+      commission.tax_amount || 0,
       adjustments
     );
 
     // 4. Render to PDF Buffer
     // Define exact structure for the template to avoid 'any'
+    const recipientMeta = commission.recipient?.metadata || {};
     const templateData = {
-      agentName: (commission.agent as { full_name: string | null } | null)?.full_name || "ไม่ทราบชื่อ",
-      address: (commission.agent as { tax_address: string | null } | null)?.tax_address || "-", 
-      taxAmount: FinanceMath.format(commission.wht_amount),
-      grossAmount: FinanceMath.format(commission.amount),
+      agentName: commission.recipient?.display_name || "ไม่ทราบชื่อ",
+      address: recipientMeta?.tax_address || recipientMeta?.address || "-", 
+      taxAmount: FinanceMath.format(commission.tax_amount || 0),
+      grossAmount: FinanceMath.format(commission.amount || 0),
       netAmount: FinanceMath.format(netPayout),
       date: format(new Date(), "d MMMM yyyy", { locale: th }),
-      tenantName: (commission.tenant as { name: string | null } | null)?.name || "Cazador CRM",
-      referenceCode: commission.payment_reference || commission.id.slice(0, 8).toUpperCase(),
+      tenantName: commission.tenant?.name || "Cazador CRM",
+      referenceCode: commission.metadata?.payment_reference || commission.id.slice(0, 8).toUpperCase(),
     };
 
     const pdfBuffer = await renderToBuffer(

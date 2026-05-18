@@ -1,11 +1,15 @@
-import type { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 import { PropertyRow, PropertyImage ,PropertyImageMetadata} from "../types";
+
+export type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL_BUILDING" | "WAREHOUSE" | "OFFICE_BUILDING" | "VILLA" | "POOL_VILLA" | "OTHER";
+export type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
+export type PropertyStatus = "DRAFT" | "ACTIVE" | "UNDER_OFFER" | "SOLD" | "RENTED" | "ARCHIVED";
 
 export type PropertyImageRow = PropertyImage;
 
 export type PublicPropertyImage = Pick<
   PropertyImageRow,
-  "id" | "property_id" | "image_url" | "is_cover" | "sort_order" | "created_at"
+  "id" | "property_id" | "url" | "is_cover" | "sort_order" | "created_at"
 >;
 
 

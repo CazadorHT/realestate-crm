@@ -31,12 +31,13 @@ export const TaxService = {
     let agentDefaultRate: number | null = null;
     if (agentId) {
       const { data: agentProfile } = await supabase
-        .from("profiles")
-        .select("default_tax_rate")
-        .eq("id", agentId)
+        .from("identity_secrets_v3")
+        .select("tax_info")
+        .eq("identity_id", agentId)
         .single();
       
-      agentDefaultRate = TaxLogic.percentToDecimal(agentProfile?.default_tax_rate);
+      const defaultTaxRate = (agentProfile?.tax_info as any)?.default_tax_rate;
+      agentDefaultRate = TaxLogic.percentToDecimal(defaultTaxRate);
     }
 
     // 3. Fetch Tenant's default tax rate (Optional, if we had one in tenant settings)

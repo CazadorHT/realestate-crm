@@ -133,7 +133,7 @@ export const ManagementSection = ({
                                 "bg-amber-500",
                             )}
                           />
-                          {PROPERTY_STATUS_LABELS[s]}
+                          {PROPERTY_STATUS_LABELS[s]?.th || s}
                         </span>
                       </SelectItem>
                     ))}

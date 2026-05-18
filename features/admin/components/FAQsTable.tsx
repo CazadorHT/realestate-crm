@@ -29,9 +29,9 @@ import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { useDebounce } from "use-debounce";
 import { useEffect } from "react";
-import { Database } from "@/lib/database.types";
+import { FAQItem } from "@/features/admin/faqs-actions";
 
-type FAQ = Database["public"]["Tables"]["faqs"]["Row"];
+type FAQ = FAQItem;
 
 interface FAQsTableProps {
   faqs: FAQ[];
@@ -331,7 +331,7 @@ export function FAQsTable({
                       <Checkbox
                         checked={isSelected(faq.id)}
                         onCheckedChange={() => toggleSelect(faq.id)}
-                        aria-label={`เลือก ${faq.question}`}
+                        aria-label={`เลือก ${faq.question?.th || faq.question?.en || ""}`}
                         className="rounded-md"
                       />
                     </TableCell>
@@ -343,7 +343,7 @@ export function FAQsTable({
                     <TableCell className="px-6 py-4">
                       <div className="flex flex-col min-w-0">
                         <span className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                          {faq.question}
+                          {faq.question?.th || faq.question?.en || ""}
                         </span>
                         <div className="flex items-center gap-2 mt-1">
                            <Eye className="h-3 w-3 text-slate-400" />
@@ -487,7 +487,7 @@ export function FAQsTable({
                            )}
                         </div>
                         <h4 className="font-bold text-slate-900 leading-tight">
-                          {faq.question}
+                          {faq.question?.th || faq.question?.en || ""}
                         </h4>
                         <div className="flex items-center gap-2 mt-1 opacity-60">
                            <Eye className="h-3 w-3" />
@@ -585,7 +585,7 @@ export function FAQsTable({
             <div className="flex flex-col gap-4 py-2">
               <p className="text-slate-600">คุณแน่ใจหรือไม่ว่าต้องการย้ายคำถามนี้ลงถังขยะ? คุณสามารถกู้คืนข้อมูลได้ในภายหลัง</p>
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                <p className="text-slate-900 font-bold mb-1 italic">"{deleteConfirmFaq.question}"</p>
+                <p className="text-slate-900 font-bold mb-1 italic">"{deleteConfirmFaq.question?.th || deleteConfirmFaq.question?.en || ""}"</p>
                 <Badge variant="outline" className="text-[10px] uppercase font-bold text-slate-400 bg-white">
                    ID: {deleteConfirmFaq.id.slice(0, 8)}...
                 </Badge>
@@ -632,7 +632,7 @@ export function FAQsTable({
             <div className="flex flex-col gap-4 py-2">
               <p className="text-slate-600">คุณต้องการกู้คืนคำถามนี้กลับไปยังรายการที่ใช้งานปกติใช่ไหม?</p>
               <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl">
-                <p className="text-emerald-900 font-bold italic">"{restoreConfirmFaq.question}"</p>
+                <p className="text-emerald-900 font-bold italic">"{restoreConfirmFaq.question?.th || restoreConfirmFaq.question?.en || ""}"</p>
               </div>
             </div>
           ) : ""
@@ -680,7 +680,7 @@ export function FAQsTable({
                 <p className="text-sm font-bold">คำเตือน: การลบถาวรจะไม่สามารถกู้กลับคืนมาได้อีก!</p>
               </div>
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl">
-                 <p className="text-slate-900 font-bold italic mb-3">"{permanentDeleteFaq.question}"</p>
+                 <p className="text-slate-900 font-bold italic mb-3">"{permanentDeleteFaq.question?.th || permanentDeleteFaq.question?.en || ""}"</p>
                  <p className="text-[10px] text-rose-600 font-bold mb-2 uppercase">พิมพ์ DELETE เพื่อยืนยัน:</p>
                  <Input
                     value={confirmName}

@@ -223,7 +223,7 @@ export function generatePropertyDescription(
 
     data.nearby_places?.forEach((p) => {
       const label = CAT_MAP[p.category] || "สถานที่อื่นๆ";
-      const dist = p.distance ? `(${p.distance} กม.)` : "";
+      const dist = p.distance_meters ? `(${p.distance_meters} ม.)` : "";
       addToGroup(label, `${p.name} ${dist}`);
     });
 

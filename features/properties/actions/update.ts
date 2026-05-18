@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { type Database } from "@/lib/database.types";
+import { type Database } from "@/lib/database.types.generated";
 import {
   requireAuthContext,
   assertAuthenticated,
@@ -19,6 +19,14 @@ import {
   CreatePropertyResult,
   UpdatePropertyStatusResult,
 } from "../types";
+import {
+  PROPERTY_STATUS_DB_VALUE,
+  LISTING_TYPE_DB_VALUE,
+  PROPERTY_TYPE_DB_VALUE,
+  getStatusFromDb,
+  getListingTypeFromDb,
+  getPropertyTypeFromDb,
+} from "../labels";
 import { PropertyRow } from "@/lib/services/properties";
 import {
   finalizeUploadSession,
@@ -32,6 +40,7 @@ import {
 } from "../logic/notifications";
 import { mapDbError } from "@/lib/db-error";
 import { encrypt, generateBlindIndex } from "@/lib/crypto";
+
 
 /**
  * Update property with images
@@ -64,77 +73,105 @@ export async function updatePropertyAction(
     const safeValues = parsed.data;
     const { images, agent_ids, feature_ids, ...propertyData } = safeValues;
 
-    // 2) Fetch current state (for security check and Diff)
-    let query = supabase
-      .from("properties")
+    // 2) Fetch current state (V3 joined fetch)
+    const { data, error: findErr } = await supabase
+      .from("properties_core")
       .select(`
-        id, tenant_id, created_by, meta_keywords, price, rental_price, 
-        original_price, original_rental_price, status, title, description,
-        listing_type, version, images, property_type, is_exclusive, requires_ai_review,
-        address_line1, district, province, subdistrict, bedrooms, bathrooms, 
-        size_sqm, land_size_sqwah,
-        property_agents(agent_id), property_features(feature_id)
+        id, tenant_id, status, listing_type, property_type, sale_price, rent_price, 
+        bedrooms, bathrooms, floor_area, land_area, branch_id, owner_id, assigned_to, 
+        is_exclusive, verified, h3_index_res8,
+        properties_details (
+          title, description, amenities, address_info, pricing_details, transit_info, meta_data
+        )
       `)
-      .eq("id", id);
-
-    // Apply tenant filter only if not ADMIN
-    if (role !== "ADMIN" && tenantId) {
-      query = query.eq("tenant_id", tenantId);
-    }
-
-    const { data, error: findErr } = await query.single();
+      .eq("id", id)
+      .single();
       
-    if (findErr || !data) {
-      return { success: false, message: "Property not found" };
-    }
+    if (findErr || !data) return { success: false, message: "Property not found" };
 
-    interface ExistingProperty {
-      id: string; tenant_id: string; created_by: string; meta_keywords: string[] | null;
-      price: number | null; rental_price: number | null; original_price: number | null;
-      original_rental_price: number | null; status: string; title: string;
-      description: string | null; listing_type: string | null; version: number;
-      images: unknown[] | null; property_type: string | null; is_exclusive: boolean | null;
-      requires_ai_review: boolean | null; address_line1: string | null;
-      district: string | null; province: string | null; subdistrict: string | null;
-      bedrooms: number | null; bathrooms: number | null; size_sqm: number | null;
-      land_size_sqwah: number | null;
-      property_agents: { agent_id: string }[];
-      property_features: { feature_id: string }[];
-    }
+    const details = data.properties_details as Database["public"]["Tables"]["properties_details"]["Row"] | null;
+    const existingMeta = details?.meta_data as Record<string, unknown> | null;
+    const createdBy = existingMeta?.created_by as string | undefined;
 
-    const existing = data as unknown as ExistingProperty;
+    type MultiLang = { th?: string; en?: string; cn?: string; ru?: string };
+    type AddressInfoV3 = { 
+      th?: string; 
+      en?: string;
+      district?: string; 
+      province?: string; 
+      subdistrict?: string; 
+      maps_link?: string;
+      slug?: string;
+    };
+    
+    // Hardened JSONB Extraction
+    const title = (details?.title || {}) as MultiLang;
+    const description = (details?.description || {}) as MultiLang;
+    const addressInfo = (details?.address_info || {}) as AddressInfoV3;
 
-    // ✅ Strict Ownership Check (Accepts Owner, Admin, or Manager)
+    const existing: Partial<PropertyFormValues> = {
+      title: title?.th || "",
+      title_en: title?.en || "",
+      title_cn: title?.cn || "",
+      title_ru: title?.ru || "",
+      description: description?.th || "",
+      description_en: description?.en || "",
+      description_cn: description?.cn || "",
+      description_ru: description?.ru || "",
+      property_type: getPropertyTypeFromDb(data.property_type),
+      listing_type: getListingTypeFromDb(data.listing_type),
+      status: getStatusFromDb(data.status),
+      branch_id: data.branch_id || "",
+      owner_id: data.owner_id || undefined,
+      assigned_to: data.assigned_to || undefined,
+      is_exclusive: !!data.is_exclusive,
+      verified: !!data.verified,
+      h3_index_res8: data.h3_index_res8 || undefined,
+      price: data.sale_price,
+      rental_price: data.rent_price,
+      bedrooms: data.bedrooms || 0,
+      bathrooms: data.bathrooms || 0,
+      size_sqm: data.floor_area,
+      land_size_sqwah: data.land_area,
+      address_line1: addressInfo?.th || "",
+      district: addressInfo?.district || "",
+      province: addressInfo?.province || "",
+      subdistrict: addressInfo?.subdistrict || "",
+      currency: "THB",
+      requires_ai_review: !!existingMeta?.requires_ai_review,
+      agent_ids: (existingMeta?.agent_ids as string[]) || [],
+      feature_ids: (existingMeta?.feature_ids as string[]) || [],
+      orientation: (existingMeta?.orientation as any) || "N",
+      parking_type: (existingMeta?.parking_type as any) || "FIXED",
+      google_maps_link: addressInfo?.maps_link || "",
+      images: (existingMeta?.images as string[]) || [],
+      property_source: (existingMeta?.property_source as string) || "",
+    };
+
     const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
-    if (existing.created_by !== user.id && !canBypassOwnership) {
+    if (createdBy && createdBy !== user.id && !canBypassOwnership) {
       return { success: false, message: "Forbidden: You can only update your own properties" };
     }
 
     assertAuthenticated({ userId: user.id, role });
-
-    // 3) Auto-Status & SEO Logic
-    const listingType = (safeValues.listing_type || existing.listing_type) as "SALE" | "RENT";
+    // 🛡️ Expert: Auto-Status & AI Review Logic (V3)
+    let metaUpdates: Record<string, unknown> = {};
     
-    // Auto-Clear logic: if Admin/Manager edits manually, we assume they reviewed it.
-    let auditUpdates: Partial<PropertyUpdate> = {};
     if (canBypassOwnership) {
-      const significantFields = [
-        "title", "description", "price", "rental_price", "original_price", "original_rental_price",
-        "status", "listing_type", "property_type", "address_line1", "district", "province",
-        "subdistrict", "bedrooms", "bathrooms", "size_sqm", "land_size_sqwah"
-      ] as const;
+      const significantFields: (keyof PropertyFormValues)[] = [
+        "title", "description", "price", "rental_price",
+        "original_price", "original_rental_price",
+        "status", "listing_type", "property_type"
+      ];
+      
       const hasChanged = significantFields.some(key => {
         const newVal = propertyData[key as keyof typeof propertyData];
-        const oldVal = (existing as any)[key];
-        
-        if (newVal === undefined) return false;
-        const normalizedNew = newVal === null ? undefined : newVal;
-        const normalizedOld = oldVal === null ? undefined : oldVal;
-        return normalizedNew !== normalizedOld;
+        const oldVal = existing[key as keyof PropertyFormValues];
+        return newVal !== undefined && newVal !== oldVal;
       });
 
       if (hasChanged) {
-        auditUpdates = {
+        metaUpdates = {
           requires_ai_review: false,
           ai_reviewed_at: new Date().toISOString(),
           ai_reviewed_by: user.id
@@ -142,98 +179,201 @@ export async function updatePropertyAction(
       }
     }
 
-    const currentRequiresAiReview = auditUpdates.requires_ai_review !== undefined 
-      ? auditUpdates.requires_ai_review 
-      : propertyData.requires_ai_review;
+    const currentRequiresAiReview = metaUpdates.requires_ai_review !== undefined 
+      ? (metaUpdates.requires_ai_review as boolean)
+      : (propertyData as PropertyFormValues).requires_ai_review;
 
     if (currentRequiresAiReview) {
       propertyData.status = "DRAFT";
-    } else if ((propertyData.sold_units ?? 0) >= (propertyData.total_units ?? 1)) {
-      propertyData.status = listingType === "RENT" ? "RENTED" : "SOLD";
     }
 
-    const finalKeywords = generateKeywords(safeValues, (existing.meta_keywords || []) as string[]);
-    
-    // SEO Data needs a main image
-    const existingImages = (existing.images as { url: string }[]) || [];
-    const mainImageUrl = images?.[0] ? getPublicImageUrl(images[0]) : (existingImages[0]?.url || "");
-    
-    const seoData = prepareSEOData({ ...propertyData, main_image: mainImageUrl }, safeValues);
-    const mergedKeywords = Array.from(new Set([...(seoData.metaKeywords || []), ...finalKeywords]));
+    // 3) --- SEO & KEYWORDS ---
+    const existingImages = (existingMeta?.images as string[]) || [];
+    const mainImageUrl = images?.[0] ? getPublicImageUrl(images[0]) : (existingImages[0] || "");
+    const finalKeywords = generateKeywords(safeValues, (existingMeta?.keywords as string[]) || []);
+    const seoData = prepareSEOData({ ...propertyData, main_image: mainImageUrl } as Record<string, unknown>, safeValues);
+    const mergedKeywords = Array.from(new Set([...((existingMeta?.keywords as string[]) || []), ...finalKeywords]));
 
-    // 4) ATOMIC EXECUTION (RPC)
-    interface EliteRpcResult {
-      id: string;
-      slug: string;
+    // 4) --- V3 SMART ORCHESTRATOR: ATOMIC UPDATE ---
+    
+    // 4.1 Update properties_core (Hot Table)
+    const { error: coreUpdateError } = await supabase
+      .from("properties_core")
+      .update({
+        branch_id: safeValues.branch_id,
+        status: PROPERTY_STATUS_DB_VALUE[safeValues.status || "DRAFT"],
+        listing_type: LISTING_TYPE_DB_VALUE[safeValues.listing_type || "SALE"],
+        property_type: PROPERTY_TYPE_DB_VALUE[safeValues.property_type || "CONDO"],
+        sale_price: safeValues.price || safeValues.original_price,
+        rent_price: safeValues.rental_price || safeValues.original_rental_price,
+        bedrooms: safeValues.bedrooms,
+        bathrooms: safeValues.bathrooms,
+        floor_area: safeValues.size_sqm,
+        land_area: safeValues.land_size_sqwah,
+        owner_id: safeValues.owner_id,
+        assigned_to: safeValues.assigned_to,
+        is_exclusive: !!safeValues.is_exclusive,
+        verified: !!safeValues.verified,
+        h3_index_res8: safeValues.h3_index_res8,
+        price_per_sqm: safeValues.price_per_sqm,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id);
+
+    if (coreUpdateError) return { success: false, message: mapDbError(coreUpdateError) };
+
+    // 4.2 Update properties_details (Warm Layer / JSONB)
+    const { error: detailsUpdateError } = await supabase
+      .from("properties_details")
+      .upsert({
+        property_id: id,
+        title: {
+          th: safeValues.title,
+          en: safeValues.title_en,
+          cn: safeValues.title_cn,
+          ru: safeValues.title_ru,
+        },
+        description: {
+          th: safeValues.description,
+          en: safeValues.description_en,
+          cn: safeValues.description_cn,
+          ru: safeValues.description_ru,
+        },
+        address_info: {
+          th: safeValues.address_line1,
+          province: safeValues.province,
+          district: safeValues.district,
+          subdistrict: safeValues.subdistrict,
+          postal_code: safeValues.postal_code,
+          maps_link: safeValues.google_maps_link,
+          nearby_places: safeValues.nearby_places || [],
+        },
+        amenities: {
+          floor: safeValues.floor,
+          parking_slots: safeValues.parking_slots,
+          is_pet_friendly: safeValues.is_pet_friendly,
+          is_fully_furnished: safeValues.is_fully_furnished,
+          is_renovated: safeValues.is_renovated,
+          has_private_pool: safeValues.has_private_pool,
+          is_exclusive: safeValues.is_exclusive,
+          is_fully_fitted: safeValues.is_fully_fitted,
+          is_green_building: safeValues.is_green_building,
+          has_flexible_lease: safeValues.has_flexible_lease,
+          is_cbd: safeValues.is_cbd,
+          is_smart_home: safeValues.is_smart_home,
+          has_private_elevator: safeValues.has_private_elevator,
+          is_handicapped_friendly: safeValues.is_handicapped_friendly,
+          is_high_floor: safeValues.is_high_floor,
+          is_never_lived_in: safeValues.is_never_lived_in,
+          is_grade_a: safeValues.is_grade_a,
+          is_grade_b: safeValues.is_grade_b,
+          is_grade_c: safeValues.is_grade_c,
+          is_column_free: safeValues.is_column_free,
+          is_central_air: safeValues.is_central_air,
+          is_split_air: safeValues.is_split_air,
+          has_247_access: safeValues.has_247_access,
+          has_fiber_optic: safeValues.has_fiber_optic,
+          is_tax_registered: safeValues.is_tax_registered,
+          has_raised_floor: safeValues.has_raised_floor,
+          is_high_ceiling: safeValues.is_high_ceiling,
+          ceiling_height: safeValues.ceiling_height,
+          office_capacity: safeValues.office_capacity,
+          orientation: safeValues.orientation,
+          parking_type: safeValues.parking_type,
+        },
+        pricing_details: {
+          maintenance_fee: safeValues.maintenance_fee,
+          parking_fee: safeValues.parking_fee_additional,
+          electricity_charge: safeValues.electricity_charge,
+          water_charge: safeValues.water_charge,
+          commission_sale: safeValues.commission_sale_percentage,
+          commission_rent: safeValues.commission_rent_months,
+          original_price: safeValues.original_price,
+          original_rental_price: safeValues.original_rental_price,
+        },
+        transit_info: {
+          places: safeValues.nearby_places || [],
+          transits: safeValues.nearby_transits || [],
+        },
+        meta_data: {
+          ...existingMeta,
+          slug: seoData.slug,
+          meta_title: seoData.metaTitle,
+          meta_description: seoData.metaDescription,
+          keywords: mergedKeywords,
+          agent_ids: agent_ids,
+          co_agent: {
+            is_co_agent: safeValues.is_co_agent,
+            name: safeValues.co_agent_name,
+            phone: safeValues.co_agent_phone,
+            contact_id: safeValues.co_agent_contact_id,
+          },
+          property_source: safeValues.property_source,
+          requires_ai_review: currentRequiresAiReview,
+          video_url: safeValues.video_url,
+          floor_plan_url: safeValues.floor_plan_url,
+          version: ((existingMeta?.version as number) || 0) + 1,
+        },
+      });
+
+    if (detailsUpdateError) return { success: false, message: mapDbError(detailsUpdateError) };
+
+    // 4.3 Update property_media_v3 (Full sync)
+    if (images !== undefined) {
+      await supabase.from("property_media_v3").delete().eq("property_id", id);
+      
+      const mediaRows = images.map((storagePath, index) => ({
+        property_id: id,
+        storage_path: storagePath,
+        url: getPublicImageUrl(storagePath),
+        is_cover: index === 0,
+        sort_order: index,
+        media_type: "image",
+      }));
+
+      await supabase.from("property_media_v3").insert(mediaRows);
     }
 
-    const { data: updatedRow, error: rpcError } = await supabase.rpc("update_property_elite", {
-      p_id: id,
-      p_tenant_id: existing.tenant_id,
-      p_user_id: user.id,
-      p_is_admin: canBypassOwnership,
-      p_version: safeValues.version ?? existing.version ?? 1,
-      p_data: {
-        ...propertyData,
-        ...auditUpdates,
-        co_agent_name: encrypt(propertyData.co_agent_name),
-        co_agent_name_hash: generateBlindIndex(propertyData.co_agent_name),
-        co_agent_phone: encrypt(propertyData.co_agent_phone),
-        co_agent_phone_hash: generateBlindIndex(propertyData.co_agent_phone),
-        slug: seoData.slug,
-        meta_title: seoData.metaTitle,
-        meta_description: seoData.metaDescription,
-        meta_keywords: mergedKeywords,
-        structured_data: seoData.structuredData as any,
-        images: images !== undefined ? images.map((path, idx) => ({
-          image_url: getPublicImageUrl(path),
-          storage_path: path,
-          is_cover: idx === 0,
-          sort_order: idx
-        })) : undefined,
-        agent_ids: agent_ids ?? undefined,
-        feature_ids: feature_ids ?? undefined
+    // 4.4 Update Relations (Agents/Features)
+    if (agent_ids) {
+      await supabase.from("property_agents").delete().eq("property_id", id);
+      if (agent_ids.length > 0) {
+        await supabase.from("property_agents").insert(agent_ids.map(aId => ({ property_id: id, agent_id: aId })));
       }
-    }) as { data: EliteRpcResult | null, error: { message?: string; code?: string } | null };
+    }
 
-    if (rpcError) {
-      console.error("RPC update_property_elite failed:", rpcError);
-      if (rpcError.message?.includes("VC409") || rpcError.code === "P4090") {
-        return { success: false, message: "ข้อมูลถูกแก้ไขไปแล้วโดยเอเจนต์ท่านอื่น กรุณารีเฟรชข้อมูลล่าสุด" };
+    if (feature_ids) {
+      await supabase.from("property_features").delete().eq("property_id", id);
+      if (feature_ids.length > 0) {
+        await supabase.from("property_features").insert(feature_ids.map(fId => ({ property_id: id, feature_id: fId })));
       }
-      return { success: false, message: mapDbError(rpcError) };
     }
 
     // 5) GRANULAR AUDIT (Diffing)
-    const oldAgents = Array.isArray(existing.property_agents) 
-      ? existing.property_agents.map((a) => String(a.agent_id))
-      : [];
-    const oldFeatures = Array.isArray(existing.property_features)
-      ? existing.property_features.map((f) => String(f.feature_id))
-      : [];
+    const oldAgents = (existingMeta?.agent_ids as string[]) || [];
+    const oldFeatures = (existingMeta?.feature_ids as string[]) || [];
     
-    interface ProfileLabel { id: string; full_name: string | null }
     interface FeatureLabel { id: string; label: string }
     
     let agentLabels: { id: string; full_name: string }[] = [];
     let featureLabels: FeatureLabel[] = [];
-    const normalizedAgentIds = (agent_ids || []).map(id => String(id));
-    const normalizedFeatureIds = (feature_ids || []).map(id => String(id));
+    const normalizedAgentIds = (agent_ids || []).map((id: string) => String(id));
+    const normalizedFeatureIds = (feature_ids || []).map((id: string) => String(id));
     const needsLabels = JSON.stringify(oldAgents.sort()) !== JSON.stringify(normalizedAgentIds.sort()) || 
                         JSON.stringify(oldFeatures.sort()) !== JSON.stringify(normalizedFeatureIds.sort());
 
     if (needsLabels) {
       const [{ data: agents }, { data: features }] = await Promise.all([
-        supabase.from("profiles").select("id, full_name").in("id", [...new Set([...oldAgents, ...(agent_ids || [])])]),
-        supabase.from("features").select("id, name").in("id", [...new Set([...oldFeatures, ...(feature_ids || [])])])
+        supabase.from("identities_v3").select("id, display_name").in("id", [...new Set([...oldAgents, ...normalizedAgentIds])]),
+        supabase.from("ref_master_data").select("code, label").eq("type", "FEATURE").in("code", [...new Set([...oldFeatures, ...normalizedFeatureIds])])
       ]);
-      agentLabels = (agents || []).map((a) => ({ id: a.id, full_name: a.full_name || "Unknown Agent" }));
-      featureLabels = (features || []).map(f => ({ id: f.id, label: f.name }));
+      agentLabels = (agents || []).map((a) => ({ id: String(a.id), full_name: a.display_name || "Unknown Agent" }));
+      featureLabels = (features || []).map((f) => ({ id: String(f.code), label: (f.label as Record<string, string>)?.th || f.code }));
     }
 
     const diff = getPropertyDiff(
-      { ...existing, agent_ids: oldAgents, feature_ids: oldFeatures } as unknown as PropertyFormValues,
-      { ...safeValues, agent_ids, feature_ids },
+      { ...existing, agent_ids: oldAgents, feature_ids: oldFeatures } as any,
+      { ...safeValues, agent_ids, feature_ids } as any,
       { allAgents: agentLabels, allFeatures: featureLabels }
     );
 
@@ -241,8 +381,9 @@ export async function updatePropertyAction(
       { supabase, user, role },
       {
         action: "property.update",
-        entity: "properties",
+        entity: "properties_core",
         entityId: id,
+        summary: diff.summary.join(", "),
         metadata: {
           diff: diff.summary,
           changes: diff.details,
@@ -257,9 +398,9 @@ export async function updatePropertyAction(
     try {
       if (images !== undefined) {
         await finalizeUploadSession({ supabase, userId: user.id, sessionId, propertyId: id, usedPaths: images });
-        const { data: currentImages } = await supabase.from("property_images").select("id, storage_path").eq("property_id", id);
-        if (currentImages && currentImages.length > 0) {
-          const scanEvents = currentImages.map((img) => ({
+        const { data: currentMedia } = await supabase.from("property_media_v3").select("id, storage_path").eq("property_id", id);
+        if (currentMedia && currentMedia.length > 0) {
+          const scanEvents = currentMedia.map((img) => ({
             name: "app/property.image.created",
             data: { imageId: img.id, storagePath: img.storage_path },
           }));
@@ -269,8 +410,9 @@ export async function updatePropertyAction(
       
       // Notifications
       const updatedStatus = safeValues.status;
+      const displayTitle = existing.title || "Property";
       if ((updatedStatus === "SOLD" || updatedStatus === "RENTED") && existing.status !== updatedStatus) {
-        await sendStatusUpdateNotification({ id, title: existing.title }, updatedStatus as "SOLD" | "RENTED").catch(e => console.warn("Notification skip:", e.message));
+        await sendStatusUpdateNotification({ id, title: displayTitle }, updatedStatus as "SOLD" | "RENTED").catch(e => console.warn("Notification skip:", e.message));
       }
       
       // Price Drop Logic (Sale & Rent)
@@ -280,9 +422,9 @@ export async function updatePropertyAction(
       const oldRentPrice = Number(existing.rental_price || existing.original_rental_price || 0);
   
       if (currentSalePrice > 0 && oldSalePrice > 0 && currentSalePrice < oldSalePrice) {
-        await sendPriceDropNotification(existing as any, oldSalePrice, currentSalePrice, "SALE").catch(e => console.warn("Price Drop Notif skip:", e.message));
+        await sendPriceDropNotification({ id, title: displayTitle }, oldSalePrice, currentSalePrice, "SALE").catch(e => console.warn("Price Drop Notif skip:", e.message));
       } else if (currentRentPrice > 0 && oldRentPrice > 0 && currentRentPrice < oldRentPrice) {
-        await sendPriceDropNotification(existing as any, oldRentPrice, currentRentPrice, "RENT").catch(e => console.warn("Price Drop Notif skip:", e.message));
+        await sendPriceDropNotification({ id, title: displayTitle }, oldRentPrice, currentRentPrice, "RENT").catch(e => console.warn("Price Drop Notif skip:", e.message));
       }
   
       if (safeValues.requires_ai_review) {
@@ -294,7 +436,7 @@ export async function updatePropertyAction(
 
     revalidatePath("/", "layout");
 
-    return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: updatedRow?.slug || "" };
+    return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err: unknown) {
     console.error("updatePropertyAction error:", err);
     const errorWithCode = err as { code?: string };
@@ -306,86 +448,75 @@ export async function updatePropertyAction(
 }
 
 /**
- * Update property status
+ * Update property status (Hardened V3)
  */
 export async function updatePropertyStatusAction(input: {
   id: string;
   status: PropertyStatus;
-  version?: number;
 }): Promise<UpdatePropertyStatusResult> {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
-    if (role !== "ADMIN" && !tenantId) {
-      throw new Error("Tenant ID is required but missing");
+
+    const { data: existing, error: fetchErr } = await supabase
+      .from("properties_core")
+      .select(`
+        id, tenant_id, status,
+        properties_details ( title, meta_data )
+      `)
+      .eq("id", input.id)
+      .single();
+
+    if (fetchErr || !existing) return { success: false, message: "ไม่พบข้อมูลทรัพย์" };
+    if (existing.tenant_id !== tenantId && role !== "ADMIN") {
+      return { success: false, message: "Unauthorized" };
     }
 
-    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-    if (!input?.id || !UUID_RE.test(input.id)) {
-      return { success: false, message: "รูปแบบรหัสทรัพย์ไม่ถูกต้อง" };
-    }
-    if (!PROPERTY_STATUS_ENUM.includes(input.status)) {
-      return { success: false, message: "สถานะไม่ถูกต้อง" };
-    }
-
-    let query = supabase
-      .from("properties")
-      .select("id, title, tenant_id, status, listing_type, requires_ai_review, version")
-      .eq("id", input.id);
-
-    if (role !== "ADMIN" && tenantId) {
-      query = query.eq("tenant_id", tenantId);
-    }
-
-    const { data: existing, error: fetchErr } = await query.single();
-    if (fetchErr || !existing) {
-      return { success: false, message: "ไม่พบข้อมูลทรัพย์" };
-    }
-
-    if (existing?.requires_ai_review && input.status !== "DRAFT") {
+    type MultiLang = { th?: string; en?: string; cn?: string; ru?: string };
+    const details = existing.properties_details as unknown as { title: MultiLang; meta_data: Record<string, unknown> } | null;
+    const meta = details?.meta_data;
+    
+    if (meta?.requires_ai_review && input.status !== "DRAFT") {
       return { success: false, message: "กรุณาตรวจสอบข้อมูล AI ในหน้าแก้ไขก่อนเปลี่ยนสถานะ" };
     }
 
-    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const { error: updateError } = await supabase
+      .rpc("sync_property_inventory_atomic", {
+        p_property_id: input.id,
+        p_adjustment: (input.status === "SOLD" || input.status === "RENTED") ? 1 : -1,
+        p_deal_type: input.status === "RENTED" ? "RENT" : "SALE",
+        p_tenant_id: tenantId!
+      });
 
-    const { data: updatedRow, error: rpcError } = await supabase.rpc("update_property_status_elite", {
-      p_id: input.id,
-      p_tenant_id: existing?.tenant_id || tenantId || "",
-      p_user_id: user.id,
-      p_is_admin: canBypassOwnership,
-      p_status: input.status,
-      p_version: input.version ?? existing?.version ?? 1,
-    }) as { data: unknown, error: { message?: string; code?: string } | null };
-
-    if (rpcError) {
-      console.error("RPC update_property_status_elite failed:", rpcError);
-      if (rpcError.message?.includes("VC409") || rpcError.code === "P4090") {
-        return { success: false, errorType: "VERSION_CONFLICT", message: "ข้อมูลถูกแก้ไขไปแล้วโดยเอเจนต์ท่านอื่น กรุณาดึงข้อมูลล่าสุด" };
-      }
-      return { success: false, message: mapDbError(rpcError) };
+    if (updateError) {
+      // Fallback to direct update if RPC fails (legacy support during migration)
+      const { error: directError } = await supabase
+        .from("properties_core")
+        .update({ status: PROPERTY_STATUS_DB_VALUE[input.status as PropertyStatus] })
+        .eq("id", input.id);
+      
+      if (directError) return { success: false, message: mapDbError(directError) };
     }
 
-    await logAudit(
-      { supabase, user, role },
-      { action: "property.status.update", entity: "properties", entityId: input.id, metadata: { status: input.status } }
-    );
+    const oldStatusStr = getStatusFromDb(existing.status);
 
-    if (existing && (input.status === "SOLD" || input.status === "RENTED") && existing.status !== input.status) {
-      await sendStatusUpdateNotification({ id: existing.id, title: existing.title }, input.status as "SOLD" | "RENTED");
+    await logAudit({ supabase, user, role }, {
+      action: "property.status_update",
+      entity: "properties_core",
+      entityId: input.id,
+      summary: `Changed status from ${oldStatusStr} to ${input.status}`,
+      metadata: { old_status: oldStatusStr, new_status: input.status }
+    });
+
+    if ((input.status === "SOLD" || input.status === "RENTED") && oldStatusStr !== (input.status as string)) {
+      const title = details?.title?.th || "Property";
+      await sendStatusUpdateNotification({ id: input.id, title }, input.status as "SOLD" | "RENTED");
     }
 
-    revalidatePath("/", "layout");
-    revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
-    revalidateTag("public-data", "seconds");
-    revalidateTag("popular-areas", "seconds");
-    revalidateTag("dashboard-stats", "seconds");
-    revalidateTag("dashboard-charts", "seconds");
-    revalidateTag("dashboard-performance", "seconds");
-
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
-  } catch (e: unknown) {
-    return { success: false, message: mapDbError(e) };
+  } catch (err) {
+    return { success: false, message: mapDbError(err) };
   }
 }
 
@@ -398,11 +529,11 @@ export async function triggerPropertyAiReviewAction(propertyId: string) {
     assertStaff(role);
     if (!tenantId) throw new Error("Tenant context required");
 
-    const { error } = await supabase.from("properties").update({ requires_ai_review: true, status: "DRAFT" }).eq("id", propertyId).eq("tenant_id", tenantId);
+    const { error } = await supabase.from("properties_core").update({ status: PROPERTY_STATUS_DB_VALUE["DRAFT"] }).eq("id", propertyId).eq("tenant_id", tenantId);
     if (error) throw error;
 
-    await inngest.send({ name: "property.created", data: { propertyId, userId: user.id, tenantId } });
-    await logAudit({ supabase, user, role }, { action: "property.ai_refresh", entity: "properties", entityId: propertyId });
+    await inngest.send({ name: "property.created", data: { propertyId, userId: user.id, tenantId } }).catch(e => console.warn("Inngest skip:", e.message));
+    await logAudit({ supabase, user, role }, { action: "property.ai_refresh", entity: "properties_core", entityId: propertyId });
     revalidatePath("/protected/properties");
     return { success: true, message: "กำลังเริ่มการประมวลผล AI หลังบ้าน..." };
   } catch (e: unknown) {

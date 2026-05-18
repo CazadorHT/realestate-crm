@@ -91,7 +91,7 @@ bot.use(async (ctx, next) => {
 
   // Define allowed roles for Back-office access
   const ALLOWED_ROLES = ["ADMIN", "AGENT", "STAFF", "MANAGER"];
-  const isAuthorized = profile && ALLOWED_ROLES.includes(profile.role);
+  const isAuthorized = profile && profile.role && ALLOWED_ROLES.includes(profile.role);
 
   if (!isAuthorized && ctx.chat?.type === "private") {
     // 🛡️ Security Watchdog: Notify admin group about access request
@@ -115,10 +115,14 @@ bot.use(async (ctx, next) => {
     );
   }
 
-  if (!isAuthorized) return; // Ignore in groups/channels if not authorized
+  if (!isAuthorized || !profile) return; // Ignore in groups/channels if not authorized
  
   // 🛡️ Elite Pattern: Strictly Typed Context (No more 'any')
-  ctx.userProfile = profile;
+  ctx.userProfile = {
+    id: profile.id,
+    role: profile.role || "USER",
+    full_name: profile.full_name,
+  };
   ctx.adminSupabase = supabase; 
   await next();
 });
@@ -175,14 +179,19 @@ bot.command("check", async (ctx) => {
     .maybeSingle();
 
   if (error) return ctx.reply(`❌ เกิดข้อผิดพลาดในการดึงข้อมูล: ${error.message}`);
-  if (!prop) return ctx.reply(`🔍 ไม่พบทรัพย์รหัส <b>${propertyId}</b> ในระบบครับ`, { parse_mode: "HTML" });
+  if (!prop || !prop.id) return ctx.reply(`🔍 ไม่พบทรัพย์รหัส <b>${propertyId}</b> ในระบบครับ`, { parse_mode: "HTML" });
 
   const message = formatPropertyDetail(prop);
   const keyboard = buildPropertyKeyboard(prop.id);
 
   // 🖼️ Handle Property Image (Cover or First one)
-  const rawImageUrl = prop.property_images?.find((img: any) => img.is_cover)?.image_url 
-                 || prop.property_images?.[0]?.image_url;
+  const images = Array.isArray(prop.property_images) 
+    ? prop.property_images 
+    : prop.property_images 
+      ? [prop.property_images] 
+      : [];
+  const rawImageUrl = images.find((img: any) => img.is_cover)?.image_url 
+                 || images[0]?.image_url;
   
   if (rawImageUrl) {
     // 🖼️ Optimized for Telegram: 800px width for faster loading (Edge Transformation)

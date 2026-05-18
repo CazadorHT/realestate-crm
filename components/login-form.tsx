@@ -19,8 +19,11 @@ import {
   EyeOff,
   Loader2,
   CheckCircle2,
+  Copy,
+  Check,
 } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 import { AuthHeader } from "./auth/auth-header";
 import { SocialAuthButtons } from "./auth/social-auth-buttons";
@@ -36,6 +39,7 @@ export type AuthView = "login" | "signup" | "forgot-password";
 const loginSchema = z.object({
   email: z.string().email("กรุณากรอกอีเมลให้ถูกต้อง"),
   password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
+  rememberMe: z.boolean().default(true),
   honeypot: z.string().max(0).optional(), // Bot trap
 });
 
@@ -60,6 +64,7 @@ interface AuthValues {
   email: string;
   password?: string;
   confirmPassword?: string;
+  rememberMe?: boolean;
   honeypot?: string;
 }
 
@@ -74,23 +79,32 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const router = useRouter();
 
+  const handleCopyPassword = (password: string) => {
+    if (!password) return;
+    navigator.clipboard.writeText(password);
+    setCopied(true);
+    toast.success("ก๊อปปี้รหัสผ่านแล้ว!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   // --- Form Hooks ---
+  const form = useForm<AuthValues>({
+    resolver: async (data, context, options) => {
+      const schema = view === "login" ? loginSchema : view === "signup" ? signupSchema : forgotSchema;
+      return zodResolver(schema)(data, context, options);
+    },
+  });
+
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<AuthValues>({
-    resolver: zodResolver(
-      view === "login"
-        ? loginSchema
-        : view === "signup"
-          ? signupSchema
-          : forgotSchema,
-    ) as any,
-  });
+    getValues,
+  } = form;
 
   const handleSetView = (newView: AuthView) => {
     const order: AuthView[] = ["forgot-password", "login", "signup"];
@@ -129,19 +143,34 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
           });
           throw error;
         }
-        await logActivityAction("LOGIN", "user", undefined, {
-          email: data.email,
-        });
 
-        // 🔔 Notify Admins about the login
-        await notifyAdminsAction({
-          type: "INFO",
-          title: "มีการเข้าสู่ระบบ 🔑",
-          message: `ผู้ใช้ ${data.email} เข้าสู่ระบบแล้ว`,
-          link: "/protected/settings/users", // Link to user management
-        });
+        // 🛡️ Record Login Activity in Profile
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+           await supabase.from("profiles").update({
+             last_login_at: new Date().toISOString(),
+             last_ip: "CLIENT_SIDE_FETCH"
+           }).eq("id", authUser.id);
+        }
 
-        router.push("/protected");
+        try {
+          await logActivityAction("LOGIN", "user", undefined, {
+            email: data.email,
+            remember: data.rememberMe
+          });
+
+          // 🔔 Notify Admins about the login
+          await notifyAdminsAction({
+            type: "INFO",
+            title: "มีการเข้าสู่ระบบ 🔑",
+            message: `ผู้ใช้ ${data.email} เข้าสู่ระบบแล้ว (Remember: ${data.rememberMe ? 'Yes' : 'No'})`,
+            link: "/protected/settings/users", // Link to user management
+          });
+        } catch (e) {
+          console.error("Auxiliary login actions failed:", e);
+        }
+
+        window.location.href = "/protected";
       } else if (view === "signup") {
         const { error } = await supabase.auth.signUp({
           email: data.email,
@@ -150,7 +179,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
             emailRedirectTo: `${window.location.origin}/auth/confirm`,
           },
         });
-        
+
         if (error) {
           await logActivityAction("SIGNUP_FAILURE", "user", undefined, {
             email: data.email,
@@ -170,7 +199,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
           message: `มีผู้ใช้ใหม่สมัครสมาชิกด้วยอีเมล ${data.email}`,
           link: "/protected/settings/users",
         });
-        
+
         setSuccess("ส่งอีเมลยืนยันไปแล้วนะ! ไปเช็คดูใน Inbox ได้เลย");
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(
@@ -183,12 +212,12 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
         setSuccess("เราส่งลิงก์รีเซ็ตรหัสผ่านไปให้ทางอีเมลแล้วนะ!");
       }
     } catch (error: unknown) {
-      // Security Tip: If the error is about a user already existing, 
-      // sometimes it's better to show a generic success message or a 
+      // Security Tip: If the error is about a user already existing,
+      // sometimes it's better to show a generic success message or a
       // subtle hint to prevent User Enumeration.
       const errorMessage =
         error instanceof Error
-          ? error.message === "User already registered" 
+          ? error.message === "User already registered"
             ? "หากมีบัญชีอยู่แล้ว คุณจะได้รับอีเมลยืนยันหรือลิงก์เข้าสู่ระบบ"
             : error.message
           : "อ๊ะ! มีอะไรบางอย่างผิดพลาด ลองใหม่อีกทีนะ";
@@ -224,11 +253,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
     <PremiumAuthLayout
       view={view}
       title={
-        <AuthHeader
-          view={view}
-          direction={direction}
-          variants={formVariants}
-        />
+        <AuthHeader view={view} direction={direction} variants={formVariants} />
       }
     >
       <m.div layout className="">
@@ -293,7 +318,8 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                           : isSignUp
                             ? "bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:ring-purple-500/10"
                             : "bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-amber-500/50 focus:ring-amber-500/10",
-                        errors.email && "border-red-500/50 focus:border-red-500",
+                        errors.email &&
+                          "border-red-500/50 focus:border-red-500",
                       )}
                     />
                   </div>
@@ -351,28 +377,66 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                             "border-red-500/50 focus:border-red-500",
                         )}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword(!showPassword)}
-                        className={cn(
-                          "absolute right-4 top-1/2 -translate-y-1/2 transition-colors",
-                          isLogin
-                            ? "text-slate-400 hover:text-slate-600"
-                            : "text-slate-600 hover:text-slate-400",
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                        {showPassword && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopyPassword(form.getValues("password") || "")}
+                            className={cn(
+                              "p-1.5 rounded-lg transition-colors",
+                              isLogin
+                                ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                : "text-slate-500 hover:text-purple-400 hover:bg-white/5",
+                            )}
+                          >
+                            {copied ? (
+                              <Check className="h-4 w-4 text-emerald-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </button>
                         )}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="h-4.5 w-4.5" />
-                        ) : (
-                          <Eye className="h-4.5 w-4.5" />
-                        )}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className={cn(
+                            "p-1.5 rounded-lg transition-colors",
+                            isLogin
+                              ? "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                              : "text-slate-600 hover:text-slate-400 hover:bg-white/5",
+                          )}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4.5 w-4.5" />
+                          ) : (
+                            <Eye className="h-4.5 w-4.5" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                     {errors.password && (
                       <p className="text-[10px] text-red-500 ml-1 font-medium">
                         {errors.password.message}
                       </p>
                     )}
+                  </div>
+                )}
+
+                {/* Remember Me (Login only) */}
+                {isLogin && (
+                  <div className="flex items-center space-x-2 ml-1">
+                    <input
+                      type="checkbox"
+                      id="rememberMe"
+                      {...register("rememberMe")}
+                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label
+                      htmlFor="rememberMe"
+                      className="text-xs font-medium text-slate-500 cursor-pointer"
+                    >
+                      จดจำฉันในระบบ
+                    </label>
                   </div>
                 )}
 

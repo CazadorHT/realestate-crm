@@ -1,9 +1,10 @@
 import { createAdminClient } from "../lib/supabase/admin";
 import { Database } from "../lib/database.types";
-
-type PropertyType = Database["public"]["Enums"]["property_type"];
-type LeadSource = Database["public"]["Enums"]["lead_source"];
-type LeadStage = Database["public"]["Enums"]["lead_stage"];
+// แก้ไขจากการดึง Enum ใน Database เป็น String Union Types โดยตรง 
+// เนื่องจากใน database.types.generated.ts ไม่มีระบุ Enums ไว้
+type PropertyType = "CONDO" | "HOUSE" | "VILLA" | "TOWNHOME";
+type LeadSource = "FACEBOOK" | "WEBSITE" | "LINE" | "REFERRAL" | "PORTAL";
+type LeadStage = "NEW" | "CONTACTED" | "VIEWED" | "NEGOTIATING" | "CLOSED";
 
 async function seedDemoData() {
   const supabase = createAdminClient();
@@ -42,7 +43,8 @@ async function seedDemoData() {
 
   // 3. Generate 25 Properties
   console.log("🏠 Generating 25 properties...");
-  const properties = [];
+  const properties: Record<string, any>[] = []; // กำหนด Type ป้องกัน Implicit Any
+  
   for (let i = 1; i <= 25; i++) {
     const province = provinces[Math.floor(Math.random() * provinces.length)];
     const district = districts[province][Math.floor(Math.random() * districts[province].length)];
@@ -64,9 +66,9 @@ async function seedDemoData() {
       title: `Project ${type} at ${district} #${i}`,
       title_en: `Elite ${type} in ${district} #${i}`,
       description: `บ้าน/คอนโด คุณภาพเยี่ยม ในทำเลศักยภาพ ${district} เดินทางสะดวก พร้อมสิ่งอำนวยความสะดวกครบครัน`,
-      property_type: type as PropertyType,
+      property_type: type,
       status: "ACTIVE",
-      listing_type: (isSale && isRent ? "SALE_AND_RENT" : (isSale ? "SALE" : "RENT")) as any,
+      listing_type: (isSale && isRent ? "SALE_AND_RENT" : (isSale ? "SALE" : "RENT")),
       price,
       original_price: originalPrice,
       rental_price: rentalPrice,
@@ -77,7 +79,7 @@ async function seedDemoData() {
       size_sqm: Math.floor(Math.random() * 100) + 30,
       bedrooms: Math.floor(Math.random() * 4) + 1,
       bathrooms: Math.floor(Math.random() * 3) + 1,
-      slug: `demo-property-${tenant_id.slice(0,4)}-${Date.now()}-${i}`,
+      slug: `demo-property-${tenant_id?.slice(0,4)}-${Date.now()}-${i}`,
       meta_keywords: isHotDeal ? ["Hot Deal", "Investment"] : ["Luxury", "Family"],
     });
   }
@@ -87,7 +89,7 @@ async function seedDemoData() {
     .insert(properties as any)
     .select("id");
 
-  if (propError) {
+  if (propError || !insertedProps) {
     console.error("❌ Error inserting properties:", propError);
     return;
   }
@@ -95,7 +97,7 @@ async function seedDemoData() {
 
   // 4. Generate 60 Leads
   console.log("👥 Generating 60 leads...");
-  const leads = [];
+  const leads: Record<string, any>[] = []; // กำหนด Type ป้องกัน Implicit Any
   const insertedPropIds = insertedProps.map(p => p.id);
 
   for (let i = 1; i <= 60; i++) {
@@ -104,7 +106,9 @@ async function seedDemoData() {
     const fullName = `${firstName} ${lastName}`;
     const source = leadSources[Math.floor(Math.random() * leadSources.length)];
     const stage = leadStages[Math.floor(Math.random() * leadStages.length)];
-    const propertyId = Math.random() > 0.5 ? insertedPropIds[Math.floor(Math.random() * insertedPropIds.length)] : null;
+    const propertyId = Math.random() > 0.5 && insertedPropIds.length > 0 
+      ? insertedPropIds[Math.floor(Math.random() * insertedPropIds.length)] 
+      : null;
     
     leads.push({
       tenant_id,

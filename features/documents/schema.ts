@@ -1,9 +1,8 @@
 import { z } from "zod";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
-export type DocumentType = Database["public"]["Enums"]["document_type"];
-export type DocumentOwnerType =
-  Database["public"]["Enums"]["document_owner_type"];
+export type DocumentType = z.infer<typeof DocumentTypeEnum>;
+export type DocumentOwnerType = z.infer<typeof DocumentOwnerTypeEnum>;
 
 export const DocumentTypeEnum = z.enum([
   "ID_CARD",

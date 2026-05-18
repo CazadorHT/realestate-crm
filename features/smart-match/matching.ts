@@ -1,7 +1,7 @@
 import { SearchCriteria, ScoreBreakdown } from "./types";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+type PropertyRow = any;
 
 // --- Constants & Config ---
 const SCORE_WEIGHTS = {

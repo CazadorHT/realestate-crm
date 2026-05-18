@@ -21,7 +21,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { Database } from "@/lib/database.types";
+import { FAQItem } from "@/features/admin/faqs-actions";
 import { Button } from "@/components/ui/button";
 
 // Modular Components
@@ -29,7 +29,7 @@ import { FAQQuestionSection } from "./faq-form/FAQQuestionSection";
 import { FAQAnswerSection } from "./faq-form/FAQAnswerSection";
 import { FAQSettingsSection } from "./faq-form/FAQSettingsSection";
 
-export type FAQRow = Database["public"]["Tables"]["faqs"]["Row"];
+export type FAQRow = FAQItem;
 
 export const faqFormSchema = z.object({
   question: z.string().min(1, "กรุณาระบุคำถามหลัก"),
@@ -73,14 +73,14 @@ export function FAQForm({
     resolver: zodResolver(faqFormSchema),
     mode: "onChange",
     defaultValues: {
-      question: initialData?.question || "",
-      question_en: initialData?.question_en || "",
-      question_cn: initialData?.question_cn || "",
-      question_ru: initialData?.question_ru || "",
-      answer: initialData?.answer || "",
-      answer_en: initialData?.answer_en || "",
-      answer_cn: initialData?.answer_cn || "",
-      answer_ru: initialData?.answer_ru || "",
+      question: initialData?.question?.th || "",
+      question_en: initialData?.question?.en || "",
+      question_cn: initialData?.question?.cn || "",
+      question_ru: initialData?.question?.ru || "",
+      answer: initialData?.answer?.th || "",
+      answer_en: initialData?.answer?.en || "",
+      answer_cn: initialData?.answer?.cn || "",
+      answer_ru: initialData?.answer?.ru || "",
       category: initialData?.category || "ทั่วไป",
       sort_order: initialData?.sort_order ?? 0,
       is_active: initialData?.is_active ?? true,
@@ -109,8 +109,21 @@ export function FAQForm({
     setSaving(true);
     try {
       const input = {
-        ...values,
+        question: {
+          th: values.question || "",
+          en: values.question_en || "",
+          cn: values.question_cn || "",
+          ru: values.question_ru || "",
+        },
+        answer: {
+          th: values.answer || "",
+          en: values.answer_en || "",
+          cn: values.answer_cn || "",
+          ru: values.answer_ru || "",
+        },
+        category: values.category,
         sort_order: Number(values.sort_order),
+        is_active: values.is_active,
       };
 
       const res = isNew 

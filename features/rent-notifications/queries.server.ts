@@ -1,5 +1,6 @@
-import { Database } from "@/lib/database.types";
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+import { SupabaseClient } from "@supabase/supabase-js";
+import { Database as LegacyDatabase } from "@/lib/database.types.generated";
+import { RentNotificationRule } from "./types";
 
 export async function getRentNotificationRules(
   page = 1,
@@ -8,23 +9,24 @@ export async function getRentNotificationRules(
   search: string = "",
 ) {
   const { createClient } = await import("@/lib/supabase/server");
-  const supabase = await createClient();
+  const supabase = (await createClient()) as unknown as SupabaseClient<LegacyDatabase>;
   const offset = (page - 1) * pageSize;
 
-  let query = supabase.from("rent_notification_rules").select(
+  let query = supabase.from("rent_notification_rules_v3").select(
     `
-      *,
-      properties!inner (
+      id, property_id, channel_id, notification_day, notification_hour, language, is_active, last_sent_at, created_at, tenant_id,
+      property:properties_core!inner (
         id, 
-        title,
-        property_images(image_url),
-        deals (
+        details:properties_details(title),
+        property_images:property_media_v3(image_url),
+        deals:crm_deals_v3 (
+          transaction_end_date,
           rental_contracts (
             end_date
           )
         )
       ),
-      line_groups!inner (group_id, group_name, picture_url),
+      channel:notification_channels_v3!inner (id, platform, external_channel_id, channel_name, picture_url),
       tenant:tenants (name)
     `,
     { count: "exact" },
@@ -36,7 +38,7 @@ export async function getRentNotificationRules(
 
   if (search) {
     query = query.or(
-      `properties.title.ilike.%${search}%,line_groups.group_name.ilike.%${search}%`,
+      `property.details.title.ilike.%${search}%,channel.channel_name.ilike.%${search}%`,
     );
   }
 
@@ -46,19 +48,25 @@ export async function getRentNotificationRules(
 
   if (error) {
     console.error("Error fetching rent notification rules:", error);
-    throw new Error(require("@/lib/db-error").mapDbError(error));
+    const dbErrorModule = await import("@/lib/db-error");
+    throw new Error(dbErrorModule.mapDbError(error));
   }
 
-  return { rules: data || [], count: count || 0 };
+  const rules = (data || []).map((r) => ({
+    ...r,
+    notification_day: r.notification_day ?? 1,
+  })) as unknown as RentNotificationRule[];
+
+  return { rules, count: count || 0 };
 }
 
 export async function getLineGroups(tenantId?: string | null) {
   const { createClient } = await import("@/lib/supabase/server");
-  const supabase = await createClient();
+  const supabase = (await createClient()) as unknown as SupabaseClient<LegacyDatabase>;
 
   let query = supabase
-    .from("line_groups")
-    .select("group_id, group_name, picture_url")
+    .from("notification_channels_v3")
+    .select("id, platform, external_channel_id, channel_name, picture_url")
     .eq("is_active", true);
 
   if (tenantId && tenantId !== "ALL") {
@@ -78,14 +86,14 @@ export async function getLineGroups(tenantId?: string | null) {
 
 export async function getAllPropertiesSimple(tenantId?: string | null) {
   const { createClient } = await import("@/lib/supabase/server");
-  const supabase = await createClient();
+  const supabase = (await createClient()) as unknown as SupabaseClient<LegacyDatabase>;
 
   // Optimized query using NOT EXISTS to filter out properties that already have rules
   // This is much faster than application-level filtering as the property count grows.
   const { data, error } = await supabase.rpc(
-    "get_properties_without_notification_rules",
+    "get_properties_without_notification_rules_v3",
     {
-      p_tenant_id: tenantId === "ALL" ? null : tenantId || null,
+      p_tenant_id: tenantId === "ALL" ? undefined : (tenantId || undefined),
     },
   );
 
@@ -98,25 +106,23 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
 
     // 1. Fetch properties with active contracts
     let query = supabase
-      .from("properties")
+      .from("properties_core")
       .select(
         `
         id, 
-        title,
-        property_images(image_url),
-        deals!inner (
+        details:properties_details(title),
+        property_images:property_media_v3(image_url),
+        deals:crm_deals_v3!inner (
           id,
           status,
-          rental_contracts!inner (
+          rental_contracts (
             id,
             status
           )
         )
       `,
       )
-      .eq("deals.status", "CLOSED_WIN")
-      .eq("deals.rental_contracts.status", "ACTIVE")
-      .neq("status", "ARCHIVED");
+      .eq("deals.status", "CLOSED_WIN");
 
     if (tenantId && tenantId !== "ALL") {
       query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
@@ -129,30 +135,31 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
     if (propError || !properties) return [];
 
     const { data: rules } = await supabase
-      .from("rent_notification_rules")
+      .from("rent_notification_rules_v3")
       .select("property_id");
-    const existingIds = new Set((rules || []).map((r: { property_id: string }) => r.property_id));
+    const existingIds = new Set((rules || []).map((r: { property_id: string | null }) => r.property_id as string));
 
     type PropertyWithImages = {
       id: string;
-      title: string | null;
-      images: Array<{ url: string; image_url?: string; is_cover: boolean | null }>;
+      details?: { title?: { th?: string; en?: string } | null } | null;
+      property_images: Array<{ image_url?: string; is_cover?: boolean | null }>;
     };
 
     return (properties as unknown as PropertyWithImages[])
       .filter((p: PropertyWithImages) => !existingIds.has(p.id))
       .map((p: PropertyWithImages) => {
-        const imagesArr = p.images || [];
+        const imagesArr = p.property_images || [];
         const cover = imagesArr.find((img) => img.is_cover) || imagesArr[0];
         return {
           id: p.id,
-          title: p.title || "Unknown Property",
-          image: cover?.url || cover?.image_url || null,
+          title: p.details?.title?.th || p.details?.title?.en || "Unknown Property",
+          image: cover?.image_url || null,
         };
       });
   }
 
-  return (data as any[] || []).map((p: { id: string; title: string; image_url: string | null }) => ({
+  const rpcData = (data as unknown as Array<{ id: string; title: string; image_url: string | null }>) || [];
+  return rpcData.map((p) => ({
     id: p.id,
     title: p.title,
     image: p.image_url,
@@ -165,14 +172,16 @@ export async function getRentNotificationHistory(
   tenantId?: string | null,
 ) {
   const { createClient } = await import("@/lib/supabase/server");
-  const supabase = await createClient();
+  const supabase = (await createClient()) as unknown as SupabaseClient<LegacyDatabase>;
   const offset = (page - 1) * pageSize;
 
-  let query = supabase.from("rent_notification_history").select(
+  let query = supabase.from("rent_notification_history_v3").select(
     `
-      *,
-      properties (title),
-      line_groups (group_name)
+      id, rule_id, property_id, channel_id, sent_at, status, error_message, created_at, tenant_id,
+      property:properties_core (
+        details:properties_details(title)
+      ),
+      channel:notification_channels_v3 (channel_name)
     `,
     { count: "exact" },
   );

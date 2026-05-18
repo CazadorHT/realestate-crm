@@ -21,10 +21,6 @@ import {
 } from "@/components/ui/select";
 import { useAITranslation } from "../../hooks/use-ai-translation";
 import {
-  TRANSIT_TYPE_LABELS,
-  TRANSIT_TYPE_ENUM,
-} from "@/features/properties/labels";
-import {
   TrainFront,
   MapPin,
   Ruler,
@@ -32,12 +28,14 @@ import {
   Trash2,
   Sparkles,
   Loader2,
+  Clock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "../../components/SectionHeader";
 import type { UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
+import { getTransitTypesAction, type MasterDataTransitType } from "@/features/properties/actions/fetch-master-data";
 
 // Util function for parsing numbers
 const parseNumber = (s: string) => {
@@ -121,7 +119,21 @@ interface TransitSectionProps {
 export function TransitSection({ form: formProp }: TransitSectionProps) {
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
-  const watchedNearTransit = form.watch("near_transit");
+  const [transitTypes, setTransitTypes] = React.useState<MasterDataTransitType[]>([]);
+  const [isLoadingTypes, setIsLoadingTypes] = React.useState(true);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    getTransitTypesAction().then((data) => {
+      if (isMounted) {
+        setTransitTypes(data);
+        setIsLoadingTypes(false);
+      }
+    }).catch(() => {
+      if (isMounted) setIsLoadingTypes(false);
+    });
+    return () => { isMounted = false; };
+  }, []);
 
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -148,13 +160,12 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
           desc="รถไฟฟ้าและจุดเชื่อมต่อสำคัญ"
           tone="blue"
           right={
-            watchedNearTransit &&
             fields.length > 0 && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-8 gap-1.5 text-blue-600! border-blue-200! bg-blue-50! hover:bg-blue-100! font-bold px-3 shadow-xs transition-all active:scale-95"
+                className="h-8 gap-1.5 text-blue-600! border-blue-200! bg-blue-50! hover:bg-blue-100! font-semibold px-3 shadow-xs transition-all active:scale-95"
                 disabled={isTranslating}
                 onClick={() => translateTransits()}
               >
@@ -163,210 +174,213 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                 ) : (
                   <Sparkles className="h-3.5 w-3.5" />
                 )}
-                AI {isTranslating ? "กำลังแปล..." : "แปลทั้งหมดของการเดินทาง"}
+                AI {isTranslating ? "กำลังแปล..." : "แปลชื่อทั้งหมด"}
               </Button>
             )
           }
         />
         <Separator className="bg-slate-200/70" />
       </CardHeader>
-      <CardContent className="pt-6 ">
-        <FormField
-          control={form.control}
-          name="near_transit"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center space-x-4 space-y-0 p-4 rounded-xl border border-slate-100 bg-slate-50">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={(checked) => {
-                    field.onChange(checked);
-                    // Clear transit data when unchecked
-                    if (!checked) {
-                      form.setValue("nearby_transits", []);
-                    }
-                  }}
-                  className="w-8 h-8 rounded-md border-slate-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                />
-              </FormControl>
-              <div className="space-y-1">
-                <FormLabel className="text-base font-bold text-slate-800 cursor-pointer">
-                  ตั้งอยู่ใกล้รถไฟฟ้า / รถสาธารณะ
-                </FormLabel>
-                <p className="text-xs text-slate-500 font-medium">
-                  หากติ๊กเลือก จะมีช่องให้กรอกรายละเอียดเพิ่มเติม
-                </p>
-              </div>
-            </FormItem>
-          )}
-        />
-
-        <div
-          className={`space-y-4 mt-2 overflow-hidden transition-all duration-300 ease-in-out ${
-            watchedNearTransit
-              ? "max-h-[1000px] opacity-100 translate-y-0 pt-4"
-              : "max-h-0 opacity-0 -translate-y-4 pt-0 mt-0"
-          }`}
-        >
+      <CardContent className="pt-6 px-4 sm:px-6">
+        <div className="space-y-4">
           {/* Transit List - Scrollable container for max 3 visible */}
-          <div className="max-h-[350px] overflow-y-auto space-y-4 pr-1 custom-scrollbar">
+          <div className="max-h-[400px] overflow-y-auto space-y-4 pr-1 custom-scrollbar">
             {fields.map((item, index) => (
               <div
                 key={item.id}
-                className="grid grid-cols-12 gap-x-4 gap-y-3 p-3 sm:p-4 bg-slate-50/50 rounded-xl border border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200 relative group"
+                className="grid grid-cols-1 gap-4 p-4 sm:p-5 bg-slate-50/50 rounded-2xl border border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200 relative group"
               >
-                {/* Transit Type */}
-                <FormField
-                  control={form.control}
-                  name={`nearby_transits.${index}.type`}
-                  render={({ field }) => (
-                    <FormItem className="col-span-6 sm:col-span-3 lg:col-span-2">
-                      <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
-                        <TrainFront className="h-3.5 w-3.5 text-blue-500" />
-                        ประเภท
-                      </FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value ?? "BTS"}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full min-w-0 h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="bg-white rounded-xl">
-                          {TRANSIT_TYPE_ENUM.map((t) => (
-                            <SelectItem
-                              key={t}
-                              value={t}
-                              className="font-medium py-2 text-sm"
-                            >
-                              {TRANSIT_TYPE_LABELS[t]}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-
-                {/* Distance */}
-                <FormField
-                  control={form.control}
-                  name={`nearby_transits.${index}.distance_meters`}
-                  render={({ field }) => (
-                    <FormItem className="col-span-3 sm:col-span-2 lg:col-span-2">
-                      <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
-                        <Ruler className="h-3.5 w-3.5 text-blue-500" />
-                        กม.
-                      </FormLabel>
-                      <FormControl>
-                        <KilometerInput
-                          value={field.value}
-                          onChange={field.onChange}
-                          className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium text-xs text-center focus:ring-0 focus:border-blue-400 px-1"
-                          placeholder="0.5"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                {/* Time */}
-                <FormField
-                  control={form.control}
-                  name={`nearby_transits.${index}.time`}
-                  render={({ field }) => (
-                    <FormItem className="col-span-3 sm:col-span-2 lg:col-span-1">
-                      <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
-                        นาที
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value ?? ""}
-                          className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium text-xs text-center focus:ring-0 focus:border-blue-400 px-1"
-                          placeholder="5"
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
-                />
-
-                {/* Station Name */}
-                <FormField
-                  control={form.control}
-                  name={`nearby_transits.${index}.station_name`}
-                  render={({ field }) => (
-                    <FormItem className="col-span-10 sm:col-span-4 lg:col-span-6 ">
-                      <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
-                        <MapPin className="h-3.5 w-3.5 text-blue-500" />
-                        ชื่อสถานี
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          {...field}
-                          value={field.value ?? ""}
-                          className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium px-4 text-xs focus:ring-0 focus:border-blue-400"
-                          placeholder="เช่น สถานีทองหล่อ"
-                        />
-                      </FormControl>
-
-                      {/* Hidden fields for EN/CN/RU - Only shown on focus or if non-empty? 
-                          Actually let's keep them compact but accessible. */}
-                      <div className="grid grid-cols-3 gap-2 mt-2">
-                        <FormField
-                          control={form.control}
-                          name={`nearby_transits.${index}.station_name_en`}
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              value={field.value || ""}
-                              placeholder="EN Name"
-                              className="h-8 text-[10px] bg-slate-50/50 text-slate-500 border-slate-100 focus:bg-white transition-all"
-                            />
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`nearby_transits.${index}.station_name_cn`}
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              value={field.value || ""}
-                              placeholder="CN Name"
-                              className="h-8 text-[10px] bg-slate-50/50 text-slate-500 border-slate-100 focus:bg-white transition-all"
-                            />
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name={`nearby_transits.${index}.station_name_ru`}
-                          render={({ field }) => (
-                            <Input
-                              {...field}
-                              value={field.value || ""}
-                              placeholder="RU Name"
-                              className="h-8 text-[10px] bg-slate-50/50 text-slate-500 border-slate-100 focus:bg-white transition-all"
-                            />
-                          )}
-                        />
-                      </div>
-                    </FormItem>
-                  )}
-                />
-
-                {/* Delete Button - Fixed at top right for mobile grid */}
-                <div className="col-span-2 sm:col-span-1 flex items-start justify-end pt-5">
+                {/* Delete Button - Positioned top-right */}
+                <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                   <Button
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    className="h-8 w-8 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full"
                     onClick={() => remove(index)}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
+                </div>
+
+                {/* Core Info: Type, Distance, Time */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  {/* Transit Type */}
+                  <FormField
+                    control={form.control}
+                    name={`nearby_transits.${index}.type`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
+                          <TrainFront className="h-3.5 w-3.5 text-blue-500" />
+                          ประเภท
+                        </FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value ?? "BTS"}
+                          disabled={isLoadingTypes}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
+                              {isLoadingTypes ? (
+                                <div className="flex items-center gap-2">
+                                  <Loader2 className="h-3 w-3 animate-spin" />
+                                  <span>กำลังโหลด...</span>
+                                </div>
+                              ) : (
+                                <SelectValue />
+                              )}
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white rounded-xl shadow-lg border-slate-200">
+                            {transitTypes.length > 0 ? (
+                              transitTypes.map((t) => (
+                                <SelectItem
+                                  key={t.code}
+                                  value={t.code}
+                                  className="font-medium py-2.5 text-sm cursor-pointer hover:bg-slate-50"
+                                >
+                                  <div className="flex items-center gap-2.5">
+                                    <div 
+                                      className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50" 
+                                      style={{ backgroundColor: t.metadata?.color || "#cbd5e1" }}
+                                    />
+                                    <span className="flex-1">{t.label.th}</span>
+                                    <span className="text-[10px] text-slate-400 font-mono uppercase px-1.5 py-0.5 bg-slate-100 rounded">
+                                      {t.code}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))
+                            ) : (
+                              ["BTS", "MRT", "ARL"].map((code) => (
+                                <SelectItem key={code} value={code} className="py-2.5">
+                                  {code}
+                                </SelectItem>
+                              ))
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Distance */}
+                  <FormField
+                    control={form.control}
+                    name={`nearby_transits.${index}.distance_meters`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
+                          <Ruler className="h-3.5 w-3.5 text-blue-500" />
+                          ระยะทาง (กม.)
+                        </FormLabel>
+                        <FormControl>
+                          <KilometerInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            className="h-9! rounded-lg bg-white border-slate-200 shadow-sm font-medium text-xs text-center focus:ring-0 focus:border-blue-400"
+                            placeholder="0.5"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Time */}
+                  <FormField
+                    control={form.control}
+                    name={`nearby_transits.${index}.time`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
+                          <Clock className="h-3.5 w-3.5 text-blue-500" />
+                          เวลา (นาที)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-9! rounded-lg bg-white border-slate-200 shadow-sm font-medium text-xs text-center focus:ring-0 focus:border-blue-400"
+                            placeholder="5"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                {/* Station Names: Stacked Vertically */}
+                <div className="space-y-3">
+                  <FormField
+                    control={form.control}
+                    name={`nearby_transits.${index}.station_name`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
+                          <MapPin className="h-3.5 w-3.5 text-blue-500" />
+                          ชื่อสถานี (ภาษาไทย)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium px-4 text-xs focus:ring-0 focus:border-blue-400"
+                            placeholder="เช่น สถานีทองหล่อ"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* International Names Stack */}
+                  <div className="grid grid-cols-1 gap-3 pl-2 border-l-2 border-slate-100 ml-1">
+                    <FormField
+                      control={form.control}
+                      name={`nearby_transits.${index}.station_name_en`}
+                      render={({ field }) => (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-slate-300 w-6">EN</span>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="English Station Name"
+                            className="h-9 text-xs bg-white text-slate-600 border-slate-200 rounded-lg focus:bg-white transition-all flex-1"
+                          />
+                        </div>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`nearby_transits.${index}.station_name_cn`}
+                      render={({ field }) => (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-slate-300 w-6">CN</span>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="中文名称"
+                            className="h-9 text-xs bg-white text-slate-600 border-slate-200 rounded-lg focus:bg-white transition-all flex-1"
+                          />
+                        </div>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`nearby_transits.${index}.station_name_ru`}
+                      render={({ field }) => (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-slate-300 w-6">RU</span>
+                          <Input
+                            {...field}
+                            value={field.value || ""}
+                            placeholder="Название станции"
+                            className="h-9 text-xs bg-white text-slate-600 border-slate-200 rounded-lg focus:bg-white transition-all flex-1"
+                          />
+                        </div>
+                      )}
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -376,7 +390,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
           <Button
             type="button"
             variant="outline"
-            className="w-full h-12 border-dashed border-2 border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50/50 font-medium text-sm transition-all"
+            className="w-full h-12 border-dashed border-2 border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50/50 font-medium text-sm transition-all mt-4"
             onClick={handleAddTransit}
           >
             <Plus className="h-4 w-4 mr-2" />

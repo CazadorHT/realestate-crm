@@ -3,8 +3,25 @@
 import { requireAuthContext, assertAdminOrManager, authzFail } from "@/lib/authz";
 import { FinanceMath } from "@/lib/finance/precision";
 import { generateExcelBuffer, generateMultiSheetExcelBuffer, ExcelColumn } from "@/lib/excel-export";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 import { CommissionStatus } from "./types";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { Database as LegacyDatabase } from "@/lib/database.types.generated";
+
+export type ExtendedDatabase = Database & {
+  public: {
+    Functions: Database["public"]["Functions"] & {
+      get_financial_analytics_v1: {
+        Args: { p_year: number; p_tenant_id?: string };
+        Returns: FinancialAnalyticsData;
+      };
+      get_distinct_finance_years: {
+        Args: Record<string, never>;
+        Returns: number[];
+      };
+    };
+  };
+};
 
 export type ExportActionResponse = {
   success: boolean;
@@ -31,6 +48,9 @@ export type FinancialAnalyticsData = {
   }[];
 };
 
+type DealRevenueRow = { commission_total: number | null; closed_at: string | null };
+type DealCommissionRow = { amount: number | null; created_at: string | null; status: string | null };
+
 /**
  * Fetches deep financial analytics for the P&L Dashboard.
  * Supports cross-branch (tenant) visualization if tenantId is not provided in context.
@@ -40,18 +60,19 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
     const { supabase, role, tenantId: currentTenantId } = await requireAuthContext();
     assertAdminOrManager(role);
 
+    const legacySupabase = supabase as unknown as SupabaseClient<ExtendedDatabase>;
     const targetYear = year || new Date().getFullYear();
     const tId = currentTenantId && currentTenantId !== "ALL" ? currentTenantId : undefined;
 
     // 🛡️ Phase 1: High-Performance SQL Aggregation (Primary)
-    const { data: rpcData, error: rpcErr } = await supabase.rpc("get_financial_analytics_v1", {
+    const { data: rpcData, error: rpcErr } = await legacySupabase.rpc("get_financial_analytics_v1", {
       p_year: targetYear,
       p_tenant_id: tId
     });
 
     if (!rpcErr && rpcData) {
       console.log(`[getFinancialAnalyticsAction] RPC Success for year ${targetYear}`);
-      return { success: true, data: rpcData as FinancialAnalyticsData };
+      return { success: true, data: rpcData as unknown as FinancialAnalyticsData };
     }
 
     // 🛡️ Phase 2: Manual JS Fallback (If RPC is missing or fails)
@@ -61,10 +82,10 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
     const endDate = `${targetYear}-12-31`;
 
     // 1. Fetch Revenue (Deals)
-    let dealsQuery = supabase
-      .from("deals")
-      .select("commission_amount, closed_at")
-      .not("commission_amount", "is", null)
+    let dealsQuery = legacySupabase
+      .from("crm_deals_v3")
+      .select("commission_total, closed_at")
+      .not("commission_total", "is", null)
       .gte("closed_at", startDate)
       .lte("closed_at", endDate)
       .eq("status", "CLOSED_WIN");
@@ -74,8 +95,8 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
     if (dealsErr) throw dealsErr;
 
     // 2. Fetch Payouts (Agent Shares)
-    let payoutsQuery = supabase
-      .from("deal_commissions")
+    let payoutsQuery = legacySupabase
+      .from("crm_deal_commissions_v3")
       .select("amount, created_at, status")
       .gte("created_at", startDate)
       .lte("created_at", endDate);
@@ -84,21 +105,13 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
     const { data: payoutsData, error: payoutsErr } = await payoutsQuery;
     if (payoutsErr) throw payoutsErr;
 
-    // 3. Fetch Adjustments
-    let adjQuery = supabase
-      .from("commission_adjustments")
-      .select("amount, created_at")
-      .gte("created_at", startDate)
-      .lte("created_at", endDate);
-    
-    if (tId) adjQuery = adjQuery.eq("tenant_id", tId);
-    const { data: adjustmentsData, error: adjErr } = await adjQuery;
-    if (adjErr) throw adjErr;
+    const typedDeals = (dealsData as unknown as DealRevenueRow[]) || [];
+    const typedPayouts = (payoutsData as unknown as DealCommissionRow[]) || [];
 
     // --- High-Precision Calculation Engine ---
-    const totalRevenue = (dealsData || []).reduce((acc: number, d: { commission_amount: number | null }) => acc + (d.commission_amount || 0), 0);
-    const totalPayouts = (payoutsData || []).reduce((acc: number, p: { amount: number | null }) => acc + (p.amount || 0), 0);
-    const totalAdjustments = (adjustmentsData || []).reduce((acc: number, a: { amount: number | null }) => acc + (a.amount || 0), 0);
+    const totalRevenue = typedDeals.reduce((acc, d) => acc + (d.commission_total || 0), 0);
+    const totalPayouts = typedPayouts.reduce((acc, p) => acc + (p.amount || 0), 0);
+    const totalAdjustments = 0; // Adjustments are deprecated in V3 Core
     
     let realizedProfitTotal = 0;
     let accruedProfitTotal = 0;
@@ -106,21 +119,19 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
     const monthlyTrends = Array.from({ length: 12 }, (_, i) => {
       const monthStr = `${targetYear}-${(i + 1).toString().padStart(2, "0")}`;
       
-      const monRevenue = (dealsData || [])
-        .filter((d) => (d.closed_at as string)?.startsWith(monthStr))
-        .reduce((acc: number, d: { commission_amount: number | null }) => acc + (d.commission_amount || 0), 0);
+      const monRevenue = typedDeals
+        .filter((d) => (d.closed_at || "")?.startsWith(monthStr))
+        .reduce((acc, d) => acc + (d.commission_total || 0), 0);
       
-      const monPayouts = (payoutsData || [])
-        .filter((p) => (p.created_at as string)?.startsWith(monthStr))
-        .reduce((acc: number, p: { amount: number | null }) => acc + (p.amount || 0), 0);
+      const monPayouts = typedPayouts
+        .filter((p) => (p.created_at || "")?.startsWith(monthStr))
+        .reduce((acc, p) => acc + (p.amount || 0), 0);
 
-      const monAdjustmentsView = (adjustmentsData || [])
-        .filter((a) => (a.created_at as string)?.startsWith(monthStr))
-        .reduce((acc: number, a: { amount: number | null }) => acc + (a.amount || 0), 0);
+      const monAdjustmentsView = 0;
 
-      const monPaidPayouts = (payoutsData || [])
-        .filter((p) => (p.created_at as string)?.startsWith(monthStr) && p.status === "PAID")
-        .reduce((acc: number, p: { amount: number | null }) => acc + (p.amount || 0), 0);
+      const monPaidPayouts = typedPayouts
+        .filter((p) => (p.created_at || "")?.startsWith(monthStr) && p.status === "PAID")
+        .reduce((acc, p) => acc + (p.amount || 0), 0);
       
       const monPendingPayouts = monPayouts - monPaidPayouts;
       const monRealized = monRevenue - monPaidPayouts + monAdjustmentsView;
@@ -135,8 +146,8 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
       };
     });
 
-    realizedProfitTotal = monthlyTrends.reduce((acc: number, m) => acc + m.realizedProfit, 0);
-    accruedProfitTotal = monthlyTrends.reduce((acc: number, m) => acc + m.accruedProfit, 0);
+    realizedProfitTotal = monthlyTrends.reduce((acc, m) => acc + m.realizedProfit, 0);
+    accruedProfitTotal = monthlyTrends.reduce((acc, m) => acc + m.accruedProfit, 0);
 
     return {
       success: true,
@@ -165,22 +176,20 @@ export async function getFinancialAnalyticsAction(year?: number): Promise<{ succ
 type ExportFinanceDealRow = {
   id: string;
   closed_at: string | null;
-  commission_amount: number | null;
-  property: { title: string } | null;
+  commission_total: number | null;
+  property: { 
+    details: { 
+      title: { th?: string; en?: string } | null 
+    } | null 
+  } | null;
   commissions: {
     amount: number;
     status: CommissionStatus;
-    wht_amount: number;
+    tax_amount: number;
     net_amount: number;
-    agent: {
-      full_name: string | null;
-      tax_id: string | null;
-      tax_address: string | null;
+    recipient: {
+      display_name: string | null;
     } | null;
-    adjustments: {
-      amount: number;
-      description: string;
-    }[];
   }[];
 };
 
@@ -192,25 +201,27 @@ export async function exportYearlyFinanceAction(year?: number): Promise<ExportAc
     const { supabase, role } = await requireAuthContext();
     assertAdminOrManager(role);
 
+    const legacySupabase = supabase as unknown as SupabaseClient<Database>;
     const targetYear = year || new Date().getFullYear();
     const startDate = `${targetYear}-01-01`;
     const endDate = `${targetYear}-12-31`;
 
     // 1. Fetch Deals with their related commissions and adjustments
-    const { data, error } = await supabase
-      .from("deals")
+    const { data, error } = await legacySupabase
+      .from("crm_deals_v3")
       .select(`
         id,
         closed_at,
-        commission_amount,
-        property:properties(title),
-        commissions:deal_commissions(
+        commission_total,
+        property:properties_core(
+          details:properties_details(title)
+        ),
+        commissions:crm_deal_commissions_v3(
           amount, 
           status, 
-          wht_amount, 
+          tax_amount, 
           net_amount, 
-          agent:profiles(full_name, tax_id, tax_address),
-          adjustments:commission_adjustments(amount, description)
+          recipient:identities_v3(display_name)
         )
       `)
       .in("status", ["CLOSED_WIN", "SIGNED"]) 
@@ -229,15 +240,14 @@ export async function exportYearlyFinanceAction(year?: number): Promise<ExportAc
       const commissions = (deal.commissions || []);
       const totalPayouts = commissions.reduce((acc, c) => acc + (Number(c.amount) || 0), 0);
       
-      const allAdjustments = commissions.flatMap(c => (c.adjustments || []));
-      const totalAdjustments = allAdjustments.reduce((acc, a) => acc + (Number(a.amount) || 0), 0);
+      const totalAdjustments = 0;
       
-      const revenue = Number(deal.commission_amount) || 0;
+      const revenue = Number(deal.commission_total) || 0;
       
       // Sheet 1: Main Summary
       summaryData.push({
         date: deal.closed_at,
-        property: (deal.property as { title: string } | null)?.title || "-",
+        property: deal.property?.details?.title?.th || deal.property?.details?.title?.en || "-",
         revenue: revenue,
         payouts: totalPayouts,
         adjustments: totalAdjustments,
@@ -246,14 +256,14 @@ export async function exportYearlyFinanceAction(year?: number): Promise<ExportAc
 
       // Sheet 2 & 3: WHT Categories
       commissions.forEach((c) => {
-        if (c.wht_amount > 0) {
+        if (c.tax_amount > 0) {
           const whtRow = {
             date: deal.closed_at,
-            agent: c.agent?.full_name || "-",
-            tax_id: c.agent?.tax_id || "-",
-            address: c.agent?.tax_address || "-",
+            agent: c.recipient?.display_name || "-",
+            tax_id: "-", // Obfuscated in V3 Identity Engine
+            address: "-", // Obfuscated in V3 Identity Engine
             gross: c.amount,
-            wht: c.wht_amount,
+            wht: c.tax_amount,
             net: c.net_amount
           };
 
@@ -314,7 +324,8 @@ export async function getAvailableFinancialYearsAction(): Promise<{ success: boo
     const { supabase, role } = await requireAuthContext();
     assertAdminOrManager(role);
 
-    const { data: dealYears, error: dealErr } = await supabase.rpc("get_distinct_finance_years");
+    const legacySupabase = supabase as unknown as SupabaseClient<ExtendedDatabase>;
+    const { data: dealYears, error: dealErr } = await legacySupabase.rpc("get_distinct_finance_years");
 
     if (dealErr) {
        const err = dealErr as { code?: string; message?: string };
@@ -325,14 +336,17 @@ export async function getAvailableFinancialYearsAction(): Promise<{ success: boo
        
        console.log("Switching to high-reliability manual query fallback...");
        
-       const { data: dData } = await supabase.from("deals").select("closed_at").not("closed_at", "is", null);
-       const { data: cData } = await supabase.from("deal_commissions").select("created_at").not("created_at", "is", null);
+       const { data: dData } = await legacySupabase.from("crm_deals_v3").select("closed_at").not("closed_at", "is", null);
+       const { data: cData } = await legacySupabase.from("crm_deal_commissions_v3").select("created_at").not("created_at", "is", null);
+
+       const typedDeals = (dData as unknown as { closed_at: string | null }[]) || [];
+       const typedComms = (cData as unknown as { created_at: string | null }[]) || [];
 
        const years = new Set<number>();
-       dData?.forEach(d => {
+       typedDeals.forEach((d) => {
          if (d.closed_at) years.add(new Date(d.closed_at).getFullYear());
        });
-       cData?.forEach(c => {
+       typedComms.forEach((c) => {
          if (c.created_at) years.add(new Date(c.created_at).getFullYear());
        });
        return { 

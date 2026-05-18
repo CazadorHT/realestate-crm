@@ -108,8 +108,9 @@ export default async function RootLayout({
 
   // ✅ Suppress GTM iframe on legal pages — Google OAuth bot marks iframes as "improperly formatted"
   const headersList = await headers();
-  const pathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
-  const isLegalPage = pathname.startsWith("/privacy-policy") || pathname.startsWith("/terms");
+  const rawPathname = headersList.get("x-pathname") || headersList.get("x-invoke-path") || "";
+  const pathname = rawPathname.toLowerCase();
+  const isLegalPage = pathname.includes("privacy-policy") || pathname.includes("terms");
 
   return (
     <html lang={lang} data-scroll-behavior="smooth">

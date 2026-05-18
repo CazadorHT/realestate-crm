@@ -15,25 +15,30 @@ export async function getContracts({
 } = {}) {
   const supabase = await createClient();
 
-  let query = supabase.from("rental_contracts").select(
+  let query = supabase.from("crm_deals_v3").select(
     `
-      *,
-      deal:deals (
+      id,
+      transaction_date,
+      transaction_end_date,
+      metadata,
+      status,
+      tenant_id,
+      created_at,
+      property:properties (
         id,
-        property:properties (
-          id,
-          title
-        ),
-        lead:leads (
-          id,
-          full_name,
+        title
+      ),
+      lead:crm_leads_v3 (
+        id,
+        identity:identities_v3 (
+          display_name,
           phone,
           email
         )
       )
     `,
     { count: "exact" },
-  );
+  ).eq("deal_type", "RENTAL").neq("status", "TERMINATED");
 
   // If tenantId is provided and NOT "ALL", filter by it.
   if (tenantId && tenantId !== "ALL") {
@@ -80,16 +85,44 @@ export async function getContracts({
   }
 
   const { data, error, count } = await query
-    .order("start_date", { ascending: false });
-
-  const typedData = data as unknown as RentalContractWithRelations[];
+    .order("transaction_date", { ascending: false });
 
   if (error) {
     console.error("getContracts Error:", error);
     return { data: [], count: 0, error };
   }
 
-  return { data: typedData || [], count: count || 0, error: null };
+  const mappedData: RentalContractWithRelations[] = (data || []).map((row: any) => {
+    const meta = (row.metadata || {}) as Record<string, any>;
+    const leadData = row.lead;
+    const identity = leadData?.identity;
+
+    return {
+      id: row.id,
+      contract_number: meta.contract_number || `REC-${row.id.slice(0, 6).toUpperCase()}`,
+      start_date: row.transaction_date || row.created_at || new Date().toISOString(),
+      end_date: row.transaction_end_date || new Date().toISOString(),
+      lease_term_months: meta.lease_term_months || null,
+      rent_price: meta.rent_price || null,
+      deposit_amount: meta.deposit_amount || null,
+      created_at: row.created_at,
+      deal_id: row.id,
+      status: row.status || "ACTIVE",
+      tenant_id: row.tenant_id,
+      deal: {
+        id: row.id,
+        property: row.property ? { id: row.property.id, title: row.property.title } : null,
+        lead: leadData ? {
+          id: leadData.id,
+          full_name: identity?.display_name || "Unknown Lead",
+          phone: identity?.phone || null,
+          email: identity?.email || null,
+        } : null,
+      },
+    };
+  });
+
+  return { data: mappedData, count: count || 0, error: null };
 }
 
 /**
@@ -102,7 +135,7 @@ export async function getAllContractIdsQuery({
 } = {}) {
   const { supabase, tenantId } = await requireAuthContext();
 
-  let query = supabase.from("rental_contracts").select("id");
+  let query = supabase.from("crm_deals_v3").select("id").eq("deal_type", "RENTAL").neq("status", "TERMINATED");
 
   if (tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);

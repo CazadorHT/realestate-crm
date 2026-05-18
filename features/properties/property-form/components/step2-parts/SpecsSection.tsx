@@ -80,7 +80,7 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
                 { name: "bathrooms", label: "ห้องน้ำ", icon: Bath },
                 { name: "parking_slots", label: "ที่จอดรถ", icon: CarFront },
                 { name: "floor", label: "ชั้นที่", icon: Building2 },
-                { name: "office_capacity", label: "จำนวนที่นั่ง", icon: Users },
+                { name: "office_capacity", label: "รองรับจำนวนที่นั่ง", icon: Users },
               ].map((item) => (
                 <FormField
                   key={item.name}

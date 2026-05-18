@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { Json } from "@/lib/database.types";
+import { Json } from "@/lib/database.types.generated";
 import { sendLineNotification } from "@/lib/line";
 import { getTemplateConfig } from "@/features/line/utils";
 import { headers } from "next/headers";
@@ -481,7 +481,7 @@ export async function notifySignupAction(
 }
 
 /**
- * 🔍 Get Property Audit Logs
+ * 🔍 Get Property Audit Logs (V3 Hardened)
  */
 export async function getPropertyAuditLogsAction(
   propertyId: string,
@@ -498,10 +498,10 @@ export async function getPropertyAuditLogsAction(
     const offset = (page - 1) * pageSize;
 
     let query = supabase
-      .from("audit_logs")
-      .select("id, user_id, action, entity, entity_id, metadata, tenant_id, created_at", { count: "exact" })
+      .from("system_audit_logs_v3")
+      .select("id, actor_id, action, entity_table, entity_id, new_data, tenant_id, created_at", { count: "exact" })
       .eq("entity_id", propertyId)
-      .eq("entity", "properties");
+      .eq("entity_table", "properties");
 
     if (tenantId && tenantId !== "ALL") {
       query = query.eq("tenant_id", tenantId);
@@ -511,11 +511,11 @@ export async function getPropertyAuditLogsAction(
       query = query.eq("action", filters.action);
     }
     if (filters.userId && filters.userId !== "ALL") {
-      query = query.eq("user_id", filters.userId);
+      query = query.eq("actor_id", filters.userId);
     }
 
     if (filters.search) {
-      query = query.or(`action.ilike.%${filters.search}%,metadata->>diff.ilike.%${filters.search}%`);
+      query = query.or(`action.ilike.%${filters.search}%,new_data->>diff.ilike.%${filters.search}%`);
     }
 
     const { data, error, count } = await query
@@ -524,7 +524,7 @@ export async function getPropertyAuditLogsAction(
 
     if (error) throw error;
 
-    const userIds = Array.from(new Set(data?.map((log) => log.user_id).filter(Boolean))) as string[];
+    const userIds = Array.from(new Set(data?.map((log) => log.actor_id).filter(Boolean))) as string[];
     
     const { data: profiles } = userIds.length > 0 
       ? await supabase
@@ -536,16 +536,25 @@ export async function getPropertyAuditLogsAction(
     const profileMap = new Map(profiles?.map((p) => [p.id, p]));
 
     const enrichedData = (data || []).map((log) => {
+      const matchedProfile = log.actor_id ? (profileMap.get(log.actor_id) || null) : null;
       const logWithUser = {
-        ...log,
-        user: log.user_id ? (profileMap.get(log.user_id) || null) : null
+        id: log.id,
+        created_at: log.created_at,
+        user_id: log.actor_id,
+        action: log.action,
+        entity: log.entity_table,
+        entity_id: log.entity_id || "",
+        tenant_id: log.tenant_id || "",
+        metadata: (log.new_data || {}) as any,
+        user: matchedProfile,
+        profiles: matchedProfile
       };
 
       if (role === "ADMIN") return logWithUser;
       
       return {
         ...logWithUser,
-        metadata: scrubMetadata(log.metadata)
+        metadata: scrubMetadata(logWithUser.metadata)
       };
     });
 
@@ -569,7 +578,7 @@ export async function getPropertyAuditLogsAction(
 }
 
 /**
- * 📊 Get Audit Stats Action
+ * 📊 Get Audit Stats Action (V3 Hardened)
  */
 export async function getAuditStatsAction(
   propertyId: string
@@ -583,10 +592,10 @@ export async function getAuditStatsAction(
     const { supabase, tenantId } = await requireAuthContext();
 
     let query = supabase
-      .from("audit_logs")
-      .select("action, user_id", { count: "exact" })
+      .from("system_audit_logs_v3")
+      .select("action, actor_id", { count: "exact" })
       .eq("entity_id", propertyId)
-      .eq("entity", "properties");
+      .eq("entity_table", "properties");
 
     if (tenantId && tenantId !== "ALL") {
       query = query.eq("tenant_id", tenantId);
@@ -601,8 +610,8 @@ export async function getAuditStatsAction(
 
     data?.forEach((log) => {
       actionCounts[log.action] = (actionCounts[log.action] || 0) + 1;
-      if (log.user_id) {
-        modifierCounts[log.user_id] = (modifierCounts[log.user_id] || 0) + 1;
+      if (log.actor_id) {
+        modifierCounts[log.actor_id] = (modifierCounts[log.actor_id] || 0) + 1;
       }
     });
 

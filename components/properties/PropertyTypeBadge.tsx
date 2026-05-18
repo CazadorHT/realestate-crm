@@ -16,7 +16,8 @@ export function PropertyTypeBadge({
   className,
   language: customLanguage,
 }: PropertyTypeBadgeProps) {
-  const label = PROPERTY_TYPE_LABELS[type as PropertyType] || type;
+  const labelObj = PROPERTY_TYPE_LABELS[type as PropertyType];
+  const label = labelObj ? (labelObj[customLanguage || "th"] || labelObj.th) : type;
   const gradient =
     (PROPERTY_TYPE_GRADIENTS as Record<string, string>)[type] ??
     "from-slate-400 to-slate-500";

@@ -82,7 +82,7 @@ describe("Finance Actions - Agile Payout Hardening", () => {
     it("should call high-performance RPC and return success", async () => {
       mockSupabase
         .mockTableResult("profiles", { full_name: "Accountant Pro" })
-        .mockTableResult("deal_commissions", { updated_count: 5 });
+        .mockTableResult("crm_deal_commissions_v3", { updated_count: 5 });
 
       const ids = ["c1", "c2"];
       const result = await bulkMarkAsReadyToPayAction(ids);
@@ -103,16 +103,16 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       const mockCommission = {
         id: "c1",
         amount: 10000,
-        wht_amount: 100,
+        tax_amount: 100,
         tax_rate: 0.01,
-        adjustments: [],
-        agent: { full_name: "Agent A", line_user_id: "l1" },
+        recipient: { display_name: "Agent A", line_id: "l1" },
       };
 
       mockSupabase
-        .mockTableResult("deal_commissions", mockCommission)
-        .mockTableResult("deal_commissions", { ...mockCommission, status: "PAID" })
-        .mockTableResult("audit_logs", { success: true });
+        .mockTableResult("crm_deal_commissions_v3", mockCommission)
+        .mockTableResult("crm_deal_commissions_v3", { ...mockCommission, status: "PAID" })
+        .mockTableResult("financial_ledger_v3", [])
+        .mockTableResult("system_audit_logs_v3", { success: true });
 
       const result = await markAsPaidAction("c1", {
         payment_reference: "REF_DYNAMIC",
@@ -127,8 +127,10 @@ describe("Finance Actions - Agile Payout Hardening", () => {
 
       expect(mockSupabase.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          payout_metadata: expect.objectContaining({
-            calculation_snapshot: expect.objectContaining({ final_net: 9900 }),
+          metadata: expect.objectContaining({
+            payout_metadata: expect.objectContaining({
+              calculation_snapshot: expect.objectContaining({ final_net: 9900 }),
+            }),
           }),
         }),
       );
@@ -161,23 +163,24 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       const mockCommission = {
         id: "c1",
         amount: 333.33,
-        wht_amount: 0,
+        tax_amount: 0,
         tax_rate: 0.03,
         deal_id: "d1",
-        adjustments: [{ amount: 10.05 }, { amount: -5.13 }, { amount: 0.08 }],
+        deal: { commission_total: 333.33 },
       };
 
       mockSupabase
-        .mockTableResult("deal_commissions", mockCommission)
-        .mockTableResult("deal_commissions", [{ amount: 333.33 }])
-        .mockTableResult("deal_commissions", { success: true })
-        .mockTableResult("audit_logs", { success: true });
+        .mockTableResult("crm_deal_commissions_v3", mockCommission)
+        .mockTableResult("crm_deal_commissions_v3", [{ amount: 333.33 }])
+        .mockTableResult("crm_deal_commissions_v3", { success: true })
+        .mockTableResult("financial_ledger_v3", [{ amount: 10.05, amount_net: 10.05 }, { amount: -5.13, amount_net: -5.13 }, { amount: 0.08, amount_net: 0.08 }])
+        .mockTableResult("system_audit_logs_v3", { success: true });
 
       const result = await recalculatePayoutTotalsAction("c1");
       expect(result.success).toBe(true);
       expect(mockSupabase.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          wht_amount: 10,
+          tax_amount: 10,
           net_amount: 328.33,
         }),
       );
@@ -194,16 +197,16 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       });
 
       const mockCommissions = [
-        { id: "c1", status: "PAID", amount: 1000, wht_amount: 30, adjustments: [], deal_id: "d1" },
-        { id: "c2", status: "READY_TO_PAY", amount: 500, wht_amount: 15, adjustments: [], deal_id: "d2" },
+        { id: "c1", status: "PAID", amount: 1000, tax_amount: 30, net_amount: 970, deal_id: "d1" },
+        { id: "c2", status: "READY_TO_PAY", amount: 500, tax_amount: 15, net_amount: 485, deal_id: "d2" },
       ];
 
-      mockSupabase.mockTableResult("deal_commissions", mockCommissions);
+      mockSupabase.mockTableResult("crm_deal_commissions_v3", mockCommissions);
 
-      const result = await getAgentWalletStatsAction();
+      const result = await getAgentWalletStatsAction("a1");
 
       expect(result.success).toBe(true);
-      expect(result.data?.stats.totalEarnings).toBe(970);
+      expect(result.data?.stats.totalEarnings).toBe(1500);
       expect(result.data?.stats.pendingAmount).toBe(485);
     });
   });
@@ -213,13 +216,13 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       const mockData = {
         id: "c1",
         amount: 10000,
-        wht_amount: 300,
+        tax_amount: 300,
         paid_at: "2024-01-01T12:00:00Z",
-        agent: { full_name: "สมชาย ใจดี" },
+        recipient: { display_name: "สมชาย ใจดี" },
         tenant: { name: "Cazador Enterprise" },
       };
 
-      mockSupabase.mockTableResult("deal_commissions", mockData);
+      mockSupabase.mockTableResult("crm_deal_commissions_v3", mockData);
 
       const result = await getWhtCertificateDataAction("c1");
       expect(result.success).toBe(true);
@@ -234,14 +237,17 @@ describe("Finance Actions - Agile Payout Hardening", () => {
         {
           id: "c1",
           deal_id: "d1",
-          summary_view: { total_adjustments: 0, net_payout_amount: 5000 },
-          agent: { full_name: "P1" },
+          amount: 5000,
+          tax_amount: 0,
+          recipient: { display_name: "P1" },
+          deal: { commission_total: 5000 }
         },
       ];
 
       mockSupabase
-        .mockTableResult("deal_commissions", mockQueue)
-        .mockTableResult("deal_commissions", [{ deal_id: "d1", amount: 5000 }]);
+        .mockTableResult("crm_deal_commissions_v3", mockQueue)
+        .mockTableResult("crm_deal_commissions_v3", [{ deal_id: "d1", amount: 5000 }])
+        .mockTableResult("financial_ledger_v3", []);
 
       const result = await getPayoutQueueAction({ page: 2, pageSize: 20 });
       expect(mockSupabase.range).toHaveBeenCalledWith(20, 39);
@@ -259,7 +265,7 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       });
 
       // Mock commission belongs to tenant-B
-      mockSupabase.mockTableResult("deal_commissions", { tenant_id: "tenant-B" });
+      mockSupabase.mockTableResult("crm_deal_commissions_v3", { tenant_id: "tenant-B" });
 
       const result = await createCommissionAdjustmentAction({
         commission_id: "c1",
@@ -279,16 +285,17 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       const mockCommission = {
         id: "c1",
         amount: 1000,
-        wht_amount: 30,
+        tax_amount: 30,
         tax_rate: 0.03,
         status: "READY_TO_PAY",
-        agent: { full_name: "Agent A" },
+        recipient: { display_name: "Agent A" },
       };
 
       mockSupabase
-        .mockTableResult("deal_commissions", mockCommission)
-        .mockTableResult("deal_commissions", { ...mockCommission, status: "PAID" })
-        .mockTableResult("audit_logs", { success: true });
+        .mockTableResult("crm_deal_commissions_v3", mockCommission)
+        .mockTableResult("crm_deal_commissions_v3", { ...mockCommission, status: "PAID" })
+        .mockTableResult("financial_ledger_v3", [])
+        .mockTableResult("system_audit_logs_v3", { success: true });
 
       const result = await markAsPaidAction("c1", {
         payment_reference: "UNIQUE_REF_123",
@@ -299,7 +306,9 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       expect(result.success).toBe(true);
       expect(mockSupabase.update).toHaveBeenCalledWith(
         expect.objectContaining({
-          payment_reference: "UNIQUE_REF_123",
+          metadata: expect.objectContaining({
+            payment_reference: "UNIQUE_REF_123",
+          }),
           status: "PAID",
         })
       );
@@ -309,20 +318,21 @@ describe("Finance Actions - Agile Payout Hardening", () => {
       const mockCommission = {
         id: "c-float",
         amount: 1000.00000000001,
-        wht_amount: 0,
+        tax_amount: 0,
         tax_rate: 0.03,
         deal_id: "d1",
-        adjustments: [
-          { amount: 0.1 },
-          { amount: 0.2 },
-        ],
+        deal: { commission_total: 1000 },
       };
 
       mockSupabase
-        .mockTableResult("deal_commissions", mockCommission)
-        .mockTableResult("deal_commissions", [{ amount: 1000 }])
-        .mockTableResult("deal_commissions", { success: true })
-        .mockTableResult("audit_logs", { success: true });
+        .mockTableResult("crm_deal_commissions_v3", mockCommission)
+        .mockTableResult("crm_deal_commissions_v3", [{ amount: 1000 }])
+        .mockTableResult("crm_deal_commissions_v3", { success: true })
+        .mockTableResult("financial_ledger_v3", [
+          { amount: 0.1, amount_net: 0.1 },
+          { amount: 0.2, amount_net: 0.2 },
+        ])
+        .mockTableResult("system_audit_logs_v3", { success: true });
 
       const result = await recalculatePayoutTotalsAction("c-float");
       

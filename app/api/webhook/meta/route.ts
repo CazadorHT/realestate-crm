@@ -137,7 +137,7 @@ async function handleFacebookChange(change: any) {
   const { field, value } = change;
   if (!value) return;
 
-  const supabase = createAdminClient();
+  const supabase = createAdminClient() as any;
   let text = "";
   let senderId = "";
   let senderName = "Facebook User";
@@ -234,7 +234,7 @@ async function handleFacebookChange(change: any) {
   }
 
   // 2. Save Message
-  if (lead) {
+  if (lead && lead.id) {
     await saveOmniMessage({
       lead_id: lead.id,
       source: "FACEBOOK",
@@ -252,7 +252,7 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
 
   if (!senderId || !text) return;
 
-  const supabase = createAdminClient();
+  const supabase = createAdminClient() as any;
 
   // 1. Find or Create Lead
   const idField = source === "FACEBOOK" ? "facebook_psid" : "instagram_sid";
@@ -293,7 +293,7 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
   }
 
   // 2. Log Message to Omni-channel
-  if (lead) {
+  if (lead && lead.id) {
     await saveOmniMessage({
       lead_id: lead.id,
       source: source as any,
@@ -309,7 +309,7 @@ async function handleInstagramChange(change: any) {
   const { field, value } = change;
   if (!value) return;
 
-  const supabase = createAdminClient();
+  const supabase = createAdminClient() as any;
   let text = "";
   let senderId = "";
   let senderName = "IG User";
@@ -367,7 +367,7 @@ async function handleInstagramChange(change: any) {
   }
 
   // 2. Save Message
-  if (lead) {
+  if (lead && lead.id) {
     await saveOmniMessage({
       lead_id: lead.id,
       source: "INSTAGRAM",
@@ -386,7 +386,7 @@ async function handleWhatsAppWebhook(message: any, contact: any) {
   const text = message.text.body;
   const name = contact?.profile?.name || `WA: ${from}`;
 
-  const supabase = createAdminClient();
+  const supabase = createAdminClient() as any;
 
   // 1. Find or Create Lead by Phone
   let { data: lead } = await supabase
@@ -416,7 +416,7 @@ async function handleWhatsAppWebhook(message: any, contact: any) {
   }
 
   // 2. Log Message
-  if (lead) {
+  if (lead && lead.id) {
     await saveOmniMessage({
       lead_id: lead.id,
       source: "WHATSAPP",

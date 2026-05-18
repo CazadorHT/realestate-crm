@@ -47,48 +47,48 @@ export async function getAgentDashboardStats(): Promise<AgentDashboardStats> {
   ] = await Promise.all([
     // 1. Personal Commissions This Month (Paid or pending but closed this month)
     supabase
-      .from("deal_commissions")
-      .select("net_amount")
-      .eq("agent_id", profile.id)
-      .neq("status", "CANCELLED")
+      .from("financial_ledger_v3")
+      .select("amount_total")
+      .eq("to_identity_id", profile.id)
+      .eq("transaction_type", "commission_payout")
       .gte("created_at", currentMonthStart),
     // 2. Personal Commissions Last Month
     supabase
-      .from("deal_commissions")
-      .select("net_amount")
-      .eq("agent_id", profile.id)
-      .neq("status", "CANCELLED")
+      .from("financial_ledger_v3")
+      .select("amount_total")
+      .eq("to_identity_id", profile.id)
+      .eq("transaction_type", "commission_payout")
       .gte("created_at", lastMonthStart)
       .lte("created_at", lastMonthEnd),
     // 3. Personal Leads This Month
     supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .select("id", { count: "exact", head: true })
       .eq("assigned_to", profile.id)
       .gte("created_at", currentMonthStart),
     // 4. Personal Leads Last Month
     supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .select("id", { count: "exact", head: true })
       .eq("assigned_to", profile.id)
       .gte("created_at", lastMonthStart)
       .lte("created_at", lastMonthEnd),
     // 5. Total Deals Won (Ever or this month? Let's do this month for consistency)
     supabase
-      .from("deals")
+      .from("financial_ledger_v3")
       .select("id", { count: "exact", head: true })
-      .eq("created_by", profile.id)
-      .eq("status", "CLOSED_WIN")
+      .eq("to_identity_id", profile.id)
+      .eq("transaction_type", "deal_closed")
       .gte("created_at", currentMonthStart),
     // 6. Total Leads Assigned (for overall conversion)
     supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .select("id", { count: "exact", head: true })
       .eq("assigned_to", profile.id),
   ]);
 
-  const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, r: { net_amount: number | null }) => sum + (Number(r.net_amount) || 0), 0);
-  const totalRevenueLast = (revenueLast || []).reduce((sum: number, r: { net_amount: number | null }) => sum + (Number(r.net_amount) || 0), 0);
+  const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, r: { amount_total: number | null }) => sum + (Number(r.amount_total) || 0), 0);
+  const totalRevenueLast = (revenueLast || []).reduce((sum: number, r: { amount_total: number | null }) => sum + (Number(r.amount_total) || 0), 0);
 
   const revenueChange = totalRevenueLast === 0 ? "+100%" : `${(((totalRevenueCurrent - totalRevenueLast) / totalRevenueLast) * 100).toFixed(1)}%`;
   const leadsChange = (leadsLast || 0) === 0 ? "+100%" : `${((((leadsCurrent || 0) - (leadsLast || 0)) / leadsLast!) * 100).toFixed(1)}%`;
@@ -128,19 +128,15 @@ export async function getAgentTasks(targetUserId?: string): Promise<AgentTask[]>
 
   interface ContractRow {
     id: string;
-    end_date: string;
-    deal: {
-      id: string;
-      created_by: string;
-      property: {
-        title: string;
-      } | null;
+    transaction_end_date: string | null;
+    property: {
+      title: string;
     } | null;
   }
 
   const [staleLeadsRes, expiringContractsRes] = await Promise.all([
     supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .select("id, full_name, updated_at, stage, phone, line_id, ai_score")
       .eq("assigned_to", effectiveUserId)
       .neq("stage", "CLOSED")
@@ -148,21 +144,18 @@ export async function getAgentTasks(targetUserId?: string): Promise<AgentTask[]>
       .order("ai_score", { ascending: false })
       .limit(5) as Promise<{ data: LeadRow[] | null }>,
     supabase
-      .from("rental_contracts")
+      .from("crm_deals_v3")
       .select(`
         id, 
-        end_date, 
-        deal:deals!inner (
-          id, 
-          created_by,
-          property:properties (title)
-        )
+        transaction_end_date, 
+        property:properties!inner (title)
       `)
-      .eq("deal.created_by", effectiveUserId)
-      .eq("status", "ACTIVE")
-      .lte("end_date", thirtyDaysFromNow)
-      .gte("end_date", new Date().toISOString())
-      .order("end_date", { ascending: true })
+      .eq("created_by", effectiveUserId)
+      .eq("deal_type", "RENTAL")
+      .eq("status", "WON")
+      .lte("transaction_end_date", thirtyDaysFromNow)
+      .gte("transaction_end_date", new Date().toISOString())
+      .order("transaction_end_date", { ascending: true })
       .limit(5) as Promise<{ data: ContractRow[] | null }>,
   ]);
 
@@ -184,14 +177,14 @@ export async function getAgentTasks(targetUserId?: string): Promise<AgentTask[]>
     });
   });
 
-  (expiringContractsRes.data || []).forEach((contract: ContractRow) => {
+  (expiringContractsRes.data || []).forEach((contract: any) => {
     tasks.push({
       id: contract.id,
       type: "EXPIRING_CONTRACT",
       title: "สัญญาเช่ากำลังจะหมดอายุ",
-      description: `ทรัพย์: ${contract.deal?.property?.title || "ไม่ระบุ"}`,
+      description: `ทรัพย์: ${contract.property?.title || "ไม่ระบุ"}`,
       priority: "MEDIUM",
-      dueDate: contract.end_date,
+      dueDate: contract.transaction_end_date || undefined,
       link: `/protected/contracts/${contract.id}`,
     });
   });

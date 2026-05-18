@@ -13,9 +13,9 @@ export async function generateLeadSummary(leadId: string): Promise<string> {
   const activitiesText = (lead.lead_activities ?? [])
     .map(
       (a) =>
-        `- [${new Date(a.created_at).toLocaleDateString("th-TH")}] ${
+        `- [${a.created_at ? new Date(a.created_at).toLocaleDateString("th-TH") : "-"}] ${
           a.activity_type
-        }: ${a.note}`,
+        }: ${a.description || ""}`,
     )
     .join("\n");
 
@@ -28,14 +28,7 @@ export async function generateLeadSummary(leadId: string): Promise<string> {
     - สถานะปัจจุบัน: ${lead.stage}
     - ทำเลที่สนใจ: ${lead.preferred_locations?.join(", ") || "ไม่ระบุ"}
     - งบประมาณ: ${lead.budget_min || 0} - ${lead.budget_max || "ไม่จำกัด"}
-    - สเปค: ${lead.min_bedrooms || "-"} ห้องนอน, ${
-      lead.min_bathrooms || "-"
-    } ห้องน้ำ, ขนาด ${lead.min_size_sqm || 0}-${
-      lead.max_size_sqm || "ไม่จำกัด"
-    } ตร.ม.
-    - อื่นๆ: เลี้ยงสัตว์ ${lead.has_pets ? "ได้" : "ไม่ได้"}, จำนวนผู้พักอาศัย ${
-      lead.num_occupants || "-"
-    } คน
+    - สเปค: ${lead.min_bedrooms || "-"} ห้องนอน
 
     ประวัติกิจกรรม:
     ${activitiesText || "ยังไม่มีประวัติกิจกรรม"}
@@ -58,8 +51,8 @@ export async function generateLeadSummary(leadId: string): Promise<string> {
     const { createClient } = await import("@/lib/supabase/server");
     const supabase = await createClient();
     await supabase
-      .from("leads")
-      .update({ ai_summary_content: summaryText })
+      .from("crm_leads_v3")
+      .update({ ai_summary: summaryText })
       .eq("id", leadId);
 
     await logAiUsage({

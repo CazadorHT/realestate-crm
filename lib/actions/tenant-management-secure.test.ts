@@ -37,6 +37,6 @@ describe("Tenant Management Secure Actions (Phase 1)", () => {
     
     // Verify that the action used the supabase client from the context
     // and NOT createAdminClient()
-    expect(mockSupabase.from).toHaveBeenCalledWith("tenants");
+    expect(mockSupabase.from).toHaveBeenCalledWith("tenants_v3");
   });
 });

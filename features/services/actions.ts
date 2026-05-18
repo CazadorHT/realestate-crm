@@ -4,35 +4,55 @@ import { revalidatePath } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { createClient } from "@/lib/supabase/server";
-import { type Json } from "@/lib/database.types";
+import { type Json } from "@/lib/database.types.generated";
+
+export type LocalizedString = {
+  th?: string;
+  en?: string;
+  cn?: string;
+  ru?: string;
+};
 
 export type ServiceRow = {
   id: string;
   slug: string;
-  title: string;
-  title_en: string | null;
-  title_cn: string | null;
-  title_ru: string | null;
-  description: string | null;
-  description_en: string | null;
-  description_cn: string | null;
-  description_ru: string | null;
-  content: string | null;
-  content_en: string | null;
-  content_cn: string | null;
-  content_ru: string | null;
+  title: any; // Allow string or LocalizedString
+  content: any; // Allow string or LocalizedString
   cover_image: string | null;
-  gallery_images: string[] | null;
-  price_range: string | null;
-  price_range_en: string | null;
-  price_range_cn: string | null;
-  price_range_ru: string | null;
-  contact_link: string | null;
-  is_active: boolean;
-  sort_order: number;
+  meta_data: {
+    description?: LocalizedString;
+    gallery_images?: string[];
+    price_range?: LocalizedString;
+    contact_link?: string;
+    sort_order?: number;
+  };
+  status: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+  published_at: string | null;
+  seo_score: number | null;
   created_at: string;
   updated_at: string;
-  tenant_id: string | null;
+  tenant_id: string;
+
+  // --- V2 Backward Compatibility Flat Fields ---
+  title_en?: string | null;
+  title_cn?: string | null;
+  title_ru?: string | null;
+  description?: string | null;
+  description_en?: string | null;
+  description_cn?: string | null;
+  description_ru?: string | null;
+  content_en?: string | null;
+  content_cn?: string | null;
+  content_ru?: string | null;
+  gallery_images?: string[] | null;
+  price_range?: string | null;
+  price_range_en?: string | null;
+  price_range_cn?: string | null;
+  price_range_ru?: string | null;
+  contact_link?: string | null;
+  sort_order?: number;
+  is_active?: boolean;
+  [key: string]: any;
 };
 
 import { z } from "zod";
@@ -60,6 +80,7 @@ const serviceSchema = z.object({
   contact_link: z.string().optional().nullable(),
   is_active: z.boolean().optional().default(true),
   sort_order: z.number().optional().default(0),
+  seo_score: z.number().optional().nullable(),
 });
 
 const updateServiceSchema = serviceSchema.partial().extend({
@@ -92,9 +113,9 @@ export async function getServices(
 
       if (!tenantId) {
         const { data: member } = await supabase
-          .from("tenant_members")
+          .from("tenant_members_v3")
           .select("tenant_id")
-          .eq("profile_id", user.id)
+          .eq("identity_id", user.id)
           .limit(1)
           .maybeSingle();
         tenantId = member?.tenant_id;
@@ -105,22 +126,22 @@ export async function getServices(
   }
 
   let query = supabase
-    .from("services")
-    .select("id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru, content, content_en, content_cn, content_ru, cover_image, gallery_images, price_range, price_range_en, price_range_cn, price_range_ru, contact_link, is_active, sort_order, created_at, updated_at, tenant_id", { count: "exact" })
-    .order("sort_order", { ascending: true })
+    .from("cms_content_v3")
+    .select("id, slug, title, content, cover_image, status, published_at, seo_score, meta_data, created_at, updated_at, tenant_id", { count: "exact" })
+    .eq("content_type", "service")
     .order("created_at", { ascending: false });
 
   if (tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
   }
 
-  // Lifecycle Filters
+  // Lifecycle Filters: V3 uses status field instead of is_active/deleted_at
   if (onlyDeleted) {
-    query = query.not("deleted_at", "is", null);
+    query = query.eq("status", "ARCHIVED");
   } else {
-    query = query.is("deleted_at", null);
+    query = query.neq("status", "ARCHIVED");
     if (!includeInactive) {
-      query = query.eq("is_active", true);
+      query = query.eq("status", "PUBLISHED");
     }
   }
 
@@ -135,12 +156,38 @@ export async function getServices(
   }
 
   return {
-    data: (data || []).map((row: any) => ({
-      ...row,
-      gallery_images: Array.isArray(row.gallery_images)
-        ? (row.gallery_images as string[])
-        : [],
-    })) as ServiceRow[],
+    data: (data || []).map((row: Record<string, any>) => {
+      const titleObj = (row.title || {}) as Record<string, any>;
+      const contentObj = (row.content || {}) as Record<string, any>;
+      const metaObj = (row.meta_data || {}) as Record<string, any>;
+      const descObj = (metaObj.description || {}) as Record<string, any>;
+      const priceObj = (metaObj.price_range || {}) as Record<string, any>;
+
+      return {
+        ...row,
+        title: titleObj.th || titleObj.en || "",
+        content: contentObj.th || contentObj.en || "",
+        meta_data: metaObj as ServiceRow["meta_data"],
+        title_en: titleObj.en || null,
+        title_cn: titleObj.cn || null,
+        title_ru: titleObj.ru || null,
+        description: descObj.th || null,
+        description_en: descObj.en || null,
+        description_cn: descObj.cn || null,
+        description_ru: descObj.ru || null,
+        content_en: contentObj.en || null,
+        content_cn: contentObj.cn || null,
+        content_ru: contentObj.ru || null,
+        gallery_images: metaObj.gallery_images || [],
+        price_range: priceObj.th || null,
+        price_range_en: priceObj.en || null,
+        price_range_cn: priceObj.cn || null,
+        price_range_ru: priceObj.ru || null,
+        contact_link: metaObj.contact_link || null,
+        sort_order: metaObj.sort_order || 0,
+        is_active: row.status === "PUBLISHED",
+      };
+    }) as ServiceRow[],
     count: count || 0,
   };
 }
@@ -148,24 +195,44 @@ export async function getServices(
 export async function getServiceBySlug(slug: string) {
   const supabase = await createClient();
   
-  let query = supabase
-    .from("services")
-    .select("id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru, content, content_en, content_cn, content_ru, cover_image, gallery_images, price_range, price_range_en, price_range_cn, price_range_ru, contact_link, is_active, sort_order, created_at, updated_at, tenant_id")
-    .eq("slug", slug);
-
-  // For specific service detail, we usually want the one that is active
-  // if accessed publicly. If accessed by staff, they might want inactive ones.
-  // But for now, let's keep it simple and just fetch by slug.
-
-  const { data, error } = await query.maybeSingle();
+  const { data, error } = await supabase
+    .from("cms_content_v3")
+    .select("id, slug, title, content, cover_image, status, published_at, seo_score, meta_data, created_at, updated_at, tenant_id")
+    .eq("content_type", "service")
+    .eq("slug", slug)
+    .maybeSingle();
 
   if (error || !data) return null;
 
+  const titleObj = (data.title || {}) as Record<string, any>;
+  const contentObj = (data.content || {}) as Record<string, any>;
+  const metaObj = (data.meta_data || {}) as Record<string, any>;
+  const descObj = (metaObj.description || {}) as Record<string, any>;
+  const priceObj = (metaObj.price_range || {}) as Record<string, any>;
+
   return {
     ...data,
-    gallery_images: Array.isArray(data.gallery_images)
-      ? data.gallery_images
-      : [],
+    title: titleObj.th || titleObj.en || "",
+    content: contentObj.th || contentObj.en || "",
+    meta_data: metaObj as ServiceRow["meta_data"],
+    title_en: titleObj.en || null,
+    title_cn: titleObj.cn || null,
+    title_ru: titleObj.ru || null,
+    description: descObj.th || null,
+    description_en: descObj.en || null,
+    description_cn: descObj.cn || null,
+    description_ru: descObj.ru || null,
+    content_en: contentObj.en || null,
+    content_cn: contentObj.cn || null,
+    content_ru: contentObj.ru || null,
+    gallery_images: metaObj.gallery_images || [],
+    price_range: priceObj.th || null,
+    price_range_en: priceObj.en || null,
+    price_range_cn: priceObj.cn || null,
+    price_range_ru: priceObj.ru || null,
+    contact_link: metaObj.contact_link || null,
+    sort_order: metaObj.sort_order || 0,
+    is_active: data.status === "PUBLISHED",
   } as ServiceRow;
 }
 
@@ -176,21 +243,37 @@ export async function createService(input: CreateServiceInput) {
     assertStaff(ctx.role);
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
-    const { data: service, error } = await ctx.supabase.from("services").insert({
-      ...validated,
+    const { data: service, error } = await ctx.supabase.from("cms_content_v3").insert({
+      slug: validated.slug,
+      author_id: ctx.user.id,
+      title: { th: validated.title, en: validated.title_en, cn: validated.title_cn, ru: validated.title_ru } as Json,
+      content: { th: validated.content, en: validated.content_en, cn: validated.content_cn, ru: validated.content_ru } as Json,
+      cover_image: validated.cover_image,
+      meta_data: {
+        description: { th: validated.description, en: validated.description_en, cn: validated.description_cn, ru: validated.description_ru },
+        gallery_images: validated.gallery_images,
+        price_range: { th: validated.price_range, en: validated.price_range_en, cn: validated.price_range_cn, ru: validated.price_range_ru },
+        contact_link: validated.contact_link,
+        sort_order: validated.sort_order,
+      } as Json,
+      content_type: "service",
+      status: validated.is_active ? "PUBLISHED" : "DRAFT",
+      published_at: validated.is_active ? new Date().toISOString() : null,
+      seo_score: validated.seo_score,
       tenant_id: ctx.tenantId,
     }).select("id").single();
 
     if (error) throw error;
 
-    // Audit Logging
-    await ctx.supabase.from("audit_logs").insert({
-      action: "SERVICE_CREATE",
-      entity: "services",
-      entity_id: service?.id,
+    // Unified V3 Audit Logging
+    await ctx.supabase.from("activity_timeline_v3").insert({
+      activity_type: "SERVICE_CREATE",
+      target_entity: "services",
+      target_id: service?.id || "unknown",
       tenant_id: ctx.tenantId,
-      user_id: ctx.user.id,
-      metadata: { title: validated.title }
+      actor_id: ctx.user.id,
+      metadata: { title: validated.title } as Json,
+      description: `สร้างบริการใหม่: ${validated.title}`
     });
 
     revalidatePath("/services");
@@ -216,18 +299,67 @@ export async function updateService(input: UpdateServiceInput) {
 
     const { id, ...updates } = validated;
 
-    // 1. Fetch original for Delta Audit
-    const { data: oldData } = await ctx.supabase
-      .from("services")
-      .select("id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru, content, content_en, content_cn, content_ru, cover_image, gallery_images, price_range, price_range_en, price_range_cn, price_range_ru, contact_link, is_active, sort_order, created_at, updated_at, tenant_id")
+    // 1. Fetch old data to prevent JSONB partial loss
+    const { data: old } = await ctx.supabase
+      .from("cms_content_v3")
+      .select("title, content, meta_data, status, published_at, seo_score")
       .eq("id", id)
       .single();
 
-    // 2. Perform Update
+    if (!old) throw new Error("ไม่พบข้อมูลบริการที่ต้องการอัปเดต");
+
+    const oldTitle = (old.title || {}) as Record<string, any>;
+    const oldContent = (old.content || {}) as Record<string, any>;
+    const oldMeta = (old.meta_data || {}) as Record<string, any>;
+
+    const newStatus = validated.is_active !== undefined ? (validated.is_active ? "PUBLISHED" : "DRAFT") : (old.status as any);
+    const publishedAt = (newStatus === "PUBLISHED" && old.status !== "PUBLISHED") 
+      ? new Date().toISOString() 
+      : old.published_at;
+
+    // 2. Perform Update on V3 Table
     const { error: updateError } = await ctx.supabase
-      .from("services")
+      .from("cms_content_v3")
       .update({
-        ...updates,
+        slug: validated.slug,
+        title: { 
+          ...oldTitle,
+          ...(validated.title !== undefined && { th: validated.title }),
+          ...(validated.title_en !== undefined && { en: validated.title_en }),
+          ...(validated.title_cn !== undefined && { cn: validated.title_cn }),
+          ...(validated.title_ru !== undefined && { ru: validated.title_ru }),
+        } as Json,
+        content: { 
+          ...oldContent,
+          ...(validated.content !== undefined && { th: validated.content }),
+          ...(validated.content_en !== undefined && { en: validated.content_en }),
+          ...(validated.content_cn !== undefined && { cn: validated.content_cn }),
+          ...(validated.content_ru !== undefined && { ru: validated.content_ru }),
+        } as Json,
+        cover_image: validated.cover_image,
+        meta_data: {
+          ...oldMeta,
+          description: { 
+            ...(oldMeta.description || {}),
+            ...(validated.description !== undefined && { th: validated.description }),
+            ...(validated.description_en !== undefined && { en: validated.description_en }),
+            ...(validated.description_cn !== undefined && { cn: validated.description_cn }),
+            ...(validated.description_ru !== undefined && { ru: validated.description_ru }),
+          },
+          gallery_images: validated.gallery_images ?? oldMeta.gallery_images,
+          price_range: { 
+            ...(oldMeta.price_range || {}),
+            ...(validated.price_range !== undefined && { th: validated.price_range }),
+            ...(validated.price_range_en !== undefined && { en: validated.price_range_en }),
+            ...(validated.price_range_cn !== undefined && { cn: validated.price_range_cn }),
+            ...(validated.price_range_ru !== undefined && { ru: validated.price_range_ru }),
+          },
+          contact_link: validated.contact_link ?? oldMeta.contact_link,
+          sort_order: validated.sort_order ?? oldMeta.sort_order,
+        } as Json,
+        status: newStatus,
+        published_at: publishedAt,
+        seo_score: validated.seo_score ?? old.seo_score,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
@@ -235,23 +367,19 @@ export async function updateService(input: UpdateServiceInput) {
 
     if (updateError) throw updateError;
 
-    // 3. Audit Logging (Delta Only)
-    if (oldData) {
-      const changedFields = getDelta(oldData, updates);
-      if (changedFields.length > 0) {
-        await ctx.supabase.from("audit_logs").insert({
-          action: "SERVICE_UPDATE",
-          entity: "services",
-          entity_id: id,
-          tenant_id: ctx.tenantId,
-          user_id: ctx.user.id,
-          metadata: { 
-            title: updates.title,
-            changed_fields: changedFields 
-          }
-        });
-      }
-    }
+    // 2. Audit Logging
+    await ctx.supabase.from("activity_timeline_v3").insert({
+      activity_type: "SERVICE_UPDATE",
+      target_entity: "services",
+      target_id: id,
+      tenant_id: ctx.tenantId,
+      actor_id: ctx.user.id,
+      metadata: { 
+        title: validated.title,
+        updates: updates 
+      } as Json,
+      description: `อัปเดตข้อมูลบริการ: ${validated.title}`
+    });
 
     revalidatePath("/services");
     revalidatePath("/protected/services");
@@ -267,26 +395,6 @@ export async function updateService(input: UpdateServiceInput) {
   }
 }
 
-/**
- * Helper to identify changed fields between two objects.
- */
-function getDelta(oldObj: Record<string, unknown>, newObj: Record<string, unknown>): string[] {
-  const changes: string[] = [];
-  Object.keys(newObj).forEach((key) => {
-    // Basic comparison for primitive types and arrays
-    const oldVal = oldObj[key];
-    const newVal = newObj[key];
-    
-    if (Array.isArray(newVal)) {
-      if (JSON.stringify(oldVal) !== JSON.stringify(newVal)) {
-        changes.push(key);
-      }
-    } else if (oldVal !== newVal) {
-      changes.push(key);
-    }
-  });
-  return changes;
-}
 
 /**
  * Soft Deletes a service (moves to Trash).
@@ -298,23 +406,23 @@ export async function deleteService(id: string) {
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
     const { error } = await ctx.supabase
-      .from("services")
+      .from("cms_content_v3")
       .update({ 
-        deleted_at: new Date().toISOString(),
-        is_active: false 
+        status: "ARCHIVED" 
       })
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId);
 
     if (error) throw error;
 
-    // Audit Logging
-    await ctx.supabase.from("audit_logs").insert({
-      action: "SERVICE_SOFT_DELETE",
-      entity: "services",
-      entity_id: id,
+    // Unified V3 Audit Logging
+    await ctx.supabase.from("activity_timeline_v3").insert({
+      activity_type: "SERVICE_SOFT_DELETE",
+      target_entity: "services",
+      target_id: id,
       tenant_id: ctx.tenantId,
-      user_id: ctx.user.id
+      actor_id: ctx.user.id,
+      description: `ย้ายบริการลงถังขยะ: ${id}`
     });
 
     revalidatePath("/services");
@@ -336,22 +444,22 @@ export async function restoreServiceAction(id: string) {
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
     const { error } = await ctx.supabase
-      .from("services")
-      .update({ deleted_at: null })
+      .from("cms_content_v3")
+      .update({ status: "DRAFT" })
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId);
 
     if (error) throw error;
 
-    // Audit Logging
-    await ctx.supabase.from("audit_logs").insert({
-      action: "SERVICE_RESTORE",
-      entity: "services",
-      entity_id: id,
+    // Unified V3 Audit Logging
+    await ctx.supabase.from("activity_timeline_v3").insert({
+      activity_type: "SERVICE_RESTORE",
+      target_entity: "services",
+      target_id: id,
       tenant_id: ctx.tenantId,
-      user_id: ctx.user.id
+      actor_id: ctx.user.id,
+      description: `กู้คืนบริการจากถังขยะ: ${id}`
     });
-
     revalidatePath("/protected/services");
     return { success: true, message: "กู้คืนบริการเรียบร้อย ✨" };
   } catch (err: unknown) {
@@ -370,15 +478,16 @@ export async function permanentDeleteServiceAction(id: string) {
     assertStaff(ctx.role);
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
-    // 1. Get service images to cleanup storage
+    // 1. Get service images from V3 metadata to cleanup storage
     const { data: service } = await ctx.supabase
-      .from("services")
-      .select("title, cover_image, gallery_images")
+      .from("cms_content_v3")
+      .select("title, cover_image, meta_data")
       .eq("id", id)
       .single();
 
     if (service) {
       const filesToDelete: string[] = [];
+      const meta_data = service.meta_data as ServiceRow["meta_data"];
       
       const extractPath = (url: string) => {
         const bucketMatch = "service-images/";
@@ -392,12 +501,10 @@ export async function permanentDeleteServiceAction(id: string) {
         if (path) filesToDelete.push(path);
       }
       
-      if (Array.isArray(service.gallery_images)) {
-        (service.gallery_images as unknown[]).forEach((img) => {
-          if (typeof img === 'string') {
-            const path = extractPath(img);
-            if (path) filesToDelete.push(path);
-          }
+      if (meta_data?.gallery_images && Array.isArray(meta_data.gallery_images)) {
+        meta_data.gallery_images.forEach((img: string) => {
+          const path = extractPath(img);
+          if (path) filesToDelete.push(path);
         });
       }
 
@@ -407,44 +514,40 @@ export async function permanentDeleteServiceAction(id: string) {
           .remove(filesToDelete);
         
         if (storageError) {
-          console.warn("Storage removal failed, logging to maintenance_logs:", storageError);
-          await ctx.supabase.from("maintenance_logs").insert({
+          console.warn("Storage removal failed, logging to activity_timeline_v3:", storageError);
+          await ctx.supabase.from("activity_timeline_v3").insert({
             tenant_id: ctx.tenantId,
-            entity_type: "service",
-            entity_id: id,
-            action: "delete_storage_failed",
-            details: { 
+            target_entity: "service",
+            target_id: id,
+            activity_type: "STORAGE_CLEANUP_FAILED",
+            description: "ลบไฟล์ภาพไม่สำเร็จ เตรียมเข้าคิว Cleanup",
+            metadata: { 
               files: filesToDelete, 
-              storage_error: {
-                message: storageError.message,
-                name: storageError.name,
-                status: storageError.status,
-                statusCode: (storageError as { statusCode?: string }).statusCode
-              }
-            } as unknown as Json,
-            status: "pending"
+              storage_error: storageError.message
+            } as Json
           });
         }
       }
     }
 
-    // 2. Delete from Database
+    // 2. Delete from Database (V3 Table)
     const { error } = await ctx.supabase
-      .from("services")
+      .from("cms_content_v3")
       .delete()
       .eq("id", id)
       .eq("tenant_id", ctx.tenantId);
 
     if (error) throw error;
 
-    // Audit Logging
-    await ctx.supabase.from("audit_logs").insert({
-      action: "SERVICE_PERMANENT_DELETE",
-      entity: "services",
-      entity_id: id,
+    // Unified V3 Audit Logging
+    await ctx.supabase.from("activity_timeline_v3").insert({
+      activity_type: "SERVICE_PERMANENT_DELETE",
+      target_entity: "services",
+      target_id: id,
       tenant_id: ctx.tenantId,
-      user_id: ctx.user.id,
-      metadata: { title: service?.title }
+      actor_id: ctx.user.id,
+      metadata: { title: service?.title } as Json,
+      description: `ลบบริการถาวร: ${id}`
     });
 
     revalidatePath("/protected/services");
@@ -524,19 +627,18 @@ export async function cleanupOrphanedServiceImagesAction() {
     assertStaff(ctx.role);
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
-    // Get pending cleanup tasks
+    // Get pending cleanup tasks from unified activity timeline
     const { data: logs } = await ctx.supabase
-      .from("maintenance_logs")
-      .select("id, details, status, updated_at")
-      .eq("status", "pending")
-      .eq("action", "delete_storage_failed")
+      .from("activity_timeline_v3")
+      .select("id, metadata")
+      .eq("activity_type", "STORAGE_CLEANUP_FAILED")
       .limit(50);
 
     if (!logs || logs.length === 0) return { success: true, count: 0 };
 
     let successCount = 0;
     for (const log of logs) {
-      const details = log.details as { files?: string[] } | null;
+      const details = log.metadata as { files?: string[] } | null;
       if (details && Array.isArray(details.files)) {
         const { error: storageError } = await ctx.supabase.storage
           .from("service-images")
@@ -544,8 +646,8 @@ export async function cleanupOrphanedServiceImagesAction() {
 
         if (!storageError) {
           await ctx.supabase
-            .from("maintenance_logs")
-            .update({ status: "completed", updated_at: new Date().toISOString() })
+            .from("activity_timeline_v3")
+            .delete()
             .eq("id", log.id);
           successCount++;
         }
@@ -569,18 +671,18 @@ export async function emptyServiceTrashAction() {
     assertStaff(ctx.role);
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
-    // 1. Get all services in trash for this tenant
+    // 1. Get all services in trash for this tenant from V3 table
     const { data: services } = await ctx.supabase
-      .from("services")
-      .select("id, title, cover_image, gallery_images")
-      .not("deleted_at", "is", null)
+      .from("cms_content_v3")
+      .select("id, title, cover_image, meta_data")
+      .eq("status", "ARCHIVED")
       .eq("tenant_id", ctx.tenantId);
     
     if (!services || services.length === 0) {
       return { success: true, message: "ถังขยะว่างเปล่าอยู่แล้ว" };
     }
 
-    // 2. Identify all media to delete
+    // 2. Identify all media to delete from V3 metadata
     const filesToDelete: string[] = [];
     const extractPath = (url: string) => {
       const bucketMatch = "service-images/";
@@ -594,12 +696,11 @@ export async function emptyServiceTrashAction() {
         const p = extractPath(s.cover_image);
         if (p) filesToDelete.push(p);
       }
-      if (Array.isArray(s.gallery_images)) {
-        (s.gallery_images as unknown[]).forEach((img) => {
-          if (typeof img === 'string') {
-            const p = extractPath(img);
-            if (p) filesToDelete.push(p);
-          }
+      const meta_data = s.meta_data as ServiceRow["meta_data"];
+      if (meta_data?.gallery_images && Array.isArray(meta_data.gallery_images)) {
+        meta_data.gallery_images.forEach((img: string) => {
+          const p = extractPath(img);
+          if (p) filesToDelete.push(p);
         });
       }
     });
@@ -611,37 +712,39 @@ export async function emptyServiceTrashAction() {
         .remove(filesToDelete);
       
       if (storageError) {
-        console.warn("Bulk storage removal failed, logging to maintenance_logs for retry:", storageError);
-        await ctx.supabase.from("maintenance_logs").insert({
+        console.warn("Bulk storage removal failed, logging to activity_timeline_v3 for retry:", storageError);
+        await ctx.supabase.from("activity_timeline_v3").insert({
           tenant_id: ctx.tenantId,
-          entity_type: "service_bulk",
-          entity_id: "BULK_OPERATION",
-          action: "delete_storage_failed",
-          details: { 
+          target_entity: "service_bulk",
+          target_id: "BULK_OPERATION",
+          activity_type: "STORAGE_CLEANUP_FAILED",
+          description: "ล้างถังขยะ: ลบไฟล์ภาพบางส่วนไม่สำเร็จ",
+          metadata: { 
             files: filesToDelete, 
             storage_error: storageError.message
-          } as unknown as Json,
-          status: "pending"
+          } as Json
         });
       }
     }
 
-    // 4. Batch Delete from Database
+    // 4. Batch Delete from Database (V3 Table)
     const { error: deleteError } = await ctx.supabase
-      .from("services")
+      .from("cms_content_v3")
       .delete()
-      .not("deleted_at", "is", null)
+      .eq("status", "ARCHIVED")
       .eq("tenant_id", ctx.tenantId);
     
     if (deleteError) throw deleteError;
 
     // 5. Audit Logging
-    await ctx.supabase.from("audit_logs").insert({
-      action: "SERVICE_EMPTY_TRASH",
-      entity: "services",
+    await ctx.supabase.from("activity_timeline_v3").insert({
+      activity_type: "SERVICE_EMPTY_TRASH",
+      target_entity: "services",
+      target_id: "BULK_DELETE",
       tenant_id: ctx.tenantId,
-      user_id: ctx.user.id,
-      metadata: { count: services.length }
+      actor_id: ctx.user.id,
+      metadata: { count: services.length } as Json,
+      description: `ล้างถังขยะบริการ: ลบถาวร ${services.length} รายการ`
     });
 
     revalidatePath("/protected/services");

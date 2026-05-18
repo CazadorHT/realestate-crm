@@ -1,17 +1,11 @@
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 import { type PropertyImage } from "@/features/properties/types";
 
-export type CommissionStatus = Database["public"]["Enums"]["commission_status"];
-export type CommissionRole = Database["public"]["Enums"]["commission_role"];
+export type CommissionStatus = "PENDING" | "READY_TO_PAY" | "PAID" | "CANCELLED";
+export type CommissionRole = "AGENT" | "CO_BROKER" | "COMPANY";
 
-export interface CommissionAdjustment {
-  id: string;
-  commission_id: string;
-  description: string;
-  amount: number;
-  adjustment_type: 'MARKETING' | 'FEE' | 'BONUS' | 'OTHER';
-  created_at: string;
-}
+// 🚫 CommissionAdjustment has been deprecated in V3 Architecture
+// The ledger is now immutable and adjustments are handled as separate ledger entries if necessary.
 
 export interface CommissionPayoutRecord extends JoinedPayout {
   recipient_name?: string;
@@ -20,6 +14,23 @@ export interface CommissionPayoutRecord extends JoinedPayout {
   calculated_total?: number;
   total_adjustments?: number;
   net_transfer_amount?: number;
+  wht_amount?: number;
+  agent?: { full_name?: string | null } | null;
+  co_broker?: { name?: string | null } | null;
+  slip_url?: string;
+  payout_metadata?: {
+    calculation_snapshot?: {
+      tax_rate_snapshot?: number;
+      gross?: number | null;
+      wht?: number | null;
+      net_base?: number;
+      final_net?: number;
+    };
+  } | null;
+  updated_at?: string;
+  property?: { title?: string } | null;
+  author?: { name?: string } | null;
+  audit_meta?: any[] | null;
 }
 
 export interface RecalculatePreview {
@@ -69,42 +80,35 @@ export interface PaginatedPayoutResult {
   error?: string;
 }
 
-export type JoinedPayout = Database["public"]["Tables"]["deal_commissions"]["Row"] & {
-  agent: { id: string; full_name: string; phone: string | null } | null;
-  co_broker: {
-    id: string;
-    name: string;
-    phone: string | null;
-    company_name: string | null;
-  } | null;
-  adjustments: Database["public"]["Tables"]["commission_adjustments"]["Row"][];
-  summary_view: {
-    total_adjustments: number | null;
-    net_payout_amount: number | null;
-  } | null;
+export type JoinedPayout = Database["public"]["Tables"]["crm_deal_commissions_v3"]["Row"] & {
+  recipient: { id: string; display_name: string; phone: string | null } | null;
+  summary_view?: { total_adjustments: number | null; net_payout_amount: number | null } | null;
   deal: {
     id: string;
-    commission_amount: number | null;
+    commission_total: number | null;
     property: {
-      title: string | null;
-      property_type: string | null;
-      listing_type: string | null;
+      details: { title: any }[] | null;
+      property_type: number | null;
+      listing_type: number | null;
     } | null;
   } | null;
 };
 
 /** 🧬 REFACTORED TYPES TO AVOID INTERFACE EXTENSION ISSUES */
-export type AgentWalletHistory = Database["public"]["Tables"]["deal_commissions"]["Row"] & {
+export type AgentWalletHistory = Database["public"]["Tables"]["crm_deal_commissions_v3"]["Row"] & {
   net_amount: number;
-  adjustments: Database["public"]["Tables"]["commission_adjustments"]["Row"][];
+  net_transfer_amount?: number;
+  wht_amount?: number;
+  total_adjustments?: number;
   deal: {
     id: string;
     status: string;
     property: {
-      title: string;
-      images: PropertyImage[]; 
-      listing_type: string;
-      property_type: string;
+      title?: string;
+      details?: { title: any }[] | null;
+      media?: { url: string; is_cover: boolean | null }[]; 
+      listing_type?: number | null;
+      property_type?: number | null;
     } | null;
   } | null;
 };

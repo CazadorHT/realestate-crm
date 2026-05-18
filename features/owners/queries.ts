@@ -10,59 +10,88 @@ export async function getOwnerById(id: string): Promise<Owner | null> {
   const isMultiTenant = config.multi_tenant_enabled;
 
   let query = supabase
-    .from("owners")
-    .select("id, full_name, full_name_hash, phone, phone_hash, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by")
-    .eq("id", id);
+    .from("identities_v3")
+    .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
+    .eq("id", id)
+    .eq("category", 2);
 
   if (isMultiTenant && tenantId) {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
   }
-  // Single-tenant: no filter (show all)
 
   const { data, error } = await query.single();
 
-  if (error) {
+  if (error || !data) {
     console.error("Error fetching owner:", error);
     return null;
   }
 
-  return data;
+  const social = (data.social_links as Record<string, any>) || {};
+
+  return {
+    id: data.id,
+    full_name: data.display_name || "",
+    full_name_hash: social.full_name_hash || null,
+    phone: data.phone || null,
+    phone_hash: social.phone_hash || null,
+    line_id: data.line_id || null,
+    facebook_url: social.facebook_url || null,
+    other_contact: social.other_contact || null,
+    company_name: social.company_name || null,
+    owner_type: social.owner_type || null,
+    created_at: data.created_at,
+    updated_at: data.updated_at,
+    tenant_id: data.tenant_id,
+    created_by: social.created_by || null,
+  };
 }
 
-export async function getOwners() {
+export async function getOwners(): Promise<Owner[]> {
   const { supabase, tenantId } = await requireAuthContext();
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
 
-  // Fetch owners with property count
   let query = supabase
-    .from("owners")
-    .select(
-      `
-      id, full_name, full_name_hash, phone, phone_hash, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by,
-      properties:properties(count)
-    `,
-    );
+    .from("identities_v3")
+    .select(`
+      id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id,
+      properties:properties_core!properties_core_owner_id_fkey(count)
+    `)
+    .eq("category", 2);
 
   if (isMultiTenant && tenantId) {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
   }
-  // Single-tenant: no filter (show all)
 
   const { data, error } = await query.order("created_at", { ascending: false });
 
-  if (error) {
+  if (error || !data) {
     console.error("Error fetching owners:", error);
     return [];
   }
 
-  type OwnerWithCount = Owner & { properties: { count: number }[] };
-  const owners = data as unknown as OwnerWithCount[];
+  return data.map((row: any) => {
+    const social = (row.social_links as Record<string, any>) || {};
+    const propCount = row.properties?.[0]?.count || 0;
 
-  return owners.map((owner) => ({
-    ...owner,
-    property_count: owner.properties?.[0]?.count || 0,
-  }));
+    return {
+      id: row.id,
+      full_name: row.display_name || "",
+      full_name_hash: social.full_name_hash || null,
+      phone: row.phone || null,
+      phone_hash: social.phone_hash || null,
+      line_id: row.line_id || null,
+      facebook_url: social.facebook_url || null,
+      other_contact: social.other_contact || null,
+      company_name: social.company_name || null,
+      owner_type: social.owner_type || null,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      tenant_id: row.tenant_id,
+      created_by: social.created_by || null,
+      property_count: propCount,
+    };
+  });
 }
 
 export async function getOwnerProperties(ownerId: string) {
@@ -71,23 +100,43 @@ export async function getOwnerProperties(ownerId: string) {
   const isMultiTenant = config.multi_tenant_enabled;
 
   let query = supabase
-    .from("properties")
-    .select("id, title, slug, property_type, listing_type, price, original_price, rental_price, original_rental_price, status, popular_area, created_at, tenant_id")
+    .from("properties_core")
+    .select("id, details:properties_details(title, meta_data), property_type, listing_type, sale_price, rent_price, status, created_at, tenant_id")
     .eq("owner_id", ownerId);
 
   if (isMultiTenant && tenantId) {
     query = query.eq("tenant_id", tenantId);
   }
-  // Single-tenant: no filter
 
   const { data, error } = await query.order("created_at", { ascending: false });
 
-  if (error) {
+  if (error || !data) {
     console.error("Error fetching owner properties:", error);
     return [];
   }
 
-  return data || [];
+  return data.map((item: any) => {
+    const details = item.details as any;
+    const titleObj = details?.title || {};
+    const titleStr = titleObj.th || titleObj.en || "";
+    const metaData = details?.meta_data || {};
+
+    return {
+      id: item.id,
+      title: titleStr,
+      slug: metaData.slug || "",
+      property_type: item.property_type,
+      listing_type: item.listing_type,
+      price: item.sale_price,
+      original_price: item.sale_price,
+      rental_price: item.rent_price,
+      original_rental_price: item.rent_price,
+      status: item.status,
+      popular_area: metaData.popular_area || null,
+      created_at: item.created_at,
+      tenant_id: item.tenant_id,
+    };
+  });
 }
 
 export type GetOwnersParams = {
@@ -103,34 +152,32 @@ export async function getOwnersQuery({
   pageSize = 10,
   allBranches = false,
 }: GetOwnersParams) {
-  const { supabase, tenantId, role } = await requireAuthContext();
+  const { supabase, tenantId } = await requireAuthContext();
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
   const start = (page - 1) * pageSize;
   const end = start + pageSize - 1;
 
   let query = supabase
-    .from("owners")
-    .select("id, full_name, full_name_hash, phone, phone_hash, line_id, facebook_url, other_contact, company_name, owner_type, created_at, updated_at, tenant_id, created_by, properties:properties(count), tenants(name)", {
+    .from("identities_v3")
+    .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id, properties:properties_core!properties_core_owner_id_fkey(count), tenants:tenants_v3(name)", {
       count: "exact",
-    });
+    })
+    .eq("category", 2);
 
-  // Visibility Logic:
   if (!isMultiTenant) {
-    // Single-tenant: show all owners (no filter)
-  } else if (allBranches || (tenantId === undefined)) {
-    // Multi-tenant + ALL Branches (global cookie or toggle): show everything
+    // Single-tenant
+  } else if (allBranches || tenantId === undefined) {
+    // Multi-tenant + ALL Branches
   } else if (tenantId) {
-    // Multi-tenant: show branch owners + unassigned
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
   } else {
-    // Edge case: no tenant context, show only unassigned
     query = query.is("tenant_id", null);
   }
 
   if (q) {
     query = query.or(
-      `full_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`,
+      `display_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`,
     );
   }
 
@@ -143,13 +190,28 @@ export async function getOwnersQuery({
     throw new Error(mapDbError(error));
   }
 
-  type OwnerWithCount = Owner & { properties: { count: number }[] };
-  const rawOwners = data as unknown as OwnerWithCount[];
+  const owners: Owner[] = (data || []).map((row: any) => {
+    const social = (row.social_links as Record<string, any>) || {};
+    const propCount = row.properties?.[0]?.count || 0;
 
-  const owners = rawOwners.map((owner) => ({
-    ...owner,
-    property_count: owner.properties?.[0]?.count || 0,
-  }));
+    return {
+      id: row.id,
+      full_name: row.display_name || "",
+      full_name_hash: social.full_name_hash || null,
+      phone: row.phone || null,
+      phone_hash: social.phone_hash || null,
+      line_id: row.line_id || null,
+      facebook_url: social.facebook_url || null,
+      other_contact: social.other_contact || null,
+      company_name: social.company_name || null,
+      owner_type: social.owner_type || null,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+      tenant_id: row.tenant_id,
+      created_by: social.created_by || null,
+      property_count: propCount,
+    };
+  });
 
   return {
     data: owners,
@@ -167,17 +229,17 @@ export async function getOwnersDashboardStatsQuery(allBranches = false) {
 
   // 1. Total Owners
   let ownersQuery = supabase
-    .from("owners")
-    .select("id", { count: "exact", head: true });
+    .from("identities_v3")
+    .select("id", { count: "exact", head: true })
+    .eq("category", 2);
 
   if (!isMultiTenant) {
-    // Single-tenant: show all (no filter)
-  } else if (allBranches || (tenantId === undefined)) {
-    // ALL Branches: no filter
+    // Single-tenant
+  } else if (allBranches || tenantId === undefined) {
+    // ALL Branches
   } else if (tenantId) {
     ownersQuery = ownersQuery.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
   } else {
-    // Fallback: only unassigned
     ownersQuery = ownersQuery.is("tenant_id", null);
   }
   const { count: totalOwners } = await ownersQuery;
@@ -191,13 +253,14 @@ export async function getOwnersDashboardStatsQuery(allBranches = false) {
   ).toISOString();
 
   let newOwnersQuery = supabase
-    .from("owners")
+    .from("identities_v3")
     .select("id", { count: "exact", head: true })
+    .eq("category", 2)
     .gte("created_at", startOfMonth);
 
   if (isMultiTenant) {
-    if (allBranches || (tenantId === undefined)) {
-      // ALL: no filter
+    if (allBranches || tenantId === undefined) {
+      // ALL
     } else if (tenantId) {
       newOwnersQuery = newOwnersQuery.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
     } else {
@@ -208,15 +271,15 @@ export async function getOwnersDashboardStatsQuery(allBranches = false) {
 
   // 3. Linked Properties
   let propQuery = supabase
-    .from("properties")
+    .from("properties_core")
     .select("id", { count: "exact", head: true })
     .is("deleted_at", null)
     .not("owner_id", "is", null);
 
   if (!isMultiTenant) {
-    // Single-tenant: show all linked properties
-  } else if (allBranches || (tenantId === undefined)) {
-    // ALL: no filter
+    // Single-tenant
+  } else if (allBranches || tenantId === undefined) {
+    // ALL
   } else if (tenantId) {
     propQuery = propQuery.eq("tenant_id", tenantId);
   } else {
@@ -237,28 +300,29 @@ export async function getOwnersDashboardStatsQuery(allBranches = false) {
  * Used for "Select All across pages" feature.
  */
 export async function getAllOwnerIdsQuery(args: { q?: string; allBranches?: boolean } = {}) {
-  const { supabase, role, tenantId } = await requireAuthContext();
+  const { supabase, tenantId } = await requireAuthContext();
   const config = await getSystemConfig();
   const isMultiTenant = config.multi_tenant_enabled;
 
   const q = (args.q ?? "").trim();
   const allBranches = args.allBranches ?? false;
 
-  let query = supabase.from("owners").select("id");
+  let query = supabase
+    .from("identities_v3")
+    .select("id")
+    .eq("category", 2);
 
-  // Visibility Logic:
   if (!isMultiTenant) {
-    // Single-tenant: show all owners (no filter)
-  } else if (allBranches || (tenantId === "ALL") || !tenantId) {
-    // Multi-tenant + ALL Branches: show everything
+    // Single-tenant
+  } else if (allBranches || tenantId === "ALL" || !tenantId) {
+    // Multi-tenant + ALL
   } else {
-    // Multi-tenant: show branch owners + unassigned
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
   }
 
   if (q) {
     query = query.or(
-      `full_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`,
+      `display_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`,
     );
   }
 

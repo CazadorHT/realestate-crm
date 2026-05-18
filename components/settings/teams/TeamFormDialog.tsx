@@ -115,7 +115,7 @@ export function TeamFormDialog({
               : null,
             agent_count: 0,
             member_previews: [],
-          } as TeamWithManager);
+          } as unknown as TeamWithManager);
           onOpenChange(false);
         } else {
           toast.error(result.message || "เกิดข้อผิดพลาดในการสร้างทีม");

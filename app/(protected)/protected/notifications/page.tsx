@@ -12,7 +12,8 @@ import {
   Settings2,
   Calendar,
   Layers,
-  ArrowRight
+  ArrowRight,
+  LucideIcon
 } from "lucide-react";
 import { useNotifications, GroupedNotification } from "@/hooks/use-notifications";
 import { PageHeader } from "@/components/dashboard/PageHeader";
@@ -74,7 +75,7 @@ export default function NotificationsPage() {
 
   // --- Date Grouping Logic ---
   const notificationGroups = useMemo(() => {
-    const groups: { title: string; icon: any; items: GroupedNotification[] }[] = [
+    const groups: { title: string; icon: LucideIcon; items: GroupedNotification[] }[] = [
       { title: "วันนี้", icon: Bell, items: [] },
       { title: "เมื่อวาน", icon: Calendar, items: [] },
       { title: "สัปดาห์นี้", icon: Layers, items: [] },
@@ -82,7 +83,7 @@ export default function NotificationsPage() {
     ];
 
     filteredNotifications.forEach((n) => {
-      const date = new Date(n.created_at);
+      const date = new Date(n.created_at || new Date().toISOString());
       if (isToday(date)) groups[0].items.push(n);
       else if (isYesterday(date)) groups[1].items.push(n);
       else if (isThisWeek(date)) groups[2].items.push(n);

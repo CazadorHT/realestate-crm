@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { Database, Json } from "@/lib/database.types";
-import { getPublicImageUrl } from "@/features/properties/image-utils";
+import { Database } from "@/lib/database.types";
+import { Json } from "@/lib/database.types.generated";
 import { 
   getSafeImages, 
   getCoverImage, 
@@ -43,7 +43,7 @@ export type PropertyRow = {
   nearby_transits: Json;
 
   images?: Json | null;
-  property_features?: Json | null;
+  property_features?: Array<{ features: { id: string; name: string; icon_key: string } | null }> | null;
 };
 
 
@@ -137,7 +137,7 @@ export async function searchPropertiesForChatbot(
         asoke: ["อโศก"],
         อโศก: ["Asoke"],
         // Added BTS/MRT and new popular areas
-        bangue: ["บางซื่อ"],
+        bangsue: ["บางซื่อ"],
         บางซื่อ: ["Bangsue"],
         bangna: ["บางนา"],
         บางนา: ["Bangna"],
@@ -172,10 +172,9 @@ export async function searchPropertiesForChatbot(
     }
   }
 
-  // 2. Broad Property Type Synonyms
+  // 2. Broad Property Type Synonyms & Postgres Enum Safety
   if (options.propertyType) {
     const type = options.propertyType;
-    const searchTerm = `%${type}%`;
     const synonyms: Record<string, string[]> = {
       OFFICE_BUILDING: [
         "ออฟฟิศ",
@@ -250,29 +249,52 @@ export async function searchPropertiesForChatbot(
       ],
     };
 
+    // Map AI/Chatbot property types to valid Postgres enum values to prevent invalid enum errors
+    const dbTypeMapping: Record<string, string> = {
+      TOWNHOME: "TOWNHOUSE",
+      COMMERCIAL_BUILDING: "COMMERCIAL",
+      OFFICE_BUILDING: "COMMERCIAL",
+      WAREHOUSE: "COMMERCIAL",
+      TOWNHOUSE: "TOWNHOUSE",
+      COMMERCIAL: "COMMERCIAL",
+      CONDO: "CONDO",
+      HOUSE: "HOUSE",
+      LAND: "LAND",
+    };
+
+    const validDbType = dbTypeMapping[type] || type;
+
     if (synonyms[type]) {
       const orSyns = synonyms[type].map((s) => {
         const st = `%${s}%`;
         return `title.ilike.${st},description.ilike.${st}`;
       });
-      // For enum column property_type, use .eq instead of .ilike
-      query = query.or(`property_type.eq.${type},${orSyns.join(",")}`);
+      query = query.or(`property_type.eq.${validDbType},${orSyns.join(",")}`);
     } else {
-      // Fallback to .eq for enum column
-      query = query.eq("property_type", type as Database["public"]["Enums"]["property_type"]);
+      query = query.eq("property_type", validDbType as Database["public"]["Enums"]["property_type"]);
     }
   }
 
-  // 3. Price Filters
+  // 3. Price Filters (With Smart Fallback for Missing Listing Type)
   if (options.minPrice) {
-    if (options.listingType === "RENT")
+    if (options.listingType === "RENT") {
       query = query.gte("rental_price", options.minPrice);
-    else query = query.gte("price", options.minPrice);
+    } else if (options.listingType === "SALE") {
+      query = query.gte("price", options.minPrice);
+    } else {
+      // Smart Fallback: If listingType is not specified, check either price or rental_price
+      query = query.or(`price.gte.${options.minPrice},rental_price.gte.${options.minPrice}`);
+    }
   }
   if (options.maxPrice) {
-    if (options.listingType === "RENT")
+    if (options.listingType === "RENT") {
       query = query.lte("rental_price", options.maxPrice);
-    else query = query.lte("price", options.maxPrice);
+    } else if (options.listingType === "SALE") {
+      query = query.lte("price", options.maxPrice);
+    } else {
+      // Smart Fallback: If listingType is not specified, check either price or rental_price
+      query = query.or(`price.lte.${options.maxPrice},rental_price.lte.${options.maxPrice}`);
+    }
   }
 
   // 4. Intent Filter
@@ -356,7 +378,7 @@ export async function searchPropertiesForChatbot(
       image_url: getCoverImage(r.images),
       images: getSafeImages(r.images),
       location: buildLocation(r),
-      features: ((r.property_features as unknown as Array<{ features: { id: string, name: string, icon_key: string } | null }> ) || [])
+      features: (r.property_features || [])
         .map((pf) => pf.features)
         .filter((f): f is NonNullable<typeof f> => f !== null),
       near_transit: r.near_transit,

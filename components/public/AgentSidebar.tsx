@@ -30,6 +30,8 @@ interface AgentSidebarProps {
   agentImage?: string | null;
   agentPhone?: string | null;
   agentLine?: string | null;
+  agentWechat?: string | null;
+  agentWhatsapp?: string | null;
   isVerified?: boolean;
   propertyId?: string;
   propertyTitle?: string;
@@ -48,6 +50,8 @@ export function AgentSidebar({
   agentImage,
   agentPhone,
   agentLine,
+  agentWechat,
+  agentWhatsapp,
   isVerified = true,
   propertyId,
   propertyTitle,
@@ -61,8 +65,8 @@ export function AgentSidebar({
   // Custom t function for language override
   const t = (key: string) => {
     if (!customLanguage) return globalT(key);
-    const dict = dictionaries[language as keyof typeof dictionaries] as any;
-    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+    const dict = dictionaries[language as keyof typeof dictionaries] as Record<string, any>;
+    return (key.split(".").reduce((prev, curr) => prev?.[curr], dict) as unknown as string) || key;
   };
   const [showPhone, setShowPhone] = useState(false);
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
@@ -114,7 +118,9 @@ export function AgentSidebar({
   };
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-xl shadow-slate-100/50 relative overflow-hidden flex flex-col w-full">
+    <div className="rounded-[2.5rem] border border-slate-100 bg-white/80 p-7 shadow-2xl shadow-slate-200/50 backdrop-blur-xl relative overflow-hidden flex flex-col w-full group">
+      {/* Decorative Gradient Element */}
+      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-blue-500/10 transition-colors" />
       {/* Agent Info */}
       <div className="flex items-center gap-4 mb-6 pb-6 border-b border-slate-100 shrink-0">
         <div className="relative shrink-0">
@@ -149,13 +155,13 @@ export function AgentSidebar({
 
       <div className="flex flex-col flex-1 min-h-0">
         {/* Contact Section (Hidden on Mobile) */}
-        <div className="hidden md:flex flex-col mb-6 shrink-0 space-y-3">
-          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+        <div className="hidden md:flex flex-col mb-6 shrink-0 space-y-3.5">
+          <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1">
             {t("property.contact_agent")}
           </h4>
           <Button
             asChild
-            className="w-full h-12 rounded-xl text-base md:text-sm xl:text-base font-semibold bg-[#06C755] hover:bg-[#05B04C] text-white shadow-lg shadow-green-100 transition-all hover:-translate-y-0.5"
+            className="w-full h-13 rounded-2xl text-base md:text-sm xl:text-base font-semibold bg-linear-to-r from-[#06C755] to-[#05B04C] hover:from-[#05B04C] hover:to-[#049d43] text-white shadow-lg shadow-green-200/50 transition-all hover:-translate-y-0.5 active:scale-95"
           >
             <a
               href={
@@ -186,6 +192,9 @@ export function AgentSidebar({
           <AgentPhoneDialog
             agentName={agentName}
             agentPhone={agentPhone || ""}
+            wechatId={agentWechat}
+            whatsappId={agentWhatsapp}
+            lineId={agentLine}
             propertyId={propertyId}
             propertyTitle={propertyTitle}
             language={language as Language}

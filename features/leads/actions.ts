@@ -5,7 +5,6 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { createSafeAction } from "@/lib/actions/safe-action";
 import { leadFormSchema, leadActivitySchema } from "./types";
 import type {
-  LeadActionResult,
   LeadInsert,
   LeadUpdate,
   LeadActivityInsert,
@@ -13,42 +12,75 @@ import type {
 import { generateLeadSummary } from "./services/ai-lead-service";
 import { z } from "zod";
 import { getCoverImage } from "@/lib/property-hardened-utils";
+import type { PropertyAddressV3, PropertyPricingV3 } from "@/features/properties/types/v3";
 import { logAudit } from "@/lib/audit";
 import { UserRole } from "@/lib/authz";
-import { Database } from "@/lib/database.types";
 import { mapDbError } from "@/lib/db-error";
-import { encrypt, decrypt, generateBlindIndex } from "@/lib/crypto";
+import { 
+  LISTING_TYPE_DB_VALUE, 
+  PROPERTY_TYPE_DB_VALUE, 
+  PROPERTY_STATUS_DB_VALUE,
+  ListingType as ListingTypeLegacy,
+  PropertyType as PropertyTypeLegacy,
+  PropertyStatus as PropertyStatusLegacy,
+  getStatusFromDb,
+  getPropertyTypeFromDb,
+  getListingTypeFromDb
+} from "@/features/properties/labels";
+import { encrypt } from "@/lib/crypto";
 
 export const createLeadAction = createSafeAction(
   leadFormSchema,
   async (data, { supabase, userId, tenantId }) => {
+    // 1. Create Identity for the Lead
+    const { data: identity, error: identityErr } = await supabase
+      .from("identities_v3")
+      .insert({
+        display_name: data.full_name,
+        email: data.email,
+        phone: data.phone,
+        role: "LEAD",
+        tenant_id: tenantId,
+        updated_at: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
+
+    if (identityErr || !identity) {
+      console.error("Create identity error:", identityErr);
+      throw new Error(mapDbError(identityErr));
+    }
+
+    // 2. Store encrypted full name in secrets
+    const { error: secretErr } = await supabase
+      .from("identity_secrets_v3")
+      .insert({
+        identity_id: identity.id,
+        full_name_encrypted: encrypt(data.full_name),
+        updated_at: new Date().toISOString(),
+      });
+
+    if (secretErr) {
+      console.error("Create identity secret error:", secretErr);
+      // Non-blocking but should be logged
+    }
+
+    // 3. Create the Lead record
     const payload: LeadInsert = {
-      ...data,
-      full_name: encrypt(data.full_name) || "Unknown",
-      full_name_hash: generateBlindIndex(data.full_name),
-      phone: encrypt(data.phone),
-      phone_hash: generateBlindIndex(data.phone),
-      email: encrypt(data.email),
-      email_hash: generateBlindIndex(data.email),
-      line_id: encrypt(data.line_id),
-      line_id_hash: generateBlindIndex(data.line_id),
-      wechat_id: encrypt(data.wechat_id),
-      whatsapp: encrypt(data.whatsapp),
-      facebook_psid: encrypt(data.preferences?.["facebook_psid"] as string),
-      instagram_sid: encrypt(data.preferences?.["instagram_sid"] as string),
-      note: encrypt(data.note),
+      identity_id: identity.id,
       tenant_id: tenantId,
-      nationality: Array.isArray(data.nationality)
-        ? data.nationality.join(", ")
-        : data.nationality,
+      source: data.source || "DIRECT",
+      stage: data.stage || "NEW",
+      status: "ACTIVE",
+      budget_min: data.budget_min ? Number(data.budget_min) : null,
+      budget_max: data.budget_max ? Number(data.budget_max) : null,
+      min_bedrooms: data.min_bedrooms ? Number(data.min_bedrooms) : null,
       preferred_locations: data.preferred_locations ?? null,
-      lead_type: data.lead_type ?? undefined,
-      created_by: userId,
       updated_at: new Date().toISOString(),
-    } as LeadInsert;
+    };
 
     const { data: lead, error } = await supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .insert(payload)
       .select("id")
       .single();
@@ -92,35 +124,41 @@ export const updateLeadAction = createSafeAction(
   async (data, { supabase, userId, tenantId }) => {
     const { id, ...updateData } = data;
 
+    // 1. Get current identity ID from the lead
+    const { data: leadRef, error: leadRefErr } = await supabase
+      .from("crm_leads_v3")
+      .select("identity_id")
+      .eq("id", id)
+      .single();
+
+    if (leadRefErr || !leadRef) throw new Error("ไม่พบข้อมูลลีด");
+
+    // 2. Update Identity info
+    const { error: identityErr } = await supabase
+      .from("identities_v3")
+      .update({
+        display_name: updateData.full_name,
+        email: updateData.email,
+        phone: updateData.phone,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", leadRef.identity_id);
+
+    if (identityErr) throw new Error(mapDbError(identityErr));
+
+    // 3. Update Lead business info
     const payload: LeadUpdate = {
-      ...updateData,
-      full_name: encrypt(updateData.full_name) || "Unknown",
-      full_name_hash: generateBlindIndex(updateData.full_name),
-      phone: encrypt(updateData.phone),
-      phone_hash: generateBlindIndex(updateData.phone),
-      email: encrypt(updateData.email),
-      email_hash: generateBlindIndex(updateData.email),
-      line_id: encrypt(updateData.line_id),
-      line_id_hash: generateBlindIndex(updateData.line_id),
-      wechat_id: encrypt(updateData.wechat_id),
-      whatsapp: encrypt(updateData.whatsapp),
-      facebook_psid: encrypt(
-        updateData.preferences?.["facebook_psid"] as string,
-      ),
-      instagram_sid: encrypt(
-        updateData.preferences?.["instagram_sid"] as string,
-      ),
-      note: encrypt(updateData.note),
-      nationality: Array.isArray(updateData.nationality)
-        ? updateData.nationality.join(", ")
-        : updateData.nationality,
+      source: updateData.source || undefined,
+      stage: updateData.stage || undefined,
+      budget_min: updateData.budget_min ? Number(updateData.budget_min) : null,
+      budget_max: updateData.budget_max ? Number(updateData.budget_max) : null,
+      min_bedrooms: updateData.min_bedrooms ? Number(updateData.min_bedrooms) : null,
       preferred_locations: updateData.preferred_locations ?? null,
-      lead_type: updateData.lead_type ?? undefined,
       updated_at: new Date().toISOString(),
-    } as LeadUpdate;
+    };
 
     const { error } = await supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .update(payload)
       .eq("id", id)
       .eq("tenant_id", tenantId);
@@ -131,13 +169,8 @@ export const updateLeadAction = createSafeAction(
     }
 
     revalidatePath("/protected/leads");
-    revalidateTag("dashboard-stats", "seconds");
-    revalidateTag("dashboard-charts", "seconds");
-    revalidateTag("dashboard-performance", "seconds");
     revalidatePath(`/protected/leads/${id}`);
     revalidateTag("dashboard-stats", "seconds");
-    revalidateTag("dashboard-charts", "seconds");
-    revalidateTag("dashboard-performance", "seconds");
     return { id };
   },
 );
@@ -146,7 +179,7 @@ export const deleteLeadAction = createSafeAction(
   z.object({ id: z.string().uuid() }),
   async ({ id }, { supabase, tenantId }) => {
     const { error } = await supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .delete()
       .eq("id", id)
       .eq("tenant_id", tenantId);
@@ -169,7 +202,7 @@ export const createLeadActivityAction = createSafeAction(
   async ({ leadId, values }, { supabase, userId, tenantId }) => {
     // Verify lead belongs to tenant
     const { data: lead, error: leadErr } = await supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .select("id")
       .eq("id", leadId)
       .eq("tenant_id", tenantId)
@@ -179,14 +212,17 @@ export const createLeadActivityAction = createSafeAction(
       throw new Error("ไม่พบข้อมูล Lead หรือคุณไม่มีสิทธิ์");
 
     const payload: LeadActivityInsert = {
-      lead_id: leadId,
-      property_id: values.property_id ?? null,
+      target_id: leadId,
+      target_entity: "leads",
       activity_type: values.activity_type,
-      note: values.note.trim(),
-      created_by: userId,
+      description: values.note.trim(),
+      actor_id: userId,
+      tenant_id: tenantId,
+      metadata: values.property_id ? { property_id: values.property_id } : null,
+      created_at: new Date().toISOString(),
     };
 
-    const { error } = await supabase.from("lead_activities").insert(payload);
+    const { error } = await supabase.from("activity_timeline_v3").insert(payload);
     if (error) throw new Error(mapDbError(error));
 
     revalidatePath(`/protected/leads/${leadId}`);
@@ -203,7 +239,7 @@ export const updateLeadActivityAction = createSafeAction(
   async ({ activityId, leadId, values }, { supabase, tenantId }) => {
     // Security check for lead ownership
     const { data: lead, error: leadErr } = await supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .select("id")
       .eq("id", leadId)
       .eq("tenant_id", tenantId)
@@ -213,14 +249,14 @@ export const updateLeadActivityAction = createSafeAction(
       throw new Error("ไม่พบข้อมูล Lead หรือคุณไม่มีสิทธิ์");
 
     const { error } = await supabase
-      .from("lead_activities")
+      .from("activity_timeline_v3")
       .update({
         activity_type: values.activity_type,
-        note: values.note.trim(),
-        property_id: values.property_id ?? null,
+        description: values.note.trim(),
+        metadata: values.property_id ? { property_id: values.property_id } : null,
       })
       .eq("id", activityId)
-      .eq("lead_id", leadId);
+      .eq("target_id", leadId);
 
     if (error) throw new Error(mapDbError(error));
 
@@ -237,7 +273,7 @@ export const deleteLeadActivityAction = createSafeAction(
   async ({ activityId, leadId }, { supabase, tenantId }) => {
     // Security check for lead ownership
     const { data: lead, error: leadErr } = await supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .select("id")
       .eq("id", leadId)
       .eq("tenant_id", tenantId)
@@ -247,10 +283,10 @@ export const deleteLeadActivityAction = createSafeAction(
       throw new Error("ไม่พบข้อมูล Lead หรือคุณไม่มีสิทธิ์");
 
     const { error } = await supabase
-      .from("lead_activities")
+      .from("activity_timeline_v3")
       .delete()
       .eq("id", activityId)
-      .eq("lead_id", leadId);
+      .eq("target_id", leadId);
 
     if (error) throw new Error(mapDbError(error));
 
@@ -266,9 +302,9 @@ export const updateLeadStageAction = createSafeAction(
   }),
   async ({ id, stage }, { supabase, tenantId }) => {
     const { error } = await supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .update({
-        stage: stage as Database["public"]["Enums"]["lead_stage"],
+        stage: stage,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
@@ -278,8 +314,6 @@ export const updateLeadStageAction = createSafeAction(
 
     revalidatePath("/protected/leads");
     revalidateTag("dashboard-stats", "seconds");
-    revalidateTag("dashboard-charts", "seconds");
-    revalidateTag("dashboard-performance", "seconds");
     return { success: true };
   },
 );
@@ -307,17 +341,15 @@ export const searchPropertiesAction = createSafeAction(
     const queryTerm = (q ?? "").trim();
     const effectiveTenantId = inputTenantId || contextTenantId;
 
-    // 1. Fetch counts for ALL matching properties (ignoring facet-specific filters, but respecting search q)
+    // 1. Fetch facet counts using core tables (Efficient facet calculation)
     let facetSb = supabase
-      .from("properties")
+      .from("properties_core")
       .select("listing_type, property_type, status")
       .is("deleted_at", null);
 
     if (effectiveTenantId) {
       facetSb = facetSb.eq("tenant_id", effectiveTenantId);
     }
-
-    if (queryTerm) facetSb = facetSb.ilike("title", `%${queryTerm}%`);
 
     const { data: facetData, error: facetError } = await facetSb;
 
@@ -336,113 +368,127 @@ export const searchPropertiesAction = createSafeAction(
     } else if (facetData) {
       facetData.forEach(
         (x: {
-          listing_type: string | null;
-          property_type: string | null;
-          status: string | null;
+          listing_type: number;
+          property_type: number;
+          status: number | null;
         }) => {
-          if (x.listing_type)
-            counts.listing_type[x.listing_type] =
-              (counts.listing_type[x.listing_type] || 0) + 1;
-          if (x.property_type)
-            counts.property_type[x.property_type] =
-              (counts.property_type[x.property_type] || 0) + 1;
-          if (x.status)
-            counts.status[x.status] = (counts.status[x.status] || 0) + 1;
+          const ltKey = getListingTypeFromDb(x.listing_type);
+          counts.listing_type[ltKey] =
+            (counts.listing_type[ltKey] || 0) + 1;
+          const ptKey = getPropertyTypeFromDb(x.property_type);
+          counts.property_type[ptKey] =
+            (counts.property_type[ptKey] || 0) + 1;
+          if (x.status !== null) {
+            const stKey = getStatusFromDb(x.status);
+            counts.status[stKey] = (counts.status[stKey] || 0) + 1;
+          }
         },
       );
     }
 
-    // 2. Fetch actually filtered property results (Explicit Select Only - Price Shield Enforced)
+    // 2. Fetch filtered properties using Core + Details Join (No Views)
     let sb = supabase
-      .from("properties")
-      .select(
-        "id, title, price, original_price, rental_price, original_rental_price, listing_type, property_type, province, district, popular_area, status, images",
-      )
+      .from("properties_core")
+      .select(`
+        id, 
+        listing_type, 
+        property_type, 
+        status,
+        sale_price,
+        rent_price,
+        properties_details!inner(title, address_info, pricing_details),
+        property_media_v3(url, storage_path, is_cover, sort_order)
+      `)
       .is("deleted_at", null);
 
     if (effectiveTenantId) {
-      sb = sb.eq("tenant_id", effectiveTenantId); // Search only specific tenant
+      sb = sb.eq("tenant_id", effectiveTenantId);
+    }
+
+    if (queryTerm) {
+      // Search in localized title (TH)
+      sb = sb.ilike("properties_details.title->>th", `%${queryTerm}%`);
     }
 
     sb = sb.order("updated_at", { ascending: false }).limit(30);
 
-    if (queryTerm) sb = sb.ilike("title", `%${queryTerm}%`);
-
     if (listing_type) {
-      if (listing_type === "SALE" || listing_type === "SALE_AND_RENT") {
-        sb = sb.in("listing_type", ["SALE", "SALE_AND_RENT"]);
-      } else if (listing_type === "RENT" || listing_type === "SALE_AND_RENT") {
-        sb = sb.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+      const type = listing_type as ListingTypeLegacy;
+      if (type === "SALE") {
+        sb = sb.in("listing_type", [0, 2]); // SALE or SALE_AND_RENT
+      } else if (type === "RENT") {
+        sb = sb.in("listing_type", [1, 2]); // RENT or SALE_AND_RENT
+      } else if (type === "SALE_AND_RENT") {
+        sb = sb.eq("listing_type", 2);
       }
     }
 
     if (property_type) {
-      sb = sb.eq(
-        "property_type",
-        property_type as Database["public"]["Enums"]["property_type"],
-      );
+      const dbVal = PROPERTY_TYPE_DB_VALUE[property_type as PropertyTypeLegacy];
+      if (dbVal !== undefined) sb = sb.eq("property_type", dbVal);
     }
 
     if (popular_area) {
-      sb = sb.ilike("popular_area", `%${popular_area}%`);
+      sb = sb.ilike("properties_details.address_info->>popular_area", `%${popular_area}%`);
     }
 
     if (status) {
       if (Array.isArray(status)) {
-        sb = sb.in(
-          "status",
-          status as Database["public"]["Enums"]["property_status"][],
-        );
+        const dbVals = status
+          .map(s => PROPERTY_STATUS_DB_VALUE[s as PropertyStatusLegacy])
+          .filter(v => v !== undefined);
+        if (dbVals.length > 0) sb = sb.in("status", dbVals);
       } else {
-        sb = sb.eq(
-          "status",
-          status as Database["public"]["Enums"]["property_status"],
-        );
+        const dbVal = PROPERTY_STATUS_DB_VALUE[status as PropertyStatusLegacy];
+        if (dbVal !== undefined) sb = sb.eq("status", dbVal);
       }
     }
 
     const { data, error } = await sb;
     if (error) throw new Error(mapDbError(error));
 
-    interface PropertyResult {
-      id: string;
-      title: string;
-      price: number | null;
-      original_price: number | null;
-      rental_price: number | null;
-      original_rental_price: number | null;
-      listing_type: string | null;
-      property_type: string | null;
-      province: string | null;
-      district: string | null;
-      popular_area: string | null;
-      status: string | null;
-      images: Array<{
-        url: string;
-        image_url?: string;
-        is_cover: boolean | null;
-        sort_order: number | null;
-      }>;
-    }
 
-    const properties = (data as unknown as PropertyResult[]) || [];
 
     return {
-      properties: properties.map((x) => ({
-        id: x.id,
-        title: x.title,
-        price: x.price,
-        original_price: x.original_price,
-        rental_price: x.rental_price,
-        original_rental_price: x.original_rental_price,
-        listing_type: x.listing_type,
-        property_type: x.property_type,
-        cover_image_url: getCoverImage(x.images),
-        province: x.province,
-        district: x.district,
-        popular_area: x.popular_area,
-        status: x.status,
-      })),
+      properties: (data || []).map((x) => {
+        const detailsObj = (x.properties_details as unknown as { 
+          title: { th?: string; en?: string; cn?: string; ru?: string } | string; 
+          address_info: PropertyAddressV3; 
+          pricing_details: PropertyPricingV3 
+        }) || {};
+        
+        const titleVal = typeof detailsObj.title === "object" ? detailsObj.title?.th : detailsObj.title;
+        const pricing = detailsObj.pricing_details || {};
+        const address = detailsObj.address_info || {};
+        const images = (x.property_media_v3 as Array<{
+          url: string;
+          storage_path: string;
+          is_cover: boolean;
+          sort_order: number;
+        }>) || [];
+
+        return {
+          id: x.id,
+          title: titleVal || "No Title",
+          price: x.sale_price as number | null,
+          original_price: (pricing.original_price as number) || null,
+          rental_price: x.rent_price as number | null,
+          original_rental_price: (pricing.original_rental_price as number) || null,
+          listing_type: getListingTypeFromDb(x.listing_type),
+          property_type: getPropertyTypeFromDb(x.property_type),
+          cover_image_url: getCoverImage(images.map(img => ({
+            url: img.url,
+            image_url: img.url,
+            storage_path: img.storage_path,
+            is_cover: img.is_cover,
+            sort_order: img.sort_order
+          }))),
+          province: (typeof address.province === "object" ? address.province?.th : address.province) || null,
+          district: (typeof address.district === "object" ? address.district?.th : address.district) || null,
+          popular_area: (typeof address.popular_area === "object" ? address.popular_area?.th : address.popular_area) || null,
+          status: getStatusFromDb(x.status),
+        };
+      }),
       counts,
     };
   },
@@ -463,11 +509,13 @@ export const updateLeadPDPAAction = createSafeAction(
     consent: z.boolean(),
   }),
   async ({ id, consent }, { supabase, tenantId }) => {
+    const { data: lead } = await supabase.from("crm_leads_v3").select("utm_data").eq("id", id).single();
+    const currentMeta = (lead?.utm_data as Record<string, unknown>) || {};
+
     const { error } = await supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .update({
-        pdpa_consent: consent,
-        consent_date: new Date().toISOString(),
+        utm_data: { ...currentMeta, pdpa_consent: consent, consent_date: new Date().toISOString() },
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
@@ -488,8 +536,8 @@ export const transferLeadAction = createSafeAction(
   async ({ id, targetTenantId }, { supabase, tenantId, userId, role }) => {
     // 1. Verify lead exists and belongs to current tenant
     const { data: lead, error: leadErr } = await supabase
-      .from("leads")
-      .select("full_name")
+      .from("crm_leads_v3")
+      .select("id, identities_v3!identity_id(display_name)")
       .eq("id", id)
       .eq("tenant_id", tenantId)
       .single();
@@ -500,7 +548,7 @@ export const transferLeadAction = createSafeAction(
 
     // 2. Perform transfer
     const { error: updateErr } = await supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .update({
         tenant_id: targetTenantId,
         updated_at: new Date().toISOString(),
@@ -509,6 +557,10 @@ export const transferLeadAction = createSafeAction(
       .eq("tenant_id", tenantId);
 
     if (updateErr) throw new Error(mapDbError(updateErr));
+
+    type TransferLeadIdentity = { display_name: string | null };
+    const leadData = lead as unknown as { id: string; identities_v3: TransferLeadIdentity | null };
+    const leadDisplayName = leadData?.identities_v3?.display_name || "Unknown";
 
     // 3. Log Audit
     await logAudit(
@@ -519,12 +571,12 @@ export const transferLeadAction = createSafeAction(
       },
       {
         action: "lead.transfer",
-        entity: "leads",
+        entity: "crm_leads_v3",
         entityId: id,
         metadata: {
           fromTenantId: tenantId,
           toTenantId: targetTenantId,
-          fullName: lead.full_name,
+          fullName: leadDisplayName,
         },
       },
     );
@@ -533,8 +585,8 @@ export const transferLeadAction = createSafeAction(
     try {
       // Find admins/owners of the target tenant
       const { data: members } = await supabase
-        .from("tenant_members")
-        .select("profile_id")
+        .from("tenant_members_v3")
+        .select("identity_id")
         .eq("tenant_id", targetTenantId)
         .in("role", ["admin", "owner"]);
 
@@ -542,19 +594,19 @@ export const transferLeadAction = createSafeAction(
         const { createNotificationAction } =
           await import("@/lib/actions/notifications");
         const { data: currentTenant } = await supabase
-          .from("tenants")
+          .from("tenants_v3")
           .select("name")
           .eq("id", tenantId)
           .single();
 
         await Promise.all(
-          members.map((member: { profile_id: string }) =>
+          members.map((member: { identity_id: string }) =>
             createNotificationAction({
-              userId: member.profile_id,
+              userId: member.identity_id,
               tenantId: targetTenantId,
               type: "LEAD_TRANSFER",
               title: "มีลูกค้าส่งต่อใหม่ (Lead Transfer)",
-              message: `สาขา ${currentTenant?.name || "อื่น"} ได้ส่งต่อลูกค้า "${lead.full_name}" มายังสาขาของคุณ`,
+              message: `สาขา ${currentTenant?.name || "อื่น"} ได้ส่งต่อลูกค้า "${leadDisplayName}" มายังสาขาของคุณ`,
               link: `/protected/leads/${id}`,
             }),
           ),
@@ -566,9 +618,6 @@ export const transferLeadAction = createSafeAction(
     }
 
     revalidatePath("/protected/leads");
-    revalidateTag("dashboard-stats", "seconds");
-    revalidateTag("dashboard-charts", "seconds");
-    revalidateTag("dashboard-performance", "seconds");
     revalidatePath(`/protected/leads/${id}`);
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
@@ -591,37 +640,46 @@ export const searchLeadsAction = createSafeAction(
     const effectiveTenantId = inputTenantId || contextTenantId;
 
     try {
-      let sb = supabase.from("leads").select("id, full_name, phone, email");
+      // Direct Join on V3 Core Tables (Explicit Identity Join)
+      let sb = supabase
+        .from("crm_leads_v3")
+        .select(`
+          id,
+          identities_v3!identity_id (
+            display_name,
+            phone,
+            email
+          )
+        `);
 
       if (effectiveTenantId) {
         sb = sb.eq("tenant_id", effectiveTenantId);
       }
 
       if (queryTerm) {
-        const hash = generateBlindIndex(queryTerm);
-        if (hash) {
-          // Search by blind index for exact matches (fast & secure)
-          sb = sb.or(
-            `full_name_hash.eq.${hash},phone_hash.eq.${hash},email_hash.eq.${hash}`,
-          );
-        } else {
-          // Fallback if hashing fails (should not happen for strings)
-          sb = sb.or(
-            `full_name.ilike.%${queryTerm}%,phone.ilike.%${queryTerm}%`,
-          );
-        }
+        sb = sb.or(
+          `display_name.ilike.%${queryTerm}%,phone.ilike.%${queryTerm}%,email.ilike.%${queryTerm}%`,
+          { foreignTable: "identities_v3" }
+        );
       }
 
-      sb = sb.order("updated_at", { ascending: false }).limit(20);
+      sb = sb.order("created_at", { ascending: false }).limit(20);
 
       const { data, error } = await sb;
       if (error) throw error;
 
-      return (data || []).map((lead) => ({
-        ...lead,
-        full_name: decrypt(lead.full_name) || "Unknown",
-        phone: decrypt(lead.phone),
-        email: decrypt(lead.email),
+      return (data || []).map((lead: { 
+        id: string; 
+        identities_v3: { 
+          display_name: string | null; 
+          phone: string | null; 
+          email: string | null 
+        } | null 
+      }) => ({
+        id: lead.id,
+        full_name: lead.identities_v3?.display_name || "Unknown",
+        phone: lead.identities_v3?.phone ?? null,
+        email: lead.identities_v3?.email ?? null,
       }));
     } catch (error: unknown) {
       console.error("Search lead error:", error);

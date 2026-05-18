@@ -97,8 +97,7 @@ import {
 } from "@/features/dashboard/queries/agent-dashboard";
 import { AgentTaskBoard } from "@/features/dashboard/components/agent/AgentTaskBoard";
 
-import type { Database } from "@/lib/database.types";
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+import type { Database } from "@/lib/database.types.generated";
 
 // การควบคุมฟีเจอร์
 import { isFeatureEnabled } from "@/lib/features";
@@ -122,7 +121,7 @@ export default async function DashboardPage(props: {
   const branchId = searchParams.branchId as string | undefined;
   const teamId = searchParams.teamId as string | undefined;
   const agentId = searchParams.agentId as string | undefined;
-  const view = (searchParams.view as any) || "company";
+  const view = (searchParams.view as "company" | "personal" | "staff") || "company";
 
   const supabase = await createClient();
 
@@ -146,7 +145,7 @@ export default async function DashboardPage(props: {
 
   // สัญญาข้อมูลพื้นฐาน (แบบไม่รอคิว)
   const notificationsPromise = getRecentNotifications(
-    profile?.notification_preferences as any,
+    profile?.notification_preferences as Record<string, any>,
     tenantId,
     currentUserId,
   );
@@ -234,6 +233,8 @@ export default async function DashboardPage(props: {
                       userId={view === "staff" ? agentId : user?.id}
                       role={profile?.role}
                       view={view}
+                      range={range}
+                      branchId={branchId}
                     />
                   </Suspense>
                 </ErrorBoundary>
@@ -508,11 +509,15 @@ async function SmartSummaryWrapper({
   userId,
   role,
   view,
+  range,
+  branchId,
 }: {
   tenantId?: string | null;
   userId?: string;
   role?: string;
   view?: string;
+  range?: string;
+  branchId?: string;
 }) {
   const isAdmin = role === "ADMIN" || role === "MANAGER";
 
@@ -521,11 +526,11 @@ async function SmartSummaryWrapper({
   const multiTenantEnabled = config.multi_tenant_enabled;
 
   const stats = await getDashboardStats({ 
-    tenantId, 
+    tenantId: branchId || tenantId, 
     agentId: userId, 
     view, 
     targetId: "all", 
-    range: "all" 
+    range: range || "all" 
   });
 
   return (

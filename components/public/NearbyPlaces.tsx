@@ -19,29 +19,24 @@ import {
 import { useEffect } from "react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 export interface NearbyPlaceItem {
   category: string;
-  name: string;
-  name_en?: string;
-  name_cn?: string;
-  name_ru?: string;
+  name: { th?: string; en?: string; cn?: string; ru?: string } | string;
   distance?: string;
   time?: string;
 }
 
 export interface TransitItem {
   type: string;
-  station_name: string;
-  station_name_en?: string;
-  station_name_cn?: string;
-  station_name_ru?: string;
+  station_name: { th?: string; en?: string; cn?: string; ru?: string } | string;
   distance_meters?: number;
   time?: string;
 }
 
 interface NearbyPlacesProps {
-  location?: string;
+  location?: { th?: string; en?: string; cn?: string; ru?: string } | string;
   propertyId?: string;
   propertyTitle?: string;
   data?: NearbyPlaceItem[];
@@ -49,7 +44,7 @@ interface NearbyPlacesProps {
   language?: Language;
 }
 
-const ICON_MAP: Record<string, any> = {
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
   School: School,
   Mall: ShoppingBag,
   Hospital: Stethoscope,
@@ -94,11 +89,19 @@ export function NearbyPlaces({
     } catch (e) {}
   }, [data.length, transits.length]);
 
-  // Custom t function for language override
-  const t = (key: string) => {
+  // Custom t function with explicit string return
+  const t = (key: string): string => {
     if (!customLanguage) return globalT(key);
-    const dict = dictionaries[language as keyof typeof dictionaries] as any;
-    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+    const dict = dictionaries[language as keyof typeof dictionaries] as Record<string, unknown>;
+    
+    const value = key.split(".").reduce((prev: unknown, curr) => {
+      if (prev && typeof prev === "object" && curr in (prev as Record<string, unknown>)) {
+        return (prev as Record<string, unknown>)[curr];
+      }
+      return undefined;
+    }, dict);
+
+    return typeof value === "string" ? value : key;
   };
 
   // Group nearby places by category (NOT including transits)
@@ -177,13 +180,7 @@ export function NearbyPlaces({
                     className="flex justify-between items-start text-sm gap-2 p-1.5 -mx-1.5 rounded-lg transition-colors hover:bg-white/50 group/item"
                   >
                     <span className="text-slate-600 mr-auto wrap-break-word leading-tight group-hover/item:text-slate-800 transition-colors">
-                      {(language === "en"
-                        ? item.name_en
-                        : language === "cn"
-                          ? item.name_cn
-                          : language === "ru"
-                            ? item.name_ru
-                            : null) || item.name}
+                      {getLocaleValue(item, "name", language)}
                     </span>
                     <div className="flex items-center gap-1.5 shrink-0">
                       {item.distance && (
@@ -236,23 +233,11 @@ export function NearbyPlaces({
                       </span>
                       <Link
                         href={`/properties?transit_station=${encodeURIComponent(
-                          (language === "en"
-                            ? transit.station_name_en
-                            : language === "cn"
-                              ? transit.station_name_cn
-                              : language === "ru"
-                                ? transit.station_name_ru
-                                : null) || transit.station_name,
+                          getLocaleValue(transit, "station_name", language)
                         )}`}
                         className="text-slate-600 leading-tight hover:text-blue-600 hover:underline transition-colors decoration-blue-300 underline-offset-4"
                       >
-                        {(language === "en"
-                          ? transit.station_name_en
-                          : language === "cn"
-                            ? transit.station_name_cn
-                            : language === "ru"
-                              ? transit.station_name_ru
-                              : null) || transit.station_name}
+                        {getLocaleValue(transit, "station_name", language)}
                       </Link>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">

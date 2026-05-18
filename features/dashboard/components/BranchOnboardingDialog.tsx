@@ -19,10 +19,10 @@ import {
   migrateDataToTenantAction 
 } from "@/lib/actions/tenant-management";
 import { cn } from "@/lib/utils";
-import type { Database } from "@/lib/database.types";
+import type { Database } from "@/lib/database.types.generated";
 import { z } from "zod";
 
-type TenantRow = Database["public"]["Tables"]["tenants"]["Row"];
+type TenantRow = Database["public"]["Tables"]["tenants_v3"]["Row"];
 
 // Base validation matching the server schema
 const slugSchema = z

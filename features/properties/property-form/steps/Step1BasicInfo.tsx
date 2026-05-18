@@ -4,6 +4,7 @@ import { useFormContext } from "react-hook-form";
 import {
   ListingTypeSection,
   PropertyTypeSection,
+  BranchSection,
 } from "../components/step1-parts";
 import { QuickInfoSection } from "@/features/properties/property-form/sections/QuickInfoSection";
 import type { Step1Props } from "../types";
@@ -29,6 +30,7 @@ export function Step1BasicInfo({
   onAddAreaAction,
   isQuickInfoOpen,
   setIsQuickInfoOpen,
+  branches,
 }: Step1Props) {
   const form = useFormContext<PropertyFormValues>();
   return (
@@ -37,6 +39,9 @@ export function Step1BasicInfo({
       style={{ zoom: "0.80" }}
     >
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {/* Branch Section */}
+        <BranchSection branches={branches} />
+
         {/* Listing Type Section */}
         <ListingTypeSection />
  

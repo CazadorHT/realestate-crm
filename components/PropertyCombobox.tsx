@@ -260,7 +260,7 @@ export function PropertyCombobox({
           tenantId: tenantId ?? undefined,
         });
         if (res.success) {
-          setItems(res.data.properties || []);
+          setItems((res.data.properties as PropertyPickItem[]) || []);
           setCounts(res.data.counts || null);
         }
       } finally {
@@ -287,7 +287,7 @@ export function PropertyCombobox({
           status: undefined,
         });
         if (res.success) {
-          setItems(res.data.properties || []);
+          setItems((res.data.properties as PropertyPickItem[]) || []);
           setCounts(res.data.counts || null);
         }
       } finally {

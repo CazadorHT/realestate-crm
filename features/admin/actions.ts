@@ -30,7 +30,7 @@ export async function getAdminUsersAction() {
       .select("profile_id")
       .eq("tenant_id", tenantId);
     
-    const ids = (memberIds || []).map((m) => m.profile_id);
+    const ids = (memberIds || []).map((m) => m.profile_id).filter(Boolean) as string[];
     query = query.in("id", ids);
   }
 

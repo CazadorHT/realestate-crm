@@ -1,12 +1,14 @@
  "use server";
-import { requireAuthContext, authzFail } from "@/lib/authz";
+import { requireAuthContext } from "@/lib/authz";
 import { LINE_MESSAGING_API, lineConfig } from "@/lib/line-config";
 import { saveOmniMessage } from "@/lib/line";
 import { revalidatePath } from "next/cache";
 import { sendMetaMessage, sendWhatsAppMessage } from "@/lib/meta";
 import { OmniMessage } from "./types";
 import { Database } from "@/lib/database.types";
+import { Json } from "@/lib/database.types.generated";
 import { decrypt } from "@/lib/crypto";
+import { z } from "zod";
 
 export type ActionResponse<T = unknown> = {
   success: boolean;
@@ -23,24 +25,45 @@ export async function sendDirectReplyAction(
   try {
     const { supabase: userSupabase, tenantId } = await requireAuthContext();
 
-    // 1. Get Lead details
-    const { data: lead, error: leadError } = await userSupabase
-      .from("leads")
-      .select("source, line_id, facebook_psid, instagram_sid, phone")
+    // 1. Get Lead details directly from V3 Core crm_leads_v3 joined with identities_v3
+    // Eliminate select(*) to save bandwidth and reduce payload size
+    const { data: leadData, error: leadError } = await userSupabase
+      .from("crm_leads_v3")
+      .select(`
+        source,
+        identity:identities_v3!crm_leads_v3_identity_id_fkey (
+          line_id,
+          phone,
+          social_links
+        )
+      `)
       .eq("id", leadId)
       .eq("tenant_id", tenantId!)
       .single();
 
-    if (leadError || !lead)
+    const identity = leadData?.identity as {
+      line_id?: string | null;
+      phone?: string | null;
+      social_links?: Json | null;
+    } | null;
+
+    if (leadError || !leadData || !identity) {
       throw new Error("ไม่พบข้อมูลลูกค้า หรือคุณไม่มีสิทธิ์เข้าถึง");
+    }
+
+    const socialLinks = (identity.social_links as Record<string, unknown>) || {};
+    const rawLineId = identity.line_id;
+    const rawFbPsid = socialLinks.facebook_psid as string | undefined | null;
+    const rawIgSid = socialLinks.instagram_sid as string | undefined | null;
+    const rawPhone = identity.phone;
 
     // 2. Platform specific sending (Decrypt identifiers just-in-time for API calls)
-    const lineId = decrypt(lead.line_id);
-    const fbPsid = decrypt(lead.facebook_psid);
-    const igSid = decrypt(lead.instagram_sid);
-    const phone = decrypt(lead.phone);
+    const lineId = rawLineId ? decrypt(rawLineId) : null;
+    const fbPsid = rawFbPsid ? decrypt(rawFbPsid) : null;
+    const igSid = rawIgSid ? decrypt(rawIgSid) : null;
+    const phone = rawPhone ? decrypt(rawPhone) : null;
 
-    if (lead.source === "LINE" && lineId) {
+    if (leadData.source === "LINE" && lineId) {
       const res = await fetch(`${LINE_MESSAGING_API}/push`, {
         method: "POST",
         headers: {
@@ -58,28 +81,24 @@ export async function sendDirectReplyAction(
         throw new Error(`LINE API Error: ${errText}`);
       }
     } else if (
-      lead.source === "FACEBOOK" &&
+      leadData.source === "FACEBOOK" &&
       (fbPsid || fbPsid === null)
     ) {
       const psid = fbPsid || "MOCK_PSID";
       const res = await sendMetaMessage(psid, content, "FACEBOOK");
       if (!res.success) throw new Error(`Facebook API Error: ${res.error}`);
-    } else if (lead.source === "INSTAGRAM" && igSid) {
-      const res = await sendMetaMessage(
-        igSid,
-        content,
-        "INSTAGRAM",
-      );
+    } else if (leadData.source === "INSTAGRAM" && igSid) {
+      const res = await sendMetaMessage(igSid, content, "INSTAGRAM");
       if (!res.success) throw new Error(`Instagram API Error: ${res.error}`);
-    } else if (lead.source === "WHATSAPP" && phone) {
+    } else if (leadData.source === "WHATSAPP" && phone) {
       const res = await sendWhatsAppMessage(phone, content);
       if (!res.success) throw new Error(`WhatsApp API Error: ${res.error}`);
     }
 
-    // 3. Log to omni_messages
+    // 3. Log to V3 Communications Hub via saveOmniMessage
     await saveOmniMessage({
       lead_id: leadId,
-      source: lead.source as Database["public"]["Enums"]["lead_source"],
+      source: (leadData.source || "OTHER") as Database["public"]["Enums"]["lead_source"],
       content,
       direction: "OUTGOING",
       payload: { system_push: true },
@@ -101,28 +120,40 @@ export async function replyToCommentAction(
   try {
     const { supabase: userSupabase, tenantId } = await requireAuthContext();
 
-    // 1. Get original comment details
+    // 1. Get original comment details from V3 communications hub
     const { data: msg, error: msgError } = await userSupabase
-      .from("omni_messages")
-      .select("external_message_id, lead_id, source, leads!inner(tenant_id)")
+      .from("communications_hub_v3")
+      .select("external_message_id, identity_id, platform, tenant_id")
       .eq("id", messageId)
-      .eq("leads.tenant_id", tenantId!)
+      .eq("tenant_id", tenantId!)
       .single();
 
-    if (msgError || !msg || !msg.external_message_id || !msg.lead_id) {
+    if (msgError || !msg || !msg.external_message_id || !msg.identity_id) {
       throw new Error("ไม่พบข้อความต้นฉบับ หรือข้อมูลไม่ครบถ้วน");
     }
+
+    // Find active lead_id for this identity
+    const { data: leadData } = await userSupabase
+      .from("crm_leads_v3")
+      .select("id")
+      .eq("identity_id", msg.identity_id)
+      .eq("tenant_id", tenantId!)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    const leadId = leadData?.id || msg.identity_id;
 
     // 2. Reply via Meta API
     const { replyToMetaComment } = await import("@/lib/meta");
     const res = await replyToMetaComment(msg.external_message_id, content);
 
-    if (!res.success) throw new Error(res.error);
+    if (!res.success) throw new Error(res.error || "Meta reply failed");
 
-    // 3. Save to omni_messages
+    // 3. Save to V3 Communications Hub via saveOmniMessage
     await saveOmniMessage({
-      lead_id: msg.lead_id,
-      source: msg.source as Database["public"]["Enums"]["lead_source"],
+      lead_id: leadId,
+      source: (msg.platform || "OTHER") as Database["public"]["Enums"]["lead_source"],
       content,
       direction: "OUTGOING",
       payload: { comment_reply: true, parent_id: msg.external_message_id },
@@ -145,32 +176,68 @@ export async function getLeadMessagesAction(
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
-    // 1. Get lead info to filter global messages
+    // 1. Get lead info from V3 Core to filter messages by identity_id and source
     const { data: lead } = await supabase
-      .from("leads")
-      .select("created_at, source")
+      .from("crm_leads_v3")
+      .select("created_at, source, identity_id")
       .eq("id", leadId)
+      .eq("tenant_id", tenantId!)
       .single();
 
-    if (!lead) throw new Error("ไม่พบข้อมูลลูกค้า");
+    if (!lead || !lead.identity_id) throw new Error("ไม่พบข้อมูลลูกค้า");
 
-    // 2. Fetch messages ordered by newest first for better performance & visibility
-    // 🛡️ [PHASE 1] Use Security Definer RPC for complex cross-tenant message fetching
-    const { data, error } = await supabase.rpc("get_lead_messages", {
-      p_lead_id: leadId,
-      p_source: lead.source as string, // Cast since we already verified lead exists
-      p_lead_created_at: lead.created_at,
-      p_offset: offset,
-      p_limit: limit + 1, // Fetch one extra to check hasMore
-    });
+    // 2. Fetch messages from communications_hub_v3 ordered by newest first
+    // Query both direct messages for this identity AND global/broadcast messages for this platform
+    // Completely eliminates select(*) and only requests the exact 9 columns needed
+    const { data: rawMessages, error } = await supabase
+      .from("communications_hub_v3")
+      .select(`
+        id,
+        tenant_id,
+        content,
+        direction,
+        platform,
+        external_message_id,
+        is_read,
+        payload,
+        created_at
+      `)
+      .eq("tenant_id", tenantId!)
+      .or(`identity_id.eq.${lead.identity_id},and(identity_id.is.null,platform.eq.${lead.source || "OTHER"},created_at.gte.${lead.created_at || "1970-01-01"})`)
+      .order("created_at", { ascending: false })
+      .range(offset, offset + limit);
 
     if (error) throw error;
 
-    const messages = (data as OmniMessage[]) || [];
-    const hasMore = messages.length > limit;
+    const messagesData = (rawMessages || []) as Array<{
+      id: string;
+      tenant_id: string | null;
+      content: string | null;
+      direction: number;
+      platform: string;
+      external_message_id: string | null;
+      is_read: boolean | null;
+      payload: Json | null;
+      created_at: string | null;
+    }>;
 
-    // If we fetched one extra to check hasMore, remove it
-    const finalMessages = hasMore ? messages.slice(0, limit) : messages;
+    const hasMore = messagesData.length > limit;
+    const slicedData = hasMore ? messagesData.slice(0, limit) : messagesData;
+
+    // Map to OmniMessage interface expected by UI components
+    const finalMessages: OmniMessage[] = slicedData.map((m) => ({
+      id: m.id,
+      lead_id: leadId,
+      tenant_id: m.tenant_id,
+      content: m.content,
+      direction: m.direction === 0 ? "INCOMING" : "OUTGOING",
+      source: m.platform,
+      external_message_id: m.external_message_id,
+      is_read: m.is_read || false,
+      payload: (m.payload as OmniMessage["payload"]) || null,
+      created_at: m.created_at,
+      updated_at: m.created_at || new Date().toISOString(),
+    }));
 
     return {
       success: true,
@@ -184,8 +251,6 @@ export async function getLeadMessagesAction(
   }
 }
 
-import { z } from "zod";
-
 const CategorySchema = z.enum(["CUSTOMER", "AGENT", "OWNER"]);
 
 export async function updateLeadCategoryAction(
@@ -198,26 +263,30 @@ export async function updateLeadCategoryAction(
     // 1. Validate category
     const validatedCategory = CategorySchema.parse(category);
 
-    // 2. Get current preferences to merge
+    // 2. Get current utm_data/preferences to merge from V3 Core crm_leads_v3
     const { data: lead } = await supabase
-      .from("leads")
-      .select("preferences")
+      .from("crm_leads_v3")
+      .select("utm_data")
       .eq("id", leadId)
       .eq("tenant_id", tenantId!)
       .single();
 
     if (!lead) throw new Error("ไม่พบข้อมูลผู้ติดต่อ");
 
-    const newPreferences = {
-      ...((lead.preferences as Record<string, unknown>) || {}),
+    const newUtmData = {
+      ...((lead.utm_data as Record<string, unknown>) || {}),
       category: validatedCategory,
       category_updated_at: new Date().toISOString(),
+      preferences: {
+        ...(((lead.utm_data as Record<string, unknown>)?.preferences as Record<string, unknown>) || {}),
+        category: validatedCategory,
+      },
     };
 
-    // 3. Update
+    // 3. Update V3 Core crm_leads_v3
     const { error } = await supabase
-      .from("leads")
-      .update({ preferences: newPreferences })
+      .from("crm_leads_v3")
+      .update({ utm_data: newUtmData })
       .eq("id", leadId)
       .eq("tenant_id", tenantId!);
 
@@ -239,13 +308,28 @@ export async function markLeadMessagesAsReadAction(
   leadId: string,
 ): Promise<ActionResponse> {
   try {
-    const { supabase } = await requireAuthContext();
+    const { supabase, tenantId } = await requireAuthContext();
 
+    // 1. Get identity_id from V3 Core crm_leads_v3
+    const { data: lead } = await supabase
+      .from("crm_leads_v3")
+      .select("identity_id")
+      .eq("id", leadId)
+      .eq("tenant_id", tenantId!)
+      .single();
+
+    if (!lead || !lead.identity_id) {
+      throw new Error("ไม่พบข้อมูลผู้ติดต่อ");
+    }
+
+    // 2. Update communications_hub_v3 for this identity_id
+    // direction === 0 is INBOUND (incoming from customer)
     const { error } = await supabase
-      .from("omni_messages")
+      .from("communications_hub_v3")
       .update({ is_read: true })
-      .eq("lead_id", leadId)
-      .eq("direction", "INCOMING")
+      .eq("identity_id", lead.identity_id)
+      .eq("tenant_id", tenantId!)
+      .eq("direction", 0)
       .eq("is_read", false);
 
     if (error) throw error;

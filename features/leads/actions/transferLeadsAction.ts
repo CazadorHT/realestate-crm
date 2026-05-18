@@ -33,7 +33,7 @@ export async function transferLeadsAction(
 
     if (
       !targetAgent ||
-      !["ADMIN", "MANAGER", "AGENT"].includes(targetAgent.role)
+      !["ADMIN", "MANAGER", "AGENT"].includes(targetAgent.role || "")
     ) {
       return { success: false, message: "ผู้รับงานปลายทางไม่ถูกต้อง" };
     }

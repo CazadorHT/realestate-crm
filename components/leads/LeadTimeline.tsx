@@ -7,6 +7,7 @@ import type { PropertySummary } from "@/features/leads/queries";
 import {
   propertyTypeLabel,
   listingTypeLabel,
+  getListingTypeFromDb,
 } from "@/features/properties/labels";
 import { Button } from "@/components/ui/button";
 import {
@@ -123,9 +124,10 @@ function fmtMoney(value: any, currency?: string | null) {
 }
 
 function PriceDisplay({ p }: { p: PropertySummary }) {
-  const isRent = p.listing_type === "RENT";
-  const isSale = p.listing_type === "SALE";
-  const isBoth = p.listing_type === "SALE_AND_RENT";
+  const listingType = getListingTypeFromDb(p.listing_type as any);
+  const isRent = listingType === "RENT";
+  const isSale = listingType === "SALE";
+  const isBoth = listingType === "SALE_AND_RENT";
 
   const renderPrice = (
     current: number | null | undefined,
@@ -200,9 +202,7 @@ export function LeadTimeline({
   leadId: string;
 }) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [editActivity, setEditActivity] = useState<LeadActivityRow | null>(
-    null,
-  );
+  const [editActivity, setEditActivity] = useState<any>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleDelete = (id: string) => {
@@ -267,7 +267,7 @@ export function LeadTimeline({
                   {p?.cover_url ? (
                     <img
                       src={p.cover_url}
-                      alt={p.title}
+                      alt={p.title || ""}
                       className="absolute inset-0 h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   ) : (

@@ -3,21 +3,21 @@ import { calculateAgentStats } from './agent-kpis';
 
 describe('calculateAgentStats', () => {
   const mockAgents = [
-    { id: 'agent-1', full_name: 'Agent One', email: 'one@test.com', avatar_url: null },
-    { id: 'agent-2', full_name: 'Agent Two', email: 'two@test.com', avatar_url: null },
+    { id: 'agent-1', display_name: 'Agent One', email: 'one@test.com', avatar_url: null },
+    { id: 'agent-2', display_name: 'Agent Two', email: 'two@test.com', avatar_url: null },
   ];
 
   const mockDeals = [
-    { created_by: 'agent-1', commission_amount: 1000, deal_type: 'SALE' },
-    { created_by: 'agent-1', commission_amount: 500, deal_type: 'RENT' },
-    { created_by: 'agent-2', commission_amount: 2000, deal_type: 'SALE' },
+    { id: 'deal-1', agent_id: 'agent-1', total_amount: 1000, commission_total: 100, deal_type: 'SALE', status: 'CLOSED_WIN' },
+    { id: 'deal-2', agent_id: 'agent-1', total_amount: 500, commission_total: 50, deal_type: 'RENT', status: 'CLOSED_WIN' },
+    { id: 'deal-3', agent_id: 'agent-2', total_amount: 2000, commission_total: 200, deal_type: 'SALE', status: 'CLOSED_WIN' },
   ];
 
   const mockLeads = [
-    { assigned_to: 'agent-1' },
-    { assigned_to: 'agent-1' },
-    { assigned_to: 'agent-1' },
-    { assigned_to: 'agent-2' },
+    { id: 'lead-1', assigned_to: 'agent-1' },
+    { id: 'lead-2', assigned_to: 'agent-1' },
+    { id: 'lead-3', assigned_to: 'agent-1' },
+    { id: 'lead-4', assigned_to: 'agent-2' },
   ];
 
   it('should calculate stats correctly for agent-1', () => {
@@ -47,7 +47,7 @@ describe('calculateAgentStats', () => {
   });
 
   it('should handle agents with no deals or leads', () => {
-    const emptyAgent = [{ id: 'agent-none', full_name: 'None', email: 'none@test.com', avatar_url: null }];
+    const emptyAgent = [{ id: 'agent-none', display_name: 'None', email: 'none@test.com', avatar_url: null }];
     const stats = calculateAgentStats(emptyAgent, [], []);
     const agentNone = stats[0];
 
@@ -58,8 +58,8 @@ describe('calculateAgentStats', () => {
   });
 
   it('should handle null commission amounts', () => {
-    const dealWithNull = [{ created_by: 'agent-1', commission_amount: null, deal_type: 'SALE' }];
-    const stats = calculateAgentStats([{ id: 'agent-1' }], dealWithNull, []);
+    const dealWithNull = [{ id: 'deal-null', agent_id: 'agent-1', total_amount: null, commission_total: null, deal_type: 'SALE', status: 'CLOSED_WIN' }];
+    const stats = calculateAgentStats([{ id: 'agent-1', display_name: 'Agent One', email: 'one@test.com', avatar_url: null }], dealWithNull, []);
     expect(stats[0].totalRevenue).toBe(0);
   });
 });

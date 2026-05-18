@@ -30,12 +30,16 @@ export async function getPropertiesForSelect() {
   // Map to include cover_image
   return (data ?? []).map((p) => {
     const images = (p.images as unknown as PropertyImageMetadata[]) || [];
+    const coverUrl =
+      images.find((img) => img.is_cover)?.url ||
+      images[0]?.url ||
+      null;
     return {
       ...p,
-      cover_image:
-        images.find((img) => img.is_cover)?.url ||
-        images[0]?.url ||
-        null,
+      id: p.id!,
+      title: p.title ?? "Untitled",
+      cover_image: coverUrl,
+      image_url: coverUrl,
     };
   });
 }

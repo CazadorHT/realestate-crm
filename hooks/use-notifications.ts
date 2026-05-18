@@ -12,13 +12,13 @@ import {
   deleteNotificationsAction,
 } from "@/lib/actions/notifications";
 import { toast } from "sonner";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 import { differenceInMinutes } from "date-fns";
 import { useTenant } from "@/components/providers/TenantProvider";
 import { useRealtime } from "@/components/providers/RealtimeProvider";
 
 export type DBNotification =
-  Database["public"]["Tables"]["notifications"]["Row"];
+  Database["public"]["Tables"]["notifications_v3"]["Row"];
 
 export interface GroupedNotification extends DBNotification {
   notifications: DBNotification[];
@@ -33,7 +33,6 @@ export function useNotifications() {
   const { subscribe, status } = useRealtime();
   const { activeTenant } = useTenant();
   const tenantId = activeTenant?.id === "ALL" ? undefined : activeTenant?.id;
-  const lastStatusRef = useRef(status);
 
   const lastFetchRef = useRef<number>(0);
   const FETCH_THROTTLE = 3000; // 3 seconds
@@ -52,10 +51,11 @@ export function useNotifications() {
       if (Array.isArray(data)) {
         setNotifications(data as DBNotification[]);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Avoid logging full Error objects in production-like environments if they are too verbose
-      const errorMessage = error?.message || "Unknown error";
-      const isTimeout = errorMessage.includes("Timeout") || error?.code === "UND_ERR_CONNECT_TIMEOUT";
+      const errObj = error as { message?: string; code?: string };
+      const errorMessage = errObj?.message || "Unknown error";
+      const isTimeout = errorMessage.includes("Timeout") || errObj?.code === "UND_ERR_CONNECT_TIMEOUT";
       console.error(isTimeout ? "Notification fetch timed out (Server)" : "Failed to fetch notifications:", errorMessage);
       
       // Only toast on manual refreshes or non-timeout errors to reduce noise
@@ -82,7 +82,7 @@ export function useNotifications() {
 
     const unsubscribe = subscribe(
       {
-        table: "notifications",
+        table: "notifications_v3",
         filter: `user_id=eq.${userId}`,
       },
       {
@@ -133,7 +133,7 @@ export function useNotifications() {
     const processedIds = new Set<string>();
 
     const sorted = [...notifications].sort((a, b) => 
-      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      new Date(b.created_at || new Date().toISOString()).getTime() - new Date(a.created_at || new Date().toISOString()).getTime()
     );
 
     for (let i = 0; i < sorted.length; i++) {
@@ -149,8 +149,8 @@ export function useNotifications() {
         if (processedIds.has(next.id)) continue;
 
         const timeDiff = Math.abs(differenceInMinutes(
-          new Date(current.created_at),
-          new Date(next.created_at)
+          new Date(current.created_at || new Date().toISOString()),
+          new Date(next.created_at || new Date().toISOString())
         ));
 
         // Group if same type, same title, and within 5 minutes

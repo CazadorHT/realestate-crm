@@ -13,11 +13,9 @@ import {
   RefreshCw,
   FileDown,
   Share2,
-  Trash2,
   FileText,
 } from "lucide-react";
-import type { Database } from "@/lib/database.types";
-import { DealCommission } from "../types";
+import { Deal, DealCommission, InvoiceRow } from "../types";
 import {
   Table,
   TableBody,
@@ -37,13 +35,11 @@ import { toast } from "sonner";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-type Deal = Database["public"]["Tables"]["deals"]["Row"];
-
 interface DealFinancialsProps {
   deal: Deal;
   isRent: boolean;
   commissions: DealCommission[];
-  invoices?: any[];
+  invoices?: InvoiceRow[];
 }
 
 export function DealFinancials({
@@ -67,7 +63,11 @@ export function DealFinancials({
   };
 
   const handleCalculate = async () => {
-    if ((deal.commission_amount || 0) <= 0) {
+    if (!deal?.id) {
+      toast.error("รหัสดีลไม่ถูกต้อง (Invalid Deal ID)");
+      return;
+    }
+    if ((deal.commission_total || 0) <= 0) {
       toast.error("กรุณาระบุยอดคอมมิชชั่นรวมก่อนคำนวณส่วนแบ่ง");
       return;
     }
@@ -92,6 +92,10 @@ export function DealFinancials({
   };
 
   const handleExportPdf = async (commissionId: string) => {
+    if (!commissionId) {
+      toast.error("รหัสคอมมิชชั่นไม่ถูกต้อง (Invalid Commission ID)");
+      return;
+    }
     const processId = startProcess("กำลังเตรียมไฟล์ PDF ค่าคอมมิชชั่น", {
       type: "EXPORT"
     });
@@ -113,6 +117,10 @@ export function DealFinancials({
   };
 
   const handleSendLine = async (commissionId: string) => {
+    if (!commissionId) {
+      toast.error("รหัสคอมมิชชั่นไม่ถูกต้อง (Invalid Commission ID)");
+      return;
+    }
     const processId = startProcess("กำลังส่งข้อมูลค่าคอมมิชชั่นไปยัง LINE", {
       type: "SOCIAL_LINE",
     });
@@ -172,7 +180,7 @@ export function DealFinancials({
             </span>
           </div>
           <p className="text-2xl font-bold text-emerald-700">
-            ฿{(deal.commission_amount || 0).toLocaleString()}
+            ฿{(deal.commission_total || 0).toLocaleString()}
           </p>
         </div>
 
@@ -200,12 +208,12 @@ export function DealFinancials({
             </div>
             {latestInvoice && (
               <Badge className="bg-indigo-100 text-indigo-600 hover:bg-indigo-100 border-none text-[10px]">
-                {latestInvoice.invoice_number} • {latestInvoice.status}
+                {latestInvoice.invoice_number || latestInvoice.id?.slice(0, 8)} • {latestInvoice.status}
               </Badge>
             )}
           </div>
           <p className="text-3xl font-bold text-indigo-700">
-            ฿{(latestInvoice?.total_amount || (deal.commission_amount || 0)).toLocaleString()}
+            ฿{(latestInvoice?.total_amount || latestInvoice?.total || (deal.commission_total || 0)).toLocaleString()}
           </p>
         </div>
 
@@ -357,19 +365,19 @@ export function DealFinancials({
                             <Avatar className="h-7 w-7 border border-slate-200 shadow-xs">
                               <AvatarImage src={comm.agent.avatar_url || ""} />
                               <AvatarFallback className="text-[10px] bg-slate-100 text-slate-500">
-                                {comm.agent.full_name?.charAt(0)}
+                                {comm.agent.display_name?.charAt(0)}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
                               <span className="text-sm font-bold text-slate-700 leading-tight">
-                                {comm.agent.full_name}
+                                {comm.agent.display_name}
                               </span>
                               <Badge
                                 variant="outline"
                                 className="text-[9px] h-4 w-fit px-1 gap-1 text-slate-500 border-slate-200 mt-0.5"
                               >
-                                {getRoleIcon(comm.role)}
-                                {getRoleLabel(comm.role)}
+                                {getRoleIcon(comm.recipient_role)}
+                                {getRoleLabel(comm.recipient_role)}
                               </Badge>
                             </div>
                           </div>
@@ -377,20 +385,20 @@ export function DealFinancials({
                           <div className="flex items-center gap-2">
                             <div
                               className={`h-7 w-7 rounded-full flex items-center justify-center border shadow-xs ${
-                                comm.role === "AGENCY"
+                                comm.recipient_role === "AGENCY"
                                   ? "bg-indigo-50 text-indigo-500 border-indigo-100"
-                                  : comm.role === "TEAM_POOL"
+                                  : comm.recipient_role === "TEAM_POOL"
                                     ? "bg-amber-50 text-amber-500 border-amber-100"
                                     : "bg-slate-50 text-slate-500 border-slate-200"
                               }`}
                             >
-                              {getRoleIcon(comm.role)}
+                              {getRoleIcon(comm.recipient_role)}
                             </div>
                             <div className="flex flex-col">
                               <span className="text-sm font-bold text-slate-700 leading-tight">
-                                {getRoleLabel(comm.role)}
+                                {getRoleLabel(comm.recipient_role)}
                               </span>
-                              {comm.role === "AGENCY" && (
+                              {comm.recipient_role === "AGENCY" && (
                                 <span className="text-[10px] text-slate-400">
                                   หักเข้ากองกลางบริษัท
                                 </span>
@@ -406,16 +414,16 @@ export function DealFinancials({
                       </span>
                     </TableCell>
                     <TableCell className="text-right font-medium text-slate-700">
-                      ฿{comm.amount.toLocaleString()}
+                      ฿{(comm.amount || 0).toLocaleString()}
                     </TableCell>
                     <TableCell className="text-right text-red-500 font-medium">
-                      {comm.wht_amount > 0
-                        ? `-฿${comm.wht_amount.toLocaleString()}`
+                      {(comm.tax_amount || 0) > 0
+                        ? `-฿${(comm.tax_amount || 0).toLocaleString()}`
                         : "-"}
                     </TableCell>
                     <TableCell className="text-right">
                       <span className="text-base font-bold text-emerald-600">
-                        ฿{comm.net_amount.toLocaleString()}
+                        ฿{(comm.net_amount || 0).toLocaleString()}
                       </span>
                     </TableCell>
                     <TableCell className="text-right pr-6">

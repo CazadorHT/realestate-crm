@@ -19,11 +19,11 @@ import { getTenantsAction } from "@/lib/actions/transfer-branch-action";
 
 type TransferBranchDialogProps = {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onOpenChangeAction: (open: boolean) => void;
   entityId: string;
   entityName: string;
   currentTenantId?: string | null;
-  onTransfer: (
+  onTransferAction: (
     entityId: string,
     targetTenantId: string,
   ) => Promise<{ success: boolean; message?: string }>;
@@ -31,11 +31,11 @@ type TransferBranchDialogProps = {
 
 export function TransferBranchDialog({
   open,
-  onOpenChange,
+  onOpenChangeAction,
   entityId,
   entityName,
   currentTenantId,
-  onTransfer,
+  onTransferAction,
 }: TransferBranchDialogProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -61,10 +61,10 @@ export function TransferBranchDialog({
     if (!selectedTenantId) return;
     startTransition(async () => {
       try {
-        const result = await onTransfer(entityId, selectedTenantId);
+        const result = await onTransferAction(entityId, selectedTenantId);
         if (result.success) {
           toast.success(result.message || "ย้ายสาขาเรียบร้อยแล้ว");
-          onOpenChange(false);
+          onOpenChangeAction(false);
           router.refresh();
         } else {
           toast.error(result.message || "เกิดข้อผิดพลาด");
@@ -78,7 +78,7 @@ export function TransferBranchDialog({
   return (
     <ResponsiveDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={onOpenChangeAction}
       title={
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -96,7 +96,7 @@ export function TransferBranchDialog({
         <div className="flex flex-col sm:flex-row gap-3 w-full">
           <Button
             variant="ghost"
-            onClick={() => onOpenChange(false)}
+            onClick={() => onOpenChangeAction(false)}
             disabled={isPending}
             className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
           >

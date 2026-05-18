@@ -67,16 +67,13 @@ export default async function PublicPropertyDetailPage(props: {
   const agent = data.assigned_agent;
   const features = (data.property_features || [])
     .map((pf) => pf.features)
-    .filter(Boolean);
+    .filter((f): f is NonNullable<typeof f> => !!f)
+    .map(f => ({ ...f, icon_key: f.icon_key || "Check" }));
   const shareUrl = `${siteConfig.url}/properties/${encodeURIComponent(data.slug || slug)}`;
 
   // 2. SEO & Schema Generation
   const seo = generatePropertySEO(
-    {
-      ...data,
-      nearby_transits: (data.nearby_transits as any[]) || [],
-      nearby_places: (getSafeNearbyPlaces(data.nearby_places) as any[]) || [],
-    } as any,
+    data,
     language,
   );
 
@@ -94,16 +91,16 @@ export default async function PublicPropertyDetailPage(props: {
         />
       )}
 
-      <GTMPropertyPageView property={data as any} />
+      <GTMPropertyPageView property={{ ...data, popular_area: data.popular_area ?? null }} />
 
       {/* 1. Header & Breadcrumb */}
-      <PropertyHeader property={data} features={features as any} />
+      <PropertyHeader property={data} features={features as any[]} />
 
       <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8 mt-4 lg:mt-8">
         {/* 2. Gallery */}
         <section className="mb-6 md:mb-10">
           <PropertyGallery
-            images={data.images as any}
+            images={data.images}
             title={getLocaleValue(data, "title", language)}
             propertyId={data.id}
             imageAlt={`${getLocaleValue(data, "title", language)} ${t("seo.in")} ${data.district || ""}, ${data.province || ""}`}
@@ -117,9 +114,9 @@ export default async function PublicPropertyDetailPage(props: {
           property={
             {
               ...data,
-              features: features as any,
+              features,
               image_url: data.images.find((i) => i.is_cover)?.image_url || null,
-            } as any
+            }
           }
         />
 
@@ -142,11 +139,11 @@ export default async function PublicPropertyDetailPage(props: {
               propertyId={data.id}
               propertyTitle={data.title}
               location={data.popular_area || undefined}
-              data={(data.nearby_places as any) || []}
-              transits={(data.nearby_transits as any) || []}
+              data={data.nearby_places}
+              transits={data.nearby_transits}
             />
             <hr className="border-slate-100" />
-            <PropertyAmenities features={features as any} />
+            <PropertyAmenities features={features} />
             <hr className="border-slate-100" />
             <Suspense fallback={<MapSkeleton />}>
               <PropertyMapSection
@@ -172,6 +169,8 @@ export default async function PublicPropertyDetailPage(props: {
                 agentImage={getPublicAvatarUrl(agent?.avatar_url || "")}
                 agentPhone={agent?.phone}
                 agentLine={agent?.line_id}
+                agentWechat={agent?.wechat_user_id}
+                agentWhatsapp={agent?.whatsapp_user_id}
                 isVerified={true}
                 propertyId={data.id}
                 propertyTitle={data.title}
@@ -202,6 +201,8 @@ export default async function PublicPropertyDetailPage(props: {
         agentImage={getPublicAvatarUrl(agent?.avatar_url || "")}
         agentPhone={agent?.phone}
         agentLine={agent?.line_id}
+        agentWechat={agent?.wechat_user_id}
+        agentWhatsapp={agent?.whatsapp_user_id}
         propertyId={data.id}
         propertyTitle={data.title}
         property={data}

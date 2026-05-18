@@ -7,8 +7,9 @@ import { z } from "zod";
 import { generateText } from "@/lib/ai/gemini";
 import { popularAreaSchema } from "./popular-areas-validation";
 import { mapDbError } from "@/lib/db-error";
-import { Database } from "@/lib/database.types";
+import { Database, type Json } from "@/lib/database.types.generated";
 import { logAudit } from "@/lib/audit";
+import { type SupabaseClient } from "@supabase/supabase-js";
 
 /** Row shape returned by the get_popular_areas_with_counts RPC.
  *  Defined here because the Supabase generated types lag behind the DB schema
@@ -30,9 +31,21 @@ interface PopularAreaRpcRow {
 }
 
 type PopularAreaInsert =
-  Database["public"]["Tables"]["popular_areas"]["Insert"];
+  Database["public"]["Tables"]["popular_areas_v3"]["Insert"];
 type PopularAreaUpdate =
-  Database["public"]["Tables"]["popular_areas"]["Update"];
+  Database["public"]["Tables"]["popular_areas_v3"]["Update"];
+
+/** Extended Database interface to include dynamic RPC function */
+type ExtendedDatabase = Database & {
+  public: {
+    Functions: {
+      get_popular_areas_with_counts: {
+        Args: { target_tenant_id?: string };
+        Returns: PopularAreaRpcRow[];
+      };
+    };
+  };
+};
 
 /**
  * Get popular areas with optional search and pagination (Server-side)
@@ -57,7 +70,8 @@ export async function getPopularAreas({
     // Use the Dynamic RPC for reading to support branch-specific property counting
     // We skip .select() because the generated Supabase types don't include name_ru yet
     // (needs `supabase gen types` re-run). Cast to PopularAreaRpcRow[] after execution.
-    let query = supabase
+    const extendedSupabase = supabase as unknown as SupabaseClient<ExtendedDatabase>;
+    let query = extendedSupabase
       .rpc(
         "get_popular_areas_with_counts",
         { target_tenant_id: tenantId ?? undefined },
@@ -82,7 +96,7 @@ export async function getPopularAreas({
 
     // Default primary sort
     query = query.order(
-      actualSortBy as keyof Database["public"]["Tables"]["popular_areas"]["Row"],
+      actualSortBy as keyof PopularAreaRpcRow,
       { ascending: sortOrder === "asc" },
     );
 
@@ -132,21 +146,41 @@ export async function createPopularArea(
     const supabase = await createClient();
 
     // Get next sort order (With better null handling)
-    const { data: lastItem } = await supabase
-      .from("popular_areas")
+    let lastQuery = supabase
+      .from("popular_areas_v3")
       .select("sort_order")
       .order("sort_order", { ascending: false })
       .limit(1);
 
+    if (ctx.tenantId) {
+      lastQuery = lastQuery.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { data: lastItem } = await lastQuery;
+
     const nextOrder = (Number(lastItem?.[0]?.sort_order) || 0) + 1;
 
     const insertData: PopularAreaInsert = {
-      ...parsed,
+      id: crypto.randomUUID(),
+      name: {
+        th: parsed.name,
+        en: parsed.name_en || "",
+        cn: parsed.name_cn || "",
+        ru: parsed.name_ru || "",
+      },
+      province: parsed.province,
+      slug: parsed.name_en 
+        ? parsed.name_en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString().slice(-4) 
+        : `area-${Date.now()}`,
+      image_url: parsed.image_url,
+      featured: parsed.featured,
+      is_active: parsed.is_active,
       sort_order: nextOrder,
+      tenant_id: ctx.tenantId ?? null,
     };
 
     const { error } = await supabase
-      .from("popular_areas")
+      .from("popular_areas_v3")
       .insert(insertData)
       .select("id")
       .single();
@@ -156,7 +190,7 @@ export async function createPopularArea(
       { supabase, user: ctx.user, role: ctx.role, tenantId: ctx.tenantId },
       {
         action: "popular_area.create",
-        entity: "popular_areas",
+        entity: "popular_areas_v3",
         metadata: { name: parsed.name, province: parsed.province },
       },
     );
@@ -183,12 +217,30 @@ export async function updatePopularArea(
     const parsed = popularAreaSchema.parse(values);
     const supabase = await createClient();
 
-    const updateData: PopularAreaUpdate = parsed;
+    const updateData: PopularAreaUpdate = {
+      name: {
+        th: parsed.name,
+        en: parsed.name_en || "",
+        cn: parsed.name_cn || "",
+        ru: parsed.name_ru || "",
+      },
+      province: parsed.province,
+      image_url: parsed.image_url,
+      featured: parsed.featured,
+      is_active: parsed.is_active,
+      updated_at: new Date().toISOString(),
+    };
 
-    const { error } = await supabase
-      .from("popular_areas")
+    let updateQuery = supabase
+      .from("popular_areas_v3")
       .update(updateData)
       .eq("id", id);
+
+    if (ctx.tenantId) {
+      updateQuery = updateQuery.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { error } = await updateQuery;
 
     if (error) throw error;
 
@@ -196,7 +248,7 @@ export async function updatePopularArea(
       { supabase, user: ctx.user, role: ctx.role, tenantId: ctx.tenantId },
       {
         action: "popular_area.update",
-        entity: "popular_areas",
+        entity: "popular_areas_v3",
         entityId: id,
         metadata: { name: parsed.name, province: parsed.province },
       },
@@ -219,17 +271,24 @@ export async function deletePopularArea(id: string) {
     assertStaff(ctx.role);
 
     const supabase = await createClient();
-    const { error } = await supabase
-      .from("popular_areas")
+
+    let query = supabase
+      .from("popular_areas_v3")
       .delete()
       .eq("id", id);
+
+    if (ctx.tenantId) {
+      query = query.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { error } = await query;
     if (error) throw error;
 
     await logAudit(
       { supabase, user: ctx.user, role: ctx.role, tenantId: ctx.tenantId },
       {
         action: "popular_area.delete",
-        entity: "popular_areas",
+        entity: "popular_areas_v3",
         entityId: id,
       },
     );
@@ -249,25 +308,34 @@ export async function deletePopularArea(id: string) {
  */
 export async function resequencePopularAreas() {
   try {
+    const ctx = await requireAuthContext();
     const supabase = await createClient();
-    const { data: areas } = await supabase
-      .from("popular_areas")
-      .select("id, name")
+
+    let query = supabase
+      .from("popular_areas_v3")
+      .select("id, name, sort_order, created_at");
+
+    if (ctx.tenantId) {
+      query = query.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { data: areas } = await query
       .order("sort_order", { ascending: true })
       .order("created_at", { ascending: true });
 
     if (!areas) return;
 
     const updates: PopularAreaInsert[] = areas.map(
-      (area: { id: string; name: string }, index: number) => ({
+      (area: { id: string; name: Json }, index: number) => ({
         id: area.id,
         name: area.name,
         sort_order: index + 1,
+        tenant_id: ctx.tenantId ?? null,
       }),
     );
 
     const { error } = await supabase
-      .from("popular_areas")
+      .from("popular_areas_v3")
       .upsert(updates);
 
     if (error) throw error;
@@ -289,25 +357,31 @@ export async function reorderPopularAreasAction(
 
     const supabase = await createClient();
 
-    // We need to fetch names to satisfy Insert type requirement for upsert
-    const { data: currentAreas } = await supabase
-      .from("popular_areas")
+    let query = supabase
+      .from("popular_areas_v3")
       .select("id, name")
       .in("id", ids);
 
+    if (ctx.tenantId) {
+      query = query.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { data: currentAreas } = await query;
+
     const updates: PopularAreaInsert[] = ids.map(
       (id: string, index: number) => {
-        const area = currentAreas?.find((a: { id: string; name: string }) => a.id === id);
+        const area = currentAreas?.find((a: { id: string; name: Json }) => a.id === id);
         return {
           id,
-          name: area?.name || "",
+          name: area?.name || { th: "" },
           sort_order: offset + index + 1,
+          tenant_id: ctx.tenantId ?? null,
         };
       },
     );
 
     const { error } = await supabase
-      .from("popular_areas")
+      .from("popular_areas_v3")
       .upsert(updates);
 
     if (error) throw error;
@@ -316,7 +390,7 @@ export async function reorderPopularAreasAction(
       { supabase, user: ctx.user, role: ctx.role, tenantId: ctx.tenantId },
       {
         action: "popular_area.reorder",
-        entity: "popular_areas",
+        entity: "popular_areas_v3",
         metadata: { count: ids.length, offset },
       },
     );
@@ -359,7 +433,7 @@ export async function uploadPopularAreaImageAction(formData: FormData) {
         },
         {
           action: "popular_area.upload_image",
-          entity: "popular_areas",
+          entity: "popular_areas_v3",
           metadata: {
             fileName: file.name,
             fileSize: file.size,
@@ -384,18 +458,22 @@ export async function bulkTranslatePopularAreasAction(
   selectAll?: boolean,
   search?: string,
 ) {
-  const { supabase, user, role } = await requireAuthContext();
+  const { supabase, user, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
   try {
     let query = supabase
-      .from("popular_areas")
-      .select("id, name, name_en, name_cn, name_ru, slug, image_url, sort_order, is_active, featured, province");
+      .from("popular_areas_v3")
+      .select("id, name, province, slug, image_url, sort_order, is_active, featured");
+
+    if (tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
 
     if (selectAll) {
       if (search) {
         query = query.or(
-          `name.ilike.%${search}%,name_en.ilike.%${search}%,name_cn.ilike.%${search}%,name_ru.ilike.%${search}%`,
+          `name->>th.ilike.%${search}%,name->>en.ilike.%${search}%,name->>cn.ilike.%${search}%,name->>ru.ilike.%${search}%`,
         );
       }
     } else if (ids && ids.length > 0) {
@@ -410,15 +488,14 @@ export async function bulkTranslatePopularAreasAction(
       return { success: true, message: "ไม่มีข้อมูลให้แปล" };
 
     // Limit to items that actually need translation or are outdated
-    const toTranslate = areas.filter(
-      (a) =>
-        !a.name_en ||
-        !a.name_cn ||
-        !a.name_ru ||
-        a.name_en === a.name ||
-        a.name_cn === a.name ||
-        a.name_ru === a.name,
-    );
+    const toTranslate = areas.filter((a: { id: string; name: Json; province: string | null }) => {
+      const n = (a.name as Record<string, unknown> | null) || {};
+      const th = (n.th as string) || "";
+      const en = (n.en as string) || "";
+      const cn = (n.cn as string) || "";
+      const ru = (n.ru as string) || "";
+      return !en || !cn || !ru || en === th || cn === th || ru === th;
+    });
 
     if (toTranslate.length === 0)
       return {
@@ -437,7 +514,7 @@ export async function bulkTranslatePopularAreasAction(
 
     const prompt = `
       Translate location names in Thailand from Thai to English, Chinese, and Russian.
-      Names: ${JSON.stringify(limitedItems.map((a) => ({ id: a.id, name: a.name })))}
+      Names: ${JSON.stringify(limitedItems.map((a: { id: string; name: Json }) => ({ id: a.id, name: ((a.name as Record<string, unknown> | null)?.th as string) || "" })))}
       Return strict JSON Array of objects: [{ "id": "uuid", "name_en": "...", "name_cn": "...", "name_ru": "..." }]
       Do not include any markers or explanation.
     `;
@@ -474,14 +551,18 @@ export async function bulkTranslatePopularAreasAction(
         (item) => item.id && (item.name_en || item.name_cn || item.name_ru),
       )
       .map((item) => {
-        const original = areas.find((a: { id: string; name: string; province: string | null }) => a.id === item.id);
+        const original = areas.find((a: { id: string; name: Json; province: string | null }) => a.id === item.id);
+        const oldName = (original?.name as Record<string, unknown> | null) || {};
         return {
           id: item.id,
-          name: original?.name || "", // Essential NOT NULL field
+          name: {
+            th: (oldName.th as string) || "",
+            en: (item.name_en || "").trim() || (oldName.en as string) || "",
+            cn: (item.name_cn || "").trim() || (oldName.cn as string) || "",
+            ru: (item.name_ru || "").trim() || (oldName.ru as string) || "",
+          },
           province: original?.province || null,
-          name_en: (item.name_en || "").trim() || null,
-          name_cn: (item.name_cn || "").trim() || null,
-          name_ru: (item.name_ru || "").trim() || null,
+          tenant_id: tenantId ?? null,
         };
       });
 
@@ -493,7 +574,7 @@ export async function bulkTranslatePopularAreasAction(
     }
 
     const { error: upsertErr } = await supabase
-      .from("popular_areas")
+      .from("popular_areas_v3")
       .upsert(validUpdates);
     if (upsertErr) throw upsertErr;
 
@@ -507,7 +588,7 @@ export async function bulkTranslatePopularAreasAction(
       { supabase, user, role },
       {
         action: "popular_area.bulk_translate",
-        entity: "popular_areas",
+        entity: "popular_areas_v3",
         entityId: selectAll ? "all" : ids?.join(",") || "",
         metadata: {
           translatedCount: validUpdates.length,
@@ -528,3 +609,4 @@ export async function bulkTranslatePopularAreasAction(
     return { success: false, message: mapDbError(error) };
   }
 }
+

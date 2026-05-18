@@ -200,7 +200,7 @@ export function PropertiesTable({
     try {
       const result = await getAllPropertyIdsAction(filters);
       if (result.success && result.ids) {
-        toggleSelectAll(result.ids);
+        toggleSelectAll(result.ids.filter(Boolean) as string[]);
         finishProcess(processId, "SUCCESS", `เลือกทั้งหมด ${result.ids.length} รายการเรียบร้อยแล้ว`);
       } else {
         finishProcess(processId, "ERROR", "ไม่สามารถเลือกทั้งหมดได้");

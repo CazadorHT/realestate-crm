@@ -31,7 +31,7 @@ describe('Authorization Logic (Standardized Infrastructure)', () => {
 
     it('should resolve AuthContext for valid staff profile', async () => {
       // 1. Profile role fetch
-      mockSupabase.mockTableResult('profiles', { role: 'AGENT' });
+      mockSupabase.mockTableResult('identities_v3', { role: 'AGENT' });
       
       vi.mocked(getSystemConfig).mockResolvedValue({ 
         multi_tenant_enabled: false, 
@@ -45,15 +45,15 @@ describe('Authorization Logic (Standardized Infrastructure)', () => {
     });
 
     it('should enforce multi-tenant membership for non-staff', async () => {
-       mockSupabase.mockTableResult('profiles', { role: 'USER' });
+       mockSupabase.mockTableResult('identities_v3', { role: 'USER' });
        vi.mocked(getSystemConfig).mockResolvedValue({ multi_tenant_enabled: true } as any);
        
        // Membership lookup
-       mockSupabase.mockTableResult('tenant_members', { role: 'MEMBER' });
+       mockSupabase.mockTableResult('tenant_members_v3', { role: 'MEMBER' });
 
        const ctx = await requireAuthContext('t1', mockSupabase);
        expect(ctx.tenantId).toBe('t1');
-       expect(mockSupabase.from).toHaveBeenCalledWith('tenant_members');
+       expect(mockSupabase.from).toHaveBeenCalledWith('tenant_members_v3');
     });
   });
 });

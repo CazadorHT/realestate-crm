@@ -45,7 +45,7 @@ export async function createBackgroundTaskAction(params: {
         .eq("id", existingTasks[0].id)
         .single();
       
-      if (fullTask && JSON.stringify(fullTask.payload) === JSON.stringify(params.payload)) {
+      if (fullTask && JSON.stringify((fullTask as any).payload) === JSON.stringify(params.payload)) {
         console.log(`[BackgroundTask] Found duplicate task: ${params.name}. Skipping...`);
         return { success: true, data: fullTask, message: "DUPLICATE_PREVENTED" };
       }

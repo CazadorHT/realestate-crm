@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
 export type InventoryCheckResult = {
   available: string[]; // List of IDs or Values that have inventory
@@ -87,7 +87,7 @@ export async function checkBudgetAvailability(
 
   // Filter by property type
   if (options.propertyType) {
-    query = query.eq("property_type", options.propertyType as Database["public"]["Enums"]["property_type"]);
+    query = query.eq("property_type", options.propertyType as string);
   }
 
   // Filter by area (if office size selected)
@@ -190,7 +190,7 @@ export async function checkLocationAvailability(
   }
 
   if (options.propertyType) {
-    query = query.eq("property_type", options.propertyType as Database["public"]["Enums"]["property_type"]);
+    query = query.eq("property_type", options.propertyType as string);
   }
 
   if (options.officeSize) {
@@ -303,7 +303,7 @@ export async function checkTransitAvailability(
   }
 
   if (options.propertyType) {
-    query = query.eq("property_type", options.propertyType as Database["public"]["Enums"]["property_type"]);
+    query = query.eq("property_type", options.propertyType as string);
   }
 
   if (options.officeSize) {

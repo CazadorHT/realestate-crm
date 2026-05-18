@@ -22,8 +22,8 @@ function Step4MediaComponent({
   uploadSessionId,
   persistImages,
   refreshOwners,
-  allBranches,
-  setAllBranches,
+  showAllOwners,
+  setShowAllOwners,
   isMultiTenant,
   userRole,
 }: Step4Props) {
@@ -45,12 +45,12 @@ function Step4MediaComponent({
           {/* Card 1: Management (Status, Owner, Agents) */}
  
           <ManagementSection
-          form={form}
+            form={form}
             owners={owners}
             agents={agents}
             refreshOwners={refreshOwners}
-            allBranches={allBranches}
-            setAllBranches={setAllBranches}
+            allBranches={showAllOwners}
+            setAllBranches={setShowAllOwners}
             isMultiTenant={isMultiTenant}
             userRole={userRole}
           />

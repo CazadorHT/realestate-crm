@@ -30,8 +30,9 @@ export async function bulkDeleteBlogsAction(
 
     // Use safe user client to respect RLS
     const { error, count } = await supabase
-      .from("blog_posts")
+      .from("cms_content_v3")
       .delete({ count: "exact" })
+      .eq("content_type", "BLOG")
       .in("id", ids);
 
     if (error) throw error;
@@ -40,7 +41,7 @@ export async function bulkDeleteBlogsAction(
       { supabase, user, role },
       {
         action: "blog.bulk_delete",
-        entity: "blog_posts",
+        entity: "cms_content_v3",
         entityId: ids.join(","),
         metadata: { deletedCount: count },
       }

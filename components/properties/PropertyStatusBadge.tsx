@@ -27,9 +27,10 @@ export function PropertyStatusBadge({
   // Custom t function
   const t = (key: string) => {
     if (!customLanguage) return globalT(key);
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { dictionaries } = require("@/components/providers/LanguageProvider");
     const dict = dictionaries[language];
-    return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
+    return key.split(".").reduce((prev: any, curr: string) => prev?.[curr], dict) || key;
   };
 
   const styles: Record<string, string> = {
@@ -63,14 +64,21 @@ export function PropertyStatusBadge({
     ),
   };
 
+  // แก้ไข: เจาะเอาค่า String ตาม language ปัจจุบัน (พร้อม Fallback)
   const labels: Record<string, string> = {
     ACTIVE: t("property.status.active"),
     DRAFT: t("property.status.draft"),
     ARCHIVED: t("property.status.archived"),
     SOLD: t("property.status.sold"),
     RENTED: t("property.status.rented"),
-    UNDER_OFFER: PROPERTY_STATUS_LABELS.UNDER_OFFER,
-    RESERVED: PROPERTY_STATUS_LABELS.RESERVED,
+    UNDER_OFFER: 
+      (PROPERTY_STATUS_LABELS.UNDER_OFFER as Record<string, string>)[language] || 
+      (PROPERTY_STATUS_LABELS.UNDER_OFFER as Record<string, string>)["th"] || 
+      "Under Offer",
+    RESERVED: 
+      (PROPERTY_STATUS_LABELS.RESERVED as Record<string, string>)[language] || 
+      (PROPERTY_STATUS_LABELS.RESERVED as Record<string, string>)["th"] || 
+      "Reserved",
   };
 
   const normalizedStatus = status.toUpperCase();

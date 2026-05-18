@@ -27,7 +27,7 @@ export function QuickStatus({ value, onValueChange }: QuickStatusProps) {
         <SelectItem value="ALL">ทุกสถานะ</SelectItem>
         {PROPERTY_STATUS_ORDER.map((s) => (
           <SelectItem key={s} value={s}>
-            {PROPERTY_STATUS_LABELS[s]}
+            {PROPERTY_STATUS_LABELS[s].th}
           </SelectItem>
         ))}
       </SelectContent>

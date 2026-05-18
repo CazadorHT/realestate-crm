@@ -13,7 +13,7 @@ import { mapDbError } from "@/lib/db-error";
 /**
  * ดึงรายชื่อ tenants (branches) ทั้งหมด — Admin only
  */
-export async function getTenantsAction() {
+export async function getTenantsAction(): Promise<{ id: string; name: string }[]> {
   const ctx = await requireAuthContext();
   assertAdmin(ctx.role);
 
@@ -27,7 +27,10 @@ export async function getTenantsAction() {
     return [];
   }
 
-  return data ?? [];
+  return (data ?? []).map(t => ({
+    id: t.id ?? "",
+    name: t.name ?? "",
+  }));
 }
 
 /**

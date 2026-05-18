@@ -172,7 +172,7 @@ export function DealsTableRow({
           </Button>
 
           <DealFormDialog
-            leadId={deal.lead_id}
+            leadId={deal.lead_id || ""}
             properties={properties}
             deal={deal}
             trigger={
@@ -189,7 +189,7 @@ export function DealsTableRow({
 
           <DeleteDealButton
             dealId={deal.id}
-            leadId={deal.lead_id}
+            leadId={deal.lead_id || ""}
             onSuccess={onRefresh}
           />
         </div>

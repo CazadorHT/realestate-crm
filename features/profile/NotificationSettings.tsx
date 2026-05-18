@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 import { Bell, Mail, MessageSquare, UserPlus, Clock } from "lucide-react";
 import { updateNotificationSettings } from "./actions";
 import { toast } from "sonner";
-import type { Json } from "@/lib/database.types";
+import type { Json } from "@/lib/database.types.generated";
 import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 

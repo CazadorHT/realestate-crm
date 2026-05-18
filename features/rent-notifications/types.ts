@@ -1,9 +1,13 @@
 import { RentNotificationRuleInput } from "./schema";
 
 export interface LINEGroup {
-  group_id: string;
-  group_name: string | null;
-  picture_url: string | null;
+  group_id?: string;
+  group_name?: string | null;
+  picture_url?: string | null;
+  id?: string;
+  platform?: string;
+  external_channel_id?: string;
+  channel_name?: string | null;
 }
 
 export interface SimpleProperty {
@@ -12,13 +16,16 @@ export interface SimpleProperty {
   image: string | null;
 }
 
-export interface RentNotificationRule extends Omit<RentNotificationRuleInput, "is_active" | "language" | "notification_hour"> {
+export interface RentNotificationRule extends Omit<RentNotificationRuleInput, "is_active" | "language" | "notification_hour" | "line_group_id"> {
   id: string;
   notification_day: number;
   notification_hour: number | null;
   is_active: boolean | null;
   language: string | null;
   last_sent_at: string | null;
+  line_group_id?: string | null;
+  channel_id?: string | null;
+  created_at?: string | null;
   properties?: {
     id: string;
     title: string;
@@ -29,6 +36,9 @@ export interface RentNotificationRule extends Omit<RentNotificationRuleInput, "i
       }[];
     }[];
   };
+  property?: any;
+  channel?: any;
+  tenant?: any;
   line_groups?: LINEGroup | LINEGroup[] | null;
   tenants?: {
     name: string;

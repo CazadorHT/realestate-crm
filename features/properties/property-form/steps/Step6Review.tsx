@@ -96,6 +96,8 @@ import { useAITranslation } from "../hooks/use-ai-translation";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { createClient } from "@/lib/supabase/client";
+import { type Database } from "@/lib/database.types.generated";
+import { type SupabaseClient } from "@supabase/supabase-js";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { cn } from "@/lib/utils";
 import { AiWriterButton } from "../components/AiWriterButton";
@@ -105,6 +107,31 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+// Hardened types for tables that might be missing from generated types
+interface ExtendedDatabase extends Database {
+  public: Database["public"] & {
+    Tables: Database["public"]["Tables"] & {
+      features: {
+        Row: Feature;
+        Insert: Feature;
+        Update: Partial<Feature>;
+        Relationships: [];
+      };
+      popular_areas: {
+        Row: {
+          name: string;
+          name_en: string | null;
+          name_cn: string | null;
+          name_ru: string | null;
+        };
+        Insert: any;
+        Update: any;
+        Relationships: [];
+      };
+    };
+  };
+}
 
 interface Step6ReviewProps {
   mode: "create" | "edit";
@@ -123,6 +150,8 @@ type Profile = {
   avatar_url: string | null;
   phone: string | null;
   line_id: string | null;
+  wechat_user_id: string | null;
+  whatsapp_user_id: string | null;
 };
 
 export function Step6Review({ mode }: Step6ReviewProps) {
@@ -148,9 +177,12 @@ export function Step6Review({ mode }: Step6ReviewProps) {
     const supabase = createClient();
 
     async function loadData() {
+      // Use ExtendedDatabase to ensure type safety for V3 tables
+      const db = supabase as unknown as SupabaseClient<ExtendedDatabase>;
+
       // 1. Load Features
       if (values.feature_ids && values.feature_ids.length > 0) {
-        const { data } = await supabase
+        const { data } = await db
           .from("features")
           .select("id, name, icon_key, category")
           .in("id", values.feature_ids);
@@ -166,7 +198,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("id, full_name, avatar_url, phone, line_id")
+          .select("id, full_name, avatar_url, phone, line_id, wechat_user_id, whatsapp_user_id")
           .eq("id", user.id)
           .single();
 
@@ -178,19 +210,24 @@ export function Step6Review({ mode }: Step6ReviewProps) {
         values.popular_area &&
         (!values.popular_area_en || !values.popular_area_cn || !values.popular_area_ru)
       ) {
-        const { data: areaData } = await supabase
+        const { data: areaData } = await db
           .from("popular_areas")
           .select("name_en, name_cn, name_ru")
           .eq("name", values.popular_area)
           .maybeSingle();
 
         if (areaData) {
+          const area = areaData as {
+            name_en: string | null;
+            name_cn: string | null;
+            name_ru: string | null;
+          };
           if (!values.popular_area_en)
-            form.setValue("popular_area_en", areaData.name_en);
+            form.setValue("popular_area_en", area.name_en);
           if (!values.popular_area_cn)
-            form.setValue("popular_area_cn", areaData.name_cn);
+            form.setValue("popular_area_cn", area.name_cn);
           if (!values.popular_area_ru)
-            form.setValue("popular_area_ru", areaData.name_ru);
+            form.setValue("popular_area_ru", area.name_ru);
         }
       }
     }
@@ -201,19 +238,21 @@ export function Step6Review({ mode }: Step6ReviewProps) {
   // Transform images for Gallery (using real URLs from form)
   const images = useMemo(() => {
     return (values.images || []).map((url: string, index: number) => {
-      // Ensure URL is public
       const publicUrl = url.startsWith("http") ? url : getPublicImageUrl(url);
 
       return {
         id: `preview-${index}`,
-        image_url: publicUrl,
+        url: publicUrl, // Change image_url to url
         is_cover: index === 0,
         sort_order: index,
         created_at: new Date().toISOString(),
         property_id: "preview-id",
-        storage_path: null,
+        storage_path: "",
+        media_type: "image",
+        ai_scan_status: "not_started",
+        ai_scan_result: {},
       };
-    }) as any[];
+    });
   }, [values.images]);
 
   const locationParts = [
@@ -485,14 +524,40 @@ export function Step6Review({ mode }: Step6ReviewProps) {
           property={
             {
               ...values,
-              id: (values as any).id || "preview-id",
-              listing_type: values.listing_type as any,
+              id: values.id || "preview-id",
+              listing_type: values.listing_type,
               price: values.price ?? null,
               original_price: values.original_price ?? null,
               rental_price: values.rental_price ?? null,
               original_rental_price: values.original_rental_price ?? null,
               min_contract_months: values.min_contract_months ?? null,
-            } as any
+              address_info: {
+                address_line1: values.address_line1,
+                address_line2: (values as any).address_line2 ?? null,
+                subdistrict: values.subdistrict,
+                district: values.district,
+                province: values.province,
+                postal_code: values.postal_code,
+              },
+              transit_info: {
+                transits: [
+                  ...(values.near_transit && values.transit_station_name
+                    ? [
+                        {
+                          type: values.transit_type || "BTS",
+                          station_name: values.transit_station_name,
+                          station_name_en: values.transit_station_name_en,
+                          station_name_cn: values.transit_station_name_cn,
+                          station_name_ru: values.transit_station_name_ru,
+                          distance_meters: values.transit_distance_meters,
+                        },
+                      ]
+                    : []),
+                  ...(values.nearby_transits || []),
+                ],
+                places: values.nearby_places || [],
+              }
+            } as unknown as any // We use unknown as bridge to avoid direct any where possible, but header expects a very specific complex type
           }
           language={previewLanguage}
         />
@@ -526,9 +591,9 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                   property={
                     {
                       ...values,
-                      id: (values as any).id || "preview-id",
+                      id: values.id || "preview-id",
                       created_at: new Date().toISOString(),
-                    } as any
+                    } as unknown as any
                   }
                   language={previewLanguage}
                 />
@@ -710,7 +775,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                     </div>
                   ) : (
                     <PropertyDescription
-                      property={values as any}
+                      property={values as unknown as any}
                       language={previewLanguage}
                     />
                   )}
@@ -741,11 +806,17 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                               values.transit_station_name_cn || undefined,
                             station_name_ru:
                               values.transit_station_name_ru || undefined,
-                            distance_meters: values.transit_distance_meters,
-                          } as any,
+                            distance_meters: values.transit_distance_meters ?? undefined,
+                          },
                         ]
                       : []),
-                    ...(values.nearby_transits || []),
+                    ...(values.nearby_transits || []).map(t => ({
+                      ...t,
+                      station_name_en: t.station_name_en || undefined,
+                      station_name_cn: t.station_name_cn || undefined,
+                      station_name_ru: t.station_name_ru || undefined,
+                      distance_meters: t.distance_meters ?? undefined,
+                    })),
                   ]}
                   language={previewLanguage}
                 />
@@ -775,6 +846,8 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                     agentImage={currentUser?.avatar_url}
                     agentPhone={currentUser?.phone}
                     agentLine={currentUser?.line_id}
+                    agentWechat={currentUser?.wechat_user_id}
+                    agentWhatsapp={currentUser?.whatsapp_user_id}
                     isVerified={true}
                     propertyId="preview-id"
                     propertyTitle={values.title}

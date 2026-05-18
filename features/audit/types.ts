@@ -1,4 +1,4 @@
-import { Json } from "@/lib/database.types";
+import { Json } from "@/lib/database.types.generated";
 import { PropertyFormValues } from "@/features/properties/schema";
 
 /**
@@ -14,6 +14,7 @@ export interface AuditMetadata {
   is_restore?: boolean;
   image_changes?: { added: string[]; removed: string[] };
   word_counts?: Record<string, { old: number; new: number; delta: number }>;
+  [key: string]: unknown; // Flexible support for arbitrary V3 JSONB metadata
 }
 
 /**
@@ -27,7 +28,7 @@ export interface AuditActionResult<T = unknown> {
 }
 
 /**
- * Audit Log Entry with Profile context
+ * Audit Log Entry with Profile context (V3 Hardened & Decoupled)
  */
 export interface AuditLogEntry {
   id: string;
@@ -44,4 +45,11 @@ export interface AuditLogEntry {
     avatar_url: string | null;
     role: string | null;
   };
+  user?: {
+    id: string;
+    full_name: string | null;
+    avatar_url: string | null;
+    role: string | null;
+  } | null;
 }
+

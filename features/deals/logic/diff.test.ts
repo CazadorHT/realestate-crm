@@ -13,16 +13,16 @@ describe("getDealDiff - Thai Semantic Localization", () => {
   });
 
   it("should handle commission increases with natural Thai language", () => {
-    const oldData = { commission_amount: 50000 };
-    const newData = { commission_amount: 75000 };
+    const oldData = { commission_total: 50000 };
+    const newData = { commission_total: 75000 };
     const diff = getDealDiff(oldData, newData);
 
     expect(diff[0]).toContain("ราคาคอมมิชชั่นเพิ่มขึ้นจาก 50,000.00 บาท เป็น 75,000.00 บาท");
   });
 
   it('should handle setting commission for the first time (null -> value) using "ระบุ"', () => {
-    const oldData = { commission_amount: 0 };
-    const newData = { commission_amount: 50000 };
+    const oldData = { commission_total: 0 };
+    const newData = { commission_total: 50000 };
     const diff = getDealDiff(oldData, newData);
 
     expect(diff[0]).toContain("ระบุยอดคอมมิชชั่นเป็น 50,000.00 บาท");
@@ -45,8 +45,8 @@ describe("getDealDiff - Thai Semantic Localization", () => {
   });
 
   it("should return empty array if no significant changes", () => {
-    const oldData = { status: "SIGNED" as any, commission_amount: 1000 };
-    const newData = { status: "SIGNED" as any, commission_amount: 1000 };
+    const oldData = { status: "SIGNED" as any, commission_total: 1000 };
+    const newData = { status: "SIGNED" as any, commission_total: 1000 };
     const diff = getDealDiff(oldData, newData);
 
     expect(diff).toHaveLength(0);

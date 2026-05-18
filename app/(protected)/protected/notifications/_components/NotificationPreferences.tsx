@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Settings, Bell, UserPlus, ShieldPlus, TrendingUp, Save } from "lucide-react";
+import { Settings, Bell, UserPlus, ShieldPlus, TrendingUp, Save, LucideIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -12,7 +12,7 @@ interface PreferenceItemProps {
   id: string;
   title: string;
   description: string;
-  icon: any;
+  icon: LucideIcon;
   enabled: boolean;
   onToggle: (id: string, val: boolean) => void;
 }

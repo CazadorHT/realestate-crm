@@ -60,9 +60,9 @@ export async function postPropertyToTikTokAction(
     }
 
     // 4. เตรียมรูปภาพ (Standardized Logic using storage_path)
-    const rawImagesCount = property.property_images?.length || 0;
+    const rawImagesCount = (property.property_images as unknown as any[])?.length || 0;
     
-    const rawImages = (property.property_images || [])
+    const rawImages = ((property.property_images as unknown as any[]) || [])
       .map((img: any) => {
         // Prefer storage_path (absolute path in bucket) over raw image_url
         const path = img.storage_path || img.image_url;
@@ -124,7 +124,7 @@ export async function postPropertyToTikTokAction(
     }
 
     // 5. ยิง API จริงของ TikTok (บังคับใช้ MEDIA_UPLOAD เท่านั้นเพื่อความเสถียร)
-    const tiktokTitle = (property.title || "Real Estate Property").substring(0, 80);
+    const tiktokTitle = ((property as any).title || "Real Estate Property").substring(0, 80);
     
     const publishResult = await publishTikTokPhotoPost(accessToken, {
       title: tiktokTitle,

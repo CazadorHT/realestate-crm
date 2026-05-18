@@ -11,13 +11,13 @@ export type BulkDeleteResult = {
 };
 
 /**
- * Bulk delete features/amenities
+ * Bulk delete features/amenities from V3 system_settings_v3
  */
 export async function bulkDeleteFeaturesAction(
   ids: string[]
 ): Promise<BulkDeleteResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     if (!ids || ids.length === 0) {
@@ -28,20 +28,27 @@ export async function bulkDeleteFeaturesAction(
       };
     }
 
-    const { error, count } = await supabase
-      .from("features")
+    let deleteQuery = supabase
+      .from("system_settings_v3")
       .delete({ count: "exact" })
+      .eq("category", "features_list")
       .in("id", ids);
+
+    if (tenantId) {
+      deleteQuery = deleteQuery.eq("tenant_id", tenantId);
+    }
+
+    const { error, count } = await deleteQuery;
 
     if (error) throw error;
 
     await logAudit(
-      { supabase, user, role },
+      { supabase, user, role, tenantId },
       {
         action: "feature.bulk_delete",
-        entity: "features",
+        entity: "system_settings_v3",
         entityId: ids.join(","),
-        metadata: { deletedCount: count },
+        metadata: { deletedCount: count, category: "features_list" },
       }
     );
 

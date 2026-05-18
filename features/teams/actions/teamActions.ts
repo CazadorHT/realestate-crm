@@ -3,11 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { requireAuthContext } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
-import { Tables, TablesInsert, TablesUpdate } from "@/lib/database.types";
+import { Tables, TablesInsert, TablesUpdate } from "@/lib/database.types.generated";
 import { validateManagerRole, validateTeamName } from "../utils";
 
 
-export type TeamWithManager = Tables<"teams"> & {
+export type TeamWithManager = Tables<"teams_v3"> & {
   manager?: {
     full_name: string | null;
     avatar_url: string | null;
@@ -32,21 +32,23 @@ export async function getTeamsAction() {
     const { supabase } = ctx;
 
     let query = supabase
-      .from("teams")
+      .from("teams_v3")
       .select(`
         id,
         name,
         created_at,
         tenant_id,
         manager_id,
-        manager:profiles!teams_manager_id_fkey (
-          full_name, 
+        manager:identities_v3!teams_v3_manager_id_fkey (
+          display_name, 
           avatar_url
         ),
-        members:profiles!profiles_team_id_fkey (
-          id, 
-          full_name, 
-          avatar_url
+        members:tenant_members_v3!tenant_members_v3_team_id_fkey (
+          identity:identities_v3!tenant_members_v3_identity_id_fkey (
+            id, 
+            display_name, 
+            avatar_url
+          )
         )
       `);
 
@@ -74,15 +76,24 @@ export async function getTeamsAction() {
       created_at: string;
       tenant_id: string | null;
       manager_id: string | null;
-      manager: { full_name: string | null; avatar_url: string | null } | null;
-      members: { id: string; full_name: string | null; avatar_url: string | null }[];
+      manager: { display_name: string | null; avatar_url: string | null } | null;
+      members: { identity: { id: string; display_name: string | null; avatar_url: string | null } }[];
     };
 
-    const formattedData: TeamWithManager[] = (data as unknown as TeamQueryResult[]).map((team) => ({
-      ...team,
-      agent_count: team.members?.length || 0,
-      member_previews: team.members?.slice(0, 5) || [],
-    }));
+    const formattedData: TeamWithManager[] = (data as unknown as TeamQueryResult[]).map((team) => {
+      const { members, ...rest } = team;
+      const extractedMembers = members?.map(m => ({
+        id: m.identity.id,
+        full_name: m.identity.display_name,
+        avatar_url: m.identity.avatar_url
+      })) || [];
+      return {
+        ...rest,
+        manager: team.manager ? { full_name: team.manager.display_name, avatar_url: team.manager.avatar_url } : null,
+        agent_count: extractedMembers.length,
+        member_previews: extractedMembers.slice(0, 5),
+      } as unknown as TeamWithManager;
+    });
 
     return { success: true, data: formattedData };
   } catch (error) {
@@ -101,21 +112,21 @@ export async function getTeamManagementStatsAction() {
     const { supabase } = ctx;
 
     // 1. จำนวนทีม
-    let teamsQuery = supabase.from("teams").select("id", { count: "exact", head: true });
+    let teamsQuery = supabase.from("teams_v3").select("id", { count: "exact", head: true });
     if (tId && tId !== "ALL") teamsQuery = teamsQuery.eq("tenant_id", tId);
     const { count: teamCount } = await teamsQuery;
 
     // 2. จำนวนเอเจนท์ที่มีสังกัดทีม (ในสาขานี้)
-    let agentsQuery = supabase.from("profiles").select("id", { count: "exact", head: true }).not("team_id", "is", null);
+    let agentsQuery = supabase.from("tenant_members_v3").select("id", { count: "exact", head: true }).not("team_id", "is", null);
     if (tId && tId !== "ALL") {
-        const { data: branchTeams } = await supabase.from("teams").select("id").eq("tenant_id", tId);
+        const { data: branchTeams } = await supabase.from("teams_v3").select("id").eq("tenant_id", tId);
         const teamIds = branchTeams?.map(t => t.id) || [];
         agentsQuery = agentsQuery.in("team_id", teamIds);
     }
     const { count: agentCount } = await agentsQuery;
 
     // 3. จำนวน Lead ในระบบ (Scoped)
-    let leadsQuery = supabase.from("leads").select("id", { count: "exact", head: true });
+    let leadsQuery = supabase.from("crm_leads_v3").select("id", { count: "exact", head: true });
     if (tId && tId !== "ALL") leadsQuery = leadsQuery.eq("tenant_id", tId);
     const { count: leadCount } = await leadsQuery;
 
@@ -142,32 +153,41 @@ export async function getTeamMembersAction(teamId: string) {
 
     // 0. ดึงข้อมูลทีมเพื่อหา Manager ID
     const { data: teamInfo } = await supabase
-      .from("teams")
+      .from("teams_v3")
       .select("manager_id")
       .eq("id", teamId)
       .single();
 
     const leaderId = teamInfo?.manager_id;
 
-    // 1. ดึงรายชื่อสมาชิกในทีม (Profiles where team_id = teamId) 
-    // และรวมตัวหัวหน้าทีมเข้าไปด้วย (Profiles where id = leaderId)
+    // 1. ดึงรายชื่อสมาชิกในทีม (tenant_members_v3 where team_id = teamId) 
+    // และรวมตัวหัวหน้าทีมเข้าไปด้วย (identities_v3 where id = leaderId)
+    // สำหรับ V3 ต้อง query จาก tenant_members_v3 แล้ว join identities_v3 หรือดึงแยก
+    
+    // แบบง่ายสุด: ดึง identity IDs จาก tenant_members_v3
+    const { data: membersInfo } = await supabase
+      .from("tenant_members_v3")
+      .select("identity_id")
+      .eq("team_id", teamId);
+      
+    const memberIds = membersInfo?.map(m => m.identity_id) || [];
+    if (leaderId && !memberIds.includes(leaderId)) {
+      memberIds.push(leaderId);
+    }
+    
+    if (memberIds.length === 0) return { success: true, data: [] };
+
     const query = supabase
-      .from("profiles")
+      .from("identities_v3")
       .select(`
         id,
-        full_name,
+        display_name,
         role,
         avatar_url
-      `);
-    
-    // ใช้ OR เพื่อดึงทั้งสมาชิกปกติ และตัวหัวหน้าทีม
-    if (leaderId) {
-      query.or(`team_id.eq.${teamId},id.eq.${leaderId}`);
-    } else {
-      query.eq("team_id", teamId);
-    }
+      `)
+      .in("id", memberIds);
 
-    const { data: profiles, error: pError } = await query.order("full_name");
+    const { data: profiles, error: pError } = await query.order("display_name");
 
     if (pError) {
       console.error("TRACE [getTeamMembersAction] Profile Error:", pError);
@@ -181,12 +201,15 @@ export async function getTeamMembersAction(teamId: string) {
     // 2. ดึงจำนวน Lead ที่แต่ละคนถือครอง (ใช้ Promise.all เพื่อความเร็ว)
     const formatted = await Promise.all(profiles.map(async (profile) => {
       const { count } = await supabase
-        .from("leads")
+        .from("crm_leads_v3")
         .select("id", { count: "exact", head: true })
         .eq("assigned_to", profile.id);
       
       return {
-        ...profile,
+        id: profile.id,
+        full_name: profile.display_name,
+        role: profile.role,
+        avatar_url: profile.avatar_url,
         lead_count: count || 0,
         isLeader: profile.id === leaderId
       };
@@ -218,7 +241,7 @@ export async function updateUserTeamAction(
     // 2) ตรวจสอบว่าทีมมีอยู่จริง (ในกรณีที่ย้ายเข้าทีม)
     if (teamId) {
       const { data: team } = await supabase
-        .from("teams")
+        .from("teams_v3")
         .select("id")
         .eq("id", teamId)
         .maybeSingle();
@@ -228,9 +251,10 @@ export async function updateUserTeamAction(
 
     // 3) อัปเดตข้อมูลผ่าน Safe Client (RLS Protected)
     const { error } = await supabase
-      .from("profiles")
+      .from("tenant_members_v3")
       .update({ team_id: teamId })
-      .eq("id", userId);
+      .eq("identity_id", userId)
+      .eq("tenant_id", ctx.tenantId || "");
 
     if (error) {
       console.error("TRACE [updateUserTeamAction]:", error);
@@ -262,7 +286,7 @@ export async function createTeamAction(name: string, managerId?: string) {
 
     // 1) ตรวจสอบชื่อทีมซ้ำ
     const { data: existingTeam } = await ctx.supabase
-      .from("teams")
+      .from("teams_v3")
       .select("id")
       .eq("name", trimmedName)
       .maybeSingle();
@@ -274,7 +298,7 @@ export async function createTeamAction(name: string, managerId?: string) {
     // 2) ตรวจสอบสิทธิ์ของ Manager (ถ้ามีการระบุ)
     if (managerId) {
       const { data: managerProfile } = await ctx.supabase
-        .from("profiles")
+        .from("identities_v3")
         .select("role")
         .eq("id", managerId)
         .single();
@@ -284,7 +308,7 @@ export async function createTeamAction(name: string, managerId?: string) {
     }
 
     const { data, error } = await ctx.supabase
-      .from("teams")
+      .from("teams_v3")
       .insert({
         name,
         manager_id: managerId || null,
@@ -317,7 +341,7 @@ export async function createTeamAction(name: string, managerId?: string) {
  */
 export async function updateTeamAction(
   id: string,
-  updates: TablesUpdate<"teams">,
+  updates: TablesUpdate<"teams_v3">,
 ) {
   try {
     const ctx = await requireAuthContext();
@@ -332,7 +356,7 @@ export async function updateTeamAction(
 
       // ตรวจสอบชื่อซ้ำ (ยกเว้นตัวเอง)
       const { data: existing } = await ctx.supabase
-        .from("teams")
+        .from("teams_v3")
         .select("id")
         .eq("name", trimmedName)
         .neq("id", id)
@@ -345,7 +369,7 @@ export async function updateTeamAction(
 
     if (updates.manager_id) {
       const { data: managerProfile } = await ctx.supabase
-        .from("profiles")
+        .from("identities_v3")
         .select("role")
         .eq("id", updates.manager_id)
         .single();
@@ -362,7 +386,7 @@ export async function updateTeamAction(
     }
 
     let query = ctx.supabase
-      .from("teams")
+      .from("teams_v3")
       .update(updates)
       .eq("id", id);
 
@@ -402,10 +426,7 @@ export async function deleteTeamAction(id: string) {
       return { success: false, message: "ไม่มีสิทธิ์ในการดำเนินการนี้" };
     }
 
-    // 🛡️ [PHASE 1] Use Security Definer RPC for atomic team deletion
-    const { error } = await ctx.supabase.rpc("hard_delete_team", {
-      p_team_id: id
-    });
+    const { error } = await ctx.supabase.from("teams_v3").delete().eq("id", id);
 
     if (error) {
       console.error("Error deleting team via RPC:", error);

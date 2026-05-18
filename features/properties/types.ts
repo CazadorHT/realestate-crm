@@ -1,14 +1,22 @@
-import type { Database } from "@/lib/database.types";
+import type { Database } from "@/lib/database.types.generated";
+import type { 
+  PropertyAmenitiesV3, 
+  PropertyAddressV3, 
+  PropertyMetaDataV3, 
+  PropertyPricingV3, 
+  PropertyTransitV3,
+  PropertyImageV3
+} from "./types/v3";
 
-export type PropertyType = Database["public"]["Enums"]["property_type"];
-export type ListingType = Database["public"]["Enums"]["listing_type"];
-export type PropertyStatus = Database["public"]["Enums"]["property_status"];
+export type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL_BUILDING" | "WAREHOUSE" | "OFFICE_BUILDING" | "VILLA" | "POOL_VILLA" | "OTHER";
+export type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
+export type PropertyStatus = "DRAFT" | "ACTIVE" | "UNDER_OFFER" | "RESERVED" | "SOLD" | "RENTED" | "ARCHIVED";
 
-export type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
+export type PropertyRow = Omit<Database["public"]["Views"]["properties"]["Row"], "id"> & { id: string };
 export type PropertyInsert =
-  Database["public"]["Tables"]["properties"]["Insert"];
+  Database["public"]["Tables"]["properties_core"]["Insert"];
 export type PropertyUpdate =
-  Database["public"]["Tables"]["properties"]["Update"];
+  Database["public"]["Tables"]["properties_core"]["Update"];
 
 // --- Hardened JSONB Schemas ---
 export interface PropertyImageMetadata {
@@ -24,7 +32,7 @@ export interface PropertyImageMetadata {
 export interface NearbyItem {
   category: string;
   name: string;
-  distance: string | undefined;
+  distance_meters: number | undefined;
   time: string | undefined;
   name_en: string | undefined;
   name_cn: string | undefined;
@@ -32,7 +40,7 @@ export interface NearbyItem {
 }
 
 export interface NearbyTransitItem {
-  type: "BTS" | "MRT" | "MRT2" | "ARL" | "SRT" | "SRT2" | "SRT3" | "MRT3" | "OTHER";
+  type: string; // Dynamic from ref_master_data
   station_name: string;
   distance_meters: number | undefined;
   time: string | undefined;
@@ -41,13 +49,17 @@ export interface NearbyTransitItem {
   station_name_ru: string | undefined;
 }
 
+export interface PropertyTransitInfoConsolidated {
+  places: NearbyItem[];
+  transits: PropertyTransitV3[];
+}
+
 export type TransitType = NearbyTransitItem["type"];
 
 // Property Image types
-export type PropertyImage =
-  Database["public"]["Tables"]["property_images"]["Row"];
+export type PropertyImage = Database["public"]["Tables"]["property_media_v3"]["Row"];
 export type PropertyImageInsert =
-  Database["public"]["Tables"]["property_images"]["Insert"];
+  Database["public"]["Tables"]["property_media_v3"]["Insert"];
 
 // Property with hardened JSONB fields and minimal relational joins
 export type PropertyWithImages = PropertyRow & {
@@ -136,29 +148,92 @@ export interface PropertyTableData {
   ai_reviewed_by?: string | null;
 }
 
-/**
- * [S-Tier] Centralized Property Detail Type
- * Pure extension of base row with mapped relations.
- * No redundant field overrides here to prevent TS conflicts.
- */
-export interface PropertyDetail extends PropertyRow {
-  // Hardened Relation mappings
-  images: Array<{
-    id: string | null | undefined;
-    url: string;
-    image_url?: string;
-    storage_path: string | null;
-    is_cover: boolean | null;
-    sort_order: number | null;
-  }>;
-  assigned_agent: Pick<
-    Database["public"]["Tables"]["profiles"]["Row"],
-    "full_name" | "phone" | "avatar_url" | "line_id"
-  > | null;
+export interface PropertyDetail {
+  id: string;
+  slug: string | null;
+  status: number | null;
+  listing_type: ListingType; // Strict Union
+  property_type: PropertyType; // Strict Union
+  sale_price: number | null;
+  rent_price: number | null;
+  price: number | null; 
+  rental_price: number | null; 
+  original_price: number | null;
+  original_rental_price: number | null;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  floor_area: number | null;
+  size_sqm: number | null; 
+  land_area: number | null;
+  land_size_sqwah: number | null; 
+  parking_slots: number | null;
+  office_capacity: number | null;
+  min_contract_months: number | null;
+  province: string | null;
+  district: string | null;
+  subdistrict: string | null;
+  google_maps_link: string | null;
+  is_hot_deal: boolean | null;
+  is_pet_friendly: boolean | null;
+  is_exclusive: boolean | null;
+  verified: boolean | null;
+  floor_plan_url: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  
+  // V3 Multi-language Fields (JSONB flattened for UI/SEO)
+  title: string;
+  title_en?: string | null;
+  title_cn?: string | null;
+  title_ru?: string | null;
+  
+  description: string | null;
+  description_en?: string | null;
+  description_cn?: string | null;
+  description_ru?: string | null;
+
+  popular_area?: string | null;
+  popular_area_en?: string | null;
+  popular_area_cn?: string | null;
+  popular_area_ru?: string | null;
+
+  subdistrict_en?: string | null;
+  subdistrict_cn?: string | null;
+  subdistrict_ru?: string | null;
+
+  district_en?: string | null;
+  district_cn?: string | null;
+  district_ru?: string | null;
+
+  province_en?: string | null;
+  province_cn?: string | null;
+  province_ru?: string | null;
+
+  address_info: PropertyAddressV3;
+  amenities: PropertyAmenitiesV3;
+  transit_info: PropertyTransitInfoConsolidated | null;
+  nearby_places: NearbyItem[];
+  nearby_transits: PropertyTransitV3[];
+
+  // Relations
+  images: PropertyImageV3[];
+  assigned_agent: {
+    full_name: string | null;
+    phone: string | null;
+    avatar_url: string | null;
+    line_id?: string | null;
+    wechat_user_id?: string | null;
+    whatsapp_user_id?: string | null;
+  } | null;
   property_features: {
-    features: Pick<
-      Database["public"]["Tables"]["features"]["Row"],
-      "id" | "name" | "name_en" | "name_cn" | "name_ru" | "icon_key" | "category"
-    > | null;
+    features: {
+      id: string;
+      name: string;
+      name_en?: string;
+      name_cn?: string;
+      name_ru?: string;
+      icon_key?: string;
+      category?: string;
+    } | null;
   }[];
 }

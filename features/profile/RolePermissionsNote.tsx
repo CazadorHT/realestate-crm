@@ -14,27 +14,33 @@ import {
 export function RolePermissionsNote() {
   const roles = [
     {
-      title: "ADMIN (แอดมิน)",
+      title: "ADMIN (แอดมินระบบ)",
       icon: <Shield className="h-4 w-4 text-rose-600" />,
-      desc: "ผู้ดูแลพื้นฐานระบบสูงสุด: มีอำนาจสูงสุดในการบริหารจัดการสมาชิกทุกสาขา, กำหนดโครงสร้างองค์กร, ตรวจสอบธุรกรรมทางการเงิน และตั้งค่าความปลอดภัยของข้อมูลทั้งหมดในระบบ",
+      desc: "ผู้ดูแลระบบสูงสุด: มีอำนาจสูงสุดในการบริหารจัดการสมาชิกทุกสาขา, กำหนดโครงสร้างองค์กร, ทำงานข้ามระบบสาขาได้ทั้งหมด และตั้งค่าความปลอดภัยของข้อมูลทั้งระบบ",
       color: "bg-rose-50 border-rose-100",
+    },
+    {
+      title: "OWNER (เจ้าของสาขา)",
+      icon: <Shield className="h-4 w-4 text-indigo-600" />,
+      desc: "เจ้าของบริษัท / สาขา: มีสิทธิ์สูงสุดภายในสาขาของตนเอง สามารถจัดการทีมงาน, อนุมัติการเข้าถึงข้อมูล, และดูรายงานผลประกอบการทั้งหมดของสาขาได้",
+      color: "bg-indigo-50 border-indigo-100",
     },
     {
       title: "MANAGER (ผู้จัดการ)",
       icon: <Users className="h-4 w-4 text-amber-600" />,
-      desc: "ผู้จัดการสาขา / หัวหน้าทีม: รับผิดชอบการบริหารจัดการทรัพย์สินและทีมงานภายในสาขา, อนุมัติเคสและสัญญา, ตรวจสอบรายงานยอดขาย และดูแลภาพรวมความถูกต้องของข้อมูลในเขตที่ดูแล",
+      desc: "ผู้จัดการสาขา / หัวหน้าทีม: รับผิดชอบการบริหารจัดการทรัพย์สินและทีมงานภายในสาขา, อนุมัติเคสและสัญญา, และดูแลภาพรวมความถูกต้องของข้อมูล",
       color: "bg-amber-50 border-amber-100",
     },
     {
       title: "AGENT (ตัวแทน)",
       icon: <User className="h-4 w-4 text-emerald-600" />,
-      desc: "ตัวแทนอสังหาริมทรัพย์: มีหน้าที่หลักในการจัดการทรัพย์สิน (Properties) และผู้เช่า/ผู้ซื้อ (Leads), สร้างรายการประกาศ, ดำเนินงานขายและประสานงานกับลูกค้าในสาขาที่ได้รับมอบหมาย",
+      desc: "ตัวแทนอสังหาริมทรัพย์: มีหน้าที่หลักในการจัดการทรัพย์สิน (Properties) และผู้เช่า/ผู้ซื้อ (Leads), และประสานงานกับลูกค้าในสาขาที่ได้รับมอบหมาย",
       color: "bg-emerald-50 border-emerald-100",
     },
     {
       title: "USER (ผู้ใช้งานทั่วไป)",
       icon: <Key className="h-4 w-4 text-slate-600" />,
-      desc: "ผู้ใช้งานทั่วไป / ทีมสนับสนุน: เข้าถึงฟีเจอร์พื้นฐานเพื่อติดตามสถานะงานที่เกี่ยวข้อง, ดูข้อมูลส่วนตัว และดำเนินกิจกรรมเบื้องต้นตามขอบเขตงานที่ได้รับอนุญาตจากแอดมิน",
+      desc: "ผู้ใช้งานทั่วไป / ทีมสนับสนุน: เข้าถึงฟีเจอร์พื้นฐานเพื่อติดตามสถานะงานที่เกี่ยวข้อง และดูข้อมูลส่วนตัวตามขอบเขตงานที่ได้รับอนุญาต",
       color: "bg-slate-50 border-slate-100",
     },
   ];
@@ -98,11 +104,18 @@ export function RolePermissionsNote() {
 
                 {/* Capabilities Tags */}
                 <div className="flex flex-wrap gap-1.5 pt-1">
+                  {role.title.includes("OWNER") && (
+                    <>
+                      <span className="px-2 py-0.5 rounded-md bg-indigo-100/50 text-[9px] font-semibold text-indigo-700 uppercase">Branch Admin</span>
+                      <span className="px-2 py-0.5 rounded-md bg-indigo-100/50 text-[9px] font-semibold text-indigo-700 uppercase">Member Management</span>
+                      <span className="px-2 py-0.5 rounded-md bg-indigo-100/50 text-[9px] font-semibold text-indigo-700 uppercase">Branch Reports</span>
+                    </>
+                  )}
                   {role.title.includes("ADMIN") && (
                     <>
+                      <span className="px-2 py-0.5 rounded-md bg-rose-100/50 text-[9px] font-semibold text-rose-700 uppercase">Cross-branch Management</span>
                       <span className="px-2 py-0.5 rounded-md bg-rose-100/50 text-[9px] font-semibold text-rose-700 uppercase">System Config</span>
-                      <span className="px-2 py-0.5 rounded-md bg-rose-100/50 text-[9px] font-semibold text-rose-700 uppercase">User Management</span>
-                      <span className="px-2 py-0.5 rounded-md bg-rose-100/50 text-[9px] font-semibold text-rose-700 uppercase">Financial Audit</span>
+                      <span className="px-2 py-0.5 rounded-md bg-rose-100/50 text-[9px] font-semibold text-rose-700 uppercase">Global Audit</span>
                     </>
                   )}
                   {role.title.includes("MANAGER") && (

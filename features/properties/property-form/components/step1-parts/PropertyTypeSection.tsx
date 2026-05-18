@@ -98,7 +98,7 @@ export function PropertyTypeSection({
                       <Icon className="w-6 h-6" />
                     </div>
                     <span className="text-sm uppercase tracking-wider text-center w-full">
-                      {PROPERTY_TYPE_LABELS[type]}
+                      {PROPERTY_TYPE_LABELS[type]?.th || PROPERTY_TYPE_LABELS[type]?.en || type}
                     </span>
                   </button>
                 );

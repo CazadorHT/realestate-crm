@@ -1,12 +1,12 @@
 import { createClient } from "@/lib/supabase/server";
 import { DashboardStats, RevenueChartData, FunnelData, PipelineData } from "./types";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
-type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
-type DealRow = Database["public"]["Tables"]["deals"]["Row"];
+type PropertyRow = Database["public"]["Tables"]["properties_core"]["Row"];
+type LeadRow = Database["public"]["Tables"]["crm_leads_v3"]["Row"];
+type LedgerRow = Database["public"]["Tables"]["financial_ledger_v3"]["Row"];
 
-async function calculateDateRange(range: string) {
+async function calculateDateRange(range?: string) {
   const now = new Date();
   let start = new Date();
   const currentYear = now.getFullYear();
@@ -93,12 +93,13 @@ export async function getDashboardStats({
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase.from("profiles")
-          .select("role, team:teams!profiles_team_id_fkey(tenant_id)")
+          .select("role, team:teams_v3!inner(tenant_id)")
           .eq("id", user.id)
           .single();
         
         const isAdmin = profile?.role === "ADMIN" || profile?.role === "MANAGER";
-        const profileTenantId = (profile as any)?.team?.tenant_id;
+        const profileTeam = profile?.team as { tenant_id: string } | null;
+        const profileTenantId = profileTeam?.tenant_id || null;
         
         if (!isAdmin && profileTenantId) {
           activeTenantId = profileTenantId;
@@ -106,9 +107,9 @@ export async function getDashboardStats({
       }
     }
 
-    let revCurQuery = supabase.from("properties").select("price, rental_price, status").in("status", ["SOLD", "RENTED"]).is("deleted_at", null);
-    let leadsCurQuery = supabase.from("leads").select("id", { count: "exact", head: true });
-    let commissionDealsQuery = supabase.from("deals").select("commission_amount, created_at, closed_at").eq("status", "CLOSED_WIN");
+    let revCurQuery = supabase.from("properties_core").select("sale_price, rent_price, status").in("status", [3]).is("deleted_at", null);
+    let leadsCurQuery = supabase.from("crm_leads_v3").select("id", { count: "exact", head: true });
+    let commissionDealsQuery = supabase.from("financial_ledger_v3").select("amount_total, created_at").eq("transaction_type", "deal_closed");
     
     if (range !== "all" && range !== "ALL" && startDate) {
       revCurQuery = revCurQuery.gte("updated_at", startDate);
@@ -129,18 +130,18 @@ export async function getDashboardStats({
       revCurQuery, leadsCurQuery, commissionDealsQuery
     ]);
 
-    // Filter deals in memory to handle fallback date (closed_at || created_at)
-    const commissionDeals = (commissionDealsRaw || []).filter((d: any) => {
+    // Filter deals in memory to handle fallback date (created_at)
+    const commissionDeals = (commissionDealsRaw || []).filter((d: LedgerRow) => {
       if (range === "all" || range === "ALL" || !startDate) return true;
-      const dealDate = d.closed_at || d.created_at;
+      const dealDate = d.created_at;
       const start = new Date(startDate).getTime();
       const end = endDate ? new Date(endDate).getTime() : new Date().getTime();
       const current = new Date(dealDate).getTime();
       return current >= start && (endDate ? current <= end : true);
     });
 
-    const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, p: Partial<PropertyRow>) => sum + (p.status === "SOLD" ? (p.price || 0) : (p.rental_price || 0)), 0);
-    const totalCommission = (commissionDeals || []).reduce((sum: number, d: Partial<DealRow>) => sum + (d.commission_amount || 0), 0);
+    const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, p: Partial<PropertyRow>) => sum + (p.status === 3 ? (Number(p.sale_price) || Number(p.rent_price) || 0) : 0), 0);
+    const totalCommission = (commissionDeals || []).reduce((sum: number, d: Partial<LedgerRow>) => sum + (Number(d.amount_total) || 0), 0);
     const dealsWon = (commissionDeals || []).length;
 
     return {
@@ -169,7 +170,15 @@ export async function getDashboardStats({
 
 export const getDashboardStatsAction = getDashboardStats;
 
-export async function getRevenueChartData(args: any): Promise<RevenueChartData[]> {
+export interface DashboardQueryArgs {
+  tenantId?: string | null;
+  agentId?: string | null;
+  view?: string;
+  targetId?: string | null;
+  range?: string;
+}
+
+export async function getRevenueChartData(args: DashboardQueryArgs): Promise<RevenueChartData[]> {
   try {
     const supabase = await createClient();
     const now = new Date();
@@ -191,12 +200,13 @@ export async function getRevenueChartData(args: any): Promise<RevenueChartData[]
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase.from("profiles")
-          .select("role, team:teams!profiles_team_id_fkey(tenant_id)")
+          .select("role, team:teams_v3!inner(tenant_id)")
           .eq("id", user.id)
           .single();
         
         const isAdmin = profile?.role === "ADMIN" || profile?.role === "MANAGER";
-        const profileTenantId = (profile as any)?.team?.tenant_id;
+        const profileTeam = profile?.team as { tenant_id: string } | null;
+        const profileTenantId = profileTeam?.tenant_id || null;
         
         if (!isAdmin && profileTenantId) {
           activeTenantId = profileTenantId;
@@ -204,19 +214,19 @@ export async function getRevenueChartData(args: any): Promise<RevenueChartData[]
       }
     }
 
-    let query = supabase.from("deals")
-      .select("commission_amount, status, created_at, closed_at")
-      .eq("status", "CLOSED_WIN");
+    let query = supabase.from("financial_ledger_v3")
+      .select("amount_total, status, created_at")
+      .eq("transaction_type", "deal_closed");
 
     // We will filter by date in memory to support fallback
     if (activeTenantId) query = query.eq("tenant_id", activeTenantId);
 
     const { data: rawData } = await query;
 
-    // Filter by date in memory to handle fallback (closed_at || created_at)
-    const data = (rawData || []).filter((d: any) => {
+    // Filter by date in memory to handle fallback (created_at)
+    const data = (rawData || []).filter((d: LedgerRow) => {
       if (isAllRange || !actualStart) return true;
-      const dealDate = d.closed_at || d.created_at;
+      const dealDate = d.created_at;
       const start = new Date(actualStart).getTime();
       const end = endDate ? new Date(endDate).getTime() : new Date().getTime();
       const current = new Date(dealDate).getTime();
@@ -262,8 +272,8 @@ export async function getRevenueChartData(args: any): Promise<RevenueChartData[]
 
     const todayLabel = `${now.getDate()}/${now.getMonth() + 1} (วันนี้)`;
 
-    (data || []).forEach((d: any) => {
-      const date = new Date(d.closed_at || d.created_at);
+    (data || []).forEach((d: LedgerRow) => {
+      const date = new Date(d.created_at);
       let label = "";
       if (isDaily) {
         const isToday = date.getDate() === now.getDate() && 
@@ -275,7 +285,7 @@ export async function getRevenueChartData(args: any): Promise<RevenueChartData[]
       }
       
       if (grouped.has(label)) {
-        const val = Number(d.commission_amount) || 0;
+        const val = Number(d.amount_total) || 0;
         grouped.set(label, (grouped.get(label) || 0) + val);
       }
     });
@@ -286,10 +296,10 @@ export async function getRevenueChartData(args: any): Promise<RevenueChartData[]
 
 export const getRevenueChartDataAction = getRevenueChartData;
 
-export async function getFunnelStats(args: any): Promise<FunnelData[]> {
+export async function getFunnelStats(args: DashboardQueryArgs): Promise<FunnelData[]> {
   try {
     const supabase = await createClient();
-    let query = supabase.from("leads").select("stage, created_at");
+    let query = supabase.from("crm_leads_v3").select("stage, created_at");
     const { start: startDate, end: endDate } = await calculateDateRange(args.range);
     
     if (args.range !== "all" && args.range !== "ALL" && startDate) {
@@ -308,12 +318,13 @@ export async function getFunnelStats(args: any): Promise<FunnelData[]> {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase.from("profiles")
-          .select("role, team:teams!profiles_team_id_fkey(tenant_id)")
+          .select("role, team:teams_v3!inner(tenant_id)")
           .eq("id", user.id)
           .single();
         
         const isAdmin = profile?.role === "ADMIN" || profile?.role === "MANAGER";
-        const profileTenantId = (profile as any)?.team?.tenant_id;
+        const profileTeam = profile?.team as { tenant_id: string } | null;
+        const profileTenantId = profileTeam?.tenant_id || null;
         
         if (!isAdmin && profileTenantId) {
           activeTenantId = profileTenantId;
@@ -334,7 +345,7 @@ export async function getFunnelStats(args: any): Promise<FunnelData[]> {
 
     (leads || []).forEach((l: Partial<LeadRow>) => {
       const stage = (l.stage || "").toUpperCase();
-      if (stage === "NEW" || stage === "LEAD") counts.NEW++;
+      if (stage === "NEW" || stage === "AWARENESS" || stage === "CONSIDERATION") counts.NEW++;
       else if (stage === "CONTACTED") counts.CONTACTED++;
       else if (stage === "VIEWED") counts.VIEWED++;
       else if (stage === "NEGOTIATING") counts.NEGOTIATING++;
@@ -353,10 +364,10 @@ export async function getFunnelStats(args: any): Promise<FunnelData[]> {
 
 export const getFunnelStatsAction = getFunnelStats;
 
-export async function getPipelineStats(args: any): Promise<PipelineData[]> {
+export async function getPipelineStats(args: DashboardQueryArgs): Promise<PipelineData[]> {
   try {
     const supabase = await createClient();
-    let query = supabase.from("properties").select("id, status, updated_at, deals!property_id(status)").is("deleted_at", null);
+    let query = supabase.from("properties_core").select("id, status, updated_at, financial_ledger_v3!reference_id(status)");
     const { start: startDate, end: endDate } = await calculateDateRange(args.range);
 
     if (args.range !== "all" && args.range !== "ALL" && startDate) {
@@ -375,12 +386,13 @@ export async function getPipelineStats(args: any): Promise<PipelineData[]> {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase.from("profiles")
-          .select("role, team:teams!profiles_team_id_fkey(tenant_id)")
+          .select("role, team:teams_v3!inner(tenant_id)")
           .eq("id", user.id)
           .single();
         
         const isAdmin = profile?.role === "ADMIN" || profile?.role === "MANAGER";
-        const profileTenantId = (profile as any)?.team?.tenant_id;
+        const profileTeam = profile?.team as { tenant_id: string } | null;
+        const profileTenantId = profileTeam?.tenant_id || null;
         
         if (!isAdmin && profileTenantId) {
           activeTenantId = profileTenantId;
@@ -390,15 +402,19 @@ export async function getPipelineStats(args: any): Promise<PipelineData[]> {
 
     if (activeTenantId) query = query.eq("tenant_id", activeTenantId);
 
+    type PropertyWithLedger = PropertyRow & {
+      financial_ledger_v3: { status: string }[] | null;
+    };
+
     const { data: properties } = await query;
     const counts = { ACTIVE: 0, UNDER_OFFER: 0, RESERVED: 0, SOLD: 0 };
-    (properties || []).forEach((p: any) => {
-      const hasWonDeal = (p.deals || []).some((d: any) => d.status === "CLOSED_WIN");
+    (properties as unknown as PropertyWithLedger[] || []).forEach((p) => {
+      const ledger = p.financial_ledger_v3;
+      const hasWonDeal = (ledger || []).some((d) => d.status === "cleared");
       
-      if (p.status === "SOLD" || p.status === "RENTED" || hasWonDeal) counts.SOLD++;
-      else if (p.status === "RESERVED") counts.RESERVED++;
-      else if (p.status === "UNDER_OFFER") counts.UNDER_OFFER++;
-      else if (p.status === "ACTIVE") counts.ACTIVE++;
+      if (p.status === 3 || hasWonDeal) counts.SOLD++;
+      else if (p.status === 2) counts.UNDER_OFFER++;
+      else if (p.status === 1) counts.ACTIVE++;
     });
 
     return [

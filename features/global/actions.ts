@@ -38,9 +38,9 @@ export async function searchGlobalAction(
     if (properties) {
       properties.forEach((p) => {
         results.push({
-          id: p.id,
+          id: p.id || "",
           type: "property",
-          title: p.title,
+          title: p.title || "",
           subtitle: p.district || p.address_line1 || undefined,
           url: `/protected/properties/${p.id}`,
         });
@@ -61,9 +61,9 @@ export async function searchGlobalAction(
     if (leads) {
       leads.forEach((l) => {
         results.push({
-          id: l.id,
+          id: l.id || "",
           type: "lead",
-          title: l.full_name,
+          title: l.full_name || "",
           subtitle: l.phone || l.email || undefined,
           url: `/protected/leads/${l.id}`,
         });
@@ -82,9 +82,9 @@ export async function searchGlobalAction(
     if (owners) {
       owners.forEach((o) => {
         results.push({
-          id: o.id,
+          id: o.id || "",
           type: "owner",
-          title: o.full_name,
+          title: o.full_name || "",
           subtitle: o.phone || undefined,
           url: `/protected/owners/${o.id}`,
         });

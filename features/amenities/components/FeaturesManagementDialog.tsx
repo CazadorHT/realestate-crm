@@ -138,7 +138,7 @@ export function FeaturesManagementDialog({
       name_cn: feature.name_cn || "",
       name_ru: feature.name_ru || "",
       category: feature.category || "",
-      icon_key: feature.icon_key,
+      icon_key: feature.icon_key || "box",
     });
     setIsFormOpen(true);
   };
@@ -266,7 +266,7 @@ export function FeaturesManagementDialog({
 
                         <div className="p-3 bg-slate-50 rounded-xl text-slate-500 group-hover:bg-emerald-50 group-hover:text-emerald-600 transition-colors">
                           <DynamicIcon
-                            name={feature.icon_key}
+                            name={feature.icon_key || "box"}
                             className="w-6 h-6"
                           />
                         </div>

@@ -1,14 +1,14 @@
-import type { Database, Json } from "@/lib/database.types";
+import type { Database, Json } from "@/lib/database.types.generated";
 import type { LeadActivityType } from "@/features/leads/labels";
 
-export type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
-export type LeadInsert = Database["public"]["Tables"]["leads"]["Insert"];
-export type LeadUpdate = Database["public"]["Tables"]["leads"]["Update"];
+export type LeadRow = Database["public"]["Tables"]["crm_leads_v3"]["Row"];
+export type LeadInsert = Database["public"]["Tables"]["crm_leads_v3"]["Insert"];
+export type LeadUpdate = Database["public"]["Tables"]["crm_leads_v3"]["Update"];
 
 export type LeadActivityRow =
-  Database["public"]["Tables"]["lead_activities"]["Row"];
+  Database["public"]["Tables"]["activity_timeline_v3"]["Row"];
 export type LeadActivityInsert =
-  Database["public"]["Tables"]["lead_activities"]["Insert"];
+  Database["public"]["Tables"]["activity_timeline_v3"]["Insert"];
 // --- Hardened JSONB Schemas ---
 export interface LeadPreferences {
   line_id?: string | null;
@@ -17,11 +17,13 @@ export interface LeadPreferences {
   budget_flexible?: boolean;
   preferred_zones?: string[];
   pet_friendly_required?: boolean;
-  [key: string]: Json | undefined; // Use Json type for compatibility
+  whatsapp_id?: string | null;
+  wechat_id?: string | null;
+  preferred_language?: string | null;
 }
 
-// --- Extended Feature Types ---
-export type LeadWithJoins = Omit<LeadRow, "preferences"> & {
+// --- Extended Feature Types (V3 Hardened) ---
+export type LeadWithJoins = LeadRow & {
   ai_score?: number | null;
   ai_status_label?: string | null;
   utm_source?: string | null;
@@ -29,8 +31,29 @@ export type LeadWithJoins = Omit<LeadRow, "preferences"> & {
   tenants?: {
     name: string;
   } | null;
-  preferences: LeadPreferences | null;
-  ai_summary_content?: string | null;
+  identity?: {
+    display_name: string | null;
+    email: string | null;
+    phone: string | null;
+    line_id: string | null;
+    social_links: Json | null;
+  } | null;
+  full_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  note?: string | null;
+  line_id?: string | null;
+  wechat_id?: string | null;
+  whatsapp?: string | null;
+  facebook_psid?: string | null;
+  instagram_sid?: string | null;
+  property_id?: string | null;
+  lead_type?: string | null;
+  preferences?: Json | null;
+  is_foreigner?: boolean | null;
+  nationality?: string | null;
+  preferred_property_types?: string[] | null;
+  [key: string]: any;
 };
 
 // ใช้สำหรับแสดง leads พร้อมกับ activities

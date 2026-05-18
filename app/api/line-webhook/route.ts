@@ -651,9 +651,9 @@ async function handleInteractiveCommand(
     }
 
     // 5. บันทึกข้อมูลเพิ่มลงในโน้ตของ Lead (ถ้ามี)
-    if (lead) {
+    if (lead && lead.id) {
       const newNote = `[${new Date().toLocaleString("th-TH")}] สนใจทรัพย์: ${propertyTitle} (ID: ${propertyId})\n${lead.note || ""}`;
-      await supabase.from("leads").update({ note: newNote }).eq("id", lead.id);
+      await supabase.from("leads").update({ note: newNote }).eq("id", lead.id!);
     }
     return;
   }

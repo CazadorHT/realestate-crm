@@ -4,6 +4,8 @@ import { Building2, ShieldCheck } from "lucide-react";
 
 import { type TenantMembership } from "./types";
 
+import { ROLE_LABELS } from "@/lib/auth-shared";
+
 export function TenantMembershipCard({ memberships }: { memberships: TenantMembership[] }) {
   if (!memberships || memberships.length === 0) return null;
 
@@ -22,7 +24,7 @@ export function TenantMembershipCard({ memberships }: { memberships: TenantMembe
             <div className="font-medium text-slate-900">{m.tenant?.name || "ไม่ทราบชื่อสาขา"}</div>
             <Badge variant="secondary" className="bg-blue-50 text-blue-700 border-blue-100 flex items-center gap-1">
               <ShieldCheck className="h-3 w-3" />
-              {m.role}
+              {m.role ? (ROLE_LABELS[m.role] || m.role) : ""}
             </Badge>
           </div>
         ))}

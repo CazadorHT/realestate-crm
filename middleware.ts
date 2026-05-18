@@ -214,6 +214,14 @@ export async function middleware(request: NextRequest) {
       if (val) finalResponse.headers.set(h, val);
     });
 
+    // 🛡️ [GOOGLE OAUTH FIX] Explicitly set Content-Type and X-Robots-Tag for legal pages
+    // This prevents Google's bot from thinking the page is a download/document.
+    const isLegalPath = pathname.startsWith("/privacy-policy") || pathname.startsWith("/terms");
+    if (isLegalPath) {
+      finalResponse.headers.set("Content-Type", "text/html; charset=utf-8");
+      finalResponse.headers.set("X-Robots-Tag", "all");
+    }
+
     return finalResponse;
   } catch (syncError) {
     console.error("[SECURITY] Middleware Final Sync Error (Fail-open):", syncError);

@@ -7,10 +7,10 @@ import { WalletPortfolioStats } from "@/features/finance/components/WalletPortfo
 
 
 export default async function AgentWalletPage() {
-  await requireAuthContext();
+  const { user } = await requireAuthContext();
   
   // 💹 Fetch data once for all performance components to optimize DB hits
-  const res = await getAgentWalletStatsAction();
+  const res = await getAgentWalletStatsAction(user.id);
   
   // 🛡️ Safe Data Handing with Type Guards
   const stats = (res.success && res.data) ? res.data.stats : {

@@ -55,8 +55,8 @@ export async function getProtectedPropertyWithImagesById(
 
   if (error || !data) throw error;
 
-  if (data.property_images) {
-    data.property_images.sort(
+  if (Array.isArray(data.property_images)) {
+    (data.property_images as any[]).sort(
       (a: { sort_order: number | null }, b: { sort_order: number | null }) => (a.sort_order ?? 0) - (b.sort_order ?? 0),
     );
   }

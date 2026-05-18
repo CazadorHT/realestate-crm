@@ -5,24 +5,16 @@ import { Button } from "@/components/ui/button";
 import { PropertyStatusBadge } from "@/components/properties/PropertyStatusBadge";
 import { DocumentList } from "@/features/documents/components/DocumentList";
 
+import type { PropertyWithDetails, RelatedDealV3 as RelatedDeal } from "@/features/properties/types/v3";
+import { m, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/utils";
+
 interface PropertyCRMDetailsProps {
-  property: {
-    status: string | null;
-    agent?: {
-      full_name: string | null;
-    } | null;
-  };
-  relatedDeal: {
-    id: string;
-    lead?: {
-      full_name: string;
-    } | null;
-  } | null;
-  relatedContract: {
-    id: string;
-  } | null;
+  property: PropertyWithDetails;
+  relatedDeal: RelatedDeal | null;
+  relatedContract: any | null; // Keep flexible for specific contract views
   commissionLabel: string;
-   tenantId: string | undefined;
+  tenantId: string | undefined;
 }
 
 import { useState } from "react";
@@ -42,20 +34,27 @@ export function PropertyCRMDetails({
   if (!relatedDeal) return null;
 
   return (
-    <section className="space-y-6 rounded-2xl border p-5 sm:p-8 bg-slate-50/50 mt-8 sm:mt-12">
+    <m.section 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-6 rounded-3xl border border-white/60 p-6 sm:p-8 bg-white/40 backdrop-blur-xl shadow-xl shadow-slate-200/40 mt-8 sm:mt-12"
+    >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h3 className="text-lg sm:text-xl font-bold flex flex-wrap items-center gap-2 text-slate-800">
-          <PropertyStatusBadge
-            status={property.status || "DRAFT"}
-            className="text-[10px] sm:text-sm px-2 py-0.5 sm:px-3 sm:py-1"
-            language="th"
-          />
-          CRM ดีลสถานะสำเร็จ
-        </h3>
-         <Button
+        <div className="space-y-1">
+          <h3 className="text-lg sm:text-xl font-extrabold flex flex-wrap items-center gap-2 text-slate-900 tracking-tight">
+            <PropertyStatusBadge
+              status={property.status || "DRAFT"}
+              className="text-[10px] sm:text-xs px-2.5 py-1 rounded-full shadow-sm"
+              language="th"
+            />
+            CRM ดีลสถานะสำเร็จ
+          </h3>
+          <p className="text-xs text-slate-500 font-medium uppercase tracking-widest">Closed-Win Sales Intelligence</p>
+        </div>
+        <Button
           variant="outline"
           size="sm"
-          className="w-full sm:w-auto rounded-xl"
+          className="w-full sm:w-auto rounded-xl border-slate-200 bg-white hover:bg-slate-50 hover:text-blue-600 transition-all duration-300 font-bold shadow-sm"
           onClick={() => {
             setNavigatingId(relatedDeal.id);
             router.push(`/protected/deals/${relatedDeal.id}`);
@@ -65,45 +64,44 @@ export function PropertyCRMDetails({
           {navigatingId === relatedDeal.id ? (
             <Loader2 className="h-4 w-4 animate-spin text-blue-600 mr-2" />
           ) : null}
-          ไปยังหน้า Deal
+          รายละเอียดดีล (V3)
         </Button>
       </div>
 
-      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-4">
-        <div className="rounded-xl border border-slate-200 p-4 bg-white shadow-sm">
-          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">
-            ค่าคอมมิชชั่น
-          </div>
-          <div className="text-lg sm:text-xl font-bold text-emerald-600">
-            {commissionLabel}
-          </div>
-        </div>
-        <div className="rounded-xl border border-slate-200 p-4 bg-white shadow-sm">
-          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">
-            ลูกค้า (Lead)
-          </div>
-          <div className="font-bold text-slate-900 text-base sm:text-lg">
-            {relatedDeal.lead?.full_name ?? "-"}
-          </div>
-        </div>
-        <div className="rounded-xl border border-slate-200 p-4 bg-white shadow-sm">
-          <div className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">
-            เคสโดย
-          </div>
-          <div className="font-bold text-slate-900 text-base sm:text-lg">
-            {property.agent?.full_name ?? "-"}
-          </div>
-        </div>
+      <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 mt-6">
+        {[
+          { label: "ค่าคอมมิชชั่น", value: commissionLabel, color: "text-emerald-600", desc: "Total Commission" },
+          { label: "ลูกค้า (Lead)", value: relatedDeal.lead?.full_name ?? "-", color: "text-slate-900", desc: "Buyer/Tenant Identity" },
+          { label: "ดูแลโดย", value: property.agent?.full_name ?? "-", color: "text-slate-900", desc: "In-charge Agent" },
+        ].map((item, idx) => (
+          <m.div
+            key={idx}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: idx * 0.1 }}
+            className="rounded-2xl border border-white bg-white/60 p-5 shadow-sm hover:shadow-md transition-shadow duration-300 group"
+          >
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 group-hover:text-blue-500 transition-colors">
+              {item.label}
+            </div>
+            <div className={cn("text-lg font-black tracking-tight", item.color)}>
+              {item.value}
+            </div>
+            <div className="text-[9px] text-slate-300 font-medium mt-1 uppercase tracking-tighter">{item.desc}</div>
+          </m.div>
+        ))}
       </div>
 
-      <div className="grid gap-8 grid-cols-1 lg:grid-cols-2 mt-6 sm:mt-8 pt-6 sm:pt-8 border-t border-slate-200">
+      <div className="grid gap-8 grid-cols-1 lg:grid-cols-2 mt-8 pt-8 border-t border-slate-100">
         <div>
-          <div className="text-xs sm:text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+          <div className="text-xs sm:text-sm font-black text-slate-800 mb-5 flex items-center gap-3">
+            <div className="w-1.5 h-6 rounded-full bg-blue-500/20 flex items-center justify-center">
+              <div className="w-1 h-1 rounded-full bg-blue-500" />
+            </div>
             เอกสารสัญญา (Contract)
           </div>
           {relatedContract?.id ? (
-            <div className="overflow-x-auto no-scrollbar">
+            <div className="overflow-x-auto no-scrollbar rounded-2xl border border-slate-50 bg-white/40 p-4">
               <DocumentList
                 ownerId={relatedContract.id}
                 ownerType="RENTAL_CONTRACT"
@@ -111,17 +109,22 @@ export function PropertyCRMDetails({
               />
             </div>
           ) : (
-            <div className="text-center py-8 sm:py-10 text-slate-400 border border-dashed rounded-xl bg-white text-sm">
-              ยังไม่มีสัญญา
-            </div>
+            <m.div 
+              whileHover={{ scale: 1.01 }}
+              className="text-center py-10 sm:py-14 text-slate-400 border border-dashed border-slate-200 rounded-3xl bg-slate-50/30 text-xs font-bold uppercase tracking-widest"
+            >
+              ยังไม่มีสัญญาที่บันทึก
+            </m.div>
           )}
         </div>
         <div>
-          <div className="text-xs sm:text-sm font-bold text-slate-800 mb-4 flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+          <div className="text-xs sm:text-sm font-black text-slate-800 mb-5 flex items-center gap-3">
+             <div className="w-1.5 h-6 rounded-full bg-indigo-500/20 flex items-center justify-center">
+              <div className="w-1 h-1 rounded-full bg-indigo-500" />
+            </div>
             เอกสารดีล (Documents)
           </div>
-          <div className="overflow-x-auto no-scrollbar">
+          <div className="overflow-x-auto no-scrollbar rounded-2xl border border-slate-50 bg-white/40 p-4">
             <DocumentList
               ownerId={relatedDeal.id}
               ownerType="DEAL"
@@ -130,6 +133,6 @@ export function PropertyCRMDetails({
           </div>
         </div>
       </div>
-    </section>
+    </m.section>
   );
 }

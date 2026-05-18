@@ -1,14 +1,19 @@
 import { createClient } from "@/lib/supabase/client";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { Database as LegacyDatabase } from "@/lib/database.types.generated";
 
 export async function getRentNotificationRules() {
-  const supabase = createClient();
+  const supabase = createClient() as unknown as SupabaseClient<LegacyDatabase>;
   const { data, error } = await supabase
-    .from("rent_notification_rules")
+    .from("rent_notification_rules_v3")
     .select(
       `
-      id, property_id, line_group_id, notification_day, notification_hour, language, is_active, last_sent_at, created_at, tenant_id,
-      properties (id, title),
-      line_groups (group_id, group_name, picture_url)
+      id, property_id, channel_id, notification_day, notification_hour, language, is_active, last_sent_at, created_at, tenant_id,
+      property:properties_core (
+        id,
+        details:properties_details(title)
+      ),
+      channel:notification_channels_v3 (id, platform, external_channel_id, channel_name, picture_url)
     `,
     )
     .order("created_at", { ascending: false });
@@ -21,11 +26,11 @@ export async function getRentNotificationRules() {
 }
 
 export async function getLineGroups() {
-  const supabase = createClient();
+  const supabase = createClient() as unknown as SupabaseClient<LegacyDatabase>;
   // Fetch only active groups or all? Let's fetch all for now or active.
   const { data, error } = await supabase
-    .from("line_groups")
-    .select("group_id, group_name, picture_url, is_active")
+    .from("notification_channels_v3")
+    .select("id, platform, external_channel_id, channel_name, picture_url, is_active")
     .eq("is_active", true)
     .order("updated_at", { ascending: false });
 

@@ -366,11 +366,11 @@ export function PropertyRowActions({
       {showTransferButton && (
         <TransferBranchDialog
           open={showTransferDialog}
-          onOpenChange={setShowTransferDialog}
+          onOpenChangeAction={setShowTransferDialog}
           entityId={id}
           entityName={title || "ทรัพย์สิน"}
           currentTenantId={tenantId}
-          onTransfer={transferPropertyBranchAction}
+          onTransferAction={transferPropertyBranchAction}
         />
       )}
 

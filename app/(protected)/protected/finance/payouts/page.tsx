@@ -173,7 +173,7 @@ export default function PayoutDashboardPage() {
 
   const filteredPayouts = payouts.filter(p => 
     p.agent?.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.deal?.property?.title?.toLowerCase().includes(searchTerm.toLowerCase())
+    p.property?.title?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const visibleIds = payouts.map((p: CommissionPayoutRecord) => p.id);

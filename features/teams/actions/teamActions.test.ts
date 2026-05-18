@@ -67,7 +67,7 @@ describe('Team Actions - Enterprise Model', () => {
       const result = await getTeamsAction();
 
       expect(result.success).toBe(true);
-      expect(mockSupabase.from).toHaveBeenCalledWith('teams');
+      expect(mockSupabase.from).toHaveBeenCalledWith('teams_v3');
       expect(mockSupabase.eq).toHaveBeenCalledWith('tenant_id', tenantId);
     });
 
@@ -165,9 +165,9 @@ describe('Team Actions - Enterprise Model', () => {
       const result = await deleteTeamAction('team-1');
 
       expect(result.success).toBe(true);
-      expect(mockSupabase.rpc).toHaveBeenCalledWith('hard_delete_team', {
-        p_team_id: 'team-1'
-      });
+      expect(mockSupabase.from).toHaveBeenCalledWith('teams_v3');
+      expect(mockSupabase.delete).toHaveBeenCalled();
+      expect(mockSupabase.eq).toHaveBeenCalledWith('id', 'team-1');
     });
   });
 });

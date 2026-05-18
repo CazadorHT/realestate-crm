@@ -3,21 +3,6 @@
 import { useState } from "react";
 import { UserPlus, Mail, Key, Loader2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -26,9 +11,11 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { cn } from "@/lib/utils";
 import { ChevronDown, CheckCircle2, Shield, User as UserIcon, Eye } from "lucide-react";
 
-interface Profile {
+interface StaffIdentity {
   id: string;
   full_name: string | null;
+  display_name: string | null;
+  nickname: string | null;
   email: string | null;
   avatar_url: string | null;
   role: string | null;
@@ -37,8 +24,8 @@ interface Profile {
 interface AddMemberDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  allProfiles: Profile[];
-  currentMembers: Array<{ profile_id: string }>;
+  allProfiles: StaffIdentity[];
+  currentMembers: Array<{ identity_id: string }>;
   branchName: string;
   onAdd: (data: { email: string; role: string }, isExisting: boolean) => Promise<void>;
 }
@@ -59,7 +46,7 @@ export function AddMemberDialog({
   const [memberSearch, setMemberSearch] = useState("");
 
   const availableProfiles = allProfiles.filter(
-    (p) => !currentMembers.some((m) => m.profile_id === p.id)
+    (p) => !currentMembers.some((m) => m.identity_id === p.id)
   );
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -151,11 +138,10 @@ export function AddMemberDialog({
                           </AvatarFallback>
                         </Avatar>
                         <span className="text-sm font-bold text-slate-900">
-                          {
-                            availableProfiles.find(
-                              (p) => p.email === newMember.email
-                            )?.full_name
-                          }
+                          {(() => {
+                            const p = availableProfiles.find(p => p.email === newMember.email);
+                            return p ? (p.nickname ? `${p.display_name || p.full_name} (${p.nickname})` : (p.display_name || p.full_name)) : "";
+                          })()}
                         </span>
                       </>
                     ) : (
@@ -186,12 +172,10 @@ export function AddMemberDialog({
                     {availableProfiles
                       .filter(
                         (p) =>
-                          p.full_name
-                            ?.toLowerCase()
-                            .includes(memberSearch.toLowerCase()) ||
-                          p.email
-                            ?.toLowerCase()
-                            .includes(memberSearch.toLowerCase())
+                          p.full_name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
+                          p.display_name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
+                          p.nickname?.toLowerCase().includes(memberSearch.toLowerCase()) ||
+                          p.email?.toLowerCase().includes(memberSearch.toLowerCase())
                       )
                       .map((p) => (
                         <button
@@ -227,7 +211,8 @@ export function AddMemberDialog({
                                     "text-indigo-600"
                                 )}
                               >
-                                {p.full_name}
+                                {p.display_name || p.full_name}
+                                {p.nickname && <span className="ml-1 text-slate-400 font-normal">({p.nickname})</span>}
                               </span>
                               <Badge
                                 variant="outline"
@@ -300,9 +285,9 @@ export function AddMemberDialog({
                 {availableProfiles
                   .filter(
                     (p) =>
-                      p.full_name
-                        ?.toLowerCase()
-                        .includes(searchQuery.toLowerCase()) ||
+                      p.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      p.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                      p.nickname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                       p.email?.toLowerCase().includes(searchQuery.toLowerCase())
                   )
                   .map((p) => (
@@ -328,7 +313,8 @@ export function AddMemberDialog({
                       </Avatar>
                       <div>
                         <p className="text-xs font-bold text-slate-900">
-                          {p.full_name}
+                          {p.display_name || p.full_name}
+                          {p.nickname && <span className="ml-1 text-slate-400 font-normal">({p.nickname})</span>}
                         </p>
                         <p className="text-[10px] text-slate-400">{p.email}</p>
                       </div>

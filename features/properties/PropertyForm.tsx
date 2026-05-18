@@ -188,15 +188,16 @@ export function PropertyForm({
     popularAreas,
     refreshPopularAreas,
     refreshOwners,
-    allBranches,
-    setAllBranches,
-  } = usePropertyFormData(mode, defaultValues?.id, form);
+    branches,
+    showAllOwners,
+    setShowAllOwners,
+  } = usePropertyFormData(mode, defaultValues?.id || undefined, form);
 
   // === DRAFT MANAGEMENT ===
   const { checkAndRestoreDraft, clearDraft } = usePropertyFormDraft(
     form,
     mode,
-    defaultValues?.id,
+    defaultValues?.id || undefined,
   );
 
   useEffect(() => {
@@ -225,7 +226,7 @@ export function PropertyForm({
 
   // Initialize Quick Info for edit mode
   React.useEffect(() => {
-    if (defaultValues?.title || defaultValues?.popular_area) {
+    if (defaultValues?.title || (defaultValues as any)?.popular_area) {
       setIsQuickInfoOpen(true);
     }
   }, [defaultValues]);
@@ -380,7 +381,7 @@ export function PropertyForm({
         result = await createPropertyAction({ ...values }, uploadSessionId);
       } else {
         result = await updatePropertyAction(
-          defaultValues!.id,
+          defaultValues!.id as string,
           { ...values },
           uploadSessionId,
         );
@@ -405,8 +406,8 @@ export function PropertyForm({
         }
 
         setSuccessData({
-          id: propertyId,
-          title: values.title,
+          id: propertyId ?? "",
+          title: values.title ?? "",
           slug: result.slug,
         });
       } else {
@@ -558,6 +559,7 @@ export function PropertyForm({
             onAddAreaAction={handleAddArea}
             isQuickInfoOpen={isQuickInfoOpen}
             setIsQuickInfoOpen={setIsQuickInfoOpen}
+            branches={branches}
           />
         );
       case 2:
@@ -574,10 +576,10 @@ export function PropertyForm({
             uploadSessionId={uploadSessionId}
             persistImages={persistImages}
             refreshOwners={refreshOwners}
-            allBranches={allBranches}
-            setAllBranches={setAllBranches}
             isMultiTenant={isMultiTenant}
             userRole={userRole}
+            showAllOwners={showAllOwners}
+            setShowAllOwners={setShowAllOwners}
           />
         );
       case 5:
@@ -598,13 +600,13 @@ export function PropertyForm({
       {/* 1. Header */}
       <PropertyFormHeader
         mode={mode}
-        title={defaultValues?.title}
+        title={defaultValues?.title ?? undefined}
         uploadSessionId={uploadSessionId}
         isDirty={form.formState.isDirty}
         isSubmitting={isActuallySubmitting}
         onSubmit={submitNow}
-        aiReviewedAt={defaultValues?.ai_reviewed_at}
-        reviewerName={defaultValues?.reviewer?.full_name}
+        aiReviewedAt={(defaultValues as any)?.ai_reviewed_at}
+        reviewerName={defaultValues?.reviewer?.full_name ?? undefined}
         form={form}
       />
 

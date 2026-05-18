@@ -80,8 +80,8 @@ export function DealFormDialog({
           : 12;
 
       return {
-        lead_id: sanitized.lead_id,
-        property_id: sanitized.property_id,
+        lead_id: sanitized.lead_id || "",
+        property_id: sanitized.property_id || "",
         deal_type: sanitized.deal_type,
         status: (sanitized.status as CreateDealInput["status"]) ?? "NEGOTIATING",
         commission_amount: sanitized.commission_amount as number | undefined,

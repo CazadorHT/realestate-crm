@@ -22,6 +22,7 @@ import { type TenantMembership } from "@/features/profile/types";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle2, Fingerprint, LayoutDashboard, ShieldCheck, Trophy, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { ROLE_LABELS } from "@/lib/auth-shared";
 
 
 export default async function ProfilePage() {
@@ -44,11 +45,11 @@ export default async function ProfilePage() {
     );
   }
 
-  // Fetch branch memberships with strict typing
+  // Fetch branch memberships with strict typing (V3)
   const { data: memberships } = await supabase
-    .from("tenant_members")
-    .select("role, tenant:tenants(id, name)")
-    .eq("profile_id", profile.id);
+    .from("tenant_members_v3")
+    .select("role, tenant:tenants_v3(id, name)")
+    .eq("identity_id", profile.id);
 
   const isAdmin = profile.role === "ADMIN";
   
@@ -117,7 +118,7 @@ export default async function ProfilePage() {
                     </h2>
                     <div className="flex items-center justify-center gap-2 mt-1">
                        <Trophy className="h-3.5 w-3.5 text-amber-500" />
-                       <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em]">Verified {profile.role || "USER"}</span>
+                       <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.2em]">Verified {profile.role ? (ROLE_LABELS[profile.role] || profile.role) : "USER"}</span>
                     </div>
                   </div>
 
@@ -138,7 +139,7 @@ export default async function ProfilePage() {
                       </div>
                       <div className="text-left overflow-hidden">
                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Access</p>
-                        <p className="text-[11px] font-black text-indigo-600 uppercase truncate">{profile.role}</p>
+                        <p className="text-[11px] font-black text-indigo-600 uppercase truncate">{profile.role ? (ROLE_LABELS[profile.role] || profile.role) : ""}</p>
                       </div>
                     </div>
                   </div>
@@ -169,6 +170,8 @@ export default async function ProfilePage() {
             {/* Section 1: Profile Information */}
             <ProfileInfoForm
               fullName={profile.full_name}
+              nickname={profile.nickname}
+              signature_url={profile.signature_url}
               phone={profile.phone}
               line_id={profile.line_id}
               line_user_id={profile.line_user_id}
@@ -183,6 +186,8 @@ export default async function ProfilePage() {
               bank_account_no={profile.bank_account_no}
               bank_account_name={profile.bank_account_name}
               telegram_id={profile.telegram_id}
+              wechat_user_id={profile.wechat_user_id}
+              whatsapp_user_id={profile.whatsapp_user_id}
               score={scoreClamped}
             />
 

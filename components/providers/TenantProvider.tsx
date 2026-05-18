@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { setActiveTenantCookieAction } from "@/lib/actions/tenant-context";
+import { type Json } from "@/lib/database.types.generated";
 import * as Sentry from "@sentry/nextjs";
 
 type Tenant = {
@@ -18,7 +19,8 @@ type Tenant = {
   name: string;
   slug: string;
   logo_url: string | null;
-  userRole?: string;
+  userRole: string;
+  global_settings?: Record<string, any>;
 };
 
 type TenantContextType = {
@@ -64,30 +66,47 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
 
       // 1. Fetch all tenants for this user regardless of mode (needed for fallback)
       const { data: memberData, error } = await supabase
-        .from("tenant_members")
-        .select(
-          `
-          tenant_id,
+        .from("tenant_members_v3")
+        .select(`
           role,
-          tenants (
+          tenant:tenants_v3 (
             id,
             name,
             slug,
-            logo_url
+            logo_url,
+            global_settings
           )
-        `,
-        )
-        .eq("profile_id", user.id);
+        `)
+        .eq("identity_id", user.id);
 
       if (error) throw error;
 
-      const tenantList = memberData
-        ?.map((m: any) => ({
-          ...m.tenants,
-          userRole: m.role,
-        }))
-        .filter(Boolean) as Tenant[];
-      setTenants(tenantList || []);
+      interface V3TenantMember {
+        role: string;
+        tenant: {
+          id: string;
+          name: string;
+          slug: string;
+          logo_url: string | null;
+          global_settings: Json | null;
+        } | null;
+      }
+
+      const tenantList: Tenant[] = ((memberData as unknown as V3TenantMember[]) || [])
+        .map((m): Tenant | null => {
+          if (!m.tenant) return null;
+          return {
+            id: m.tenant.id,
+            name: m.tenant.name,
+            slug: m.tenant.slug,
+            logo_url: m.tenant.logo_url,
+            userRole: m.role,
+            global_settings: m.tenant.global_settings as Record<string, any>,
+          };
+        })
+        .filter((t): t is Tenant => t !== null);
+
+      setTenants(tenantList);
 
       // 2. Determine Active Tenant
       if (!config.multi_tenant_enabled) {
@@ -99,16 +118,20 @@ export function TenantProvider({ children }: { children: React.ReactNode }) {
           initial =
             tenantList.find((t) => t.id === config.default_tenant_id) || null;
 
-          // If not in user's list (e.g. admin not added yet), fetch it directly
+          // If not in user's list (e.g. superadmin not explicitly added), fetch it
           if (!initial) {
             const { data: defaultTenant } = await supabase
-              .from("tenants")
-              .select("id, name, slug, logo_url")
+              .from("tenants_v3")
+              .select("id, name, slug, logo_url, global_settings")
               .eq("id", config.default_tenant_id)
               .single();
 
             if (defaultTenant) {
-              initial = defaultTenant as Tenant;
+              initial = {
+                ...defaultTenant,
+                userRole: "ADMIN", // Fallback for system default
+                global_settings: (defaultTenant as any).global_settings as Record<string, any>,
+              };
             }
           }
         }

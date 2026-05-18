@@ -29,13 +29,30 @@ export function PartnerSection() {
       try {
         const supabase = createClient();
         const { data } = await supabase
-          .from("partners")
-          .select("id, name, logo_url, website_url")
-          .eq("is_active", true)
-          .order("sort_order", { ascending: true });
+          .from("cms_content_v3")
+          .select("id, title, cover_image, meta_data, status")
+          .eq("content_type", "PARTNER")
+          .eq("status", "published")
+          .order("meta_data->sort_order", { ascending: true });
 
         if (data) {
-          setPartners(data as unknown as Partner[]);
+          const mapped: Partner[] = data.map((item) => {
+            let nameStr = "";
+            if (item.title && typeof item.title === "object") {
+              const t = item.title as Record<string, unknown>;
+              nameStr = (t.th as string) || (t.default as string) || (Object.values(t)[0] as string) || "";
+            } else {
+              nameStr = String(item.title || "");
+            }
+            const metaObj = (typeof item.meta_data === "object" && item.meta_data !== null && !Array.isArray(item.meta_data) ? item.meta_data : {}) as Record<string, unknown>;
+            return {
+              id: item.id,
+              name: nameStr,
+              logo_url: item.cover_image || "",
+              website_url: typeof metaObj.website_url === "string" ? metaObj.website_url : undefined,
+            };
+          });
+          setPartners(mapped);
         }
       } catch (error) {
         console.error("Error fetching partners:", error);

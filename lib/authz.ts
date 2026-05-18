@@ -13,6 +13,7 @@ export type AuthContext = {
   user: User;
   role: UserRole;
   tenantId?: string;
+  category?: number; // 0=Staff, 1=Customer, etc.
 };
 
 export class AuthzError extends Error {
@@ -45,9 +46,9 @@ async function getRole(
   const statelessRole = getRoleStateless(user);
   if (statelessRole) return statelessRole;
 
-  // 2. Fallback to DB if Metadata is missing
+  // 2. Fallback to DB (Identities V3 is the Source of Truth)
   const { data } = await supabase
-    .from("profiles")
+    .from("identities_v3")
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
@@ -66,19 +67,25 @@ export const getAuthContextOrNull = cache(async (
   const supabase = injectedSupabase ?? (await createClient());
   const { data, error } = await supabase.auth.getUser();
   
-  // 🛡️ Zombie Session Protection: Verify user exists and JWT is still valid
+  // 🛡️ Server-side Identity Linking
   if (error || !data?.user) return null;
 
-  // 🛡️ Server-side Identity Linking
-  Sentry.setUser({
-    id: data.user.id,
-    email: data.user.email,
-  });
+  // Fetch identity details (Source of Truth)
+  const { data: identity } = await supabase
+    .from("identities_v3")
+    .select("role, tenant_id, category")
+    .eq("id", data.user.id)
+    .maybeSingle();
 
-  const role = await getRole(supabase, data.user);
-  if (!role) return null; // 🛡️ Mission Critical: No profile = No access
+  if (!identity?.role) return null;
 
-  return { supabase, user: data.user, role };
+  return { 
+    supabase, 
+    user: data.user, 
+    role: identity.role as UserRole,
+    tenantId: identity.tenant_id ?? undefined,
+    category: identity.category ?? undefined
+  };
 });
 
 export const requireAuthContext = cache(async (
@@ -115,12 +122,17 @@ export const requireAuthContext = cache(async (
   }
 
   // 2.2 If we have a tenant ID (from param or cookie), verify membership
+  // 👑 Optimization: ADMINs can access ANY tenant without being a member
   if (finalTenantId) {
+    if (isAdmin(ctx.role)) {
+      return { ...ctx, tenantId: finalTenantId };
+    }
+
     const { data: member, error } = await ctx.supabase
-      .from("tenant_members")
+      .from("tenant_members_v3")
       .select("role")
       .eq("tenant_id", finalTenantId)
-      .eq("profile_id", ctx.user.id)
+      .eq("identity_id", ctx.user.id)
       .single();
 
     if (error || !member) {
@@ -134,13 +146,13 @@ export const requireAuthContext = cache(async (
 
   // Rule 3: If still no tenant (or switch failed), pick the first one from their membership
   const { data: firstMember } = await ctx.supabase
-    .from("tenant_members")
+    .from("tenant_members_v3")
     .select("tenant_id")
-    .eq("profile_id", ctx.user.id)
+    .eq("identity_id", ctx.user.id)
     .limit(1)
     .maybeSingle();
 
-  if (firstMember) {
+  if (firstMember?.tenant_id) {
     return { ...ctx, tenantId: firstMember.tenant_id };
   }
 

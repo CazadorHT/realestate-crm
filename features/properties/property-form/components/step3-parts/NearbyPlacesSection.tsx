@@ -33,8 +33,46 @@ import {
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "../../components/SectionHeader";
-import { useFormContext, type UseFormReturn } from "react-hook-form";
+import { useFormContext, useWatch, type UseFormReturn } from "react-hook-form";
+import { Checkbox } from "@/components/ui/checkbox";
 import type { PropertyFormValues } from "@/features/properties/schema";
+
+const KilometerInput = ({
+  value,
+  onChange,
+  className,
+  placeholder,
+}: {
+  value?: number | null;
+  onChange: (val?: number) => void;
+  className?: string;
+  placeholder?: string;
+}) => {
+  const [displayValue, setDisplayValue] = React.useState(() => {
+    if (value === undefined || value === null) return "";
+    return (value / 1000).toString();
+  });
+
+  React.useEffect(() => {
+    const currentMeters = value ?? undefined;
+    const inputMeters = displayValue === "" ? undefined : parseFloat(displayValue) * 1000;
+    if (currentMeters === inputMeters) return;
+    setDisplayValue(currentMeters !== undefined && currentMeters !== null ? (currentMeters / 1000).toString() : "");
+  }, [value]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVal = e.target.value;
+    setDisplayValue(newVal);
+    if (newVal === "") {
+      onChange(undefined as any);
+      return;
+    }
+    const parsed = parseFloat(newVal);
+    if (!isNaN(parsed)) onChange(parsed * 1000);
+  };
+
+  return <Input value={displayValue} onChange={handleChange} className={className} placeholder={placeholder} />;
+};
 
 interface NearbyPlacesSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
@@ -56,7 +94,7 @@ export function NearbyPlacesSection({
     append({
       category: "Other",
       name: "",
-      distance: "",
+      distance_meters: undefined,
       time: "",
     });
   };
@@ -70,7 +108,7 @@ export function NearbyPlacesSection({
           desc="เพิ่มจุดเด่นรอบๆ ทรัพย์สิน"
           tone="blue"
           right={
-            fields.length > 0 && (
+            fields.length > 0 ? (
               <Button
                 type="button"
                 variant="outline"
@@ -84,183 +122,187 @@ export function NearbyPlacesSection({
                 ) : (
                   <Sparkles className="h-3.5 w-3.5" />
                 )}
-                AI {isTranslating ? "กำลังแปล..." : "Fix All"}
+                AI {isTranslating ? "กำลังแปล..." : "แปลชื่อทั้งหมด"}
               </Button>
-            )
+            ) : null
           }
         />
         <Separator className="bg-slate-200/70" />
       </CardHeader>
 
-      <CardContent className="pt-6 space-y-4 px-4 sm:px-6">
-        {/* Places List - Scrollable container for max 3 visible */}
-        <div className="max-h-[400px] overflow-y-auto space-y-4 pr-1 custom-scrollbar">
-          {fields.map((item, index) => (
-            <div
-              key={item.id}
-              className="grid grid-cols-12 gap-x-4 gap-y-3 p-3 sm:p-4 bg-slate-50/50 rounded-xl border border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200"
-            >
-              {/* Category */}
-              <FormField
-                control={form.control}
-                name={`nearby_places.${index}.category`}
-                render={({ field }) => (
-                  <FormItem className="col-span-6 sm:col-span-4 lg:col-span-3">
-                    <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
-                      <Landmark className="h-3.5 w-3.5 text-blue-500" />
-                      ประเภท
-                    </FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger className="w-full min-w-0 h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
-                          <SelectValue placeholder="เลือก..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white rounded-xl">
-                        {NEARBY_PLACE_CATEGORIES.map((cat) => (
-                          <SelectItem
-                            key={cat.value}
-                            value={cat.value}
-                            className="font-medium py-2 text-sm"
-                          >
-                            {cat.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </FormItem>
-                )}
-              />
+      <CardContent className="pt-6 px-4 sm:px-6">
+        <div className="space-y-4">
+          <div className="max-h-[400px] overflow-y-auto space-y-4 pr-1 custom-scrollbar">
+            {fields.map((item, index) => (
+              <div
+                key={item.id}
+                className="grid grid-cols-1 gap-4 p-4 sm:p-5 bg-slate-50/50 rounded-2xl border border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200 relative group"
+              >
+                <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full"
+                    onClick={() => remove(index)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
 
-              {/* Distance */}
-              <FormField
-                control={form.control}
-                name={`nearby_places.${index}.distance`}
-                render={({ field }) => (
-                  <FormItem className="col-span-3 sm:col-span-2">
-                    <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
-                      <Ruler className="h-3.5 w-3.5 text-blue-500" />
-                      ระยะ
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="1 กม."
-                        className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium text-xs text-center focus:ring-0 focus:border-blue-400 px-1"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name={`nearby_places.${index}.category`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
+                          <Landmark className="h-3.5 w-3.5 text-blue-500" />
+                          ประเภท
+                        </FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger className="w-full h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
+                              <SelectValue placeholder="เลือก..." />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-white rounded-xl">
+                            {NEARBY_PLACE_CATEGORIES.map((cat) => (
+                              <SelectItem key={cat.value} value={cat.value} className="font-medium py-2 text-sm">
+                                {cat.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Time */}
-              <FormField
-                control={form.control}
-                name={`nearby_places.${index}.time`}
-                render={({ field }) => (
-                  <FormItem className="col-span-3 sm:col-span-2">
-                    <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
-                      <Clock className="h-3.5 w-3.5 text-blue-500" />
-                      เวลา
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="5 นาที"
-                        className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium text-xs text-center focus:ring-0 focus:border-blue-400 px-1"
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+                  <FormField
+                    control={form.control}
+                    name={`nearby_places.${index}.distance_meters`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
+                          <Ruler className="h-3.5 w-3.5 text-blue-500" />
+                          ระยะทาง (กม.)
+                        </FormLabel>
+                        <FormControl>
+                          <KilometerInput
+                            value={field.value}
+                            onChange={field.onChange}
+                            className="h-9! rounded-lg bg-white border-slate-200 shadow-sm font-medium text-xs text-center focus:ring-0 focus:border-blue-400"
+                            placeholder="0.5"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
 
-              {/* Name */}
-              <FormField
-                control={form.control}
-                name={`nearby_places.${index}.name`}
-                render={({ field }) => (
-                  <FormItem className="col-span-10 sm:col-span-3 lg:col-span-4">
-                    <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
-                      <MapPin className="h-3.5 w-3.5 text-blue-500" />
-                      ชื่อสถานที่
-                    </FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="เช่น โรงเรียนสาธิต"
-                        className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium px-4 text-xs focus:ring-0 focus:border-blue-400"
-                      />
-                    </FormControl>
+                  <FormField
+                    control={form.control}
+                    name={`nearby_places.${index}.time`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
+                          <Clock className="h-3.5 w-3.5 text-blue-500" />
+                          เวลา (นาที)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="5"
+                            className="h-9! rounded-lg bg-white border-slate-200 shadow-sm font-medium text-xs text-center focus:ring-0 focus:border-blue-400"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-                    {/* Hidden fields for EN/CN/RU */}
-                    <div className="grid grid-cols-3 gap-2 mt-2">
-                      <FormField
-                        control={form.control}
-                        name={`nearby_places.${index}.name_en`}
-                        render={({ field }) => (
+                <div className="space-y-3">
+                  <FormField
+                    control={form.control}
+                    name={`nearby_places.${index}.name`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
+                          <MapPin className="h-3.5 w-3.5 text-blue-500" />
+                          ชื่อสถานที่ (ภาษาไทย)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            {...field}
+                            placeholder="เช่น โรงเรียนสาธิต"
+                            className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium px-4 text-xs focus:ring-0 focus:border-blue-400"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 gap-3 pl-2 border-l-2 border-slate-100 ml-1">
+                    <FormField
+                      control={form.control}
+                      name={`nearby_places.${index}.name_en`}
+                      render={({ field }) => (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-slate-300 w-6">EN</span>
                           <Input
                             {...field}
                             value={field.value || ""}
-                            placeholder="EN Name"
-                            className="h-8 text-[10px] bg-slate-50/50 text-slate-500 border-slate-100 focus:bg-white transition-all"
+                            placeholder="English Place Name"
+                            className="h-9 text-xs bg-white text-slate-600 border-slate-200 rounded-lg focus:bg-white transition-all flex-1"
                           />
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`nearby_places.${index}.name_cn`}
-                        render={({ field }) => (
+                        </div>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`nearby_places.${index}.name_cn`}
+                      render={({ field }) => (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-slate-300 w-6">CN</span>
                           <Input
                             {...field}
                             value={field.value || ""}
-                            placeholder="CN Name"
-                            className="h-8 text-[10px] bg-slate-50/50 text-slate-500 border-slate-100 focus:bg-white transition-all"
+                            placeholder="中文名称"
+                            className="h-9 text-xs bg-white text-slate-600 border-slate-200 rounded-lg focus:bg-white transition-all flex-1"
                           />
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name={`nearby_places.${index}.name_ru`}
-                        render={({ field }) => (
+                        </div>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name={`nearby_places.${index}.name_ru`}
+                      render={({ field }) => (
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] font-bold text-slate-300 w-6">RU</span>
                           <Input
                             {...field}
                             value={field.value || ""}
-                            placeholder="RU Name"
-                            className="h-8 text-[10px] bg-slate-50/50 text-slate-500 border-slate-100 focus:bg-white transition-all"
+                            placeholder="Название места"
+                            className="h-9 text-xs bg-white text-slate-600 border-slate-200 rounded-lg focus:bg-white transition-all flex-1"
                           />
-                        )}
-                      />
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              {/* Delete Button */}
-              <div className="col-span-2 sm:col-span-1 flex items-start justify-end pt-5">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
-                  onClick={() => remove(index)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                        </div>
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
 
-        {/* Add Button */}
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full h-12 border-dashed border-2 border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50/50 font-medium text-sm transition-all"
-          onClick={handleAddPlace}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          เพิ่มสถานที่
-        </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full h-12 border-dashed border-2 border-slate-200 text-slate-500 hover:text-blue-600 hover:border-blue-300 hover:bg-blue-50/50 font-medium text-sm transition-all mt-4"
+            onClick={handleAddPlace}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            เพิ่มสถานที่
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

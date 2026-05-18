@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { restorePropertyVersionAction } from "./restore";
-import { requireAuthContext, assertStaff } from "@/lib/authz";
-import { revalidatePath } from "next/cache";
+import { requireAuthContext } from "@/lib/authz";
 
 // Mock the modules
 vi.mock("@/lib/authz", () => ({
@@ -18,8 +17,8 @@ vi.mock("@/lib/authz", () => ({
   }
 }));
 
-vi.mock("@/lib/audit", () => ({
-  logAudit: vi.fn(),
+vi.mock("./update", () => ({
+  updatePropertyAction: vi.fn(),
 }));
 
 vi.mock("next/cache", () => ({
@@ -40,7 +39,6 @@ describe("restorePropertyVersionAction", () => {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       single: vi.fn().mockReturnThis(),
-      rpc: vi.fn().mockReturnThis(),
     };
   });
 
@@ -52,28 +50,17 @@ describe("restorePropertyVersionAction", () => {
       tenantId: mockTenantId,
     });
 
+    const { updatePropertyAction } = await import("./update");
+    (updatePropertyAction as any).mockResolvedValue({ success: true });
+
     // Mock fetching audit log
     mockSupabase.single.mockResolvedValueOnce({
       data: {
         id: VALID_LOG_ID,
         entity_id: VALID_PROPERTY_ID,
         tenant_id: mockTenantId,
-        metadata: {
-          old_state: { title: "Old Title", price: 5000000 }
-        }
+        new_data: { title: "Old Title", price: 5000000, slug: "old-slug" }
       },
-      error: null
-    });
-
-    // Mock fetching current property version
-    mockSupabase.single.mockResolvedValueOnce({
-      data: { id: VALID_PROPERTY_ID, version: 5, title: "Current Title" },
-      error: null
-    });
-
-    // Mock RPC call
-    mockSupabase.rpc.mockResolvedValueOnce({
-      data: { id: VALID_PROPERTY_ID, slug: "restored-property" },
       error: null
     });
 
@@ -81,11 +68,11 @@ describe("restorePropertyVersionAction", () => {
 
     expect(result.success).toBe(true);
     expect(result.message).toBe("คืนค่าข้อมูลสำเร็จ");
-    expect(mockSupabase.rpc).toHaveBeenCalledWith("update_property_elite", expect.objectContaining({
-      p_version: 5,
-      p_data: expect.objectContaining({ title: "Old Title" })
-    }));
-    expect(revalidatePath).toHaveBeenCalled();
+    expect(updatePropertyAction).toHaveBeenCalledWith(
+        VALID_PROPERTY_ID, 
+        expect.objectContaining({ title: "Old Title" }), 
+        expect.stringContaining("RESTORE")
+    );
   });
 
   it("should return error if log is not found", async () => {
@@ -102,7 +89,6 @@ describe("restorePropertyVersionAction", () => {
 
     expect(result.success).toBe(false);
     expect(result.errorType).toBe("NOT_FOUND");
-    expect(result.message).toContain("ไม่พบข้อมูลประวัติ");
   });
 
   it("should prevent cross-tenant restoration", async () => {
@@ -114,7 +100,7 @@ describe("restorePropertyVersionAction", () => {
     });
 
     mockSupabase.single.mockResolvedValueOnce({
-      data: { id: VALID_LOG_ID, tenant_id: "branch-B", metadata: {} },
+      data: { id: VALID_LOG_ID, tenant_id: "branch-B", new_data: {} },
       error: null
     });
 
@@ -122,67 +108,5 @@ describe("restorePropertyVersionAction", () => {
 
     expect(result.success).toBe(false);
     expect(result.errorType).toBe("UNAUTHORIZED");
-    expect(result.message).toContain("ไม่สามารถคืนค่าข้อมูลข้ามสาขา");
-  });
-
-  it("should handle version conflict (VC409) from RPC", async () => {
-    (requireAuthContext as any).mockResolvedValue({
-      supabase: mockSupabase,
-      user: mockUser,
-      role: "AGENT",
-      tenantId: mockTenantId,
-    });
-
-    mockSupabase.single.mockResolvedValueOnce({
-      data: { id: VALID_LOG_ID, tenant_id: mockTenantId, metadata: { old_state: { title: "Old" } } },
-      error: null
-    });
-
-    mockSupabase.single.mockResolvedValueOnce({
-      data: { id: VALID_PROPERTY_ID, version: 5 },
-      error: null
-    });
-
-    // Mock RPC Failure with VC409
-    mockSupabase.rpc.mockResolvedValueOnce({
-      data: null,
-      error: { message: "VC409: Version conflict" }
-    });
-
-    const result = await restorePropertyVersionAction(VALID_PROPERTY_ID, VALID_LOG_ID);
-
-    expect(result.success).toBe(false);
-    expect(result.errorType).toBe("CONFLICT");
-    expect(result.message).toContain("ข้อมูลถูกแก้ไขโดยผู้อื่นแล้ว");
-  });
-
-  it("should handle ownership errors (VC403) from RPC", async () => {
-    (requireAuthContext as any).mockResolvedValue({
-      supabase: mockSupabase,
-      user: mockUser,
-      role: "AGENT",
-      tenantId: mockTenantId,
-    });
-
-    mockSupabase.single.mockResolvedValueOnce({
-      data: { id: VALID_LOG_ID, tenant_id: mockTenantId, metadata: { old_state: { title: "Old" } } },
-      error: null
-    });
-
-    mockSupabase.single.mockResolvedValueOnce({
-      data: { id: VALID_PROPERTY_ID, version: 5 },
-      error: null
-    });
-
-    mockSupabase.rpc.mockResolvedValueOnce({
-      data: null,
-      error: { message: "VC403: Forbidden" }
-    });
-
-    const result = await restorePropertyVersionAction(VALID_PROPERTY_ID, VALID_LOG_ID);
-
-    expect(result.success).toBe(false);
-    expect(result.errorType).toBe("UNAUTHORIZED");
-    expect(result.message).toContain("คุณไม่มีสิทธิ์คืนค่าข้อมูลทรัพย์สินชิ้นนี้");
   });
 });

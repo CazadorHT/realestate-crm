@@ -2,7 +2,7 @@ import { InlineKeyboard } from "grammy";
 import { siteConfig } from "@/lib/site-config";
 import type { Tables } from "./database.types";
 import { 
-  PROPERTY_TYPE_LABELS, 
+  propertyTypeLabel, 
   LISTING_TYPE_LABELS 
 } from "@/features/properties/labels";
 
@@ -52,7 +52,7 @@ function formatBudgetRange(min: number | null | undefined, max: number | null | 
 /**
  * 🏠 Property Detail Formatter
  */
-export function formatPropertyDetail(prop: Tables<"properties">) {
+export function formatPropertyDetail(prop: Tables<"properties"> & Record<string, any>) {
   const baseUrl = siteConfig.url.endsWith("/") ? siteConfig.url.slice(0, -1) : siteConfig.url;
   const adminUrl = `${baseUrl}/dashboard/properties/${prop.id}`;
   
@@ -68,7 +68,7 @@ export function formatPropertyDetail(prop: Tables<"properties">) {
 
   const badge = statusBadges[prop.status || "DRAFT"] || `⚪ ${prop.status}`;
   
-  const typeLabel = PROPERTY_TYPE_LABELS[prop.property_type as keyof typeof PROPERTY_TYPE_LABELS] || prop.property_type || "N/A";
+  const typeLabel = propertyTypeLabel(prop.property_type as keyof typeof propertyTypeLabel, "th") || prop.property_type || "N/A";
   const listingLabel = LISTING_TYPE_LABELS[prop.listing_type as keyof typeof LISTING_TYPE_LABELS] || prop.listing_type || "N/A";
 
   // 💰 Pricing Intelligence
@@ -168,7 +168,7 @@ export function formatDailyReport(data: {
  * 🔔 Lead Notification Formatter
  */
 export function formatLeadNotification(
-  lead: Partial<Tables<"leads">>, 
+  lead: Partial<Tables<"leads">> & Record<string, any>, 
   options?: { 
     property?: Tables<"properties">; 
     lastMessage?: string; 
@@ -204,7 +204,7 @@ export function formatLeadNotification(
  * 🔥 Price Drop Notification Formatter
  */
 export function formatPriceDropNotification(
-  prop: Tables<"properties">, 
+  prop: Tables<"properties"> & Record<string, any>, 
   oldPrice: number, 
   newPrice: number,
   type: "SALE" | "RENT"

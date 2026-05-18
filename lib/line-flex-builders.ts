@@ -1,6 +1,6 @@
 import { siteConfig } from "@/lib/site-config";
 import {
-  PROPERTY_TYPE_LABELS,
+  propertyTypeLabel,
   LISTING_TYPE_LABELS,
   type PropertyType,
   type ListingType,
@@ -320,7 +320,7 @@ export function t(
 }
 
 // Property type labels per language
-const PROPERTY_TYPE_LABELS_I18N: Record<string, Record<BotLang, string>> = {
+const propertyTypeLabel_I18N: Record<string, Record<BotLang, string>> = {
   HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "独栋别墅", ru: "Дом" },
   CONDO: { th: "คอนโด", en: "Condo", cn: "公寓", ru: "Кондо" },
   OFFICE_BUILDING: { th: "สำนักงานออฟฟิศ", en: "Office", cn: "办公楼", ru: "Офис" },
@@ -679,8 +679,8 @@ export function buildPropertyTypeQuickReply(
 
   const items: QuickReplyItem[] = typesToShow.map((type) => {
     const label =
-      PROPERTY_TYPE_LABELS_I18N[type]?.[lang] ||
-      PROPERTY_TYPE_LABELS[type as PropertyType] ||
+      propertyTypeLabel_I18N[type]?.[lang] ||
+      propertyTypeLabel(type as PropertyType, "th") ||
       type;
     return {
       type: "action" as const,
@@ -710,8 +710,8 @@ export function buildAreaQuickReply(
   areaTranslations?: AreaTranslations,
 ): { type: "text"; text: string; quickReply: QuickReply } {
   const typeLabel =
-    PROPERTY_TYPE_LABELS_I18N[propertyType]?.[lang] ||
-    PROPERTY_TYPE_LABELS[propertyType as PropertyType] ||
+    propertyTypeLabel_I18N[propertyType]?.[lang] ||
+    propertyTypeLabel(propertyType as PropertyType, "th") ||
     propertyType;
 
   const limitedAreas = areas.slice(0, 13);
@@ -751,8 +751,8 @@ export function buildSearchResultText(
   areaTranslations?: AreaTranslations,
 ): { type: "text"; text: string; quickReply: QuickReply } {
   const typeLabel =
-    PROPERTY_TYPE_LABELS_I18N[propertyType]?.[lang] ||
-    PROPERTY_TYPE_LABELS[propertyType as PropertyType] ||
+    propertyTypeLabel_I18N[propertyType]?.[lang] ||
+    propertyTypeLabel(propertyType as PropertyType, "th") ||
     propertyType;
 
   let text = t("found_n", lang, { n: String(n) });
@@ -1562,7 +1562,7 @@ export function buildSocialPostFlex(
     "—";
 
 
-  const PROPERTY_TYPE_LABELS_I18N: Record<string, Record<string, string>> = {
+  const propertyTypeLabel_I18N: Record<string, Record<string, string>> = {
     HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "独栋别墅", ru: "Дом" },
     CONDO: { th: "คอนโด", en: "Condo", cn: "公寓", ru: "Кондо" },
     TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅", ru: "Таунхаус" },
@@ -1587,15 +1587,15 @@ export function buildSocialPostFlex(
   };
 
   const propertyTypeLabelValue =
-    PROPERTY_TYPE_LABELS_I18N[prop.property_type || ""]?.[lang] ||
+    propertyTypeLabel_I18N[prop.property_type || ""]?.[lang] ||
     (lang === "th"
-      ? PROPERTY_TYPE_LABELS[prop.property_type as PropertyType]
+      ? propertyTypeLabel(prop.property_type as PropertyType, "th")
       : lang === "en"
         ? prop.property_type_en
         : lang === "cn"
           ? prop.property_type_cn
           : prop.property_type_ru) ||
-    PROPERTY_TYPE_LABELS[prop.property_type as PropertyType] ||
+    propertyTypeLabel(prop.property_type as PropertyType, "th") ||
     prop.property_type ||
     "—";
 

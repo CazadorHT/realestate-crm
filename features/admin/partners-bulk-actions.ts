@@ -17,7 +17,7 @@ export async function bulkDeletePartnersAction(
   ids: string[]
 ): Promise<BulkDeleteResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     if (!ids || ids.length === 0) {
@@ -28,10 +28,17 @@ export async function bulkDeletePartnersAction(
       };
     }
 
-    const { error, count } = await supabase
-      .from("partners")
+    let query = supabase
+      .from("cms_content_v3")
       .delete({ count: "exact" })
-      .in("id", ids);
+      .in("id", ids)
+      .eq("content_type", "PARTNER");
+
+    if (tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { error, count } = await query;
 
     if (error) throw error;
 
@@ -39,13 +46,14 @@ export async function bulkDeletePartnersAction(
       { supabase, user, role },
       {
         action: "partner.bulk_delete",
-        entity: "partners",
+        entity: "cms_content_v3",
         entityId: ids.join(","),
         metadata: { deletedCount: count },
       }
     );
 
     revalidatePath("/protected/partners");
+    revalidatePath("/admin/partners");
 
     return {
       success: true,

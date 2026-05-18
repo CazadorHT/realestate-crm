@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/card";
 import { Building2, Eye, ArrowUpRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LISTING_TYPE_LABELS } from "@/features/properties/labels";
+import { listingTypeLabel } from "@/features/properties/labels";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { PropertyAnalytics } from "@/features/dashboard/queries";
 
@@ -84,9 +84,7 @@ export function TopPropertiesTable({
                                 : "bg-amber-50 text-amber-600 border-amber-100",
                           )}
                         >
-                          {LISTING_TYPE_LABELS[
-                            prop.listing_type as keyof typeof LISTING_TYPE_LABELS
-                          ] || prop.listing_type}
+                          {listingTypeLabel(prop.listing_type, "th")}
                         </span>
                       </div>
 
@@ -184,9 +182,7 @@ export function TopPropertiesTable({
                               : "bg-amber-50 text-amber-600 border-amber-100",
                         )}
                       >
-                        {LISTING_TYPE_LABELS[
-                          prop.listing_type as keyof typeof LISTING_TYPE_LABELS
-                        ] || prop.listing_type}
+                        {listingTypeLabel(prop.listing_type, "th")}
                       </span>
                     </td>
                     <td className="px-4 md:px-6 py-3 md:py-4 text-right">

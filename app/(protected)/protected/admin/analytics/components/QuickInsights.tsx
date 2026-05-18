@@ -3,7 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AreaAnalytics, DistributionData } from "@/features/dashboard/queries";
 import { TrendingUp, MapPin, Building2, CheckCircle2 } from "lucide-react";
-import { LISTING_TYPE_LABELS, PROPERTY_TYPE_LABELS } from "@/features/properties/labels";
+import { listingTypeLabel, propertyTypeLabel, ListingType, PropertyType } from "@/features/properties/labels";
 
 interface QuickInsightsProps {
   topAreas: AreaAnalytics[];
@@ -28,7 +28,7 @@ export function QuickInsights({ topAreas, listingTypeDist, propertyTypeDist, tot
     },
     {
       title: "ประเภทดีลที่ถูกหามากที่สุด",
-      value: topListingType ? (LISTING_TYPE_LABELS[topListingType.label as keyof typeof LISTING_TYPE_LABELS] || topListingType.label) : "ไม่มีข้อมูล",
+      value: topListingType ? listingTypeLabel(topListingType.label as ListingType, "th") : "ไม่มีข้อมูล",
       detail: topListingType ? `${Math.round((topListingType.value / (totalViews || 1)) * 100)}% ของยอดวิวทั้งหมด` : "-",
       icon: TrendingUp,
       color: "text-emerald-600",
@@ -36,7 +36,7 @@ export function QuickInsights({ topAreas, listingTypeDist, propertyTypeDist, tot
     },
     {
       title: "ประเภททรัพย์ยอดนิยม",
-      value: topPropertyType ? (PROPERTY_TYPE_LABELS[topPropertyType.label as keyof typeof PROPERTY_TYPE_LABELS] || topPropertyType.label) : "ไม่มีข้อมูล",
+      value: topPropertyType ? propertyTypeLabel(topPropertyType.label as PropertyType, "th") : "ไม่มีข้อมูล",
       detail: topPropertyType ? `${topPropertyType.value.toLocaleString()} Views` : "-",
       icon: Building2,
       color: "text-orange-600",

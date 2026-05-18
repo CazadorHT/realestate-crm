@@ -1,8 +1,15 @@
-import { Database } from "@/lib/database.types";
-
-export type RentalContract = Database["public"]["Tables"]["rental_contracts"]["Row"];
-
-export type RentalContractWithRelations = RentalContract & {
+export type RentalContractWithRelations = {
+  id: string;
+  contract_number: string;
+  start_date: string;
+  end_date: string;
+  lease_term_months: number | null;
+  rent_price: number | null;
+  deposit_amount: number | null;
+  created_at: string | null;
+  deal_id: string;
+  status: string;
+  tenant_id: string;
   deal: {
     id: string;
     property: {

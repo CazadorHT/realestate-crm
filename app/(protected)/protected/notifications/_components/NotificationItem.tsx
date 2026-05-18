@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
-import { Check, Trash2, ExternalLink, Info, AlertTriangle, Bell as BellIcon, UserPlus, Building2, ChevronRight, Layers, X } from "lucide-react";
+import { Check, Trash2, ExternalLink, Info, AlertTriangle, Bell as BellIcon, UserPlus, Building2, ChevronRight, Layers, X, LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { GroupedNotification } from "@/hooks/use-notifications";
@@ -24,7 +24,7 @@ interface NotificationItemProps {
   onBatchMarkRead?: (ids: string[]) => Promise<void>;
 }
 
-const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
+const TYPE_CONFIG: Record<string, { icon: LucideIcon; color: string; bg: string }> = {
   LEAD_TRANSFER: { icon: UserPlus, color: "text-blue-600", bg: "bg-blue-50" },
   BRANCH_INVITE: { icon: Building2, color: "text-emerald-600", bg: "bg-emerald-50" },
   SYSTEM: { icon: BellIcon, color: "text-purple-600", bg: "bg-purple-50" },
@@ -40,14 +40,13 @@ export function NotificationItem({
   onDelete,
   onBatchMarkRead,
 }: NotificationItemProps) {
-  const [validating, setValidating] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [responding, setResponding] = useState(false);
 
   const config = TYPE_CONFIG[notification.type || "INFO"] || TYPE_CONFIG.INFO;
   const Icon = config.icon;
 
-  const timeAgo = formatDistanceToNow(new Date(notification.created_at), {
+  const timeAgo = formatDistanceToNow(new Date(notification.created_at || new Date().toISOString()), {
     addSuffix: true,
     locale: th,
   });

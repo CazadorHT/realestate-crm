@@ -65,7 +65,7 @@ export async function getBudgetRanges(
 ): Promise<BudgetRange[]> {
   const supabase = await createClient();
 
-  let query = supabase
+  let query = (supabase as any)
     .from("smart_match_budget_ranges")
     .select("id, purpose, label, label_en, label_cn, label_ru, min_value, max_value, sort_order, is_active")
     .order("sort_order", { ascending: true });
@@ -89,7 +89,7 @@ export async function getActiveBudgetRanges(
 ): Promise<BudgetRange[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("smart_match_budget_ranges")
     .select("id, purpose, label, label_en, label_cn, label_ru, min_value, max_value, sort_order, is_active")
     .eq("purpose", purpose)
@@ -110,7 +110,7 @@ export async function createBudgetRange(
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("smart_match_budget_ranges")
     .insert(input);
 
@@ -130,7 +130,7 @@ export async function updateBudgetRange(
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("smart_match_budget_ranges")
     .update({ ...input, updated_at: new Date().toISOString() })
     .eq("id", id);
@@ -150,7 +150,7 @@ export async function deleteBudgetRange(
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("smart_match_budget_ranges")
     .delete()
     .eq("id", id);
@@ -169,7 +169,7 @@ export async function deleteBudgetRange(
 export async function getPropertyTypes(): Promise<PropertyTypeOption[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("smart_match_property_types")
     .select("id, label, label_en, label_cn, label_ru, value, sort_order, is_active")
     .order("sort_order", { ascending: true });
@@ -185,7 +185,7 @@ export async function getPropertyTypes(): Promise<PropertyTypeOption[]> {
 export async function getActivePropertyTypes(): Promise<PropertyTypeOption[]> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("smart_match_property_types")
     .select("id, label, label_en, label_cn, label_ru, value, sort_order, is_active")
     .eq("is_active", true)
@@ -205,7 +205,7 @@ export async function createPropertyType(
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("smart_match_property_types")
     .insert(input);
 
@@ -225,7 +225,7 @@ export async function updatePropertyType(
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("smart_match_property_types")
     .update(input)
     .eq("id", id);
@@ -245,7 +245,7 @@ export async function deletePropertyType(
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("smart_match_property_types")
     .delete()
     .eq("id", id);
@@ -407,7 +407,7 @@ export async function updateSmartMatchSetting(
   const { supabase, role } = await requireAuthContext();
   assertStaff(role);
 
-  const { error } = await supabase.from("smart_match_settings").upsert({
+  const { error } = await (supabase as any).from("smart_match_settings").upsert({
     key,
     value: JSON.stringify(value),
     updated_at: new Date().toISOString(),

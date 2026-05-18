@@ -367,6 +367,7 @@ export async function getPropertiesTableData(params: {
 
   const bestImageMap = new Map<string, string>();
   imagesResult.data?.forEach((img) => {
+    if (!img.property_id) return;
     if (!bestImageMap.has(img.property_id)) {
       const bestUrl = img.image_url || img.storage_path;
       if (bestUrl) bestImageMap.set(img.property_id, bestUrl);
@@ -454,6 +455,6 @@ export async function getPropertiesTableData(params: {
   return {
     tableData,
     count: count || 0,
-    filterMetadata: filterMetadataResult.data || [],
+    filterMetadata: (filterMetadataResult.data as unknown as Partial<TableQueryResult>[]) || [],
   };
 }

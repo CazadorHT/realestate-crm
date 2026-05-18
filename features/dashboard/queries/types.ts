@@ -1,4 +1,6 @@
 
+import { ListingType, PropertyType } from "@/features/properties/labels";
+
 export type DashboardStats = {
   revenueThisMonth: number;
   revenueChange: string;
@@ -87,8 +89,8 @@ export type PropertyAnalytics = {
   title: string;
   slug: string;
   view_count: number;
-  listing_type: string;
-  property_type: string | null;
+  listing_type: ListingType;
+  property_type: PropertyType;
   price: number | null;
   rental_price: number | null;
   property_images: { image_url: string; is_cover: boolean }[];

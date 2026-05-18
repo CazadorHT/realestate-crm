@@ -1,5 +1,5 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
-import { DealWithProperty, DealCommission } from "./types";
+import { DealWithProperty, DealCommission, InvoiceRow } from "./types";
 import { getScopedRevenueClient } from "./logic/scoped-client";
 
 export async function getDealsByLeadId(
@@ -85,14 +85,14 @@ export async function getDealCommissions(dealId: string): Promise<DealCommission
 
   const scoped = getScopedRevenueClient(supabase, tenantId);
 
-  const { data, error } = await scoped
+  const { data: rawData, error } = await scoped
     .commissions()
     .select(
       `
       *,
-      agent:profiles (
+      agent:identities_v3 (
         id,
-        full_name,
+        display_name,
         avatar_url
       )
     `,
@@ -105,7 +105,15 @@ export async function getDealCommissions(dealId: string): Promise<DealCommission
     return [];
   }
 
-  return (data || []) as DealCommission[];
+  const data = (rawData || []) as unknown as DealCommission[];
+  return data.map((d) => ({
+    ...d,
+    agent: d.agent ? {
+      id: d.agent.id,
+      display_name: d.agent.display_name,
+      avatar_url: d.agent.avatar_url,
+    } : null,
+  }));
 }
 
 export async function getDealsPageStats(timeRange: string = "all") {
@@ -113,7 +121,7 @@ export async function getDealsPageStats(timeRange: string = "all") {
   assertStaff(role);
 
   const scoped = getScopedRevenueClient(supabase, tenantId);
-  let query = scoped.deals().select("status, commission_amount, deal_type, created_at");
+  let query = scoped.deals().select("status, commission_total, deal_type, created_at");
 
   // Handle Time Range
   const now = new Date();
@@ -176,15 +184,15 @@ export async function getDealsPageStats(timeRange: string = "all") {
     wonDeals: data.filter((d) => d.status === "CLOSED_WIN").length,
     lostDeals: data.filter((d) => d.status === "CLOSED_LOSS").length,
     totalCommission: data
-      .filter((d) => d.status === "CLOSED_WIN" && d.commission_amount)
-      .reduce((sum, d) => sum + (d.commission_amount || 0), 0),
+      .filter((d) => d.status === "CLOSED_WIN" && d.commission_total)
+      .reduce((sum, d) => sum + (d.commission_total || 0), 0),
   };
 
 
   return stats;
 }
 
-export async function getInvoicesByDealId(dealId: string) {
+export async function getInvoicesByDealId(dealId: string): Promise<InvoiceRow[]> {
   const { supabase, tenantId } = await requireAuthContext();
   if (!tenantId) return [];
 
@@ -200,5 +208,5 @@ export async function getInvoicesByDealId(dealId: string) {
     return [];
   }
 
-  return data;
+  return (data || []) as InvoiceRow[];
 }

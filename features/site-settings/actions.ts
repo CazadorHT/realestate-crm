@@ -12,7 +12,7 @@ import {
   siteSettingsSchema,
   SENSITIVE_KEYS,
 } from "./schema";
-import { Json } from "@/lib/database.types";
+import { Json } from "@/lib/database.types.generated";
 import { siteConfig } from "@/lib/site-config";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { encrypt, decrypt, isEncrypted } from "@/lib/crypto";
@@ -288,7 +288,7 @@ export async function updateSiteSetting(
     const userId = ctx.user.id;
     const encryptedValue = await encryptValue(key, value);
 
-    const { error } = await supabase.from("site_settings").upsert(
+    const { error } = await (supabase as any).from("site_settings").upsert(
       {
         key,
         value: (encryptedValue ?? "") as Json,
@@ -328,7 +328,7 @@ async function updateSiteSettingAdmin(
 
     const encryptedValue = await encryptValue(key, value);
 
-    const { error } = await supabase.from("site_settings").upsert(
+    const { error } = await (supabase as any).from("site_settings").upsert(
       {
         key,
         value: (encryptedValue ?? "") as Json,
@@ -366,7 +366,7 @@ export async function migrateSecretsAction(): Promise<{
     }
 
     const supabase = ctx.supabase;
-    const { data: settings, error: fetchError } = await supabase
+    const { data: settings, error: fetchError } = await (supabase as any)
       .from("site_settings")
       .select("key, value")
       .in("key", SENSITIVE_KEYS);
@@ -433,7 +433,7 @@ export async function updateSiteSettings(
       }))
     );
 
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from("site_settings")
       .upsert(updates, { onConflict: "key" });
 

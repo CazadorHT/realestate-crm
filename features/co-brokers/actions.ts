@@ -16,6 +16,36 @@ export interface CoBrokerDocumentInput {
   file_size: number;
 }
 
+// --- Helper ---
+function mapIdentityToCoBroker(identity: any): CoBroker {
+  const socialLinks = (identity.social_links as Record<string, any>) || {};
+  return {
+    id: identity.id,
+    name: identity.display_name || "",
+    company_name: socialLinks.company_name || null,
+    phone: identity.phone || null,
+    email: identity.email || null,
+    line_id: identity.line_id || null,
+    whatsapp: socialLinks.whatsapp || null,
+    internal_notes: socialLinks.internal_notes || null,
+    rating: socialLinks.rating ?? 3,
+    specialized_areas: socialLinks.specialized_areas || [],
+    property_types: socialLinks.property_types || [],
+    tax_id: socialLinks.tax_id || null,
+    tax_address: socialLinks.tax_address || null,
+    bank_code: socialLinks.bank_code || null,
+    bank_account_no: socialLinks.bank_account_no || null,
+    bank_account_name: socialLinks.bank_account_name || null,
+    standard_commission_rate: socialLinks.standard_commission_rate || null,
+    is_active: identity.is_active ?? true,
+    broker_group: socialLinks.broker_group || "GENERAL",
+    created_at: identity.created_at || null,
+    created_by: socialLinks.created_by || null,
+    tenant_id: identity.tenant_id || "",
+    deleted_at: identity.deleted_at || null,
+  };
+}
+
 /**
  * 📊 ดึงรายการคู่ค้าทั้งหมด
  */
@@ -24,25 +54,41 @@ export async function getCoBrokersAction(query?: string, area?: string): Promise
     const { supabase, tenantId } = await requireAuthContext();
 
     let dbQuery = supabase
-      .from("co_brokers")
-      .select("id, name, company_name, phone, email, line_id, broker_group, specialized_areas, is_active, created_at, updated_at, tenant_id, created_by")
+      .from("identities_v3")
+      .select("id, display_name, phone, email, line_id, is_active, created_at, updated_at, tenant_id, social_links, deleted_at")
       .eq("tenant_id", tenantId!)
+      .eq("category", 2)
+      .eq("role", "CO_BROKER")
       .is("deleted_at", null);
 
     if (query) {
       dbQuery = dbQuery.or(
-        `name.ilike.%${query}%,company_name.ilike.%${query}%,phone.ilike.%${query}%`,
+        `display_name.ilike.%${query}%,phone.ilike.%${query}%,email.ilike.%${query}%`,
+      );
+    }
+
+    const { data, error } = await dbQuery.order("display_name", { ascending: true });
+
+    if (error) throw error;
+
+    let mapped = (data || []).map(mapIdentityToCoBroker);
+
+    if (query) {
+      const q = query.toLowerCase();
+      // Additional JS filter to match company_name inside JSONB
+      mapped = mapped.filter(item => 
+        (item.name && item.name.toLowerCase().includes(q)) ||
+        (item.company_name && item.company_name.toLowerCase().includes(q)) ||
+        (item.phone && item.phone.includes(q)) ||
+        (item.email && item.email.toLowerCase().includes(q))
       );
     }
 
     if (area) {
-      dbQuery = dbQuery.contains("specialized_areas", [area]);
+      mapped = mapped.filter(item => item.specialized_areas && item.specialized_areas.includes(area));
     }
 
-    const { data, error } = await dbQuery.order("name", { ascending: true });
-
-    if (error) throw error;
-    return { success: true, data: data as unknown as CoBroker[] };
+    return { success: true, data: mapped };
   } catch (error: unknown) {
     logger.error("getCoBrokersAction failed", error, { source: "co-brokers-actions" });
     return {
@@ -61,22 +107,45 @@ export async function createCoBrokerAction(values: CoBrokerFormValues) {
     const validated = CoBrokerSchema.parse(values);
 
     const { data, error } = await supabase
-      .from("co_brokers")
+      .from("identities_v3")
       .insert({
-        ...validated,
         tenant_id: tenantId!,
-        created_by: user.id,
+        category: 2,
+        role: "CO_BROKER",
+        display_name: validated.name,
+        phone: validated.phone,
+        email: validated.email || null,
+        line_id: validated.line_id || null,
+        is_active: validated.is_active ?? true,
+        social_links: {
+          company_name: validated.company_name || null,
+          whatsapp: validated.whatsapp || null,
+          internal_notes: validated.internal_notes || null,
+          rating: validated.rating ?? 3,
+          specialized_areas: validated.specialized_areas || [],
+          property_types: validated.property_types || [],
+          tax_id: validated.tax_id || null,
+          tax_address: validated.tax_address || null,
+          bank_code: validated.bank_code || null,
+          bank_account_no: validated.bank_account_no || null,
+          bank_account_name: validated.bank_account_name || null,
+          standard_commission_rate: validated.standard_commission_rate || null,
+          broker_group: validated.broker_group || "GENERAL",
+          created_by: user.id,
+        },
       })
-      .select("id, name, company_name, phone, email, line_id")
+      .select("id, display_name, phone, email, line_id, is_active, created_at, updated_at, tenant_id, social_links, deleted_at")
       .single();
 
     if (error) throw error;
 
+    const mapped = mapIdentityToCoBroker(data);
+
     await logActivityAction("CREATE", "CO_BROKER", data.id, {
-      name: data.name,
+      name: mapped.name,
     });
     revalidatePath("/protected/co-brokers");
-    return { success: true, data };
+    return { success: true, data: mapped };
   } catch (error: unknown) {
     logger.error("createCoBrokerAction failed", error, { source: "co-brokers-actions", values });
     return {
@@ -96,21 +165,62 @@ export async function updateCoBrokerAction(
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
-    const { data, error } = await supabase
-      .from("co_brokers")
-      .update(values)
+    // Fetch existing identity to merge social_links
+    const { data: existing, error: fetchErr } = await supabase
+      .from("identities_v3")
+      .select("social_links")
       .eq("id", id)
       .eq("tenant_id", tenantId!)
-      .select("id, name, company_name, phone, email, line_id")
+      .single();
+
+    if (fetchErr || !existing) throw new Error("ไม่พบข้อมูลคู่ค้าที่ต้องการแก้ไข");
+
+    const currentSocial = (existing.social_links as Record<string, any>) || {};
+    const mergedSocial = {
+      ...currentSocial,
+      ...(values.company_name !== undefined ? { company_name: values.company_name || null } : {}),
+      ...(values.whatsapp !== undefined ? { whatsapp: values.whatsapp || null } : {}),
+      ...(values.internal_notes !== undefined ? { internal_notes: values.internal_notes || null } : {}),
+      ...(values.rating !== undefined ? { rating: values.rating } : {}),
+      ...(values.specialized_areas !== undefined ? { specialized_areas: values.specialized_areas } : {}),
+      ...(values.property_types !== undefined ? { property_types: values.property_types } : {}),
+      ...(values.tax_id !== undefined ? { tax_id: values.tax_id || null } : {}),
+      ...(values.tax_address !== undefined ? { tax_address: values.tax_address || null } : {}),
+      ...(values.bank_code !== undefined ? { bank_code: values.bank_code || null } : {}),
+      ...(values.bank_account_no !== undefined ? { bank_account_no: values.bank_account_no || null } : {}),
+      ...(values.bank_account_name !== undefined ? { bank_account_name: values.bank_account_name || null } : {}),
+      ...(values.standard_commission_rate !== undefined ? { standard_commission_rate: values.standard_commission_rate || null } : {}),
+      ...(values.broker_group !== undefined ? { broker_group: values.broker_group } : {}),
+    };
+
+    const updatePayload: any = {
+      social_links: mergedSocial,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (values.name !== undefined) updatePayload.display_name = values.name;
+    if (values.phone !== undefined) updatePayload.phone = values.phone;
+    if (values.email !== undefined) updatePayload.email = values.email || null;
+    if (values.line_id !== undefined) updatePayload.line_id = values.line_id || null;
+    if (values.is_active !== undefined) updatePayload.is_active = values.is_active;
+
+    const { data, error } = await supabase
+      .from("identities_v3")
+      .update(updatePayload)
+      .eq("id", id)
+      .eq("tenant_id", tenantId!)
+      .select("id, display_name, phone, email, line_id, is_active, created_at, updated_at, tenant_id, social_links, deleted_at")
       .single();
 
     if (error) throw error;
+
+    const mapped = mapIdentityToCoBroker(data);
 
     await logActivityAction("UPDATE", "CO_BROKER", id, {
       updated_fields: Object.keys(values),
     });
     revalidatePath("/protected/co-brokers");
-    return { success: true, data };
+    return { success: true, data: mapped };
   } catch (error: unknown) {
     logger.error("updateCoBrokerAction failed", error, { source: "co-brokers-actions", id, values });
     return {
@@ -128,7 +238,7 @@ export async function deleteCoBrokerAction(id: string) {
     const { supabase, tenantId } = await requireAuthContext();
 
     const { error } = await supabase
-      .from("co_brokers")
+      .from("identities_v3")
       .update({
         deleted_at: new Date().toISOString(),
         is_active: false,
@@ -155,7 +265,7 @@ export async function restoreCoBrokerAction(id: string) {
     const { supabase, tenantId } = await requireAuthContext();
 
     const { error } = await supabase
-      .from("co_brokers")
+      .from("identities_v3")
       .update({ deleted_at: null, is_active: true })
       .eq("id", id)
       .eq("tenant_id", tenantId!);
@@ -183,7 +293,7 @@ export async function permanentlyDeleteCoBrokerAction(id: string) {
     if (role !== "ADMIN") throw new Error("คุณไม่มีสิทธิ์ลบข้อมูลถาวร");
 
     const { error } = await supabase
-      .from("co_brokers")
+      .from("identities_v3")
       .delete()
       .eq("id", id)
       .eq("tenant_id", tenantId!);
@@ -215,32 +325,32 @@ export async function getCoBrokerPerformanceAction(id: string) {
     const [totalRes, activeRes, soldRes, commRes] = await Promise.all([
       // 1. Get total listings count
       supabase
-        .from("properties")
+        .from("properties_core")
         .select("id", { count: "exact", head: true })
         .eq("co_broker_id", id)
         .eq("tenant_id", tenantId!),
 
-      // 2. Get active listings count
+      // 2. Get active listings count (status: 1 is ACTIVE in properties_core)
       supabase
-        .from("properties")
+        .from("properties_core")
         .select("id", { count: "exact", head: true })
         .eq("co_broker_id", id)
-        .eq("status", "ACTIVE")
+        .eq("status", 1)
         .eq("tenant_id", tenantId!),
 
-      // 3. Get sold/rented listings count
+      // 3. Get sold/rented listings count (status: 4 is SOLD, 5 is RENTED in properties_core)
       supabase
-        .from("properties")
+        .from("properties_core")
         .select("id", { count: "exact", head: true })
         .eq("co_broker_id", id)
-        .or("status.eq.SOLD,status.eq.RENTED")
+        .in("status", [4, 5])
         .eq("tenant_id", tenantId!),
 
       // 4. Get earnings summary (Minimal data fetch)
       supabase
-        .from("deal_commissions")
+        .from("crm_deal_commissions_v3")
         .select("net_amount, status")
-        .eq("co_broker_id", id)
+        .eq("recipient_id", id)
         .eq("tenant_id", tenantId!),
     ]);
 
@@ -254,11 +364,11 @@ export async function getCoBrokerPerformanceAction(id: string) {
     const soldListings = soldRes.count || 0;
     const commissions = commRes.data || [];
 
-    const realizedEarnings = (commissions as { status: string; net_amount: number | string | null }[])
+    const realizedEarnings = (commissions as { status: string | null; net_amount: number | null }[])
       .filter((c) => c.status === "PAID")
       .reduce((sum: number, c) => sum + (Number(c.net_amount) || 0), 0);
 
-    const accruedEarnings = (commissions as { status: string; net_amount: number | string | null }[])
+    const accruedEarnings = (commissions as { status: string | null; net_amount: number | null }[])
       .filter((c) => c.status !== "PAID" && c.status !== "VOID")
       .reduce((sum: number, c) => sum + (Number(c.net_amount) || 0), 0);
 
@@ -290,23 +400,37 @@ export async function addCoBrokerDocumentAction(input: CoBrokerDocumentInput) {
     const { supabase, tenantId, user } = await requireAuthContext();
 
     const { data: doc, error } = await supabase
-      .from("co_broker_documents")
+      .from("documents_v3")
       .insert({
-        ...input,
         tenant_id: tenantId!,
-        created_by: user.id,
+        owner_entity: "CO_BROKER",
+        owner_id: input.co_broker_id,
+        file_name: input.file_name,
+        storage_path: input.file_url,
+        document_type: input.file_type || "DOCUMENT",
+        created_at: new Date().toISOString(),
       })
-      .select("id, co_broker_id, file_name, file_url")
+      .select("id, owner_id, file_name, storage_path, document_type, created_at")
       .single();
 
     if (error) throw error;
+
+    const mappedDoc = {
+      id: doc.id,
+      co_broker_id: doc.owner_id,
+      file_name: doc.file_name,
+      file_url: doc.storage_path,
+      file_type: doc.document_type,
+      file_size: input.file_size,
+      created_at: doc.created_at,
+    };
 
     await logActivityAction("UPLOAD_DOC", "CO_BROKER_DOCUMENT", doc.id, {
       broker_id: input.co_broker_id,
       file_name: input.file_name,
     });
 
-    return { success: true, data: doc };
+    return { success: true, data: mappedDoc };
   } catch (error: unknown) {
     logger.error("addCoBrokerDocumentAction failed", error, { source: "co-brokers-actions", input });
     return {
@@ -321,14 +445,26 @@ export async function getCoBrokerDocumentsAction(id: string) {
     const { supabase, tenantId } = await requireAuthContext();
 
     const { data, error } = await supabase
-      .from("co_broker_documents")
-      .select("id, co_broker_id, file_name, file_url, file_type, file_size, created_at")
-      .eq("co_broker_id", id)
+      .from("documents_v3")
+      .select("id, owner_id, file_name, storage_path, document_type, created_at")
+      .eq("owner_entity", "CO_BROKER")
+      .eq("owner_id", id)
       .eq("tenant_id", tenantId!)
       .order("created_at", { ascending: false });
 
     if (error) throw error;
-    return { success: true, data };
+
+    const mapped = (data || []).map(doc => ({
+      id: doc.id,
+      co_broker_id: doc.owner_id,
+      file_name: doc.file_name,
+      file_url: doc.storage_path,
+      file_type: doc.document_type,
+      file_size: 0,
+      created_at: doc.created_at,
+    }));
+
+    return { success: true, data: mapped };
   } catch (error: unknown) {
     logger.error("getCoBrokerDocumentsAction failed", error, { source: "co-brokers-actions", id });
     return { success: false, error: (error as Error).message };
@@ -344,7 +480,7 @@ export async function deleteCoBrokerDocumentAction(
     const { supabase, tenantId } = await requireAuthContext();
 
     const { error } = await supabase
-      .from("co_broker_documents")
+      .from("documents_v3")
       .delete()
       .eq("id", docId)
       .eq("tenant_id", tenantId!);
@@ -371,28 +507,36 @@ export async function bulkDeleteCoBrokersAction(ids: string[]) {
   try {
     const { supabase, tenantId, role, user } = await requireAuthContext();
 
-    let query = supabase
-      .from("co_brokers")
+    let targetIds = ids;
+    if (role !== "ADMIN" && role !== "MANAGER") {
+      const { data } = await supabase
+        .from("identities_v3")
+        .select("id, social_links")
+        .in("id", ids)
+        .eq("tenant_id", tenantId!);
+      
+      targetIds = (data || [])
+        .filter(d => ((d.social_links as Record<string, any>) || {})?.created_by === user.id)
+        .map(d => d.id);
+    }
+
+    if (targetIds.length === 0) return { success: true };
+
+    const { error } = await supabase
+      .from("identities_v3")
       .update({
         deleted_at: new Date().toISOString(),
         is_active: false,
       })
-      .in("id", ids)
+      .in("id", targetIds)
       .eq("tenant_id", tenantId!);
-
-    // 🛡️ RBAC Guard: Agents can only delete their own
-    if (role !== "ADMIN" && role !== "MANAGER") {
-      query = query.eq("created_by", user.id);
-    }
-
-    const { error } = await query;
 
     if (error) throw error;
 
     await logActivityAction("BULK_SOFT_DELETE", "CO_BROKER", "BULK_OP", { 
-      ids,
-      count: ids.length,
-      summary: `ลบคู่ค้าแบบกลุ่มจำนวน ${ids.length} รายการ`
+      ids: targetIds,
+      count: targetIds.length,
+      summary: `ลบคู่ค้าแบบกลุ่มจำนวน ${targetIds.length} รายการ`
     });
     revalidatePath("/protected/co-brokers");
     return { success: true };
@@ -409,25 +553,33 @@ export async function bulkRestoreCoBrokersAction(ids: string[]) {
   try {
     const { supabase, tenantId, role, user } = await requireAuthContext();
 
-    let query = supabase
-      .from("co_brokers")
-      .update({ deleted_at: null, is_active: true })
-      .in("id", ids)
-      .eq("tenant_id", tenantId!);
-
-    // 🛡️ RBAC Guard: Agents can only restore their own
+    let targetIds = ids;
     if (role !== "ADMIN" && role !== "MANAGER") {
-      query = query.eq("created_by", user.id);
+      const { data } = await supabase
+        .from("identities_v3")
+        .select("id, social_links")
+        .in("id", ids)
+        .eq("tenant_id", tenantId!);
+      
+      targetIds = (data || [])
+        .filter(d => ((d.social_links as Record<string, any>) || {})?.created_by === user.id)
+        .map(d => d.id);
     }
 
-    const { error } = await query;
+    if (targetIds.length === 0) return { success: true };
+
+    const { error } = await supabase
+      .from("identities_v3")
+      .update({ deleted_at: null, is_active: true })
+      .in("id", targetIds)
+      .eq("tenant_id", tenantId!);
 
     if (error) throw error;
 
     await logActivityAction("BULK_RESTORE", "CO_BROKER", "BULK_OP", { 
-      ids,
-      count: ids.length,
-      summary: `กู้คืนคู่ค้าแบบกลุ่มจำนวน ${ids.length} รายการ`
+      ids: targetIds,
+      count: targetIds.length,
+      summary: `กู้คืนคู่ค้าแบบกลุ่มจำนวน ${targetIds.length} รายการ`
     });
     revalidatePath("/protected/co-brokers");
     return { success: true };
@@ -447,26 +599,35 @@ export async function bulkUpdateCoBrokerGroupAction(
   try {
     const { supabase, tenantId, role, user } = await requireAuthContext();
 
-    let query = supabase
-      .from("co_brokers")
-      .update({ broker_group: groupName })
+    const { data: records, error: fetchErr } = await supabase
+      .from("identities_v3")
+      .select("id, social_links")
       .in("id", ids)
       .eq("tenant_id", tenantId!);
 
-    // 🛡️ RBAC Guard: Agents can only update their own
-    if (role !== "ADMIN" && role !== "MANAGER") {
-      query = query.eq("created_by", user.id);
-    }
+    if (fetchErr || !records) throw fetchErr;
 
-    const { error } = await query;
+    const targetRecords = role !== "ADMIN" && role !== "MANAGER"
+      ? records.filter(d => ((d.social_links as Record<string, any>) || {})?.created_by === user.id)
+      : records;
 
-    if (error) throw error;
+    if (targetRecords.length === 0) return { success: true };
+
+    await Promise.all(targetRecords.map(rec => {
+      const currentSocial = (rec.social_links as Record<string, any>) || {};
+      const mergedSocial = { ...currentSocial, broker_group: groupName };
+      return supabase
+        .from("identities_v3")
+        .update({ social_links: mergedSocial, updated_at: new Date().toISOString() })
+        .eq("id", rec.id)
+        .eq("tenant_id", tenantId!);
+    }));
 
     await logActivityAction("BULK_CHANGE_GROUP", "CO_BROKER", "BULK_OP", { 
-      ids,
+      ids: targetRecords.map(r => r.id),
       groupName,
-      count: ids.length,
-      summary: `เปลี่ยนกลุ่มคู่ค้าแบบกลุ่มเป็น "${groupName}" จำนวน ${ids.length} รายการ`
+      count: targetRecords.length,
+      summary: `เปลี่ยนกลุ่มคู่ค้าแบบกลุ่มเป็น "${groupName}" จำนวน ${targetRecords.length} รายการ`
     });
     revalidatePath("/protected/co-brokers");
     return { success: true };
@@ -487,14 +648,16 @@ export async function getTrashCoBrokersAction(): Promise<{ success: boolean; dat
     const { supabase, tenantId } = await requireAuthContext();
 
     const { data, error } = await supabase
-      .from("co_brokers")
-      .select("id, name, company_name, phone, email, line_id, broker_group, specialized_areas, is_active, created_at, deleted_at, tenant_id")
+      .from("identities_v3")
+      .select("id, display_name, phone, email, line_id, is_active, created_at, updated_at, tenant_id, social_links, deleted_at")
       .eq("tenant_id", tenantId!)
+      .eq("category", 2)
+      .eq("role", "CO_BROKER")
       .not("deleted_at", "is", null)
       .order("deleted_at", { ascending: false });
 
     if (error) throw error;
-    return { success: true, data: data as unknown as CoBroker[] };
+    return { success: true, data: (data || []).map(mapIdentityToCoBroker) };
   } catch (error: unknown) {
     logger.error("getTrashCoBrokersAction failed", error, { source: "co-brokers-actions" });
     return { success: false, error: (error as Error).message };
@@ -509,14 +672,14 @@ export async function getCoBrokerDealsAction(id: string) {
     const { supabase, tenantId } = await requireAuthContext();
 
     const { data, error } = await supabase
-      .from("deals")
+      .from("crm_deals_v3")
       .select(
         `
         id,
         status,
-        commission_amount,
+        commission_total,
         transaction_date,
-        property:properties!deals_property_id_fkey (title, property_type)
+        property:properties!crm_deals_v3_property_id_fkey (title, property_type)
       `,
       )
       .eq("partner_co_broker_id", id)
@@ -524,7 +687,12 @@ export async function getCoBrokerDealsAction(id: string) {
       .order("transaction_date", { ascending: false });
 
     if (error) throw error;
-    return { success: true, data };
+
+    const mapped = (data || []).map((item: any) => ({
+      ...item,
+      commission_amount: item.commission_total
+    }));
+    return { success: true, data: mapped };
   } catch (error: unknown) {
     logger.error("getCoBrokerDealsAction failed", error, { source: "co-brokers-actions", id });
     return { success: false, error: (error as Error).message };

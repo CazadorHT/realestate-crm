@@ -50,11 +50,11 @@ export function getDealDiff(
 
   // 2. Commission Amount
   if (
-    newData.commission_amount !== undefined &&
-    newData.commission_amount !== oldData.commission_amount
+    newData.commission_total !== undefined &&
+    newData.commission_total !== oldData.commission_total
   ) {
-    const oldAmt = oldData.commission_amount || 0;
-    const newAmt = newData.commission_amount || 0;
+    const oldAmt = oldData.commission_total || 0;
+    const newAmt = newData.commission_total || 0;
 
     if (oldAmt === 0 && newAmt > 0) {
       changes.push(`ระบุยอดคอมมิชชั่นเป็น ${formatBaht(newAmt)}`);

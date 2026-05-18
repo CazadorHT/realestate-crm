@@ -31,8 +31,8 @@ export async function bulkDeleteRentalContractsAction(
     }
 
     let deleteQuery = supabase
-      .from("rental_contracts")
-      .delete({ count: "exact" })
+      .from("crm_deals_v3")
+      .update({ status: "TERMINATED" }, { count: "exact" })
       .in("id", ids);
 
     if (tenantId && tenantId !== "ALL") {
@@ -47,7 +47,7 @@ export async function bulkDeleteRentalContractsAction(
       { supabase, user, role },
       {
         action: "rental_contract.bulk_delete",
-        entity: "rental_contracts",
+        entity: "crm_deals_v3",
         entityId: ids.join(","),
         metadata: { deletedCount: count },
       }

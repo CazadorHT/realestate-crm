@@ -27,7 +27,7 @@ export function QuickListing({ value, onValueChange }: QuickListingProps) {
         <SelectItem value="ALL">ขาย & เช่า</SelectItem>
         {LISTING_TYPE_ORDER.map((t) => (
           <SelectItem key={t} value={t}>
-            {LISTING_TYPE_LABELS[t]}
+            {LISTING_TYPE_LABELS[t].th}
           </SelectItem>
         ))}
       </SelectContent>

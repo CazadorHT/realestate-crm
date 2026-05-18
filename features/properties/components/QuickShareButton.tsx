@@ -12,41 +12,27 @@ import { Languages } from "lucide-react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { siteConfig } from "@/lib/site-config";
 import Image from "next/image";
+import { getLocaleValue } from "@/lib/utils/locale-utils";
 
 interface QuickShareButtonProps {
   property: {
     id: string;
-    title: string;
+    title: { th?: string; en?: string; cn?: string; ru?: string } | string;
     property_type?: string | null;
     listing_type?: string | null;
     price?: number | null;
     rental_price?: number | null;
     original_price?: number | null;
     original_rental_price?: number | null;
-    province?: string | null;
-    district?: string | null;
-    subdistrict?: string | null;
-    popular_area?: string | null;
+    province?: { th?: string; en?: string; cn?: string; ru?: string } | string | null;
+    district?: { th?: string; en?: string; cn?: string; ru?: string } | string | null;
+    subdistrict?: { th?: string; en?: string; cn?: string; ru?: string } | string | null;
+    popular_area?: { th?: string; en?: string; cn?: string; ru?: string } | string | null;
     bedrooms?: number | null;
     bathrooms?: number | null;
     area_sqm?: number | null;
     size_sqm?: number | null;
     cover_image_url?: string | null;
-    title_en?: string | null;
-    title_cn?: string | null;
-    title_ru?: string | null;
-    description_en?: string | null;
-    description_cn?: string | null;
-    description_ru?: string | null;
-    popular_area_en?: string | null;
-    popular_area_cn?: string | null;
-    popular_area_ru?: string | null;
-    district_en?: string | null;
-    district_cn?: string | null;
-    district_ru?: string | null;
-    province_en?: string | null;
-    province_cn?: string | null;
-    province_ru?: string | null;
   };
   className?: string;
 }
@@ -59,11 +45,10 @@ export function QuickShareButton({
   const [lang, setLang] = useState<"th" | "en" | "cn" | "ru">("th");
 
   const publicUrl = `${siteConfig.url}/properties/${property.id}`;
-
-  const tTitle = (lang === "th" ? property.title : (property as any)[`title_${lang}`]) || property.title || "";
-  const tDistrict = (lang === "th" ? property.district : (property as any)[`district_${lang}`]) || property.district || "";
-  const tProvince = (lang === "th" ? property.province : (property as any)[`province_${lang}`]) || property.province || "";
-  const tPopularArea = (lang === "th" ? property.popular_area : (property as any)[`popular_area_${lang}`]) || property.popular_area || "";
+  const tTitle = getLocaleValue(property, "title", lang);
+  const tDistrict = getLocaleValue(property, "district", lang);
+  const tProvince = getLocaleValue(property, "province", lang);
+  const tPopularArea = getLocaleValue(property, "popular_area", lang);
 
   // Labels
   const L = {
@@ -192,7 +177,7 @@ ${L.link} ${publicUrl}
           </Label>
           <Tabs 
             value={lang} 
-            onValueChange={(v) => setLang(v as any)}
+            onValueChange={(v) => setLang(v as typeof lang)}
             className="w-full"
           >
             <TabsList className="grid w-full grid-cols-4 bg-slate-100 p-1 rounded-lg">
@@ -209,7 +194,7 @@ ${L.link} ${publicUrl}
             <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-slate-100 shadow-sm">
               <Image
                 src={property.cover_image_url}
-                alt={property.title}
+                alt={tTitle}
                 fill
                 className="object-cover"
               />

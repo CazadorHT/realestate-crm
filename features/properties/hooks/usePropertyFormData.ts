@@ -21,7 +21,8 @@ export function usePropertyFormData(
     }[]
   >([]);
   const [popularAreas, setPopularAreas] = React.useState<string[]>([]);
-  const [allBranches, setAllBranches] = React.useState(false);
+  const [showAllOwners, setShowAllOwners] = React.useState(false);
+  const [branches, setBranches] = React.useState<{ id: string; name: any }[]>([]);
 
   const province = form.watch("province");
 
@@ -54,12 +55,20 @@ export function usePropertyFormData(
   React.useEffect(() => {
     async function loadData() {
       try {
-        // Load owners
-        await fetchOwners(allBranches);
-
-        // Load agents
         const { createClient } = await import("@/lib/supabase/client");
         const supabase = createClient();
+
+        // Load branches
+        const { data: branchesData } = await supabase
+          .from("branches_v3")
+          .select("id, name")
+          .eq("is_active", true);
+        if (branchesData) setBranches(branchesData);
+
+        // Load owners
+        await fetchOwners(showAllOwners);
+
+        // Load agents
         const { data: agentsData } = await supabase
           .from("profiles")
           .select("id, full_name, phone, avatar_url")
@@ -90,7 +99,7 @@ export function usePropertyFormData(
     }
 
     loadData();
-  }, [mode, defaultValuesId, allBranches]); // Removed form from deps to avoid loops, watching province separately
+  }, [mode, defaultValuesId, showAllOwners]); // Removed form from deps to avoid loops, watching province separately
 
   // Re-fetch popular areas when province changes
   React.useEffect(() => {
@@ -127,11 +136,12 @@ export function usePropertyFormData(
     owners,
     agents,
     popularAreas,
-    allBranches,
-    setAllBranches,
+    branches,
+    showAllOwners,
+    setShowAllOwners,
     refreshPopularAreas: fetchPopularAreas,
     refreshOwners: async () => {
-      return fetchOwners(allBranches);
+      return fetchOwners(showAllOwners);
     },
   };
 }

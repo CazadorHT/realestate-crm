@@ -31,12 +31,12 @@ export const onBlogGenerateRequested = inngest.createFunction(
       // 🕵️ Step 0: Check if task was already cancelled
       await step.run("check-cancellation", async () => {
         const { data: task } = await supabase
-          .from("background_tasks")
-          .select("is_cancelled")
+          .from("system_task_queue")
+          .select("status")
           .eq("id", taskId)
           .single();
         
-        if (task?.is_cancelled) {
+        if (task?.status === "CANCELLED" || task?.status === "ERROR") {
           throw new Error("USER_CANCELLED");
         }
       });

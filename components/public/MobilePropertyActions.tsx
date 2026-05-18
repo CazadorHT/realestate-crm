@@ -17,6 +17,8 @@ interface MobilePropertyActionsProps {
   agentImage?: string | null;
   agentPhone?: string | null;
   agentLine?: string | null;
+  agentWechat?: string | null;
+  agentWhatsapp?: string | null;
   propertyId?: string;
   propertyTitle?: string;
   property?: {
@@ -32,6 +34,8 @@ export function MobilePropertyActions({
   agentImage,
   agentPhone,
   agentLine,
+  agentWechat,
+  agentWhatsapp,
   propertyId,
   propertyTitle,
   property,
@@ -40,23 +44,26 @@ export function MobilePropertyActions({
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 p-3 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-[0_-8px_20px_-5px_rgba(0,0,0,0.1)] xl:hidden"
+      className="fixed bottom-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-t border-slate-200/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.15)] xl:hidden rounded-t-[2.5rem]"
     >
-      <div className="flex items-center gap-2 sm:gap-4 max-w-lg md:max-w-2xl lg:max-w-4xl mx-auto ">
+      <div className="flex items-center gap-3 max-w-lg mx-auto ">
         {/* Agent Info (Mini) */}
-        <div className="flex items-center gap-2 shrink-0 md:mr-12 lg:mr-20">
-          <Avatar className="h-10 w-10 sm:h-12 sm:w-12 border border-slate-200">
-            <AvatarImage src={agentImage || ""} alt={agentName || "Agent"} />
-            <AvatarFallback className="bg-slate-100 text-slate-500 text-[10px] sm:text-xs font-semibold">
-              {(agentName || "A")[0]}
-            </AvatarFallback>
-          </Avatar>
-          <div className="hidden sm:block">
-            <div className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+        <div className="flex items-center gap-2.5 shrink-0">
+          <div className="relative">
+            <Avatar className="h-11 w-11 border-2 border-white shadow-sm">
+              <AvatarImage src={agentImage || ""} alt={agentName || "Agent"} className="object-cover" />
+              <AvatarFallback className="bg-slate-100 text-slate-500 text-xs font-semibold">
+                {(agentName || "A")[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+          </div>
+          <div className="hidden xs:block">
+            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight leading-none mb-1">
               {t("property.managed_by")}
             </div>
-            <div className="text-xs font-semibold text-slate-900 truncate max-w-[80px] md:max-w-md">
-              {agentName || "Admin"}
+            <div className="text-sm font-bold text-slate-900 truncate max-w-[100px]">
+              {agentName?.split(' ')[0] || "Admin"}
             </div>
           </div>
         </div>
@@ -66,22 +73,25 @@ export function MobilePropertyActions({
           <AgentPhoneDialog
             agentName={agentName}
             agentPhone={agentPhone || ""}
+            lineId={agentLine}
+            wechatId={agentWechat}
+            whatsappId={agentWhatsapp}
             propertyId={propertyId}
             propertyTitle={propertyTitle}
             language={language}
             trigger={
               <Button
-                className="sm:flex-1 h-11 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-medium text-xs sm:text-sm px-3 sm:px-2 min-w-0"
+                className="flex-1 h-12 bg-slate-50 text-slate-700 border border-slate-200 hover:bg-slate-100 font-bold text-sm px-4 rounded-2xl transition-all active:scale-95"
                 variant="outline"
               >
-                <Phone className="w-4 h-4 sm:mr-1.5 shrink-0" />
-                <span className="truncate hidden sm:block">{t("common.call")}</span>
+                <Phone className="w-4 h-4 mr-2 shrink-0" />
+                <span className="truncate">{t("common.call")}</span>
               </Button>
             }
           />
 
           <Button
-            className="flex-1 h-11 bg-[#06C755] hover:bg-[#05b34c] text-white font-medium text-xs sm:text-sm px-2 border-none min-w-0"
+            className="flex-1 h-12 bg-linear-to-r from-[#06C755] to-[#05b34c] hover:opacity-90 text-white font-bold text-sm px-4 border-none rounded-2xl shadow-lg shadow-green-500/20 transition-all active:scale-95 flex items-center justify-center"
             onClick={() => {
               try {
                 pushToDataLayer(GTM_EVENTS.CLICK_LINE, {
@@ -115,7 +125,7 @@ export function MobilePropertyActions({
             property={property}
             trigger={
               <Button 
-                className="flex-1 h-11  bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm shadow-md px-2 min-w-0"
+                className="flex-1 h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:opacity-90 text-white font-bold text-sm shadow-lg shadow-blue-500/20 px-4 rounded-2xl transition-all active:scale-95"
                 onClick={() => {
                   try {
                     pushToDataLayer(GTM_EVENTS.VIEW_ITEM, {
@@ -126,7 +136,7 @@ export function MobilePropertyActions({
                   } catch (e) {}
                 }}
               >
-                <SiGooglemessages className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5 shrink-0" />
+                <SiGooglemessages className="w-4 h-4 mr-2 shrink-0" />
                 <span className="truncate">{t("common.contact")}</span>
               </Button>
             }

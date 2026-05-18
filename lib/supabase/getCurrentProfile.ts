@@ -1,8 +1,28 @@
 import { createClient } from "@/lib/supabase/server";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 import { UserRole } from "@/lib/auth-shared";
 
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+export type IdentityRow = Database["public"]["Tables"]["identities_v3"]["Row"] & {
+  wechat_user_id?: string | null;
+  whatsapp_user_id?: string | null;
+};
+
+export type Profile = ProfileRow & {
+  role: UserRole;
+  email: string | null;
+  display_name: string | null;
+  nickname: string | null;
+  signature_url: string | null;
+  tenantId: string | null;
+  avatar_url: string | null;
+  wechat_user_id: string | null;
+  whatsapp_user_id: string | null;
+};
+
+type IdentityWithProfile = IdentityRow & {
+  profile: ProfileRow | null;
+};
 
 // ดึงข้อมูลโปรไฟล์ปัจจุบันจาก Supabase Auth และตาราง profiles
 export async function getCurrentProfile(): Promise<Profile | null> {
@@ -23,60 +43,113 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     return null;
   }
 
-  // 2. ดึงข้อมูลเพิ่มเติมจากตาราง 'profiles' (Custom Table)
-  // ตารางนี้เราสร้างเองเพื่อเก็บข้อมูลที่แก้ได้ เช่น ชื่อที่เปลี่ยนใหม่, รูปโปรไฟล์ที่อัพโหลดเอง
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id, full_name, email, avatar_url, role, phone, line_id, line_user_id, facebook_url, facebook_psid, whatsapp_id, wechat_id, team_id, other_contact, notification_preferences, created_at, updated_at, tax_id, tax_address, bank_code, bank_account_no, bank_account_name, other_bank_name, telegram_id, default_tax_rate")
+  // 2. ดึงข้อมูลแบบ Join ระหว่าง Identity (Source of Truth) และ Profile (Business Details)
+  const { data, error: identityError } = await supabase
+    .from("identities_v3")
+    .select(`
+      *,
+      profile:profiles!id(
+        *
+      )
+    `)
     .eq("id", user.id)
     .single();
 
-  // Fallback Logic: กรณีไม่มีข้อมูลในตาราง profiles (เช่น เพิ่งสมัครใหม่)
-  // ให้ใช้ข้อมูลจาก Auth Metadata (Google/Email) มาแสดงแทน เพื่อให้หน้าเว็บไม่ว่างเปล่า
-  if (profileError || !profile) {
-    console.warn("Profile not found in DB, using auth metadata", profileError);
+  const identity = data as unknown as IdentityWithProfile;
+  const profile = identity?.profile;
+
+  if (identityError || !identity) {
+    console.warn("Identity not found in DB, using auth metadata", identityError);
 
     return {
       id: user.id,
+      display_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
       email: user.email ?? null,
-      role: (user.user_metadata?.role as UserRole) ?? "USER", // Default to USER for new signups
-      avatar_url: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null, // รองรับทั้ง avatar_url และ picture จาก Google
-      full_name:
-        user.user_metadata?.full_name ?? user.user_metadata?.name ?? null, // ชื่อจาก Google
+      role: (user.user_metadata?.role as UserRole) ?? ("AGENT" as UserRole),
+      nickname: user.user_metadata?.nickname ?? null,
+      avatar_url: user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? null,
+      signature_url: null,
+      tenantId: null,
+      full_name: user.user_metadata?.full_name ?? user.user_metadata?.name ?? null,
       phone: null,
       line_id: null,
       line_user_id: null,
       facebook_url: null,
-      facebook_psid: null,
       whatsapp_id: null,
       wechat_id: null,
-      team_id: null,
-      other_contact: null,
-      notification_preferences: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      telegram_id: null,
       tax_id: null,
       tax_address: null,
       bank_code: null,
       bank_account_no: null,
       bank_account_name: null,
       other_bank_name: null,
-      telegram_id: null,
-      default_tax_rate: null,
-    };
+      notification_preferences: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      deleted_at: null,
+      bio: null,
+      last_ip: null,
+      last_login_at: null,
+      last_seen_at: null,
+      metadata: null,
+      is_active: true,
+      wechat_user_id: null,
+      whatsapp_user_id: null,
+    } as Profile;
   }
 
-  // Merge Logic: ถ้ามี profiles แต่บางค่าเป็น Null ให้ลองดึงจาก Auth มาเติมให้เต็ม
-  const dbProfile: Profile = profile;
-
-  return {
-    ...dbProfile,
-    email: dbProfile.email || user.email || null,
-    full_name:
-      dbProfile.full_name ||
-      user.user_metadata?.full_name ||
-      user.user_metadata?.name ||
-      null,
-    avatar_url: dbProfile.avatar_url || user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+  // 3. Prepare default fields to ensure No-Any & No-Undefined crashes
+  const defaultFields: Partial<ProfileRow> = {
+    full_name: identity.display_name || null,
+    nickname: identity.nickname || null,
+    phone: identity.phone || null,
+    line_id: identity.line_id || null,
+    avatar_url: identity.avatar_url || null,
+    display_name: identity.display_name || null,
+    email: identity.email || null,
+    role: (identity.role as string) || "AGENT",
+    bio: null,
+    tax_id: null,
+    tax_address: null,
+    bank_code: null,
+    bank_account_no: null,
+    bank_account_name: null,
+    other_bank_name: null,
+    notification_preferences: null,
+    signature_url: null,
+    line_user_id: null,
+    facebook_url: null,
+    whatsapp_id: null,
+    wechat_id: null,
+    telegram_id: null,
+    last_ip: null,
+    last_login_at: null,
+    last_seen_at: null,
+    metadata: null,
+    is_active: true,
+    created_at: identity.created_at || new Date().toISOString(),
+    updated_at: identity.updated_at || new Date().toISOString(),
+    deleted_at: null,
   };
+
+  // Merge Identity & Profile (Identity is the master for communication & role)
+  return {
+    ...defaultFields,
+    ...profile,
+    id: identity.id,
+    email: identity.email || user.email || null,
+    role: (identity.role as UserRole) || "AGENT",
+    category: identity.category ?? undefined,
+    tenantId: identity.tenant_id || null,
+    display_name: identity.display_name,
+    nickname: identity.nickname || profile?.nickname || defaultFields.nickname || null,
+    signature_url: profile?.signature_url || null,
+    avatar_url: identity.avatar_url || profile?.avatar_url || defaultFields.avatar_url || null,
+    full_name: profile?.full_name || identity.display_name || defaultFields.full_name || null,
+    phone: identity.phone || profile?.phone || defaultFields.phone || null,
+    line_id: identity.line_id || profile?.line_id || defaultFields.line_id || null,
+    wechat_user_id: identity.wechat_user_id || profile?.wechat_user_id || null,
+    whatsapp_user_id: identity.whatsapp_user_id || profile?.whatsapp_user_id || null,
+  } as Profile;
 }

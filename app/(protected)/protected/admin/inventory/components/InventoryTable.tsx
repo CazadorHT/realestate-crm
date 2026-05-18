@@ -171,12 +171,12 @@ export const InventoryTable = React.memo(
                       router.push(`/protected/properties/${item.id}`);
                     }}
                   >
-                    {navigatingId === item.id && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center pl-2 z-10">
-                        <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                      </div>
-                    )}
-                    <TableCell className="px-6 whitespace-normal!">
+                    <TableCell className="px-6 whitespace-normal! relative">
+                      {navigatingId === item.id && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center justify-center pl-2 z-10">
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                        </div>
+                      )}
                       <div className="flex items-center gap-4">
                         {/* Thumbnail with Overlays */}
                         <div className="relative h-12 w-20 rounded-lg bg-slate-100 overflow-hidden shrink-0 border border-slate-100">

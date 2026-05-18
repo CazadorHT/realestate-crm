@@ -4,12 +4,10 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { FAQForm } from "./FAQForm";
 import { FaQuestion } from "react-icons/fa6";
 
-import { Database } from "@/lib/database.types";
-
-type FAQ = Database["public"]["Tables"]["faqs"]["Row"];
+import { FAQItem } from "@/features/admin/faqs-actions";
 
 interface EditFAQDialogProps {
-  faq: FAQ | null;
+  faq: FAQItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;

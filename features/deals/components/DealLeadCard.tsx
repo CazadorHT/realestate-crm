@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 interface DealLeadCardProps {
   lead: {
     id: string;
-    full_name: string | null;
+    full_name?: string | null;
+    display_name?: string | null;
     email: string | null;
     phone: string | null;
   } | null; // Allow null to be safe, though usage implies it exists if rendered
@@ -14,6 +15,8 @@ interface DealLeadCardProps {
 
 export function DealLeadCard({ lead }: DealLeadCardProps) {
   if (!lead) return null;
+
+  const name = lead.full_name || lead.display_name || "ไม่ระบุชื่อ";
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -29,14 +32,14 @@ export function DealLeadCard({ lead }: DealLeadCardProps) {
       <div className="p-5">
         <div className="flex items-center gap-4">
           <div className="h-12 w-12 rounded-full bg-linear-to-br from-blue-500 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
-            {lead.full_name?.charAt(0)?.toUpperCase() || "?"}
+            {name.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
             <Link
               href={`/protected/leads/${lead.id}`}
               className="font-semibold text-lg hover:text-primary transition-colors"
             >
-              {lead.full_name || "ไม่ระบุชื่อ"}
+              {name}
             </Link>
             <div className="flex flex-wrap gap-3 mt-1 text-sm text-muted-foreground">
               {lead.email && (

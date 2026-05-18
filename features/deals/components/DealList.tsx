@@ -144,7 +144,7 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                         type="button"
                         onClick={(e) => {
                           e.preventDefault();
-                          const refCode = deal.property_id.slice(0, 8);
+                          const refCode = (deal.property_id || "").slice(0, 8);
                           navigator.clipboard.writeText(refCode);
                           toast.success(`คัดลอกรหัส ${refCode} แล้ว`, {
                             description: "คุณสามารถนำไปวางในช่องค้นหาได้ทันที",
@@ -154,14 +154,14 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                         className="text-[9px] font-semibold text-blue-500 uppercase tracking-widest leading-none bg-blue-50 px-1.5 py-1 rounded-md border border-blue-100/50 hover:bg-blue-100 hover:border-blue-200 transition-all active:scale-95 flex items-center gap-1 group"
                         title="คลิกเพื่อคัดลอกรหัสอ้างอิง"
                       >
-                        REF: #{deal.property_id.slice(0, 8)}
+                        REF: #{(deal.property_id || "").slice(0, 8)}
                         <Copy className="h-2.5 w-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
                       </button>
                     </div>
 
                     {/* Title: Compact font */}
                     <Link
-                      href={`/protected/properties/${deal.property_id}`}
+                      href={`/protected/properties/${deal.property_id || ""}`}
                       className="font-semibold text-sm lg:text-base text-slate-800 hover:text-blue-600 transition-colors block line-clamp-1 leading-normal"
                       title={deal.property?.title || "Property"}
                     >
@@ -301,7 +301,7 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                         </Link>
 
                         <DealFormDialog
-                          leadId={deal.lead_id}
+                          leadId={deal.lead_id || ""}
                           deal={deal}
                           properties={properties}
                           refreshOnSuccess
@@ -322,7 +322,7 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
 
                         <DeleteDealButton
                           dealId={deal.id}
-                          leadId={deal.lead_id}
+                          leadId={deal.lead_id || ""}
                           onSuccess={() => router.refresh()}
                           className="w-full"
                         >

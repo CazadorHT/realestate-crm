@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
-import { Database } from "@/lib/database.types";
+import { requireAuthContext } from "@/lib/authz";
+
+// --- V3 Hardened Interfaces ---
 
 export interface AgentKpiStats {
   agentId: string;
@@ -15,7 +16,26 @@ export interface AgentKpiStats {
   rentCount: number;
 }
 
-import { requireAuthContext } from "@/lib/authz";
+interface AgentRow {
+  id: string;
+  display_name: string | null;
+  email: string | null;
+  avatar_url: string | null;
+}
+
+interface DealRow {
+  id: string;
+  agent_id: string | null;
+  total_amount: number | null;
+  commission_total: number | null;
+  deal_type: string;
+  status: string | null;
+}
+
+interface LeadRow {
+  id: string;
+  assigned_to: string | null;
+}
 
 /**
  * Fetches performance analytics for a specific agent or all agents (leaderboard).
@@ -50,63 +70,58 @@ export async function getAgentKpiStats(
       startDate = start.toISOString();
     }
 
-    const applyTenantFilter = <T extends any>(
-      query: any,
-    ) => {
-      if (tenantId && tenantId !== "ALL") {
-        return query.eq("tenant_id", tenantId);
-      }
-      return query;
-    };
+    // Step 1: Query identities through tenant_members (V3 Tenant-specific Role)
+    let agentQuery = supabase
+      .from("tenant_members_v3")
+      .select(`
+        identity_id,
+        role,
+        identity:identities_v3!identity_id (
+          id,
+          display_name,
+          email,
+          avatar_url
+        )
+      `)
+      .in("role", ["owner", "admin", "manager", "agent"]);
 
-    // Step 1: Get profile IDs for this tenant if filtering
-    let profileIds: string[] | null = null;
     if (tenantId && tenantId !== "ALL") {
-      const { data: members, error: memberError } = await supabase
-        .from("tenant_members")
-        .select("profile_id")
-        .eq("tenant_id", tenantId);
-      
-      if (memberError) {
-        console.error("[getAgentKpiStats] Tenant Members Error:", memberError);
-        return [];
-      }
-      profileIds = members?.map((m) => m.profile_id) || [];
+      agentQuery = agentQuery.eq("tenant_id", tenantId);
     }
-
-    // Step 2: Query profiles (they don't have tenant_id)
-    let profileQuery = supabase
-      .from("profiles")
-      .select("id, full_name, email, avatar_url")
-      .eq("role", "AGENT");
-
-    if (profileIds) {
-      if (profileIds.length === 0) return []; // No agents in this tenant
-      profileQuery = profileQuery.in("id", profileIds);
-    }
-
     if (agentId) {
-      profileQuery = profileQuery.eq("id", agentId);
+      agentQuery = agentQuery.eq("identity_id", agentId);
     }
 
-    const { data: agents, error: profilesError } = await profileQuery;
+    const { data: rawAgents, error: identitiesError } = await agentQuery;
 
-    if (profilesError) {
-      console.error("[getAgentKpiStats] Profiles Error:", profilesError);
+    if (identitiesError || !rawAgents) {
+      console.error("[getAgentKpiStats] Identities Error:", identitiesError);
       return [];
     }
 
-    if (!agents || agents.length === 0) return [];
+    // Map to normalized AgentRow (Strict Typing)
+    const agents: AgentRow[] = rawAgents.map(m => {
+      const iden = Array.isArray(m.identity) ? m.identity[0] : m.identity;
+      const identityObj = (iden as Record<string, unknown> | null) || {};
+      return {
+        id: m.identity_id,
+        display_name: (identityObj.display_name as string) || "Unknown",
+        email: (identityObj.email as string) || null,
+        avatar_url: (identityObj.avatar_url as string) || null
+      };
+    });
 
-    // Step 3: Fetch all closed deals for calculating revenue
+    // Step 3: Fetch financial records for revenue/deals from crm_deals_v3
     let dealsQuery = supabase
-      .from("deals")
-      .select("id, created_by, commission_amount, deal_type, status, created_at")
+      .from("crm_deals_v3")
+      .select("id, agent_id, total_amount, commission_total, deal_type, status, closed_at")
       .eq("status", "CLOSED_WIN");
     
-    dealsQuery = applyTenantFilter(dealsQuery);
+    if (tenantId && tenantId !== "ALL") {
+      dealsQuery = dealsQuery.eq("tenant_id", tenantId);
+    }
     if (startDate) {
-      dealsQuery = dealsQuery.gte("created_at", startDate);
+      dealsQuery = dealsQuery.gte("closed_at", startDate);
     }
     const { data: deals, error: dealsError } = await dealsQuery;
 
@@ -114,23 +129,24 @@ export async function getAgentKpiStats(
       console.error("[getAgentKpiStats] Deals Error:", dealsError);
     }
 
-    // Fetch assigned leads count for conversion rate
-    let leadsQuery = supabase.from("leads").select("id, assigned_to, created_at");
-    leadsQuery = applyTenantFilter(leadsQuery);
+    // Step 4: Fetch assigned leads count for conversion rate (V3 Direct)
+    let leadsQuery = supabase
+      .from("crm_leads_v3")
+      .select("id, assigned_to, created_at");
+    
+    if (tenantId && tenantId !== "ALL") {
+      leadsQuery = leadsQuery.eq("tenant_id", tenantId);
+    }
     if (startDate) {
       leadsQuery = leadsQuery.gte("created_at", startDate);
     }
     const { data: leads, error: leadsError } = await leadsQuery;
 
-    if (leadsError) {
-      console.error("[getAgentKpiStats] Leads Error:", leadsError);
-    }
-
-    type AgentRow = { id: string; full_name: string | null; email: string | null; avatar_url: string | null };
-    type DealRow = { id: string; created_by: string; commission_amount: number | null; deal_type: string; status: string };
-    type LeadRow = { id: string; assigned_to: string | null };
-
-    return calculateAgentStats(agents as AgentRow[], deals as unknown as DealRow[] || [], leads as unknown as LeadRow[] || []);
+    return calculateAgentStats(
+      agents as AgentRow[],
+      (deals as DealRow[]) || [],
+      (leads as LeadRow[]) || []
+    );
   } catch (error) {
     console.error("getAgentKpiStats Error:", error);
     return [];
@@ -142,37 +158,41 @@ export async function getAgentKpiStats(
  * Extracted for unit testing.
  */
 export function calculateAgentStats(
-  agents: any[],
-  deals: any[],
-  leads: any[]
+  agents: AgentRow[],
+  deals: DealRow[],
+  leads: LeadRow[]
 ): AgentKpiStats[] {
   return agents.map((agent) => {
     const agentDeals = (deals || []).filter(
-      (d: any) => d.created_by === agent.id,
+      (d) => d.agent_id === agent.id,
     );
     const agentLeads = (leads || []).filter(
-      (l: any) => l.assigned_to === agent.id,
+      (l) => l.assigned_to === agent.id,
     );
 
     const totalRevenue = agentDeals.reduce(
-      (sum: number, d: any) => sum + (d.commission_amount || 0),
+      (sum, d) => sum + (d.total_amount || 0),
+      0,
+    );
+    const totalCommission = agentDeals.reduce(
+      (sum, d) => sum + (d.commission_total || 0),
       0,
     );
     const salesCount = agentDeals.filter(
-      (d: any) => d.deal_type === "SALE",
+      (d) => d.deal_type === "SALE",
     ).length;
     const rentCount = agentDeals.filter(
-      (d: any) => d.deal_type === "RENT",
+      (d) => d.deal_type === "RENT",
     ).length;
 
     return {
       agentId: agent.id,
-      fullName: agent.full_name,
+      fullName: agent.display_name,
       email: agent.email,
       avatarUrl: agent.avatar_url,
       totalDeals: agentDeals.length,
       totalRevenue,
-      totalCommission: totalRevenue,
+      totalCommission,
       leadCount: agentLeads.length,
       conversionRate:
         agentLeads.length > 0

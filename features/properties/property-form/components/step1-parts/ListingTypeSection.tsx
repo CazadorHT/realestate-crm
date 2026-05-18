@@ -98,7 +98,7 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
                         field.value === type ? "text-white" : "text-slate-800 group-hover:text-blue-500"
                       }`}
                     >
-                      {LISTING_TYPE_LABELS[type]}
+                      {LISTING_TYPE_LABELS[type]?.th || type}
                     </div>
                   </div>
 

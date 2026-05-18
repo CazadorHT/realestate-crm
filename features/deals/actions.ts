@@ -9,8 +9,7 @@ import {
   authzFail,
   AuthContext,
 } from "@/lib/authz";
-import { type PostgrestSingleResponse } from "@supabase/supabase-js";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 import { mapDbError } from "@/lib/db-error";
 import {
   createDealSchema,
@@ -19,13 +18,12 @@ import {
   UpdateDealInput,
 } from "./schema";
 import { z } from "zod";
-import { Deal, DealStatus, DealType, DealCommission, SplitWithTax, ProfileWithTax, CoBrokerWithTax } from "./types";
+import { Deal, DealType, SplitWithTax, ProfileWithTax, CoBrokerWithTax } from "./types";
 import { logAudit } from "@/lib/audit";
 import { getCommissionRulesAction } from "../dashboard/actions/commission-actions";
 import {
   calculateAdvancedSplit,
   CommissionRole,
-  CommissionSplitResult,
 } from "@/lib/finance/commissions";
 import { getScopedRevenueClient } from "./logic/scoped-client";
 import { getDealDiff } from "./logic/diff";
@@ -41,7 +39,7 @@ async function adjustPropertyStock(
   if (!propertyId) return;
 
   const scoped = getScopedRevenueClient(ctx.supabase, ctx.tenantId);
-  const { error } = await scoped.rpc("sync_property_inventory_atomic", {
+  const { error } = await (scoped.rpc as Function)("sync_property_inventory_atomic", {
     p_property_id: propertyId,
     p_adjustment: adjustment,
     p_deal_type: dealType,
@@ -62,7 +60,7 @@ async function swapPropertyStock(
   oldDealType: string,
   newDealType: string,
 ) {
-  const { error } = await ctx.supabase.rpc("swap_property_stock_atomic", {
+  const { error } = await (ctx.supabase.rpc as Function)("swap_property_stock_atomic", {
     p_old_property_id: (oldPropertyId as string) || "",
     p_new_property_id: (newPropertyId as string) || "",
     p_old_deal_type: oldDealType,
@@ -80,8 +78,6 @@ export async function createDealAction(input: CreateDealInput) {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     if (!tenantId) throw new Error("Tenant ID is required but missing");
-// ... (rest of the code unchanged until updateDealAction)
-
     // Validate Input
     const validated = createDealSchema.parse(input);
 
@@ -89,44 +85,30 @@ export async function createDealAction(input: CreateDealInput) {
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
 
-    // Calculate end date for RENT deals if duration is provided
-    const dealData = { ...validated };
-    if (
-      dealData.deal_type === "RENT" &&
-      dealData.transaction_date &&
-      dealData.duration_months
-    ) {
-      dealData.transaction_end_date = addMonths(
-        new Date(dealData.transaction_date),
-        dealData.duration_months,
-      ).toISOString();
+    // 1. Calculate end date for RENT deals
+    const deal_type = validated.deal_type;
+    const transaction_date = validated.transaction_date;
+    const duration_months_val = validated.duration_months;
+    
+    let transaction_end_date = undefined;
+    if (deal_type === "RENT" && transaction_date && duration_months_val) {
+      transaction_end_date = addMonths(new Date(transaction_date), duration_months_val).toISOString();
     }
 
-    // duration_months is a virtual field for the form, remove it before DB insert
-    // Use destructuring to cleanly separate duration_months from the rest
-    const { duration_months, ...insertData } = dealData;
+    const { 
+      commission_amount, 
+      commission_percent, 
+      duration_months, 
+      ...insertData 
+    } = {
+      ...validated,
+      transaction_end_date
+    };
 
-    // Clean empty/nullable fields (do not store empty strings).
-    const _cleanKeys = [
-      "transaction_date",
-      "transaction_end_date",
-      "co_agent_name",
-      "co_agent_contact",
-      "co_agent_online",
-      "source",
-      "partner_co_broker_id",
-    ] as const;
-    _cleanKeys.forEach((k) => {
-      const key = k as keyof typeof insertData;
-      if (insertData[key] === "" || insertData[key] === null) {
-        delete insertData[key];
-      }
-    });
-
-    // Remove any keys that are explicitly `undefined` (helpful for partial updates to preserve DB values)
+    // 2. Clean empty strings to avoid DB constraint errors
     Object.keys(insertData).forEach((k) => {
       const key = k as keyof typeof insertData;
-      if (insertData[key] === undefined) {
+      if (insertData[key] === "") {
         delete insertData[key];
       }
     });
@@ -137,12 +119,20 @@ export async function createDealAction(input: CreateDealInput) {
       .deals()
       .insert({
         ...insertData,
+        title: `Deal for Property ${validated.property_id}`,
+        tenant_id: tenantId,
         created_by: user.id,
+        commission_total: commission_amount,
+        metadata: { 
+          commission_percent,
+          duration_months: duration_months_val 
+        },
       })
       .select("id")
       .single();
 
     if (error) throw new Error(error.message);
+    if (!data) throw new Error("Failed to create deal: No data returned");
 
     await logAudit(
       { supabase, user, role },
@@ -211,7 +201,7 @@ export async function updateDealAction(input: UpdateDealInput) {
 
     const { data: currentDeal, error: currentErr } = await scoped
       .deals()
-      .select("id, status, property_id, deal_type, tenant_id")
+      .select("id, status, property_id, deal_type, tenant_id, transaction_date, metadata")
       .eq("id", validated.id)
       .single();
 
@@ -225,51 +215,49 @@ export async function updateDealAction(input: UpdateDealInput) {
     const nextStatus = validated.status ?? prevStatus;
     const nextPropertyId = validated.property_id ?? prevPropertyId;
 
-    // Calculate end date for RENT deals if duration is updated
-    const dealData = { ...validated };
-    if (
-      dealData.deal_type === "RENT" &&
-      dealData.transaction_date &&
-      dealData.duration_months
-    ) {
-      dealData.transaction_end_date = addMonths(
-        new Date(dealData.transaction_date),
-        dealData.duration_months,
-      ).toISOString();
-    }
-    // Cleanup virtual field
-    const { duration_months: _unused, ...updateData } = dealData;
+    // 1. Calculate end date with merge logic for partial updates
+    const effectiveDealType = validated.deal_type || currentDeal.deal_type;
+    const effectiveDate = validated.transaction_date || currentDeal.transaction_date;
+    // Get duration from input OR from saved metadata if it exists
+    const prevDuration = (currentDeal.metadata as Record<string, unknown>)?.duration_months as number | undefined;
+    const effectiveDuration = validated.duration_months || prevDuration;
 
-    // Clean empty-string fields before update (keep `null` to explicitly clear DB columns)
-    const _updateCleanKeys = [
-      "transaction_date",
-      "transaction_end_date",
-      "co_agent_name",
-      "co_agent_contact",
-      "co_agent_contact",
-      "source",
-      "partner_co_broker_id",
-    ] as const;
-    _updateCleanKeys.forEach((k) => {
+    let transaction_end_date = undefined;
+    if (effectiveDealType === "RENT" && effectiveDate && effectiveDuration) {
+      transaction_end_date = addMonths(new Date(effectiveDate), effectiveDuration).toISOString();
+    }
+
+    const { 
+      commission_amount, 
+      commission_percent, 
+      duration_months, 
+      ...updateData 
+    } = {
+      ...validated,
+      ...(transaction_end_date ? { transaction_end_date } : {})
+    };
+
+    // 2. Clean empty strings
+    Object.keys(updateData).forEach((k) => {
       const key = k as keyof typeof updateData;
       if (updateData[key] === "") {
         delete updateData[key];
       }
     });
 
-    // Remove explicit undefined keys
-    Object.keys(updateData).forEach((k) => {
-      const key = k as keyof typeof updateData;
-      if (updateData[key] === undefined) {
-        delete updateData[key];
-      }
-    });
-
     const { error } = await scoped
       .deals()
-      .update(updateData)
-      .eq("id", validated.id)
-      .single();
+      .update({
+        ...updateData,
+        commission_total: commission_amount,
+        metadata: { 
+          ...(currentDeal.metadata as Record<string, unknown>),
+          ...(commission_percent !== undefined ? { commission_percent } : {}),
+          ...(duration_months !== undefined ? { duration_months } : {})
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", validated.id);
 
     if (error) throw new Error(mapDbError(error));
 
@@ -293,8 +281,6 @@ export async function updateDealAction(input: UpdateDealInput) {
     const isNoLongerWon = prevStatus === "CLOSED_WIN" && nextStatus !== "CLOSED_WIN";
 
     if (isPropertySwapped) {
-      // Logic: If we are swapping, we only care if either the OLD was won or the NEW is won
-      // We call the Atomic Swap RPC which handles the transition safely.
       await swapPropertyStock(
         { supabase, tenantId },
         prevStatus === "CLOSED_WIN" ? prevPropertyId : null,
@@ -303,16 +289,14 @@ export async function updateDealAction(input: UpdateDealInput) {
         validated.deal_type || currentDeal.deal_type,
       );
     } else if (nextPropertyId) {
-      // Same Property, just Status Change
       if (isBecameWon) {
         await adjustPropertyStock(
           { supabase, tenantId },
           nextPropertyId,
           1,
-          validated.deal_type || currentDeal.deal_type,
+          (validated.deal_type || currentDeal.deal_type) as "SALE" | "RENT",
         );
 
-        // 🔔 Notify Admins about the newly closed deal
         try {
           const { notifyAdminsAction } = await import("@/lib/actions/notifications");
           await notifyAdminsAction({
@@ -329,7 +313,7 @@ export async function updateDealAction(input: UpdateDealInput) {
           { supabase, tenantId },
           nextPropertyId,
           -1,
-          currentDeal.deal_type,
+          currentDeal.deal_type as "SALE" | "RENT",
         );
       }
     }
@@ -361,8 +345,7 @@ export async function deleteDealAction(dealId: string, leadId: string) {
 
     const scoped = getScopedRevenueClient(supabase, tenantId);
 
-    // 💎 10/10 HARDENING: Use the Atomic RPC even for single deletes to guarantee integrity
-    const { data: count, error: deleteErr } = await scoped.rpc(
+    const { data: count, error: deleteErr } = await (scoped.rpc as Function)(
       "bulk_delete_deals_atomic",
       {
         p_deal_ids: [dealId],
@@ -408,12 +391,15 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     const scoped = getScopedRevenueClient(supabase, tenantId);
 
-    // 1. Get Deal with Property Details
     const { data: deal, error: dealErr } = await scoped
       .deals()
       .select(`
-        *,
-        property:properties (
+        id,
+        created_by,
+        partner_co_broker_id,
+        commission_total,
+        property_id,
+        property:properties_core!property_id (
           id,
           assigned_to
         )
@@ -423,7 +409,6 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     if (dealErr || !deal) throw new Error("ไม่พบข้อมูลดีล");
 
-    // 2. Get Global Rules & Tax Default
     const rulesRes = await getCommissionRulesAction();
     const globalDefaultWht = rulesRes.success ? (rulesRes.data?.defaultWhtRate || 3) : 3;
     const rules = rulesRes.success && rulesRes.data ? rulesRes.data : {
@@ -437,26 +422,35 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
       enableTeamPoolByDefault: false,
     };
 
-    // 3. Fetch Agent/Co-broker Specific Tax Rates (Fallback Logic)
     const agentIds = [deal.property?.assigned_to, deal.created_by].filter(Boolean) as string[];
     let agentProfiles: ProfileWithTax[] = [];
     
     if (agentIds.length > 0) {
       const { data } = await supabase
-        .from("profiles")
-        .select("id, default_tax_rate")
+        .from("identities_v3")
+        .select("id, social_links")
         .in("id", agentIds);
-      if (data) agentProfiles = data as unknown as ProfileWithTax[];
+      if (data) {
+        agentProfiles = data.map(d => ({
+          ...d,
+          default_tax_rate: (d.social_links as Record<string, unknown>)?.default_tax_rate ?? null
+        })) as unknown as ProfileWithTax[];
+      }
     }
 
     let coBrokerProfile: CoBrokerWithTax | null = null;
     if (deal.partner_co_broker_id) {
       const { data } = await supabase
-        .from("co_brokers")
-        .select("id, default_tax_rate" as any)
+        .from("identities_v3")
+        .select("id, social_links")
         .eq("id", deal.partner_co_broker_id)
         .single();
-      if (data) coBrokerProfile = data as unknown as CoBrokerWithTax;
+      if (data) {
+        coBrokerProfile = {
+          ...data,
+          default_tax_rate: (data.social_links as Record<string, unknown>)?.default_tax_rate ?? null
+        } as unknown as CoBrokerWithTax;
+      }
     }
 
     const getTaxRateForAgent = (id?: string) => {
@@ -466,12 +460,11 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     const coBrokerTaxRate = (coBrokerProfile?.default_tax_rate ?? globalDefaultWht);
 
-    // 4. Simple or Advanced Split
     let splits: SplitWithTax[] = [];
 
     if (rules.enableAdvancedSplit) {
       splits = calculateAdvancedSplit(
-        deal.commission_amount || 0,
+        deal.commission_total || 0,
         {
           listingPercent: rules.defaultListingPercent ?? 30,
           closingPercent: rules.defaultClosingPercent ?? 50,
@@ -483,11 +476,8 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
           listingAgentId: deal.property?.assigned_to || undefined,
           closingAgentId: deal.created_by || undefined,
         },
-        globalDefaultWht // Provide global default for starters
-      );
-
-      // 🛡️ Post-process splits to apply individual tax rates
-      splits = (splits as CommissionSplitResult[]).map((s) => {
+        globalDefaultWht
+      ).map((s) => {
         let actualTaxRate = globalDefaultWht;
         if (s.role === "LISTING" || s.role === "CLOSING") {
           actualTaxRate = getTaxRateForAgent(s.agentId);
@@ -503,70 +493,54 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
           ...s,
           whtAmount: whtAmount.toNumber(),
           netAmount: FinanceMath.toDecimal(s.amount).minus(whtAmount).toNumber(),
-          taxRate: actualTaxRate // Attach it for the insert data
+          taxRate: actualTaxRate
         } as SplitWithTax;
       });
     } else {
-      // Simple Split: 100% to AGENCY
       splits = [
         {
           role: "AGENCY" as CommissionRole,
           percentage: 100,
-          amount: deal.commission_amount || 0,
+          amount: deal.commission_total || 0,
           whtAmount: 0,
-          netAmount: deal.commission_amount || 0,
+          netAmount: deal.commission_total || 0,
         },
       ];
     }
 
-    // 5. Save to deal_commissions
-    // First clear existing
     await scoped
       .commissions()
       .delete()
       .eq("deal_id", dealId);
 
-    const insertData = splits.map((s) => ({
-      deal_id: dealId,
-      agent_id: s.agentId ?? null,
-      co_broker_id: s.role === "CO_AGENT" ? deal.partner_co_broker_id : null,
-      role: s.role as Database["public"]["Enums"]["commission_role"],
-      percentage: s.percentage,
-      amount: s.amount,
-      wht_amount: s.whtAmount,
-      net_amount: s.netAmount,
-      tax_rate: (s.taxRate || globalDefaultWht) / 100,
-      tenant_id: tenantId,
-      status: "UNPAID" as Database["public"]["Enums"]["commission_status"],
-    }));
+    const totalBaseAmount = deal.commission_total || 0;
+    const vatAmount = 0;
+    const totalInvoiceAmount = totalBaseAmount + vatAmount;
 
     const { error: insertErr } = await scoped
       .commissions()
-      .insert(insertData);
+      .insert(splits.map((s) => ({
+        tenant_id: tenantId,
+        deal_id: dealId,
+        recipient_id: s.agentId ?? (s.role === "CO_AGENT" ? deal.partner_co_broker_id : null),
+        recipient_role: s.role,
+        percentage: s.percentage,
+        amount: s.amount,
+        tax_amount: s.whtAmount,
+        net_amount: s.netAmount,
+        tax_rate: (s.taxRate || globalDefaultWht),
+        status: "UNPAID",
+        metadata: { generated_at: new Date().toISOString() },
+      })));
 
     if (insertErr) throw new Error(mapDbError(insertErr));
 
-    // 6. 💎 10/10 NEW: Auto-generate Draft Invoice
-    const invoiceNumber = `INV-${new Date().getFullYear()}${(new Date().getMonth() + 1).toString().padStart(2, '0')}-${dealId.slice(0, 4).toUpperCase()}`;
-    
-    // คำนวณยอดรวม Invoice (ยอดคอมมิชชั่นรวม + VAT 7%)
-    const totalBaseAmount = deal.commission_amount || 0;
-    const vatRate = 0.07; // 7% VAT
-    const vatAmount = Number((totalBaseAmount * vatRate).toFixed(2));
-    const totalInvoiceAmount = totalBaseAmount + vatAmount;
-
-    await supabase
-      .from("invoices")
-      .upsert({
-        tenant_id: tenantId,
-        deal_id: dealId,
-        invoice_number: invoiceNumber,
-        amount: totalBaseAmount,
-        vat_amount: vatAmount,
-        total_amount: totalInvoiceAmount,
-        status: "DRAFT",
-        metadata: { generated_at: new Date().toISOString(), type: "COMMISSION" }
-      }, { onConflict: 'tenant_id, invoice_number' });
+    await scoped.deals().update({
+      commission_total: totalBaseAmount,
+      vat_amount: vatAmount,
+      net_received: totalInvoiceAmount,
+      metadata: { last_calculated_at: new Date().toISOString() }
+    }).eq("id", dealId);
 
     await logAudit(
       { supabase, user, role },
@@ -574,8 +548,8 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
         action: "finance.calculate",
         entity: "deals",
         entityId: dealId,
-        summary: `คำนวณส่วนแบ่งคอมมิชชั่นและออกร่างใบแจ้งหนี้ ${invoiceNumber} สำเร็จ`,
-        metadata: { totalAmount: totalBaseAmount, invoiceNumber }
+        summary: `คำนวณส่วนแบ่งคอมมิชชั่นเรียบร้อย (Pure V3)`,
+        metadata: { totalAmount: totalBaseAmount }
       }
     );
 

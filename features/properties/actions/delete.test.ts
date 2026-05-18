@@ -80,13 +80,11 @@ describe('Property Actions - Hardened Deletion & Atomic Integrity', () => {
     mockSupabase.then
       .mockImplementationOnce((resolve: any) => resolve({ count: 0, error: null })) // 2. deal check
       .mockImplementationOnce((resolve: any) => resolve({ data: [{ storage_path: 'img.jpg' }], error: null })) // 3. images select
-      .mockImplementationOnce((resolve: any) => resolve({ error: null })) // 4. leads update
-      .mockImplementationOnce((resolve: any) => resolve({ error: null })) // 5. features delete
+      .mockImplementationOnce((resolve: any) => resolve({ error: null })) // 4. details delete
+      .mockImplementationOnce((resolve: any) => resolve({ error: null })) // 5. media delete
       .mockImplementationOnce((resolve: any) => resolve({ error: null })) // 6. agents delete
-      .mockImplementationOnce((resolve: any) => resolve({ error: null })) // 7. matches delete
-      .mockImplementationOnce((resolve: any) => resolve({ error: null })) // 8. uploads delete
-      .mockImplementationOnce((resolve: any) => resolve({ error: null })) // 9. image rows delete
-      .mockImplementationOnce((resolve: any) => resolve({ error: { code: '23503', message: 'FK Conflict' } })); // 💥 10. MAIN DELETE FAILS
+      .mockImplementationOnce((resolve: any) => resolve({ error: null })) // 7. features delete
+      .mockImplementationOnce((resolve: any) => resolve({ error: { code: '23503', message: 'FK Conflict' } })); // 💥 8. MAIN DELETE FAILS
 
     const result = await deletePropertyAction(getMockFormData('p1'));
 

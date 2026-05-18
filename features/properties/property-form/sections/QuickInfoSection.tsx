@@ -77,7 +77,9 @@ export function QuickInfoSection({
       return;
     }
     setIsTranslatingArea(true);
-    const toastId = toast.loading("กำลังแปลชื่อย่านเป็นภาษาอังกฤษ จีน และรัสเซีย...");
+    const toastId = toast.loading(
+      "กำลังแปลชื่อย่านเป็นภาษาอังกฤษ จีน และรัสเซีย...",
+    );
     try {
       const result = await translateTextAction(newArea, "plain");
       setNewAreaEnAction(result.en);
@@ -85,7 +87,9 @@ export function QuickInfoSection({
       setNewAreaRuAction(result.ru);
       toast.success("แปลชื่อย่านเรียบร้อยแล้ว ✨", { id: toastId });
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : "การแปลขัดข้อง", { id: toastId });
+      toast.error(error instanceof Error ? error.message : "การแปลขัดข้อง", {
+        id: toastId,
+      });
     } finally {
       setIsTranslatingArea(false);
     }
@@ -177,8 +181,9 @@ export function QuickInfoSection({
           />
         </div>
 
-        {/* Title (English) */}
-        <div className="md:col-span-1 lg:col-span-2">
+        {/* Multi-language Titles Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:col-span-1 lg:col-span-4">
+          {/* Title (English) */}
           <FormField
             control={form.control}
             name="title_en"
@@ -198,10 +203,8 @@ export function QuickInfoSection({
               </FormItem>
             )}
           />
-        </div>
 
-        {/* 物业名称 (Chinese) */}
-        <div className="md:col-span-1 lg:col-span-2">
+          {/* 物业名称 (Chinese) */}
           <FormField
             control={form.control}
             name="title_cn"
@@ -221,10 +224,8 @@ export function QuickInfoSection({
               </FormItem>
             )}
           />
-        </div>
 
-        {/* Название (Russian) */}
-        <div className="md:col-span-1 lg:col-span-2">
+          {/* Название (Russian) */}
           <FormField
             control={form.control}
             name="title_ru"
@@ -247,7 +248,7 @@ export function QuickInfoSection({
         </div>
 
         {/* province */}
-        <div className="md:col-span-1 lg:col-span-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-1 lg:col-span-4">
           <FormField
             control={form.control}
             name="province"
@@ -298,10 +299,7 @@ export function QuickInfoSection({
               </FormItem>
             )}
           />
-        </div>
-
-        {/* popular_area */}
-        <div className="md:col-span-1 lg:col-span-2">
+          {/* popular_area */}
           <FormField
             control={form.control}
             name="popular_area"

@@ -1,13 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import { leadRowToFormValues } from './mapper';
-import { LeadRow } from './types';
+import { LeadWithJoins } from './types';
 import { encrypt } from '@/lib/crypto';
 
 // Mock encryption secret for consistent testing
 process.env.ENCRYPTION_SECRET = "test-secret-must-be-32-chars-long-!!!";
 
 describe('Lead Mapper - leadRowToFormValues', () => {
-  const mockRow: LeadRow = {
+  const mockRow: LeadWithJoins = {
     id: 'lead-1',
     full_name: 'Hunter Developer',
     email: 'hunter@test.com',
@@ -20,7 +20,7 @@ describe('Lead Mapper - leadRowToFormValues', () => {
     assigned_to: 'agent-1',
     property_id: null,
     budget_min: 1000000,
-    budget_max: 5000000,
+    budget_max: 500000,
     note: 'Interested in condos',
     is_foreigner: true,
     nationality: 'Thai',
@@ -59,6 +59,11 @@ describe('Lead Mapper - leadRowToFormValues', () => {
     line_id_hash: null,
     wechat_id: 'wechat123',
     whatsapp: '+66812345678',
+    ai_summary: null,
+    identity_id: 'identity-1',
+    requirements_embedding: null,
+    status: 'ACTIVE',
+    utm_data: null,
   };
 
   it('should map a raw lead row to form values correctly (Backward Compatibility)', () => {
@@ -73,7 +78,7 @@ describe('Lead Mapper - leadRowToFormValues', () => {
   });
 
   it('should decrypt encrypted PII fields correctly', () => {
-    const encryptedRow: LeadRow = {
+    const encryptedRow: LeadWithJoins = {
       ...mockRow,
       full_name: encrypt('Encrypted Name')!,
       phone: encrypt('0999999999')!,
@@ -90,7 +95,7 @@ describe('Lead Mapper - leadRowToFormValues', () => {
   });
 
   it('should fallback to null or default for empty fields', () => {
-    const emptyRow: LeadRow = {
+    const emptyRow: LeadWithJoins = {
       ...mockRow,
       phone: null,
       email: null,
@@ -114,17 +119,17 @@ describe('Lead Mapper - leadRowToFormValues', () => {
   describe('Brutal Mapper Edge Cases', () => {
     it('should handle completely missing fields gracefully', () => {
       // @ts-ignore - Testing runtime resilience against bad DB data
-      const corruptedRow: LeadRow = { id: 'bad-1' };
+      const corruptedRow: LeadWithJoins = { id: 'bad-1' };
       const values = leadRowToFormValues(corruptedRow);
       
       expect(values.full_name).toBe("");
       expect(values.phone).toBe(null);
       expect(values.email).toBe(null);
-      expect(values.stage).toBe(undefined); // Should match DB default behavior
+      expect(values.stage).toBe("NEW"); // Should match DB default behavior
     });
 
     it('should handle malformed JSON in preferences', () => {
-      const rowWithBadJson: LeadRow = {
+      const rowWithBadJson: LeadWithJoins = {
         ...mockRow,
         preferences: "not-json-but-string" as any
       };
@@ -133,7 +138,7 @@ describe('Lead Mapper - leadRowToFormValues', () => {
     });
 
     it('should handle numbers passed as strings and vice versa for IDs', () => {
-      const weirdRow: LeadRow = {
+      const weirdRow: LeadWithJoins = {
         ...mockRow,
         budget_min: "500000" as any,
         is_foreigner: "true" as any,

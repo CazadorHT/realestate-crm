@@ -31,6 +31,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import Link from "next/link";
 import { useTenant } from "@/components/providers/TenantProvider";
+import { ROLE_LABELS } from "@/lib/auth-shared";
 
 interface UserNavProps {
   profile: Profile | null;
@@ -91,7 +92,7 @@ export function UserNav({ profile }: UserNavProps) {
                 </p>
                 {profile?.role && (
                   <span className="mt-1 inline-flex w-fit items-center rounded-sm bg-primary/10 px-1 py-0.5 text-[10px] font-medium text-primary uppercase">
-                    {profile.role}
+                    {profile.role ? (ROLE_LABELS[profile.role] || profile.role) : ""}
                   </span>
                 )}
               </div>
@@ -191,7 +192,7 @@ export function UserNav({ profile }: UserNavProps) {
                   <p className="text-xs text-slate-500 truncate">{profile?.email}</p>
                   {profile?.role && (
                     <span className="mt-1 inline-flex w-fit items-center rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600 uppercase border border-blue-100">
-                      {profile.role}
+                      {profile.role ? (ROLE_LABELS[profile.role] || profile.role) : ""}
                     </span>
                   )}
                 </div>

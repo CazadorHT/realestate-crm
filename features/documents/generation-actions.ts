@@ -422,7 +422,7 @@ export async function generateDocumentFromTemplateAction(
     const docRes = await createDocumentRecordAction({
       owner_id: ownerId,
       owner_type: ownerType,
-      document_type: template.type,
+      document_type: template.type as any,
       file_name: displayFileName,
       storage_path: storagePath,
       mime_type: "text/html",

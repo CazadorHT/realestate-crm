@@ -17,17 +17,23 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AreaAnalytics, DistributionData } from "@/features/dashboard/queries";
-import { LISTING_TYPE_LABELS, PROPERTY_TYPE_LABELS } from "@/features/properties/labels";
+import { listingTypeLabel, propertyTypeLabel, ListingType, PropertyType } from "@/features/properties/labels";
 
 // Custom Glassmorphism Tooltip
-const CustomTooltip = ({ active, payload, label }: any) => {
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: { name?: string; value?: number; fill?: string; color?: string }[];
+  label?: string;
+}
+
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white/80 backdrop-blur-md border border-white/20 p-3 rounded-xl shadow-xl">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label || payload[0].name}</p>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">{label || payload[0]?.name}</p>
         <div className="flex items-center gap-2">
-           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: payload[0].fill || payload[0].color }} />
-           <p className="text-sm font-bold text-slate-900">{payload[0].value.toLocaleString()} Views</p>
+           <div className="h-2 w-2 rounded-full" style={{ backgroundColor: payload[0]?.fill || payload[0]?.color }} />
+           <p className="text-sm font-bold text-slate-900">{(payload[0]?.value || 0).toLocaleString()} Views</p>
         </div>
       </div>
     );
@@ -72,14 +78,14 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
 
   // Format data for Listing Types
   const listingData = listingTypeDist.map(item => ({
-    name: LISTING_TYPE_LABELS[item.label as keyof typeof LISTING_TYPE_LABELS] || item.label,
+    name: listingTypeLabel(item.label as ListingType, "th"),
     value: item.value,
     originalValue: item.label,
   }));
 
   // Format data for Property Types
   const propertyData = propertyTypeDist.map(item => ({
-    name: PROPERTY_TYPE_LABELS[item.label as keyof typeof PROPERTY_TYPE_LABELS] || item.label,
+    name: propertyTypeLabel(item.label as PropertyType, "th"),
     value: item.value,
     originalValue: item.label,
   }));
@@ -110,7 +116,7 @@ export function AnalyticsCharts({ topAreas, listingTypeDist, propertyTypeDist }:
                 dataKey="views" 
                 radius={[0, 4, 4, 0]} 
                 barSize={24}
-                onClick={(data: any) => updateFilters("area", data.originalValue)}
+                onClick={(payload) => updateFilters("area", (payload as unknown as { originalValue: string }).originalValue)}
                 className="cursor-pointer"
               >
                 {areaData.map((entry, index) => (

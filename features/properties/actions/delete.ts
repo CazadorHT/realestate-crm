@@ -28,7 +28,7 @@ export async function deletePropertyAction(formData: FormData) {
 
     // 0) โหลดเจ้าของทรัพย์เพื่อเช็คสิทธิ (owner/admin)
     const { data: property, error: propErr } = await supabase
-      .from("properties")
+      .from("properties_core")
       .select("id, created_by, tenant_id")
       .eq("id", id)
       .eq("tenant_id", tenantId)
@@ -45,7 +45,7 @@ export async function deletePropertyAction(formData: FormData) {
 
     // 0.2) Check for dependencies that block deletion (like active Deals)
     const { count: dealCount, error: dealErr } = await supabase
-      .from("deals")
+      .from("crm_deals_v3")
       .select("id", { count: "exact", head: true })
       .eq("property_id", id);
 
@@ -57,33 +57,24 @@ export async function deletePropertyAction(formData: FormData) {
 
     // 1) Get image paths first (to use for cleanup later)
     const { data: images } = await supabase
-      .from("property_images")
+      .from("property_media_v3")
       .select("storage_path")
       .eq("property_id", id);
 
-    // 2) Manual Cleanup of Dependencies (Fix for Foreign Key Constraint 23503)
-    // 2.1 Unlink Leads (don't delete leads, just remove association)
-    await supabase
-      .from("leads")
-      .update({ property_id: null })
-      .eq("property_id", id)
-      .eq("tenant_id", tenantId);
-
-    // 2.2 Delete Sub-tables
-    await supabase.from("property_features").delete().eq("property_id", id);
-    await supabase.from("property_agents").delete().eq("property_id", id);
-    await supabase.from("property_matches").delete().eq("property_id", id);
-    await supabase
-      .from("property_image_uploads")
-      .delete()
-      .eq("property_id", id);
-
-    // Explicitly delete property_images rows (DB)
-    await supabase.from("property_images").delete().eq("property_id", id);
+    // 2) Manual Cleanup of Dependencies (V3 Details, Media, Agents, Features)
+    // In a perfect V3, these should have ON DELETE CASCADE, 
+    // but we'll do explicit cleanup for extra safety during migration.
+    
+    await Promise.all([
+      supabase.from("properties_details").delete().eq("property_id", id),
+      supabase.from("property_media_v3").delete().eq("property_id", id),
+      supabase.from("property_agents").delete().eq("property_id", id),
+      supabase.from("property_features").delete().eq("property_id", id),
+    ]);
 
     // 3) Delete main property record
     const { error } = await supabase
-      .from("properties")
+      .from("properties_core")
       .delete()
       .eq("id", id)
       .eq("tenant_id", tenantId);
@@ -120,7 +111,7 @@ export async function deletePropertyAction(formData: FormData) {
       { supabase, user, role },
       {
         action: "property.delete",
-        entity: "properties",
+        entity: "properties_core",
         entityId: id,
         metadata: {
           // ใส่ได้ตามต้องการ เช่นจำนวนรูปที่ลบจริง (ถ้าคำนวณไว้)
@@ -128,12 +119,7 @@ export async function deletePropertyAction(formData: FormData) {
       },
     );
 
-    // Clean up TEMP uploads (legacy logic, keep it)
-    await supabase
-      .from("property_image_uploads")
-      .delete()
-      .eq("user_id", user.id)
-      .eq("status", "TEMP");
+    // Clean up TEMP uploads (V3 handled via storage cleanup)
 
     revalidatePath("/", "layout");
     revalidatePath("/protected/properties");

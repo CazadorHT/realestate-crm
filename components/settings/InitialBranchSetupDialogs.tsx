@@ -222,7 +222,7 @@ export function InitialBranchSetupDialogs({
         </div>
       }
     >
-      <div className="py-4 pb-6">
+      <div className="py-6 px-4">
         {step === "create" && (
           <Form {...form}>
             <form

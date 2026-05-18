@@ -45,7 +45,7 @@ export function TransferLeadsDialog({
         .in("role", ["ADMIN", "MANAGER", "AGENT"])
         .order("full_name");
 
-      if (data) setAgents(data);
+      if (data) setAgents(data as { id: string; full_name: string | null; role: string }[]);
     }
 
     if (isOpen) {

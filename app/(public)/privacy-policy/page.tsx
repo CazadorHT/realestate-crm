@@ -7,8 +7,9 @@ import { enUS, th, zhCN, ru } from "date-fns/locale";
 import { Shield, FileText, Info, Phone as PhoneIcon, Home } from "lucide-react";
 import Link from "next/link";
 
-// ✅ Force dynamic to ensure fresh settings but disable streaming for bots
-export const dynamic = "force-dynamic";
+// ✅ Optimized for Google OAuth Bot: Use static-ish rendering for 100% HTML compatibility
+// This prevents "improperly formatted" errors by ensuring a fast, stable response.
+export const revalidate = 86400; 
 
 // ✅ Always use production URL — siteConfig.url returns localhost in dev mode
 const PRODUCTION_URL = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";

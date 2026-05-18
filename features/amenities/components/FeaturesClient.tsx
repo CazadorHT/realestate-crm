@@ -132,7 +132,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
     form.reset({
       name: feature.name,
       category: feature.category || "",
-      icon_key: feature.icon_key,
+      icon_key: feature.icon_key || "box",
     });
     setIsDialogOpen(true);
   };
@@ -336,7 +336,7 @@ export function FeaturesClient({ features }: FeaturesClientProps) {
               </TableRow>
             ) : (
               currentFeatures.map((feature) => {
-                const Icon = ICON_MAP[feature.icon_key] || DEFAULT_ICON;
+                const Icon = ICON_MAP[feature.icon_key || "box"] || DEFAULT_ICON;
                 return (
                   <TableRow
                     key={feature.id}

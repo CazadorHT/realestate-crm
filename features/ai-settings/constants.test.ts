@@ -11,13 +11,13 @@ describe('AI Settings Constants', () => {
   it('should correctly map model info by ID', () => {
     const flashModel = MODEL_INFO_MAP['gemini-flash-latest'];
     expect(flashModel).toBeDefined();
-    expect(flashModel.label).toContain('Gemini Flash');
+    expect(flashModel.label).toContain('Gemini 3 Flash');
   });
 
   it('should have a complete default configuration', () => {
     expect(DEFAULT_CONFIG.chatbot_model).toBe('gemini-flash-latest');
-    expect(DEFAULT_CONFIG.blog_generator_model).toBe('gemini-flash-latest');
-    expect(DEFAULT_CONFIG.lead_model).toBe('gemini-flash-latest');
+    expect(DEFAULT_CONFIG.blog_generator_model).toBe('gemini-pro-latest');
+    expect(DEFAULT_CONFIG.lead_model).toBe('gemini-flash-lite-latest');
   });
 
   it('should ensure all model IDs in DEFAULT_CONFIG exist in ALLOWED_MODELS', () => {

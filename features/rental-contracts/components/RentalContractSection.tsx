@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getContractByDealId as _noop } from "@/features/rental-contracts/actions"; // noop to keep import types consistent
+import { Resolver } from "react-hook-form";
+import { DocumentOwnerType } from "@/features/documents/schema";
 
 type Props = {
   dealId: string;
@@ -23,6 +25,7 @@ type Props = {
 import {
   contractFormSchema,
   ContractFormInput,
+  RentalContract,
 } from "@/features/rental-contracts/schema";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,11 +92,11 @@ export function RentalContractSection({
 }: Props) {
   const canCreateContract =
     dealStatus === "CLOSED_WIN" || dealStatus === "SIGNED";
-  const [contract, setContract] = useState<any | null>(null);
+  const [contract, setContract] = useState<RentalContract | null>(null);
   const [loading, setLoading] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showDetails, setShowDetails] = useState<any | null>(null);
-  const [showTerminateDialog, setShowTerminateDialog] = useState<any | null>(
+  const [showDetails, setShowDetails] = useState<RentalContract | null>(null);
+  const [showTerminateDialog, setShowTerminateDialog] = useState<RentalContract | null>(
     null,
   );
 
@@ -118,7 +121,7 @@ export function RentalContractSection({
   }, [dealId, dealType]);
 
   const form = useForm<ContractFormInput>({
-    resolver: zodResolver(contractFormSchema) as any,
+    resolver: zodResolver(contractFormSchema) as unknown as Resolver<ContractFormInput>,
     mode: "onChange",
     defaultValues: {
       deal_id: dealId,
@@ -173,11 +176,11 @@ export function RentalContractSection({
         (initialRent ? initialRent * 1 : undefined),
       status: contract?.status ?? "DRAFT",
     });
-  }, [contract?.id]);
+  }, [contract]);
 
   const handleSubmit = async (vals: ContractFormInput) => {
     try {
-      const payload = { ...vals, deal_id: dealId } as any;
+      const payload: Record<string, unknown> = { ...vals, deal_id: dealId };
       if (contract?.id) payload.id = contract.id;
 
       const method = contract?.id ? "PUT" : "POST";
@@ -491,7 +494,7 @@ export function RentalContractSection({
                       </Label>
                       <Select
                         value={form.watch("status")}
-                        onValueChange={(val: any) =>
+                        onValueChange={(val: "DRAFT" | "ACTIVE" | "TERMINATED") =>
                           form.setValue("status", val, { shouldDirty: true })
                         }
                       >
@@ -628,7 +631,7 @@ export function RentalContractSection({
             <div className="mt-4">
               <DocumentSection
                 ownerId={contract.id}
-                ownerType={"RENTAL_CONTRACT" as any}
+                ownerType={"RENTAL_CONTRACT" as DocumentOwnerType}
                 tenantId={tenantId}
               />
             </div>

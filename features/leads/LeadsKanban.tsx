@@ -80,7 +80,7 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
       newStage = overId;
     } else if (isOverACard) {
       const overLead = leads.find((l) => l.id === overId);
-      if (overLead) newStage = overLead.stage;
+      if (overLead) newStage = overLead.stage || undefined;
     }
 
     if (newStage && activeLead.stage !== newStage) {
@@ -119,7 +119,7 @@ export function LeadsKanban({ initialLeads }: KanbanProps) {
       try {
         const result = await updateLeadStageAction({
           id: activeId,
-          stage: newStage,
+          stage: newStage || "NEW",
         });
         if (!result.success) {
           toast.error(result.error || "Failed to update stage");
@@ -336,7 +336,7 @@ const LeadCard = React.memo(function LeadCard({
 
         <div className="pt-2 border-t border-slate-100 flex flex-wrap gap-2 justify-between items-center text-[11px] text-muted-foreground">
           <div className="flex items-center gap-2">
-            <span>{new Date(lead.created_at).toLocaleDateString("th-TH")}</span>
+            <span>{lead.created_at ? new Date(lead.created_at).toLocaleDateString("th-TH") : ""}</span>
             {lead.tenants?.name && (
               <Badge variant="outline" className="text-[11px] h-5 px-1.5 bg-slate-50 text-slate-500 border-slate-200">
                 {lead.tenants.name}

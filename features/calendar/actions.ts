@@ -1,11 +1,8 @@
 "use server";
 
 import { combineDateTime } from "./utils";
-
 import { requireAuthContext } from "@/lib/authz";
-import { Database } from "@/lib/database.types";
 import { revalidatePath } from "next/cache";
-import {redirect} from "next/navigation";
 
 export async function createAppointment(formData: FormData) {
   const { supabase, user, tenantId, role } = await requireAuthContext();
@@ -29,7 +26,7 @@ export async function createAppointment(formData: FormData) {
   // Security Check: Verify lead belongs to the same tenant if multi-tenant is enabled
   if (isMultiTenant && tenantId && tenantId !== "ALL" && role !== "ADMIN") {
     const { data: lead, error: leadError } = await supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .select("tenant_id")
       .eq("id", leadId)
       .single();
@@ -39,13 +36,18 @@ export async function createAppointment(formData: FormData) {
     }
   }
 
-  const { error } = await supabase.from("lead_activities").insert({
-    lead_id: leadId,
-    property_id: propertyId === "none" ? null : propertyId,
-    activity_type: activityType as Database["public"]["Enums"]["lead_activity_type"],
+  const { error } = await supabase.from("activity_timeline_v3").insert({
+    target_entity: "LEAD",
+    target_id: leadId,
+    activity_type: activityType,
     created_at: isoString,
-    note: note,
-    created_by: user.id,
+    description: note,
+    actor_id: user.id,
+    tenant_id: tenantId === "ALL" ? null : tenantId,
+    metadata: {
+      property_id: propertyId === "none" ? null : propertyId,
+      note: note
+    }
   });
 
   if (error) {
@@ -58,13 +60,11 @@ export async function createAppointment(formData: FormData) {
 }
 
 export async function updateEventDate(id: string, newStart: string, type: string) {
-  const { supabase, tenantId, role } = await requireAuthContext();
+  const { supabase } = await requireAuthContext();
 
-  // Basic security check: if multi-tenant, verify the entity belongs to the tenant
-  // For lead_activities
   if (["viewing", "follow_up", "call", "line_chat"].includes(type)) {
      const { error } = await supabase
-       .from("lead_activities")
+       .from("activity_timeline_v3")
        .update({ created_at: newStart })
        .eq("id", id);
      
@@ -74,13 +74,33 @@ export async function updateEventDate(id: string, newStart: string, type: string
      }
   } else if (type === "deal_closing") {
      const { error } = await supabase
-       .from("deals")
+       .from("crm_deals_v3")
        .update({ transaction_date: newStart })
        .eq("id", id);
      
      if (error) {
        console.error("Error updating deal date:", error);
        throw new Error("ไม่สามารถอัปเดตวันที่ปิดดีลได้");
+     }
+  } else if (["contract_start", "contract_end", "early_termination"].includes(type)) {
+     const actualId = id.replace("-start", "").replace("-end", "").replace("-terminated", "");
+     let updatePayload: any = {};
+     if (type === "contract_start") updatePayload = { transaction_date: newStart };
+     if (type === "contract_end") updatePayload = { transaction_end_date: newStart };
+     if (type === "early_termination") {
+       const { data: existing } = await supabase.from("crm_deals_v3").select("metadata").eq("id", actualId).single();
+       const meta = (existing?.metadata || {}) as Record<string, any>;
+       updatePayload = { metadata: { ...meta, check_out_date: newStart } };
+     }
+     
+     const { error } = await supabase
+       .from("crm_deals_v3")
+       .update(updatePayload)
+       .eq("id", actualId);
+
+     if (error) {
+       console.error("Error updating contract date:", error);
+       throw new Error("ไม่สามารถอัปเดตวันที่สัญญาได้");
      }
   }
 

@@ -1,19 +1,8 @@
-import { SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 import { AuthContext } from "@/lib/authz";
 
 /**
- * Filter tables that have a tenant_id column for ironclad scoping
- */
-type TenantTable = {
-  [K in keyof Database["public"]["Tables"]]: Database["public"]["Tables"][K]["Row"] extends {
-    tenant_id: string | null;
-  }
-    ? K
-    : never;
-}[keyof Database["public"]["Tables"]];
-/**
- * The Runtime Proxy Injector (Elite Architecture)
+ * The Runtime Proxy Injector (V3 Hardened)
  * 
  * Intercepts method calls (`select`, `insert`, `upsert`, `update`, `delete`) to the generic Supabase Query Builder
  * and dynamically injects Branch Isolation (tenant_id) while preserving 100% native Type Inference.
@@ -32,6 +21,13 @@ function createScopedProxy<T extends keyof Database["public"]["Tables"]>(
   const isAll = !tenantId || tenantId === "ALL";
   const builder = supabase.from(tableName);
 
+  // NOTE: Proxy handlers operate at the JavaScript runtime level where
+  // strict TypeScript typing is inherently limited. Using 'any' inside
+  // Proxy traps is INTENTIONAL and UNAVOIDABLE — TypeScript cannot
+  // statically type dynamic property interception. Type safety is
+  // enforced at the PUBLIC API surface (getScopedRevenueClient return
+  // type and table name validation) rather than inside Proxy internals.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new Proxy(builder, {
     get(target: any, prop: string) {
       const origMethod = target[prop];
@@ -54,7 +50,7 @@ function createScopedProxy<T extends keyof Database["public"]["Tables"]>(
           if (!isAll && tenantId && args.length > 0) {
             let payload = args[0];
             if (Array.isArray(payload)) {
-              payload = payload.map((p) => ({ ...p, tenant_id: tenantId }));
+              payload = payload.map((p: Record<string, unknown>) => ({ ...p, tenant_id: tenantId }));
             } else if (payload && typeof payload === "object") {
               payload = { ...payload, tenant_id: tenantId };
             }
@@ -85,18 +81,19 @@ export function getScopedRevenueClient(
   tenantId: string | undefined
 ) {
   return {
-    deals: () => createScopedProxy(supabase, "deals", tenantId),
-    commissions: () => createScopedProxy(supabase, "deal_commissions", tenantId),
-    leads: () => createScopedProxy(supabase, "leads", tenantId),
-    properties: () => createScopedProxy(supabase, "properties", tenantId),
+    deals: () => createScopedProxy(supabase, "crm_deals_v3", tenantId),
+    commissions: () => createScopedProxy(supabase, "crm_deal_commissions_v3", tenantId),
+    leads: () => createScopedProxy(supabase, "crm_leads_v3", tenantId),
+    properties: () => createScopedProxy(supabase, "properties_core", tenantId),
 
     /**
      * Scoped RPC wrapper
      */
     rpc: <K extends keyof Database["public"]["Functions"]>(
       name: K,
-      args: Database["public"]["Functions"][K]["Args"] = {}
+      args: Database["public"]["Functions"][K]["Args"] = {} as Database["public"]["Functions"][K]["Args"]
     ) => {
+      // @ts-expect-error - TS2590: Supabase rpc union type is too complex for generic K spread
       return supabase.rpc(name, { ...args, p_tenant_id: tenantId });
     },
 

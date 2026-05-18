@@ -1,10 +1,22 @@
 import { z } from "zod";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
-export type RentalContract =
-  Database["public"]["Tables"]["rental_contracts"]["Row"];
+export interface RentalContract {
+  id: string;
+  deal_id: string;
+  start_date?: string;
+  end_date?: string;
+  rent_price?: number;
+  deposit_amount?: number | null;
+  lease_term_months?: number;
+  payment_cycle?: string;
+  other_terms?: string;
+  advance_payment_amount?: number | null;
+  status: "DRAFT" | "ACTIVE" | "TERMINATED";
+  contract_number?: string;
+}
 export type RentalContractInsert =
-  Database["public"]["Tables"]["rental_contracts"]["Insert"];
+  Database["public"]["Tables"]["crm_deals_v3"]["Insert"];
 
 const contractBaseSchema = z.object({
   deal_id: z.string().min(1, "กรุณาเลือกดีล เพื่อสร้างสัญญา").uuid("รหัสดีลไม่ถูกต้อง"),
@@ -44,6 +56,7 @@ const contractBaseSchema = z.object({
   status: z.enum(["DRAFT", "ACTIVE", "TERMINATED"]).optional(),
   contract_number: z.string().optional(),
   tenant_id: z.string().uuid().optional(),
+  deal_type: z.string().optional(),
 });
 
 export interface ContractDealSummary {
@@ -61,7 +74,7 @@ export interface ContractDealSummary {
   duration_months?: number | null;
 }
 
-const dateRefinement = (data: any, ctx: z.RefinementCtx) => {
+const dateRefinement = (data: { start_date?: string; end_date?: string; deal_type?: string; [key: string]: unknown }, ctx: z.RefinementCtx) => {
   if (data.start_date && data.end_date) {
     const start = new Date(data.start_date);
     const end = new Date(data.end_date);

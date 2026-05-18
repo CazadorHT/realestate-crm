@@ -144,11 +144,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="max-h-[300px]">
-                    {provinces.map((p) => (
-                      <SelectItem key={p.id} value={p.name_th}>
-                        {p.name_th}
-                      </SelectItem>
-                    ))}
+                    {[...provinces]
+                      .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                      .map((p) => (
+                        <SelectItem key={p.id} value={p.name_th}>
+                          {p.name_th}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
@@ -185,11 +187,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="max-h-[300px]">
-                    {districtOptions.map((d) => (
-                      <SelectItem key={d.id} value={d.name_th}>
-                        {d.name_th.replace(/^เขต/, "")}
-                      </SelectItem>
-                    ))}
+                    {[...districtOptions]
+                      .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                      .map((d) => (
+                        <SelectItem key={d.id} value={d.name_th}>
+                          {d.name_th.replace(/^เขต/, "")}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
@@ -231,11 +235,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent className="max-h-[300px]">
-                    {subDistrictOptions.map((s) => (
-                      <SelectItem key={s.id} value={s.name_th}>
-                        {s.name_th}
-                      </SelectItem>
-                    ))}
+                    {[...subDistrictOptions]
+                      .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                      .map((s) => (
+                        <SelectItem key={s.id} value={s.name_th}>
+                          {s.name_th}
+                        </SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
                 <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">

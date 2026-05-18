@@ -68,9 +68,13 @@ export function getPropertyDiff(
   };
 
   // Helper for Enum Localization
-  const enumFormatter = (labels: Record<string, string>) => (val: unknown) => {
+  const enumFormatter = (labels: Record<string, any>) => (val: unknown) => {
     const key = String(val ?? "");
-    return labels[key] || String(val ?? "N/A");
+    const labelObj = labels[key];
+    if (labelObj && typeof labelObj === "object" && labelObj.th) {
+      return labelObj.th;
+    }
+    return labelObj || String(val ?? "N/A");
   };
 
   // --- 1. CORE FIELDS ---

@@ -34,7 +34,7 @@ export function BulkPropertyStatusDropdown({
   const [isPending, startTransition] = useTransition();
 
   const handleBulkUpdate = (status: PropertyStatus) => {
-    const statusLabel = PROPERTY_STATUS_LABELS[status];
+    const statusLabel = PROPERTY_STATUS_LABELS[status].th;
     const processId = startProcess(
       `ปรับสถานะทรัพย์เป็น ${statusLabel} (${selectedIds.length} รายการ)`,
       { type: "BULK_UPDATE" }
@@ -89,7 +89,7 @@ export function BulkPropertyStatusDropdown({
             className="flex items-center gap-2.5 p-2 rounded-lg cursor-pointer focus:bg-blue-50 focus:text-blue-700"
           >
             <div className={cn("h-2 w-2 rounded-full", PROPERTY_STATUS_STYLES[s as PropertyStatus].dot)} />
-            <span className="text-sm font-semibold">{PROPERTY_STATUS_LABELS[s as PropertyStatus]}</span>
+            <span className="text-sm font-semibold">{PROPERTY_STATUS_LABELS[s as PropertyStatus].th}</span>
           </DropdownMenuItem>
         ))}
 
@@ -104,7 +104,7 @@ export function BulkPropertyStatusDropdown({
             className="flex items-center gap-2.5 p-2 rounded-lg cursor-pointer focus:bg-emerald-50 focus:text-emerald-700"
           >
             <div className={cn("h-2 w-2 rounded-full", PROPERTY_STATUS_STYLES[s as PropertyStatus].dot)} />
-            <span className="text-sm font-semibold">{PROPERTY_STATUS_LABELS[s as PropertyStatus]}</span>
+            <span className="text-sm font-semibold">{PROPERTY_STATUS_LABELS[s as PropertyStatus].th}</span>
           </DropdownMenuItem>
         ))}
 
@@ -119,7 +119,7 @@ export function BulkPropertyStatusDropdown({
             className="flex items-center gap-2.5 p-2 rounded-lg cursor-pointer focus:bg-slate-100 focus:text-slate-900"
           >
             <div className={cn("h-2 w-2 rounded-full", PROPERTY_STATUS_STYLES[s as PropertyStatus].dot)} />
-            <span className="text-sm font-semibold">{PROPERTY_STATUS_LABELS[s as PropertyStatus]}</span>
+            <span className="text-sm font-semibold">{PROPERTY_STATUS_LABELS[s as PropertyStatus].th}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

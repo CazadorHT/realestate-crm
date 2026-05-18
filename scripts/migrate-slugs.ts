@@ -59,7 +59,12 @@ async function migratePropertySlugs() {
   const updates: { id: string; slug: string }[] = [];
 
   for (const property of properties) {
-    let baseSlug = generateSlug(property.title);
+    // ป้องกันกรณี id เป็น null จาก Type ของ View
+    if (!property.id) continue; 
+
+    // ป้องกันกรณี title เป็น null โดยใช้ Default Value หรือ ID แทน
+    const safeTitle = property.title || `property-${property.id.substring(0, 8)}`;
+    let baseSlug = generateSlug(safeTitle);
 
     // Handle duplicates by appending numbers
     if (slugMap.has(baseSlug)) {
@@ -107,10 +112,9 @@ async function migratePropertySlugs() {
   // 5. Show some examples
   console.log("\n📋 Sample slugs generated:");
   updates.slice(0, 5).forEach((u, i) => {
-    const original = properties.find(
-      (p: { id: string; title: string; slug: string | null }) => p.id === u.id
-    );
-    console.log(`   ${i + 1}. "${original?.title}" → "${u.slug}"`);
+    // ปล่อยให้ TS รู้จัก Type ของ p เองจาก properties 
+    const original = properties.find((p) => p.id === u.id);
+    console.log(`   ${i + 1}. "${original?.title || 'Untitled'}" → "${u.slug}"`);
   });
 }
 

@@ -4,7 +4,7 @@ import { useForm, FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { popularAreaSchema } from "../popular-areas-validation";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,12 +28,12 @@ import {
 import { ProvinceSelector } from "./ProvinceSelector";
 import { toast } from "sonner";
 import { useState } from "react";
+import { type PopularArea } from "./PopularAreasTable";
 
-type PopularAreaRow = Database["public"]["Tables"]["popular_areas"]["Row"];
 type PopularAreaInput = z.infer<typeof popularAreaSchema>;
 
 interface PopularAreaFormProps {
-  initialData?: PopularAreaRow;
+  initialData?: PopularArea;
   onSuccess: () => void;
   onCancel: () => void;
   saveAction: (values: PopularAreaInput) => Promise<{ success: boolean; message: string }>;

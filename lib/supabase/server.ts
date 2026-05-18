@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import type { Database } from "@/lib/database.types"; // 👈 import type
+import type { Database } from "@/lib/database.types";
 /**
  * ✅ Recommended: Official Project-specific Supabase Server Client
  * 
@@ -58,3 +58,4 @@ export async function createClient() {
     );
   }
 }
+

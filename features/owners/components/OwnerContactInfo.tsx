@@ -3,10 +3,10 @@ import { FaFacebook, FaLine } from "react-icons/fa";
 
 interface OwnerContactInfoProps {
   owner: {
-    phone: string | null;
-    line_id: string | null;
-    facebook_url: string | null;
-    other_contact: string | null;
+    phone?: string | null;
+    line_id?: string | null;
+    facebook_url?: string | null;
+    other_contact?: string | null;
   };
 }
 

@@ -11,13 +11,16 @@ import { getPropertySummariesByIdsQuery } from "@/features/leads/queries";
 import {
   leadStageLabelNullable,
   leadSourceLabelNullable,
+  type LeadStage,
+  type LeadSource,
 } from "@/features/leads/labels";
 import { getDealsByLeadId } from "@/features/deals/queries";
 import { DealList } from "@/features/deals/components/DealList";
 import { DealFormDialog } from "@/features/deals/components/DealFormDialog";
 import { DocumentSection } from "@/features/documents/components/DocumentSection";
 import type { LeadActivityFormValues } from "@/lib/types/leads";
-import type { Database } from "@/lib/database.types";
+import type { Database } from "@/lib/database.types.generated";
+import type { LeadPreferences } from "@/features/leads/types";
 
 // Components
 import { LeadContactCard } from "@/features/leads/components/LeadContactCard";
@@ -27,7 +30,52 @@ import { PDPAStatus } from "@/features/leads/components/PDPAStatus";
 import { LeadTransferButton } from "@/features/leads/components/LeadTransferButton";
 import { LeadSmartMatch } from "@/features/smart-match/components/LeadSmartMatch";
 
-type LeadActivity = Database["public"]["Tables"]["lead_activities"]["Row"];
+type LeadActivity = Database["public"]["Tables"]["activity_timeline_v3"]["Row"];
+
+// --- V3 Hardened Types ---
+interface PropertyV3Join {
+  id: string;
+  sale_price: number | null;
+  rent_price: number | null;
+  listing_type: string;
+  branch_id: string | null;
+  details: { title: any }[]; 
+  media: { storage_path: string }[];
+}
+
+type LeadV3Row = Database["public"]["Tables"]["crm_leads_v3"]["Row"];
+
+type LeadV3Mapped = Omit<LeadV3Row, "stage"> & {
+  stage: LeadStage | null;
+  full_name: string;
+  pdpa_consent: boolean;
+  consent_date: string | null;
+  ai_summary_content: string | null;
+  lead_activities: LeadActivity[];
+  // Unpacked V3 Preferences for Legacy Component Compatibility
+  preferred_locations: string[] | null;
+  budget_min: number | null;
+  budget_max: number | null;
+  min_bedrooms: number | null;
+  min_bathrooms: number | null;
+  min_size_sqm: number | null;
+  max_size_sqm: number | null;
+  num_occupants: number | null;
+  has_pets: boolean | null;
+  preferred_property_types: string[] | null;
+  need_company_registration: boolean | null;
+  allow_airbnb: boolean | null;
+  preferences: LeadPreferences | null;
+  // Contact info
+  phone: string | null;
+  email: string | null;
+  nationality: string | null;
+  is_foreigner: boolean | null;
+  note: string | null;
+  line_id: string | null;
+  wechat_id: string | null;
+  whatsapp: string | null;
+};
 
 import { LeadDetailTour } from "@/features/leads/_components/LeadDetailTour";
 import { LeadsMatchingTour } from "@/features/leads/_components/LeadsMatchingTour";
@@ -45,55 +93,89 @@ export default async function LeadDetailPage({
   
   const { multi_tenant_enabled } = await (await import("@/lib/actions/system-config")).getSystemConfig();
 
-  const lead = await getLeadWithActivitiesQuery(id);
+  const [lead, deals, propertiesRaw] = await Promise.all([
+    getLeadWithActivitiesQuery(id),
+    getDealsByLeadId(id),
+    (await import("@/lib/supabase/server")).createClient().then(c => 
+      c.from("properties_core")
+        .select(`
+          id, 
+          sale_price, 
+          rent_price, 
+          listing_type, 
+          branch_id,
+          details:properties_details(title),
+          media:property_media_v3(storage_path)
+        `)
+        .eq("tenant_id", tenantId)
+        .eq("status", 1)
+        .eq("media.is_cover", true)
+        .order("created_at", { ascending: false })
+        .limit(50)
+    ).then(res => res.data as unknown as PropertyV3Join[])
+  ]);
 
   if (!lead) return notFound();
 
-  // Fetch Deals
-  const deals = await getDealsByLeadId(id);
-
-  // Fetch properties for dropdown
-  const { data: propertiesRaw } = await (await import("@/lib/supabase/server"))
-    .createClient()
-    .then((c) =>
-      c
-        .from("properties")
-        .select(
-          "id, title, price, original_price, rental_price, original_rental_price, listing_type, district, popular_area, commission_sale_percentage, commission_rent_months, images",
-        )
-        .eq("tenant_id", tenantId)
-        .eq("status", "ACTIVE")
-        .order("created_at", { ascending: false })
-        .limit(50),
-    );
-
-  const properties = (propertiesRaw ?? []).map((p: any) => ({
+  const properties = (propertiesRaw ?? []).map((p) => ({
     id: p.id,
-    title: p.title,
-    price: p.price,
-    original_price: p.original_price,
-    rental_price: p.rental_price,
-    original_rental_price: p.original_rental_price,
+    title: (p.details?.[0]?.title as any)?.th || (p.details?.[0]?.title as any)?.en || "Untitled Property", 
+    price: p.sale_price,
+    rental_price: p.rent_price,
     listing_type: p.listing_type,
-    popular_area: p.popular_area,
-    commission_sale_percentage: p.commission_sale_percentage,
-    commission_rent_months: p.commission_rent_months,
-    cover_image: (() => {
-      const imagesArr = (p.images as any[]) || [];
-      const cover = imagesArr.find((img: any) => img.is_cover) || imagesArr[0];
-      return cover?.url || cover?.image_url || null;
-    })(),
+    cover_image: p.media?.[0]?.storage_path || null,
   }));
+
+  // V3: Explicit Unpacking of JSONB Preferences (Strict Typing)
+  const rawLead = lead as any;
+  const prefs = (rawLead.preferences as any) || {};
+
+  const leadV3: LeadV3Mapped = {
+    ...rawLead,
+    stage: (rawLead.stage as LeadStage | null) || null,
+    full_name: rawLead.display_name || rawLead.full_name || "Unknown",
+    pdpa_consent: !!rawLead.pdpa_consent,
+    consent_date: rawLead.consent_date || null,
+    ai_summary_content: rawLead.ai_summary_content || null,
+    lead_activities: rawLead.lead_activities || [],
+    // Mapping from V3 JSONB Preferences
+    preferred_locations: prefs.locations || null,
+    budget_min: prefs.budget_min || null,
+    budget_max: prefs.budget_max || null,
+    min_bedrooms: prefs.min_bedrooms || null,
+    min_bathrooms: prefs.min_bathrooms || null,
+    min_size_sqm: prefs.min_size || null,
+    max_size_sqm: prefs.max_size || null,
+    num_occupants: prefs.occupants || null,
+    has_pets: prefs.has_pets || null,
+    preferred_property_types: prefs.property_types || null,
+    need_company_registration: prefs.need_company || null,
+    allow_airbnb: prefs.allow_airbnb || null,
+    preferences: (prefs as LeadPreferences) || null,
+    // Contact Info mapping
+    phone: rawLead.phone || null,
+    email: rawLead.email || null,
+    nationality: rawLead.nationality || null,
+    is_foreigner: !!rawLead.is_foreigner,
+    note: rawLead.note || null,
+    line_id: rawLead.line_id || null,
+    wechat_id: rawLead.wechat_id || null,
+    whatsapp: rawLead.whatsapp || null,
+  };
+  
+  const fullName = leadV3.full_name;
 
   async function onCreateActivity(values: LeadActivityFormValues) {
     "use server";
     const res = await createLeadActivityAction({ leadId: id, values });
     if (!res.success) throw new Error(res.error);
   }
-  const propertyIds = ((lead.lead_activities as LeadActivity[] | null) ?? [])
-    .map((a) => a.property_id)
+  
+  // V3 Activity Mapping: Use target_id if target_entity is PROPERTY
+  const propertyIds = (leadV3.lead_activities ?? [])
+    .filter((a) => a.target_entity === "PROPERTY")
+    .map((a) => a.target_id)
     .filter((id): id is string => id !== null);
-
   const propertiesById = await getPropertySummariesByIdsQuery(propertyIds);
 
   return (
@@ -107,7 +189,7 @@ export default async function LeadDetailPage({
           backHref="/protected/leads"
           items={[
             { label: "ลีด", href: "/protected/leads" },
-            { label: lead.full_name || "รายละเอียดลีด" },
+            { label: fullName || "รายละเอียดลีด" },
           ]}
         />
       </div>
@@ -127,14 +209,14 @@ export default async function LeadDetailPage({
               </span>
             </div>
             <h1 className="text-3xl md:text-4xl font-semibold text-white tracking-tight">
-              K. {lead.full_name}
+              K. {fullName}
             </h1>
             <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
               <div className="px-3 py-1 rounded-lg bg-blue-500/20 border border-blue-400/30 text-xs font-semibold text-blue-200">
-                {leadStageLabelNullable(lead.stage)}
+                {leadStageLabelNullable(lead.stage as LeadStage | null)}
               </div>
               <div className="px-3 py-1 rounded-lg bg-slate-700/50 border border-slate-600/50 text-xs font-semibold text-slate-300">
-                {leadSourceLabelNullable(lead.source)}
+                {leadSourceLabelNullable(lead.source as LeadSource | null)}
               </div>
             </div>
           </div>
@@ -150,13 +232,13 @@ export default async function LeadDetailPage({
             {multi_tenant_enabled && (
               <LeadTransferButton
                 leadId={id}
-                leadName={lead.full_name ?? "Unknown"}
+                leadName={fullName ?? "Unknown"}
                 currentTenantId={tenantId}
               />
             )}
             <LeadActivityDialog
               leadId={id}
-              leadName={lead.full_name ?? "Unknown"}
+              leadName={fullName ?? "Unknown"}
               onSubmitAction={onCreateActivity}
               tenantId={tenantId}
               triggerClassName="bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-900/20 border-0 h-12 rounded-xl font-semibold flex-1 sm:flex-none px-6"
@@ -170,14 +252,14 @@ export default async function LeadDetailPage({
         <div className="lg:col-span-1">
           <PDPAStatus
             leadId={id}
-            consent={!!lead.pdpa_consent}
-            consentDate={lead.consent_date}
+            consent={!!leadV3.pdpa_consent}
+            consentDate={leadV3.consent_date}
           />
         </div>
         <div className="lg:col-span-2">
           <LeadSummaryCard 
             leadId={id} 
-            initialSummary={lead.ai_summary_content}
+            initialSummary={leadV3.ai_summary_content}
           />
         </div>
       </div>
@@ -185,14 +267,14 @@ export default async function LeadDetailPage({
       {/* AI Smart Match Section */}
       <LeadSmartMatch 
         leadId={id} 
-        leadName={lead.full_name ?? "ลูกค้า"} 
-        initialSummary={lead.ai_summary_content ?? undefined}
+        leadName={fullName ?? "ลูกค้า"} 
+        initialSummary={leadV3.ai_summary_content ?? undefined}
       />
 
       {/* Top Row - Contact & Requirements (2 columns) */}
       <div className="grid gap-6 lg:gap-8 md:grid-cols-2">
-        <LeadContactCard lead={lead} />
-        <LeadRequirementsCard lead={lead} />
+        <LeadContactCard lead={leadV3} />
+        <LeadRequirementsCard lead={leadV3} />
       </div>
 
       {/* Main Content - Dynamic Grid for 3 Section Lists */}
@@ -243,14 +325,14 @@ export default async function LeadDetailPage({
             </div>
             <LeadActivityDialog
               leadId={id}
-              leadName={lead.full_name ?? "Unknown"}
+              leadName={fullName ?? "Unknown"}
               onSubmitAction={onCreateActivity}
               tenantId={tenantId}
             />
           </div>
           <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
             <LeadTimeline
-              activities={lead.lead_activities ?? []}
+              activities={leadV3.lead_activities ?? []}
               propertiesById={propertiesById}
               leadId={id}
             />

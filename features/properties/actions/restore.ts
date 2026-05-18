@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache";
 import { requireAuthContext, assertStaff, authzFail } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
-import { Json } from "@/lib/database.types";
+import { Json } from "@/lib/database.types.generated";
 
+import { PropertyFormValues } from "../schema";
 import { AuditActionResult, AuditMetadata } from "@/features/audit/types";
 
 /**
@@ -22,8 +23,8 @@ export async function restorePropertyVersionAction(
 
     // 1. Fetch the specific audit log entry
     const { data: log, error: logError } = await supabase
-      .from("audit_logs")
-      .select("metadata, tenant_id")
+      .from("system_audit_logs_v3")
+      .select("new_data, tenant_id")
       .eq("id", logId)
       .eq("entity_id", propertyId)
       .single();
@@ -36,7 +37,7 @@ export async function restorePropertyVersionAction(
       };
     }
 
-    // Security: Check if log belongs to the same tenant (Redundant but safe)
+    // Security: Check if log belongs to the same tenant
     if (log.tenant_id !== tenantId && role !== "ADMIN") {
       return { 
         success: false, 
@@ -45,130 +46,32 @@ export async function restorePropertyVersionAction(
       };
     }
 
-    const metadata = log.metadata as unknown as AuditMetadata;
-    const oldState = metadata?.old_state as Record<string, unknown>;
+    const oldState = log.new_data as Record<string, unknown>;
 
     if (!oldState) {
       return { 
         success: false, 
         message: "ไม่พบข้อมูลสถานะเดิมในบันทึกนี้ ไม่สามารถคืนค่าได้",
-        errorType: "VALIDATION_ERROR"
+        errorType: "VALIDATION_ERROR" 
       };
     }
 
-    // -- SENTINEL: Dry Run Validation --
-    const { PropertySchema } = await import("@/features/properties/schema");
-    const dryRun = PropertySchema.partial().safeParse(oldState);
-    if (!dryRun.success) {
-      console.error("Restore Validation Failed:", dryRun.error.format());
-      return { 
-        success: false, 
-        message: "ข้อมูลประวัติไม่ถูกต้องตามมาตรฐานปัจจุบัน ไม่สามารถคืนค่าได้",
-        errorType: "VALIDATION_ERROR"
-      };
-    }
+    // 2. Reuse update action logic (Refactored)
+    const { updatePropertyAction } = await import("./update");
+    const result = await updatePropertyAction(propertyId, oldState as unknown as PropertyFormValues, `RESTORE-${logId}`);
 
-    // 2. Fetch current property to check version (Optimistic Locking)
-    interface PropertyOwnershipResult {
-      version: number;
-      title: string;
-      slug: string; // Added for revalidation
-    }
-
-    const { data: current, error: currentErr } = await supabase
-      .from("properties")
-      .select("version, title, slug")
-      .eq("id", propertyId)
-      .eq("tenant_id", tenantId)
-      .single();
-
-    const typedCurrent = current as PropertyOwnershipResult | null;
-
-    if (!typedCurrent) {
-      return { 
-        success: false, 
-        message: "ไม่พบข้อมูลทรัพย์สินปัจจุบัน " + (currentErr?.message || ""),
-        errorType: "NOT_FOUND"
-      };
-    }
-
-    // 3. ATOMIC RESTORE (Reuse the Elite RPC)
-    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
-    
-    interface EliteRpcResult {
-      id: string;
-      slug: string;
-    }
-
-    const { data: updatedRow, error: rpcError } = await supabase.rpc("update_property_elite", {
-      p_id: propertyId,
-      p_tenant_id: tenantId,
-      p_user_id: user.id,
-      p_is_admin: canBypassOwnership,
-      p_version: typedCurrent.version,
-      p_data: {
-        ...oldState,
-        id: undefined,
-        created_at: undefined,
-        updated_at: undefined,
-        tenant_id: undefined,
-        created_by: undefined,
-        version: undefined,
-      } as Json
-    });
-
-    const typedUpdatedRow = updatedRow as EliteRpcResult | null;
-
-    if (rpcError) {
-      console.error("RPC restore failed:", rpcError);
-      
-      // Handle Specific RPC Error Codes (User Errors)
-      if (rpcError.message?.includes("VC409")) {
-        return {
-          success: false,
-          message: "ข้อมูลถูกแก้ไขโดยผู้อื่นแล้ว กรุณารีเฟรชหน้าจอเพื่อรับข้อมูลล่าสุดก่อนคืนค่า",
-          errorType: "CONFLICT"
-        };
-      }
-      if (rpcError.message?.includes("VC403")) {
-        return {
-          success: false,
-          message: "คุณไม่มีสิทธิ์คืนค่าข้อมูลทรัพย์สินชิ้นนี้ (ไม่ใช่เจ้าของ)",
-          errorType: "UNAUTHORIZED"
-        };
-      }
-
-      return { 
-        success: false, 
-        message: `ไม่สามารถคืนค่าได้: ${mapDbError(rpcError)}`,
+    if (!result.success) {
+      return {
+        success: false,
+        message: result.message || "การคืนค่าข้อมูลล้มเหลว",
         errorType: "SYSTEM_ERROR"
       };
-    }
-
-    // 4. Log the Restoration Event
-    await logAudit(
-      { supabase, user, role },
-      {
-        action: "property.update",
-        entity: "properties",
-        entityId: propertyId,
-        metadata: {
-          is_restore: true,
-          restored_from_log_id: logId,
-          diff: [`คืนค่าข้อมูลจากประวัติเวอร์ชันเดิม (${typedCurrent.title})`],
-        },
-      }
-    );
-
-    revalidatePath("/protected/properties");
-    if (typedUpdatedRow?.slug) {
-      revalidatePath(`/properties/${typedUpdatedRow.slug}`);
     }
 
     return { 
       success: true, 
       message: "คืนค่าข้อมูลสำเร็จ",
-      data: { slug: typedUpdatedRow?.slug || "" }
+      data: { slug: (oldState.slug as string) || "" }
     };
 
   } catch (err: unknown) {

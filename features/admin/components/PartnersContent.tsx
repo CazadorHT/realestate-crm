@@ -11,10 +11,10 @@ import { CreatePartnerDialog } from "@/features/admin/components/CreatePartnerDi
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
-import { Database } from "@/lib/database.types";
+import { PartnerRow } from "@/features/admin/partners-actions";
 import { Input } from "@/components/ui/input";
 import { TableSkeleton } from "@/components/ui/TableSkeleton";
-type Partner = Database["public"]["Tables"]["partners"]["Row"];
+type Partner = PartnerRow;
 interface PartnersContentProps {
   isSuperAdmin: boolean;
   initialData?: Partner[];

@@ -1,12 +1,6 @@
-import type { Database } from "@/lib/database.types";
-export type LeadStage = Database["public"]["Enums"]["lead_stage"];
-export type LeadSource = Database["public"]["Enums"]["lead_source"];
-export type LeadActivityType =
-  Database["public"]["Enums"]["lead_activity_type"];
-/** ===== Activity Types (enum ของคุณ) =====
- * ถ้าคุณมี enum จริงใน DB (recommended):
- * Database["public"]["Enums"]["lead_activity_type"]
- */
+export type LeadStage = "NEW" | "CONTACTED" | "VIEWED" | "NEGOTIATING" | "CLOSED";
+export type LeadSource = "PORTAL" | "FACEBOOK" | "INSTAGRAM" | "LINE" | "WEBSITE" | "REFERRAL" | "OTHER" | "WHATSAPP";
+export type LeadActivityType = "CALL" | "LINE_CHAT" | "EMAIL" | "VIEWING" | "FOLLOW_UP" | "NOTE" | "SYSTEM";
 export const LEAD_SOURCE_LABELS = {
   PORTAL: "ติดต่อเข้ามาเอง",
   FACEBOOK: "มาจากช่องทางเฟซบุ๊ก",
@@ -68,19 +62,19 @@ export const LEAD_ACTIVITY_TYPE_ORDER = [
 ] as const satisfies readonly [LeadActivityType, ...LeadActivityType[]];
 /** helpers */
 
-export function leadStageLabelNullable(v: LeadStage | null | undefined) {
+export function leadStageLabelNullable(v: LeadStage | string | null | undefined) {
   if (!v) return "-";
-  return LEAD_STAGE_LABELS[v];
+  return LEAD_STAGE_LABELS[v as LeadStage] ?? v;
 }
-export function leadSourceLabelNullable(v: LeadSource | null | undefined) {
+export function leadSourceLabelNullable(v: LeadSource | string | null | undefined) {
   if (!v) return "-";
-  return LEAD_SOURCE_LABELS[v];
+  return LEAD_SOURCE_LABELS[v as LeadSource] ?? v;
 }
 export function leadActivityTypeLabelNullable(
-  v: LeadActivityType | null | undefined,
+  v: LeadActivityType | string | null | undefined,
 ) {
   if (!v) return "-";
-  return LEAD_ACTIVITY_TYPE_LABELS[v];
+  return LEAD_ACTIVITY_TYPE_LABELS[v as LeadActivityType] ?? v;
 }
 /** fallback เผื่อเจอ string แปลก ๆ (ข้อมูลเก่าหรือ null) */
 export function safeEnumLabel(map: Record<string, string>, v: any) {

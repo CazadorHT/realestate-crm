@@ -26,6 +26,7 @@ export interface Step1Props extends BaseStepProps {
   onAddAreaAction: () => Promise<void>;
   isQuickInfoOpen: boolean;
   setIsQuickInfoOpen: (val: boolean) => void;
+  branches: Array<{ id: string; name: any }>;
 }
 
 /**
@@ -59,8 +60,8 @@ export interface Step4Props extends BaseStepProps {
   uploadSessionId: string;
   persistImages: boolean;
   refreshOwners?: () => Promise<Array<{ id: string; full_name: string; phone: string | null }>>;
-  allBranches?: boolean;
-  setAllBranches?: (val: boolean) => void;
+  showAllOwners?: boolean;
+  setShowAllOwners?: (val: boolean) => void;
   isMultiTenant?: boolean;
   userRole?: string;
 }

@@ -58,6 +58,7 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
     district: 'Watthana',
     subdistrict: 'Khlong Toei Nuea',
     google_maps_link: 'https://maps.google.com',
+    branch_id: '123e4567-e89b-12d3-a456-426614174000',
     ...overrides,
   });
 
@@ -134,6 +135,7 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
       subdistrict: 'Khlong Toei Nuea',
       google_maps_link: 'https://maps.google.com',
       popular_area: 'Thong Lo',
+      branch_id: '123e4567-e89b-12d3-a456-426614174000',
       images: ['properties/img1.jpg'],
       // ✨ Missing Required Fields
       currency: 'THB',
@@ -183,6 +185,7 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
       is_fully_fitted: false,
       is_never_lived_in: false,
       requires_ai_review: true,
+      has_nearby_places: false,
       status: 'ACTIVE',
     };
 
@@ -191,10 +194,10 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
 
     // If it fails with "Required", we still have missing fields. 
     // But since we added many, let's see if we hit the image failure now.
-    expect(result.message).toBe('Failed to attach images');
+    expect(result.message).toBe('เกิดข้อผิดพลาด: Image DB Error');
     expect(result.success).toBe(false);
 
-    expect(localSupabase.from).toHaveBeenCalledWith('properties');
+    expect(localSupabase.from).toHaveBeenCalledWith('properties_core');
 
   });
 
@@ -202,6 +205,10 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
     it('should automatically set requires_ai_review to false for ADMIN', async () => {
       const localSupabase: any = {
         from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
         insert: vi.fn().mockImplementation(() => ({
           select: () => ({
             single: () => Promise.resolve({ data: { id: 'p1' }, error: null })
@@ -268,22 +275,29 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
         is_fully_fitted: false,
         is_never_lived_in: false,
         requires_ai_review: true, // Should be overridden by action
+        has_nearby_places: false,
         status: 'ACTIVE',
         province: 'BKK',
         district: 'D1',
         subdistrict: 'S1',
+        branch_id: '123e4567-e89b-12d3-a456-426614174000',
         commission_sale_percentage: 3,
       };
 
       await createPropertyAction(values as any, 'session-123');
 
-      const insertCall = localSupabase.insert.mock.calls[0][0];
-      expect(insertCall.requires_ai_review).toBe(false);
+      // In V3, requires_ai_review is in the SECOND insert (properties_details) within meta_data
+      const detailsInsertCall = localSupabase.insert.mock.calls[1][0];
+      expect(detailsInsertCall.meta_data.requires_ai_review).toBe(false);
     });
 
     it('should preserve requires_ai_review as true for AGENT', async () => {
       const localSupabase: any = {
         from: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnThis(),
+        delete: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
         insert: vi.fn().mockImplementation(() => ({
           select: () => ({
             single: () => Promise.resolve({ data: { id: 'p2' }, error: null })
@@ -350,17 +364,20 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
         is_fully_fitted: false,
         is_never_lived_in: false,
         requires_ai_review: true, // Should remain true for AGENT
+        has_nearby_places: false,
         status: 'ACTIVE',
         province: 'BKK',
         district: 'D1',
         subdistrict: 'S1',
+        branch_id: '123e4567-e89b-12d3-a456-426614174000',
         commission_sale_percentage: 3,
       };
 
       await createPropertyAction(values as any, 'session-123');
 
-      const insertCall = localSupabase.insert.mock.calls[0][0];
-      expect(insertCall.requires_ai_review).toBe(true);
+      // In V3, requires_ai_review is in the SECOND insert (properties_details) within meta_data
+      const detailsInsertCall = localSupabase.insert.mock.calls[1][0];
+      expect(detailsInsertCall.meta_data.requires_ai_review).toBe(true);
     });
   });
 });

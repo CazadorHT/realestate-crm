@@ -113,14 +113,14 @@ export default async function DealDetailPage({ params }: PageProps) {
             {/* Action Buttons */}
             <div className="flex items-center gap-2">
               <DealFormDialog
-                leadId={deal.lead_id}
+                leadId={deal.lead_id || ""}
                 deal={deal}
                 properties={JSON.parse(JSON.stringify(properties))}
                 refreshOnSuccess
               />
               <DeleteDealButton
                 dealId={deal.id}
-                leadId={deal.lead_id}
+                leadId={deal.lead_id || ""}
                 redirectPath={`/protected/leads/${deal.lead_id}`}
               />
             </div>

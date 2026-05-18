@@ -10,6 +10,7 @@ import {
 
 import { mapDbError } from "@/lib/db-error";
 import { revalidatePath } from "next/cache";
+import { DocumentWithRelations } from "./types";
 
 // 1. Get Documents by Owner
 export async function getDocumentsByOwner(
@@ -62,8 +63,8 @@ export async function getAllDocuments(
       supabase.from("properties").select("id").ilike("title", q),
     ]);
 
-    const leadIds = matchingLeads.data?.map((l) => l.id) || [];
-    const propIds = matchingProps.data?.map((p) => p.id) || [];
+    const leadIds = (matchingLeads.data?.map((l) => l.id).filter(Boolean) || []) as string[];
+    const propIds = (matchingProps.data?.map((p) => p.id).filter(Boolean) || []) as string[];
     searchOwnerIds = [...leadIds, ...propIds];
   }
 
@@ -202,7 +203,7 @@ export async function getAllDocuments(
 
   // Map results back to docs
   const documentsWithOwners = rawDocs.map((doc) => {
-    let ownerData = null;
+    let ownerData: any = null;
     if (doc.owner_type === "PROPERTY") {
       ownerData = { property: propMap.get(doc.owner_id) };
     } else if (doc.owner_type === "LEAD") {
@@ -212,7 +213,19 @@ export async function getAllDocuments(
     } else if (doc.owner_type === "RENTAL_CONTRACT") {
       ownerData = { rental_contract: contractMap.get(doc.owner_id) };
     }
-    return { ...doc, ...ownerData };
+    return {
+      ...doc,
+      id: doc.id!,
+      file_name: doc.file_name ?? "Untitled",
+      storage_path: doc.storage_path ?? "",
+      created_at: doc.created_at ?? new Date().toISOString(),
+      owner_type: doc.owner_type ?? "PROPERTY",
+      owner_id: doc.owner_id ?? "",
+      size_bytes: doc.size_bytes ? Number(doc.size_bytes) : null,
+      document_type: doc.document_type ?? "DOCUMENT",
+      tenant: doc.tenant as any,
+      ...ownerData,
+    } as unknown as DocumentWithRelations;
   });
 
   return {
@@ -249,6 +262,7 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
       .from("documents")
       .insert({
         ...validated,
+        owner_entity: validated.owner_type,
         size_bytes: validated.size_bytes || 0,
         tenant_id:
           tenantId && tenantId !== "ALL" ? tenantId : validated.tenant_id,
@@ -510,7 +524,7 @@ export async function searchOwnerAction(
         .limit(10);
       if (error) throw error;
       return (data || []).map((l) => ({
-        id: l.id,
+        id: l.id as string,
         label: `${l.full_name} (${l.email || "N/A"})`,
       }));
     } else if (type === "PROPERTY") {
@@ -532,8 +546,8 @@ export async function searchOwnerAction(
         .limit(10);
       if (error) throw error;
       return (data || []).map((p) => ({
-        id: p.id,
-        label: p.title,
+        id: p.id as string,
+        label: p.title || "",
       }));
     } else if (type === "DEAL") {
       let qry = supabase
@@ -555,7 +569,7 @@ export async function searchOwnerAction(
         .limit(10);
       if (error) throw error;
       return (data || []).map((d) => ({
-        id: d.id,
+        id: d.id as string,
         label: `${(d.leads as unknown as { full_name: string } | null)?.full_name || "Unknown Lead"} - ${(d.properties as unknown as { title: string } | null)?.title || "Unknown Property"}`,
       }));
     } else if (type === "RENTAL_CONTRACT") {
@@ -581,7 +595,7 @@ export async function searchOwnerAction(
           properties: { title: string } | null;
         } | null;
         return {
-          id: c.id,
+          id: c.id as string,
           label: `Contract: ${deal?.leads?.full_name || "N/A"} - ${deal?.properties?.title || "N/A"}`,
         };
       });

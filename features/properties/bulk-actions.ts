@@ -57,7 +57,7 @@ export async function bulkDeletePropertiesAction(
 
     const blockedIds = new Set<string>();
     propertiesStatus?.forEach((p) => {
-      if (p.status === "SOLD" || p.status === "RENTED") blockedIds.add(p.id);
+      if ((p.status === "SOLD" || p.status === "RENTED") && p.id) blockedIds.add(p.id);
     });
     activeDeals?.forEach((d) => {
       if (d.property_id) blockedIds.add(d.property_id);
@@ -209,7 +209,7 @@ export async function bulkPermanentDeletePropertiesAction(
       return { success: true, count: 0, message: "ไม่มีรายการที่สามารถลบได้" };
     }
 
-    const targetIds = verifiedProps.map(p => p.id);
+    const targetIds = verifiedProps.map(p => p.id).filter((id): id is string => !!id);
 
     // 🛡️ Guard: Check for blocking dependencies (Deals or Restricted Status)
     const { data: statusCheck } = await supabase
@@ -225,7 +225,7 @@ export async function bulkPermanentDeletePropertiesAction(
 
     const blockedIds = new Set<string>();
     statusCheck?.forEach(p => {
-      if (p.status === "SOLD" || p.status === "RENTED") blockedIds.add(p.id);
+      if ((p.status === "SOLD" || p.status === "RENTED") && p.id) blockedIds.add(p.id);
     });
     dealsCheck?.forEach(d => {
       if (d.property_id) blockedIds.add(d.property_id);

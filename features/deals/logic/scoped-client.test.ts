@@ -39,7 +39,9 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
       deal_type: "SALE" as const, 
       lead_id: "l-1", 
       property_id: "p-1", 
-      status: "NEGOTIATING" as const 
+      status: "NEGOTIATING" as const,
+      title: "Test Deal",
+      tenant_id: tenantId,
     };
     
     scoped.deals().insert(data);
@@ -55,8 +57,8 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
     const tenantId = "tenant-123";
     const scoped = getScopedRevenueClient(mockSupabase as any, tenantId);
     const data = [
-      { deal_type: "SALE" as const, lead_id: "l-1", property_id: "p-1", status: "NEGOTIATING" as const },
-      { deal_type: "RENT" as const, lead_id: "l-2", property_id: "p-2", status: "NEGOTIATING" as const }
+      { deal_type: "SALE" as const, lead_id: "l-1", property_id: "p-1", status: "NEGOTIATING" as const, title: "Test Deal 1", tenant_id: tenantId },
+      { deal_type: "RENT" as const, lead_id: "l-2", property_id: "p-2", status: "NEGOTIATING" as const, title: "Test Deal 2", tenant_id: tenantId }
     ];
     
     scoped.deals().insert(data);

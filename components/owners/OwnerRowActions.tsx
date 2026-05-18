@@ -173,11 +173,11 @@ export function OwnerRowActions({
       {showTransferButton && (
         <TransferBranchDialog
           open={showTransferDialog}
-          onOpenChange={setShowTransferDialog}
+          onOpenChangeAction={setShowTransferDialog}
           entityId={id}
           entityName={fullName || "เจ้าของทรัพย์"}
           currentTenantId={tenantId}
-          onTransfer={transferOwnerBranchAction}
+          onTransferAction={transferOwnerBranchAction}
         />
       )}
     </>

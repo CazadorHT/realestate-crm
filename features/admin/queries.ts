@@ -6,7 +6,7 @@ export type AuditLogWithUser = {
   action: string;
   entity: string;
   entity_id: string | null;
-  metadata: import("@/lib/database.types").Json;
+  metadata: import("@/lib/database.types.generated").Json;
   created_at: string;
   user_id: string | null;
   user: {
@@ -25,16 +25,15 @@ export async function getAllUsers() {
     return await requireAuthContext();
   })();
 
+  // Query V3 Core identity table directly and alias display_name to full_name
+  // to maintain perfect compatibility with existing UI interfaces
   let query = supabase
-    .from("profiles")
-    .select("id, full_name, email, role")
-    .order("full_name", { ascending: true });
+    .from("identities_v3")
+    .select("id, full_name:display_name, email, role")
+    .order("display_name", { ascending: true });
 
   if (tenantId && tenantId !== "ALL") {
-    // In a production app, we would join tenant_members here.
-    // Since profiles lack tenant_id column, we rely on RLS 
-    // or a complex join. For this hardening, we'll assume RLS 
-    // is configured or we add a basic check.
+    query = query.eq("tenant_id", tenantId);
   }
 
   const { data, error } = await query;
@@ -63,7 +62,7 @@ export async function getAuditLogs({
   };
 }) {
   noStore();
-  const { supabase, tenantId, role: authRole } = await (async () => {
+  const { supabase, tenantId } = await (async () => {
     const { requireAuthContext } = await import("@/lib/authz");
     return await requireAuthContext();
   })();
@@ -71,8 +70,14 @@ export async function getAuditLogs({
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  // 1. Build Query with Filters
-  let query = supabase.from("audit_logs").select("id, user_id, action, entity, entity_id, metadata, tenant_id, created_at", { count: "exact" });
+  // 1. Build Query with Filters using specific field projections from V3 Core table (Faster & Economical)
+  // Aliasing columns to match legacy UI interfaces exactly
+  let query = supabase
+    .from("system_audit_logs_v3")
+    .select(
+      "id, action, entity:entity_table, entity_id, metadata:new_data, user_id:actor_id, tenant_id, created_at",
+      { count: "exact" },
+    );
 
   if (tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -83,11 +88,11 @@ export async function getAuditLogs({
   }
 
   if (filters.entity && filters.entity !== "ALL") {
-    query = query.eq("entity", filters.entity);
+    query = query.eq("entity_table", filters.entity);
   }
 
   if (filters.userId && filters.userId !== "ALL") {
-    query = query.eq("user_id", filters.userId);
+    query = query.eq("actor_id", filters.userId);
   }
 
   if (filters.startDate) {
@@ -101,7 +106,7 @@ export async function getAuditLogs({
     query = query.lte("created_at", end);
   }
 
-  // 2. Fetch Logs (without join first, to be safe)
+  // 2. Fetch Logs (without join first, to be safe and performant)
   const {
     data: logs,
     error: logsError,
@@ -121,12 +126,14 @@ export async function getAuditLogs({
   }
 
   // 3. Extract User IDs (Filtering out nulls)
-  const userIds = Array.from(new Set(logs.map((log) => log.user_id).filter(Boolean))) as string[];
+  const userIds = Array.from(
+    new Set(logs.map((log) => log.user_id).filter(Boolean)),
+  ) as string[];
 
-  // 4. Fetch Profiles manually
+  // 4. Fetch Profiles manually from V3 Core Identity table
   const { data: profiles, error: profilesError } = await supabase
-    .from("profiles")
-    .select("id, full_name, avatar_url, email, role")
+    .from("identities_v3")
+    .select("id, full_name:display_name, avatar_url, email, role")
     .in("id", userIds);
 
   if (profilesError) {
@@ -141,7 +148,13 @@ export async function getAuditLogs({
   const profileMap = new Map(profiles?.map((p) => [p.id, p]));
 
   const formattedData: AuditLogWithUser[] = logs.map((log) => ({
-    ...log,
+    id: log.id,
+    action: log.action,
+    entity: log.entity,
+    entity_id: log.entity_id,
+    metadata: log.metadata || {},
+    created_at: log.created_at,
+    user_id: log.user_id,
     user: log.user_id ? (profileMap.get(log.user_id) || null) : null,
   }));
 
@@ -161,7 +174,7 @@ export async function autoPurgeOldLogs() {
 
   try {
     const { error } = await supabase
-      .from("audit_logs")
+      .from("system_audit_logs_v3")
       .delete()
       .lt("created_at", dateString);
 

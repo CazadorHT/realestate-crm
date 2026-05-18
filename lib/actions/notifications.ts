@@ -27,7 +27,7 @@ export async function createNotificationAction({
 }) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from("notifications").insert({
+  const { error } = await supabase.from("notifications_v3").insert({
     user_id: userId,
     tenant_id: tenantId,
     type,
@@ -53,7 +53,7 @@ export async function getNotificationsAction(tenantId?: string) {
   if (!user) return [];
 
   let query = supabase
-    .from("notifications")
+    .from("notifications_v3")
     .select("id, user_id, tenant_id, type, title, message, link, is_read, created_at")
     .eq("user_id", user.id);
 
@@ -82,7 +82,7 @@ export async function markNotificationAsReadAction(notificationId: string) {
   if (!user) return { success: false };
 
   const { error } = await supabase
-    .from("notifications")
+    .from("notifications_v3")
     .update({ is_read: true })
     .eq("id", notificationId)
     .eq("user_id", user.id);
@@ -105,7 +105,7 @@ export async function markAllNotificationsAsReadAction(tenantId?: string) {
   if (!user) return { success: false };
 
   let query = supabase
-    .from("notifications")
+    .from("notifications_v3")
     .update({ is_read: true })
     .eq("user_id", user.id)
     .eq("is_read", false);
@@ -132,7 +132,7 @@ export async function markNotificationsAsReadAction(notificationIds: string[]) {
   if (!user) return { success: false };
 
   const { error } = await supabase
-    .from("notifications")
+    .from("notifications_v3")
     .update({ is_read: true })
     .in("id", notificationIds)
     .eq("user_id", user.id);
@@ -153,7 +153,7 @@ export async function deleteNotificationAction(notificationId: string) {
   if (!user) return { success: false };
 
   const { error } = await supabase
-    .from("notifications")
+    .from("notifications_v3")
     .delete()
     .eq("id", notificationId)
     .eq("user_id", user.id);
@@ -174,7 +174,7 @@ export async function deleteNotificationsAction(notificationIds: string[]) {
   if (!user) return { success: false };
 
   const { error } = await supabase
-    .from("notifications")
+    .from("notifications_v3")
     .delete()
     .in("id", notificationIds)
     .eq("user_id", user.id);
@@ -196,7 +196,7 @@ export async function deleteAllNotificationsAction(tenantId?: string) {
   if (!user) return { success: false };
 
   let query = supabase
-    .from("notifications")
+    .from("notifications_v3")
     .delete()
     .eq("user_id", user.id);
 
@@ -261,13 +261,13 @@ export async function notifyAdminsAction({
       generated_at: new Date().toISOString(),
       bulk: targetAdmins.length > 5,
       version: "2.0", // Tracking version for future migrations
-    } as any,
+    } as Record<string, unknown>,
   }));
 
   if (notifications.length === 0) return { success: true };
 
   const { error: insertError } = await supabase
-    .from("notifications")
+    .from("notifications_v3")
     .insert(notifications);
 
   if (insertError) {

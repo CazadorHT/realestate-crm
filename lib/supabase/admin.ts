@@ -1,7 +1,7 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/database.types";
 
-export function createAdminClient(schema: string = "public") {
+export function createAdminClient(schema: "public" | string = "public"): SupabaseClient<Database, "public", "public"> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -10,7 +10,7 @@ export function createAdminClient(schema: string = "public") {
   }
 
   return createClient<Database>(supabaseUrl, supabaseServiceKey, {
-    db: { schema: schema as any },
+    db: { schema: schema as "public" },
     auth: {
       autoRefreshToken: false,
       persistSession: false,

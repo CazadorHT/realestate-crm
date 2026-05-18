@@ -31,7 +31,7 @@ export const getSystemConfig = cache(async (): Promise<SystemConfig> => {
   return data.value as SystemConfig;
 });
 
-import type { Json } from "@/lib/database.types";
+import type { Json } from "@/lib/database.types.generated";
 
 /**
  * Updates the global system configuration.

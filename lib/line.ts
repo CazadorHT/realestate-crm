@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { Json } from "@/lib/database.types";
+import { Database } from "@/lib/database.types";
+import { Json } from "@/lib/database.types.generated";
 
 const LINE_MESSAGING_API = "https://api.line.me/v2/bot/message/push";
 
@@ -120,11 +121,11 @@ export async function broadcastLineMessage(
       const supabase = createAdminClient();
       const textContent = typeof message === "string" ? message : JSON.stringify(message);
       
-      await supabase.from("omni_messages").insert({
-        lead_id: null,
-        source: "LINE" as const,
+      await supabase.from("communications_hub_v3").insert({
+        identity_id: null,
+        platform: "LINE",
         content: textContent,
-        direction: "OUTGOING" as const,
+        direction: 1,
         payload: { is_broadcast: true, global: true }
       });
     } catch (logErr) {
@@ -180,19 +181,11 @@ export async function getLineBotInfo() {
 }
 
 /**
- * บันทึกข้อความลงในตาราง omni_messages
+ * บันทึกข้อความลงในตาราง communications_hub_v3
  */
 export async function saveOmniMessage(data: {
   lead_id: string;
-  source:
-    | "LINE"
-    | "FACEBOOK"
-    | "INSTAGRAM"
-    | "WHATSAPP"
-    | "WEBSITE"
-    | "PORTAL"
-    | "REFERRAL"
-    | "OTHER";
+  source: Database["public"]["Enums"]["lead_source"];
   external_message_id?: string;
   content: string;
   payload?: Json;
@@ -200,17 +193,30 @@ export async function saveOmniMessage(data: {
   tenant_id?: string;
 }) {
   const supabase = createAdminClient();
-  const { error } = await supabase.from("omni_messages").insert({
-    lead_id: data.lead_id,
-    source: data.source,
-    external_message_id: data.external_message_id,
+  let identity_id: string | null = null;
+  if (data.lead_id) {
+    const { data: leadData } = await supabase
+      .from("crm_leads_v3")
+      .select("identity_id")
+      .eq("id", data.lead_id)
+      .single();
+    if (leadData?.identity_id) {
+      identity_id = leadData.identity_id;
+    }
+  }
+
+  const { error } = await supabase.from("communications_hub_v3").insert({
+    identity_id,
+    platform: data.source,
+    external_message_id: data.external_message_id || null,
     content: data.content,
-    payload: data.payload,
-    direction: data.direction,
-    tenant_id: data.tenant_id,
+    payload: data.payload || null,
+    direction: data.direction === "INCOMING" ? 0 : 1,
+    tenant_id: data.tenant_id || null,
   });
 
   if (error) {
     console.error("Error saving omni message:", error);
   }
 }
+

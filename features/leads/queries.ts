@@ -3,24 +3,24 @@ import { getSystemConfig } from "@/lib/actions/system-config";
 import { mapDbError } from "@/lib/db-error";
 import { decrypt } from "@/lib/crypto";
 import type { LeadRow, LeadWithActivities, LeadWithJoins } from "./types";
-import type { Database } from "@/lib/database.types";
+import type { Database } from "@/lib/database.types.generated";
 
-type PropertyRow = Database["public"]["Tables"]["properties"]["Row"];
-type PropertyImageRow = Database["public"]["Tables"]["property_images"]["Row"];
+type PropertyRow = Database["public"]["Tables"]["properties_core"]["Row"];
+type PropertyImageRow = Database["public"]["Tables"]["property_media_v3"]["Row"];
 
 export type PropertySummary = Pick<
   PropertyRow,
   | "id"
-  | "title"
   | "property_type"
   | "listing_type"
   | "status"
-  | "price"
-  | "original_price"
-  | "rental_price"
-  | "original_rental_price"
   | "currency"
 > & {
+  title: string | null;
+  price: number | null;
+  original_price: number | null;
+  rental_price: number | null;
+  original_rental_price: number | null;
   cover_url: string | null;
 };
 
@@ -43,8 +43,8 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   const pageSize = Math.min(200, Math.max(5, args.pageSize ?? 10));
 
   let query = supabase
-    .from("leads")
-    .select("id, full_name, email, phone, stage, source, budget_min, budget_max, property_id, property:properties(id, title), tenants(id, name), created_at, updated_at, tenant_id, assigned_to, note", { count: "exact" });
+    .from("crm_leads_v3")
+    .select("id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, identity:identities_v3!inner(display_name, email, phone)", { count: "exact" });
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -53,13 +53,13 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   query = query.order("created_at", { ascending: false });
 
   if (q) {
-    // ค้นชื่อ/เบอร์/อีเมล (ปรับ field ได้)
     query = query.or(
-      `full_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`,
+      `display_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`,
+      { foreignTable: "identities_v3" }
     );
   }
   if (stage && stage !== "ALL") {
-    query = query.eq("stage", stage as Database["public"]["Enums"]["lead_stage"]);
+    query = query.eq("stage", stage);
   }
 
   const from = (page - 1) * pageSize;
@@ -69,12 +69,12 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   if (error) throw new Error(mapDbError(error));
 
-  const leads = (data || []).map((l) => ({
+  const leads = (data || []).map((l: any) => ({
     ...l,
-    full_name: decrypt(l.full_name) || "Unknown",
-    phone: decrypt(l.phone),
-    email: decrypt(l.email),
-    note: decrypt(l.note),
+    full_name: l.identity?.display_name || "Unknown",
+    phone: l.identity?.phone || null,
+    email: l.identity?.email || null,
+    note: l.ai_summary || null,
   })) as unknown as LeadWithJoins[];
   const leadIds = leads.map((l) => l.id);
 
@@ -82,7 +82,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   let dealsCountMap: Record<string, number> = {};
   if (leadIds.length > 0) {
     const { data: dealsForLeads, error: dealsErr } = await supabase
-      .from("deals")
+      .from("crm_deals_v3")
       .select("id, lead_id")
       .in("lead_id", leadIds);
 
@@ -93,13 +93,9 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     }
   }
 
-  // attach counts to leads and decrypt PII
+  // attach counts to leads
   const leadsWithCounts = leads.map((l) => ({
     ...l,
-    full_name: decrypt(l.full_name) || "Unknown",
-    email: decrypt(l.email),
-    phone: decrypt(l.phone),
-    note: decrypt(l.note),
     deals_count: dealsCountMap[l.id] ?? 0,
   }));
 
@@ -124,7 +120,7 @@ export async function getAllLeadIdsQuery(args: { q?: string; stage?: string } = 
   const q = (args.q ?? "").trim();
   const stage = (args.stage ?? "").trim();
 
-  let query = supabase.from("leads").select("id");
+  let query = supabase.from("crm_leads_v3").select("id, identity:identities_v3!inner(display_name, phone, email)");
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -132,11 +128,12 @@ export async function getAllLeadIdsQuery(args: { q?: string; stage?: string } = 
 
   if (q) {
     query = query.or(
-      `full_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`,
+      `display_name.ilike.%${q}%,phone.ilike.%${q}%,email.ilike.%${q}%`,
+      { foreignTable: "identities_v3" }
     );
   }
   if (stage && stage !== "ALL") {
-    query = query.eq("stage", stage as Database["public"]["Enums"]["lead_stage"]);
+    query = query.eq("stage", stage);
   }
 
   const { data, error } = await query;
@@ -155,8 +152,8 @@ export async function getLeadsForKanbanQuery() {
   const isMultiTenant = config.multi_tenant_enabled;
 
   let query = supabase
-    .from("leads")
-    .select("id, full_name, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, tenants(id, name)");
+    .from("crm_leads_v3")
+    .select("id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, identity:identities_v3!inner(display_name)");
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -168,9 +165,9 @@ export async function getLeadsForKanbanQuery() {
 
   if (error) throw new Error(mapDbError(error));
 
-  return (data || []).map(l => ({
+  return (data || []).map((l: any) => ({
     ...l,
-    full_name: decrypt(l.full_name) || "Unknown",
+    full_name: l.identity?.display_name || "Unknown",
   })) as unknown as LeadWithJoins[];
 }
 // ใช้สำหรับแสดง leads รายเดียว
@@ -181,8 +178,8 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
   const isMultiTenant = config.multi_tenant_enabled;
 
   let query = supabase
-    .from("leads")
-    .select("id, full_name, email, phone, stage, source, budget_min, budget_max, property_id, preferred_property_types, preferred_locations, note, line_id, wechat_id, whatsapp, facebook_psid, instagram_sid, created_at, updated_at, tenant_id, created_by, assigned_to")
+    .from("crm_leads_v3")
+    .select("id, stage, source, budget_min, budget_max, preferred_locations, ai_summary, created_at, updated_at, tenant_id, assigned_to, identity:identities_v3!inner(display_name, email, phone, line_id, social_links)")
     .eq("id", id);
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
@@ -196,19 +193,20 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
     throw new Error(error.message);
   }
   
-  const lead = data as unknown as LeadWithJoins;
+  const lead: any = data;
+  const socialLinks = lead.identity?.social_links || {};
   return {
     ...lead,
-    full_name: decrypt(lead.full_name) || "Unknown",
-    email: decrypt(lead.email),
-    phone: decrypt(lead.phone),
-    note: decrypt(lead.note),
-    line_id: decrypt(lead.line_id),
-    wechat_id: decrypt(lead.wechat_id),
-    whatsapp: decrypt(lead.whatsapp),
-    facebook_psid: decrypt(lead.facebook_psid),
-    instagram_sid: decrypt(lead.instagram_sid),
-  };
+    full_name: lead.identity?.display_name || "Unknown",
+    email: lead.identity?.email || null,
+    phone: lead.identity?.phone || null,
+    note: lead.ai_summary || null,
+    line_id: lead.identity?.line_id || null,
+    wechat_id: socialLinks.wechat_id || null,
+    whatsapp: socialLinks.whatsapp || null,
+    facebook_psid: socialLinks.facebook_psid || null,
+    instagram_sid: socialLinks.instagram_sid || null,
+  } as unknown as LeadWithJoins;
 }
 // ใช้สำหรับแสดง leads พร้อมกับ activities
 export async function getLeadWithActivitiesQuery(
@@ -221,15 +219,8 @@ export async function getLeadWithActivitiesQuery(
     const isMultiTenant = config.multi_tenant_enabled;
 
     let query = supabase
-      .from("leads")
-        .select(`
-                id, full_name, email, phone, stage, source, budget_min, budget_max, property_id, preferred_property_types, preferred_locations, note, line_id, wechat_id, whatsapp, facebook_psid, instagram_sid, ai_summary_content, created_at, updated_at, tenant_id, created_by, assigned_to,
-                lead_activities (
-                  id, lead_id, property_id, activity_type, note, created_by, created_at,
-                  profiles:created_by ( full_name, avatar_url ),
-                  properties ( id, title )
-                )
-            `)
+      .from("crm_leads_v3")
+      .select("id, stage, source, budget_min, budget_max, preferred_locations, ai_summary, created_at, updated_at, tenant_id, assigned_to, identity:identities_v3!inner(display_name, email, phone, line_id, social_links)")
       .eq("id", id);
 
     if (isMultiTenant && tenantId && tenantId !== "ALL") {
@@ -242,25 +233,35 @@ export async function getLeadWithActivitiesQuery(
       if (error && "code" in error && error.code === "PGRST116") return null;
       throw new Error(mapDbError(error));
     }
-    const lead = data as unknown as LeadWithActivities;
+    const lead: any = data;
+    
+    // Fetch activities separately due to polymorphic relation
+    const { data: activities } = await supabase
+      .from("activity_timeline_v3")
+      .select("id, activity_type, description, created_at, metadata, actor_id, actor:identities_v3!activity_timeline_v3_actor_id_fkey(display_name, avatar_url)")
+      .eq("target_entity", "LEAD")
+      .eq("target_id", id)
+      .order("created_at", { ascending: false });
 
-    lead.lead_activities?.sort(
-      (a, b) =>
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
-    );
-
+    const socialLinks = lead.identity?.social_links || {};
     return {
       ...lead,
-      full_name: decrypt(lead.full_name) || "Unknown",
-      email: decrypt(lead.email),
-      phone: decrypt(lead.phone),
-      note: decrypt(lead.note),
-      line_id: decrypt(lead.line_id),
-      wechat_id: decrypt(lead.wechat_id),
-      whatsapp: decrypt(lead.whatsapp),
-      facebook_psid: decrypt(lead.facebook_psid),
-      instagram_sid: decrypt(lead.instagram_sid),
-    };
+      full_name: lead.identity?.display_name || "Unknown",
+      email: lead.identity?.email || null,
+      phone: lead.identity?.phone || null,
+      note: lead.ai_summary || null,
+      line_id: lead.identity?.line_id || null,
+      wechat_id: socialLinks.wechat_id || null,
+      whatsapp: socialLinks.whatsapp || null,
+      facebook_psid: socialLinks.facebook_psid || null,
+      instagram_sid: socialLinks.instagram_sid || null,
+      lead_activities: (activities || []).map((a: any) => ({
+        ...a,
+        profiles: a.actor ? { full_name: a.actor.display_name, avatar_url: a.actor.avatar_url } : null,
+        note: a.description,
+        created_by: a.actor_id
+      }))
+    } as unknown as LeadWithActivities;
   } catch (error) {
     console.error("getLeadWithActivitiesQuery error:", error);
     return null;
@@ -277,9 +278,9 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
   if (uniq.length === 0) return {} as Record<string, PropertySummary>;
 
   let query = supabase
-    .from("properties")
+    .from("properties_core")
     .select(
-      "id,title,property_type,listing_type,status,price,original_price,rental_price,original_rental_price,currency",
+      "id,property_type,listing_type,status,sale_price,rent_price,currency",
     )
     .is("deleted_at", null)
     .in("id", uniq);
@@ -293,24 +294,33 @@ export async function getPropertySummariesByIdsQuery(ids: string[]) {
   if (propsErr) throw new Error(mapDbError(propsErr));
 
   const { data: covers, error: coversErr } = await supabase
-    .from("property_images")
-    .select("property_id,image_url,is_cover,sort_order")
+    .from("property_media_v3")
+    .select("property_id,url,is_cover,sort_order")
     .in("property_id", uniq)
     .eq("is_cover", true);
 
   if (coversErr) throw new Error(mapDbError(coversErr));
 
-  const coverMap = new Map<string, PropertyImageRow>();
-  (covers ?? []).forEach((c) => {
+  const coverMap = new Map<string, string>();
+  (covers ?? []).forEach((c: any) => {
     // ถ้ามีหลาย cover ให้เลือกตัวแรก (ปกติควรมี 1)
-    if (!coverMap.has(c.property_id)) coverMap.set(c.property_id, c as PropertyImageRow);
+    if (!coverMap.has(c.property_id)) coverMap.set(c.property_id, c.url);
   });
 
   const out: Record<string, PropertySummary> = {};
-  (props ?? []).forEach((p) => {
+  (props ?? []).forEach((p: any) => {
     out[p.id] = {
-      ...(p as PropertySummary),
-      cover_url: coverMap.get(p.id)?.image_url ?? null,
+      id: p.id,
+      title: p.title || "No Title",
+      property_type: p.property_type,
+      listing_type: p.listing_type,
+      status: p.status,
+      price: p.sale_price,
+      original_price: null,
+      rental_price: p.rent_price,
+      original_rental_price: null,
+      currency: p.currency,
+      cover_url: coverMap.get(p.id) ?? null,
     };
   });
 
@@ -326,7 +336,7 @@ export async function getLeadsDashboardStatsQuery() {
 
   // 1. Total Count
   let totalQuery = supabase
-    .from("leads")
+    .from("crm_leads_v3")
     .select("id", { count: "exact", head: true });
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
@@ -336,7 +346,7 @@ export async function getLeadsDashboardStatsQuery() {
 
   // 2. Active Count (Not closed)
   let activeQuery = supabase
-    .from("leads")
+    .from("crm_leads_v3")
     .select("id", { count: "exact", head: true })
     .neq("stage", "CLOSED");
 
@@ -354,7 +364,7 @@ export async function getLeadsDashboardStatsQuery() {
   ).toISOString();
 
   let newQuery = supabase
-    .from("leads")
+    .from("crm_leads_v3")
     .select("id", { count: "exact", head: true })
     .gte("created_at", startOfMonth);
 
@@ -365,7 +375,7 @@ export async function getLeadsDashboardStatsQuery() {
 
   // 4. Source distribution (for Chart/Cards)
   let distributionQuery = supabase
-    .from("leads")
+    .from("crm_leads_v3")
     .select("stage, source");
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {

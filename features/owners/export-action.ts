@@ -7,6 +7,7 @@ import {
   ExcelColumn,
   formatThaiDate,
 } from "@/lib/excel-export";
+import { decrypt } from "@/lib/crypto";
 
 const OWNER_COLUMNS: ExcelColumn[] = [
   { key: "full_name", header: "ชื่อ-นามสกุล", width: 25 },
@@ -29,8 +30,9 @@ export async function exportOwnersAction(ids?: string[]) {
   assertStaff(role);
 
   let query = supabase
-    .from("owners")
-    .select("id, full_name, phone, line_id, company_name, owner_type, facebook_url, other_contact, created_at, tenant_id")
+    .from("identities_v3")
+    .select("id, display_name, phone, line_id, social_links, created_at, tenant_id")
+    .eq("category", 2)
     .order("created_at", { ascending: false });
 
   if (ids && ids.length > 0) {
@@ -47,7 +49,23 @@ export async function exportOwnersAction(ids?: string[]) {
     return { success: false, message: "ไม่พบข้อมูลสำหรับ export" };
   }
 
-  const buffer = await generateExcelBuffer(data, OWNER_COLUMNS, "Owners");
+  const decryptedData = data.map((o: any) => {
+    const social = (o.social_links as Record<string, any>) || {};
+    return {
+      id: o.id,
+      full_name: decrypt(o.display_name) || o.display_name || "Unknown",
+      phone: decrypt(o.phone) || o.phone,
+      line_id: decrypt(o.line_id) || o.line_id,
+      facebook_url: decrypt(social.facebook_url) || social.facebook_url,
+      other_contact: decrypt(social.other_contact) || social.other_contact,
+      company_name: social.company_name,
+      owner_type: social.owner_type,
+      created_at: o.created_at,
+      tenant_id: o.tenant_id,
+    };
+  });
+
+  const buffer = await generateExcelBuffer(decryptedData as Record<string, unknown>[], OWNER_COLUMNS, "Owners");
   const base64 = buffer.toString("base64");
 
   return {

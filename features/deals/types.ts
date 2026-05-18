@@ -1,13 +1,16 @@
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 import { type PropertyImage } from "@/features/properties/types";
 import { CommissionRole, CommissionSplitResult } from "@/lib/finance/commissions";
 
-export type DealStatus = Database["public"]["Enums"]["deal_status"];
-export type DealType = Database["public"]["Enums"]["deal_type"];
+export type DealStatus = "NEGOTIATING" | "SIGNED" | "CANCELLED" | "CLOSED_WIN" | "CLOSED_LOSS";
+export type DealType = "SALE" | "RENT";
 
-export type Deal = Database["public"]["Tables"]["deals"]["Row"];
-export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
-export type CoBroker = Database["public"]["Tables"]["co_brokers"]["Row"];
+export type Deal = Database["public"]["Tables"]["crm_deals_v3"]["Row"] & {
+  commission_amount?: number | null;
+  commission_percent?: number | null;
+};
+export type Profile = Database["public"]["Tables"]["identities_v3"]["Row"];
+export type CoBroker = Database["public"]["Tables"]["identities_v3"]["Row"];
 
 /** 💎 Hardened Extensions for Missing/Computed Columns */
 export type ProfileWithTax = Profile & {
@@ -20,6 +23,8 @@ export type CoBrokerWithTax = CoBroker & {
 
 // View model that includes the joined property title/code
 export type DealWithProperty = Deal & {
+  commission_amount?: number | null;
+  commission_percent?: number | null;
   property: {
     id: string;
     title: string;
@@ -30,13 +35,15 @@ export type DealWithProperty = Deal & {
     province?: string | null;
     popular_area?: string | null;
     images?: {
-      image_url: string;
+      url: string; // Changed from image_url for V3
+      image_url?: string; // Legacy alias
       is_cover: boolean;
     }[];
   } | null;
   lead?: {
     id: string;
-    full_name: string | null;
+    display_name: string | null;
+    full_name?: string | null; // Legacy alias
     email: string | null;
     phone: string | null;
     stage: string | null;
@@ -63,13 +70,14 @@ export type DealPropertyOption = {
   commission_sale_percentage?: number | null;
   commission_rent_months?: number | null;
   cover_image?: string | null;
+  image_url?: string | null; // Legacy alias
   listing_type?: string | null;
 };
 
-export type DealCommission = Database["public"]["Tables"]["deal_commissions"]["Row"] & {
+export type DealCommission = Database["public"]["Tables"]["crm_deal_commissions_v3"]["Row"] & {
   agent?: {
     id: string;
-    full_name: string | null;
+    display_name: string | null;
     avatar_url: string | null;
   } | null;
   deal?: {
@@ -93,12 +101,14 @@ export interface DealStats {
 
 // Result of joined query from scoped proxy
 export type JoinedDealRow = Deal & {
+  commission_amount?: number | null;
+  commission_percent?: number | null;
   tenants: { id: string; name: string } | null;
   property: {
     id: string;
     title: string;
-    listing_type: string | null;
-    property_type: string | null;
+    listing_type: number | string | null;
+    property_type: number | string | null;
     price: number | null;
     original_price: number | null;
     rental_price: number | null;
@@ -110,14 +120,16 @@ export type JoinedDealRow = Deal & {
     property_images: {
       id: string;
       property_id: string;
-      image_url: string;
+      url: string; // Changed from image_url for V3
+      image_url?: string; // Legacy alias
       is_cover: boolean;
       sort_order: number;
     }[];
   } | null;
   lead: {
     id: string;
-    full_name: string | null;
+    display_name: string | null;
+    full_name?: string | null; // Legacy alias
     phone: string | null;
     email: string | null;
     stage: string | null;
@@ -126,4 +138,9 @@ export type JoinedDealRow = Deal & {
 
 export type SplitWithTax = CommissionSplitResult & {
   taxRate?: number;
+};
+
+export type InvoiceRow = Database["public"]["Views"]["invoices"]["Row"] & {
+  invoice_number?: string | null;
+  total_amount?: number | null;
 };

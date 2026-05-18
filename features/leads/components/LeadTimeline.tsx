@@ -79,7 +79,7 @@ export const LeadTimeline: React.FC<LeadTimelineProps> = ({ activities }) => {
                       </p>
                     </div>
                     <div className="whitespace-nowrap text-right text-xs text-slate-500">
-                      {format(new Date(activity.created_at), 'd MMM yyyy, HH:mm', { locale: th })}
+                      {activity.created_at ? format(new Date(activity.created_at), 'd MMM yyyy, HH:mm', { locale: th }) : '-'}
                     </div>
                   </div>
                   <div className="mt-2 text-sm text-slate-700">

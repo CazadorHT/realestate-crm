@@ -23,7 +23,8 @@ import {
   AgentWalletStats,
   AgentWalletHistory
 } from "./types";
-import { Database, Json } from "@/lib/database.types";
+import { Json } from "@/lib/database.types.generated";
+import { Database } from "@/lib/database.types";
 import { getCommissionRulesAction } from "@/features/dashboard/actions/commission-actions";
 import { FinanceMath } from "@/lib/finance/precision";
 import { TaxLogic } from "@/lib/finance/tax-logic";
@@ -100,14 +101,13 @@ export async function markAsReadyToPayAction(
     assertStaff(role);
 
     const { data, error } = await supabase
-      .from("deal_commissions")
+      .from("crm_deal_commissions_v3")
       .update({
         status: "READY_TO_PAY",
-        updated_at: new Date().toISOString(),
       })
       .eq("id", commissionId)
       .eq("tenant_id", tenantId!)
-      .select("id, amount, role, agent_id")
+      .select("id, amount, recipient_role, recipient_id")
       .single();
 
     if (error) throw new Error(mapDbError(error));
@@ -117,7 +117,7 @@ export async function markAsReadyToPayAction(
       entity: "COMMISSION",
       entityId: commissionId,
       metadata: { 
-        summary: `อนุมัติยอดคอมมิชชัน ${FinanceMath.format(data.amount)} บ. เตรียมโอนเงิน`,
+        summary: `อนุมัติยอดคอมมิชชัน ${FinanceMath.format(data.amount || 0)} บ. เตรียมโอนเงิน`,
         commissionId, 
         amount: data.amount 
       },
@@ -149,7 +149,7 @@ export async function createCommissionAdjustmentAction(payload: {
     assertAdmin(role); // Only admins can adjust financials
 
     const { data: currentCommission } = await supabase
-      .from("deal_commissions")
+      .from("crm_deal_commissions_v3")
       .select("tenant_id")
       .eq("id", payload.commission_id)
       .single();
@@ -161,11 +161,18 @@ export async function createCommissionAdjustmentAction(payload: {
     }
 
     const { data, error } = await supabase
-      .from("commission_adjustments")
+      .from("financial_ledger_v3")
       .insert({
-        ...payload,
-        created_by: user.id,
+        amount_net: payload.amount,
+        amount_total: payload.amount,
+        transaction_type: payload.adjustment_type,
+        reference_entity: "COMMISSION",
+        reference_id: payload.commission_id,
         tenant_id: tenantId,
+        metadata: {
+          description: payload.description,
+          created_by: user.id
+        }
       })
       .select("id")
       .single();
@@ -209,22 +216,25 @@ export async function recalculatePayoutTotalsAction(
       throw new Error("กรุณาระบุสาขาเป้าหมายก่อนดำเนินการคำนวณใหม่");
     }
 
-    const { data: current, error: fetchErr } = await supabase
-      .from("deal_commissions")
-      .select(
-        `
-        *,
-        deal:deals(commission_percent, commission_amount),
-        adjustments:commission_adjustments(*)
-      `,
-      )
+    const { data: rawCurrent, error: fetchErr } = await supabase
+      .from("crm_deal_commissions_v3")
+      .select("*, deal:crm_deals_v3!crm_deal_commissions_v3_deal_id_fkey(commission_total)")
       .eq("id", commissionId)
       .eq("tenant_id", tenantId) // 🛡️ Strict tenant check
       .single();
 
-    if (fetchErr || !current) throw new Error("ไม่พบข้อมูลรายการคอมมิชชัน");
+    if (fetchErr || !rawCurrent) throw new Error("ไม่พบข้อมูลรายการคอมมิชชัน");
+    const current = rawCurrent as any;
     if (current.status === "PAID")
       throw new Error("ไม่สามารถคำนวณใหม่ได้สำหรับรายการที่จ่ายแล้ว");
+
+    // Fetch adjustments explicitly from financial_ledger_v3
+    const { data: adjustmentsData } = await supabase
+      .from("financial_ledger_v3")
+      .select("*")
+      .eq("reference_entity", "COMMISSION")
+      .eq("reference_id", commissionId);
+    const adjustments = (adjustmentsData as any[]) || [];
 
     // 2. Resolve Tax Rate (Smart Fallback via TaxService)
     const rulesRes = await getCommissionRulesAction();
@@ -233,7 +243,7 @@ export async function recalculatePayoutTotalsAction(
       : 3;
 
     const taxRate = await TaxService.resolveEffectiveRate(supabase, {
-      agentId: current.agent_id,
+      agentId: current.recipient_id,
       tenantId,
       explicitRate: current.tax_rate,
       globalDefaultWht,
@@ -244,15 +254,15 @@ export async function recalculatePayoutTotalsAction(
     const oldNet = Number(current.net_amount);
 
     // We assume recalculation might change the gross amount if the deal changed
-    const dealAmount = Number(current.deal?.commission_amount || 0);
+    const dealAmount = Number((current.deal as any)?.commission_total || 0);
     const totalCommsForDeal =
       (
         await supabase
-          .from("deal_commissions")
+          .from("crm_deal_commissions_v3")
           .select("amount")
-          .eq("deal_id", current.deal_id)
+          .eq("deal_id", current.deal_id || "")
       ).data?.reduce(
-        (a: number, b: { amount: number | string }) => a + Number(b.amount),
+        (a: number, b: { amount: number | null }) => a + Number(b.amount || 0),
         0,
       ) || 0;
 
@@ -260,9 +270,9 @@ export async function recalculatePayoutTotalsAction(
     const newAmount = FinanceMath.toDecimal(current.amount);
     const newWht = FinanceMath.calculateWht(newAmount, taxRate);
     const newNetTransfer = FinanceMath.calculateNetPayout(
-      newAmount,
-      newWht,
-      current.adjustments || [],
+      newAmount.toNumber(),
+      newWht.toNumber(),
+      adjustments,
     );
 
     if (previewOnly) {
@@ -271,7 +281,7 @@ export async function recalculatePayoutTotalsAction(
         data: {
           before: {
             amount: oldAmount,
-            wht: Number(current.wht_amount),
+            wht: Number(current.tax_amount),
             net: oldNet,
             taxRate: current.tax_rate,
           },
@@ -290,12 +300,11 @@ export async function recalculatePayoutTotalsAction(
     }
 
     const { error: updateErr } = await supabase
-      .from("deal_commissions")
+      .from("crm_deal_commissions_v3")
       .update({
         tax_rate: taxRate,
-        wht_amount: FinanceMath.toNumber(newWht),
+        tax_amount: FinanceMath.toNumber(newWht),
         net_amount: FinanceMath.toNumber(newNetTransfer),
-        updated_at: new Date().toISOString(),
       })
       .eq("id", commissionId)
       .eq("tenant_id", tenantId!);
@@ -317,7 +326,7 @@ export async function recalculatePayoutTotalsAction(
           net: newNetTransfer.toNumber(),
         },
         deal_snapshot: {
-          commission_amount: current.deal?.commission_amount,
+          commission_amount: (current.deal as any)?.commission_total,
         },
       },
     });
@@ -358,50 +367,55 @@ export async function markAsPaidAction(
     }
 
     // 2. Fetch current record + adjustments
-    const { data: current, error: fetchErr } = await supabase
-      .from("deal_commissions")
-      .select(
-        `
-        *,
-        agent:profiles!deal_commissions_agent_id_fkey(full_name, line_user_id, telegram_id),
-        co_broker:co_brokers!deal_commissions_co_broker_id_fkey(name),
-        adjustments:commission_adjustments(*)
-      `,
-      )
+    const { data: rawCurrent, error: fetchErr } = await supabase
+      .from("crm_deal_commissions_v3")
+      .select("*, recipient:identities_v3!crm_deal_commissions_v3_recipient_id_fkey(display_name, line_id)")
       .eq("id", commissionId)
       .eq("tenant_id", tenantId) // 🛡️ ATOMIC TENANT CHECK
       .single();
 
-    if (fetchErr || !current) throw new Error("ไม่พบข้อมูลรายการคอมมิชชัน");
+    if (fetchErr || !rawCurrent) throw new Error("ไม่พบข้อมูลรายการคอมมิชชัน");
+    const current = rawCurrent as any;
     if (current.status === "PAID")
       throw new Error("รายการนี้ถูกบันทึกว่าจ่ายแล้ว");
 
+    // Fetch adjustments explicitly from financial_ledger_v3
+    const { data: adjustmentsData } = await supabase
+      .from("financial_ledger_v3")
+      .select("*")
+      .eq("reference_entity", "COMMISSION")
+      .eq("reference_id", commissionId);
+    const adjustments = (adjustmentsData as any[]) || [];
+
     // 3. Precision Calculation
     const netTransfer = FinanceMath.calculateNetPayout(
-      current.amount,
-      current.wht_amount,
-      current.adjustments || [],
+        current.amount || 0,
+        current.tax_amount || 0,
+        adjustments,
     );
 
     // 4. Execution with Metadata Snapshot + ATOMIC CHECK
     const { data: updated, error: updateErr } = await supabase
-      .from("deal_commissions")
+      .from("crm_deal_commissions_v3")
       .update({
         status: "PAID",
-        slip_url: payload.slip_url,
-        payment_reference: payload.payment_reference,
         paid_at: new Date().toISOString(),
-        idempotency_key: `${current.deal_id}-${commissionId}`,
-        payout_metadata: {
-          calculation_snapshot: {
-            gross: current.amount,
-            wht: current.wht_amount,
-            tax_rate_snapshot: current.tax_rate || 0.03,
-            net_base: Number(current.amount) - Number(current.wht_amount),
-            adjustments: current.adjustments,
-            final_net: netTransfer.toNumber(),
+        metadata: {
+          ...(current.metadata as Record<string, unknown> || {}),
+          slip_url: payload.slip_url,
+          payment_reference: payload.payment_reference,
+          idempotency_key: `${current.deal_id}-${commissionId}`,
+          payout_metadata: {
+            calculation_snapshot: {
+              gross: current.amount,
+              wht: current.tax_amount,
+              tax_rate_snapshot: current.tax_rate || 0.03,
+              net_base: Number(current.amount || 0) - Number(current.tax_amount || 0),
+              adjustments,
+              final_net: netTransfer.toNumber(),
+            },
+            processed_by: user.id,
           },
-          processed_by: user.id,
         },
       })
       .eq("id", commissionId)
@@ -428,7 +442,7 @@ export async function markAsPaidAction(
     // 🚀 Background Automation
     const { inngest } = await import("@/lib/inngest/client");
     const recipientName =
-      current.agent?.full_name || current.co_broker?.name || "Unknown Partner";
+      (current.recipient as any)?.display_name || "Unknown Partner";
 
     await inngest.send({
       name: "finance.commission_paid",
@@ -436,13 +450,13 @@ export async function markAsPaidAction(
         commissionId,
         agentName: recipientName,
         amount: Number(current.amount),
-        taxAmount: Number(current.wht_amount),
+        taxAmount: Number(current.tax_amount),
         netAmount: netTransfer.toNumber(),
         dealId: current.deal_id,
         reference: payload.payment_reference,
         paidAt: updated?.paid_at || new Date().toISOString(),
-        lineUserId: current.agent?.line_user_id,
-        telegramId: current.agent?.telegram_id,
+        lineUserId: (current.recipient as any)?.line_id,
+        telegramId: null,
         idempotencyKey: `${current.deal_id}-${commissionId}`,
       },
     });
@@ -500,7 +514,7 @@ export async function getSignedSlipUrlAction(slipUrl: string) {
  * Fetches the Payout Queue with full calculation stats and server-side pagination.
  */
 export async function getPayoutQueueAction(filters?: {
-  status?: Database["public"]["Enums"]["commission_status"];
+  status?: string;
   agentId?: string;
   page?: number;
   pageSize?: number;
@@ -512,22 +526,8 @@ export async function getPayoutQueueAction(filters?: {
     const from = (page - 1) * pageSize;
     const to = from + pageSize - 1;
 
-    let queryBuilder = supabase.from("deal_commissions").select(
-      `
-        *,
-        agent:profiles!deal_commissions_agent_id_fkey (id, full_name, phone, bank_code, bank_account_no, bank_account_name, bank:ref_banks(name_th, name_en)),
-        co_broker:co_brokers!deal_commissions_co_broker_id_fkey (id, name, phone, company_name, bank_code, bank_account_no, bank_account_name, bank:ref_banks(name_th, name_en)),
-        adjustments:commission_adjustments(*),
-        summary_view:view_commission_payout_summaries!inner (
-          total_adjustments,
-          net_payout_amount
-        ),
-        deal:deals!deal_commissions_deal_id_fkey (
-          id,
-          commission_amount,
-          property:properties!deals_property_id_fkey (title, property_type, listing_type)
-        )
-      `,
+    let queryBuilder = supabase.from("crm_deal_commissions_v3").select(
+      "*, recipient:identities_v3!crm_deal_commissions_v3_recipient_id_fkey(id, display_name, phone), deal:crm_deals_v3!crm_deal_commissions_v3_deal_id_fkey(id, commission_total, property:properties_core(id, property_type, listing_type, details:properties_details(title)))",
       { count: "exact" },
     );
 
@@ -553,55 +553,91 @@ export async function getPayoutQueueAction(filters?: {
         .order("created_at", { ascending: false })
         .range(from, to),
       supabase
-        .from("deal_commissions")
+        .from("crm_deal_commissions_v3")
         .select("deal_id, amount"), // Ideally we'd limit this or filter by the deals in data, but for now we'll optimize the existing logic
     ]);
 
-    const { data, error, count } = mainResult as {
-      data: JoinedPayout[] | null;
+    const { data: rawData, error, count } = mainResult as {
+      data: any;
       error: unknown;
       count: number | null;
     };
 
     if (error) throw new Error(mapDbError(error));
+    const data = (rawData as any[]) || [];
 
-    // Group sums by deal_id for integrity check
     const commissionSumsByDeal = (integrityResult.data || []).reduce(
       (
         acc: Record<string, number>,
-        curr: { deal_id: string; amount: number | string },
+        curr: { deal_id: string | null; amount: number | null },
       ) => {
-        acc[curr.deal_id] = (acc[curr.deal_id] || 0) + Number(curr.amount);
+        if (!curr.deal_id) return acc;
+        const dealId = curr.deal_id as string;
+        acc[dealId] = (acc[dealId] || 0) + Number(curr.amount || 0);
         return acc;
       },
-      {},
+      {} as Record<string, number>,
     );
 
-    // Enhance records with totals from the SQL View and Stale Detection
-    const enhancedData = (data || []).map((item: JoinedPayout): CommissionPayoutRecord => {
-      const summary = item.summary_view;
-      const agent = item.agent;
-      const co_broker = item.co_broker;
-      const deal = item.deal;
+    const commissionIds = data.map((c) => c.id);
+    const { data: ledgerData } = commissionIds.length > 0
+      ? await supabase
+          .from("financial_ledger_v3")
+          .select("*")
+          .eq("reference_entity", "COMMISSION")
+          .in("reference_id", commissionIds)
+      : { data: [] };
 
-      const recipientName = agent?.full_name || co_broker?.name || "Unknown";
-      const actualDealCommission = Number(deal?.commission_amount || 0);
-      const calculatedTotal = commissionSumsByDeal[item.deal_id] || 0;
+    const adjustmentsMap: Record<string, any[]> = (ledgerData || []).reduce((acc: Record<string, any[]>, curr: any) => {
+      const refId = curr.reference_id;
+      if (refId) {
+        if (!acc[refId]) acc[refId] = [];
+        acc[refId].push(curr);
+      }
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    // Enhance records with totals from the SQL View and Stale Detection
+    const enhancedData = data.map((item: any): CommissionPayoutRecord => {
+      const recipient = item.recipient;
+      const deal = item.deal as any;
+
+      const recipientName = (recipient as any)?.display_name || "Unknown Partner";
+      const actualDealCommission = Number(deal?.commission_total || 0);
+      const calculatedTotal = commissionSumsByDeal[item.deal_id as string] || 0;
 
       // Calculate stale status: total of saved commissions matches the deal's current commission amount
       const isStale =
         !deal || Math.abs(actualDealCommission - calculatedTotal) > 0.01;
-      const netAmount = Number(summary?.net_payout_amount || item.net_amount);
+
+      const adjustments = adjustmentsMap[item.id as string] || [];
+      const totalAdjustments = adjustments.reduce((sum: number, a: any) => sum + Number(a.amount_net || 0), 0);
+      const netAmount = FinanceMath.calculateNetPayout(
+        item.amount || 0,
+        item.tax_amount || 0,
+        adjustments
+      ).toNumber();
+
+      const propDetails = deal?.property?.details?.[0] as any;
+      const propertyTitle = propDetails?.title?.th || propDetails?.title?.en || "ไม่ทราบชื่อทรัพย์สิน";
 
       return {
         ...item,
         recipient_name: recipientName,
-        total_adjustments: Number(summary?.total_adjustments || 0),
+        total_adjustments: totalAdjustments,
         net_amount: netAmount,
         net_transfer_amount: netAmount,
+        wht_amount: Number(item.tax_amount || 0),
         is_stale: isStale,
         expected_total: actualDealCommission,
         calculated_total: calculatedTotal,
+        agent: { full_name: recipientName },
+        co_broker: { name: recipientName },
+        slip_url: (item.metadata as any)?.slip_url || "",
+        payout_metadata: (item.metadata as any)?.payout_metadata || null,
+        updated_at: item.paid_at || item.created_at || new Date().toISOString(),
+        property: { title: propertyTitle },
+        author: { name: (item.metadata as any)?.payout_metadata?.processed_by || "Administrator" },
       };
     });
 
@@ -636,7 +672,7 @@ export async function getPayoutStatsAction() {
     // Check if we are in "All Branches" mode
     const isAll = role === "ADMIN" || role === "MANAGER" ? (tenantId === "ALL" || !tenantId) : false;
 
-    let queryBuilder = supabase.from("deal_commissions").select("status, net_amount, amount");
+    let queryBuilder = supabase.from("crm_deal_commissions_v3").select("status, net_amount, amount");
     if (!isAll && tenantId) {
       queryBuilder = queryBuilder.eq("tenant_id", tenantId);
     }
@@ -688,30 +724,30 @@ export async function getWhtCertificateDataAction(commissionId: string) {
     assertStaff(await (await requireAuthContext()).role);
 
     // 1. Fetch record with everything needed for the certificate
-    const { data: current, error: fetchErr } = await supabase
-      .from("deal_commissions")
+    const { data: rawCurrent, error: fetchErr } = await supabase
+      .from("crm_deal_commissions_v3")
       .select(
         `
         id,
         amount,
-        wht_amount,
-        payment_reference,
+        tax_amount,
+        metadata,
         paid_at,
-        agent:profiles!deal_commissions_agent_id_fkey(full_name, phone),
-        co_broker:co_brokers!deal_commissions_co_broker_id_fkey(name, phone, tax_id, tax_address),
-        tenant:tenants(name)
+        recipient:identities_v3!crm_deal_commissions_v3_recipient_id_fkey(display_name, phone)
       `,
       )
       .eq("id", commissionId)
       .eq("tenant_id", tenantId!)
       .single();
 
-    if (fetchErr || !current)
+    if (fetchErr || !rawCurrent)
       throw new Error("ไม่พบข้อมูลสำหรับการออกใบรับรอง");
 
+    const current = rawCurrent as any;
+
     const netAmount = FinanceMath.calculateNetPayout(
-      current.amount,
-      current.wht_amount,
+      current.amount || 0,
+      current.tax_amount || 0,
       [],
     );
 
@@ -719,22 +755,19 @@ export async function getWhtCertificateDataAction(commissionId: string) {
       success: true,
       data: {
         agentName:
-          current.agent?.full_name ||
-          current.co_broker?.name ||
+          current.recipient?.display_name ||
           "Unknown Partner",
-        address: current.co_broker?.tax_address || "ระบุในโปรไฟล์เอเยนต์",
-        taxId: current.co_broker?.tax_id || null,
-        taxAmount: FinanceMath.format(current.wht_amount),
-        grossAmount: FinanceMath.format(current.amount),
-        netAmount: FinanceMath.format(netAmount),
+        address: (current.recipient as any)?.tax_address || "ระบุในโปรไฟล์",
+        taxId: (current.recipient as any)?.tax_id || null,
+        taxAmount: FinanceMath.format(Number(current.tax_amount || 0)),
+        grossAmount: FinanceMath.format(Number(current.amount || 0)),
+        netAmount: FinanceMath.format(netAmount.toNumber()),
         date: current.paid_at
           ? new Intl.DateTimeFormat("th-TH").format(new Date(current.paid_at))
           : "-",
-        tenantName:
-          (current.tenant as { name: string } | null)?.name ||
-          "Real Estate CRM Provider",
+        tenantName: "Real Estate CRM Provider",
         referenceCode:
-          current.payment_reference || current.id.slice(0, 8).toUpperCase(),
+          (current.metadata as any)?.payment_reference || current.id.slice(0, 8).toUpperCase(),
       },
     };
   } catch (error: unknown) {
@@ -752,16 +785,14 @@ export async function getCommissionAuditTrailAction(commissionId: string) {
     const { supabase, role: userRole, tenantId } = await requireAuthContext();
 
     let query = supabase
-      .from("audit_logs")
-      .select(
-        `
+      .from("system_audit_logs_v3")
+      .select(`
         id,
         action,
-        metadata,
+        new_data,
         created_at,
-        profiles:user_id (full_name)
-      `,
-      )
+        actor:identities_v3!system_audit_logs_v3_actor_id_fkey(display_name)
+      `)
       .eq("entity_id", commissionId);
 
     if (userRole !== "ADMIN") {
@@ -780,22 +811,22 @@ export async function getCommissionAuditTrailAction(commissionId: string) {
       action: string;
       metadata: Json;
       created_at: string;
-      profiles: { full_name: string } | { full_name: string }[] | null;
+      recipient: { id: string; display_name: string; phone: string | null } | null;
     }
 
     return {
       success: true,
       data: ((data as unknown as AuditLogRecord[]) || []).map((log) => {
-        const profile = Array.isArray(log.profiles) ? log.profiles[0] : log.profiles;
+        const profile = Array.isArray((log as any).actor) ? (log as any).actor[0] : (log as any).actor;
         return {
           id: log.id,
           action: log.action,
           summary:
-            (log.metadata as { summary?: string } | null)?.summary ||
+            ((log as any).new_data as { summary?: string } | null)?.summary ||
             log.action,
           created_at: log.created_at,
-          user_full_name: profile?.full_name || "System",
-          metadata: log.metadata,
+          user_full_name: profile?.display_name || "System",
+          metadata: (log as any).new_data || {},
         };
       }),
     };
@@ -805,40 +836,70 @@ export async function getCommissionAuditTrailAction(commissionId: string) {
   }
 }
 
-export async function getAgentWalletStatsAction(): Promise<{
+export async function getAgentWalletStatsAction(agentId: string): Promise<{
   success: boolean;
   data?: { stats: AgentWalletStats; history: AgentWalletHistory[] };
   error?: string;
 }> {
   try {
-    const { supabase, user, tenantId } = await requireAuthContext();
+    const { supabase, tenantId } = await requireAuthContext();
 
-    const { data: commissions, error: commErr } = await supabase
-      .from("deal_commissions")
-      .select(
-        `
-        *,
-        adjustments:commission_adjustments(*),
-        deal:deals!deal_commissions_deal_id_fkey (
-          id, status,
-          property:properties!deals_property_id_fkey (title, images, listing_type, property_type)
-        )
-      `,
-      )
-      .eq("agent_id", user.id)
+    const { data: rawData, error } = await supabase
+      .from("crm_deal_commissions_v3")
+      .select("*, recipient:identities_v3!crm_deal_commissions_v3_recipient_id_fkey(display_name, phone), deal:crm_deals_v3!crm_deal_commissions_v3_deal_id_fkey(id, status, property:properties_core(id, property_type, listing_type, details:properties_details(title), media:property_media_v3(url, is_cover)))")
+      .eq("recipient_id", agentId)
       .eq("tenant_id", tenantId!)
       .order("created_at", { ascending: false });
 
-    if (commErr) throw new Error(mapDbError(commErr));
+    if (error) throw new Error(mapDbError(error));
+    const data = (rawData as any[]) || [];
 
-    const enhanced = (commissions || []).map((c) => ({
-      ...c,
-      net_amount: FinanceMath.calculateNetPayout(
-        c.amount,
-        c.wht_amount,
-        c.adjustments || [],
-      ).toNumber(),
-    }));
+    const commissionIds = data.map((c) => c.id);
+    const { data: ledgerData } = commissionIds.length > 0
+      ? await supabase
+          .from("financial_ledger_v3")
+          .select("*")
+          .eq("reference_entity", "COMMISSION")
+          .in("reference_id", commissionIds)
+      : { data: [] };
+
+    const adjustmentsMap: Record<string, any[]> = (ledgerData || []).reduce((acc: Record<string, any[]>, curr: any) => {
+      const refId = curr.reference_id;
+      if (refId) {
+        if (!acc[refId]) acc[refId] = [];
+        acc[refId].push(curr);
+      }
+      return acc;
+    }, {} as Record<string, any[]>);
+
+    const enhanced = data.map((c: any): AgentWalletHistory => {
+      const adjustments = adjustmentsMap[c.id as string] || [];
+      const totalAdjustments = adjustments.reduce((sum: number, a: any) => sum + Number(a.amount_net || 0), 0);
+      const netAmount = FinanceMath.calculateNetPayout(
+        c.amount || 0,
+        c.tax_amount || 0,
+        adjustments,
+      ).toNumber();
+
+      const deal = c.deal as any;
+      const propDetails = deal?.property?.details?.[0] as any;
+      const propertyTitle = propDetails?.title?.th || propDetails?.title?.en || "ไม่ทราบชื่อทรัพย์สิน";
+
+      return {
+        ...c,
+        net_amount: netAmount,
+        net_transfer_amount: netAmount,
+        wht_amount: Number(c.tax_amount || 0),
+        total_adjustments: totalAdjustments,
+        deal: deal ? {
+          ...deal,
+          property: deal.property ? {
+            ...deal.property,
+            title: propertyTitle,
+          } : null,
+        } : null,
+      };
+    });
 
     const totalEarnings = enhanced
       .filter((c) => c.status === "PAID")
@@ -852,14 +913,19 @@ export async function getAgentWalletStatsAction(): Promise<{
       enhanced.filter((c) => c.status === "PAID").map((c) => c.deal_id),
     ).size;
 
+    const agentData = data && data.length > 0 ? (data[0] as any).recipient : null;
+    const recipientName = agentData?.display_name || "Unknown Partner";
+    
     return {
       success: true,
       data: {
         stats: {
-          totalEarnings,
+          totalEarnings: FinanceMath.toNumber(
+            data?.reduce((acc, c) => acc + (c.amount || 0), 0) || 0,
+          ),
           pendingAmount,
           closedDealsCount,
-          totalCommissionsCount: (commissions || []).length,
+          totalCommissionsCount: (data || []).length,
         },
         history: enhanced as AgentWalletHistory[],
       },

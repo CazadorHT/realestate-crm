@@ -1,14 +1,33 @@
 import { createClient } from "@/lib/supabase/server";
 import { Notification, AgendaEvent } from "./types";
 import { formatTimeAgo } from "@/lib/utils";
-import { PostgrestFilterBuilder } from "@supabase/supabase-js";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
-type LeadRow = Database["public"]["Tables"]["leads"]["Row"];
-type DealRow = Database["public"]["Tables"]["deals"]["Row"];
-type AuditLogRow = Database["public"]["Tables"]["audit_logs"]["Row"];
-type ActivityRow = Database["public"]["Tables"]["lead_activities"]["Row"] & { leads: { full_name: string } | null };
-type ContractRow = Database["public"]["Tables"]["rental_contracts"]["Row"] & { deals: { property_id: string; properties: { title: string } | null } | null };
+type DealRow = Database["public"]["Tables"]["crm_deals_v3"]["Row"];
+type AuditLogRow = Database["public"]["Tables"]["activity_timeline_v3"]["Row"];
+type ProfileRow = Database["public"]["Tables"]["profiles"]["Row"];
+
+interface LeadWithIdentity {
+  id: string;
+  created_at: string | null;
+  source: string | null;
+  identity: { display_name: string | null } | null;
+}
+
+interface AgendaLeadWithIdentity {
+  id: string;
+  created_at: string | null;
+  lead_type: string;
+  identity: { display_name: string | null } | null;
+}
+
+interface ContractRow {
+  id: string;
+  transaction_end_date: string | null;
+  transaction_date: string | null;
+  metadata: unknown;
+  property: { title: string } | null;
+}
 
 export async function getRecentNotifications(
   preferences: Record<string, boolean> | null = null,
@@ -25,7 +44,7 @@ export async function getRecentNotifications(
         filteredQuery = filteredQuery.eq("tenant_id", tenantId) as unknown as T;
       }
       if (userId && userId !== "ALL") {
-        filteredQuery = filteredQuery.eq(customColumn || "user_id", userId) as unknown as T;
+        filteredQuery = filteredQuery.eq(customColumn || "actor_id", userId) as unknown as T;
       }
       return filteredQuery;
     };
@@ -50,11 +69,11 @@ export async function getRecentNotifications(
       expiringContractsResult,
     ] = await Promise.all([
       // Website Leads
-        checkPref("new_lead")
+      checkPref("new_lead")
         ? applyFilters(
             supabase
-              .from("leads")
-              .select("id, full_name, created_at, source")
+              .from("crm_leads_v3")
+              .select("id, created_at, source, identity:identities_v3(display_name)")
               .eq("source", "WEBSITE")
               .gte("created_at", isoLimit)
               .order("created_at", { ascending: false }),
@@ -72,85 +91,90 @@ export async function getRecentNotifications(
       // Audit Logs (Status Updates, Price Drops, Logic Alerts)
       applyFilters(
         supabase
-          .from("audit_logs")
+          .from("activity_timeline_v3")
           .select(
-            "id, action, created_at, metadata, user_id, entity, entity_id",
+            "id, activity_type, created_at, metadata, actor_id, target_entity, target_id",
           )
           .gte("created_at", isoLimit)
           .order("created_at", { ascending: false }),
+        "actor_id"
       ),
 
-      // Activities (New Activities)
+      // Activities (New Activities) - Remove invalid foreign key join to crm_leads_v3
       checkPref("activity")
         ? applyFilters(
             supabase
-              .from("lead_activities")
+              .from("activity_timeline_v3")
               .select(
-                "id, created_at, lead_id, activity_type, note, leads(full_name)",
+                "id, created_at, target_id, activity_type, description, metadata",
               )
+              .eq("target_entity", "crm_leads_v3")
               .gte("created_at", isoLimit)
               .order("created_at", { ascending: false }),
-            "created_by",
+            "actor_id",
           )
         : Promise.resolve({ data: [] }),
 
       // Assignments logic usually is in audit_logs, but let's check specifically for property_agents or similar
       Promise.resolve({ data: [] }), // Placeholder if handled in logs
 
-      // Contract Expiry - Check rental contracts expiring in next 30 days
+      // Contract Expiry - Check rental contracts expiring in next 30 days (Fix deal_type to 'RENT')
       checkPref("contract_expiry")
         ? applyFilters(
             supabase
-              .from("rental_contracts")
+              .from("crm_deals_v3")
               .select(
-                "id, deal_id, end_date, start_date, rent_price, deals(property_id, properties(title))",
+                "id, transaction_end_date, transaction_date, metadata, property:properties(title)",
               )
-              .eq("status", "ACTIVE")
-              .not("end_date", "is", null)
-              .gte("end_date", new Date().toISOString())
-              .order("end_date", { ascending: true }),
+              .eq("deal_type", "RENT")
+              .eq("status", "WON")
+              .not("transaction_end_date", "is", null)
+              .gte("transaction_end_date", new Date().toISOString())
+              .order("transaction_end_date", { ascending: true }),
+            "created_by"
           )
         : Promise.resolve({ data: [] }),
     ]);
 
-    const recentLeads = leadsResult.data || [];
-    const recentProfiles = profilesResult.data || [];
-    const recentLogs = logsResult.data || [];
-    const recentActivities = activitiesResult.data || [];
+    const recentLeads = (leadsResult.data as unknown as LeadWithIdentity[]) || [];
+    const recentProfiles = (profilesResult.data as unknown as ProfileRow[]) || [];
+    const recentLogs = (logsResult.data as AuditLogRow[]) || [];
+    const recentActivities = (activitiesResult.data as AuditLogRow[]) || [];
 
     // 1. New Leads
-    (recentLeads as LeadRow[]).forEach((lead) => {
+    recentLeads.forEach((lead) => {
+      const displayName = lead.identity?.display_name || "ลูกค้า";
       notifications.push({
         id: `lead-${lead.id}`,
-        message: `Lead ใหม่จากหน้าเว็บ: ${lead.full_name}`,
+        message: `Lead ใหม่จากหน้าเว็บ: ${displayName}`,
         type: "success",
-        time: formatTimeAgo(lead.created_at),
+        time: formatTimeAgo(lead.created_at || new Date().toISOString()),
         read: false,
         href: `/protected/leads/${lead.id}`,
-        createdAt: new Date(lead.created_at).getTime(),
+        createdAt: new Date(lead.created_at || new Date().toISOString()).getTime(),
         category: "new_lead",
       });
     });
 
     // 2. Audit Logs
-    (recentLogs as AuditLogRow[]).forEach((log) => {
-      const meta = log.metadata as Record<string, any>;
-      const timeStr = formatTimeAgo(log.created_at);
-      const createdAt = new Date(log.created_at).getTime();
+    recentLogs.forEach((log) => {
+      const meta = (log.metadata as Record<string, unknown>) || {};
+      const timeStr = formatTimeAgo(log.created_at || new Date().toISOString());
+      const createdAt = new Date(log.created_at || new Date().toISOString()).getTime();
 
       // Price Drops
       if (
         checkPref("price_drop") &&
-        log.action === "property.update" &&
+        log.activity_type === "property.update" &&
         meta?.price_change
       ) {
         notifications.push({
           id: `price-${log.id}`,
-          message: `ลดราคา! ${meta.title || "ทรัพย์"}: ฿${meta.old_price?.toLocaleString()} → ฿${meta.new_price?.toLocaleString()}`,
+          message: `ลดราคา! ${String(meta.title || "ทรัพย์")}: ฿${Number(meta.old_price || 0).toLocaleString()} → ฿${Number(meta.new_price || 0).toLocaleString()}`,
           type: "warning",
           time: timeStr,
           read: false,
-          href: `/protected/properties/${log.entity_id}`,
+          href: `/protected/properties/${log.target_id}`,
           createdAt,
           category: "price_drop",
         });
@@ -160,25 +184,25 @@ export async function getRecentNotifications(
       if (
         checkPref("status_update") &&
         meta?.status_update &&
-        log.action.includes(".update")
+        log.activity_type.includes(".update")
       ) {
         notifications.push({
           id: `status-${log.id}`,
-          message: `เปลี่ยนสถานะ ${log.entity}: ${meta.new_stage || meta.new_status}`,
+          message: `เปลี่ยนสถานะ ${log.target_entity}: ${String(meta.new_stage || meta.new_status || "")}`,
           type: "info",
           time: timeStr,
           read: false,
-          href: `/protected/${log.entity === "leads" ? "leads" : "properties"}/${log.entity_id}`,
+          href: `/protected/${log.target_entity === "crm_leads_v3" ? "leads" : "properties"}/${log.target_id}`,
           createdAt,
           category: "status_update",
         });
       }
 
       // Login (Security)
-      if (log.action === "LOGIN") {
+      if (log.activity_type === "LOGIN") {
         notifications.push({
           id: `login-${log.id}`,
-          message: `เข้าสู่ระบบ: ${meta?.email || "User"}`,
+          message: `เข้าสู่ระบบ: ${String(meta?.email || "User")}`,
           type: "info",
           time: timeStr,
           read: false,
@@ -188,44 +212,47 @@ export async function getRecentNotifications(
     });
 
     // 3. New Activities
-    (recentActivities as ActivityRow[]).forEach((act) => {
+    recentActivities.forEach((act) => {
+      const meta = (act.metadata as Record<string, unknown>) || {};
+      const leadName = String(meta.lead_name || meta.full_name || "ลูกค้า");
       notifications.push({
         id: `act-${act.id}`,
-        message: `กิจกรรมใน Lead ${act.leads?.full_name}: ${act.activity_type}`,
+        message: `กิจกรรมใน Lead ${leadName}: ${act.activity_type}`,
         type: "info",
-        time: formatTimeAgo(act.created_at),
+        time: formatTimeAgo(act.created_at || new Date().toISOString()),
         read: false,
-        href: `/protected/leads/${act.lead_id}`,
-        createdAt: new Date(act.created_at).getTime(),
+        href: `/protected/leads/${act.target_id}`,
+        createdAt: new Date(act.created_at || new Date().toISOString()).getTime(),
         category: "activity",
       });
     });
 
     // 4. New Registrations (Profiles)
-    (recentProfiles as (Database["public"]["Tables"]["profiles"]["Row"])[]).forEach((profile) => {
+    recentProfiles.forEach((profile) => {
       notifications.push({
         id: `user-${profile.id}`,
         message: `สมาชิกใหม่: ${profile.full_name || profile.email}`,
         type: "info",
-        time: formatTimeAgo(profile.created_at),
+        time: formatTimeAgo(profile.created_at || new Date().toISOString()),
         read: false,
-        createdAt: new Date(profile.created_at).getTime(),
+        createdAt: new Date(profile.created_at || new Date().toISOString()).getTime(),
       });
     });
 
     // 5. Contract Expiry (Contracts expiring in 30 days)
-    const expiringContracts = expiringContractsResult.data || [];
+    const expiringContracts = (expiringContractsResult.data as unknown as ContractRow[]) || [];
     const now = new Date();
 
-    (expiringContracts as ContractRow[]).forEach((contract) => {
-      const endDate = new Date(contract.end_date);
+    expiringContracts.forEach((contract) => {
+      if (!contract.transaction_end_date) return;
+      const endDate = new Date(contract.transaction_end_date);
       const daysUntilExpiry = Math.ceil(
         (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
       );
 
       // Only show contracts expiring within 30 days
       if (daysUntilExpiry > 0 && daysUntilExpiry <= 30) {
-        const propertyTitle = contract.deals?.properties?.title || "ทรัพย์สิน";
+        const propertyTitle = contract.property?.title || "ทรัพย์สิน";
         const type = daysUntilExpiry <= 7 ? "alert" : "warning";
 
         notifications.push({
@@ -234,7 +261,7 @@ export async function getRecentNotifications(
           type,
           time: `${daysUntilExpiry} วันข้างหน้า`,
           read: false,
-          href: `/protected/deals/${contract.deal_id}`,
+          href: `/protected/deals/${contract.id}`,
           createdAt: endDate.getTime(), // Sort by expiry date
           category: "contract_expiry",
         });
@@ -273,8 +300,8 @@ export async function getTodayAgenda(
   // 1. Fetch New Leads Today
   const { data: newLeads } = await applyFilters(
     supabase
-      .from("leads")
-      .select("id, full_name, created_at, lead_type")
+      .from("crm_leads_v3")
+      .select("id, created_at, lead_type, identity:identities_v3(display_name)")
       .gte("created_at", todayIso)
       .order("created_at", { ascending: false }),
     "assigned_to",
@@ -283,7 +310,7 @@ export async function getTodayAgenda(
   // 2. Fetch New Deals Today
   const { data: newDeals } = await applyFilters(
     supabase
-      .from("deals")
+      .from("crm_deals_v3")
       .select("id, deal_type, created_at")
       .gte("created_at", todayIso)
       .order("created_at", { ascending: false }),
@@ -292,21 +319,24 @@ export async function getTodayAgenda(
   const agenda: AgendaEvent[] = [];
 
   // Map Leads to "Call" tasks
-  (newLeads as LeadRow[])?.forEach((lead) => {
+  const leadsList = (newLeads as unknown as AgendaLeadWithIdentity[]) || [];
+  leadsList.forEach((lead) => {
+    const displayName = lead.identity?.display_name || "ลูกค้า";
     agenda.push({
       id: `lead-${lead.id}`,
       time: lead.created_at ? new Date(lead.created_at).toLocaleTimeString("th-TH", {
         hour: "2-digit",
         minute: "2-digit",
       }) : "--:--",
-      title: `ติดต่อลูกค้าใหม่: ${lead.full_name}`,
+      title: `ติดต่อลูกค้าใหม่: ${displayName}`,
       type: "call",
       priority: "high",
     });
   });
 
   // Map Deals to "Meeting" or "Task"
-  (newDeals as DealRow[])?.forEach((deal) => {
+  const dealsList = (newDeals as DealRow[]) || [];
+  dealsList.forEach((deal) => {
     agenda.push({
       id: `deal-${deal.id}`,
       time: deal.created_at ? new Date(deal.created_at).toLocaleTimeString("th-TH", {

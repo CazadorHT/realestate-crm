@@ -1,5 +1,5 @@
 import { PropertyImageMetadata, NearbyItem, NearbyTransitItem, TransitType } from "@/features/properties/types";
-import { Database } from "@/lib/database.types";
+import { Database } from "@/lib/database.types.generated";
 
 /**
  * 🛡️ Raw Object Guard for Images
@@ -67,6 +67,7 @@ export function getSafeNearbyPlaces(places: unknown): NearbyItem[] {
       category: (p.category as string) || "General",
       name: (p.name as string) || "Unknown Place",
       distance: (p.distance as string) || undefined,
+      distance_meters: typeof p.distance_meters === "number" ? p.distance_meters : undefined,
       time: (p.time as string) || undefined,
       name_en: (p.name_en as string) || undefined,
       name_cn: (p.name_cn as string) || undefined,

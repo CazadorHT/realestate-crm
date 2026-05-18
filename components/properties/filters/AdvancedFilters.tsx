@@ -448,7 +448,7 @@ export function AdvancedFilters({
                       }`}
                     >
                       <span className="truncate mr-1">
-                        {PROPERTY_STATUS_LABELS[s]}
+                        {PROPERTY_STATUS_LABELS[s].th}
                       </span>
                       {isAvailable && (
                         <div className="flex items-center gap-1.5 shrink-0">
@@ -524,7 +524,7 @@ export function AdvancedFilters({
                       }`}
                     >
                       <span className="truncate mr-1">
-                        {PROPERTY_TYPE_LABELS[t]}
+                        {PROPERTY_TYPE_LABELS[t].th}
                       </span>
                       {isAvailable && (
                         <div className="flex items-center gap-1.5 shrink-0">
@@ -604,7 +604,7 @@ export function AdvancedFilters({
                       }`}
                     >
                       <span className="truncate mr-1">
-                        {LISTING_TYPE_LABELS[t]}
+                        {LISTING_TYPE_LABELS[t].th}
                       </span>
                       {isAvailable && (
                         <div className="flex items-center gap-1.5 shrink-0">

@@ -6,44 +6,25 @@ import { PropertySuitability } from "@/components/public/PropertySuitability";
 import { User, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FaLine } from "react-icons/fa";
+import { ListingType, PropertyType, PropertyStatus } from "@/features/properties/types";
+import { FaLine, FaWhatsapp, } from "react-icons/fa";
+import { IoLogoWechat } from "react-icons/io5";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
+import { type Language } from "@/lib/i18n";
 
 import { AdminAiTriggers } from "@/components/admin/properties/AdminAiTriggers";
 import { PropertySocialGenerator } from "@/features/properties/components/PropertySocialGenerator";
+import type { PropertyWithDetails } from "@/features/properties/types/v3";
 
 interface PropertyAdminSidebarProps {
-  property: {
-    id: string;
-    status: string | null;
-    created_at: string;
-    updated_at: string;
-    listing_type: string | null;
-    price: number | null;
-    rental_price: number | null;
-    property_type: string | null;
-    property_source?: string | null;
-    ai_summary_content?: string | null;
-    embedding?: number[] | string | null;
-    requires_ai_review?: boolean;
-    is_featured?: boolean;
-    owner: {
-      id: string;
-      full_name: string;
-      phone: string | null;
-      line_id: string | null;
-    } | null;
-    agent: {
-      full_name: string | null;
-      phone: string | null;
-      line_id: string | null;
-      avatar_url: string | null;
-    } | null;
+  property: PropertyWithDetails & {
+    embedding?: number[] | string | null; // Optional override if vectors are fetched separately
   };
+  language?: Language;
 }
 
-export function PropertyAdminSidebar({ property }: PropertyAdminSidebarProps) {
+export function PropertyAdminSidebar({ property, language = "th" }: PropertyAdminSidebarProps) {
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -63,7 +44,7 @@ export function PropertyAdminSidebar({ property }: PropertyAdminSidebarProps) {
           </span>
           <PropertyStatusBadge
             status={property.status || "DRAFT"}
-            language="th"
+            language={language}
           />
         </div>
         <Separator className="bg-white/10" />
@@ -96,11 +77,11 @@ export function PropertyAdminSidebar({ property }: PropertyAdminSidebarProps) {
       <PropertySocialGenerator propertyId={property.id} />
 
       <PropertySuitability
-        listingType={(property.listing_type as any) || "SALE"}
+        listingType={property.listing_type || "SALE"}
         price={property.price ?? null}
         rentalPrice={property.rental_price ?? null}
-        propertyType={property.property_type || undefined}
-        language="th"
+        propertyType={property.property_type || "CONDO"}
+        language={language}
       />
 
       {/* Owner Card (Protected) */}
@@ -214,6 +195,28 @@ export function PropertyAdminSidebar({ property }: PropertyAdminSidebarProps) {
                       title={property.agent.line_id}
                     >
                       Line: {property.agent.line_id}
+                    </span>
+                  </div>
+                )}
+                {property.agent.whatsapp_user_id && (
+                  <div className="flex items-start gap-1.5 text-[10px] sm:text-xs text-slate-400 mt-1 max-w-full">
+                    <FaWhatsapp className="h-3 w-3 text-[#25D366] shrink-0 mt-0.5" />
+                    <span
+                      className="break-all"
+                      title={property.agent.whatsapp_user_id}
+                    >
+                      WhatsApp: {property.agent.whatsapp_user_id}
+                    </span>
+                  </div>
+                )}
+                {property.agent.wechat_user_id && (
+                  <div className="flex items-start gap-1.5 text-[10px] sm:text-xs text-slate-400 mt-1 max-w-full">
+                    <IoLogoWechat className="h-3 w-3 text-[#07C160] shrink-0 mt-0.5" />
+                    <span
+                      className="break-all"
+                      title={property.agent.wechat_user_id}
+                    >
+                      WeChat: {property.agent.wechat_user_id}
                     </span>
                   </div>
                 )}

@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { profileSchema, type ProfileFormValues } from "@/lib/profile-schema";
+import { profileSchema, type ProfileFormValues } from "../../lib/profile-schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Info } from "lucide-react";
-import { updateProfileAction } from "./actions";
+import { Info, Signature } from "lucide-react";
+import imageCompression from "browser-image-compression";
+import { updateProfileAction, uploadSignatureAction } from "./actions";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -59,6 +60,9 @@ import {
 
 interface ProfileInfoFormProps {
   fullName: string | null;
+  nickname?: string | null;
+  avatar_url?: string | null;
+  signature_url?: string | null;
   phone: string | null;
   line_id: string | null;
   line_user_id: string | null;
@@ -74,11 +78,20 @@ interface ProfileInfoFormProps {
   bank_account_name?: string | null;
   other_bank_name?: string | null;
   telegram_id: string | null;
+  wechat_user_id?: string | null;
+  whatsapp_user_id?: string | null;
+  bio_th?: string | null;
+  bio_en?: string | null;
+  position_th?: string | null;
+  position_en?: string | null;
   score: number;
 }
 
 export function ProfileInfoForm({
   fullName,
+  nickname,
+  avatar_url: initialAvatarUrl,
+  signature_url: initialSignatureUrl,
   phone,
   line_id,
   line_user_id,
@@ -94,6 +107,12 @@ export function ProfileInfoForm({
   bank_account_name,
   other_bank_name,
   telegram_id,
+  wechat_user_id,
+  whatsapp_user_id,
+  bio_th,
+  bio_en,
+  position_th,
+  position_en,
   score,
 }: ProfileInfoFormProps) {
   const router = useRouter();
@@ -107,6 +126,8 @@ export function ProfileInfoForm({
     mode: "onChange",
     defaultValues: {
       full_name: fullName || "",
+      nickname: nickname || "",
+      avatar_url: initialAvatarUrl || "",
       phone: phone || "",
       line_id: line_id || "",
       line_user_id: line_user_id || "",
@@ -120,12 +141,48 @@ export function ProfileInfoForm({
       bank_account_name: bank_account_name || "",
       other_bank_name: other_bank_name || "",
       telegram_id: telegram_id || "",
+      wechat_user_id: wechat_user_id || "",
+      whatsapp_user_id: whatsapp_user_id || "",
+      bio_th: bio_th || "",
+      bio_en: bio_en || "",
+      position_th: position_th || "",
+      position_en: position_en || "",
     },
   });
 
   const [banks, setBanks] = useState<any[]>([]);
   const [isBankPickerOpen, setIsBankPickerOpen] = useState(false);
   const [bankSearch, setBankSearch] = useState("");
+  const [signatureUrl, setSignatureUrl] = useState<string | null>(initialSignatureUrl || null);
+  const [isUploadingSignature, setIsUploadingSignature] = useState(false);
+
+  const handleSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingSignature(true);
+    try {
+      // Image Compression Logic
+      const options = {
+        maxSizeMB: 0.8,
+        maxWidthOrHeight: 1200,
+        useWebWorker: true,
+      };
+      
+      const compressedFile = await imageCompression(file, options);
+      
+      const formData = new FormData();
+      formData.append("file", compressedFile);
+      const result = await uploadSignatureAction(formData);
+      setSignatureUrl(result.publicUrl);
+      toast.success("อัปโหลดลายเซ็นสำเร็จ (บีบอัดเรียบร้อย)");
+    } catch (error) {
+      console.error(error);
+      toast.error("อัปโหลดลายเซ็นไม่สำเร็จ");
+    } finally {
+      setIsUploadingSignature(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchBanks() {
@@ -178,32 +235,43 @@ export function ProfileInfoForm({
     }
   };
 
-  const onSubmit = async (values: ProfileFormValues) => {
+  const onSubmit: SubmitHandler<ProfileFormValues> = async (values) => {
     setIsLoading(true);
     try {
       const formData = new FormData();
       formData.append("full_name", values.full_name);
-      if (values.phone) {
-        formData.append("phone", values.phone);
-      }
+      if (values.nickname) formData.append("nickname", values.nickname);
+      if (values.phone) formData.append("phone", values.phone);
       if (values.line_id) formData.append("line_id", values.line_id);
-      if (values.line_user_id)
-        formData.append("line_user_id", values.line_user_id);
-      if (values.facebook_url)
-        formData.append("facebook_url", values.facebook_url);
-      if (values.whatsapp_id)
-        formData.append("whatsapp_id", values.whatsapp_id);
+      if (values.line_user_id) formData.append("line_user_id", values.line_user_id);
+      if (values.facebook_url) formData.append("facebook_url", values.facebook_url);
+      if (values.whatsapp_id) formData.append("whatsapp_id", values.whatsapp_id);
       if (values.wechat_id) formData.append("wechat_id", values.wechat_id);
       if (values.tax_id) formData.append("tax_id", values.tax_id);
-      if (values.tax_address)
-        formData.append("tax_address", values.tax_address);
+      if (values.tax_address) formData.append("tax_address", values.tax_address);
       if (values.bank_code) formData.append("bank_code", values.bank_code);
-      if (values.bank_account_no)
-        formData.append("bank_account_no", values.bank_account_no);
-      if (values.bank_account_name)
-        formData.append("bank_account_name", values.bank_account_name);
-      if (values.telegram_id)
-        formData.append("telegram_id", values.telegram_id);
+      if (values.bank_account_no) formData.append("bank_account_no", values.bank_account_no);
+      if (values.bank_account_name) formData.append("bank_account_name", values.bank_account_name);
+      if (values.telegram_id) formData.append("telegram_id", values.telegram_id);
+      
+      // Sync WeChat: Map single UI field to both Legacy and V3 for consistency
+      if (values.wechat_user_id) {
+        formData.append("wechat_id", values.wechat_user_id);
+        formData.append("wechat_user_id", values.wechat_user_id);
+      }
+      
+      // Sync WhatsApp: Map single UI field to both Legacy and V3
+      if (values.whatsapp_user_id) {
+        formData.append("whatsapp_id", values.whatsapp_user_id);
+        formData.append("whatsapp_user_id", values.whatsapp_user_id);
+      }
+
+      // New V3 Branding Fields
+      if (values.avatar_url) formData.append("avatar_url", values.avatar_url);
+      if (values.bio_th) formData.append("bio_th", values.bio_th);
+      if (values.bio_en) formData.append("bio_en", values.bio_en);
+      if (values.position_th) formData.append("position_th", values.position_th);
+      if (values.position_en) formData.append("position_en", values.position_en);
 
       const result = await updateProfileAction(formData);
 
@@ -266,7 +334,7 @@ export function ProfileInfoForm({
 
       <div className="p-8">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-10">
+          <form onSubmit={form.handleSubmit((data) => onSubmit(data as ProfileFormValues))} className="space-y-10">
         {/* Section 1: Basic Information */}
         <section className="space-y-5">
           <div className="flex flex-col gap-1 pl-4 border-l-2 border-blue-500/50">
@@ -308,6 +376,31 @@ export function ProfileInfoForm({
                           </m.div>
                         )}
                       </AnimatePresence>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="nickname"
+              render={({ field }) => (
+                <FormItem className="space-y-2">
+                  <div className="flex flex-col gap-0">
+                    <FormLabel className="text-[13px] font-medium text-slate-600">
+                      ชื่อเล่น (Nickname)
+                    </FormLabel>
+                    <FormDescription className="text-[11px] text-slate-400">ชื่อเรียกสั้นๆ ในทีม (เช่น คุณเอ, พี่บี)</FormDescription>
+                  </div>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        placeholder="ระบุชื่อเล่น..."
+                        className="h-11 rounded-xl border-slate-200 focus-visible:ring-blue-500/20 shadow-none text-base font-normal transition-all"
+                        {...field}
+                      />
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -489,33 +582,21 @@ export function ProfileInfoForm({
 
             <FormField
               control={form.control}
-              name="whatsapp_id"
+              name="whatsapp_user_id"
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <div className="flex flex-col gap-0">
-                    <FormLabel className="text-[13px] font-medium text-slate-600">วอทส์แอป</FormLabel>
-                    <FormDescription className="text-[11px] text-slate-400">ระบุเบอร์โทรที่ผูกกับบัญชี WhatsApp ของคุณ</FormDescription>
+                    <FormLabel className="text-[13px] font-medium text-slate-600">วอทส์แอป (WhatsApp ID)</FormLabel>
+                    <FormDescription className="text-[11px] text-slate-400">ระบุเบอร์โทรหรือ ID สำหรับปุ่มติดต่อ WhatsApp (เช่น 66xxxxxxxx)</FormDescription>
                   </div>
                   <FormControl>
                     <div className="relative">
-                      <FaWhatsapp className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-600" />
+                      <FaWhatsapp className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
                       <Input
-                        placeholder="66xxxxxxxxx"
-                        className="pl-10.5 pr-10 h-11 rounded-xl border-emerald-50 focus-visible:ring-emerald-500/20 font-normal shadow-none transition-all"
+                        placeholder="ระบุ WhatsApp ID..."
+                        className="pl-10.5 pr-10 h-11 rounded-xl border-emerald-100/50 focus-visible:ring-emerald-500/20 font-normal shadow-none transition-all"
                         {...field}
                       />
-                      <AnimatePresence>
-                        {field.value && (
-                          <m.div
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
-                            className="absolute right-3.5 top-1/2 -translate-y-1/2"
-                          >
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          </m.div>
-                        )}
-                      </AnimatePresence>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -525,33 +606,21 @@ export function ProfileInfoForm({
 
             <FormField
               control={form.control}
-              name="wechat_id"
+              name="wechat_user_id"
               render={({ field }) => (
                 <FormItem className="space-y-2">
                   <div className="flex flex-col gap-0">
-                    <FormLabel className="text-[13px] font-medium text-slate-600">วีแชต ไอดี WeChat (สำหรับลูกค้าจีน)</FormLabel>
-                    <FormDescription className="text-[11px] text-slate-400">ไอดี WeChat สำหรับใช้ติดต่อลูกค้าชาวต่างชาติ</FormDescription>
+                    <FormLabel className="text-[13px] font-medium text-slate-600">วีแชต (WeChat ID)</FormLabel>
+                    <FormDescription className="text-[11px] text-slate-400">ไอดี WeChat สำหรับแสดงผลและให้ลูกค้าค้นหา</FormDescription>
                   </div>
                   <FormControl>
                     <div className="relative">
-                      <IoLogoWechat className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-400" />
+                      <IoLogoWechat className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500" />
                       <Input
-                        placeholder="ใส่ ID WeChat..."
-                        className="pl-10.5 pr-10 h-11 rounded-xl border-slate-200 focus-visible:ring-emerald-500/20 font-normal shadow-none transition-all"
+                        placeholder="ระบุ WeChat ID..."
+                        className="pl-10.5 pr-10 h-11 rounded-xl border-emerald-100/50 focus-visible:ring-emerald-500/20 font-normal shadow-none transition-all"
                         {...field}
                       />
-                      <AnimatePresence>
-                        {field.value && (
-                          <m.div
-                            initial={{ opacity: 0, scale: 0.5 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.5 }}
-                            className="absolute right-3.5 top-1/2 -translate-y-1/2"
-                          >
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                          </m.div>
-                        )}
-                      </AnimatePresence>
                     </div>
                   </FormControl>
                   <FormMessage />
@@ -900,6 +969,61 @@ export function ProfileInfoForm({
             )}
           />
         </section>
+
+        {/* Section 4: Digital Signature */}
+        <section className="space-y-5">
+          <div className="flex flex-col gap-1 pl-4 border-l-2 border-amber-500/50">
+            <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+              ลายเซ็นดิจิทัล (Digital Signature)
+            </h3>
+            <p className="text-xs text-slate-400">สำหรับใช้ประทับตราในเอกสารสัญญาและใบจองอัตโนมัติ</p>
+          </div>
+
+          <div className="p-6 rounded-3xl bg-slate-50/50 border border-slate-100 flex flex-col md:flex-row items-center gap-8">
+            <div className="relative w-full md:w-64 h-32 bg-white rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden group">
+              {signatureUrl ? (
+                <>
+                  <img 
+                    src={signatureUrl} 
+                    alt="Signature" 
+                    className="max-w-full max-h-full object-contain p-2"
+                  />
+                  <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <label className="cursor-pointer px-4 py-2 bg-white text-slate-900 rounded-xl text-xs font-bold shadow-xl">
+                      เปลี่ยนลายเซ็น
+                      <input type="file" className="hidden" accept="image/*" onChange={handleSignatureUpload} />
+                    </label>
+                  </div>
+                </>
+              ) : (
+                <label className="cursor-pointer flex flex-col items-center gap-2 text-slate-400 hover:text-blue-500 transition-colors">
+                  <Signature className="h-8 w-8" />
+                  <span className="text-[10px] font-bold uppercase tracking-wider">อัปโหลดลายเซ็น</span>
+                  <input type="file" className="hidden" accept="image/*" onChange={handleSignatureUpload} />
+                </label>
+              )}
+              
+              {isUploadingSignature && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center">
+                  <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+                </div>
+              )}
+            </div>
+
+            <div className="flex-1 space-y-3">
+              <h4 className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                ข้อแนะนำการใช้งาน
+              </h4>
+              <ul className="text-xs text-slate-500 space-y-1.5 list-disc pl-4 font-medium">
+                <li>ควรใช้รูปภาพลายเซ็นที่มีพื้นหลังโปร่งใส (Transparent PNG)</li>
+                <li>เซ็นด้วยปากกาสีดำหรือน้ำเงินเข้มบนกระดาษขาวสะอาด</li>
+                <li>ภาพที่ชัดเจนจะช่วยให้เอกสารสัญญาดูเป็นมืออาชีพมากขึ้น</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
 
         {/* Read-only Auth Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-6 border-t border-slate-100">
