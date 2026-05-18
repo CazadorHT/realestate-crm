@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
 type Feature = {
   id: string;
   name: string;
-  icon_key: string;
+  icon_key: string | null;
   category: string | null;
 };
 
@@ -225,7 +225,7 @@ function Step5FeaturesComponent() {
                       )}
                     >
                       <DynamicIcon
-                        name={feature.icon_key}
+                        name={feature.icon_key || "check"}
                         className="w-4 h-4 sm:w-5 sm:h-5"
                       />
                     </div>

@@ -1006,6 +1006,39 @@ export type Database = {
           },
         ]
       }
+      features: {
+        Row: {
+          category: string | null
+          created_at: string | null
+          icon_key: string | null
+          id: string
+          name: string
+          name_cn: string | null
+          name_en: string | null
+          name_ru: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string | null
+          icon_key?: string | null
+          id: string
+          name: string
+          name_cn?: string | null
+          name_en?: string | null
+          name_ru?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string | null
+          icon_key?: string | null
+          id?: string
+          name?: string
+          name_cn?: string | null
+          name_en?: string | null
+          name_ru?: string | null
+        }
+        Relationships: []
+      }
       financial_ledger_v3: {
         Row: {
           amount_net: number
@@ -2005,6 +2038,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "property_features_feature_id_fkey"
+            columns: ["feature_id"]
+            isOneToOne: false
+            referencedRelation: "features"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "property_features_property_id_fkey"
             columns: ["property_id"]
             isOneToOne: false
@@ -2417,6 +2457,141 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      smart_match_budget_ranges: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          label: string
+          label_cn: string | null
+          label_en: string | null
+          label_ru: string | null
+          max_value: number
+          min_value: number
+          purpose: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          is_active?: boolean | null
+          label: string
+          label_cn?: string | null
+          label_en?: string | null
+          label_ru?: string | null
+          max_value: number
+          min_value: number
+          purpose: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          label_cn?: string | null
+          label_en?: string | null
+          label_ru?: string | null
+          max_value?: number
+          min_value?: number
+          purpose?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      smart_match_office_sizes: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          label: string
+          label_cn: string | null
+          label_en: string | null
+          label_ru: string | null
+          max_sqm: number
+          min_sqm: number
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          is_active?: boolean | null
+          label: string
+          label_cn?: string | null
+          label_en?: string | null
+          label_ru?: string | null
+          max_sqm: number
+          min_sqm: number
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          label_cn?: string | null
+          label_en?: string | null
+          label_ru?: string | null
+          max_sqm?: number
+          min_sqm?: number
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
+      smart_match_property_types: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          label: string
+          label_cn: string | null
+          label_en: string | null
+          label_ru: string | null
+          sort_order: number | null
+          value: string
+        }
+        Insert: {
+          created_at?: string | null
+          id: string
+          is_active?: boolean | null
+          label: string
+          label_cn?: string | null
+          label_en?: string | null
+          label_ru?: string | null
+          sort_order?: number | null
+          value: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string
+          label_cn?: string | null
+          label_en?: string | null
+          label_ru?: string | null
+          sort_order?: number | null
+          value?: string
+        }
+        Relationships: []
+      }
+      smart_match_settings: {
+        Row: {
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
       }
       spatial_ref_sys: {
         Row: {
@@ -3719,45 +3894,132 @@ export type Database = {
       properties: {
         Row: {
           address_info: Json | null
+          address_line1: string | null
+          address_line1_cn: string | null
+          address_line1_en: string | null
+          address_line1_ru: string | null
+          ai_reviewed_at: string | null
+          ai_reviewed_by: string | null
+          ai_summary_content: string | null
+          allow_smoking: boolean | null
           amenities: Json | null
           assigned_to: string | null
           bathrooms: number | null
           bedrooms: number | null
           branch_id: string | null
+          branch_name: Json | null
+          ceiling_height: number | null
+          co_agent_name: string | null
+          co_agent_phone: string | null
+          co_agent_sale_commission_percent: number | null
           co_broker_id: string | null
+          commission_rent_months: number | null
+          commission_sale_percentage: number | null
           created_at: string | null
+          created_by: string | null
           currency: string | null
           deleted_at: string | null
           description: string | null
+          description_cn: string | null
+          description_en: string | null
+          description_ru: string | null
           district: string | null
+          facing_east: boolean | null
+          facing_north: boolean | null
+          facing_south: boolean | null
+          facing_west: boolean | null
+          features: Json | null
+          floor: number | null
+          google_maps_link: string | null
+          has_247_access: boolean | null
+          has_city_view: boolean | null
+          has_fiber_optic: boolean | null
+          has_garden_view: boolean | null
+          has_multi_parking: boolean | null
           has_nearby_places: boolean | null
+          has_pool_view: boolean | null
+          has_private_pool: boolean | null
+          has_raised_floor: boolean | null
+          has_river_view: boolean | null
+          has_unblocked_view: boolean | null
           id: string | null
           images: string | null
+          is_bare_shell: boolean | null
+          is_central_air: boolean | null
+          is_column_free: boolean | null
+          is_corner_unit: boolean | null
           is_exclusive: boolean | null
+          is_featured: boolean | null
+          is_foreigner_quota: boolean | null
+          is_fully_furnished: boolean | null
+          is_grade_a: boolean | null
+          is_grade_b: boolean | null
+          is_grade_c: boolean | null
+          is_high_ceiling: boolean | null
           is_hot_deal: boolean | null
+          is_pet_friendly: boolean | null
+          is_renovated: boolean | null
+          is_selling_with_tenant: boolean | null
+          is_split_air: boolean | null
+          is_tax_registered: boolean | null
           land_size_sqwah: number | null
           listing_type: string | null
+          listing_type_int: number | null
           location: unknown
+          main_image: string | null
           meta_data: Json | null
+          meta_keywords: Json | null
+          min_contract_months: number | null
+          near_transit: boolean | null
+          nearby_places: Json | null
+          nearby_transits: Json | null
+          office_capacity: number | null
+          orientation: string | null
+          original_price: number | null
+          original_rental_price: number | null
           owner_id: string | null
+          parking_slots: number | null
+          parking_type: string | null
+          popular_area: string | null
+          popular_area_cn: string | null
+          popular_area_en: string | null
+          popular_area_ru: string | null
+          postal_code: string | null
           price: number | null
+          price_per_sqm: number | null
           pricing_details: Json | null
+          property_source: string | null
           property_type: string | null
+          property_type_int: number | null
           province: string | null
+          rent_price_per_sqm: number | null
           rental_price: number | null
+          requires_ai_review: boolean | null
           size_sqm: number | null
           slug: string | null
+          sold_units: number | null
           status: string | null
           status_int: number | null
           structured_data: string | null
           subdistrict: string | null
           tenant_id: string | null
+          tenant_name: string | null
           title: string | null
+          title_cn: string | null
           title_en: string | null
+          title_ru: string | null
+          total_units: number | null
+          transit_distance_meters: number | null
           transit_info: Json | null
+          transit_station_name: string | null
+          transit_station_name_cn: string | null
+          transit_station_name_en: string | null
+          transit_station_name_ru: string | null
+          transit_type: string | null
           trust_score: number | null
           updated_at: string | null
           verified: boolean | null
+          version: number | null
           view_count: number | null
         }
         Relationships: [
@@ -3804,6 +4066,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "properties_core_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "identities_v3"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "properties_core_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "owners"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "properties_core_owner_id_fkey"
             columns: ["owner_id"]
             isOneToOne: false
@@ -3836,6 +4112,63 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_v3"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_images: {
+        Row: {
+          ai_scan_result: Json | null
+          ai_scan_status: string | null
+          created_at: string | null
+          id: string | null
+          image_url: string | null
+          is_cover: boolean | null
+          media_type: string | null
+          property_id: string | null
+          sort_order: number | null
+          storage_path: string | null
+          url: string | null
+        }
+        Insert: {
+          ai_scan_result?: Json | null
+          ai_scan_status?: string | null
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_cover?: boolean | null
+          media_type?: string | null
+          property_id?: string | null
+          sort_order?: number | null
+          storage_path?: string | null
+          url?: string | null
+        }
+        Update: {
+          ai_scan_result?: Json | null
+          ai_scan_status?: string | null
+          created_at?: string | null
+          id?: string | null
+          image_url?: string | null
+          is_cover?: boolean | null
+          media_type?: string | null
+          property_id?: string | null
+          sort_order?: number | null
+          storage_path?: string | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_media_v3_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_media_v3_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties_core"
             referencedColumns: ["id"]
           },
         ]

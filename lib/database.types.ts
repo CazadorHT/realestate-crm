@@ -125,13 +125,7 @@ export type Database = Omit<GeneratedDatabase, "public"> & {
         Update: GeneratedDatabase["public"]["Tables"]["property_agents"]["Update"]; 
         Relationships: [...GeneratedDatabase["public"]["Tables"]["property_agents"]["Relationships"], { foreignKeyName: "property_agents_agent_id_profiles_fkey"; columns: ["agent_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }] 
       };
-      property_features: { 
-        Row: GeneratedDatabase["public"]["Tables"]["property_features"]["Row"]; 
-        Insert: GeneratedDatabase["public"]["Tables"]["property_features"]["Insert"]; 
-        Update: GeneratedDatabase["public"]["Tables"]["property_features"]["Update"]; 
-        Relationships: [...GeneratedDatabase["public"]["Tables"]["property_features"]["Relationships"], { foreignKeyName: "property_features_feature_id_fkey"; columns: ["feature_id"]; isOneToOne: false; referencedRelation: "features"; referencedColumns: ["id"] }] 
-      };
-      features: { Row: Record<string, any>; Insert: Record<string, any>; Update: Record<string, any>; Relationships: any[] };
+
       lead_activities: { Row: GeneratedDatabase["public"]["Tables"]["activity_timeline_v3"]["Row"] & { note?: string | null }; Insert: Record<string, any>; Update: Record<string, any>; Relationships: any[] };
       leads: { 
         Row: Flatten<GeneratedDatabase["public"]["Views"]["leads"]["Row"] & { 
