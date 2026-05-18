@@ -102,9 +102,23 @@ export function StatsOverview({
 
   // --- Global Loading Listener ---
   useEffect(() => {
-    const handleUpdating = () => setLoading(true);
+    let timer: NodeJS.Timeout;
+    const handleUpdating = () => {
+      setLoading(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setLoading(false), 1200);
+    };
+    const handleUpdated = () => {
+      setLoading(false);
+      clearTimeout(timer);
+    };
     window.addEventListener("dashboard:updating", handleUpdating);
-    return () => window.removeEventListener("dashboard:updating", handleUpdating);
+    window.addEventListener("dashboard:updated", handleUpdated);
+    return () => {
+      window.removeEventListener("dashboard:updating", handleUpdating);
+      window.removeEventListener("dashboard:updated", handleUpdated);
+      clearTimeout(timer);
+    };
   }, []);
 
   // --- Sync stats with props (Global Filter) ---
@@ -278,6 +292,15 @@ export function StatsOverview({
             </Alert>
           )}
         </div>
+      )}
+
+      {/* 🚫 NO DATA STATE */}
+      {!loading && stats.revenueThisMonth === 0 && stats.leadsThisMonth === 0 && stats.dealsWon === 0 && (
+        <Alert className="rounded-2xl border-blue-200 bg-blue-50/80 backdrop-blur-sm shadow-sm animate-in fade-in slide-in-from-top-2 relative z-10 mb-4">
+          <AlertCircle className="h-5 w-5 text-blue-600" />
+          <AlertTitle className="text-sm font-bold text-blue-800">ยังไม่มีข้อมูลสถิติในช่วงเวลานี้</AlertTitle>
+          <AlertDescription className="text-xs text-blue-700">ระบบตรวจสอบพบว่ายังไม่มีธุรกรรม ยอดขาย หรือลีดใหม่เกิดขึ้นในช่วงเวลาหรือตัวกรองที่คุณเลือก</AlertDescription>
+        </Alert>
       )}
 
 

@@ -92,11 +92,18 @@ export function DashboardFilters({
         router.push(`${pathname}?${params.toString()}`, { scroll: false });
         setPendingFilters({}); // Clear pending after push
         setIsUpdating(false);
+        setTimeout(() => window.dispatchEvent(new CustomEvent("dashboard:updated")), 50);
       });
     }, 150); // Reduced from 400ms to 150ms for snappier feel
 
     return () => clearTimeout(timer);
   }, [pendingFilters, router, pathname, searchParams]);
+
+  useEffect(() => {
+    if (!isPending && !isUpdating) {
+      window.dispatchEvent(new CustomEvent("dashboard:updated"));
+    }
+  }, [isPending, isUpdating]);
 
   useEffect(() => {
     if (isAdmin) {

@@ -65,9 +65,23 @@ export function TopAgents({ data: initialData, role, multiTenantEnabled, range: 
   }, [initialRange]);
 
   useEffect(() => {
-    const handleUpdating = () => setLoading(true);
+    let timer: NodeJS.Timeout;
+    const handleUpdating = () => {
+      setLoading(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setLoading(false), 1200);
+    };
+    const handleUpdated = () => {
+      setLoading(false);
+      clearTimeout(timer);
+    };
     window.addEventListener("dashboard:updating", handleUpdating);
-    return () => window.removeEventListener("dashboard:updating", handleUpdating);
+    window.addEventListener("dashboard:updated", handleUpdated);
+    return () => {
+      window.removeEventListener("dashboard:updating", handleUpdating);
+      window.removeEventListener("dashboard:updated", handleUpdated);
+      clearTimeout(timer);
+    };
   }, []);
 
   // 2. Fetch Top Agents when filters change
