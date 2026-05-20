@@ -259,7 +259,7 @@ export function RentalContractSection({
         <div>
           {!contract && !canCreateContract ? (
             <div className="text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              ⚠️ ต้องปิดดีลให้ "สำเร็จ" ก่อนจึงจะสร้างสัญญาได้
+              ⚠️ ต้องปิดดีลให้ &quot;สำเร็จ&quot; ก่อนจึงจะสร้างสัญญาได้
             </div>
           ) : (
             <ResponsiveDialog

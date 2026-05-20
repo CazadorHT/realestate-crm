@@ -33,18 +33,7 @@ import {
 export type QuizStep = 1 | 1.5 | 1.7 | 2 | 2.5 | 3 | 4 | 9;
 
 export function useSmartMatchWizard() {
-  let languageContext;
-  try {
-    languageContext = useLanguage();
-  } catch (e) {
-    // Fallback for SSR or if used outside provider (though it should be inside)
-    languageContext = {
-      t: (k: string) => k,
-      language: "th" as const,
-      setLanguage: () => {},
-    };
-  }
-  const { t } = languageContext;
+  const { t, language } = useLanguage();
 
   const [step, setStep] = useState<QuizStep>(1);
   const [purpose, setPurpose] = useState<SearchPurpose>("BUY");
@@ -337,7 +326,7 @@ export function useSmartMatchWizard() {
         nearTransit: nearTransit === null ? undefined : nearTransit,
         propertyType:
           propertyType || (isOfficeMode ? "OFFICE_BUILDING" : undefined),
-        language: languageContext.language,
+        language: language,
       });
 
       const timeoutPromise = new Promise((_, reject) =>
