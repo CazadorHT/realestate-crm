@@ -2,7 +2,7 @@
 import * as React from "react";
 import { useRef, useEffect } from "react";
 import { useForm, type Resolver } from "react-hook-form";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ import {
   type CreatePropertyResult,
   getPopularAreasAction,
   postPropertyToMetaAction,
+  postPropertyToLineAction,
 } from "./actions";
 import { Form } from "@/components/ui/form";
 import {
@@ -114,7 +115,7 @@ const PREFETCH_MAP: Record<number, (() => Promise<any>) | undefined> = {
 import { usePropertyFormDraft } from "./hooks/usePropertyFormDraft";
 import { usePropertyFormData } from "./hooks/usePropertyFormData";
 import { Card } from "@/components/ui/card";
-import { FaFacebook } from "react-icons/fa6";
+import { FaFacebook, FaLine } from "react-icons/fa6";
 
 type Props = {
   mode: "create" | "edit";
@@ -136,13 +137,14 @@ export function PropertyForm({
   userRole,
 }: Props) {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   // === STATE & ORCHESTRATION ===
   const [persistImages, setPersistImages] = React.useState(false);
 
   // Success Dialog State
   const [showSuccessDialog, setShowSuccessDialog] = React.useState(false);
-  const [successData, setSuccessData] = React.useState<{ id: string; title: string; slug?: string } | null>(null);
+  const [successData, setSuccessData] = React.useState<{ id: string; title: string; slug?: string; status?: string } | null>(null);
   const [shareStatus, setShareStatus] = React.useState<Record<string, { loading: boolean; success: boolean; url?: string | null }>>({});
 
   // Redirect if not staff
@@ -200,41 +202,56 @@ export function PropertyForm({
     defaultValues?.id || undefined,
   );
 
+  const hasShownDraftToast = useRef(false);
+
   useEffect(() => {
-    if (mode === "create") {
+    if (mode === "create" && !hasShownDraftToast.current) {
       const draft = checkAndRestoreDraft();
       if (draft) {
-        toast(
-          `พบข้อมูลที่บันทึกไว้ล่าสุด โครงการ : "${draft.values.title || "ไม่มีชื่อ"}"`,
-          {
-            description: `บันทึกเมื่อ: ${new Date(
-              draft.timestamp,
-            ).toLocaleString("th-TH")}`,
-            action: {
-              label: "กู้คืน",
-              onClick: () => {
-                const currentBranchId = form.getValues("branch_id");
-                form.reset({
-                  ...draft.values,
-                  branch_id: currentBranchId || draft.values.branch_id,
-                  currency: draft.values.currency || "THB",
-                });
-                toast.success("กู้คืนข้อมูลเรียบร้อย");
+        hasShownDraftToast.current = true;
+        const shouldAutoRestore = searchParams?.get("restore") === "true";
+
+        if (shouldAutoRestore) {
+          const currentBranchId = form.getValues("branch_id");
+          form.reset({
+            ...draft.values,
+            branch_id: currentBranchId || draft.values.branch_id,
+            currency: draft.values.currency || "THB",
+          });
+          toast.success("⚡ กู้คืนข้อมูลแบบร่างอัตโนมัติเรียบร้อยแล้ว!");
+        } else {
+          toast(
+            `พบข้อมูลที่บันทึกไว้ล่าสุด โครงการ : "${draft.values.title || "ไม่มีชื่อ"}"`,
+            {
+              description: `บันทึกเมื่อ: ${new Date(
+                draft.timestamp,
+              ).toLocaleString("th-TH")}`,
+              action: {
+                label: "กู้คืน",
+                onClick: () => {
+                  const currentBranchId = form.getValues("branch_id");
+                  form.reset({
+                    ...draft.values,
+                    branch_id: currentBranchId || draft.values.branch_id,
+                    currency: draft.values.currency || "THB",
+                  });
+                  toast.success("กู้คืนข้อมูลเรียบร้อย");
+                },
               },
-            },
-            cancel: {
-              label: "ลบทิ้ง",
-              onClick: () => {
-                clearDraft();
-                toast.info("ลบแบบร่างเรียบร้อย");
+              cancel: {
+                label: "ลบทิ้ง",
+                onClick: () => {
+                  clearDraft();
+                  toast.info("ลบแบบร่างเรียบร้อย");
+                },
               },
+              duration: 10000,
             },
-            duration: 10000,
-          },
-        );
+          );
+        }
       }
     }
-  }, [mode, checkAndRestoreDraft, form, clearDraft]);
+  }, [mode, checkAndRestoreDraft, form, clearDraft, searchParams]);
 
   // Initialize Quick Info for edit mode
   React.useEffect(() => {
@@ -421,6 +438,7 @@ export function PropertyForm({
           id: propertyId ?? "",
           title: values.title ?? "",
           slug: result.slug,
+          status: values.status,
         });
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
@@ -462,6 +480,7 @@ export function PropertyForm({
           id: result.propertyId!,
           title: pendingSubmit.title,
           slug: result.slug,
+          status: pendingSubmit.status,
         });
       } else {
         toast.error(result.message || "เกิดข้อผิดพลาด");
@@ -801,6 +820,7 @@ export function PropertyForm({
             <Button
               variant="outline"
               className="w-full justify-start gap-4 h-16 text-base font-medium border-slate-200 rounded-2xl hover:border-emerald-200 hover:bg-emerald-50/50 transition-all group"
+              disabled={successData?.status !== "ACTIVE"}
               onClick={() => {
                 if (successData?.slug) {
                   window.open(`/properties/${successData.slug}`, "_blank");
@@ -815,7 +835,11 @@ export function PropertyForm({
               </div>
               <div className="flex flex-col items-start leading-tight group-hover:text-emerald-600!">
                 <span>ดูหน้าเว็บไซต์</span>
-                <span className="text-[11px] font-normal text-slate-500">เปิดแท็บใหม่เพื่อดูตัวอย่าง</span>
+                <span className="text-[11px] font-normal text-slate-500">
+                  {successData?.status !== "ACTIVE"
+                    ? "ปุ่มนี้เปิดได้เฉพาะทรัพย์ที่มีสถานะใช้งาน (Active) เท่านั้น"
+                    : "เปิดแท็บใหม่เพื่อดูตัวอย่าง"}
+                </span>
               </div>
             </Button>
 
@@ -834,7 +858,7 @@ export function PropertyForm({
 
             <div className="pt-4 border-t border-slate-100 mt-2">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-3">แชร์ไปยังโซเชียลมีเดีย</span>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-4 gap-2">
                 {/* Facebook */}
                 <Button
                   variant="outline"
@@ -954,6 +978,42 @@ export function PropertyForm({
                     <Instagram className="w-6 h-6" />
                   )}
                   <span className="leading-tight">{shareStatus["INSTAGRAM"]?.success ? "แชร์แล้ว" : "Instagram"}</span>
+                </Button>
+
+                {/* Line */}
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
+                    shareStatus["LINE"]?.success 
+                      ? "text-emerald-700! border-emerald-100 bg-emerald-50/50" 
+                      : "text-emerald-600! border-slate-200 bg-white hover:border-emerald-200 hover:bg-emerald-50/50"
+                  )}
+                  disabled={shareStatus["LINE"]?.loading}
+                  onClick={async () => {
+                    if (!successData?.id) return;
+                    setShareStatus(prev => ({ ...prev, LINE: { loading: true, success: false } }));
+                    const res = await postPropertyToLineAction(successData.id);
+                    if (res.success) {
+                      setShareStatus(prev => ({ 
+                        ...prev, 
+                        LINE: { loading: false, success: true, url: null } 
+                      }));
+                      toast.success("บรอดแคสต์ Line OA สำเร็จ!");
+                    } else {
+                      setShareStatus(prev => ({ ...prev, LINE: { loading: false, success: false } }));
+                      toast.error(res.message || "เกิดข้อผิดพลาด");
+                    }
+                  }}
+                >
+                  {shareStatus["LINE"]?.loading ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : shareStatus["LINE"]?.success ? (
+                    <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                  ) : (
+                    <FaLine className="w-6 h-6 text-[#06C755]" />
+                  )}
+                  <span className="leading-tight">{shareStatus["LINE"]?.success ? "ส่งแล้ว" : "Line"}</span>
                 </Button>
               </div>
             </div>

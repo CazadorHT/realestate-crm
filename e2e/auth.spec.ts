@@ -19,7 +19,11 @@ test.describe("Authentication Smoke Tests", () => {
     await page.fill('input[id="password"]', "wrongpassword");
     await page.click('button[type="submit"]');
     // Check for error toast or message (adjust selector as needed)
-    await expect(page.locator('text=/อีเมลหรือรหัสผ่านไม่ถูกต้อง/i').or(page.locator('text=/Invalid login credentials/i'))).toBeVisible();
+    await expect(
+      page.locator('text=/คุณยังไม่ได้ลงทะเบียนเข้าใช้งานระบบ/i')
+        .or(page.locator('text=/คุณกรอกรหัสผ่านไม่ถูกต้อง/i'))
+        .or(page.locator('text=/Invalid login credentials/i'))
+    ).toBeVisible();
   });
 
   test("should login successfully with valid credentials", async ({ page }) => {

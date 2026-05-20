@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Loader2, ArrowRightLeft } from "lucide-react";
-import { transferLeadAction } from "../actions";
+import { transferLeadAction, requestLeadTransferAction } from "../actions";
 import { getTenantsAction } from "@/lib/actions/tenant-management";
 
 interface TransferLeadDialogProps {
@@ -22,6 +22,7 @@ interface TransferLeadDialogProps {
   leadId: string;
   leadName: string;
   currentTenantId: string;
+  userRole?: string;
 }
 
 export function TransferLeadDialog({
@@ -30,11 +31,15 @@ export function TransferLeadDialog({
   leadId,
   leadName,
   currentTenantId,
+  userRole,
 }: TransferLeadDialogProps) {
   const [targetTenantId, setTargetTenantId] = useState<string>("");
+  const [reason, setReason] = useState<string>("");
   const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isTransferring, setIsTransferring] = useState(false);
+
+  const isAgent = userRole?.toUpperCase() === "AGENT";
 
   useEffect(() => {
     if (isOpen) {
@@ -58,12 +63,26 @@ export function TransferLeadDialog({
 
     setIsTransferring(true);
     try {
-      const result = await transferLeadAction({ id: leadId, targetTenantId });
-      if (result.success) {
-        toast.success(`ส่งต่อคุณ ${leadName} เรียบร้อยแล้ว`);
-        onOpenChange(false);
+      if (isAgent) {
+        const result = await requestLeadTransferAction({
+          id: leadId,
+          targetTenantId,
+          reason: reason.trim(),
+        });
+        if (result.success) {
+          toast.success(`ส่งคำขอส่งต่อคุณ ${leadName} เรียบร้อยแล้ว (รอผู้จัดการอนุมัติ)`);
+          onOpenChange(false);
+        } else {
+          toast.error(result.error);
+        }
       } else {
-        toast.error(result.error);
+        const result = await transferLeadAction({ id: leadId, targetTenantId });
+        if (result.success) {
+          toast.success(`ส่งต่อคุณ ${leadName} เรียบร้อยแล้ว`);
+          onOpenChange(false);
+        } else {
+          toast.error(result.error);
+        }
       }
     } catch (error) {
       toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
@@ -79,15 +98,23 @@ export function TransferLeadDialog({
       title={
         <div className="flex items-center gap-2">
           <ArrowRightLeft className="h-5 w-5 text-blue-600" />
-          ส่งต่อลูกค้า (Lead Referral)
+          {isAgent ? "ขอส่งต่อลูกค้า (Request Lead Referral)" : "ส่งต่อลูกค้า (Lead Referral)"}
         </div>
       }
       description={
-        <>
-          เลือกสาขาปลายทางที่ต้องการส่งต่อคุณ{" "}
-          <span className="font-bold text-slate-900">{leadName}</span>{" "}
-          ให้ดูแลต่อ
-        </>
+        isAgent ? (
+          <>
+            ส่งคำขอไปยังผู้จัดการสาขาเพื่อโอนย้ายคุณ{" "}
+            <span className="font-bold text-slate-900">{leadName}</span>{" "}
+            ไปยังสาขาปลายทาง
+          </>
+        ) : (
+          <>
+            เลือกสาขาปลายทางที่ต้องการส่งต่อคุณ{" "}
+            <span className="font-bold text-slate-900">{leadName}</span>{" "}
+            ให้ดูแลต่อ
+          </>
+        )
       }
       footer={
         <div className="flex flex-col sm:flex-row gap-2 w-full">
@@ -107,7 +134,7 @@ export function TransferLeadDialog({
             {isTransferring && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
-            ยืนยันการส่งต่อ
+            {isAgent ? "ส่งคำขอโอนย้าย" : "ยืนยันการส่งต่อ"}
           </Button>
         </div>
       }
@@ -141,6 +168,22 @@ export function TransferLeadDialog({
             </SelectContent>
           </Select>
         </div>
+
+        {isAgent && (
+          <div className="grid gap-2 text-left">
+            <Label htmlFor="reason" className="text-slate-700 font-bold">
+              เหตุผลในการขอโอนย้าย
+            </Label>
+            <textarea
+              id="reason"
+              placeholder="ระบุเหตุผล เช่น ลูกค้าสนใจโครงการเด่นในพื้นที่สาขาปลายทาง..."
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              disabled={isTransferring}
+              className="flex min-h-[90px] w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+          </div>
+        )}
       </div>
     </ResponsiveDialog>
   );

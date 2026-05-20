@@ -57,10 +57,15 @@ export function ContactForm() {
   const [direction, setDirection] = useState(0); // -1 for back, 1 for forward
 
   const formatPhoneNumber = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 10);
-    if (digits.length <= 3) return digits;
-    if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
-    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+    const hasPlus = value.startsWith("+");
+    const digits = value.replace(/[^\d]/g, "");
+    if (hasPlus) {
+      return "+" + digits.slice(0, 12);
+    }
+    const cleanDigits = digits.slice(0, 10);
+    if (cleanDigits.length <= 3) return cleanDigits;
+    if (cleanDigits.length <= 6) return `${cleanDigits.slice(0, 3)}-${cleanDigits.slice(3)}`;
+    return `${cleanDigits.slice(0, 3)}-${cleanDigits.slice(3, 6)}-${cleanDigits.slice(6)}`;
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {

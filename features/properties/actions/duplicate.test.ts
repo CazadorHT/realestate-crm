@@ -34,7 +34,7 @@ vi.mock('@/lib/seo-utils', () => ({
   })),
 }));
 
-vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn() } }));
+vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn().mockResolvedValue({}) } }));
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn() }));
 
 // 3. Universal Supabase Mock (คงเดิม)

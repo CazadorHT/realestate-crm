@@ -22,14 +22,17 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
  * - Security Status Lockdown (ACTIVE ONLY)
  * - Request Memoization for Edge performance
  */
-export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<PropertyDetail | null> => {
+export async function getPublicPropertyDetail(slugOrId: string): Promise<PropertyDetail | null> {
+  // Note: intentionally not memoized via `cache()` to avoid stale server-memory
+  // when properties are created/updated and revalidated. Revalidation is handled
+  // via Next.js path/tag revalidation during write operations.
   const supabase = await createClient();
 
   // 🛡️ V3 Hardened Query: Join Core specs with Multi-language Details and Master Identity
   const publicColumns = `
-    id, listing_type, property_type, sale_price, rent_price, original_price, original_rental_price,
-    bedrooms, bathrooms, floor_area, land_area, province, district, subdistrict,
-    is_hot_deal, is_pet_friendly, is_exclusive, verified, floor_plan_url, created_at, updated_at,
+    id, listing_type, property_type, sale_price, rent_price,
+    bedrooms, bathrooms, floor_area, land_area,
+    is_hot_deal, is_exclusive, verified, created_at, updated_at,
     details:properties_details!property_id (
       title, description, address_info, amenities, transit_info, pricing_details, meta_data
     ),
@@ -41,8 +44,10 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
       phone,
       avatar_url,
       line_id,
-      wechat_user_id,
-      whatsapp_user_id
+      profile:profiles (
+        wechat_user_id,
+        whatsapp_user_id
+      )
     ),
     property_features (
       features (
@@ -63,15 +68,45 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
   if (UUID_RE.test(slugOrId)) {
     query = query.eq("id", slugOrId);
   } else {
-    // Search by slug in properties_details
-    const { data: detailMatch } = await supabase
+    // Search by slug in properties_details.address_info.slug
+    let detailMatch = null as any;
+
+    const { data: byAddress } = await supabase
       .from("properties_details")
       .select("property_id")
       .contains("address_info", { slug: slugOrId })
       .maybeSingle();
-    
-    if (!detailMatch) return null;
-    query = query.eq("id", detailMatch.property_id);
+
+    if (byAddress) detailMatch = byAddress;
+
+    // Fallback: slug stored in meta_data.slug
+    if (!detailMatch) {
+      const { data: byMeta } = await supabase
+        .from("properties_details")
+        .select("property_id")
+        .filter("meta_data->>slug", "eq", slugOrId)
+        .maybeSingle();
+      if (byMeta) detailMatch = byMeta;
+    }
+
+    // Final fallback: legacy `properties_core.slug` column
+    if (!detailMatch) {
+      const { data: coreBySlug } = await supabase
+        .from("properties_core")
+        .select("id")
+        .eq("slug", slugOrId)
+        .maybeSingle();
+      if (coreBySlug) {
+        query = query.eq("id", coreBySlug.id);
+      }
+    }
+
+    if (!detailMatch && !query._single) {
+      // If still not found and we didn't set query by core slug, return null
+      return null;
+    }
+
+    if (detailMatch) query = query.eq("id", detailMatch.property_id);
   }
 
   const { data: rawData, error } = await query.maybeSingle();
@@ -83,10 +118,22 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
     description: { th?: string; en?: string; cn?: string; ru?: string };
     address_info: { 
       slug?: string; 
-      popular_area?: { th?: string; en?: string; cn?: string; ru?: string };
-      subdistrict?: { th?: string; en?: string; cn?: string; ru?: string };
-      district?: { th?: string; en?: string; cn?: string; ru?: string };
-      province?: { th?: string; en?: string; cn?: string; ru?: string };
+      popular_area?: string;
+      popular_area_en?: string;
+      popular_area_cn?: string;
+      popular_area_ru?: string;
+      subdistrict?: string;
+      subdistrict_en?: string;
+      subdistrict_cn?: string;
+      subdistrict_ru?: string;
+      district?: string;
+      district_en?: string;
+      district_cn?: string;
+      district_ru?: string;
+      province?: string;
+      province_en?: string;
+      province_cn?: string;
+      province_ru?: string;
       google_maps_link?: string;
     };
     amenities: PropertyAmenitiesV3;
@@ -103,12 +150,17 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
   const mappedListingType = getListingTypeFromDb(rawData.listing_type);
   const mappedPropertyType = getPropertyTypeFromDb(rawData.property_type);
 
+  const sanitizeString = (str: any): string | null => {
+    if (typeof str !== "string") return null;
+    return str.replace(/\uFFFD/g, "");
+  };
+
   // Helper for Server-side Multilingual Fallback
   const getV3Value = (obj: any, field: string) => {
     if (!obj || !obj[field]) return null;
     const val = obj[field];
-    if (typeof val === "string") return val;
-    return val.th || val.en || val.cn || val.ru || null;
+    const rawVal = typeof val === "string" ? val : (val.th || val.en || val.cn || val.ru || null);
+    return sanitizeString(rawVal);
   };
 
   const data: PropertyDetail = {
@@ -121,8 +173,8 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
     rent_price: rawData.rent_price,
     price: rawData.listing_type === 1 ? rawData.rent_price : rawData.sale_price,
     rental_price: rawData.rent_price,
-    original_price: rawData.original_price,
-    original_rental_price: rawData.original_rental_price,
+    original_price: pricing.original_price || null,
+    original_rental_price: pricing.original_rental_price || null,
     bedrooms: rawData.bedrooms,
     bathrooms: rawData.bathrooms,
     floor_area: rawData.floor_area,
@@ -135,56 +187,106 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
     province: rawData.province,
     district: rawData.district,
     subdistrict: rawData.subdistrict,
-    google_maps_link: address.google_maps_link || null,
-    is_hot_deal: rawData.is_hot_deal,
-    is_pet_friendly: rawData.is_pet_friendly,
-    is_exclusive: rawData.is_exclusive,
-    verified: rawData.verified,
+    // Support both `google_maps_link` and legacy `maps_link` keys
+    google_maps_link: (address.google_maps_link || (address as any).maps_link) || null,
+    is_hot_deal: !!rawData.is_hot_deal,
+    is_pet_friendly: !!amenities.is_pet_friendly,
+    is_exclusive: !!rawData.is_exclusive,
+    verified: !!rawData.verified,
+    is_cbd: !!amenities.is_cbd,
+    is_bare_shell: !!amenities.is_bare_shell,
+    is_never_lived_in: !!amenities.is_never_lived_in,
+    is_smart_home: !!amenities.is_smart_home,
+    is_high_ceiling: !!amenities.is_high_ceiling,
+    has_private_elevator: !!amenities.has_private_elevator,
+    is_high_floor: !!amenities.is_high_floor,
+    is_handicapped_friendly: !!amenities.is_handicapped_friendly,
+    is_foreigner_quota: !!amenities.is_foreigner_quota,
+    is_renovated: !!amenities.is_renovated,
+    is_corner_unit: !!amenities.is_corner_unit,
+    is_fully_furnished: !!amenities.is_fully_furnished,
+    has_private_pool: !!amenities.has_private_pool,
+    is_selling_with_tenant: !!amenities.is_selling_with_tenant,
+    has_river_view: !!amenities.has_river_view,
+    has_city_view: !!amenities.has_city_view,
+    has_garden_view: !!amenities.has_garden_view,
+    has_unblocked_view: !!amenities.has_unblocked_view,
+    allow_smoking: !!amenities.allow_smoking,
+    is_column_free: !!amenities.is_column_free,
+    is_grade_a: !!amenities.is_grade_a,
+    is_grade_b: !!amenities.is_grade_b,
+    is_grade_c: !!amenities.is_grade_c,
+    is_tax_registered: !!amenities.is_tax_registered,
+    has_pool_view: !!amenities.has_pool_view,
+    facing_east: !!amenities.facing_east,
+    facing_north: !!amenities.facing_north,
+    facing_south: !!amenities.facing_south,
+    facing_west: !!amenities.facing_west,
+    has_raised_floor: !!amenities.has_raised_floor,
+    is_central_air: !!amenities.is_central_air,
+    is_split_air: !!amenities.is_split_air,
+    has_247_access: !!amenities.has_247_access,
+    has_fiber_optic: !!amenities.has_fiber_optic,
+    has_multi_parking: !!amenities.has_multi_parking,
+    is_green_building: !!amenities.is_green_building,
+    has_flexible_lease: !!amenities.has_flexible_lease,
+    is_fully_fitted: !!amenities.is_fully_fitted,
+    floor: amenities.floor || null,
+    near_transit: !!(
+      (details?.transit_info as any)?.near_transit ||
+      (Array.isArray((details?.transit_info as any)?.transits) && (details?.transit_info as any).transits.length > 0) ||
+      (Array.isArray(details?.transit_info) && details.transit_info.length > 0) ||
+      (details?.meta_data as any)?.keywords?.some((k: string) => k.toLowerCase().includes("transit")) ||
+      (details?.meta_data as any)?.meta_keywords?.some((k: string) => k.toLowerCase().includes("transit"))
+    ),
+    meta_keywords: (details?.meta_data as any)?.keywords || (details?.meta_data as any)?.meta_keywords || [],
     floor_plan_url: rawData.floor_plan_url,
     created_at: rawData.created_at,
     updated_at: rawData.updated_at,
     
     title: getV3Value(details, "title") || "",
-    title_en: details?.title?.en || null,
-    title_cn: details?.title?.cn || null,
-    title_ru: details?.title?.ru || null,
+    title_en: sanitizeString(details?.title?.en) || null,
+    title_cn: sanitizeString(details?.title?.cn) || null,
+    title_ru: sanitizeString(details?.title?.ru) || null,
     
     description: getV3Value(details, "description") || "",
-    description_en: details?.description?.en || null,
-    description_cn: details?.description?.cn || null,
-    description_ru: details?.description?.ru || null,
+    description_en: sanitizeString(details?.description?.en) || null,
+    description_cn: sanitizeString(details?.description?.cn) || null,
+    description_ru: sanitizeString(details?.description?.ru) || null,
 
-    popular_area: getV3Value(address, "popular_area") || rawData.district,
-    popular_area_en: address.popular_area?.en || null,
-    popular_area_cn: address.popular_area?.cn || null,
-    popular_area_ru: address.popular_area?.ru || null,
+    popular_area: address.popular_area || rawData.district,
+    popular_area_en: address.popular_area_en || null,
+    popular_area_cn: address.popular_area_cn || null,
+    popular_area_ru: address.popular_area_ru || null,
 
-    subdistrict_en: address.subdistrict?.en || null,
-    subdistrict_cn: address.subdistrict?.cn || null,
-    subdistrict_ru: address.subdistrict?.ru || null,
+    subdistrict_en: address.subdistrict_en || null,
+    subdistrict_cn: address.subdistrict_cn || null,
+    subdistrict_ru: address.subdistrict_ru || null,
 
-    district_en: address.district?.en || null,
-    district_cn: address.district?.cn || null,
-    district_ru: address.district?.ru || null,
+    district_en: address.district_en || null,
+    district_cn: address.district_cn || null,
+    district_ru: address.district_ru || null,
 
-    province_en: address.province?.en || null,
-    province_cn: address.province?.cn || null,
-    province_ru: address.province?.ru || null,
+    province_en: address.province_en || null,
+    province_cn: address.province_cn || null,
+    province_ru: address.province_ru || null,
 
     address_info: (details?.address_info || {}) as PropertyAddressV3,
     amenities: (details?.amenities || {}) as PropertyAmenitiesV3,
     transit_info: details?.transit_info || null,
-    nearby_places: details?.transit_info?.places || [],
-    nearby_transits: details?.transit_info?.transits || [],
+    nearby_places: (details?.transit_info as any)?.places || [],
+    nearby_transits: Array.isArray((details?.transit_info as any)?.transits) 
+      ? (details?.transit_info as any)?.transits 
+      : (Array.isArray(details?.transit_info) ? details.transit_info : []),
 
     images: [], // Populated below
     assigned_agent: rawData.assigned_agent ? {
-      full_name: (rawData.assigned_agent as { display_name: string }).display_name,
-      phone: (rawData.assigned_agent as { phone: string | null }).phone,
-      avatar_url: (rawData.assigned_agent as { avatar_url: string | null }).avatar_url,
-      line_id: (rawData.assigned_agent as { line_id: string | null }).line_id,
-      wechat_user_id: (rawData.assigned_agent as { wechat_user_id: string | null }).wechat_user_id,
-      whatsapp_user_id: (rawData.assigned_agent as { whatsapp_user_id: string | null }).whatsapp_user_id
+      full_name: (rawData.assigned_agent as any).display_name,
+      phone: (rawData.assigned_agent as any).phone,
+      avatar_url: (rawData.assigned_agent as any).avatar_url,
+      line_id: (rawData.assigned_agent as any).line_id,
+      wechat_user_id: (Array.isArray((rawData.assigned_agent as any).profile) ? (rawData.assigned_agent as any).profile[0] : (rawData.assigned_agent as any).profile)?.wechat_user_id || null,
+      whatsapp_user_id: (Array.isArray((rawData.assigned_agent as any).profile) ? (rawData.assigned_agent as any).profile[0] : (rawData.assigned_agent as any).profile)?.whatsapp_user_id || null
     } : null,
     property_features: (rawData.property_features as Array<{
       features: {
@@ -241,4 +343,4 @@ export const getPublicPropertyDetail = cache(async (slugOrId: string): Promise<P
   data.images = finalImages;
 
   return data;
-});
+}

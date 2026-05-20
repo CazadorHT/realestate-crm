@@ -87,7 +87,7 @@ export default async function LeadDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { tenantId } = await requireAuthContext();
+  const { tenantId, role } = await requireAuthContext();
 
   if (!tenantId) return notFound();
   
@@ -234,6 +234,7 @@ export default async function LeadDetailPage({
                 leadId={id}
                 leadName={fullName ?? "Unknown"}
                 currentTenantId={tenantId}
+                userRole={role}
               />
             )}
             <LeadActivityDialog

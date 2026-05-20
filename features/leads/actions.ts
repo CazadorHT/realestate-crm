@@ -100,7 +100,7 @@ export const createLeadAction = createSafeAction(
     await inngest.send({
       name: "lead.created",
       data: { leadId: lead.id, tenantId },
-    });
+    }).catch(e => console.warn("Inngest lead.created skip:", e.message));
 
     // 🔔 Notify Admins about the new lead
     try {
@@ -547,14 +547,10 @@ export const transferLeadAction = createSafeAction(
     }
 
     // 2. Perform transfer
-    const { error: updateErr } = await supabase
-      .from("crm_leads_v3")
-      .update({
-        tenant_id: targetTenantId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", id)
-      .eq("tenant_id", tenantId);
+    const { error: updateErr } = await supabase.rpc("transfer_lead_to_tenant_v3", {
+      p_lead_id: id,
+      p_target_tenant_id: targetTenantId,
+    });
 
     if (updateErr) throw new Error(mapDbError(updateErr));
 
@@ -687,3 +683,91 @@ export const searchLeadsAction = createSafeAction(
     }
   },
 );
+
+export const requestLeadTransferAction = createSafeAction(
+  z.object({
+    id: z.string().uuid(),
+    targetTenantId: z.string().uuid(),
+    reason: z.string().optional(),
+  }),
+  async ({ id, targetTenantId, reason }, { supabase, tenantId, userId, role }) => {
+    // 1. Verify lead exists and belongs to current tenant
+    const { data: lead, error: leadErr } = await supabase
+      .from("crm_leads_v3")
+      .select("id, identities_v3!identity_id(display_name)")
+      .eq("id", id)
+      .eq("tenant_id", tenantId)
+      .single();
+
+    if (leadErr || !lead) {
+      throw new Error("ไม่พบข้อมูล Lead หรือคุณไม่มีสิทธิ์เข้าถึงลูกค้าคนนี้");
+    }
+
+    type TransferLeadIdentity = { display_name: string | null };
+    const leadData = lead as unknown as { id: string; identities_v3: TransferLeadIdentity | null };
+    const leadDisplayName = leadData?.identities_v3?.display_name || "Unknown";
+
+    // 2. Fetch requester name
+    const { data: requester } = await supabase
+      .from("identities_v3")
+      .select("display_name")
+      .eq("id", userId)
+      .single();
+    const requesterName = requester?.display_name || "Agent";
+
+    // 3. Fetch current & target tenant info
+    const [{ data: currentTenant }, { data: targetTenant }] = await Promise.all([
+      supabase.from("tenants_v3").select("name").eq("id", tenantId).single(),
+      supabase.from("tenants_v3").select("name").eq("id", targetTenantId).single(),
+    ]);
+
+    // 4. Log Request in activity timeline
+    const { error: activityErr } = await supabase.from("activity_timeline_v3").insert({
+      tenant_id: tenantId,
+      actor_id: userId,
+      target_entity: "lead",
+      target_id: id,
+      activity_type: "transfer_requested",
+      description: `Requested transfer of lead to ${targetTenant?.name || "another branch"}. Reason: ${reason || "None"}`,
+      metadata: {
+        source_tenant_id: tenantId,
+        target_tenant_id: targetTenantId,
+        requested_by: userId,
+        reason: reason || "",
+      },
+    });
+
+    if (activityErr) throw new Error(mapDbError(activityErr));
+
+    // 5. Notify managers/owners of the current tenant (to approve it)
+    try {
+      const { data: managers } = await supabase
+        .from("tenant_members_v3")
+        .select("identity_id")
+        .eq("tenant_id", tenantId)
+        .in("role", ["admin", "owner", "manager"]);
+
+      if (managers && managers.length > 0) {
+        const { createNotificationAction } = await import("@/lib/actions/notifications");
+        await Promise.all(
+          managers.map((member: { identity_id: string }) =>
+            createNotificationAction({
+              userId: member.identity_id,
+              tenantId: tenantId,
+              type: "LEAD_TRANSFER",
+              title: "คำขอส่งต่อลูกค้าใหม่ ⚠️",
+              message: `${requesterName} ขออนุมัติส่งต่อลูกค้า "${leadDisplayName}" ไปยังสาขา "${targetTenant?.name || "อื่น"}"`,
+              link: `/protected/leads/${id}`,
+            }),
+          ),
+        );
+      }
+    } catch (notifyErr) {
+      console.error("Failed to send transfer request notifications:", notifyErr);
+    }
+
+    revalidatePath(`/protected/leads/${id}`);
+    return { success: true };
+  }
+);
+

@@ -54,12 +54,62 @@ export function PropertyImageUploader({
   } | null>(null);
 
   const [images, setImages] = useState<ImageItem[]>(() => {
+    const valuePaths = value ? value.filter(Boolean) : [];
+
+    if (valuePaths.length > 0) {
+      const {
+        getPublicImageUrl,
+      } = require("@/features/properties/image-utils");
+
+      // Create a map of initial images by storage path/url for quick lookup
+      const initialMap = new Map<string, { image_url?: string; storage_path?: string; is_cover?: boolean }>();
+      if (initialImages && initialImages.length > 0) {
+        initialImages.forEach((img) => {
+          if (img.storage_path) {
+            initialMap.set(img.storage_path, img);
+            initialMap.set(img.storage_path.trim(), img);
+          }
+          if (img.image_url) {
+            initialMap.set(img.image_url, img);
+            initialMap.set(img.image_url.trim(), img);
+          }
+        });
+      }
+
+      return valuePaths.map((path, index) => {
+        const matchingInitial = initialMap.get(path);
+        if (matchingInitial) {
+          const preview_url =
+            matchingInitial.image_url && matchingInitial.image_url.startsWith("http")
+              ? matchingInitial.image_url
+              : matchingInitial.storage_path
+                ? getPublicImageUrl(matchingInitial.storage_path)
+                : "";
+
+          return {
+            id: `initial-${index}`,
+            storage_path: path,
+            preview_url: preview_url,
+            is_cover: matchingInitial.is_cover ?? index === 0,
+            origin: "initial" as const,
+          };
+        }
+
+        return {
+          id: `value-${index}-${Date.now()}`,
+          storage_path: path,
+          preview_url: getPublicImageUrl(path),
+          is_cover: index === 0,
+          origin: "temp" as const,
+        };
+      });
+    }
+
     if (initialImages && initialImages.length > 0) {
       const {
         getPublicImageUrl,
       } = require("@/features/properties/image-utils");
       return initialImages.map((img: { image_url?: string; storage_path?: string; is_cover?: boolean }, index) => {
-        // Use image_url if it looks like a full URL, otherwise generate from storage_path
         const preview_url =
           img.image_url && img.image_url.startsWith("http")
             ? img.image_url
@@ -75,20 +125,6 @@ export function PropertyImageUploader({
           origin: "initial",
         };
       });
-    }
-
-    // If no initialImages but value has paths, generate preview URLs
-    if (value && value.length > 0) {
-      const {
-        getPublicImageUrl,
-      } = require("@/features/properties/image-utils");
-      return value.map((path, index) => ({
-        id: `value-${index}`,
-        storage_path: path,
-        preview_url: getPublicImageUrl(path),
-        is_cover: index === 0,
-        origin: "temp" as const,
-      }));
     }
 
     return [];

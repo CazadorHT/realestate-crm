@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { GuidedTour, TourStep } from "@/components/shared/GuidedTour";
 
 interface PropertyFormTourProps {
@@ -8,6 +8,23 @@ interface PropertyFormTourProps {
 }
 
 export function PropertyFormTour({ onStepChange }: PropertyFormTourProps) {
+  const [isXlScreen, setIsXlScreen] = useState(false);
+
+  useEffect(() => {
+    // Check if screen is XL (>= 1280px) on mount and resize
+    const checkScreenSize = () => {
+      setIsXlScreen(window.innerWidth >= 1280);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
+
+  if (!isXlScreen) {
+    return null; // 🚫 ปิดการทำงาน GuidedTour บน iPad / มือถือเด็ดขาดเพื่อป้องกันอาการกระตุกและจอมืดเบลอ
+  }
+
   // Helper to wait for element with more aggressive retries
   const waitForElement = (id: string, callback: () => void, retries = 25) => {
     const el = document.getElementById(id);

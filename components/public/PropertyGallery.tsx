@@ -392,7 +392,9 @@ export function PropertyGallery({
         <div className="hidden lg:grid grid-cols-4 gap-1.5 md:gap-2 h-[350px] lg:h-[450px] xl:h-[550px] rounded-2xl lg:rounded-3xl overflow-hidden relative">
           {/* Main Image (Large Left) */}
           <div
-            className="col-span-2 row-span-2 relative cursor-pointer overflow-hidden group/main"
+            className={`${
+              sortedImages.length === 1 ? "col-span-4" : "col-span-2"
+            } row-span-2 relative cursor-pointer overflow-hidden group/main`}
             onClick={() => {
               setCurrentIndex(0);
               setOpen(true);
@@ -432,62 +434,71 @@ export function PropertyGallery({
           </div>
 
           {/* Sub Images (Grid Right) */}
-          <div className="grid grid-cols-2 gap-2 col-span-2 row-span-2 max-h-full">
-            {subImages.map((img, idx) => (
-              <div
-                key={`${img.id || img.storage_path || img.url || img.image_url || idx}-${idx}`}
-                className="relative cursor-pointer overflow-hidden group/sub"
-                onClick={() => {
-                  setCurrentIndex(idx + 1);
-                  setOpen(true);
-                  try {
-                    pushToDataLayer(GTM_EVENTS.VIEW_GALLERY, {
-                      item_id: propertyId,
-                      item_name: title,
-                      image_index: idx + 1,
-                      // Meta Pixel
-                      content_ids: [propertyId],
-                      content_name: title,
-                      content_type: "product",
-                    });
-                  } catch (e) {}
-                }}
-              >
-                {/* Blurred Background */}
-                <ImageWithFallback
-                  img={img}
-                  alt=""
-                  containerClassName="absolute inset-0"
-                  className="object-cover blur-lg opacity-40 scale-105 group-hover/sub:scale-110 transition-transform duration-500"
-                  onImageError={handleImageError}
-                  failedImages={failedImages}
-                  showFallback={false}
-                />
-                {/* Main Image */}
-                <ImageWithFallback
-                  img={img}
-                  alt={`${imageAlt || title} - ${idx + 2}`}
-                  containerClassName="relative z-10"
-                  className="object-cover group-hover/sub:scale-105 transition-transform duration-500"
-                  sizes="25vw"
-                  onImageError={handleImageError}
-                  failedImages={failedImages}
-                />
-                {/* Overlay for the last visible image if more exist */}
-                {idx === 3 && remainingCount > 0 && (
-                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg backdrop-blur-[2px] hover:bg-black/60 transition-colors">
-                    +{remainingCount} {t("common.images")}
+          {sortedImages.length > 1 && (
+            <div
+              className={`grid gap-2 col-span-2 row-span-2 max-h-full ${
+                sortedImages.length === 2
+                  ? "grid-cols-1"
+                  : sortedImages.length === 3
+                  ? "grid-cols-1 grid-rows-2"
+                  : "grid-cols-2 grid-rows-2"
+              }`}
+            >
+              {subImages.map((img, idx) => {
+                const isFirstOfThree = sortedImages.length === 4 && idx === 0;
+                return (
+                  <div
+                    key={`${img.id || img.storage_path || img.url || img.image_url || idx}-${idx}`}
+                    className={`relative cursor-pointer overflow-hidden group/sub ${
+                      isFirstOfThree ? "col-span-2" : ""
+                    }`}
+                    onClick={() => {
+                      setCurrentIndex(idx + 1);
+                      setOpen(true);
+                      try {
+                        pushToDataLayer(GTM_EVENTS.VIEW_GALLERY, {
+                          item_id: propertyId,
+                          item_name: title,
+                          image_index: idx + 1,
+                          // Meta Pixel
+                          content_ids: [propertyId],
+                          content_name: title,
+                          content_type: "product",
+                        });
+                      } catch (e) {}
+                    }}
+                  >
+                    {/* Blurred Background */}
+                    <ImageWithFallback
+                      img={img}
+                      alt=""
+                      containerClassName="absolute inset-0"
+                      className="object-cover blur-lg opacity-40 scale-105 group-hover/sub:scale-110 transition-transform duration-500"
+                      onImageError={handleImageError}
+                      failedImages={failedImages}
+                      showFallback={false}
+                    />
+                    {/* Main Image */}
+                    <ImageWithFallback
+                      img={img}
+                      alt={`${imageAlt || title} - ${idx + 2}`}
+                      containerClassName="relative z-10"
+                      className="object-cover group-hover/sub:scale-105 transition-transform duration-500"
+                      sizes="25vw"
+                      onImageError={handleImageError}
+                      failedImages={failedImages}
+                    />
+                    {/* Overlay for the last visible image if more exist */}
+                    {idx === 3 && remainingCount > 0 && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg backdrop-blur-[2px] hover:bg-black/60 transition-colors">
+                        +{remainingCount} {t("common.images")}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
-            {/* Fallback for empty slots to keep grid shape if < 5 images */}
-            {Array.from({ length: Math.max(0, 4 - subImages.length) }).map(
-              (_, i) => (
-                <div key={`empty-${i}`} className="bg-slate-50" />
-              ),
-            )}
-          </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Desktop View All Button */}
           <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6 z-50">

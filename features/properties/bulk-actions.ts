@@ -264,7 +264,7 @@ export async function bulkPermanentDeletePropertiesAction(
           bucket: PROPERTY_IMAGES_BUCKET,
           paths: storagePaths
         }
-      });
+      }).catch(e => console.warn("Inngest storage cleanup skip:", e.message));
     }
 
     await logAudit(

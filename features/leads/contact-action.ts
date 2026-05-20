@@ -163,7 +163,7 @@ export async function submitContactFormAction(
     await inngest.send({
       name: "lead.created",
       data: { leadId: leadId } // tenant_id will be resolved in background if needed
-    });
+    }).catch(e => console.warn("Inngest lead.created contact skip:", e.message));
 
     // Intelligence: Get Hot Lead Threshold
     const settings = await getSiteSettings();

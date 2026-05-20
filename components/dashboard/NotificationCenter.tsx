@@ -20,6 +20,7 @@ export function NotificationCenter({
   const [readIds, setReadIds] = useState<Set<string | number>>(new Set());
   const [deletedIds, setDeletedIds] = useState<Set<string | number>>(new Set());
   const [mounted, setMounted] = useState(false);
+  const [draftNotif, setDraftNotif] = useState<Notification | null>(null);
 
   // Load state from LocalStorage on mount
   useEffect(() => {
@@ -44,10 +45,31 @@ export function NotificationCenter({
         console.error("Failed to parse deleted_notifications", e);
       }
     }
+
+    // Check for active property form draft
+    try {
+      const rawDraft = localStorage.getItem("property-form-draft");
+      if (rawDraft) {
+        const { values, timestamp } = JSON.parse(rawDraft);
+        if (values && (values.title || values.price || values.description)) {
+          setDraftNotif({
+            id: "draft-recovery",
+            type: "alert",
+            message: `📝 แบบร่างที่ยังไม่บันทึก: "${values.title || 'ไม่มีชื่อโครงการ'}"`,
+            time: `บันทึกล่าสุดเมื่อ ${new Date(timestamp).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' })}`,
+            read: false,
+            href: "/protected/properties/new?restore=true",
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse draft for notification center", e);
+    }
   }, []);
 
   // Filter and merge notifications
-  const visibleNotifications = initialNotifications
+  const allNotifs = draftNotif ? [draftNotif, ...initialNotifications] : initialNotifications;
+  const visibleNotifications = allNotifs
     .filter((n) => !deletedIds.has(n.id))
     .map((n) => ({
       ...n,
@@ -144,13 +166,17 @@ export function NotificationCenter({
                   </div>
                   <div className="space-y-1 w-full">
                     <div className="flex justify-between items-start">
-                      <p
-                        className={`text-sm leading-none ${
-                          !notif.read ? "font-semibold" : "font-medium"
-                        }`}
-                      >
-                        {notif.message}
-                      </p>
+                      {notif.href ? (
+                        <a href={notif.href} className="hover:underline hover:text-blue-600 block">
+                          <p className={`text-sm leading-none ${!notif.read ? "font-semibold" : "font-medium"}`}>
+                            {notif.message}
+                          </p>
+                        </a>
+                      ) : (
+                        <p className={`text-sm leading-none ${!notif.read ? "font-semibold" : "font-medium"}`}>
+                          {notif.message}
+                        </p>
+                      )}
                       {!notif.read && (
                         <span className="h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0" />
                       )}
@@ -158,6 +184,13 @@ export function NotificationCenter({
                     <p className="text-xs text-muted-foreground">
                       {notif.time}
                     </p>
+                    {notif.id === "draft-recovery" && notif.href && (
+                      <div className="pt-2">
+                        <a href={notif.href} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-sm hover:bg-blue-700 transition-colors no-underline">
+                          ⚡ กู้คืนแบบร่าง (Restore)
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               );

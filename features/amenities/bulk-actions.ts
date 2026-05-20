@@ -28,17 +28,10 @@ export async function bulkDeleteFeaturesAction(
       };
     }
 
-    let deleteQuery = supabase
-      .from("system_settings_v3")
+    const { error, count } = await supabase
+      .from("features")
       .delete({ count: "exact" })
-      .eq("category", "features_list")
       .in("id", ids);
-
-    if (tenantId) {
-      deleteQuery = deleteQuery.eq("tenant_id", tenantId);
-    }
-
-    const { error, count } = await deleteQuery;
 
     if (error) throw error;
 
@@ -46,9 +39,9 @@ export async function bulkDeleteFeaturesAction(
       { supabase, user, role, tenantId },
       {
         action: "feature.bulk_delete",
-        entity: "system_settings_v3",
+        entity: "features",
         entityId: ids.join(","),
-        metadata: { deletedCount: count, category: "features_list" },
+        metadata: { deletedCount: count },
       }
     );
 

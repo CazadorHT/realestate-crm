@@ -1381,6 +1381,27 @@ export type Database = {
           },
         ]
       }
+      line_templates: {
+        Row: {
+          config: Json
+          is_active: boolean
+          key: string
+          label: string
+        }
+        Insert: {
+          config: Json
+          is_active?: boolean
+          key: string
+          label: string
+        }
+        Update: {
+          config?: Json
+          is_active?: boolean
+          key?: string
+          label?: string
+        }
+        Relationships: []
+      }
       notification_channels_v3: {
         Row: {
           channel_name: string | null
@@ -1764,6 +1785,10 @@ export type Database = {
           listing_type: number
           location: unknown
           owner_id: string | null
+          posted_to_facebook_at: string | null
+          posted_to_instagram_at: string | null
+          posted_to_line_at: string | null
+          posted_to_tiktok_at: string | null
           price_per_sqm: number | null
           property_type: number
           rent_price: number | null
@@ -1795,6 +1820,10 @@ export type Database = {
           listing_type: number
           location?: unknown
           owner_id?: string | null
+          posted_to_facebook_at?: string | null
+          posted_to_instagram_at?: string | null
+          posted_to_line_at?: string | null
+          posted_to_tiktok_at?: string | null
           price_per_sqm?: number | null
           property_type: number
           rent_price?: number | null
@@ -1826,6 +1855,10 @@ export type Database = {
           listing_type?: number
           location?: unknown
           owner_id?: string | null
+          posted_to_facebook_at?: string | null
+          posted_to_instagram_at?: string | null
+          posted_to_line_at?: string | null
+          posted_to_tiktok_at?: string | null
           price_per_sqm?: number | null
           property_type?: number
           rent_price?: number | null
@@ -2060,6 +2093,103 @@ export type Database = {
           },
         ]
       }
+      property_image_uploads: {
+        Row: {
+          created_at: string
+          id: string
+          property_id: string | null
+          session_id: string
+          status: string
+          storage_path: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          property_id?: string | null
+          session_id: string
+          status?: string
+          storage_path: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          property_id?: string | null
+          session_id?: string
+          status?: string
+          storage_path?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_image_uploads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_image_uploads_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties_core"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_matches: {
+        Row: {
+          created_at: string | null
+          id: string
+          match_reasons: Json | null
+          match_score: number | null
+          property_id: string | null
+          rank: number | null
+          session_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          match_reasons?: Json | null
+          match_score?: number | null
+          property_id?: string | null
+          rank?: number | null
+          session_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          match_reasons?: Json | null
+          match_score?: number | null
+          property_id?: string | null
+          rank?: number | null
+          session_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_matches_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_matches_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties_core"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_matches_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "property_search_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       property_media_v3: {
         Row: {
           ai_scan_result: Json | null
@@ -2173,6 +2303,78 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants_v3"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_search_sessions: {
+        Row: {
+          budget_max: number | null
+          budget_min: number | null
+          converted_at: string | null
+          created_at: string | null
+          id: string
+          ip_address: string | null
+          lead_id: string | null
+          near_transit: boolean | null
+          preferred_area: string | null
+          preferred_property_type: string | null
+          purpose: string | null
+          session_token: string | null
+          transit_distance_meters: number | null
+          transit_station_name: string | null
+          transit_type: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          budget_max?: number | null
+          budget_min?: number | null
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          near_transit?: boolean | null
+          preferred_area?: string | null
+          preferred_property_type?: string | null
+          purpose?: string | null
+          session_token?: string | null
+          transit_distance_meters?: number | null
+          transit_station_name?: string | null
+          transit_type?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          budget_max?: number | null
+          budget_min?: number | null
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string
+          ip_address?: string | null
+          lead_id?: string | null
+          near_transit?: boolean | null
+          preferred_area?: string | null
+          preferred_property_type?: string | null
+          purpose?: string | null
+          session_token?: string | null
+          transit_distance_meters?: number | null
+          transit_station_name?: string | null
+          transit_type?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_property_search_sessions_lead"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads_v3"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_property_search_sessions_lead"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
@@ -3985,6 +4187,10 @@ export type Database = {
           popular_area_en: string | null
           popular_area_ru: string | null
           postal_code: string | null
+          posted_to_facebook_at: string | null
+          posted_to_instagram_at: string | null
+          posted_to_line_at: string | null
+          posted_to_tiktok_at: string | null
           price: number | null
           price_per_sqm: number | null
           pricing_details: Json | null
@@ -4061,34 +4267,6 @@ export type Database = {
           {
             foreignKeyName: "properties_core_co_broker_id_fkey"
             columns: ["co_broker_id"]
-            isOneToOne: false
-            referencedRelation: "owners"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "properties_core_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "identities_v3"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "properties_core_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "owners"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "properties_core_owner_id_fkey"
-            columns: ["owner_id"]
-            isOneToOne: false
-            referencedRelation: "identities_v3"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "properties_core_owner_id_fkey"
-            columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "owners"
             referencedColumns: ["id"]
@@ -4639,6 +4817,40 @@ export type Database = {
         }[]
       }
       capture_daily_snapshots: { Args: never; Returns: undefined }
+      create_deposit_lead: {
+        Args: {
+          p_email?: string
+          p_email_hash?: string
+          p_full_name: string
+          p_full_name_hash: string
+          p_line_id?: string
+          p_line_id_hash?: string
+          p_note?: string
+          p_phone: string
+          p_phone_hash: string
+          p_property_type?: string
+          p_wechat_id?: string
+          p_whatsapp?: string
+        }
+        Returns: string
+      }
+      create_lead_from_match: {
+        Args: {
+          p_email?: string
+          p_email_hash?: string
+          p_full_name: string
+          p_full_name_hash?: string
+          p_line_id?: string
+          p_line_id_hash?: string
+          p_phone: string
+          p_phone_hash?: string
+          p_property_id: string
+          p_session_id: string
+          p_wechat_id?: string
+          p_whatsapp?: string
+        }
+        Returns: string
+      }
       decline_tenant_invitation: {
         Args: { p_tenant_id: string }
         Returns: undefined
@@ -4802,6 +5014,7 @@ export type Database = {
       }
       get_user_tenants: { Args: never; Returns: string[] }
       gettransactionid: { Args: never; Returns: unknown }
+      increment_property_view: { Args: { p_id: string }; Returns: undefined }
       increment_service_view: {
         Args: {
           p_ip_hash?: string
@@ -4811,8 +5024,19 @@ export type Database = {
         }
         Returns: undefined
       }
+      is_member_of_tenant: {
+        Args: { tenant_id_param: string }
+        Returns: boolean
+      }
+      is_system_admin: { Args: never; Returns: boolean }
+      is_tenant_admin: { Args: { target_tenant_id: string }; Returns: boolean }
+      is_tenant_admin_or_manager: {
+        Args: { tenant_id_param: string }
+        Returns: boolean
+      }
       is_tenant_member: { Args: { target_tenant_id: string }; Returns: boolean }
       is_tenant_staff: { Args: { target_tenant_id: string }; Returns: boolean }
+      is_valid_uuid: { Args: { uuid_to_test: string }; Returns: boolean }
       json_matches_schema: {
         Args: { instance: Json; schema: Json }
         Returns: boolean
@@ -4825,6 +5049,18 @@ export type Database = {
       jsonschema_validation_errors: {
         Args: { instance: Json; schema: Json }
         Returns: string[]
+      }
+      log_ai_usage: {
+        Args: {
+          p_completion_tokens?: number
+          p_cost_thb?: number
+          p_error_message?: string
+          p_feature: string
+          p_model: string
+          p_prompt_tokens?: number
+          p_status: string
+        }
+        Returns: undefined
       }
       log_system_activity: {
         Args: {
@@ -4893,6 +5129,50 @@ export type Database = {
       }
       postgis_version: { Args: never; Returns: string }
       postgis_wagyu_version: { Args: never; Returns: string }
+      profiles: {
+        Args: { property: Database["public"]["Views"]["properties"]["Row"] }
+        Returns: {
+          avatar_url: string | null
+          bank_account_name: string | null
+          bank_account_no: string | null
+          bank_code: string | null
+          bio: string | null
+          created_at: string | null
+          deleted_at: string | null
+          display_name: string | null
+          email: string | null
+          facebook_url: string | null
+          full_name: string | null
+          id: string
+          is_active: boolean | null
+          last_ip: string | null
+          last_login_at: string | null
+          last_seen_at: string | null
+          line_id: string | null
+          line_user_id: string | null
+          metadata: Json | null
+          nickname: string | null
+          notification_preferences: Json | null
+          other_bank_name: string | null
+          phone: string | null
+          role: string | null
+          signature_url: string | null
+          tax_address: string | null
+          tax_id: string | null
+          telegram_id: string | null
+          updated_at: string | null
+          wechat_id: string | null
+          wechat_user_id: string | null
+          whatsapp_id: string | null
+          whatsapp_user_id: string | null
+        }[]
+        SetofOptions: {
+          from: "properties"
+          to: "profiles"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       refresh_executive_dashboard: { Args: never; Returns: undefined }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
@@ -5477,6 +5757,32 @@ export type Database = {
         Args: { geom: unknown; move: number; wrap: number }
         Returns: unknown
       }
+      submit_public_lead: {
+        Args: {
+          p_ai_score?: number
+          p_ai_status_label?: string
+          p_email?: string
+          p_email_hash?: string
+          p_full_name: string
+          p_full_name_hash?: string
+          p_line_id?: string
+          p_line_id_hash?: string
+          p_note?: string
+          p_phone?: string
+          p_phone_hash?: string
+          p_property_id?: string
+          p_referral_url?: string
+          p_source?: string
+          p_utm_campaign?: string
+          p_utm_content?: string
+          p_utm_medium?: string
+          p_utm_source?: string
+          p_utm_term?: string
+          p_wechat_id?: string
+          p_whatsapp?: string
+        }
+        Returns: string
+      }
       swap_property_stock_atomic: {
         Args: {
           p_new_deal_type: string
@@ -5494,6 +5800,14 @@ export type Database = {
           p_property_id: string
           p_tenant_id: string
         }
+        Returns: undefined
+      }
+      transfer_lead_to_tenant_v3: {
+        Args: { p_lead_id: string; p_target_tenant_id: string }
+        Returns: undefined
+      }
+      transfer_property_to_tenant_v3: {
+        Args: { p_property_id: string; p_target_tenant_id: string }
         Returns: undefined
       }
       transfer_tenant_member: {

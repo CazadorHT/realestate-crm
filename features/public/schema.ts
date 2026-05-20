@@ -2,7 +2,16 @@ import * as z from "zod";
 
 export const depositLeadSchema = z.object({
   fullName: z.string().min(2, "กรุณาระบุชื่อ-นามสกุล"),
-  phone: z.string().length(10, "เบอร์โทรศัพท์ต้องมี 10 หลัก"),
+  phone: z.string().refine(
+    (val) => {
+      const clean = val.replace(/[^\d+]/g, "");
+      if (clean.startsWith("+")) {
+        return clean.length >= 10 && clean.length <= 15;
+      }
+      return clean.length === 10;
+    },
+    { message: "เบอร์โทรศัพท์ต้องมี 10 หลัก" }
+  ),
   email: z.string().email("อีเมลไม่ถูกต้อง").optional().or(z.literal("")).nullable(),
   lineId: z.string().optional().nullable(),
   wechatId: z.string().optional().nullable(),
@@ -41,7 +50,16 @@ export const publicPropertyFilterSchema = z.object({
 
 export const inquiryLeadSchema = z.object({
   fullName: z.string().min(2, "กรุณาระบุชื่อ-นามสกุล"),
-  phone: z.string().length(10, "เบอร์โทรศัพท์ต้องมี 10 หลัก"),
+  phone: z.string().refine(
+    (val) => {
+      const clean = val.replace(/[^\d+]/g, "");
+      if (clean.startsWith("+")) {
+        return clean.length >= 10 && clean.length <= 15;
+      }
+      return clean.length === 10;
+    },
+    { message: "เบอร์โทรศัพท์ต้องมี 10 หลัก" }
+  ),
   email: z.string().email("อีเมลไม่ถูกต้อง").optional().or(z.literal("")).nullable(),
   lineId: z.string().optional().nullable(),
   wechatId: z.string().optional().nullable(),

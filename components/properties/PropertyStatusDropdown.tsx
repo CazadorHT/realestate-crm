@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, Eye, Building2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -46,9 +46,41 @@ export function PropertyStatusSelect(props: {
   const label = useMemo(() => PROPERTY_STATUS_LABELS[value]?.th || value, [value]);
 
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
   const [pendingStatus, setPendingStatus] = useState<PropertyStatus | null>(
     null,
   );
+
+  const focusTable = () => {
+    // 1. Try to focus the status select button trigger for this property
+    const triggerBtn = document.getElementById(`status-trigger-${props.id}`);
+    if (triggerBtn) {
+      triggerBtn.focus();
+      triggerBtn.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
+
+    // 2. Try to find table row of this property
+    const row = document.getElementById(`property-row-${props.id}`) || 
+                document.querySelector(`[data-property-id="${props.id}"]`);
+    if (row) {
+      (row as HTMLElement).focus();
+      row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      return;
+    }
+
+    // 3. Fallback: focus the table container
+    const table = document.querySelector("#tour-property-list-top, table");
+    if (table) {
+      (table as HTMLElement).focus();
+      table.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  };
+
+  const handleCloseSuccessDialog = () => {
+    setSuccessDialogOpen(false);
+    setTimeout(focusTable, 100);
+  };
 
   const commitChange = (nextStatus: PropertyStatus) => {
     if (nextStatus === value) return;
@@ -69,6 +101,14 @@ export function PropertyStatusSelect(props: {
       }
 
       toast.success("อัปเดตสถานะเรียบร้อย");
+      
+      // If the new status is ACTIVE, show the redirection dialog
+      if (nextStatus === "ACTIVE") {
+        setSuccessDialogOpen(true);
+      } else {
+        setTimeout(focusTable, 100);
+      }
+
       router.refresh();
     });
   };
@@ -145,6 +185,7 @@ export function PropertyStatusSelect(props: {
         description="เลือกสถานะที่ต้องการแสดงสำหรับทรัพย์นี้ (เลือกสถานะเพื่ออัปเดต)"
         trigger={
           <Button
+            id={`status-trigger-${props.id}`}
             variant="outline"
             size="sm"
             disabled={isPending}
@@ -258,6 +299,57 @@ export function PropertyStatusSelect(props: {
               >
                 ยืนยันการออนไลน์
               </AlertDialogAction>
+            </AlertDialogFooter>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={successDialogOpen} onOpenChange={(isOpen) => {
+        if (!isOpen) handleCloseSuccessDialog();
+      }}>
+        <AlertDialogContent className="rounded-3xl max-w-sm sm:max-w-md mx-auto overflow-hidden border-none shadow-2xl">
+          <div className="p-1 sm:p-2">
+            <AlertDialogHeader className="text-center sm:text-left space-y-4">
+              <div className="mx-auto sm:mx-0 w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shadow-inner">
+                <Sparkles className="h-8 w-8 text-emerald-600" />
+              </div>
+              <div className="space-y-1.5">
+                <AlertDialogTitle className="text-xl sm:text-2xl font-semibold tracking-tight text-slate-900">
+                  อสังหาริมทรัพย์ออนไลน์แล้ว!
+                </AlertDialogTitle>
+                <AlertDialogDescription className="text-slate-500 leading-relaxed font-semibold text-sm sm:text-base">
+                  อัปเดตสถานะเป็น **ACTIVE** สำเร็จ ทรัพย์นี้เผยแพร่เรียบร้อยแล้ว คุณต้องการเลือกดูหน้าแสดงผลใด?
+                </AlertDialogDescription>
+              </div>
+            </AlertDialogHeader>
+
+            <div className="flex flex-col gap-2.5 mt-6">
+              <button
+                onClick={() => {
+                  window.open(`${window.location.origin}/properties/${props.id}`, "_blank");
+                }}
+                className="w-full h-12 rounded-2xl bg-blue-600 font-semibold hover:bg-blue-700 shadow-lg shadow-blue-200/50 text-white! transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <Eye className="h-4 w-4" /> ดูหน้าประกาศ (Public Page)
+              </button>
+              
+              <button
+                onClick={() => {
+                  window.open(`/protected/properties/${props.id}`, "_blank");
+                }}
+                className="w-full h-12 rounded-2xl bg-slate-800 font-semibold hover:bg-slate-950 text-white! transition-all active:scale-95 flex items-center justify-center gap-2"
+              >
+                <Building2 className="h-4 w-4" /> ดูหน้ารายละเอียด (Detail Page)
+              </button>
+            </div>
+
+            <AlertDialogFooter className="mt-6 pt-2">
+              <AlertDialogCancel
+                className="w-full rounded-2xl h-12 font-semibold border-slate-100 bg-slate-100 hover:bg-slate-200 text-slate-600! transition-all active:scale-95 border-none"
+                onClick={handleCloseSuccessDialog}
+              >
+                กลับไปที่ตารางทรัพย์
+              </AlertDialogCancel>
             </AlertDialogFooter>
           </div>
         </AlertDialogContent>

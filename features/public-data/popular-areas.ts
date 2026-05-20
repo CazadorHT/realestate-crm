@@ -51,7 +51,7 @@ export const getPublicProvincesAction = unstable_cache(
       return [];
     }
   },
-  ["public-provinces-list-v3"],
+  ["public-provinces-list-v4"],
   { revalidate: 86400, tags: ["provinces"] }
 );
 
@@ -71,10 +71,13 @@ export const getPopularAreasAction = unstable_cache(
 
       // 🛡️ Admin Mode: Just return strings of all area names (Unoptimized but complete)
       if (!onlyActive) {
-        let query = client.from("popular_areas").select("name").order("name");
+        let query = client.from("popular_areas_v3").select("name, province").order("name->>'th'");
         if (province) query = query.eq("province", province);
         const { data } = await query;
-        return (data || []).map((item: any) => item.name);
+        return (data || []).map((item: any) => {
+          if (typeof item.name === "string") return item.name;
+          return item.name?.th || item.name?.en || item.name?.default || "";
+        }).filter(Boolean);
       }
 
       // 🚀 Public Mode: Full optimization for landing page
@@ -119,7 +122,7 @@ export const getPopularAreasAction = unstable_cache(
       }
 
       const map = new Map<string, PopularAreaItem>();
-      let areasQuery = client.from("popular_areas").select("name, name_en, name_cn, name_ru, province");
+      let areasQuery = client.from("popular_areas_v3").select("name, province");
 
       if (province && provinceMap[province]) {
         areasQuery = areasQuery.or(`province.in.(${provinceMap[province].join(",")}),province.is.null`);
@@ -130,7 +133,11 @@ export const getPopularAreasAction = unstable_cache(
       const { data: validAreasData } = await areasQuery;
       const areaTranslations = new Map<string, any>();
       (validAreasData || []).forEach((a: any) => {
-        areaTranslations.set(a.name, { en: a.name_en, cn: a.name_cn, ru: a.name_ru });
+        const areaNameTh = typeof a.name === "string" ? a.name : a.name?.th || a.name?.default || "";
+        const areaNameEn = typeof a.name === "string" ? null : a.name?.en || null;
+        const areaNameCn = typeof a.name === "string" ? null : a.name?.cn || null;
+        const areaNameRu = typeof a.name === "string" ? null : a.name?.ru || null;
+        areaTranslations.set(areaNameTh, { en: areaNameEn, cn: areaNameCn, ru: areaNameRu });
       });
 
       const validAreaNames = new Set(areaTranslations.keys());
@@ -171,6 +178,7 @@ export const getPopularAreasAction = unstable_cache(
       return [];
     }
   },
-  ["popular-areas-cache-v5"],
+  ["popular-areas-cache-v6"],
   { revalidate: 3600, tags: ["popular-areas"] }
 );
+

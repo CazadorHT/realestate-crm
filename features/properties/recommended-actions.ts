@@ -86,12 +86,15 @@ export async function getRecommendedProperties(
 
   if (popularAreaNames.length > 0) {
     const { data: areaData } = await supabase
-      .from("popular_areas")
-      .select("name, name_en, name_cn, name_ru")
-      .in("name", popularAreaNames);
+      .from("popular_areas_v3")
+      .select("name");
 
-    (areaData || []).forEach((a: { name: string; name_en: string | null; name_cn: string | null; name_ru: string | null }) => {
-      areaTranslationsMap.set(a.name, { en: a.name_en, cn: a.name_cn, ru: a.name_ru });
+    (areaData || []).forEach((a: any) => {
+      const areaNameTh = typeof a.name === "string" ? a.name : a.name?.th || a.name?.default || "";
+      const areaNameEn = typeof a.name === "string" ? null : a.name?.en || null;
+      const areaNameCn = typeof a.name === "string" ? null : a.name?.cn || null;
+      const areaNameRu = typeof a.name === "string" ? null : a.name?.ru || null;
+      areaTranslationsMap.set(areaNameTh, { en: areaNameEn, cn: areaNameCn, ru: areaNameRu });
     });
   }
 

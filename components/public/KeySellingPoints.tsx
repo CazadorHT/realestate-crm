@@ -41,8 +41,12 @@ export function KeySellingPoints({
   const visiblePoints = displayPoints.slice(0, displayLimit);
   const remainingCount = Math.max(0, displayPoints.length - displayLimit);
 
+
+
   return (
     <div className="bg-blue-50/50 border border-blue-100 rounded-xl px-4 py-6 items-center  ">
+      {/* CLIENT DEBUG: log points (client-only effect) */}
+      {/* useEffect placed above return prevents SSR markup change */}
       <div className="flex items-center gap-2 mb-3">
         <Star className="w-5 h-5 text-amber-400 fill-amber-400" />
         <h3 className="font-semibold text-slate-800">

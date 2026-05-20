@@ -31,8 +31,8 @@ export function PropertyFormNavigation({
   form,
 }: PropertyFormNavigationProps) {
   return (
-    <div className="mt-6 sm:mt-12 bg-white sm:bg-transparent">
-      <div className="fixed bottom-0 pb-safe-offset-4 sm:pb-0 left-0 right-0 z-60 sm:relative sm:z-0 bg-white/90 backdrop-blur-2xl sm:bg-white p-3 sm:p-6 md:p-8 sm:rounded-3xl shadow-[0_-12px_40px_-15px_rgba(0,0,0,0.12)] sm:shadow-lg border-t sm:border border-slate-200/50 flex flex-row justify-between items-center gap-3 sm:gap-6 px-4 sm:px-8">
+    <div className="sticky bottom-0 sm:bottom-6 z-50 w-full mt-6 sm:mt-12">
+      <div className="bg-white/90 backdrop-blur-2xl p-3 sm:p-6 md:p-8 sm:rounded-3xl shadow-[0_-12px_40px_-15px_rgba(0,0,0,0.08)] sm:shadow-lg border-t sm:border border-slate-200/50 flex flex-row justify-between items-center gap-3 sm:gap-6 px-4 sm:px-8 pb-safe-offset-4 sm:pb-6">
         {/* Left: Tertiary Action (Cancel) - Hidden on mobile to save space, or moved if needed */}
         <div className="hidden sm:block">
           <CancelButton
@@ -94,8 +94,6 @@ export function PropertyFormNavigation({
           )}
         </div>
       </div>
-      {/* Spacer for fixed bottom on mobile to prevent content hide */}
-      <div className="h-[calc(4.5rem+env(safe-area-inset-bottom))] sm:hidden" />
     </div>
   );
 }

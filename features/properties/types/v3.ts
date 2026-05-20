@@ -35,6 +35,15 @@ export interface PropertyAmenitiesV3 {
   facing_north?: boolean;
   facing_south?: boolean;
   facing_west?: boolean;
+  is_cbd?: boolean;
+  is_smart_home?: boolean;
+  has_private_elevator?: boolean;
+  is_handicapped_friendly?: boolean;
+  is_high_floor?: boolean;
+  is_never_lived_in?: boolean;
+  is_green_building?: boolean;
+  has_flexible_lease?: boolean;
+  is_fully_fitted?: boolean;
 }
 
 export interface PropertyAddressV3 {

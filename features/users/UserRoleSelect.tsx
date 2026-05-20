@@ -10,6 +10,7 @@ import {
   User,
   Check,
   ChevronDown,
+  Crown,
 } from "lucide-react";
 import { updateUserRoleAction } from "./actions/updateUserRoleAction";
 import { toast } from "sonner";
@@ -38,6 +39,15 @@ export function UserRoleSelect({
   const [isLoading, setIsLoading] = useState(false);
 
   const roles = [
+    {
+      id: "OWNER",
+      label: "OWNER",
+      icon: Crown,
+      color: "bg-indigo-500",
+      lightColor: "bg-indigo-50",
+      textColor: "text-indigo-600",
+      description: "เจ้าของสาขา มีสิทธิ์สูงสุดในสาขา",
+    },
     {
       id: "ADMIN",
       label: "ADMIN",
@@ -105,7 +115,8 @@ export function UserRoleSelect({
     }
   };
 
-  const currentRoleData = roles.find((r) => r.id === selectedRole) || roles[3];
+  const normalizedSelectedRole = (selectedRole?.toUpperCase() as UserRole) || "USER";
+  const currentRoleData = roles.find((r) => r.id === normalizedSelectedRole) || roles[4];
 
   return (
     <div className={cn("inline-flex items-center gap-2", className)}>
@@ -145,7 +156,7 @@ export function UserRoleSelect({
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 md:p-6">
           {roles.map((role) => {
-            const isActive = selectedRole === role.id;
+            const isActive = normalizedSelectedRole === role.id;
             const Icon = role.icon;
             return (
               <m.button

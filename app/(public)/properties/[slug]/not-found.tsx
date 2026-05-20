@@ -70,27 +70,26 @@ export default function NotFound() {
           variants={itemVariants}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-12 w-full sm:w-auto"
         >
-          <Button
-            asChild
-            size="lg"
-            className="rounded-full px-10 h-14 text-base font-semibold shadow-xl shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 hover:scale-105 transition-all group w-full sm:w-auto"
-          >
-            <Link href="/properties">
+          <Link href="/properties">
+            <Button
+              size="lg"
+              className="rounded-full px-10 h-14 text-base font-semibold shadow-xl shadow-blue-500/20 bg-blue-600 hover:bg-blue-700 hover:scale-105 transition-all group w-full sm:w-auto"
+            >
               <MoveLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
               {t("errors.back_to_properties")}
-            </Link>
-          </Button>
-          <Button
-            asChild
-            variant="outline"
-            size="lg"
-            className="rounded-full px-10 h-14 text-base font-semibold border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:scale-105 transition-all w-full sm:w-auto"
-          >
-            <Link href="/">
+            </Button>
+          </Link>
+
+          <Link href="/">
+            <Button
+              variant="outline"
+              size="lg"
+              className="rounded-full px-10 h-14 text-base font-semibold border-slate-200 hover:bg-slate-50 hover:border-slate-300 hover:scale-105 transition-all w-full sm:w-auto text-blue-600!"
+            >
               <Home className="w-5 h-5 mr-2" />
               {t("errors.go_home")}
-            </Link>
-          </Button>
+            </Button>
+          </Link>
         </m.div>
 
         {/* Subtle branding/footer */}

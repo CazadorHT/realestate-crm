@@ -57,13 +57,8 @@ export async function updatePropertyAction(
   sessionId: string,
 ): Promise<CreatePropertyResult> {
   try {
-    const { supabase, user, role, tenantId } = await requireAuthContext();
+    const { supabase, user, role, tenantId: contextTenantId } = await requireAuthContext();
     assertStaff(role);
-    
-    // 🛡️ Admin bypass for tenant isolation
-    if (role !== "ADMIN" && !tenantId) {
-      throw new Error("Tenant ID is required but missing");
-    }
 
     // 1) Validate form data
     const parsed = FormSchema.safeParse(values);
@@ -89,6 +84,23 @@ export async function updatePropertyAction(
       
     if (findErr || !data) return { success: false, message: "Property not found" };
 
+    const tenantId = data.tenant_id;
+    if (!tenantId) return { success: false, message: "ข้อมูลทรัพย์ไม่มีข้อมูลสาขาประกอบอยู่" };
+
+    // Verify membership if not admin and context tenant does not match the property's tenant
+    if (role !== "ADMIN" && contextTenantId !== tenantId) {
+      const { data: member } = await supabase
+        .from("tenant_members_v3")
+        .select("role")
+        .eq("tenant_id", tenantId)
+        .eq("identity_id", user.id)
+        .maybeSingle();
+
+      if (!member) {
+        return { success: false, message: "คุณไม่มีสิทธิ์เข้าถึงหรือแก้ไขข้อมูลของสาขานี้" };
+      }
+    }
+
     const details = data.properties_details as Database["public"]["Tables"]["properties_details"]["Row"] | null;
     const existingMeta = details?.meta_data as Record<string, unknown> | null;
     const createdBy = existingMeta?.created_by as string | undefined;
@@ -102,6 +114,10 @@ export async function updatePropertyAction(
       subdistrict?: string; 
       maps_link?: string;
       slug?: string;
+      popular_area?: string;
+      popular_area_en?: string;
+      popular_area_cn?: string;
+      popular_area_ru?: string;
     };
     
     // Hardened JSONB Extraction
@@ -137,12 +153,16 @@ export async function updatePropertyAction(
       district: addressInfo?.district || "",
       province: addressInfo?.province || "",
       subdistrict: addressInfo?.subdistrict || "",
+      popular_area: addressInfo?.popular_area || "",
+      popular_area_en: addressInfo?.popular_area_en || "",
+      popular_area_cn: addressInfo?.popular_area_cn || "",
+      popular_area_ru: addressInfo?.popular_area_ru || "",
       currency: "THB",
       requires_ai_review: !!existingMeta?.requires_ai_review,
       agent_ids: (existingMeta?.agent_ids as string[]) || [],
       feature_ids: (existingMeta?.feature_ids as string[]) || [],
-      orientation: (existingMeta?.orientation as any) || "N",
-      parking_type: (existingMeta?.parking_type as any) || "FIXED",
+      orientation: (existingMeta?.orientation as PropertyFormValues["orientation"]) || undefined,
+      parking_type: (existingMeta?.parking_type as PropertyFormValues["parking_type"]) || undefined,
       google_maps_link: addressInfo?.maps_link || "",
       images: (existingMeta?.images as string[]) || [],
       property_source: (existingMeta?.property_source as string) || "",
@@ -246,6 +266,10 @@ export async function updatePropertyAction(
           subdistrict: safeValues.subdistrict,
           postal_code: safeValues.postal_code,
           maps_link: safeValues.google_maps_link,
+          popular_area: safeValues.popular_area,
+          popular_area_en: safeValues.popular_area_en,
+          popular_area_cn: safeValues.popular_area_cn,
+          popular_area_ru: safeValues.popular_area_ru,
           nearby_places: safeValues.nearby_places || [],
         },
         amenities: {
@@ -302,6 +326,7 @@ export async function updatePropertyAction(
           meta_description: seoData.metaDescription,
           keywords: mergedKeywords,
           agent_ids: agent_ids,
+          feature_ids: feature_ids,
           co_agent: {
             is_co_agent: safeValues.is_co_agent,
             name: safeValues.co_agent_name,
@@ -525,9 +550,30 @@ export async function updatePropertyStatusAction(input: {
  */
 export async function triggerPropertyAiReviewAction(propertyId: string) {
   try {
-    const { supabase, user, role, tenantId } = await requireAuthContext();
+    const { supabase, user, role, tenantId: contextTenantId } = await requireAuthContext();
     assertStaff(role);
-    if (!tenantId) throw new Error("Tenant context required");
+
+    // Resolve tenantId from the property record
+    const { data: existing, error: findErr } = await supabase
+      .from("properties_core")
+      .select("tenant_id")
+      .eq("id", propertyId)
+      .single();
+
+    if (findErr || !existing) throw new Error("Property not found");
+    const tenantId = existing.tenant_id;
+    if (!tenantId) throw new Error("ไม่พบข้อมูลสาขาในระบบ");
+
+    // Verify membership if not admin and context tenant does not match the property's tenant
+    if (role !== "ADMIN" && contextTenantId !== tenantId) {
+      const { data: member } = await supabase
+        .from("tenant_members_v3")
+        .select("role")
+        .eq("tenant_id", tenantId)
+        .eq("identity_id", user.id)
+        .maybeSingle();
+      if (!member) throw new Error("คุณไม่มีสิทธิ์เข้าถึงหรือแก้ไขข้อมูลของสาขานี้");
+    }
 
     const { error } = await supabase.from("properties_core").update({ status: PROPERTY_STATUS_DB_VALUE["DRAFT"] }).eq("id", propertyId).eq("tenant_id", tenantId);
     if (error) throw error;

@@ -68,7 +68,7 @@ export default async function PublicPropertyDetailPage(props: {
   const features = (data.property_features || [])
     .map((pf) => pf.features)
     .filter((f): f is NonNullable<typeof f> => !!f)
-    .map(f => ({ ...f, icon_key: f.icon_key || "Check" }));
+    .map(f => ({ ...f, icon_key: (f.icon_key || "check").toString().toLowerCase() }));
   const shareUrl = `${siteConfig.url}/properties/${encodeURIComponent(data.slug || slug)}`;
 
   // 2. SEO & Schema Generation
@@ -94,7 +94,7 @@ export default async function PublicPropertyDetailPage(props: {
       <GTMPropertyPageView property={{ ...data, popular_area: data.popular_area ?? null }} />
 
       {/* 1. Header & Breadcrumb */}
-      <PropertyHeader property={data} features={features as any[]} />
+      <PropertyHeader property={data} features={features as any[]}/>
 
       <div className="max-w-screen-2xl mx-auto px-4 xs:px-6 sm:px-10 md:px-10 lg:px-12 xl:px-14 2xl:px-8 mt-4 lg:mt-8">
         {/* 2. Gallery */}

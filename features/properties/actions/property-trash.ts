@@ -13,21 +13,41 @@ export async function softDeleteProperty(id: string) {
   try {
     const ctx = await requireAuthContext();
     const { supabase, tenantId, role } = ctx;
-    if (!tenantId)
-      return { success: false, error: "ไม่พบข้อมูล Tenant ID ของคุณ" };
-    // 🛡️ SECURITY LOCK 1: Always check within tenant boundary
-    const { data: prop, error: fetchErr } = await supabase
-      .from("properties")
-      .select("status, tenant_id")
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
-      .single();
+
+    // 🛡️ SECURITY LOCK 1: Always check boundary if scoped, otherwise fetch first
+    let query = supabase.from("properties").select("status, tenant_id").eq("id", id);
+    if (tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+    const { data: prop, error: fetchErr } = await query.single();
 
     if (fetchErr || !prop)
       return {
         success: false,
         error: "ไม่พบข้อมูลทรัพย์สินในเขตพื้นที่ของคุณ",
       };
+
+    // If tenantId is not in context (e.g. ALL mode selected), verify membership
+    if (!tenantId && role !== "ADMIN") {
+      const targetTenantId = prop.tenant_id;
+      if (!targetTenantId) {
+        return { success: false, error: "ทรัพย์สินไม่มีข้อมูลสาขา" };
+      }
+      
+      const { data: member, error: memberErr } = await supabase
+        .from("tenant_members_v3")
+        .select("role")
+        .eq("tenant_id", targetTenantId)
+        .eq("identity_id", ctx.user.id)
+        .single();
+
+      if (memberErr || !member) {
+        return {
+          success: false,
+          error: "คุณไม่มีสิทธิ์เข้าถึงสาขาของทรัพย์สินนี้",
+        };
+      }
+    }
 
     // 💰 REVENUE PROTECTION: SOLD/RENTED objects are protected
     const isRevenueAsset = ["SOLD", "RENTED"].includes(prop.status || "");
@@ -42,14 +62,21 @@ export async function softDeleteProperty(id: string) {
     }
 
     // 🛡️ SECURITY LOCK 2: Update with strict tenant isolation
-    const { error } = await supabase
-      .from("properties")
+    let updateQuery = supabase
+      .from("properties_core")
       .update({ 
         deleted_at: new Date().toISOString(),
-        status: "ARCHIVED" as any 
+        status: 6 
       })
-      .eq("id", id)
-      .eq("tenant_id", tenantId);
+      .eq("id", id);
+
+    if (tenantId) {
+      updateQuery = updateQuery.eq("tenant_id", tenantId);
+    } else if (prop.tenant_id) {
+      updateQuery = updateQuery.eq("tenant_id", prop.tenant_id);
+    }
+
+    const { error } = await updateQuery;
 
     if (error) {
       console.error("Error soft deleting property:", error);
@@ -81,14 +108,51 @@ export async function softDeleteProperty(id: string) {
 export async function restoreProperty(id: string) {
   try {
     const ctx = await requireAuthContext();
-    const { supabase, tenantId } = ctx;
-    if (!tenantId) return { success: false, error: "ไม่พบข้อมูล Tenant ID" };
-    const { error } = await supabase
-      .from("properties")
-      .update({ deleted_at: null })
-      .eq("id", id)
-      .eq("tenant_id", tenantId);
+    const { supabase, tenantId, role } = ctx;
 
+    // Fetch the property first to verify access if tenantId is undefined
+    let query = supabase.from("properties").select("tenant_id").eq("id", id);
+    if (tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+    const { data: prop, error: fetchErr } = await query.single();
+    if (fetchErr || !prop) {
+      return { success: false, error: "ไม่พบข้อมูลทรัพย์สิน" };
+    }
+
+    if (!tenantId && role !== "ADMIN") {
+      const targetTenantId = prop.tenant_id;
+      if (!targetTenantId) {
+        return { success: false, error: "ทรัพย์สินไม่มีข้อมูลสาขา" };
+      }
+      
+      const { data: member, error: memberErr } = await supabase
+        .from("tenant_members_v3")
+        .select("role")
+        .eq("tenant_id", targetTenantId)
+        .eq("identity_id", ctx.user.id)
+        .single();
+
+      if (memberErr || !member) {
+        return {
+          success: false,
+          error: "คุณไม่มีสิทธิ์เข้าถึงสาขาของทรัพย์สินนี้",
+        };
+      }
+    }
+
+    let updateQuery = supabase
+      .from("properties_core")
+      .update({ deleted_at: null })
+      .eq("id", id);
+
+    if (tenantId) {
+      updateQuery = updateQuery.eq("tenant_id", tenantId);
+    } else if (prop.tenant_id) {
+      updateQuery = updateQuery.eq("tenant_id", prop.tenant_id);
+    }
+
+    const { error } = await updateQuery;
     if (error) return { success: false, error: mapDbError(error) };
 
     await logAudit(ctx, {
@@ -115,16 +179,36 @@ export async function permanentDeleteProperty(id: string) {
   try {
     const ctx = await requireAuthContext();
     const { supabase, tenantId, role } = ctx;
-    if (!tenantId) return { success: false, error: "ไม่พบข้อมูล Tenant ID" };
-    const { data: prop, error: fetchErr } = await supabase
-      .from("properties")
-      .select("status, tenant_id")
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
-      .single();
+
+    let query = supabase.from("properties").select("status, tenant_id").eq("id", id);
+    if (tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+    const { data: prop, error: fetchErr } = await query.single();
 
     if (fetchErr || !prop)
       return { success: false, error: "ไม่พบข้อมูลทรัพย์สิน" };
+
+    if (!tenantId && role !== "ADMIN") {
+      const targetTenantId = prop.tenant_id;
+      if (!targetTenantId) {
+        return { success: false, error: "ทรัพย์สินไม่มีข้อมูลสาขา" };
+      }
+      
+      const { data: member, error: memberErr } = await supabase
+        .from("tenant_members_v3")
+        .select("role")
+        .eq("tenant_id", targetTenantId)
+        .eq("identity_id", ctx.user.id)
+        .single();
+
+      if (memberErr || !member) {
+        return {
+          success: false,
+          error: "คุณไม่มีสิทธิ์เข้าถึงสาขาของทรัพย์สินนี้",
+        };
+      }
+    }
 
     const isRevenueAsset = ["SOLD", "RENTED"].includes(prop.status || "");
     if (isRevenueAsset && role !== "ADMIN") {
@@ -135,12 +219,18 @@ export async function permanentDeleteProperty(id: string) {
       };
     }
 
-    const { error } = await supabase
-      .from("properties")
+    let deleteQuery = supabase
+      .from("properties_core")
       .delete()
-      .eq("id", id)
-      .eq("tenant_id", tenantId);
+      .eq("id", id);
 
+    if (tenantId) {
+      deleteQuery = deleteQuery.eq("tenant_id", tenantId);
+    } else if (prop.tenant_id) {
+      deleteQuery = deleteQuery.eq("tenant_id", prop.tenant_id);
+    }
+
+    const { error } = await deleteQuery;
     if (error) return { success: false, error: mapDbError(error) };
 
     await logAudit(ctx, {

@@ -22,6 +22,7 @@ interface TableQueryResult {
   office_capacity: number | null;
   province: string | null;
   district: string | null;
+  subdistrict: string | null;
   popular_area: string | null;
   view_count: number | null;
   address_line1: string | null;
@@ -33,7 +34,7 @@ interface TableQueryResult {
   posted_to_line_at: string | null;
   posted_to_tiktok_at: string | null;
   assigned_to: string | null;
-  agent: { full_name: string } | null;
+  agent: { full_name: string }[] | { full_name: string } | null;
   tenant_id: string | null;
   tenants: { name: string } | null;
   requires_ai_review: boolean | null;
@@ -104,11 +105,11 @@ export async function getPropertiesTableData(params: {
       `
       id, title, description, status, property_type, listing_type, 
       price, rental_price, original_price, original_rental_price, 
-      updated_at, created_at, bedrooms, bathrooms, office_capacity, province, district, 
+      updated_at, created_at, bedrooms, bathrooms, office_capacity, province, district, subdistrict, 
       popular_area, view_count, address_line1, images, total_units, 
       sold_units, posted_to_facebook_at, posted_to_instagram_at, 
       posted_to_line_at, posted_to_tiktok_at, assigned_to, 
-      agent:profiles!properties_assigned_to_profile_fkey(full_name),
+      agent:profiles(full_name),
       tenant_id, tenants(name), requires_ai_review
       `,
       {
@@ -445,10 +446,15 @@ export async function getPropertiesTableData(params: {
       posted_to_instagram_at: p.posted_to_instagram_at ?? null,
       posted_to_line_at: p.posted_to_line_at ?? null,
       posted_to_tiktok_at: p.posted_to_tiktok_at ?? null,
-      agent_name: p.agent?.full_name || null,
+      agent_name: Array.isArray(p.agent)
+        ? (p.agent[0] as any)?.full_name || null
+        : (p.agent as any)?.full_name || null,
+      assigned_to: p.assigned_to,
       tenant_id: p.tenant_id,
       tenant_name: p.tenants?.name || null,
       province: p.province,
+      district: p.district,
+      subdistrict: p.subdistrict,
     };
   });
 

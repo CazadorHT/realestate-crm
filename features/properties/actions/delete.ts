@@ -102,7 +102,7 @@ export async function deletePropertyAction(formData: FormData) {
             bucket: PROPERTY_IMAGES_BUCKET,
             paths: pathsToRemove
           }
-        });
+        }).catch(e => console.warn("Inngest storage cleanup skip:", e.message));
       }
     }
 

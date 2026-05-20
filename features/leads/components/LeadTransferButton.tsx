@@ -9,14 +9,17 @@ interface LeadTransferButtonProps {
   leadId: string;
   leadName: string;
   currentTenantId: string;
+  userRole?: string;
 }
 
 export function LeadTransferButton({
   leadId,
   leadName,
   currentTenantId,
+  userRole,
 }: LeadTransferButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const isAgent = userRole?.toUpperCase() === "AGENT";
 
   return (
     <>
@@ -26,7 +29,7 @@ export function LeadTransferButton({
         onClick={() => setIsOpen(true)}
       >
         <ArrowRightLeft className="h-4 w-4" />
-        ส่งต่อเคส
+        {isAgent ? "ขอส่งต่อเคส" : "ส่งต่อเคส"}
       </Button>
 
       <TransferLeadDialog
@@ -35,6 +38,7 @@ export function LeadTransferButton({
         leadId={leadId}
         leadName={leadName}
         currentTenantId={currentTenantId}
+        userRole={userRole}
       />
     </>
   );

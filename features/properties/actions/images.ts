@@ -12,6 +12,7 @@ import {
   validatePropertyImagePaths,
 } from "../logic/images";
 import { mapDbError } from "@/lib/db-error";
+import { getSystemConfig } from "@/lib/actions/system-config";
 
 export type UploadedImageResult = {
   path: string; // storage_path เช่น "properties/xxxx.jpg"
@@ -24,8 +25,40 @@ export type UploadImageActionResponse =
 
 export async function uploadPropertyImageAction(formData: FormData): Promise<UploadImageActionResponse> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId: contextTenantId } = await requireAuthContext();
     assertStaff(role);
+
+    let tenantId = contextTenantId;
+    // Fallback if tenantId is undefined (e.g. cookie is set to "ALL")
+    if (!tenantId) {
+      const { data: firstMember } = await supabase
+        .from("tenant_members_v3")
+        .select("tenant_id")
+        .eq("identity_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      
+      if (firstMember?.tenant_id) {
+        tenantId = firstMember.tenant_id;
+      } else {
+        const { default_tenant_id } = await getSystemConfig();
+        if (default_tenant_id) {
+          tenantId = default_tenant_id;
+        } else {
+          // Ultimate fallback: get the first tenant in the system
+          const { data: firstTenant } = await supabase
+            .from("tenants_v3")
+            .select("id")
+            .limit(1)
+            .maybeSingle();
+          if (firstTenant?.id) {
+            tenantId = firstTenant.id;
+          }
+        }
+      }
+    }
+
+    if (!tenantId) throw new Error("No active tenant context found (Multi-Tenant mode required)");
 
     const sessionId = formData.get("sessionId") as string | null;
     if (!sessionId) throw new Error("Missing sessionId");
@@ -96,7 +129,7 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
       throw new Error("Too many uploads. Please wait a moment and try again.");
     }
 
-    const path = `properties/${user.id}/${sessionId}/${fileName}`;
+    const path = `${tenantId}/properties/${user.id}/${sessionId}/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
       .from(PROPERTY_IMAGES_BUCKET)
@@ -148,14 +181,37 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
  */
 
 export async function deletePropertyImageFromStorage(storagePath: string) {
-  const { supabase, user, role } = await requireAuthContext();
+  const { supabase, user, role, tenantId: contextTenantId } = await requireAuthContext();
   assertStaff(role);
 
-  const mustStartWith = "properties/";
+  let resolvedTenantId = contextTenantId;
+  if (!resolvedTenantId && storagePath) {
+    const pathParts = storagePath.split("/");
+    const pathTenantId = pathParts[0];
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pathTenantId)) {
+      resolvedTenantId = pathTenantId;
+    }
+  }
+
+  if (!resolvedTenantId && role !== "ADMIN") throw new Error("No active tenant context found");
+
+  // Verify membership if not admin and contextTenantId was not set
+  if (role !== "ADMIN" && !contextTenantId && resolvedTenantId) {
+    const { data: member } = await supabase
+      .from("tenant_members_v3")
+      .select("role")
+      .eq("tenant_id", resolvedTenantId)
+      .eq("identity_id", user.id)
+      .maybeSingle();
+
+    if (!member) throw new Error("Forbidden: You are not a member of this branch");
+  }
+
+  const expectedPrefix = resolvedTenantId ? `${resolvedTenantId}/properties/` : "properties/";
 
   const ok =
-    storagePath?.startsWith(mustStartWith) ||
-    (role === "ADMIN" && storagePath?.startsWith("properties/"));
+    storagePath?.startsWith(expectedPrefix) ||
+    (role === "ADMIN"); // Admins can bypass prefix check to clean up legacy/cross-tenant
 
   if (!ok) throw new Error("Invalid storage path (ownership mismatch)");
 
@@ -171,11 +227,10 @@ export async function deletePropertyImageFromStorage(storagePath: string) {
     throw storageErr;
   }
 
-  // ✅ ลบ tracking row TEMP
+  // ✅ Soft delete tracking row TEMP (เปลี่ยนสถานะเป็น DELETED แทนการลบจริง เพื่อกันการบายพาส Rate Limit)
   let del = supabase
     .from("property_image_uploads")
-    .delete()
-    .eq("user_id", user.id)
+    .update({ status: "DELETED" })
     .eq("storage_path", storagePath)
     .eq("status", "TEMP");
 
@@ -219,7 +274,7 @@ export async function cleanupUploadSessionAction(sessionId: string) {
 
     await supabase
       .from("property_image_uploads")
-      .delete()
+      .update({ status: "DELETED" })
       .eq("user_id", user.id)
       .eq("session_id", sessionId)
       .eq("status", "TEMP");

@@ -53,7 +53,7 @@ describe("Public Data - Popular Areas (เทสโหดๆ แบบไม่�
 
   describe("getPopularAreasAction", () => {
     it("should return admin mode area names when onlyActive is false", async () => {
-      mockSupabase.mockTableResult("popular_areas", [{ name: "Asoke" }, { name: "Thonglor" }]);
+      mockSupabase.mockTableResult("popular_areas_v3", [{ name: "Asoke" }, { name: "Thonglor" }]);
 
       const areas = await getPopularAreasAction({ onlyActive: false });
       expect(areas).toEqual(["Asoke", "Thonglor"]);
@@ -70,7 +70,7 @@ describe("Public Data - Popular Areas (เทสโหดๆ แบบไม่�
           { property_id: "p1", image_url: "http://img.com/asoke.jpg", is_cover: true, sort_order: 0 },
           { property_id: "p3", image_url: "http://img.com/thonglor.jpg", is_cover: true, sort_order: 0 },
         ])
-        .mockTableResult("popular_areas", [
+        .mockTableResult("popular_areas_v3", [
           { name: "Asoke", name_en: "Asoke EN", province: "กรุงเทพมหานคร" },
           { name: "Thonglor", name_en: "Thonglor EN", province: "กรุงเทพมหานคร" },
         ]);

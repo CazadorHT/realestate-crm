@@ -1,6 +1,7 @@
-import type { PropertyRow, NearbyItem } from "@/features/properties/types";
+import type { PropertyRow, NearbyItem, PropertyTransitInfoConsolidated, PropertyTransitV3 } from "@/features/properties/types";
 import { getSafeImages, getSafeNearbyPlaces, getSafeNearbyTransits } from "@/lib/property-hardened-utils";
 import { type PropertyFormValues } from "@/features/properties/schema";
+import { type TransitType } from "@/features/properties/labels";
 
 export const EMPTY_VALUES: PropertyFormValues = {
   title: "",
@@ -367,7 +368,13 @@ export function mapRowToFormValues(
   const meta = (row.meta_data || {}) as Record<string, any>;
   const pricing = (row.pricing_details || {}) as Record<string, any>;
   const address = (row.address_info || {}) as Record<string, any>;
-  const transit = (row.transit_info || []) as any[];
+  const transitRaw = row.transit_info || [];
+  const transit = Array.isArray(transitRaw)
+    ? (transitRaw as PropertyTransitV3[])
+    : ((transitRaw as unknown as PropertyTransitInfoConsolidated)?.transits || []);
+  const places = Array.isArray(transitRaw)
+    ? ((row.nearby_places || []) as NearbyItem[])
+    : (((transitRaw as unknown as PropertyTransitInfoConsolidated)?.places || row.nearby_places || []) as NearbyItem[]);
 
   // 🧠 Smart Lookup Helper: Try core column first, then JSONB blocks
   const get = <T>(key: string, defaultValue: T): T => {
@@ -460,16 +467,24 @@ export function mapRowToFormValues(
     transit_station_name_en: get("transit_station_name_en", ""),
     transit_station_name_cn: get("transit_station_name_cn", ""),
     transit_station_name_ru: get("transit_station_name_ru", ""),
-    transit_type: (get("transit_type", "BTS") as any),
+    transit_type: get<TransitType>("transit_type", "BTS"),
     transit_distance_meters: Number(get("transit_distance_meters", 0)) || undefined,
-    nearby_transits: transit,
-    nearby_places: getSafeNearbyPlaces(row.nearby_places || []),
+    nearby_transits: transit.map(t => ({
+      type: (t.type || "OTHER") as TransitType,
+      station_name: t.station_name || "",
+      distance_meters: t.distance_meters,
+      time: t.time,
+      station_name_en: t.station_name_en,
+      station_name_cn: t.station_name_cn,
+      station_name_ru: t.station_name_ru,
+    })),
+    nearby_places: getSafeNearbyPlaces(places),
     
     // Co-Agent (Nested in meta)
     is_co_agent: Boolean(get("is_co_agent", false)),
     co_agent_name: get("co_agent_name", ""),
     co_agent_phone: get("co_agent_phone", ""),
-    co_agent_contact_channel: (get("co_agent_contact_channel", "Line") as any),
+    co_agent_contact_channel: get("co_agent_contact_channel", "Line"),
     co_agent_contact_id: get("co_agent_contact_id", ""),
     co_agent_sale_commission_percent: Number(get("co_agent_sale_commission_percent", 0)) || undefined,
     co_agent_rent_commission_months: Number(get("co_agent_rent_commission_months", 0)) || undefined,

@@ -459,7 +459,7 @@ export async function markAsPaidAction(
         telegramId: null,
         idempotencyKey: `${current.deal_id}-${commissionId}`,
       },
-    });
+    }).catch(e => console.warn("Inngest commission_paid skip:", e.message));
 
     return {
       success: true,

@@ -50,7 +50,7 @@ export default async function PropertyDetailsPage({
       .select(
         `
         id, status, listing_type, property_type, sale_price, rent_price, currency, bedrooms, bathrooms, floor_area, land_area, location, created_at, updated_at,
-        is_featured, is_hot_deal, verified, property_source,
+        is_hot_deal, verified,
         tenant:tenants_v3 (id, name, slug),
         branch:branches_v3 (id, name),
         details:properties_details (
@@ -61,7 +61,11 @@ export default async function PropertyDetailsPage({
         ),
         agents:property_agents (
           identity:identities_v3 (
-            id, display_name, phone, email, avatar_url, line_id, wechat_user_id, whatsapp_user_id, is_active
+            id, display_name, phone, email, avatar_url, line_id, is_active,
+            profile:profiles (
+              wechat_user_id,
+              whatsapp_user_id
+            )
           )
         ),
         property_images (
@@ -82,26 +86,29 @@ export default async function PropertyDetailsPage({
   const { data: rawData, error } = rawResponse;
 
   if (error || !rawData) {
+    console.error("PropertyDetailsPage query error:", error);
     return (
       <div className="p-8 text-center text-red-500">
-        ไม่พบข้อมูลทรัพย์ หรือเกิดข้อผิดพลาดในการโหลดข้อมูล
+        ไม่พบข้อมูลทรัพย์ หรือเกิดข้อผิดพลาดในการโหลดข้อมูล: {error?.message || "rawData is null"}
       </div>
     );
   }
 
   // V3 Native Data Processing: Strict Type Casting
-  const details = rawData.details;
+  const details = (Array.isArray(rawData.details) ? rawData.details[0] : rawData.details) as any;
   const titleObj = (details?.title || {}) as Record<string, string>;
   const descObj = (details?.description || {}) as Record<string, string>;
   const amenities = (details?.amenities || {}) as PropertyAmenitiesV3;
   const addressInfo = (details?.address_info || {}) as PropertyAddressV3;
-  const transitInfo = ((details?.transit_info || []) as PropertyTransitV3[]).map(t => ({
+  const transitRaw = (details?.transit_info as any)?.transits || (Array.isArray(details?.transit_info) ? details.transit_info : []);
+  const transitList = Array.isArray(transitRaw) ? transitRaw : [];
+  const transitInfo = (transitList as PropertyTransitV3[]).map(t => ({
     ...t,
     distance_meters: t.distance_meters === null ? undefined : t.distance_meters
   })) as PropertyTransitV3[];
   const metaData = (details?.meta_data || {}) as PropertyMetaDataV3;
   
-  const mainAgentIdentity = rawData.agents?.[0]?.identity;
+  const mainAgentIdentity = rawData.agents?.[0]?.identity as any;
   const ownerIdFromMeta = metaData?.owner_id;
   const popularAreaIdFromAddress = addressInfo?.popular_area_id;
 
@@ -133,8 +140,9 @@ export default async function PropertyDetailsPage({
     id: rawData.id,
     slug: null, // V3 Core uses ID for admin; SEO slugs live in cms_content_v3
     verified: !!rawData.verified,
-    is_featured: !!rawData.is_featured,
+    is_featured: !!(metaData as any).is_featured,
     is_hot_deal: !!rawData.is_hot_deal,
+    property_source: (metaData as any).property_source || null,
     
     // Branch & Tenant info
     branch_name: (rawData.branch as { name?: { th?: string } | string } | null)?.name?.toString() || null,
@@ -203,7 +211,7 @@ export default async function PropertyDetailsPage({
 
     // AI Data Mapping
     ai_summary_content: (rawData.ai as { ai_metadata?: { summary?: string } } | null)?.ai_metadata?.summary || metaData?.ai_summary_content || null,
-    requires_ai_review: !!((rawData.ai as { ai_metadata?: { requires_review?: boolean } } | null)?.ai_metadata?.requires_review || rawData.requires_ai_review),
+    requires_ai_review: !!((rawData.ai as { ai_metadata?: { requires_review?: boolean } } | null)?.ai_metadata?.requires_review || (metaData as any)?.requires_ai_review),
     meta_keywords: metaData?.meta_keywords || [],
 
     // Smart Location
@@ -218,8 +226,8 @@ export default async function PropertyDetailsPage({
           email: mainAgentIdentity.email,
           line_id: mainAgentIdentity.line_id,
           avatar_url: mainAgentIdentity.avatar_url,
-          wechat_user_id: mainAgentIdentity.wechat_user_id,
-          whatsapp_user_id: mainAgentIdentity.whatsapp_user_id,
+          wechat_user_id: (Array.isArray(mainAgentIdentity.profile) ? mainAgentIdentity.profile[0] : mainAgentIdentity.profile)?.wechat_user_id || null,
+          whatsapp_user_id: (Array.isArray(mainAgentIdentity.profile) ? mainAgentIdentity.profile[0] : mainAgentIdentity.profile)?.whatsapp_user_id || null,
           facebook_url: null,
           other_contact: null,
           is_active: !!mainAgentIdentity.is_active,

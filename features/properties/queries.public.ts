@@ -215,12 +215,18 @@ export async function getHotProperties(limit = 10) {
 export async function getPopularAreaTranslations() {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("popular_areas")
-    .select("name, name_en, name_cn, name_ru");
+    .from("popular_areas_v3")
+    .select("name");
 
   if (error) {
     console.error("getPopularAreaTranslations error:", error);
     return [];
   }
-  return data || [];
+  return (data || []).map((item: any) => {
+    const th = typeof item.name === "string" ? item.name : item.name?.th || item.name?.default || "";
+    const en = typeof item.name === "string" ? null : item.name?.en || null;
+    const cn = typeof item.name === "string" ? null : item.name?.cn || null;
+    const ru = typeof item.name === "string" ? null : item.name?.ru || null;
+    return { name: th, name_en: en, name_cn: cn, name_ru: ru };
+  });
 }

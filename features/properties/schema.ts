@@ -124,7 +124,7 @@ export const PropertySchema = z
       .array(
         z.object({
           type: z.enum(TRANSIT_TYPE_ENUM),
-          station_name: z.string().min(1, "Required"),
+          station_name: z.string().optional(),
           distance_meters: z.coerce.number().optional(),
           time: z.string().optional(), // เวลาเดินทาง (นาที)
           station_name_en: z.string().optional(),
@@ -199,8 +199,8 @@ export const PropertySchema = z
     nearby_places: z
       .array(
         z.object({
-          category: z.string().min(1, "Required"),
-          name: z.string().min(1, "Required"),
+          category: z.string().optional(),
+          name: z.string().optional(),
           distance_meters: z.coerce.number().optional(),
           time: z.string().optional(),
           name_en: z.string().optional(),

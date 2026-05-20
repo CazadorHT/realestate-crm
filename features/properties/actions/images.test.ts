@@ -43,9 +43,12 @@ describe('Property Image Actions - Security & Validation', () => {
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
     delete: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     gte: vi.fn().mockReturnThis(),
+    single: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockReturnThis(),
     storage: {
       from: vi.fn().mockReturnThis(),
       upload: vi.fn().mockResolvedValue({ error: null }),
@@ -61,6 +64,8 @@ describe('Property Image Actions - Security & Validation', () => {
     mockSupabase.select.mockReturnValue(mockSupabase);
     mockSupabase.eq.mockReturnValue(mockSupabase);
     mockSupabase.gte.mockReturnValue(mockSupabase);
+    mockSupabase.single.mockReturnValue(mockSupabase);
+    mockSupabase.maybeSingle.mockReturnValue(mockSupabase);
     mockSupabase.then.mockImplementation((resolve: any) => resolve({ data: [], error: null, count: 0 }));
 
     vi.mocked(requireAuthContext).mockResolvedValue({
@@ -114,7 +119,7 @@ describe('Property Image Actions - Security & Validation', () => {
     });
 
     it('should allow deletion of own property images', async () => {
-      const validPath = `properties/${mockUserId}/${mockSessionId}/img.webp`;
+      const validPath = `t1/properties/${mockUserId}/${mockSessionId}/img.webp`;
       mockSupabase.then.mockImplementation((resolve: any) => resolve({ error: null }));
 
       const result = await deletePropertyImageFromStorage(validPath);

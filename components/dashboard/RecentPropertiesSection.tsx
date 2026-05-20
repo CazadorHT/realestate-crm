@@ -9,6 +9,8 @@ import { getSystemConfig } from "@/lib/actions/system-config";
 interface PropertyImage {
   url?: string;
   image_url?: string;
+  storage_path?: string | null;
+  is_cover?: boolean | null;
 }
 
 export async function RecentPropertiesSection({ 
@@ -48,6 +50,13 @@ export async function RecentPropertiesSection({
       posted_to_tiktok_at,
       requires_ai_review,
       images,
+      property_images(
+        id,
+        image_url,
+        storage_path,
+        is_cover,
+        sort_order
+      ),
       description,
       tenants(name)
     `)
@@ -93,6 +102,7 @@ export async function RecentPropertiesSection({
     posted_to_tiktok_at: string | null;
     requires_ai_review: boolean | null;
     images: PropertyImage[] | null;
+    property_images: PropertyImage[] | null;
     description: string | null;
     tenants: { name: string } | null;
   };
@@ -130,9 +140,10 @@ export async function RecentPropertiesSection({
     // Mark as NEW if it's within 7 days OR if it's the absolute latest one and none are within 7 days
     const isNew = isWithinSevenDays || (!hasRecentProperties && index === 0);
     
-    const firstImage = p.images?.[0];
-    const rawImageUrl = firstImage?.url || firstImage?.image_url || null;
-    const imageUrl = rawImageUrl ? getPublicImageUrl(rawImageUrl) : null;
+    const propertyImages = p.property_images || [];
+    const firstImage = propertyImages.find((img) => img.is_cover) || propertyImages[0] || p.images?.[0];
+    const rawImageUrl = firstImage?.image_url || firstImage?.url || firstImage?.storage_path || null;
+    const imageUrl = rawImageUrl ? (rawImageUrl.startsWith("http") ? rawImageUrl : getPublicImageUrl(rawImageUrl)) : null;
 
     return {
       id: p.id,

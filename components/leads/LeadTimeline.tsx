@@ -45,6 +45,8 @@ import {
   Repeat,
   FileText,
   Settings,
+  ArrowRightLeft,
+  User,
 } from "lucide-react";
 import {
   deleteLeadActivityAction,
@@ -94,6 +96,21 @@ const ACTIVITY_CONFIG: Record<
     icon: Settings,
     color: "bg-slate-100 text-slate-400",
     label: "ระบบ",
+  },
+  transfer_requested: {
+    icon: ArrowRightLeft,
+    color: "bg-indigo-50 text-indigo-600",
+    label: "คำขอส่งตัว",
+  },
+  transferred: {
+    icon: ArrowRightLeft,
+    color: "bg-blue-50 text-blue-600",
+    label: "โอนย้ายสาขา",
+  },
+  assigned_changed: {
+    icon: User,
+    color: "bg-cyan-50 text-cyan-600",
+    label: "เปลี่ยนผู้ดูแล",
   },
 };
 

@@ -57,7 +57,7 @@ export default async function ProfilePage() {
   const scoreClamped = calculateProfileScore(profile);
 
   return (
-    <div className="relative max-w-7xl mx-auto min-h-[calc(100vh-12rem)] pb-20">
+    <div className="relative max-w-screen-2xl mx-auto min-h-[calc(100vh-12rem)] pb-20">
       {/* Immersive Background Layer */}
       <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl animate-pulse" />

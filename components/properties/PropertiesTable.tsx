@@ -33,6 +33,8 @@ import {
   Loader2,
   CheckCircle2,
   Sparkles,
+  TrendingDown,
+  Timer,
 } from "lucide-react";
 import {
   Tooltip,
@@ -88,14 +90,33 @@ import { downloadBase64File, MIME_TYPES } from "@/lib/download-utils";
 interface PropertiesTableProps {
   data: PropertyTableData[];
   isAdmin?: boolean;
+  isAdminOrManager?: boolean;
   isMultiTenant?: boolean;
   currentTenantId?: string | null;
   currentTenantName?: string | null;
   showBranch?: boolean;
   totalCount: number;
   filters?: any;
+  currentUserEmail?: string;
 }
 // ... (SortableHead code omitted for brevity as it is unchanged) ...
+
+/** 🏷️ Listing Age Warning — Badge for stale ACTIVE listings */
+function getListingAgeBadge(status: string, createdAt: string) {
+  if (status !== "ACTIVE") return null;
+  const days = Math.floor((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24));
+  if (days >= 90) return { label: `${days}d`, color: "bg-red-100 text-red-700 border-red-200", dot: "bg-red-500" };
+  if (days >= 60) return { label: `${days}d`, color: "bg-orange-100 text-orange-700 border-orange-200", dot: "bg-orange-500" };
+  if (days >= 30) return { label: `${days}d`, color: "bg-amber-100 text-amber-700 border-amber-200", dot: "bg-amber-500" };
+  return null;
+}
+
+/** 📊 Price Change Indicator — Discount percentage */
+function getPriceChangeInfo(price: number | null, originalPrice: number | null) {
+  if (!price || !originalPrice || originalPrice <= price) return null;
+  const pct = Math.round(((originalPrice - price) / originalPrice) * 100);
+  return { pct, diff: originalPrice - price };
+}
 
 function SortableHead({
   label,
@@ -166,12 +187,14 @@ function SortableHead({
 export function PropertiesTable({
   data,
   isAdmin,
+  isAdminOrManager,
   isMultiTenant,
   currentTenantId,
   currentTenantName,
   showBranch,
   totalCount,
   filters = {},
+  currentUserEmail,
 }: PropertiesTableProps): React.ReactElement {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -519,9 +542,9 @@ export function PropertiesTable({
 
       <div id="tour-property-list-top" className="rounded-md border border-gray-200 shadow-sm bg-card overflow-hidden">
         {/* Desktop Table View */}
-        <div className="hidden lg:block overflow-x-auto">
+        <div className="hidden lg:block overflow-x-auto max-h-[calc(100vh-200px)]">
           <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 z-20 bg-card shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
               {/* Rest of the table header content ... */}
               <TableRow className="bg-muted/50 hover:bg-muted/50 ">
                 <TableHead className="w-[40px] px-2">
@@ -552,9 +575,11 @@ export function PropertiesTable({
                 <TableHead className="w-[100px] px-2 text-[11px]">
                   <SortableHead label="Update" sortKey="updated_at" />
                 </TableHead>
-                <TableHead className="w-[150px] px-2 text-[11px]">
-                  ดูแล
-                </TableHead>
+                {isAdminOrManager && (
+                  <TableHead className="w-[150px] px-2 text-[11px]">
+                    ดูแล
+                  </TableHead>
+                )}
                 <TableHead className="w-[90px] px-2 text-[11px]">
                   <SortableHead label="สถานะ" sortKey="status" />
                 </TableHead>
@@ -565,12 +590,37 @@ export function PropertiesTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((property) => (
+              {data.map((property) => {
+                const ageBadge = getListingAgeBadge(property.status, property.created_at);
+                const salePriceChange = getPriceChangeInfo(property.price, property.original_price ?? null);
+                const rentPriceChange = getPriceChangeInfo(property.rental_price, property.original_rental_price ?? null);
+                return (
                 <TableRow
+                  id={`property-row-${property.id}`}
+                  data-property-id={property.id}
                   key={property.id}
-                  className={`group hover:bg-slate-50/50 ${
-                    isSelected(property.id) ? "bg-blue-50/50 " : ""
-                  }`}
+                  onClick={(e) => {
+                    // 🖱️ Row Click → Navigate (skip interactive elements and portaled elements)
+                    const target = e.target as HTMLElement;
+                    if (!e.currentTarget.contains(target)) return;
+                    if (target.closest('button, a, input, [role="checkbox"], [data-radix-collection-item], [role="menuitem"], [role="combobox"], select')) return;
+                    setNavigatingId(property.id);
+                    router.push(`/protected/properties/${property.id}`);
+                  }}
+                  className={cn(
+                    "group hover:bg-slate-50/80 cursor-pointer transition-colors border-l-[3px]",
+                    isSelected(property.id)
+                      ? "bg-blue-50/50 border-l-blue-500"
+                      : property.status === "SOLD"
+                        ? "bg-emerald-50/30 border-l-emerald-400 opacity-55"
+                        : property.status === "RENTED"
+                          ? "bg-sky-50/30 border-l-sky-400 opacity-55"
+                          : property.status === "DRAFT"
+                            ? "bg-amber-50/30 border-l-amber-400"
+                            : property.status === "ARCHIVED"
+                              ? "bg-slate-50/50 border-l-slate-300 opacity-50"
+                              : "border-l-transparent",
+                  )}
                 >
                   {/* CHECKBOX */}
                   <TableCell className="w-[40px] px-2">
@@ -673,6 +723,13 @@ export function PropertiesTable({
                             <Clock className="h-2.5 w-2.5" />
                             {formatDistanceToNowThai(property.created_at)}
                           </span>
+                          {ageBadge && (
+                            <span className={cn("text-[10px] font-bold flex items-center gap-1 px-1.5 py-0.5 rounded border shrink-0", ageBadge.color)} title="จำนวนวันที่ประกาศอยู่ในระบบ">
+                              <span className={cn("h-1.5 w-1.5 rounded-full animate-pulse shrink-0", ageBadge.dot)} />
+                              <Timer className="h-2.5 w-2.5 shrink-0" />
+                              {ageBadge.label}
+                            </span>
+                          )}
                           {showBranch && property.tenant_name && (
                             <span className="text-[11px] text-blue-600 font-bold flex items-center gap-1 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100 max-w-[100px] truncate shrink-0" title={property.tenant_name}>
                               <Building2 className="h-2.5 w-2.5 shrink-0" />
@@ -727,14 +784,33 @@ export function PropertiesTable({
 
                   {/* PRICE */}
                   <TableCell className="px-2">
-                    <PropertyPrice
-                      variant="table"
-                      listingType={property.listing_type}
-                      price={property.price}
-                      originalPrice={property.original_price}
-                      rentalPrice={property.rental_price}
-                      originalRentalPrice={property.original_rental_price}
-                    />
+                    <div className="flex flex-col gap-0.5">
+                      <PropertyPrice
+                        variant="table"
+                        listingType={property.listing_type}
+                        price={property.price}
+                        originalPrice={property.original_price}
+                        rentalPrice={property.rental_price}
+                        originalRentalPrice={property.original_rental_price}
+                      />
+                      {/* 📊 Price Change Indicator */}
+                      {(salePriceChange || rentPriceChange) && (
+                        <div className="flex items-center gap-1 mt-0.5">
+                          {salePriceChange && (
+                            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200">
+                              <TrendingDown className="h-2.5 w-2.5" />
+                              -{salePriceChange.pct}%
+                            </span>
+                          )}
+                          {rentPriceChange && (
+                            <span className="inline-flex items-center gap-0.5 text-[9px] font-bold text-teal-700 bg-teal-50 px-1 py-0.5 rounded border border-teal-200">
+                              <TrendingDown className="h-2.5 w-2.5" />
+                              -{rentPriceChange.pct}% เช่า
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </TableCell>
 
                   {/* INTEREST & STOCK */}
@@ -765,65 +841,74 @@ export function PropertiesTable({
                     </div>
                   </TableCell>
 
-                  {/* BUYER / TENANT / AGENT */}
-                  <TableCell className="px-2">
-                    <TooltipProvider delayDuration={200}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex flex-col gap-1 min-w-0">
-                            {/* CASE 1: SOLD/RENTED WITH LEAD */}
-                            {(property.status === "SOLD" || property.status === "RENTED") && property.closed_lead_name ? (
-                              <div className="flex flex-col gap-0.5">
-                                <div 
-                                  onClick={() => {
-                                    setNavigatingId(`lead-${property.id}`);
-                                    router.push(`/protected/leads?stage=CLOSED`);
-                                  }}
-                                  className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 max-w-[120px] truncate cursor-pointer hover:bg-emerald-100 transition-all shadow-sm"
-                                >
-                                  {navigatingId === `lead-${property.id}` ? (
-                                    <Loader2 className="h-2.5 w-2.5 animate-spin text-emerald-600" />
-                                  ) : (
-                                    <Users className="h-3 w-3 text-emerald-500 shrink-0" />
-                                  )}
-                                  <span className="truncate leading-tight">คุณ {property.closed_lead_name}</span>
+                  {/* BUYER / TENANT / AGENT - Only for Admin/Manager */}
+                  {isAdminOrManager && (() => {
+                    const isSelf = !!(currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase());
+                    return (
+                      <TableCell className="px-2">
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex flex-col gap-1 min-w-0">
+                                {/* CASE 1: SOLD/RENTED WITH LEAD */}
+                                {(property.status === "SOLD" || property.status === "RENTED") && property.closed_lead_name ? (
+                                  <div className="flex flex-col gap-0.5">
+                                    <div 
+                                      onClick={() => {
+                                        setNavigatingId(`lead-${property.id}`);
+                                        router.push(`/protected/leads?stage=CLOSED`);
+                                      }}
+                                      className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 max-w-[120px] truncate cursor-pointer hover:bg-emerald-100 transition-all shadow-sm"
+                                    >
+                                      {navigatingId === `lead-${property.id}` ? (
+                                        <Loader2 className="h-2.5 w-2.5 animate-spin text-emerald-600" />
+                                      ) : (
+                                        <Users className="h-3 w-3 text-emerald-500 shrink-0" />
+                                      )}
+                                      <span className="truncate leading-tight">คุณ {property.closed_lead_name}</span>
+                                    </div>
+                                    <div className="text-[9px] text-slate-400 font-medium px-1 truncate max-w-[120px] flex items-center gap-1.5">
+                                      <div className={cn("h-1 w-1 rounded-full shrink-0", isSelf ? "bg-indigo-400" : "bg-slate-300")} />
+                                      <span className={cn("truncate", isSelf ? "text-indigo-600 font-bold" : "text-slate-500/80")}>
+                                        {isSelf ? `(คุณ) ${currentUserEmail}` : (property.agent_name || "Me")}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  /* CASE 2: REGULAR ASSIGNEE */
+                                  <div className="text-[11px] text-slate-500 flex flex-col gap-0.5">
+                                    <span className={cn("font-bold truncate max-w-[120px] flex items-center gap-1.5", isSelf ? "text-indigo-600" : "text-blue-600")}>
+                                      <Users className={cn("h-3 w-3 shrink-0", isSelf ? "text-indigo-400" : "text-blue-400")} />
+                                      {isSelf ? `(คุณ) ${currentUserEmail}` : (property.agent_name || "ไม่มีผู้ดูแล")}
+                                    </span>
+                                    <span className="text-[9px] text-slate-400 opacity-70 ml-4.5 pl-4.5">
+                                      ผู้ดูแลทรัพย์
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="left" className="p-3 bg-white border-slate-200 shadow-xl rounded-xl">
+                              <div className="space-y-2">
+                                {(property.status === "SOLD" || property.status === "RENTED") && property.closed_lead_name && (
+                                  <div className="space-y-0.5">
+                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ลูกค้า (Lead)</p>
+                                    <p className="text-sm font-bold text-emerald-700">คุณ {property.closed_lead_name}</p>
+                                  </div>
+                                )}
+                                <div className="space-y-0.5 border-t border-slate-100 pt-1.5">
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ผู้รับผิดชอบ (Agent)</p>
+                                  <p className={cn("text-sm font-bold", isSelf ? "text-indigo-700" : "text-blue-700")}>
+                                    {isSelf ? `(คุณ) ${currentUserEmail}` : (property.agent_name || "ยังไม่ได้มอบหมาย")}
+                                  </p>
                                 </div>
-                                <div className="text-[9px] text-slate-400 font-medium px-1 truncate max-w-[100px] flex items-center gap-1.5">
-                                  <div className="h-1 w-1 rounded-full bg-slate-300 shrink-0" />
-                                  <span className="truncate text-slate-500/80">{property.agent_name || "Me"}</span>
-                                </div>
                               </div>
-                            ) : (
-                              /* CASE 2: REGULAR ASSIGNEE */
-                              <div className="text-[11px] text-slate-500 flex flex-col gap-0.5">
-                                <span className="font-bold text-blue-600 truncate max-w-[100px] flex items-center gap-1.5">
-                                  <Users className="h-3 w-3 text-blue-400 shrink-0" />
-                                  {property.agent_name || "ไม่มีผู้ดูแล"}
-                                </span>
-                                <span className="text-[9px] text-slate-400 opacity-70 ml-4.5 pl-4.5">
-                                  ผู้ดูแลทรัพย์
-                                </span>
-                              </div>
-                            )}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="p-3 bg-white border-slate-200 shadow-xl rounded-xl">
-                          <div className="space-y-2">
-                            {(property.status === "SOLD" || property.status === "RENTED") && property.closed_lead_name && (
-                              <div className="space-y-0.5">
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ลูกค้า (Lead)</p>
-                                <p className="text-sm font-bold text-emerald-700">คุณ {property.closed_lead_name}</p>
-                              </div>
-                            )}
-                            <div className="space-y-0.5 border-t border-slate-100 pt-1.5">
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">ผู้รับผิดชอบ (Agent)</p>
-                              <p className="text-sm font-bold text-blue-700">{property.agent_name || "ยังไม่ได้มอบหมาย"}</p>
-                            </div>
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </TableCell>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </TableCell>
+                    );
+                  })()}
 
                   {/* STATUS */}
                   <TableCell className="px-2">
@@ -884,7 +969,8 @@ export function PropertiesTable({
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </div>
@@ -1034,6 +1120,26 @@ export function PropertiesTable({
                         className="ml-auto"
                       />
                     </div>
+
+                    {isAdminOrManager && (() => {
+                      const isSelf = !!(currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase());
+                      return (
+                        <div className="flex items-center gap-1.5 w-full">
+                          <Badge
+                            variant={isSelf ? "secondary" : "outline"}
+                            className={cn(
+                              "w-full justify-center border text-[10px] min-[400px]:text-[11px] font-bold h-7 rounded-lg gap-1",
+                              isSelf
+                                ? "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+                                : "bg-slate-50 text-slate-700 border-slate-200"
+                            )}
+                          >
+                            <Users className={cn("h-3 w-3 shrink-0", isSelf ? "text-indigo-500" : "text-blue-500")} />
+                            <span>ผู้ดูแล: {isSelf ? `(คุณ) ${currentUserEmail}` : (property.agent_name || "ไม่มีผู้ดูแล")}</span>
+                          </Badge>
+                        </div>
+                      );
+                    })()}
 
                     {showBranch && (
                       <div className="flex items-center gap-1.5 w-full">

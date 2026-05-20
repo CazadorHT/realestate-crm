@@ -11,6 +11,7 @@ import {
 } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { getPublicImageUrl } from "../image-utils";
+import { getSystemConfig } from "@/lib/actions/system-config";
 import { PropertyFormValues } from "../schema";
 import {
   CreatePropertyResult,
@@ -44,8 +45,36 @@ export async function createPropertyAction(
 ): Promise<CreatePropertyResult> {
   try {
     // ✅ Step 1.2: require auth context (แทน getUser แบบเดิม)
-    const { supabase, user, role, tenantId } = await requireAuthContext();
+    const { supabase, user, role, tenantId: contextTenantId } = await requireAuthContext();
     assertStaff(role);
+    
+    let tenantId = contextTenantId;
+    if (!tenantId) {
+      const { data: firstMember } = await supabase
+        .from("tenant_members_v3")
+        .select("tenant_id")
+        .eq("identity_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      if (firstMember?.tenant_id) {
+        tenantId = firstMember.tenant_id;
+      } else {
+        const { default_tenant_id } = await getSystemConfig();
+        if (default_tenant_id) {
+          tenantId = default_tenant_id;
+        } else {
+          // Ultimate fallback: get the first tenant in the system
+          const { data: firstTenant } = await supabase
+            .from("tenants_v3")
+            .select("id")
+            .limit(1)
+            .maybeSingle();
+          if (firstTenant?.id) {
+            tenantId = firstTenant.id;
+          }
+        }
+      }
+    }
     if (!tenantId) throw new Error("Tenant ID is required but missing");
     if (!sessionId)
       return { success: false, message: "Missing upload session" };
@@ -81,10 +110,11 @@ export async function createPropertyAction(
       propertyData.status = "DRAFT";
     }
 
-    // ✅ image paths ต้องอยู่ภายใต้ properties/
+    // ✅ image paths ต้องอยู่ภายใต้ properties/ หรือ tenant_id/properties/
     if (images?.length) {
-      const mustStartWith = "properties/";
-      const invalid = images.find((p) => !p.startsWith(mustStartWith));
+      const invalid = images.find(
+        (p) => !p.startsWith("properties/") && !p.startsWith(`${tenantId}/properties/`)
+      );
       if (invalid) {
         return {
           success: false,
@@ -168,6 +198,10 @@ export async function createPropertyAction(
           subdistrict: propertyData.subdistrict,
           postal_code: propertyData.postal_code,
           maps_link: propertyData.google_maps_link,
+          popular_area: propertyData.popular_area,
+          popular_area_en: propertyData.popular_area_en,
+          popular_area_cn: propertyData.popular_area_cn,
+          popular_area_ru: propertyData.popular_area_ru,
           slug: seoData.slug, // V3 Standard: Store slug in address_info too
         },
         amenities: {
@@ -213,13 +247,17 @@ export async function createPropertyAction(
           original_price: propertyData.original_price,
           original_rental_price: propertyData.original_rental_price,
         },
-        transit_info: safeValues.nearby_transits || [],
+        transit_info: {
+          places: safeValues.nearby_places || [],
+          transits: safeValues.nearby_transits || [],
+        },
         meta_data: {
           slug: seoData.slug,
           meta_title: seoData.metaTitle,
           meta_description: seoData.metaDescription,
           keywords: mergedKeywords,
           agent_ids: agent_ids,
+          feature_ids: feature_ids,
           co_agent: {
             is_co_agent: safeValues.is_co_agent,
             name: co_agent_name,
@@ -309,7 +347,8 @@ export async function createPropertyAction(
         userId: user.id,
         tenantId: tenantId,
       },
-    });
+    }).catch(e => console.warn("Inngest property.created skip:", e.message));
+
 
     return {
       success: true,
@@ -333,8 +372,36 @@ export async function duplicatePropertyAction(
   id: string,
 ): Promise<DuplicatePropertyResult> {
   try {
-    const { supabase, user, role, tenantId } = await requireAuthContext();
+    const { supabase, user, role, tenantId: contextTenantId } = await requireAuthContext();
     assertStaff(role);
+    
+    let tenantId = contextTenantId;
+    if (!tenantId) {
+      const { data: firstMember } = await supabase
+        .from("tenant_members_v3")
+        .select("tenant_id")
+        .eq("identity_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      if (firstMember?.tenant_id) {
+        tenantId = firstMember.tenant_id;
+      } else {
+        const { default_tenant_id } = await getSystemConfig();
+        if (default_tenant_id) {
+          tenantId = default_tenant_id;
+        } else {
+          // Ultimate fallback: get the first tenant in the system
+          const { data: firstTenant } = await supabase
+            .from("tenants_v3")
+            .select("id")
+            .limit(1)
+            .maybeSingle();
+          if (firstTenant?.id) {
+            tenantId = firstTenant.id;
+          }
+        }
+      }
+    }
     if (!tenantId) throw new Error("Tenant ID is required but missing");
 
 
@@ -489,7 +556,8 @@ export async function duplicatePropertyAction(
         userId: user.id,
         tenantId: tenantId,
       },
-    });
+    }).catch(e => console.warn("Inngest property.created duplicate skip:", e.message));
+
 
     return {
       success: true,

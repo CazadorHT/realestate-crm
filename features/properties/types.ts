@@ -1,5 +1,5 @@
 import type { Database } from "@/lib/database.types.generated";
-import type { 
+import { 
   PropertyAmenitiesV3, 
   PropertyAddressV3, 
   PropertyMetaDataV3, 
@@ -7,6 +7,15 @@ import type {
   PropertyTransitV3,
   PropertyImageV3
 } from "./types/v3";
+
+export type { 
+  PropertyAmenitiesV3, 
+  PropertyAddressV3, 
+  PropertyMetaDataV3, 
+  PropertyPricingV3, 
+  PropertyTransitV3,
+  PropertyImageV3
+};
 
 export type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL_BUILDING" | "WAREHOUSE" | "OFFICE_BUILDING" | "VILLA" | "POOL_VILLA" | "OTHER";
 export type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
@@ -132,6 +141,7 @@ export interface PropertyTableData {
   bathrooms?: number | null;
   office_capacity?: number | null;
   agent_name?: string | null;
+  assigned_to?: string | null;
   popular_area?: string | null;
   original_price?: number | null;
   original_rental_price?: number | null;
@@ -177,6 +187,47 @@ export interface PropertyDetail {
   is_pet_friendly: boolean | null;
   is_exclusive: boolean | null;
   verified: boolean | null;
+  is_cbd?: boolean | null;
+  is_bare_shell?: boolean | null;
+  is_never_lived_in?: boolean | null;
+  is_smart_home?: boolean | null;
+  is_high_ceiling?: boolean | null;
+  has_private_elevator?: boolean | null;
+  is_high_floor?: boolean | null;
+  is_handicapped_friendly?: boolean | null;
+  is_foreigner_quota?: boolean | null;
+  is_renovated?: boolean | null;
+  is_corner_unit?: boolean | null;
+  is_fully_furnished?: boolean | null;
+  has_private_pool?: boolean | null;
+  is_selling_with_tenant?: boolean | null;
+  has_river_view?: boolean | null;
+  has_city_view?: boolean | null;
+  has_garden_view?: boolean | null;
+  has_unblocked_view?: boolean | null;
+  allow_smoking?: boolean | null;
+  is_column_free?: boolean | null;
+  is_grade_a?: boolean | null;
+  is_grade_b?: boolean | null;
+  is_grade_c?: boolean | null;
+  is_tax_registered?: boolean | null;
+  has_pool_view?: boolean | null;
+  facing_east?: boolean | null;
+  facing_north?: boolean | null;
+  facing_south?: boolean | null;
+  facing_west?: boolean | null;
+  has_raised_floor?: boolean | null;
+  is_central_air?: boolean | null;
+  is_split_air?: boolean | null;
+  has_247_access?: boolean | null;
+  has_fiber_optic?: boolean | null;
+  has_multi_parking?: boolean | null;
+  is_green_building?: boolean | null;
+  has_flexible_lease?: boolean | null;
+  is_fully_fitted?: boolean | null;
+  near_transit?: boolean | null;
+  meta_keywords?: string[] | null;
+  floor?: number | null;
   floor_plan_url: string | null;
   created_at: string | null;
   updated_at: string | null;

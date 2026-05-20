@@ -29,6 +29,7 @@ export function DepositWizard({
 
   const form = useForm<DepositLeadInput>({
     resolver: zodResolver(depositLeadSchema),
+    mode: "onChange",
     defaultValues: {
       fullName: "",
       phone: "",

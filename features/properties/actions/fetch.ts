@@ -11,6 +11,8 @@ import type {
   PropertyType,
   ListingType,
   PropertyStatus,
+  PropertyTransitInfoConsolidated,
+  PropertyTransitV3,
 } from "../types";
 import type { 
   InventoryProperty,
@@ -31,7 +33,7 @@ import type { Database } from "@/lib/database.types.generated";
 
 /** === SHARED JSONB INTERFACES === */
 interface MultiLang { th?: string; en?: string; cn?: string; ru?: string }
-interface AddressInfo { th?: string; en?: string; province?: string; district?: string; subdistrict?: string; postal_code?: string; maps_link?: string }
+interface AddressInfo { th?: string; en?: string; province?: string; district?: string; subdistrict?: string; postal_code?: string; maps_link?: string; popular_area?: string; popular_area_en?: string; popular_area_cn?: string; popular_area_ru?: string }
 interface Amenities { is_pet_friendly?: boolean; is_foreigner_quota?: boolean }
 interface PricingDetails { 
   maintenance_fee?: number; 
@@ -69,7 +71,7 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
 
     const { data: core, error: coreErr } = await supabase
       .from("properties_core")
-      .select("id, tenant_id, branch_id, status, listing_type, property_type, sale_price, rent_price, currency, floor_area, land_area, created_at, updated_at")
+      .select("id, tenant_id, branch_id, status, listing_type, property_type, sale_price, rent_price, currency, floor_area, land_area, is_exclusive, is_hot_deal, verified, created_at, updated_at")
       .eq("id", id)
       .single();
 
@@ -88,6 +90,11 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       .select("id, property_id, url, media_type, is_cover, sort_order")
       .eq("property_id", id)
       .order("sort_order");
+
+    const { data: features } = await supabase
+      .from("property_features")
+      .select("feature_id")
+      .eq("property_id", id);
 
     const title = details.title as unknown as MultiLang;
     const description = details.description as unknown as MultiLang;
@@ -130,16 +137,29 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       subdistrict: addr?.subdistrict || "",
       postal_code: addr?.postal_code || "",
       google_maps_link: addr?.maps_link || "",
+      popular_area: addr?.popular_area || "",
+      popular_area_en: addr?.popular_area_en || "",
+      popular_area_cn: addr?.popular_area_cn || "",
+      popular_area_ru: addr?.popular_area_ru || "",
       
       is_pet_friendly: !!amen?.is_pet_friendly,
       is_foreigner_quota: !!amen?.is_foreigner_quota,
+      is_exclusive: !!core.is_exclusive,
+      is_hot_deal: !!core.is_hot_deal,
+      verified: !!core.verified,
       
       maintenance_fee: price?.maintenance_fee || 0,
       commission_sale_percentage: price?.commission_sale || 0,
       commission_rent_months: price?.commission_rent || 0,
       
       images: media || [],
-      nearby_transits: (details.transit_info as unknown as any[]) || [],
+      property_features: features || [],
+      nearby_transits: Array.isArray(details.transit_info)
+        ? (details.transit_info as unknown as PropertyTransitV3[])
+        : ((details.transit_info as unknown as PropertyTransitInfoConsolidated)?.transits || []),
+      nearby_places: Array.isArray(details.transit_info)
+        ? []
+        : ((details.transit_info as unknown as PropertyTransitInfoConsolidated)?.places || []),
       
       agent_ids: meta?.agent_ids || [],
       created_by: meta?.created_by || "",

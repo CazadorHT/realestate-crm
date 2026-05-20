@@ -31,6 +31,7 @@ describe("updatePropertyAction", () => {
       update: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       single: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn().mockResolvedValue({ data: { role: "AGENT" } }),
       delete: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
       upsert: vi.fn().mockReturnThis(),

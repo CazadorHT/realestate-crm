@@ -222,9 +222,11 @@ export function generatePropertyDescription(
     };
 
     data.nearby_places?.forEach((p) => {
-      const label = CAT_MAP[p.category] || "สถานที่อื่นๆ";
+      const cat = p.category || "Other";
+      const label = CAT_MAP[cat] || "สถานที่อื่นๆ";
+      const name = p.name || "";
       const dist = p.distance_meters ? `(${p.distance_meters} ม.)` : "";
-      addToGroup(label, `${p.name} ${dist}`);
+      addToGroup(label, `${name} ${dist}`.trim());
     });
 
     // 6.2 Render Groups

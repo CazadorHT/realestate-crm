@@ -43,9 +43,7 @@ export async function incrementPropertyView(propertyId: string) {
 
   // 3. Call the secure database function with identity parameters
   const { data, error } = await supabase.rpc("increment_property_view", {
-    p_property_id: propertyId,
-    p_visitor_id: visitorId,
-    p_user_id: userId
+    p_id: propertyId
   });
 
   if (error) {
@@ -68,6 +66,6 @@ export async function incrementPropertyView(propertyId: string) {
         userId,
         tenantId: result.tenant_id // 🛡️ Zero-Admin: Got from RPC directly
       }
-    });
+    }).catch(e => console.warn("Inngest proactive trigger skip:", e.message));
   }
 }

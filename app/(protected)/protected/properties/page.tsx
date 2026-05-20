@@ -77,9 +77,11 @@ export default async function PropertiesPage({
     requireAuthContext(),
   ]);
 
-  const { role, tenantId, supabase } = authContext;
+  const { role, tenantId, supabase, user } = authContext;
   const isAdminUser = role === "ADMIN";
+  const isAdminOrManager = role === "ADMIN" || role === "MANAGER";
   const isMultiTenant = config.multi_tenant_enabled;
+  const currentUserEmail = user.email || "";
 
   return (
     <div className="space-y-4 md:space-y-6 animate-fade-in">
@@ -112,9 +114,11 @@ export default async function PropertiesPage({
           <TableWrapper
             params={params}
             isAdminUser={isAdminUser}
+            isAdminOrManager={isAdminOrManager}
             isMultiTenant={isMultiTenant}
             tenantId={tenantId}
             currentPage={currentPage}
+            currentUserEmail={currentUserEmail}
           />
         </Suspense>
       </div>
@@ -142,15 +146,19 @@ async function DashboardWrapper({ allBranches }: { allBranches?: string }) {
 async function TableWrapper({
   params,
   isAdminUser,
+  isAdminOrManager,
   isMultiTenant,
   tenantId,
   currentPage,
+  currentUserEmail,
 }: {
   params: any;
   isAdminUser: boolean;
+  isAdminOrManager: boolean;
   isMultiTenant: boolean;
   tenantId: string | undefined;
   currentPage: number;
+  currentUserEmail: string;
 }) {
   const supabase = await createClient();
   
@@ -203,6 +211,7 @@ async function TableWrapper({
         <PropertiesTable
           data={tableData}
           isAdmin={isAdminUser}
+          isAdminOrManager={isAdminOrManager}
           isMultiTenant={isMultiTenant}
           currentTenantId={tenantId}
           currentTenantName={currentTenantName}
@@ -211,6 +220,7 @@ async function TableWrapper({
           }
           totalCount={count}
           filters={params}
+          currentUserEmail={currentUserEmail}
         />
       )}
     </>

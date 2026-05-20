@@ -93,66 +93,91 @@ export function ProcessMonitor() {
 
   return (
     <>
-      {/* Floating Circle Button */}
-      <m.button
-        initial={{ scale: 0, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(true)}
-        className={cn(
-          "fixed bottom-6 right-6 z-50 h-10 w-10 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-center border transition-all group overflow-hidden bg-white",
-          activeCount > 0 
-            ? "border-blue-500 text-blue-600 shadow-blue-200" 
-            : errorCount > 0 
-              ? "border-red-500 text-red-600 shadow-red-200" 
-              : processes.length > 0
-                ? "border-emerald-500 text-emerald-600 shadow-emerald-200"
-                : "border-slate-200 text-slate-400 hover:border-blue-300 hover:text-blue-500"
-        )}
-      >
-        <AnimatePresence mode="wait">
-          {activeCount > 0 ? (
-            <m.div
-              key="active"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="relative flex items-center justify-center"
-            >
-              <AnimatedLoader size={20} />
-              <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-blue-700">
-                {activeCount}
-              </span>
-            </m.div>
-          ) : errorCount > 0 ? (
-            <AnimatedAlert key="error" size={20} />
-          ) : processes.length > 0 ? (
-            <AnimatedCheck key="idle" size={20} className="text-emerald-500" />
-          ) : (
-            <AnimatedActivity key="empty" size={18} />
-          )}
-        </AnimatePresence>
-
-        {/* Notification Badge */}
-        {(activeCount > 0 || errorCount > 0) && (
-          <m.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className={cn(
-              "absolute -top-1 -right-1 h-4 w-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white shadow-md border border-white z-10",
-              errorCount > 0 ? "bg-red-500" : "bg-blue-500"
-            )}
+      {/* Floating Container */}
+      <AnimatePresence>
+        {(activeCount > 0 || errorCount > 0 || processes.length > 0) && (
+          <m.div 
+            initial={{ scale: 0, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            exit={{ scale: 0, opacity: 0, y: 20 }}
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-2"
           >
-            {activeCount + errorCount}
+            {/* Close / Dismiss Button (Only show when work is done successfully) */}
+            {activeCount === 0 && processes.length > 0 && (
+              <m.button
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  clearFinished();
+                  toast.info("ปิดและล้างประวัติงานที่สำเร็จเรียบร้อย");
+                }}
+                className="h-6 w-6 rounded-full bg-white hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center border border-slate-200 shadow-sm transition-all"
+                title="ปิด / ล้างงานที่สำเร็จ"
+              >
+                <span className="text-[10px] font-bold">✕</span>
+              </m.button>
+            )}
+
+            {/* Main Floating Circle Button */}
+            <m.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setIsOpen(true)}
+              className={cn(
+                "h-10 w-10 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.12)] flex items-center justify-center border transition-all group overflow-hidden bg-white relative",
+                activeCount > 0 
+                  ? "border-blue-500 text-blue-600 shadow-blue-200" 
+                  : errorCount > 0 
+                    ? "border-red-500 text-red-600 shadow-red-200" 
+                    : "border-emerald-500 text-emerald-600 shadow-emerald-200"
+              )}
+            >
+              <AnimatePresence mode="wait">
+                {activeCount > 0 ? (
+                  <m.div
+                    key="active"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.8, opacity: 0 }}
+                    className="relative flex items-center justify-center"
+                  >
+                    <AnimatedLoader size={20} />
+                    <span className="absolute inset-0 flex items-center justify-center text-[8px] font-bold text-blue-700">
+                      {activeCount}
+                    </span>
+                  </m.div>
+                ) : errorCount > 0 ? (
+                  <AnimatedAlert key="error" size={20} />
+                ) : (
+                  <AnimatedCheck key="idle" size={20} className="text-emerald-500" />
+                )}
+              </AnimatePresence>
+
+              {/* Notification Badge */}
+              {(activeCount > 0 || errorCount > 0) && (
+                <m.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className={cn(
+                    "absolute -top-1 -right-1 h-4 w-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white shadow-md border border-white z-10",
+                    errorCount > 0 ? "bg-red-500" : "bg-blue-500"
+                  )}
+                >
+                  {activeCount + errorCount}
+                </m.div>
+              )}
+
+              {/* Pulse effect when active */}
+              {activeCount > 0 && (
+                <span className="absolute inset-0 rounded-full bg-blue-400/20 animate-ping" />
+              )}
+            </m.button>
           </m.div>
         )}
-
-        {/* Pulse effect when active */}
-        {activeCount > 0 && (
-          <span className="absolute inset-0 rounded-full bg-blue-400/20 animate-ping" />
-        )}
-      </m.button>
+      </AnimatePresence>
 
       {/* Dialog / History View */}
       <ResponsiveDialog 
@@ -336,7 +361,7 @@ export function ProcessMonitor() {
                             onClick={() => {
                               window.open(p.resultLink, "_blank");
                             }}
-                            className="h-8 text-[10px] font-bold gap-1.5 rounded-xl border-emerald-100 text-emerald-600 hover:bg-emerald-50 hover:border-emerald-200 shadow-sm"
+                            className="h-8 text-[10px] font-semibold gap-1.5 rounded-xl border-emerald-100 text-emerald-600! hover:bg-emerald-50 hover:border-emerald-200 shadow-sm"
                           >
                             <ExternalLink className="h-3 w-3" />
                             ดูผลลัพธ์ (View)

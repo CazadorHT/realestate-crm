@@ -1,7 +1,9 @@
 "use client";
+import * as React from "react";
 
 import { Bell, Layers, CheckCheck, Trash2, ExternalLink, UserPlus, Building2, Bell as BellIcon, Info, AlertTriangle } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { cn, formatDistanceToNowThai } from "@/lib/utils";
 import { useNotifications } from "@/hooks/use-notifications";
@@ -17,16 +19,51 @@ const TYPE_CONFIG: Record<string, { icon: any; color: string; bg: string }> = {
 
 export function NotificationBell() {
   const {
-    stackedNotifications,
-    unreadCount,
+    stackedNotifications: initialStacked,
+    unreadCount: initialUnread,
     loading,
     markAsRead,
     markAllAsRead,
     deleteNotification,
   } = useNotifications();
 
+  const router = useRouter();
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [isNavigating, setIsNavigating] = React.useState(false);
+
+  const [draftNotif, setDraftNotif] = React.useState<any | null>(null);
+
+  React.useEffect(() => {
+    try {
+      const rawDraft = localStorage.getItem("property-form-draft");
+      if (rawDraft) {
+        const { values, timestamp } = JSON.parse(rawDraft);
+        if (values && (values.title || values.price || values.description)) {
+          setDraftNotif({
+            id: "draft-recovery",
+            title: "📝 แบบร่างที่ยังไม่บันทึก",
+            message: `โครงการ: "${values.title || 'ไม่มีชื่อโครงการ'}"`,
+            type: "WARNING",
+            created_at: new Date(timestamp).toISOString(),
+            is_read: false,
+            link: "/protected/properties/new?restore=true",
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse draft for notification bell", e);
+    }
+  }, []);
+
+  const stackedNotifications = draftNotif ? [draftNotif, ...initialStacked] : initialStacked;
+  const unreadCount = initialUnread + (draftNotif && !draftNotif.is_read ? 1 : 0);
+
   return (
     <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={setIsOpen}
+      isLoading={isNavigating}
+      loadingText="กำลังพากลับไปทำแบบร่างต่อ..."
       trigger={
         <Button
           variant="ghost"
@@ -103,7 +140,18 @@ export function NotificationBell() {
                     "group flex items-start gap-4 p-5 hover:bg-slate-50/50 transition-colors cursor-pointer relative",
                     !n.is_read && "bg-blue-50/20",
                   )}
-                  onClick={() => !n.is_read && markAsRead(n.id)}
+                  onClick={() => {
+                    if (n.id === "draft-recovery") {
+                      setIsNavigating(true);
+                      router.push(n.link);
+                      setTimeout(() => {
+                        setIsOpen(false);
+                        setIsNavigating(false);
+                      }, 1200);
+                    } else if (!n.is_read) {
+                      markAsRead(n.id);
+                    }
+                  }}
                 >
                   <div className={cn(
                     "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 border border-white shadow-sm relative",
@@ -134,6 +182,13 @@ export function NotificationBell() {
                     <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-2 pt-0.5">
                       {timeAgo}
                     </span>
+                    {n.id === "draft-recovery" && (
+                      <div className="pt-2.5">
+                        <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 text-white text-xs font-bold shadow-sm hover:bg-blue-700 transition-colors">
+                          ⚡ กู้คืนแบบร่าง (Restore)
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Delete Button */}
@@ -141,7 +196,12 @@ export function NotificationBell() {
                     onClick={(e) => {
                       e.stopPropagation();
                       e.preventDefault();
-                      deleteNotification(n.id);
+                      if (n.id === "draft-recovery") {
+                        localStorage.removeItem("property-form-draft");
+                        setDraftNotif(null);
+                      } else {
+                        deleteNotification(n.id);
+                      }
                     }}
                     className="absolute top-4 right-4 p-2 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 transition-all text-slate-400 hover:text-red-500"
                     title="ลบ"
@@ -151,7 +211,7 @@ export function NotificationBell() {
                 </div>
               );
 
-              if (n.link && !n.isGroup) {
+              if (n.link && !n.isGroup && n.id !== "draft-recovery") {
                 return (
                   <Link key={n.id} href={n.link} className="block no-underline">
                     {content}

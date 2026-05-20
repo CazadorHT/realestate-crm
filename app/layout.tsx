@@ -127,6 +127,18 @@ export default async function RootLayout({
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
 
+        {/* Meta Pixel Safe Stub to prevent "fbq is not defined" ReferenceError */}
+        <Script id="meta-pixel-stub" strategy="beforeInteractive">
+          {`
+            window.fbq = window.fbq || function() {
+              (window.fbq.q = window.fbq.q || []).push(arguments);
+            };
+            window.fbq.push = window.fbq;
+            window.fbq.loaded = true;
+            window.fbq.version = '2.0';
+            window.fbq.queue = [];
+          `}
+        </Script>
         
         {/* Google Tag Manager - Deferred until Interaction for S-Tier TBT Score */}
         {gtmId && <GTMInteractionLoader gtmId={gtmId} />}

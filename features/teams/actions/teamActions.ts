@@ -445,3 +445,105 @@ export async function deleteTeamAction(id: string) {
     return { success: false, message: "Unauthorized" };
   }
 }
+
+/**
+ * โอนย้ายลีดและทรัพย์สินทั้งหมดของเอเจนต์ต้นทาง ไปยังเอเจนต์ปลายทางภายในสาขาเดียวกัน (Offboarding/Reassignment)
+ */
+export async function reassignAgentAssetsAction({
+  sourceAgentId,
+  targetAgentId,
+}: {
+  sourceAgentId: string;
+  targetAgentId: string;
+}) {
+  try {
+    const ctx = await requireAuthContext();
+    const { supabase, tenantId, role } = ctx;
+
+    // 1. ตรวจสอบสิทธิ์: ต้องเป็น OWNER, MANAGER, หรือ ADMIN เท่านั้น
+    const isAuthorized = role === "ADMIN" || role === "OWNER" || role === "MANAGER";
+    if (!isAuthorized) {
+      return { success: false, message: "ไม่มีสิทธิ์ในการดำเนินการนี้ (เฉพาะผู้จัดการหรือเจ้าของสาขา)" };
+    }
+
+    if (!tenantId) {
+      return { success: false, message: "ไม่พบข้อมูลสาขาสำหรับการโอนย้าย" };
+    }
+
+    // 2. ตรวจสอบว่าทั้งคู่สังกัดสาขาเดียวกัน (ยกเว้นระบบ ADMIN ที่อนุญาตข้ามสาขา)
+    if (role !== "ADMIN") {
+      const { data: sourceMember } = await supabase
+        .from("tenant_members_v3")
+        .select("id")
+        .eq("identity_id", sourceAgentId)
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+
+      const { data: targetMember } = await supabase
+        .from("tenant_members_v3")
+        .select("id")
+        .eq("identity_id", targetAgentId)
+        .eq("tenant_id", tenantId)
+        .maybeSingle();
+
+      if (!sourceMember || !targetMember) {
+        return { success: false, message: "เอเจนต์ไม่อยู่ในสาขาเดียวกัน หรือไม่มีข้อมูลสังกัดในระบบ" };
+      }
+    }
+
+    // 3. เริ่มอัปเดตข้อมูลลีด
+    const { error: leadsError } = await supabase
+      .from("crm_leads_v3")
+      .update({ assigned_to: targetAgentId })
+      .eq("assigned_to", sourceAgentId)
+      .eq("tenant_id", tenantId);
+
+    if (leadsError) {
+      console.error("Reassign leads error:", leadsError);
+      return { success: false, message: "เกิดข้อผิดพลาดในการโอนย้ายลีด: " + leadsError.message };
+    }
+
+    // 4. เริ่มอัปเดตข้อมูลทรัพย์สิน (assigned_to ใน properties_core)
+    const { error: propertiesError } = await supabase
+      .from("properties_core")
+      .update({ assigned_to: targetAgentId })
+      .eq("assigned_to", sourceAgentId)
+      .eq("tenant_id", tenantId);
+
+    if (propertiesError) {
+      console.error("Reassign properties error:", propertiesError);
+      return { success: false, message: "เกิดข้อผิดพลาดในการโอนย้ายทรัพย์สิน: " + propertiesError.message };
+    }
+
+    // 5. บันทึกประวัติกิจกรรมลงใน activity_timeline_v3
+    await supabase.from("activity_timeline_v3").insert({
+      tenant_id: tenantId,
+      actor_id: ctx.user.id || sourceAgentId,
+      target_entity: "identity",
+      target_id: sourceAgentId,
+      activity_type: "assigned_changed",
+      description: `โอนย้ายทรัพย์สินและลีดทั้งหมดของพนักงานจาก ID ${sourceAgentId} ไปยัง ${targetAgentId} (เนื่องจาก Offboarding หรือการจัดสรรงานใหม่)`,
+      metadata: {
+        source_agent_id: sourceAgentId,
+        target_agent_id: targetAgentId,
+        reassigned_by: ctx.user.id,
+      },
+    });
+
+    // 6. ส่งแจ้งเตือนไปยังเอเจนต์ปลายทางเพื่อรับทราบ
+    const { createNotificationAction } = await import("@/lib/actions/notifications");
+    await createNotificationAction({
+      userId: targetAgentId,
+      tenantId: tenantId,
+      type: "INFO",
+      title: "ได้รับมอบหมายทรัพย์และลีดใหม่ 📋",
+      message: `ผู้จัดการได้โอนย้ายเคสดูแลทั้งหมดของเพื่อนร่วมงานมาให้คุณรับผิดชอบดูแลต่อเรียบร้อยแล้ว`,
+      link: "/protected/leads",
+    });
+
+    return { success: true, message: "โอนย้ายความรับผิดชอบทั้งหมดเรียบร้อยแล้ว" };
+  } catch (error: any) {
+    console.error("Reassign agent assets error:", error);
+    return { success: false, message: error.message || "เกิดข้อผิดพลาดในการประมวลผลเซิร์ฟเวอร์" };
+  }
+}

@@ -57,10 +57,10 @@ const PropertyAmenities = dynamic(
     ),
   { ssr: false },
 );
-const PropertyMapSection = dynamic(
+const PropertyMapClient = dynamic(
   () =>
-    import("@/components/public/property-detail/PropertyMapSection").then(
-      (m) => m.PropertyMapSection,
+    import("@/components/public/property-detail/PropertyMapClient").then(
+      (m) => m.PropertyMapClient,
     ),
   { ssr: false },
 );
@@ -91,6 +91,12 @@ import {
   Loader2,
   Clock,
   MapPin,
+  CheckCircle2,
+  AlertCircle,
+  ImageIcon,
+  BarChart3,
+  Globe,
+  Shield,
 } from "lucide-react";
 import { useAITranslation } from "../hooks/use-ai-translation";
 import { translateTextAction } from "@/lib/ai/translation-actions";
@@ -118,12 +124,12 @@ interface ExtendedDatabase extends Database {
         Update: Partial<Feature>;
         Relationships: [];
       };
-      popular_areas: {
+      popular_areas_v3: {
         Row: {
-          name: string;
-          name_en: string | null;
-          name_cn: string | null;
-          name_ru: string | null;
+        name: string;
+        name_en: string | null;
+        name_cn: string | null;
+        name_ru: string | null;
         };
         Insert: any;
         Update: any;
@@ -211,29 +217,26 @@ export function Step6Review({ mode }: Step6ReviewProps) {
         (!values.popular_area_en || !values.popular_area_cn || !values.popular_area_ru)
       ) {
         const { data: areaData } = await db
-          .from("popular_areas")
-          .select("name_en, name_cn, name_ru")
-          .eq("name", values.popular_area)
+          .from("popular_areas_v3")
+          .select("name")
+          .eq("name->>th", values.popular_area)
           .maybeSingle();
 
-        if (areaData) {
-          const area = areaData as {
-            name_en: string | null;
-            name_cn: string | null;
-            name_ru: string | null;
-          };
+        if (areaData && areaData.name && typeof areaData.name === "object") {
+          const nameObj = areaData.name as any;
           if (!values.popular_area_en)
-            form.setValue("popular_area_en", area.name_en);
+            form.setValue("popular_area_en", nameObj.en || null);
           if (!values.popular_area_cn)
-            form.setValue("popular_area_cn", area.name_cn);
+            form.setValue("popular_area_cn", nameObj.cn || null);
           if (!values.popular_area_ru)
-            form.setValue("popular_area_ru", area.name_ru);
+            form.setValue("popular_area_ru", nameObj.ru || null);
         }
       }
     }
 
     loadData();
-  }, [values.feature_ids, values.popular_area, form]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [values.feature_ids, values.popular_area]);
 
   // Transform images for Gallery (using real URLs from form)
   const images = useMemo(() => {
@@ -424,6 +427,32 @@ export function Step6Review({ mode }: Step6ReviewProps) {
     }
   }, [generateAndTranslateAll]);
 
+  // 📊 Listing Readiness Score
+  const readinessChecks = useMemo(() => {
+    const checks = [
+      { label: "ชื่อทรัพย์", ok: !!values.title?.trim(), weight: 15 },
+      { label: "รูปภาพ ≥5 รูป", ok: (values.images?.length || 0) >= 5, weight: 20 },
+      { label: "ราคา", ok: !!(values.price || values.rental_price), weight: 15 },
+      { label: "รายละเอียด (TH)", ok: !!values.description?.trim(), weight: 10 },
+      { label: "รายละเอียด (EN)", ok: !!values.description_en?.trim(), weight: 5 },
+      { label: "รายละเอียด (CN)", ok: !!values.description_cn?.trim(), weight: 5 },
+      { label: "ทำเล", ok: !!values.popular_area || !!values.district, weight: 10 },
+      { label: "ข้อมูลห้อง", ok: !!(values.bedrooms || values.size_sqm), weight: 5 },
+      { label: "สิ่งอำนวยความสะดวก", ok: (values.feature_ids?.length || 0) >= 1, weight: 5 },
+      { label: "แผนที่ Google", ok: !!values.google_maps_link?.trim(), weight: 5 },
+      { label: "ชื่อ (EN)", ok: !!values.title_en?.trim(), weight: 5 },
+    ];
+    const totalWeight = checks.reduce((s, c) => s + c.weight, 0);
+    const earned = checks.filter(c => c.ok).reduce((s, c) => s + c.weight, 0);
+    const score = Math.round((earned / totalWeight) * 100);
+    return { checks, score };
+  }, [
+    values.title, values.title_en, values.images, values.price, values.rental_price,
+    values.description, values.description_en, values.description_cn,
+    values.popular_area, values.district, values.bedrooms, values.size_sqm,
+    values.feature_ids, values.google_maps_link,
+  ]);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Review Header Alert */}
@@ -518,6 +547,113 @@ export function Step6Review({ mode }: Step6ReviewProps) {
         </div>
       </div>
 
+      {/* 📊 Listing Readiness Score */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6">
+          {/* Score Ring */}
+          <div className="relative h-20 w-20 shrink-0 mx-auto sm:mx-0">
+            <svg viewBox="0 0 80 80" className="h-20 w-20 -rotate-90">
+              <circle cx="40" cy="40" r="34" stroke="#e2e8f0" strokeWidth="6" fill="none" />
+              <circle
+                cx="40" cy="40" r="34"
+                stroke={readinessChecks.score >= 80 ? "#10b981" : readinessChecks.score >= 50 ? "#f59e0b" : "#ef4444"}
+                strokeWidth="6"
+                fill="none"
+                strokeLinecap="round"
+                strokeDasharray={`${(readinessChecks.score / 100) * 213.6} 213.6`}
+                className="transition-all duration-1000 ease-out"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className={cn(
+                "text-lg font-black",
+                readinessChecks.score >= 80 ? "text-emerald-600" : readinessChecks.score >= 50 ? "text-amber-600" : "text-red-600"
+              )}>{readinessChecks.score}%</span>
+              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Ready</span>
+            </div>
+          </div>
+
+          {/* Checklist Grid */}
+          <div className="flex-1 w-full">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-bold text-slate-700 flex items-center gap-1.5">
+                <BarChart3 className="h-4 w-4 text-slate-400" />
+                ความพร้อมประกาศ
+              </h4>
+              <span className={cn(
+                "text-[11px] font-bold px-2 py-0.5 rounded-full",
+                readinessChecks.score >= 80
+                  ? "bg-emerald-100 text-emerald-700"
+                  : readinessChecks.score >= 50
+                    ? "bg-amber-100 text-amber-700"
+                    : "bg-red-100 text-red-700"
+              )}>
+                {readinessChecks.score >= 80 ? "พร้อมเผยแพร่" : readinessChecks.score >= 50 ? "ควรเพิ่มข้อมูล" : "ข้อมูลน้อย"}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-1">
+              {readinessChecks.checks.map((c) => (
+                <div key={c.label} className="flex items-center gap-1.5 text-[11px]">
+                  {c.ok ? (
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                  ) : (
+                    <AlertCircle className="h-3.5 w-3.5 text-slate-300 shrink-0" />
+                  )}
+                  <span className={cn("truncate", c.ok ? "text-slate-600" : "text-slate-400")}>
+                    {c.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Translation Status */}
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
+              <Globe className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+              <span className="text-[11px] text-slate-500 font-medium shrink-0">แปลภาษา:</span>
+              {(["th", "en", "cn", "ru"] as const).map((lang) => {
+                const hasDesc = lang === "th" ? !!values.description?.trim()
+                  : lang === "en" ? !!values.description_en?.trim()
+                    : lang === "cn" ? !!values.description_cn?.trim()
+                      : !!values.description_ru?.trim();
+                const hasTitle = lang === "th" ? !!values.title?.trim()
+                  : lang === "en" ? !!values.title_en?.trim()
+                    : lang === "cn" ? !!values.title_cn?.trim()
+                      : !!values.title_ru?.trim();
+                const status = hasDesc && hasTitle ? "full" : hasDesc || hasTitle ? "partial" : "none";
+                return (
+                  <span
+                    key={lang}
+                    className={cn(
+                      "inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border",
+                      status === "full" ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                        : status === "partial" ? "bg-amber-50 text-amber-700 border-amber-200"
+                          : "bg-slate-50 text-slate-400 border-slate-200"
+                    )}
+                  >
+                    <span className={cn(
+                      "fi shadow-xs rounded-xs scale-90",
+                      lang === "th" ? "fi-th" : lang === "en" ? "fi-us" : lang === "cn" ? "fi-cn" : "fi-ru"
+                    )} />
+                    {status === "full" ? "✓" : status === "partial" ? "◐" : "—"}
+                  </span>
+                );
+              })}
+              {/* Image Count */}
+              <div className="ml-auto flex items-center gap-1">
+                <ImageIcon className={cn("h-3.5 w-3.5", (values.images?.length || 0) >= 5 ? "text-emerald-500" : "text-amber-500")} />
+                <span className={cn(
+                  "text-[10px] font-bold",
+                  (values.images?.length || 0) >= 5 ? "text-emerald-600" : "text-amber-600"
+                )}>
+                  {values.images?.length || 0} รูป
+                  {(values.images?.length || 0) < 5 && " (แนะนำ ≥5)"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* --- PREVIEW CONTENT --- */}
       <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-8 sm:pb-12 relative">
         <PropertyHeader
@@ -553,7 +689,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                         },
                       ]
                     : []),
-                  ...(values.nearby_transits || []),
+                  ...(Array.isArray(values.nearby_transits) ? values.nearby_transits : []),
                 ],
                 places: values.nearby_places || [],
               }
@@ -793,7 +929,12 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                     values.popular_area ||
                     undefined
                   }
-                  data={values.nearby_places || []}
+                  data={(values.nearby_places || []).map(p => ({
+                    category: p.category || "Other",
+                    name: p.name || "",
+                    distance: p.distance_meters !== undefined ? (p.distance_meters / 1000).toString() : undefined,
+                    time: p.time,
+                  }))}
                   transits={[
                     ...(values.near_transit && values.transit_station_name
                       ? [
@@ -810,8 +951,9 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                           },
                         ]
                       : []),
-                    ...(values.nearby_transits || []).map(t => ({
+                    ...(Array.isArray(values.nearby_transits) ? values.nearby_transits : []).map(t => ({
                       ...t,
+                      station_name: t.station_name || "",
                       station_name_en: t.station_name_en || undefined,
                       station_name_cn: t.station_name_cn || undefined,
                       station_name_ru: t.station_name_ru || undefined,
@@ -826,10 +968,12 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                   language={previewLanguage}
                 />
                 <hr className="border-slate-100" />
-                <PropertyMapSection
-                  googleMapsLink={values.google_maps_link || null}
-                  language={previewLanguage}
-                />
+                <section id="map-section" className="scroll-mt-20">
+                  <PropertyMapClient
+                    googleMapsLink={values.google_maps_link || null}
+                    language={previewLanguage}
+                  />
+                </section>
               </div>
 
               <div className="space-y-6">

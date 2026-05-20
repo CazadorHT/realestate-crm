@@ -38,7 +38,7 @@ export async function subscribeToLineAction(
       await inngest.send({
         name: "lead.created",
         data: { leadId }
-      });
+      }).catch(e => console.warn("Inngest lead.created skip:", e.message));
     }
 
     return { success: true, message: "บันทึกข้อมูลเรียบร้อยแล้ว" };

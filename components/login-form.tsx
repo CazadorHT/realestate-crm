@@ -212,15 +212,31 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
         setSuccess("เราส่งลิงก์รีเซ็ตรหัสผ่านไปให้ทางอีเมลแล้วนะ!");
       }
     } catch (error: unknown) {
-      // Security Tip: If the error is about a user already existing,
-      // sometimes it's better to show a generic success message or a
-      // subtle hint to prevent User Enumeration.
-      const errorMessage =
-        error instanceof Error
-          ? error.message === "User already registered"
-            ? "หากมีบัญชีอยู่แล้ว คุณจะได้รับอีเมลยืนยันหรือลิงก์เข้าสู่ระบบ"
-            : error.message
-          : "อ๊ะ! มีอะไรบางอย่างผิดพลาด ลองใหม่อีกทีนะ";
+      let errorMessage = "อ๊ะ! มีอะไรบางอย่างผิดพลาด ลองใหม่อีกทีนะ";
+      if (error instanceof Error) {
+        if (view === "login" && error.message === "Invalid login credentials") {
+          try {
+            const { data: profileExists } = await supabase
+              .from("profiles")
+              .select("id")
+              .eq("email", data.email)
+              .maybeSingle();
+
+            if (!profileExists) {
+              errorMessage = "คุณยังไม่ได้ลงทะเบียนเข้าใช้งานระบบ CRM ด้วยอีเมลนี้ กรุณาสมัครสมาชิกก่อน";
+            } else {
+              errorMessage = "คุณกรอกรหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง";
+            }
+          } catch (checkErr) {
+            console.error("Error checking profile existence:", checkErr);
+            errorMessage = "อีเมลหรือรหัสผ่านไม่ถูกต้อง";
+          }
+        } else if (error.message === "User already registered") {
+          errorMessage = "หากมีบัญชีอยู่แล้ว คุณจะได้รับอีเมลยืนยันหรือลิงก์เข้าสู่ระบบ";
+        } else {
+          errorMessage = error.message;
+        }
+      }
       setError(errorMessage);
     } finally {
       setIsLoading(false);
