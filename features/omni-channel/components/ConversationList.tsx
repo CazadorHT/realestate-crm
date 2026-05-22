@@ -120,7 +120,7 @@ export function ConversationList({
       </div>
       <div className="flex-1">
         {conversations.map((conv) => {
-          const lastMsg = conv.omni_messages?.[0];
+          const lastMsg = conv.communications_hub_v3?.[0];
           const SourceIcon =
             conv.source === "LINE"
               ? FaLine

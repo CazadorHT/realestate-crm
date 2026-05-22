@@ -37,7 +37,7 @@
 
 ## 5. การจัดการข้อมูลจาก Social Media (Social Data Handling)
 
-- [x] **Facebook/Instagram Data:** ข้อมูลข้อความ (Messages) จาก Meta ถูกเก็บในตาราง `omni_messages` ผ่าน RLS
+- [x] **Facebook/Instagram Data:** ข้อมูลข้อความ (Messages) จาก Meta ถูกเก็บในตาราง `communications_hub_v3` ผ่าน RLS
 - [x] **TikTok OAuth:** Token ถูกเก็บอย่างปลอดภัยใน `site_settings` (ไม่เปิดเผยต่อ Client-side)
 - [x] **Comment Data:** ข้อมูลคอมเมนต์จาก Facebook/Instagram ที่ถูก Keyword Automation ตอบกลับจะไม่ถูกเก็บถาวร
 - [ ] **Third-party Data Agreement:** ควรทำ DPA กับ Meta/TikTok สำหรับการใช้งานข้อมูลผู้ใช้ (สำหรับระดับ Enterprise)

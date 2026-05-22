@@ -26,7 +26,7 @@ BEGIN
         SELECT tablename 
         FROM pg_tables 
         WHERE schemaname = 'public' 
-        AND tablename IN ('leads', 'deals', 'property_agents', 'rental_contracts', 'documents', 'audit_logs', 'co_broker_documents', 'omni_messages')
+        AND tablename IN ('leads', 'deals', 'property_agents', 'rental_contracts', 'documents', 'audit_logs', 'co_broker_documents', 'communications_hub_v3')
     LOOP
         -- Enable RLS
         EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', tbl);
@@ -44,10 +44,10 @@ BEGIN
             EXECUTE format('DROP POLICY IF EXISTS "Tenant Isolation %s" ON public.%I', tbl, tbl);
             EXECUTE format('CREATE POLICY "Tenant Isolation %s" ON public.%I FOR ALL USING (is_system_admin() OR tenant_id IN (SELECT get_user_tenants()))', tbl, tbl);
             
-            -- Also drop the old "Tenant Isolation: Omni Messages" if it exists for omni_messages
-            IF tbl = 'omni_messages' THEN
-                DROP POLICY IF EXISTS "Tenant Isolation: Omni Messages" ON public.omni_messages;
-                DROP POLICY IF EXISTS "Staff can view all omni messages" ON public.omni_messages;
+            -- Also drop the old "Tenant Isolation: Omni Messages" if it exists for communications_hub_v3
+            IF tbl = 'communications_hub_v3' THEN
+                DROP POLICY IF EXISTS "Tenant Isolation: Omni Messages" ON public.communications_hub_v3;
+                DROP POLICY IF EXISTS "Staff can view all omni messages" ON public.communications_hub_v3;
             END IF;
         END IF;
     END LOOP;

@@ -152,10 +152,10 @@ CREATE TABLE public.teams (
 - รองรับการเก็บข้อมูล 3 ภาษา (TH, EN, CN) ผ่าน Column แยก หรือ JSONB
 - มีการเก็บ `slug` สำหรับ SEO Friendly URLs
 
-### ระบบ Omni-channel Inbox (`omni_messages`)
+### ระบบ Omni-channel Inbox (`communications_hub_v3`)
 
 ```sql
-CREATE TABLE public.omni_messages (
+CREATE TABLE public.communications_hub_v3 (
     id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
     lead_id uuid REFERENCES public.leads(id),
     source public.lead_source NOT NULL,

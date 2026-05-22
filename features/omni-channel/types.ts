@@ -33,7 +33,7 @@ export interface Conversation {
   source: string | null;
   tenant_id: string | null;
   note: string | null;
-  omni_messages: OmniMessage[];
+  communications_hub_v3: OmniMessage[];
   preferences: {
     category?: "CUSTOMER" | "AGENT" | "OWNER";
   } | Record<string, Json | undefined>;

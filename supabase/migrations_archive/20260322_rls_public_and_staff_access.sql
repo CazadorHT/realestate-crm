@@ -54,8 +54,9 @@ CREATE POLICY "Public Read features" ON public.features
 FOR SELECT USING (true);
 
 -- 7. Omni-channel: Public Insert (for contact forms)
-DROP POLICY IF EXISTS "Public Insert messages" ON public.omni_messages;
-CREATE POLICY "Public Insert messages" ON public.omni_messages
+-- 7. Omni-channel: Public Insert (for contact forms)
+DROP POLICY IF EXISTS "Public Insert messages" ON public.communications_hub_v3;
+CREATE POLICY "Public Insert messages" ON public.communications_hub_v3
 FOR INSERT WITH CHECK (true);
 
 -- 8. Leads: Public Insert (for contact forms)

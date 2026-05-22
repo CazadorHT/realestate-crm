@@ -72,7 +72,7 @@ export function RecentPropertiesTable({
 
   return (
     
-    <div className="space-y-6 mt-8 bg-linear-to-br from-white via-slate-50 to-slate-100  p-4 sm:p-8 rounded-3xl border border-slate-200/60 shadow-sm">
+    <div className="space-y-6 mt-8 bg-linear-to-br from-white via-slate-50 to-slate-100  p-4  rounded-3xl border border-slate-200/60 shadow-sm">
       
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

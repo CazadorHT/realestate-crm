@@ -18,7 +18,7 @@
 *   **`identity_secrets`**: แยกเก็บข้อมูลอ่อนไหว (บัตรประชาชน, พาสปอร์ต, บัญชีธนาคาร) เข้ารหัสระดับ Database (Vault) ตอบโจทย์ PDPA แบบ 100%
 
 ## 💬 เสาหลักที่ 3: Omni-Channel Engine (ระบบสื่อสารไร้รอยต่อ)
-*(ยกยอดมาจาก `omni_messages`, `line_groups`)*
+*(ยกยอดมาจาก `communications_hub_v3`, `line_groups`)*
 *   **`communications_hub`**: ตารางรวมแชทจากทุกช่องทาง (LINE, FB, WhatsApp, WeChat)
 *   **`message_templates`**: รวม `line_templates` และ Contract Templates เข้าด้วยกันเป็นระบบแม่แบบเดียว (Global Templates)
 

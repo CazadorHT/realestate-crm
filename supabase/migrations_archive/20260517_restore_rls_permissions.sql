@@ -244,13 +244,13 @@ BEGIN
     END LOOP;
 END $$;
 
--- [OMNI_MESSAGES]
-DROP POLICY IF EXISTS "Tenant Isolation: Omni Messages" ON public.omni_messages;
-DROP POLICY IF EXISTS "omni_messages_select_optimized" ON public.omni_messages;
-CREATE POLICY "omni_messages_select_optimized" ON public.omni_messages
+-- [COMMUNICATIONS_HUB_V3]
+DROP POLICY IF EXISTS "Tenant Isolation: Omni Messages" ON public.communications_hub_v3;
+DROP POLICY IF EXISTS "omni_messages_select_optimized" ON public.communications_hub_v3;
+CREATE POLICY "omni_messages_select_optimized" ON public.communications_hub_v3
 FOR SELECT USING (
-    (SELECT public.is_system_admin()) OR 
-    tenant_id = ANY (public.get_user_tenants())
+  (SELECT public.is_system_admin()) OR 
+  tenant_id = ANY (public.get_user_tenants())
 );
 
 -- [OWNERS]

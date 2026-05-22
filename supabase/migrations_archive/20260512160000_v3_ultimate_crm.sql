@@ -5,7 +5,7 @@
 -- ==========================================
 -- 1. OMNI-CHANNEL HUB (Unified Messaging)
 -- ==========================================
--- แทนที่ตาราง omni_messages, line_groups, line_templates เดิม
+-- แทนที่ตาราง communications_hub_v3, line_groups, line_templates เดิม
 CREATE TABLE public.communications_hub_v3 (
     id UUID PRIMARY KEY DEFAULT extensions.uuid_generate_v4(),
     tenant_id UUID REFERENCES public.tenants_v3(id) ON DELETE CASCADE,

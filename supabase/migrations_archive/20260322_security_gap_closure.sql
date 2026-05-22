@@ -2,18 +2,18 @@
 -- Goal: Close remaining RLS gaps in secondary tables and Storage buckets.
 
 -- 1. Omni-channel Hardening
-ALTER TABLE public.omni_messages ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES public.tenants(id);
+ALTER TABLE public.communications_hub_v3 ADD COLUMN IF NOT EXISTS tenant_id UUID REFERENCES public.tenants(id);
 
 -- Backfill tenant_id from leads
-UPDATE public.omni_messages om
+UPDATE public.communications_hub_v3 om
 SET tenant_id = l.tenant_id
 FROM public.leads l
 WHERE om.lead_id = l.id AND om.tenant_id IS NULL;
 
 -- Enable RLS and Apply Policy
-ALTER TABLE public.omni_messages ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "Staff can view all omni messages" ON public.omni_messages;
-CREATE POLICY "Tenant Isolation: Omni Messages" ON public.omni_messages
+ALTER TABLE public.communications_hub_v3 ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Staff can view all omni messages" ON public.communications_hub_v3;
+CREATE POLICY "Tenant Isolation: Omni Messages" ON public.communications_hub_v3
 FOR ALL USING (
     is_system_admin()
     OR tenant_id IN (SELECT get_user_tenants())

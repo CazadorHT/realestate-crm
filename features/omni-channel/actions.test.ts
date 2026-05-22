@@ -190,7 +190,7 @@ describe("Omni-Channel Module - Actions & Queries (เทสโหดๆ แบ�
       const convs = await getInboxConversationsQuery();
       expect(convs).toHaveLength(1);
       expect(convs[0].full_name).toBe("Customer A");
-      expect(convs[0].omni_messages).toHaveLength(1);
+      expect(convs[0].communications_hub_v3).toHaveLength(1);
     });
   });
 });

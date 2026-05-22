@@ -51,14 +51,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, security;
 
--- 4. ติดตั้ง Trigger บนตาราง omni_messages
-CREATE OR REPLACE FUNCTION public.trg_omni_messages_rate_limit()
+-- 4. ติดตั้ง Trigger บนตาราง communications_hub_v3
+CREATE OR REPLACE FUNCTION public.trg_communications_hub_v3_rate_limit()
 RETURNS trigger AS $$
 BEGIN
     -- จำกัด 5 ข้อความต่อ 1 นาที ต่อ User
     PERFORM security.check_rate_limit(
         (SELECT auth.uid())::text, 
-        'send_omni_message', 
+        'send_communications_hub_v3', 
         5, 
         interval '1 minute'
     );
@@ -66,9 +66,9 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS trg_omni_messages_rate_limit_enforce ON public.omni_messages;
-CREATE TRIGGER trg_omni_messages_rate_limit_enforce
-    BEFORE INSERT ON public.omni_messages
-    FOR EACH ROW EXECUTE FUNCTION public.trg_omni_messages_rate_limit();
+DROP TRIGGER IF EXISTS trg_communications_hub_v3_rate_limit_enforce ON public.communications_hub_v3;
+CREATE TRIGGER trg_communications_hub_v3_rate_limit_enforce
+    BEFORE INSERT ON public.communications_hub_v3
+    FOR EACH ROW EXECUTE FUNCTION public.trg_communications_hub_v3_rate_limit();
 
 COMMIT;

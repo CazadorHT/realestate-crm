@@ -122,7 +122,7 @@ export async function getInboxConversationsQuery(): Promise<Conversation[]> {
       source: lead.source,
       tenant_id: lead.tenant_id,
       note: rawNote ? decrypt(rawNote) || rawNote : null,
-      omni_messages: omniMessages,
+      communications_hub_v3: omniMessages,
       preferences: (utmData.preferences as Record<string, unknown>) || {
         category: utmData.category as any,
       },

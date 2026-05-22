@@ -97,7 +97,7 @@ erDiagram
 | Table Name | Purpose (หน้าที่) | Key Features |
 | :--- | :--- | :--- |
 | **`crm_leads_v3`** | ระบบจัดการลูกค้า | ฝัง `vector` ความต้องการลูกค้า เพื่อหา Match Score อัตโนมัติ |
-| **`communications_hub_v3`** | แชทรวมศูนย์ | รวม `omni_messages` จัดการทั้ง LINE, FB ในตารางเดียว |
+| **`communications_hub_v3`** | แชทรวมศูนย์ | รวม `communications_hub_v3` จัดการทั้ง LINE, FB ในตารางเดียว |
 | **`activity_timeline_v3`** | ประวัติการทำงาน | เก็บทุก Action (โทร, ดูบ้าน, นัดหมาย) แบบ Polymorphic |
 
 ### 🟣 5. FINANCE & ANALYTICS (การเงินและสถิติ)
