@@ -29,11 +29,9 @@ export async function getPropertiesForSelect() {
 
   // Map to include cover_image
   return (data ?? []).map((p) => {
-    const images = (p.images as unknown as PropertyImageMetadata[]) || [];
-    const coverUrl =
-      images.find((img) => img.is_cover)?.url ||
-      images[0]?.url ||
-      null;
+    const imagesRaw = (p.images as unknown) ?? null;
+    const images: PropertyImageMetadata[] = Array.isArray(imagesRaw) ? (imagesRaw as PropertyImageMetadata[]) : [];
+    const coverUrl = images.find((img) => img.is_cover)?.url || images[0]?.url || null;
     return {
       ...p,
       id: p.id!,
