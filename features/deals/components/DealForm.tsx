@@ -118,7 +118,7 @@ export function DealForm({
                     value={field.value}
                     onChangeAction={(id) => field.onChange(id)}
                     placeholder="ค้นหาตามชื่อทรัพย์ ย่าน หรือรหัส..."
-                    className="max-w-full sm:max-w-2xl"
+                    className="max-w-full"
                       initialProperty={(() => {
                         // 1. Try finding in the currently passed properties list
                         const found = properties.find((p) => p.id === field.value);
