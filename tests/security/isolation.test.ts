@@ -18,16 +18,16 @@ const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 describe('🛡️ Security & Isolation Audit', () => {
   const supabase = createClient<Database>(supabaseUrl, supabaseKey);
 
-  it('🚫 Rate Limiting: Should block rapid omni_messages inserts', async () => {
+  it('🚫 Rate Limiting: Should block rapid communications_hub_v3 inserts', async () => {
     console.log('🚀 Starting Sequential Rate Limit Test...');
     const results = [];
     
     // ยิงแบบ Sequential เพื่อให้ Database นับเลขได้ทัน
     for (let i = 0; i < 10; i++) {
-      const res = await supabase.from('omni_messages_v3').insert({
+      const res = await supabase.from('communications_hub_v3').insert({
         content: `Sequential test ${i}`,
-        direction: null, // ใช้ null เพื่อเลี่ยง Check Constraint (เพราะใน Type เป็น nullable)
-        source: 'OTHER' as const
+        direction: 0,
+        platform: 'OTHER'
       });
       results.push(res);
     }

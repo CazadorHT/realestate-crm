@@ -33,7 +33,7 @@ CREATE INDEX IF NOT EXISTS idx_leads_created_by ON public.leads(created_by);
 -- 4. MESSAGING & NOTIFICATIONS
 CREATE INDEX IF NOT EXISTS idx_notifications_tenant_id ON public.notifications(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON public.notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_omni_messages_tenant_id ON public.omni_messages(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_comms_hub_tenant_id ON public.communications_hub_v3(tenant_id);
 
 -- 5. OWNERS & PROPERTIES
 CREATE INDEX IF NOT EXISTS idx_owners_created_by ON public.owners(created_by);

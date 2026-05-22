@@ -63,8 +63,9 @@ FOR ALL USING (
 );
 
 -- 4. Fix Omni Messages (just to be safe and consistent)
-DROP POLICY IF EXISTS "Tenant Isolation: Omni Messages" ON public.omni_messages;
-CREATE POLICY "Tenant Isolation: Omni Messages" ON public.omni_messages
+-- 4. Fix Communications Hub V3 (just to be safe and consistent)
+DROP POLICY IF EXISTS "Tenant Isolation: Omni Messages" ON public.communications_hub_v3;
+CREATE POLICY "Tenant Isolation: Omni Messages" ON public.communications_hub_v3
 FOR ALL USING (
     is_system_admin()
     OR tenant_id IN (SELECT get_user_tenants())

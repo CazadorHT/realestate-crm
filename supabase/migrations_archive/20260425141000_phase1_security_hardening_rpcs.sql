@@ -122,7 +122,7 @@ CREATE OR REPLACE FUNCTION public.get_lead_messages(
     p_lead_created_at TIMESTAMPTZ,
     p_offset INTEGER DEFAULT 0,
     p_limit INTEGER DEFAULT 20
-) RETURNS SETOF public.omni_messages AS $$
+ ) RETURNS SETOF public.communications_hub_v3 AS $$
 DECLARE
     v_user_id UUID := auth.uid();
 BEGIN
@@ -139,7 +139,7 @@ BEGIN
     END IF;
 
     RETURN QUERY
-    SELECT * FROM public.omni_messages
+    SELECT * FROM public.communications_hub_v3
     WHERE (
         lead_id = p_lead_id 
         OR (lead_id IS NULL AND source = p_source::public.lead_source AND created_at >= p_lead_created_at)
