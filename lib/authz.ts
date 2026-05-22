@@ -92,6 +92,10 @@ export const requireAuthContext = cache(async (
   requestedTenantId?: string,
   injectedSupabase?: SupabaseClient<Database>,
 ): Promise<AuthContext> => {
+  const cleanRequestedTenantId = (requestedTenantId && requestedTenantId !== "ALL" && requestedTenantId !== "")
+    ? requestedTenantId
+    : undefined;
+
   const ctx = await getAuthContextOrNull(injectedSupabase);
   if (!ctx) throw new AuthzError("UNAUTHORIZED", "Unauthorized");
 
@@ -104,15 +108,15 @@ export const requireAuthContext = cache(async (
   }
 
   // Rule 2: If multi-tenant is enabled, use requested or default to cookie
-  let finalTenantId = requestedTenantId;
+  let finalTenantId = cleanRequestedTenantId;
 
   // 2.1 If no explicit tenant requested, look at the cookie
   if (!finalTenantId) {
     const cookieStore = await cookies();
     const cookieTenantId = cookieStore.get("active_tenant_id")?.value;
     
-    // If cookie is "ALL", we explicitly want cross-branch (tenantId: undefined)
-    if (cookieTenantId === "ALL") {
+    // If cookie is "ALL" or empty, we explicitly want cross-branch (tenantId: undefined)
+    if (cookieTenantId === "ALL" || cookieTenantId === "") {
       return ctx; // Return with undefined tenantId
     }
 

@@ -50,10 +50,16 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
             <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
             <Input
               placeholder="ระบุชื่อของ Lead..."
+              autoComplete="off"
               {...form.register("full_name")}
               className="pl-9 h-11 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 bg-slate-50/50 rounded-xl"
             />
           </div>
+          {form.formState.errors.full_name && (
+            <p className="text-red-500 text-xs font-semibold mt-1">
+              {form.formState.errors.full_name.message}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -98,9 +104,15 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
               <Input
                 className="pl-9 h-11 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 bg-slate-50/50 rounded-xl"
                 placeholder="0xx-xxxxxxx"
+                autoComplete="off"
                 {...form.register("phone")}
               />
             </div>
+            {form.formState.errors.phone && (
+              <p className="text-red-500 text-xs font-semibold mt-1">
+                {form.formState.errors.phone.message}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -111,9 +123,15 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
               <Input
                 className="pl-9 h-11 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 bg-slate-50/50 rounded-xl"
                 placeholder="example@email.com"
+                autoComplete="off"
                 {...form.register("email")}
               />
             </div>
+            {form.formState.errors.email && (
+              <p className="text-red-500 text-xs font-semibold mt-1">
+                {form.formState.errors.email.message}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -124,9 +142,15 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
               <Input
                 className="pl-9 h-11 border-slate-200 focus:border-[#06C755] focus:ring-[#06C755]/20 bg-slate-50/50 rounded-xl"
                 placeholder="Line ID"
+                autoComplete="off"
                 {...form.register("line_id")}
               />
             </div>
+            {form.formState.errors.line_id && (
+              <p className="text-red-500 text-xs font-semibold mt-1">
+                {form.formState.errors.line_id.message}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -137,9 +161,15 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
               <Input
                 className="pl-9 h-11 border-slate-200 focus:border-[#25D366] focus:ring-[#25D366]/20 bg-slate-50/50 rounded-xl"
                 placeholder="เบอร์ WhatsApp"
+                autoComplete="off"
                 {...form.register("whatsapp")}
               />
             </div>
+            {form.formState.errors.whatsapp && (
+              <p className="text-red-500 text-xs font-semibold mt-1">
+                {form.formState.errors.whatsapp.message}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
@@ -150,9 +180,15 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
               <Input
                 className="pl-9 h-11 border-slate-200 focus:border-[#07C160] focus:ring-[#07C160]/20 bg-slate-50/50 rounded-xl"
                 placeholder="WeChat ID"
+                autoComplete="off"
                 {...form.register("wechat_id")}
               />
             </div>
+            {form.formState.errors.wechat_id && (
+              <p className="text-red-500 text-xs font-semibold mt-1">
+                {form.formState.errors.wechat_id.message}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">

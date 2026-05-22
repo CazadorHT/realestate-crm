@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { Search, DollarSign, Info, ChevronRight, Check, Globe, Star, MessageSquare, Eye, Handshake, CheckCircle } from "lucide-react";
 import { 
@@ -29,7 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { ResponsiveDialog, DialogClose } from "@/components/ui/responsive-dialog";
 import {
   LEAD_STAGE_ORDER,
   LEAD_SOURCE_ORDER,
@@ -127,31 +128,32 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                   const isSelected = form.watch("stage") === s;
                   
                   return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => form.setValue("stage", s as any)}
-                      className={cn(
-                        "flex items-center justify-between p-4 rounded-2xl border transition-all text-left group",
-                        isSelected
-                          ? "bg-slate-900 border-slate-900 text-white shadow-xl shadow-slate-200 scale-[1.02] z-10"
-                          : "bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600"
-                      )}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "h-8 w-8 rounded-lg flex items-center justify-center",
-                          isSelected ? "bg-white/20" : cn(config.bgColor, config.color)
-                        )}>
-                          <Icon className="h-4 w-4" />
+                    <DialogClose key={s} asChild>
+                      <button
+                        type="button"
+                        onClick={() => form.setValue("stage", s as any)}
+                        className={cn(
+                          "flex items-center justify-between p-4 rounded-2xl border transition-all text-left group",
+                          isSelected
+                            ? "bg-slate-900 border-slate-900 text-white shadow-xl shadow-slate-200 scale-[1.02] z-10"
+                            : "bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "h-8 w-8 rounded-lg flex items-center justify-center",
+                            isSelected ? "bg-white/20" : cn(config.bgColor, config.color)
+                          )}>
+                            <Icon className="h-6! w-6!" />
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-semibold uppercase tracking-wider opacity-60 mb-0.5">{s}</span>
+                            <span className="text-sm font-semibold">{LEAD_STAGE_LABELS[s]}</span>
+                          </div>
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-xs font-semibold uppercase tracking-wider opacity-60 mb-0.5">{s}</span>
-                          <span className="text-sm font-semibold">{LEAD_STAGE_LABELS[s]}</span>
-                        </div>
-                      </div>
-                      {isSelected && <Check className="h-5 w-5 text-white animate-in zoom-in duration-300" />}
-                    </button>
+                        {isSelected && <Check className="h-5 w-5 text-white animate-in zoom-in duration-300" />}
+                      </button>
+                    </DialogClose>
                   );
                 })}
               </div>
@@ -178,8 +180,8 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                       const Icon = config.icon;
                       return (
                         <>
-                          <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center", config.color, "bg-slate-50")}>
-                            <Icon className="h-4 w-4" />
+                          <div className={cn("h-10! w-10! rounded-lg flex items-center justify-center", config.color, "bg-slate-50")}>
+                            <Icon className="h-4! w-4!" />
                           </div>
                           <span className="text-sm font-semibold text-slate-700">
                             {LEAD_SOURCE_LABELS[source as keyof typeof LEAD_SOURCE_LABELS]}
@@ -199,25 +201,26 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                   const isSelected = (form.watch("source") || "OTHER") === s;
 
                   return (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => form.setValue("source", s as any)}
-                      className={cn(
-                        "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center gap-2",
-                        isSelected
-                          ? "bg-slate-900 border-slate-900 text-white shadow-lg active:scale-95"
-                          : "bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600"
-                      )}
-                    >
-                      <div className={cn(
-                        "h-8 w-8 rounded-full flex items-center justify-center",
-                        isSelected ? "bg-white/20" : cn("bg-slate-50", config.color)
-                      )}>
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <span className="text-[11px] font-semibold leading-tight">{LEAD_SOURCE_LABELS[s]}</span>
-                    </button>
+                    <DialogClose key={s} asChild>
+                      <button
+                        type="button"
+                        onClick={() => form.setValue("source", s as any)}
+                        className={cn(
+                          "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all text-center gap-2",
+                          isSelected
+                            ? "bg-blue-700 border-blue-700 text-white shadow-lg active:scale-95"
+                            : "bg-white border-slate-100 hover:border-slate-200 hover:bg-slate-50 text-slate-600"
+                        )}
+                      >
+                        <div className={cn(
+                          "h-10! w-10! rounded-full flex items-center justify-center",
+                          isSelected ? "bg-white/20" : cn("bg-slate-50", config.color)
+                        )}>
+                          <Icon className="h-6! w-6!" />
+                        </div>
+                        <span className="text-[11px] font-semibold leading-tight">{LEAD_SOURCE_LABELS[s]}</span>
+                      </button>
+                    </DialogClose>
                   );
                 })}
               </div>
@@ -241,6 +244,11 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                 placeholder="0"
                 {...form.register("budget_min", { valueAsNumber: true })}
               />
+              {form.formState.errors.budget_min && (
+                <p className="text-red-500 text-xs font-semibold mt-1">
+                  {form.formState.errors.budget_min.message}
+                </p>
+              )}
             </div>
             <div className="text-indigo-300 font-medium">ถึง</div>
             <div className="relative flex-1 group">
@@ -253,6 +261,11 @@ export function LeadStatusSection({ form }: LeadStatusSectionProps) {
                 placeholder="ไม่อั้น"
                 {...form.register("budget_max", { valueAsNumber: true })}
               />
+              {form.formState.errors.budget_max && (
+                <p className="text-red-500 text-xs font-semibold mt-1">
+                  {form.formState.errors.budget_max.message}
+                </p>
+              )}
             </div>
           </div>
         </div>

@@ -71,9 +71,9 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   const leads = (data || []).map((l: any) => ({
     ...l,
-    full_name: l.identity?.display_name || "Unknown",
-    phone: l.identity?.phone || null,
-    email: l.identity?.email || null,
+    full_name: decrypt(l.identity?.display_name) || "Unknown",
+    phone: decrypt(l.identity?.phone) || null,
+    email: decrypt(l.identity?.email) || null,
     note: l.ai_summary || null,
   })) as unknown as LeadWithJoins[];
   const leadIds = leads.map((l) => l.id);
@@ -167,7 +167,7 @@ export async function getLeadsForKanbanQuery() {
 
   return (data || []).map((l: any) => ({
     ...l,
-    full_name: l.identity?.display_name || "Unknown",
+    full_name: decrypt(l.identity?.display_name) || "Unknown",
   })) as unknown as LeadWithJoins[];
 }
 // ใช้สำหรับแสดง leads รายเดียว
@@ -179,7 +179,7 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
 
   let query = supabase
     .from("crm_leads_v3")
-    .select("id, stage, source, budget_min, budget_max, preferred_locations, ai_summary, created_at, updated_at, tenant_id, assigned_to, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone, line_id, social_links)")
+    .select("id, stage, source, budget_min, budget_max, min_bedrooms, preferred_locations, ai_summary, created_at, updated_at, tenant_id, assigned_to, utm_data, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone, line_id, social_links)")
     .eq("id", id);
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
@@ -194,18 +194,38 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
   }
   
   const lead: any = data;
+  const utmData = (lead.utm_data as Record<string, any>) || {};
+  const prefs = utmData.preferences || {};
   const socialLinks = lead.identity?.social_links || {};
   return {
     ...lead,
-    full_name: lead.identity?.display_name || "Unknown",
-    email: lead.identity?.email || null,
-    phone: lead.identity?.phone || null,
-    note: lead.ai_summary || null,
-    line_id: lead.identity?.line_id || null,
-    wechat_id: socialLinks.wechat_id || null,
-    whatsapp: socialLinks.whatsapp || null,
-    facebook_psid: socialLinks.facebook_psid || null,
-    instagram_sid: socialLinks.instagram_sid || null,
+    full_name: decrypt(lead.identity?.display_name) || "Unknown",
+    email: decrypt(lead.identity?.email) || null,
+    phone: decrypt(lead.identity?.phone) || null,
+    line_id: decrypt(lead.identity?.line_id) || null,
+    wechat_id: decrypt(socialLinks.wechat_id) || null,
+    whatsapp: decrypt(socialLinks.whatsapp) || null,
+    facebook_psid: decrypt(socialLinks.facebook_psid) || null,
+    instagram_sid: decrypt(socialLinks.instagram_sid) || null,
+    pdpa_consent: !!utmData.pdpa_consent,
+    consent_date: utmData.consent_date || null,
+    ai_summary_content: lead.ai_summary || null,
+    
+    // preferences unpacks
+    preferences: prefs,
+    note: prefs.note || lead.ai_summary || null,
+    nationality: prefs.nationality || null,
+    is_foreigner: !!prefs.is_foreigner,
+    preferred_property_types: prefs.property_types || null,
+    min_bedrooms: lead.min_bedrooms !== null && lead.min_bedrooms !== undefined ? Number(lead.min_bedrooms) : (prefs.min_bedrooms ? Number(prefs.min_bedrooms) : null),
+    min_bathrooms: prefs.min_bathrooms || null,
+    min_size_sqm: prefs.min_size || null,
+    max_size_sqm: prefs.max_size || null,
+    num_occupants: prefs.occupants || null,
+    has_pets: !!prefs.has_pets,
+    need_company_registration: !!prefs.need_company,
+    allow_airbnb: !!prefs.allow_airbnb,
+    property_id: prefs.property_id || null,
   } as unknown as LeadWithJoins;
 }
 // ใช้สำหรับแสดง leads พร้อมกับ activities
@@ -220,7 +240,7 @@ export async function getLeadWithActivitiesQuery(
 
     let query = supabase
       .from("crm_leads_v3")
-      .select("id, stage, source, budget_min, budget_max, preferred_locations, ai_summary, created_at, updated_at, tenant_id, assigned_to, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone, line_id, social_links)")
+      .select("id, stage, source, budget_min, budget_max, min_bedrooms, preferred_locations, ai_summary, created_at, updated_at, tenant_id, assigned_to, utm_data, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone, line_id, social_links)")
       .eq("id", id);
 
     if (isMultiTenant && tenantId && tenantId !== "ALL") {
@@ -243,18 +263,39 @@ export async function getLeadWithActivitiesQuery(
       .eq("target_id", id)
       .order("created_at", { ascending: false });
 
+    const utmData = (lead.utm_data as Record<string, any>) || {};
+    const prefs = utmData.preferences || {};
     const socialLinks = lead.identity?.social_links || {};
     return {
       ...lead,
-      full_name: lead.identity?.display_name || "Unknown",
-      email: lead.identity?.email || null,
-      phone: lead.identity?.phone || null,
-      note: lead.ai_summary || null,
-      line_id: lead.identity?.line_id || null,
-      wechat_id: socialLinks.wechat_id || null,
-      whatsapp: socialLinks.whatsapp || null,
-      facebook_psid: socialLinks.facebook_psid || null,
-      instagram_sid: socialLinks.instagram_sid || null,
+      full_name: decrypt(lead.identity?.display_name) || "Unknown",
+      email: decrypt(lead.identity?.email) || null,
+      phone: decrypt(lead.identity?.phone) || null,
+      line_id: decrypt(lead.identity?.line_id) || null,
+      wechat_id: decrypt(socialLinks.wechat_id) || null,
+      whatsapp: decrypt(socialLinks.whatsapp) || null,
+      facebook_psid: decrypt(socialLinks.facebook_psid) || null,
+      instagram_sid: decrypt(socialLinks.instagram_sid) || null,
+      pdpa_consent: !!utmData.pdpa_consent,
+      consent_date: utmData.consent_date || null,
+      ai_summary_content: lead.ai_summary || null,
+      
+      // preferences unpacks
+      preferences: prefs,
+      note: prefs.note || lead.ai_summary || null,
+      nationality: prefs.nationality || null,
+      is_foreigner: !!prefs.is_foreigner,
+      preferred_property_types: prefs.property_types || null,
+      min_bedrooms: lead.min_bedrooms !== null && lead.min_bedrooms !== undefined ? Number(lead.min_bedrooms) : (prefs.min_bedrooms ? Number(prefs.min_bedrooms) : null),
+      min_bathrooms: prefs.min_bathrooms || null,
+      min_size_sqm: prefs.min_size || null,
+      max_size_sqm: prefs.max_size || null,
+      num_occupants: prefs.occupants || null,
+      has_pets: !!prefs.has_pets,
+      need_company_registration: !!prefs.need_company,
+      allow_airbnb: !!prefs.allow_airbnb,
+      property_id: prefs.property_id || null,
+      
       lead_activities: (activities || []).map((a: any) => ({
         ...a,
         profiles: a.actor ? { full_name: a.actor.display_name, avatar_url: a.actor.avatar_url } : null,

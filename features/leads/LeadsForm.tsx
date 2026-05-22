@@ -55,9 +55,7 @@ export function LeadForm({ initialValues, onSubmitAction }: Props) {
         <Button
           className="h-15 px-8 text-md font-bold shadow-lg cursor-pointer shadow-emerald-500/20 bg-emerald-600 hover:bg-emerald-700 hover:scale-[1.02] active:scale-95 transition-all min-w-[200px] disabled:opacity-50 disabled:grayscale disabled:cursor-not-allowed"
           type="submit"
-          disabled={
-            isPending || !form.formState.isValid || !form.formState.isDirty
-          }
+          disabled={isPending || !form.formState.isValid}
         >
           <Save className="h-4 w-4 mr-2" />
           {isPending ? "กำลังบันทึก..." : "บันทึกข้อมูล"}

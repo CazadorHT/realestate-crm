@@ -18,8 +18,8 @@ export function leadRowToFormValues(row: Partial<LeadWithJoins>): LeadFormValues
     assigned_to: row.assigned_to ?? null,
 
     // Identity
-    lead_type: null,
-    nationality: null,
+    lead_type: (row.lead_type as any) ?? null,
+    nationality: row.nationality ?? null,
     is_foreigner: (row.is_foreigner as unknown) === "true" || !!row.is_foreigner,
 
     budget_min: row.budget_min !== null && row.budget_min !== undefined ? Number(row.budget_min) : null,
@@ -35,16 +35,16 @@ export function leadRowToFormValues(row: Partial<LeadWithJoins>): LeadFormValues
       : null,
     preferred_locations:
       (row.preferred_locations as string[] | null | undefined) ?? null,
-    preferred_property_types: null,
+    preferred_property_types: (row.preferred_property_types as any[] | null | undefined) ?? null,
 
     min_bedrooms: row.min_bedrooms !== null && row.min_bedrooms !== undefined ? Number(row.min_bedrooms) : null,
-    min_bathrooms: null,
-    min_size_sqm: null,
-    max_size_sqm: null,
-    num_occupants: null,
+    min_bathrooms: row.min_bathrooms !== null && row.min_bathrooms !== undefined ? Number(row.min_bathrooms) : null,
+    min_size_sqm: row.min_size_sqm !== null && row.min_size_sqm !== undefined ? Number(row.min_size_sqm) : null,
+    max_size_sqm: row.max_size_sqm !== null && row.max_size_sqm !== undefined ? Number(row.max_size_sqm) : null,
+    num_occupants: row.num_occupants !== null && row.num_occupants !== undefined ? Number(row.num_occupants) : null,
 
-    has_pets: false,
-    need_company_registration: false,
-    allow_airbnb: false,
+    has_pets: (row.has_pets as unknown) === "true" || !!row.has_pets,
+    need_company_registration: (row.need_company_registration as unknown) === "true" || !!row.need_company_registration,
+    allow_airbnb: (row.allow_airbnb as unknown) === "true" || !!row.allow_airbnb,
   };
 }

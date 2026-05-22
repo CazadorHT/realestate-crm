@@ -4,7 +4,7 @@ import { UserPlus, Briefcase, History as HistoryIcon, Pencil } from "lucide-reac
 import { notFound } from "next/navigation";
 import { getLeadWithActivitiesQuery } from "@/features/leads/queries";
 import { createLeadActivityAction } from "@/features/leads/actions";
-import { requireAuthContext } from "@/lib/authz";
+import { requireAuthContext, isStaff } from "@/lib/authz";
 import { LeadTimeline } from "@/components/leads/LeadTimeline";
 import { LeadActivityDialog } from "@/components/leads/LeadActivityDialog";
 import { getPropertySummariesByIdsQuery } from "@/features/leads/queries";
@@ -89,15 +89,17 @@ export default async function LeadDetailPage({
   const { id } = await params;
   const { tenantId, role } = await requireAuthContext();
 
-  if (!tenantId) return notFound();
+  if (!tenantId && role !== "ADMIN" && !isStaff(role)) return notFound();
   
   const { multi_tenant_enabled } = await (await import("@/lib/actions/system-config")).getSystemConfig();
 
-  const [lead, deals, propertiesRaw] = await Promise.all([
-    getLeadWithActivitiesQuery(id),
+  const lead = await getLeadWithActivitiesQuery(id);
+  if (!lead) return notFound();
+
+  const [deals, propertiesRaw] = await Promise.all([
     getDealsByLeadId(id),
-    (await import("@/lib/supabase/server")).createClient().then(c => 
-      c.from("properties_core")
+    (await import("@/lib/supabase/server")).createClient().then(c => {
+      let query = c.from("properties_core")
         .select(`
           id, 
           sale_price, 
@@ -107,15 +109,18 @@ export default async function LeadDetailPage({
           details:properties_details(title),
           media:property_media_v3(storage_path)
         `)
-        .eq("tenant_id", tenantId)
         .eq("status", 1)
         .eq("media.is_cover", true)
         .order("created_at", { ascending: false })
-        .limit(50)
-    ).then(res => res.data as unknown as PropertyV3Join[])
+        .limit(50);
+      
+      const targetTenantId = tenantId || lead.tenant_id;
+      if (targetTenantId) {
+        query = query.eq("tenant_id", targetTenantId);
+      }
+      return query;
+    }).then(res => res.data as unknown as PropertyV3Join[])
   ]);
-
-  if (!lead) return notFound();
 
   const properties = (propertiesRaw ?? []).map((p) => ({
     id: p.id,
@@ -134,23 +139,23 @@ export default async function LeadDetailPage({
     ...rawLead,
     stage: (rawLead.stage as LeadStage | null) || null,
     full_name: rawLead.display_name || rawLead.full_name || "Unknown",
-    pdpa_consent: !!rawLead.pdpa_consent,
-    consent_date: rawLead.consent_date || null,
-    ai_summary_content: rawLead.ai_summary_content || null,
+    pdpa_consent: rawLead.pdpa_consent !== undefined ? !!rawLead.pdpa_consent : !!prefs.pdpa_consent,
+    consent_date: rawLead.consent_date || prefs.consent_date || null,
+    ai_summary_content: rawLead.ai_summary_content || rawLead.ai_summary || null,
     lead_activities: rawLead.lead_activities || [],
-    // Mapping from V3 JSONB Preferences
-    preferred_locations: prefs.locations || null,
-    budget_min: prefs.budget_min || null,
-    budget_max: prefs.budget_max || null,
-    min_bedrooms: prefs.min_bedrooms || null,
-    min_bathrooms: prefs.min_bathrooms || null,
-    min_size_sqm: prefs.min_size || null,
-    max_size_sqm: prefs.max_size || null,
-    num_occupants: prefs.occupants || null,
-    has_pets: prefs.has_pets || null,
-    preferred_property_types: prefs.property_types || null,
-    need_company_registration: prefs.need_company || null,
-    allow_airbnb: prefs.allow_airbnb || null,
+    // Resilient Fallback Mapping: checks root query mapping first, falls back to legacy nested prefs
+    preferred_locations: rawLead.preferred_locations || prefs.locations || null,
+    budget_min: rawLead.budget_min !== null && rawLead.budget_min !== undefined ? rawLead.budget_min : (prefs.budget_min || null),
+    budget_max: rawLead.budget_max !== null && rawLead.budget_max !== undefined ? rawLead.budget_max : (prefs.budget_max || null),
+    min_bedrooms: rawLead.min_bedrooms !== null && rawLead.min_bedrooms !== undefined ? rawLead.min_bedrooms : (prefs.min_bedrooms || null),
+    min_bathrooms: rawLead.min_bathrooms !== null && rawLead.min_bathrooms !== undefined ? rawLead.min_bathrooms : (prefs.min_bathrooms || null),
+    min_size_sqm: rawLead.min_size_sqm !== null && rawLead.min_size_sqm !== undefined ? rawLead.min_size_sqm : (prefs.min_size || null),
+    max_size_sqm: rawLead.max_size_sqm !== null && rawLead.max_size_sqm !== undefined ? rawLead.max_size_sqm : (prefs.max_size || null),
+    num_occupants: rawLead.num_occupants !== null && rawLead.num_occupants !== undefined ? rawLead.num_occupants : (prefs.occupants || null),
+    has_pets: rawLead.has_pets !== null && rawLead.has_pets !== undefined ? !!rawLead.has_pets : (prefs.has_pets || null),
+    preferred_property_types: rawLead.preferred_property_types || prefs.property_types || null,
+    need_company_registration: rawLead.need_company_registration !== null && rawLead.need_company_registration !== undefined ? !!rawLead.need_company_registration : (prefs.need_company || null),
+    allow_airbnb: rawLead.allow_airbnb !== null && rawLead.allow_airbnb !== undefined ? !!rawLead.allow_airbnb : (prefs.allow_airbnb || null),
     preferences: (prefs as LeadPreferences) || null,
     // Contact Info mapping
     phone: rawLead.phone || null,
@@ -233,7 +238,7 @@ export default async function LeadDetailPage({
               <LeadTransferButton
                 leadId={id}
                 leadName={fullName ?? "Unknown"}
-                currentTenantId={tenantId}
+                currentTenantId={tenantId || lead.tenant_id || ""}
                 userRole={role}
               />
             )}
@@ -241,7 +246,7 @@ export default async function LeadDetailPage({
               leadId={id}
               leadName={fullName ?? "Unknown"}
               onSubmitAction={onCreateActivity}
-              tenantId={tenantId}
+              tenantId={tenantId || lead.tenant_id}
               triggerClassName="bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-900/20 border-0 h-12 rounded-xl font-semibold flex-1 sm:flex-none px-6"
             />
           </div>
@@ -307,7 +312,7 @@ export default async function LeadDetailPage({
 
         {/* Documents Section */}
         <div className="h-[500px] xl:h-[600px]">
-           <DocumentSection ownerId={id} ownerType="LEAD" tenantId={tenantId} />
+           <DocumentSection ownerId={id} ownerType="LEAD" tenantId={tenantId || lead.tenant_id} />
         </div>
 
         {/* Timeline */}
@@ -328,7 +333,7 @@ export default async function LeadDetailPage({
               leadId={id}
               leadName={fullName ?? "Unknown"}
               onSubmitAction={onCreateActivity}
-              tenantId={tenantId}
+              tenantId={tenantId || lead.tenant_id}
             />
           </div>
           <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">

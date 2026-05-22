@@ -56,12 +56,23 @@ const TransferLeadSchema = z.object({
 export const requestLeadTransferAction = createSafeAction(
   TransferLeadSchema,
   async (data, { supabase, userId, tenantId }) => {
-    // 1. Create the transfer record
+    // 1. Get the lead's current tenant_id
+    const { data: lead, error: leadErr } = await supabase
+      .from("crm_leads_v3")
+      .select("tenant_id")
+      .eq("id", data.leadId)
+      .single();
+
+    if (leadErr || !lead) {
+      throw new Error("ไม่พบข้อมูล Lead หรือคุณไม่มีสิทธิ์เข้าถึง");
+    }
+
+    // 2. Create the transfer record
     const { data: transfer, error } = await supabase
       .from("lead_transfers")
       .insert({
         lead_id: data.leadId,
-        from_tenant_id: tenantId,
+        from_tenant_id: lead.tenant_id,
         to_tenant_id: data.targetTenantId,
         requested_by: userId,
         note: data.note,

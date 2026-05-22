@@ -69,6 +69,11 @@ export function LeadRequirementsSection({
                     placeholder="0"
                     {...form.register("min_size_sqm", { valueAsNumber: true })}
                   />
+                  {form.formState.errors.min_size_sqm && (
+                    <p className="text-red-500 text-xs font-semibold mt-1">
+                      {form.formState.errors.min_size_sqm.message}
+                    </p>
+                  )}
                 </div>
                 <div className="h-px w-4 bg-slate-300"></div>
                 <div className="relative flex-1 group">
@@ -82,6 +87,11 @@ export function LeadRequirementsSection({
                     placeholder="∞"
                     {...form.register("max_size_sqm", { valueAsNumber: true })}
                   />
+                  {form.formState.errors.max_size_sqm && (
+                    <p className="text-red-500 text-xs font-semibold mt-1">
+                      {form.formState.errors.max_size_sqm.message}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -99,6 +109,11 @@ export function LeadRequirementsSection({
                     placeholder="นอน"
                     {...form.register("min_bedrooms", { valueAsNumber: true })}
                   />
+                  {form.formState.errors.min_bedrooms && (
+                    <p className="text-red-500 text-xs font-semibold mt-1">
+                      {form.formState.errors.min_bedrooms.message}
+                    </p>
+                  )}
                 </div>
                 <div className="relative flex-1 group">
                   <Bath className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400 group-focus-within:text-blue-500" />
@@ -108,6 +123,11 @@ export function LeadRequirementsSection({
                     placeholder="น้ำ"
                     {...form.register("min_bathrooms", { valueAsNumber: true })}
                   />
+                  {form.formState.errors.min_bathrooms && (
+                    <p className="text-red-500 text-xs font-semibold mt-1">
+                      {form.formState.errors.min_bathrooms.message}
+                    </p>
+                  )}
                 </div>
               </div>
               <div className="pt-2">

@@ -16,7 +16,7 @@ export function createSafeAction<TInput, TOutput>(
   schema: z.ZodSchema<TInput>,
   handler: (
     data: TInput,
-    context: { supabase: SupabaseClient<Database>; userId: string; tenantId: string; role: string },
+    context: { supabase: SupabaseClient<Database>; userId: string; tenantId: string | null; role: string },
   ) => Promise<TOutput>,
 ) {
   return async (input: TInput, injectedSupabase?: SupabaseClient<Database>): Promise<ActionState<TOutput>> => {
@@ -46,7 +46,7 @@ export function createSafeAction<TInput, TOutput>(
       const result = await handler(validation.data, {
         supabase,
         userId: user.id,
-        tenantId: tenantId ?? "",
+        tenantId: (tenantId && tenantId !== "ALL" && tenantId !== "") ? tenantId : null,
         role,
       });
 
