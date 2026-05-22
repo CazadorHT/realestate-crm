@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   getCoBrokerPerformanceAction,
@@ -40,6 +34,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { createClient } from "@/lib/supabase/client";
 import { CoBroker } from "../schema";
+import { cn } from "@/lib/utils";
+
+const RATING_LABELS: Record<number, string> = {
+  5: "ดีเยี่ยม/ปิดดีลบ่อย",
+  4: "ดีมาก/คุยง่าย",
+  3: "มาตรฐาน",
+  2: "ต้องระวัง/ส่งงานช้า",
+  1: "Blacklist/ไม่แนะนำ",
+};
 
 interface CoBrokerDetailDrawerProps {
   broker: CoBroker | null;
@@ -157,23 +160,53 @@ export function CoBrokerDetailDrawer({
   if (!broker) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="w-full sm:max-w-xl overflow-y-auto bg-slate-50/30">
-        <SheetHeader className="mb-6">
-          <div className="flex items-center space-x-2">
+    <ResponsiveDialog
+      open={isOpen}
+      onOpenChange={(open) => !open && onClose()}
+      className="max-w-xl!"
+      title={
+        <div className="flex flex-col space-y-1.5 text-left">
+          <div className="flex flex-wrap gap-2">
             <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-none">
-              PHASE 7 HUB
+              ศูนย์กลางพันธมิตร 
             </Badge>
-            <Badge variant="outline">Enterprise Agent Wallet</Badge>
+            <Badge variant="outline">กระเป๋าเงินตัวแทนระดับองค์กร</Badge>
+            {broker.rating && (
+              <Badge 
+                className={cn(
+                  "border-none font-bold",
+                  broker.rating === 5 && "bg-amber-100 text-amber-800 hover:bg-amber-100",
+                  broker.rating === 4 && "bg-amber-50 text-amber-700 hover:bg-amber-50",
+                  broker.rating === 3 && "bg-slate-100 text-slate-700 hover:bg-slate-100",
+                  broker.rating === 2 && "bg-blue-50 text-blue-700 hover:bg-blue-50",
+                  broker.rating === 1 && "bg-red-100 text-red-800 hover:bg-red-100",
+                )}
+              >
+                เรตติ้ง: {RATING_LABELS[broker.rating] || "มาตรฐาน"}
+              </Badge>
+            )}
           </div>
-          <SheetTitle className="text-2xl font-bold mt-2">
+          <span className="text-2xl font-bold mt-2 text-slate-900 block leading-tight">
             {broker.name}
-          </SheetTitle>
-          <SheetDescription>
-            {broker.company_name || "ตัวแทนอิสระ"} • เรตติ้ง {broker.rating} ดาว
-          </SheetDescription>
-        </SheetHeader>
-
+          </span>
+        </div>
+      }
+      description={
+        <div className="text-sm font-medium text-slate-500 text-left">
+          {broker.company_name || "ตัวแทนอิสระ"} • เรตติ้ง {broker.rating} ดาว ({RATING_LABELS[broker.rating || 3]})
+        </div>
+      }
+      footer={
+        <Button
+          variant="outline"
+          className="w-full text-slate-500 border-slate-200 hover:bg-slate-50 h-12 rounded-xl"
+          onClick={onClose}
+        >
+          ปิดหน้าต่าง
+        </Button>
+      }
+    >
+      <div className="p-6">
         <Tabs defaultValue="general" className="w-full">
           <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-100">
             <TabsTrigger value="general">ข้อมูลทั่วไป</TabsTrigger>
@@ -443,17 +476,7 @@ export function CoBrokerDetailDrawer({
             </div>
           </TabsContent>
         </Tabs>
-
-        <div className="pt-6 mt-6 border-t">
-          <Button
-            variant="outline"
-            className="w-full text-slate-500 border-slate-200 hover:bg-slate-50"
-            onClick={onClose}
-          >
-            ปิดหน้าต่าง
-          </Button>
-        </div>
-      </SheetContent>
-    </Sheet>
+      </div>
+    </ResponsiveDialog>
   );
 }

@@ -56,10 +56,13 @@ export async function getCoBrokersAction(query?: string, area?: string): Promise
     let dbQuery = supabase
       .from("identities_v3")
       .select("id, display_name, phone, email, line_id, is_active, created_at, updated_at, tenant_id, social_links, deleted_at")
-      .eq("tenant_id", tenantId!)
       .eq("category", 2)
       .eq("role", "CO_BROKER")
       .is("deleted_at", null);
+
+    if (tenantId && tenantId !== "ALL") {
+      dbQuery = dbQuery.eq("tenant_id", tenantId);
+    }
 
     if (query) {
       dbQuery = dbQuery.or(
@@ -106,10 +109,43 @@ export async function createCoBrokerAction(values: CoBrokerFormValues) {
     const { supabase, tenantId, user } = await requireAuthContext();
     const validated = CoBrokerSchema.parse(values);
 
+    let targetTenantId = tenantId;
+    if (!targetTenantId || targetTenantId === "ALL") {
+      const { data: firstMember } = await supabase
+        .from("tenant_members_v3")
+        .select("tenant_id")
+        .eq("identity_id", user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (firstMember?.tenant_id) {
+        targetTenantId = firstMember.tenant_id;
+      } else {
+        const { getSystemConfig } = await import("@/lib/actions/system-config");
+        const { default_tenant_id } = await getSystemConfig();
+        if (default_tenant_id) {
+          targetTenantId = default_tenant_id;
+        } else {
+          const { data: firstTenant } = await supabase
+            .from("tenants_v3")
+            .select("id")
+            .limit(1)
+            .maybeSingle();
+          if (firstTenant?.id) {
+            targetTenantId = firstTenant.id;
+          }
+        }
+      }
+    }
+
+    if (!targetTenantId) {
+      throw new Error("ไม่พบ Tenant ID สำหรับสร้างคู่ค้า");
+    }
+
     const { data, error } = await supabase
       .from("identities_v3")
       .insert({
-        tenant_id: tenantId!,
+        tenant_id: targetTenantId,
         category: 2,
         role: "CO_BROKER",
         display_name: validated.name,
@@ -166,12 +202,16 @@ export async function updateCoBrokerAction(
     const { supabase, tenantId } = await requireAuthContext();
 
     // Fetch existing identity to merge social_links
-    const { data: existing, error: fetchErr } = await supabase
+    let fetchQuery = supabase
       .from("identities_v3")
       .select("social_links")
-      .eq("id", id)
-      .eq("tenant_id", tenantId!)
-      .single();
+      .eq("id", id);
+
+    if (tenantId && tenantId !== "ALL") {
+      fetchQuery = fetchQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: existing, error: fetchErr } = await fetchQuery.single();
 
     if (fetchErr || !existing) throw new Error("ไม่พบข้อมูลคู่ค้าที่ต้องการแก้ไข");
 
@@ -204,11 +244,16 @@ export async function updateCoBrokerAction(
     if (values.line_id !== undefined) updatePayload.line_id = values.line_id || null;
     if (values.is_active !== undefined) updatePayload.is_active = values.is_active;
 
-    const { data, error } = await supabase
+    let updateQuery = supabase
       .from("identities_v3")
       .update(updatePayload)
-      .eq("id", id)
-      .eq("tenant_id", tenantId!)
+      .eq("id", id);
+
+    if (tenantId && tenantId !== "ALL") {
+      updateQuery = updateQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data, error } = await updateQuery
       .select("id, display_name, phone, email, line_id, is_active, created_at, updated_at, tenant_id, social_links, deleted_at")
       .single();
 
@@ -237,14 +282,19 @@ export async function deleteCoBrokerAction(id: string) {
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
-    const { error } = await supabase
+    let query = supabase
       .from("identities_v3")
       .update({
         deleted_at: new Date().toISOString(),
         is_active: false,
       })
-      .eq("id", id)
-      .eq("tenant_id", tenantId!);
+      .eq("id", id);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
 
@@ -264,11 +314,16 @@ export async function restoreCoBrokerAction(id: string) {
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
-    const { error } = await supabase
+    let query = supabase
       .from("identities_v3")
       .update({ deleted_at: null, is_active: true })
-      .eq("id", id)
-      .eq("tenant_id", tenantId!);
+      .eq("id", id);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
 
@@ -292,11 +347,16 @@ export async function permanentlyDeleteCoBrokerAction(id: string) {
     const { supabase, tenantId, role } = await requireAuthContext();
     if (role !== "ADMIN") throw new Error("คุณไม่มีสิทธิ์ลบข้อมูลถาวร");
 
-    const { error } = await supabase
+    let query = supabase
       .from("identities_v3")
       .delete()
-      .eq("id", id)
-      .eq("tenant_id", tenantId!);
+      .eq("id", id);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
 
@@ -322,36 +382,40 @@ export async function getCoBrokerPerformanceAction(id: string) {
     const { supabase, tenantId } = await requireAuthContext();
 
     // 🌐 Performance Optimization: Execute all count queries concurrently
+    let totalQ = supabase
+      .from("properties_core")
+      .select("id", { count: "exact", head: true })
+      .eq("co_broker_id", id);
+
+    let activeQ = supabase
+      .from("properties_core")
+      .select("id", { count: "exact", head: true })
+      .eq("co_broker_id", id)
+      .eq("status", 1);
+
+    let soldQ = supabase
+      .from("properties_core")
+      .select("id", { count: "exact", head: true })
+      .eq("co_broker_id", id)
+      .in("status", [4, 5]);
+
+    let commQ = supabase
+      .from("crm_deal_commissions_v3")
+      .select("net_amount, status")
+      .eq("recipient_id", id);
+
+    if (tenantId && tenantId !== "ALL") {
+      totalQ = totalQ.eq("tenant_id", tenantId);
+      activeQ = activeQ.eq("tenant_id", tenantId);
+      soldQ = soldQ.eq("tenant_id", tenantId);
+      commQ = commQ.eq("tenant_id", tenantId);
+    }
+
     const [totalRes, activeRes, soldRes, commRes] = await Promise.all([
-      // 1. Get total listings count
-      supabase
-        .from("properties_core")
-        .select("id", { count: "exact", head: true })
-        .eq("co_broker_id", id)
-        .eq("tenant_id", tenantId!),
-
-      // 2. Get active listings count (status: 1 is ACTIVE in properties_core)
-      supabase
-        .from("properties_core")
-        .select("id", { count: "exact", head: true })
-        .eq("co_broker_id", id)
-        .eq("status", 1)
-        .eq("tenant_id", tenantId!),
-
-      // 3. Get sold/rented listings count (status: 4 is SOLD, 5 is RENTED in properties_core)
-      supabase
-        .from("properties_core")
-        .select("id", { count: "exact", head: true })
-        .eq("co_broker_id", id)
-        .in("status", [4, 5])
-        .eq("tenant_id", tenantId!),
-
-      // 4. Get earnings summary (Minimal data fetch)
-      supabase
-        .from("crm_deal_commissions_v3")
-        .select("net_amount, status")
-        .eq("recipient_id", id)
-        .eq("tenant_id", tenantId!),
+      totalQ,
+      activeQ,
+      soldQ,
+      commQ,
     ]);
 
     if (totalRes.error) throw totalRes.error;
@@ -397,12 +461,28 @@ export async function getCoBrokerPerformanceAction(id: string) {
  */
 export async function addCoBrokerDocumentAction(input: CoBrokerDocumentInput) {
   try {
-    const { supabase, tenantId, user } = await requireAuthContext();
+    const { supabase, tenantId } = await requireAuthContext();
+
+    let targetTenantId = tenantId && tenantId !== "ALL" ? tenantId : undefined;
+    if (!targetTenantId) {
+      const { data: broker } = await supabase
+        .from("identities_v3")
+        .select("tenant_id")
+        .eq("id", input.co_broker_id)
+        .single();
+      if (broker?.tenant_id) {
+        targetTenantId = broker.tenant_id;
+      }
+    }
+
+    if (!targetTenantId) {
+      throw new Error("ไม่พบ Tenant ID สำหรับเอกสาร");
+    }
 
     const { data: doc, error } = await supabase
       .from("documents_v3")
       .insert({
-        tenant_id: tenantId!,
+        tenant_id: targetTenantId,
         owner_entity: "CO_BROKER",
         owner_id: input.co_broker_id,
         file_name: input.file_name,
@@ -444,13 +524,17 @@ export async function getCoBrokerDocumentsAction(id: string) {
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("documents_v3")
       .select("id, owner_id, file_name, storage_path, document_type, created_at")
       .eq("owner_entity", "CO_BROKER")
-      .eq("owner_id", id)
-      .eq("tenant_id", tenantId!)
-      .order("created_at", { ascending: false });
+      .eq("owner_id", id);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data, error } = await query.order("created_at", { ascending: false });
 
     if (error) throw error;
 
@@ -479,11 +563,16 @@ export async function deleteCoBrokerDocumentAction(
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
-    const { error } = await supabase
+    let query = supabase
       .from("documents_v3")
       .delete()
-      .eq("id", docId)
-      .eq("tenant_id", tenantId!);
+      .eq("id", docId);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
 
@@ -509,11 +598,16 @@ export async function bulkDeleteCoBrokersAction(ids: string[]) {
 
     let targetIds = ids;
     if (role !== "ADMIN" && role !== "MANAGER") {
-      const { data } = await supabase
+      let selectQ = supabase
         .from("identities_v3")
         .select("id, social_links")
-        .in("id", ids)
-        .eq("tenant_id", tenantId!);
+        .in("id", ids);
+
+      if (tenantId && tenantId !== "ALL") {
+        selectQ = selectQ.eq("tenant_id", tenantId);
+      }
+
+      const { data } = await selectQ;
       
       targetIds = (data || [])
         .filter(d => ((d.social_links as Record<string, any>) || {})?.created_by === user.id)
@@ -522,14 +616,19 @@ export async function bulkDeleteCoBrokersAction(ids: string[]) {
 
     if (targetIds.length === 0) return { success: true };
 
-    const { error } = await supabase
+    let updateQ = supabase
       .from("identities_v3")
       .update({
         deleted_at: new Date().toISOString(),
         is_active: false,
       })
-      .in("id", targetIds)
-      .eq("tenant_id", tenantId!);
+      .in("id", targetIds);
+
+    if (tenantId && tenantId !== "ALL") {
+      updateQ = updateQ.eq("tenant_id", tenantId);
+    }
+
+    const { error } = await updateQ;
 
     if (error) throw error;
 
@@ -555,11 +654,16 @@ export async function bulkRestoreCoBrokersAction(ids: string[]) {
 
     let targetIds = ids;
     if (role !== "ADMIN" && role !== "MANAGER") {
-      const { data } = await supabase
+      let selectQ = supabase
         .from("identities_v3")
         .select("id, social_links")
-        .in("id", ids)
-        .eq("tenant_id", tenantId!);
+        .in("id", ids);
+
+      if (tenantId && tenantId !== "ALL") {
+        selectQ = selectQ.eq("tenant_id", tenantId);
+      }
+
+      const { data } = await selectQ;
       
       targetIds = (data || [])
         .filter(d => ((d.social_links as Record<string, any>) || {})?.created_by === user.id)
@@ -568,11 +672,16 @@ export async function bulkRestoreCoBrokersAction(ids: string[]) {
 
     if (targetIds.length === 0) return { success: true };
 
-    const { error } = await supabase
+    let updateQ = supabase
       .from("identities_v3")
       .update({ deleted_at: null, is_active: true })
-      .in("id", targetIds)
-      .eq("tenant_id", tenantId!);
+      .in("id", targetIds);
+
+    if (tenantId && tenantId !== "ALL") {
+      updateQ = updateQ.eq("tenant_id", tenantId);
+    }
+
+    const { error } = await updateQ;
 
     if (error) throw error;
 
@@ -599,11 +708,16 @@ export async function bulkUpdateCoBrokerGroupAction(
   try {
     const { supabase, tenantId, role, user } = await requireAuthContext();
 
-    const { data: records, error: fetchErr } = await supabase
+    let selectQ = supabase
       .from("identities_v3")
       .select("id, social_links")
-      .in("id", ids)
-      .eq("tenant_id", tenantId!);
+      .in("id", ids);
+
+    if (tenantId && tenantId !== "ALL") {
+      selectQ = selectQ.eq("tenant_id", tenantId);
+    }
+
+    const { data: records, error: fetchErr } = await selectQ;
 
     if (fetchErr || !records) throw fetchErr;
 
@@ -616,11 +730,17 @@ export async function bulkUpdateCoBrokerGroupAction(
     await Promise.all(targetRecords.map(rec => {
       const currentSocial = (rec.social_links as Record<string, any>) || {};
       const mergedSocial = { ...currentSocial, broker_group: groupName };
-      return supabase
+
+      let updateQ = supabase
         .from("identities_v3")
         .update({ social_links: mergedSocial, updated_at: new Date().toISOString() })
-        .eq("id", rec.id)
-        .eq("tenant_id", tenantId!);
+        .eq("id", rec.id);
+
+      if (tenantId && tenantId !== "ALL") {
+        updateQ = updateQ.eq("tenant_id", tenantId);
+      }
+
+      return updateQ;
     }));
 
     await logActivityAction("BULK_CHANGE_GROUP", "CO_BROKER", "BULK_OP", { 
@@ -647,14 +767,18 @@ export async function getTrashCoBrokersAction(): Promise<{ success: boolean; dat
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("identities_v3")
       .select("id, display_name, phone, email, line_id, is_active, created_at, updated_at, tenant_id, social_links, deleted_at")
-      .eq("tenant_id", tenantId!)
       .eq("category", 2)
       .eq("role", "CO_BROKER")
-      .not("deleted_at", "is", null)
-      .order("deleted_at", { ascending: false });
+      .not("deleted_at", "is", null);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data, error } = await query.order("deleted_at", { ascending: false });
 
     if (error) throw error;
     return { success: true, data: (data || []).map(mapIdentityToCoBroker) };
@@ -671,7 +795,7 @@ export async function getCoBrokerDealsAction(id: string) {
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("crm_deals_v3")
       .select(
         `
@@ -682,9 +806,13 @@ export async function getCoBrokerDealsAction(id: string) {
         property:properties!crm_deals_v3_property_id_fkey (title, property_type)
       `,
       )
-      .eq("partner_co_broker_id", id)
-      .eq("tenant_id", tenantId!)
-      .order("transaction_date", { ascending: false });
+      .eq("partner_co_broker_id", id);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data, error } = await query.order("transaction_date", { ascending: false });
 
     if (error) throw error;
 

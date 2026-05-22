@@ -46,7 +46,7 @@ export function createSafeAction<TInput, TOutput>(
       const result = await handler(validation.data, {
         supabase,
         userId: user.id,
-        tenantId: (tenantId && tenantId !== "ALL" && tenantId !== "") ? tenantId : null,
+        tenantId: (tenantId && tenantId !== "ALL" && tenantId !== "" && tenantId !== "undefined") ? tenantId : null,
         role,
       });
 

@@ -44,8 +44,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 import { CoBroker } from "../schema";
+
+const RATING_LABELS: Record<number, string> = {
+  5: "ดีเยี่ยม/ปิดดีลบ่อย",
+  4: "ดีมาก/คุยง่าย",
+  3: "มาตรฐาน",
+  2: "ต้องระวัง/ส่งงานช้า",
+  1: "Blacklist/ไม่แนะนำ",
+};
 
 interface CoBrokersTableProps {
   data: CoBroker[];
@@ -201,10 +215,42 @@ export function CoBrokersTable({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="flex items-center space-x-1">
-                    <Star className={cn("h-4 w-4", (broker.rating ?? 0) >= 4 ? "text-amber-500 fill-amber-500" : "text-slate-300")} />
-                    <span className="text-sm font-medium">{broker.rating ?? 0}</span>
-                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center space-x-1 cursor-help hover:opacity-80 transition-opacity">
+                          <Star className={cn("h-4 w-4", (broker.rating ?? 0) >= 4 ? "text-amber-500 fill-amber-500" : "text-slate-300")} />
+                          <span className="text-sm font-medium">{broker.rating ?? 0}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="p-3 bg-slate-900 text-slate-100 border-slate-800 shadow-xl rounded-lg w-52">
+                        <div className="space-y-1.5">
+                          <p className="font-semibold text-xs text-slate-400 mb-1">เกณฑ์การให้คะแนน</p>
+                          {Object.entries(RATING_LABELS)
+                            .reverse()
+                            .map(([ratingNum, label]) => {
+                              const num = parseInt(ratingNum);
+                              const isCurrent = (broker.rating ?? 0) === num;
+                              return (
+                                <div
+                                  key={ratingNum}
+                                  className={cn(
+                                    "flex items-center text-[11px] justify-between py-0.5 px-1 rounded transition-colors",
+                                    isCurrent ? "bg-amber-500/10 text-amber-400 font-medium" : "text-slate-300"
+                                  )}
+                                >
+                                  <div className="flex items-center space-x-1.5">
+                                    <Star className={cn("h-3 w-3", isCurrent ? "text-amber-400 fill-amber-400" : "text-slate-500")} />
+                                    <span>{ratingNum}</span>
+                                  </div>
+                                  <span className="text-slate-400 text-right">{label}</span>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">

@@ -101,7 +101,7 @@ export function NotificationBell() {
         <Button
           variant="outline"
           size="sm"
-          className="w-full text-xs font-bold text-slate-500 hover:text-slate-900 rounded-xl h-11 border-slate-200"
+          className="w-full text-xs font-bold text-slate-500! hover:text-white! rounded-xl h-11 border-slate-200"
           asChild
         >
           <Link href="/protected/notifications">

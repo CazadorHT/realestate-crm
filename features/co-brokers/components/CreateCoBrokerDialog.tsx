@@ -4,8 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CoBrokerFormValues, CoBrokerSchema } from "../schema";
 import { 
-  ResponsiveDialog,
-  DialogClose
+  ResponsiveDialog
 } from "@/components/ui/responsive-dialog";
 import {
   Form,
@@ -68,6 +67,7 @@ export function CreateCoBrokerDialog({
 }: CreateCoBrokerDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
+  const [isRatingOpen, setIsRatingOpen] = useState(false);
   const totalSteps = 3;
 
   const form = useForm<CoBrokerFormValues>({
@@ -296,7 +296,7 @@ export function CreateCoBrokerDialog({
                 key={`next-btn-${currentStep}`}
                 type="button" 
                 onClick={handleNext}
-                className="h-12 px-8 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold"
+                className="h-12 px-8 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold"
               >
                 ดำเนินการต่อ <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
@@ -419,11 +419,13 @@ export function CreateCoBrokerDialog({
                       <FormItem>
                         <FormLabel className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">เรตติ้งพาร์ทเนอร์</FormLabel>
                         <ResponsiveDialog 
-                        className="max-w-md!"
+                          open={isRatingOpen}
+                          onOpenChange={setIsRatingOpen}
+                          className="max-w-md!"
                           title="เลือกเรตติ้งของคู่ค้า"
                           description="ประเมินศักยภาพการร่วมงานเบื้องต้น"
                           trigger={
-                            <Button type="button" variant="outline" className="w-full h-12 rounded-xl justify-between px-3 border-slate-200 bg-slate-50/30">
+                            <Button type="button" variant="outline" className="w-full h-12 rounded-xl justify-between px-3 border-slate-200 bg-slate-50/30" onClick={() => setIsRatingOpen(true)}>
                               <div className="flex items-center gap-2">
                                 <Star className={cn("h-4 w-4 fill-amber-500 text-amber-500")} />
                                 <span className="font-bold">{field.value} ดาว</span>
@@ -433,7 +435,10 @@ export function CreateCoBrokerDialog({
                           }
                         >
                           <div className="p-6  ">
-                             <RatingSelector value={field.value} onChange={field.onChange} />
+                             <RatingSelector value={field.value} onChange={(v) => {
+                               field.onChange(v);
+                               setIsRatingOpen(false);
+                             }} />
                           </div>
                         </ResponsiveDialog>
                         <FormMessage />

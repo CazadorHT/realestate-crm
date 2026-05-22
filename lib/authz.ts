@@ -92,7 +92,7 @@ export const requireAuthContext = cache(async (
   requestedTenantId?: string,
   injectedSupabase?: SupabaseClient<Database>,
 ): Promise<AuthContext> => {
-  const cleanRequestedTenantId = (requestedTenantId && requestedTenantId !== "ALL" && requestedTenantId !== "")
+  const cleanRequestedTenantId = (requestedTenantId && requestedTenantId !== "ALL" && requestedTenantId !== "" && requestedTenantId !== "undefined")
     ? requestedTenantId
     : undefined;
 
@@ -115,8 +115,8 @@ export const requireAuthContext = cache(async (
     const cookieStore = await cookies();
     const cookieTenantId = cookieStore.get("active_tenant_id")?.value;
     
-    // If cookie is "ALL" or empty, we explicitly want cross-branch (tenantId: undefined)
-    if (cookieTenantId === "ALL" || cookieTenantId === "") {
+    // If cookie is "ALL" or empty or "undefined", we explicitly want cross-branch (tenantId: undefined)
+    if (cookieTenantId === "ALL" || cookieTenantId === "" || cookieTenantId === "undefined") {
       return ctx; // Return with undefined tenantId
     }
 
