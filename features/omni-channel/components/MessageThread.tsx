@@ -124,9 +124,9 @@ export function MessageThread({ lead }: { lead: Conversation }) {
   useEffect(() => {
     const unsubscribe = subscribe(
       {
-        table: "omni_messages",
-        filter: `lead_id=eq.${lead.id}`,
-      },
+          table: "communications_hub_v3",
+          filter: `lead_id=eq.${lead.id}`,
+        },
       {
         onData: (payload) => {
           try {
@@ -181,7 +181,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
     );
 
     // Track presence (Masterclass Payload)
-    trackPresence("omni_messages", `lead_id=eq.${lead.id}`, {
+    trackPresence("communications_hub_v3", `lead_id=eq.${lead.id}`, {
       user_id: lead.id,
       agent_id: "Me", // Should come from useUser in real app
       last_active_at: new Date().toISOString()
@@ -197,7 +197,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
   const handleTyping = () => {
     const now = Date.now();
     if (now - lastBroadcastRef.current > 2000) {
-      broadcast("omni_messages", `lead_id=eq.${lead.id}`, "typing", { name: "Agent" });
+      broadcast("communications_hub_v3", `lead_id=eq.${lead.id}`, "typing", { name: "Agent" });
       lastBroadcastRef.current = now;
     }
   };
