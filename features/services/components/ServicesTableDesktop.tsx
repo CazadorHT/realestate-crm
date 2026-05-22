@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { type ServiceRow } from "@/features/services/actions";
 import { useServicesActions } from "@/features/services/hooks/useServicesActions";
+import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,10 +107,13 @@ export function ServicesTableDesktop({
                   <div className="flex items-center gap-4">
                     <div className="h-14 w-20 rounded-xl bg-slate-100 overflow-hidden border border-slate-200 shrink-0 group-hover:scale-105 transition-transform duration-500 shadow-sm">
                       {(service as any).cover_image ? (
-                        <img
+                        <Image
                           src={(service as any).cover_image}
                           alt={service.title}
                           className="w-full h-full object-cover"
+                          fill
+                          sizes="80px"
+                          unoptimized
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-slate-300 text-[10px] text-center p-1">

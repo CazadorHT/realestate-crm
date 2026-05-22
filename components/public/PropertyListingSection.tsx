@@ -99,17 +99,17 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
 
   const isNavigating = searchParams.toString() !== activeParams;
 
-  const FILTER_LABELS: Record<FilterType, string> = {
-    ALL: `${t("common.all")}`,
-    HOUSE: `${t("home.property_types.house")}`,
-    CONDO: `${t("home.property_types.condo")}`,
-    OFFICE: `${t("property_types.office_building")}`,
-    TOWNHOME: `${t("home.property_types.townhome")}`,
-    WAREHOUSE: `${t("home.property_types.warehouse")}`,
-    COMMERCIAL: `${t("property_types.commercial_building")}`,
-    LAND: `${t("home.property_types.land")}`,
-    OTHER: `${t("property_types.other")}`,
-  };
+  const FILTER_LABELS: Record<FilterType, string> = useMemo(() => ({
+    ALL: t("common.all"),
+    HOUSE: t("home.property_types.house"),
+    CONDO: t("home.property_types.condo"),
+    OFFICE: t("property_types.office_building"),
+    TOWNHOME: t("home.property_types.townhome"),
+    WAREHOUSE: t("home.property_types.warehouse"),
+    COMMERCIAL: t("property_types.commercial_building"),
+    LAND: t("home.property_types.land"),
+    OTHER: t("property_types.other"),
+  }), [t]);
 
   // Derived filters from searchParams
   const areaFilter = useMemo(() => (searchParams.get("area") ?? "").trim(), [searchParams]);
@@ -240,7 +240,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
 
     loadProperties();
     return () => controller.abort();
-  }, [reloadKey, t]);
+  }, [reloadKey, t, initialProperties]);
 
   const typeCounts = useMemo(() => {
     const counts: Record<FilterType, number> = {

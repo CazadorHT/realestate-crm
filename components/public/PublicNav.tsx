@@ -71,6 +71,11 @@ export function PublicNav() {
     updateNavOffset(isVisible ? 64 : 0);
   }, [isVisible]);
 
+  function updateFavoriteCount() {
+    const ids = readFavoriteIds();
+    setFavoriteCount(ids.length);
+  }
+
   useEffect(() => {
     // Initial load
     setMounted(true);
@@ -117,12 +122,7 @@ export function PublicNav() {
       window.removeEventListener("favorite-updated", handleFavoriteUpdate);
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [pathname]);
-
-  function updateFavoriteCount() {
-    const ids = readFavoriteIds();
-    setFavoriteCount(ids.length);
-  }
+  }, [pathname, mobileMenuOpen]);
 
   const navigationLinks = [
     { name: t("nav.home"), href: "/" },

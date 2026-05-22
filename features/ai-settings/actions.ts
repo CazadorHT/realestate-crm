@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { AiModelConfig, DEFAULT_CONFIG, AiModelChoice } from "./constants";
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 
 /**
  * Get AI Model Configuration from site_settings
@@ -49,20 +50,23 @@ export async function updateAiModelConfig(
   config: Partial<AiModelConfig>,
 ): Promise<{ success: boolean; message?: string }> {
   try {
-    const supabase = await createClient();
-
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData?.user?.id;
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+    const supabase = ctx.supabase;
+    const userId = ctx.user.id;
 
     const updates = Object.entries(config).map(([key, value]: [string, any]) => ({
+      tenant_id: ctx.tenantId || null,
+      category: "general",
       key,
       value,
       updated_at: new Date().toISOString(),
+      updated_by: userId,
     }));
 
     const { error } = await supabase
-      .from("site_settings")
-      .upsert(updates, { onConflict: "key" });
+      .from("system_settings_v3")
+      .upsert(updates, { onConflict: "tenant_id,category,key" });
 
     if (error) {
       console.error("Error updating AI config:", error);

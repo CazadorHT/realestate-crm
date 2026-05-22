@@ -52,6 +52,7 @@ export const FinanceAnalytics = ({ onBack }: FinanceAnalyticsProps) => {
 
   useEffect(() => {
     fetchData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [year]);
 
   useEffect(() => {

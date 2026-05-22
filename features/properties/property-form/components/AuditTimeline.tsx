@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import NextImage from "next/image";
 import { formatDistanceToNow, format } from "date-fns";
 import { th } from "date-fns/locale";
 import {
@@ -182,7 +183,7 @@ export function AuditTimeline({ propertyId }: AuditTimelineProps) {
       action: filterAction,
       userId: filterModifier,
     });
-  }, [debouncedSearch, filterAction, filterModifier]);
+  }, [debouncedSearch, filterAction, filterModifier, fetchLogs]);
 
   const filteredLogs = logs; // Server-side does the filtering now
 
@@ -619,10 +620,13 @@ function LogItem({
                     key={idx}
                     className="group relative aspect-square overflow-hidden rounded-xl border-2 border-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.3)] bg-white"
                   >
-                    <img
+                    <NextImage
                       src={url}
                       alt="Added"
                       className="h-full w-full object-cover transition-transform group-hover:scale-110"
+                      fill
+                      sizes="96px"
+                      unoptimized
                     />
                     <div className="absolute right-1 top-1 rounded-full bg-emerald-500 p-0.5 text-white shadow-sm">
                       <PlusCircle className="h-3.5 w-3.5" />
@@ -634,10 +638,13 @@ function LogItem({
                     key={idx}
                     className="group relative aspect-square overflow-hidden rounded-xl border border-rose-200 opacity-50 grayscale transition-all hover:opacity-100 hover:grayscale-0 bg-white"
                   >
-                    <img
+                    <NextImage
                       src={url}
                       alt="Removed"
                       className="h-full w-full object-cover"
+                      fill
+                      sizes="96px"
+                      unoptimized
                     />
                     <div className="absolute right-1 top-1 rounded-full bg-rose-500 p-0.5 text-white shadow-sm">
                       <MinusCircle className="h-3.5 w-3.5" />

@@ -169,13 +169,13 @@ export function PropertyGallery({
   const isHorizontalSwipe = useRef<boolean | null>(null);
 
   // Touch handlers: detect horizontal vs vertical swipe direction
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     isHorizontalSwipe.current = null; // reset direction
-  }, []);
+  };
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+  const handleTouchMove = (e: React.TouchEvent) => {
     if (!scrollRef.current) return;
 
     const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
@@ -190,15 +190,15 @@ export function PropertyGallery({
     if (isHorizontalSwipe.current === false) {
       scrollRef.current.style.overflowX = "hidden";
     }
-  }, []);
+  };
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = () => {
     // Re-enable horizontal scroll after touch ends
     if (scrollRef.current) {
       scrollRef.current.style.overflowX = "auto";
     }
     isHorizontalSwipe.current = null;
-  }, []);
+  };
 
   // Sort: Cover first
   const sortedImages = [...(images || [])].sort((a, b) => {
@@ -213,17 +213,15 @@ export function PropertyGallery({
 
   const [direction, setDirection] = useState(0);
 
-  const handleNext = useCallback(() => {
+  const handleNext = () => {
     setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % sortedImages.length);
-  }, [sortedImages.length]);
+  };
 
-  const handlePrev = useCallback(() => {
+  const handlePrev = () => {
     setDirection(-1);
-    setCurrentIndex(
-      (prev) => (prev - 1 + sortedImages.length) % sortedImages.length,
-    );
-  }, [sortedImages.length]);
+    setCurrentIndex((prev) => (prev - 1 + sortedImages.length) % sortedImages.length);
+  };
 
   // Keyboard Navigation
   useEffect(() => {
@@ -233,23 +231,25 @@ export function PropertyGallery({
       if (e.key === "Escape") {
         setOpen(false);
       } else if (e.key === "ArrowLeft") {
-        handlePrev();
+        setDirection(-1);
+        setCurrentIndex((prev) => (prev - 1 + sortedImages.length) % sortedImages.length);
       } else if (e.key === "ArrowRight") {
-        handleNext();
+        setDirection(1);
+        setCurrentIndex((prev) => (prev + 1) % sortedImages.length);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, handleNext, handlePrev]);
+  }, [open, sortedImages.length]);
 
-  const handleImageError = useCallback((id: string) => {
+  const handleImageError = (id: string) => {
     setFailedImages((prev) => {
       const newSet = new Set(prev);
       newSet.add(id);
       return newSet;
     });
-  }, []);
+  };
 
   if (!mainImage) {
     return (
@@ -501,7 +501,7 @@ export function PropertyGallery({
           )}
 
           {/* Desktop View All Button */}
-          <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6 z-50">
+          <div className="absolute bottom-4 right-4 lg:bottom-6 lg:right-6 z-30">
             <Button
               variant="secondary"
               className="bg-white/90 hover:bg-white text-slate-900 shadow-lg backdrop-blur-sm h-9 lg:h-10 px-3 lg:px-4 rounded-xl text-sm font-semibold"
@@ -661,7 +661,7 @@ export function PropertyGallery({
               >
                 <ImageWithFallback
                    img={img}
-                  alt=""
+                  alt={`${imageAlt || title} thumbnail ${idx + 1}`}
                   className="object-cover"
                   sizes="10vw"
                   onImageError={handleImageError}

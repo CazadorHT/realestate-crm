@@ -2,6 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 
 export function ChartSkeleton() {
+  const heights = ["40%", "70%", "50%", "85%", "60%", "75%"];
   return (
     <Card className="w-full h-full border-slate-200">
       <CardHeader className="pb-2">
@@ -13,7 +14,7 @@ export function ChartSkeleton() {
           <Skeleton
             key={i}
             className="flex-1 rounded-t-lg animate-shimmer"
-            style={{ height: `${Math.random() * 60 + 20}%` }}
+            style={{ height: heights[i] }}
           />
         ))}
       </CardContent>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { profileSchema, type ProfileFormValues } from "../../lib/profile-schema";
@@ -983,10 +984,13 @@ export function ProfileInfoForm({
             <div className="relative w-full md:w-64 h-32 bg-white rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden group">
               {signatureUrl ? (
                 <>
-                  <img 
+                  <Image 
                     src={signatureUrl} 
                     alt="Signature" 
                     className="max-w-full max-h-full object-contain p-2"
+                    fill
+                    sizes="(max-width: 768px) 100vw, 256px"
+                    unoptimized
                   />
                   <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <label className="cursor-pointer px-4 py-2 bg-white text-slate-900 rounded-xl text-xs font-bold shadow-xl">

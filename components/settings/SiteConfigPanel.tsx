@@ -91,6 +91,10 @@ export function SiteConfigPanel() {
       hot_lead_threshold: 80,
       executive_summary_enabled: true,
       brand_card: "",
+      partners_description: "",
+      partners_description_en: "",
+      partners_description_cn: "",
+      partners_description_ru: "",
     },
   });
 

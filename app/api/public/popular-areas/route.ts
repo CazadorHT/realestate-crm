@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getPopularAreasAction } from "@/features/public-data/popular-areas";
+import { getPopularAreasAction } from "@/features/public/popular-areas";
 export const dynamic = 'force-dynamic'; // เพิ่มบรรทัดนี้
 export const revalidate = 3600; // Cache for 1 hour
  

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   getNotificationsAction,
@@ -37,7 +37,7 @@ export function useNotifications() {
   const lastFetchRef = useRef<number>(0);
   const FETCH_THROTTLE = 3000; // 3 seconds
 
-  const fetchNotifications = async (force = false) => {
+  const fetchNotifications = useCallback(async (force = false) => {
     const now = Date.now();
     if (!force && now - lastFetchRef.current < FETCH_THROTTLE) {
       console.log("[useNotifications] Skipping fetch due to throttle");
@@ -65,7 +65,7 @@ export function useNotifications() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [tenantId]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -125,7 +125,7 @@ export function useNotifications() {
     return () => {
       unsubscribe();
     };
-  }, [userId, tenantId, subscribe]);
+  }, [userId, tenantId, subscribe, fetchNotifications]);
 
   // --- Intelligent Stacking (Grouping) ---
   const stackedNotifications = useMemo(() => {

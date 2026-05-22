@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import type { LeadActivityRow } from "@/features/leads/types";
 import type { PropertySummary } from "@/features/leads/queries";
@@ -282,10 +283,12 @@ export function LeadTimeline({
                   )}
                 >
                   {p?.cover_url ? (
-                    <img
+                    <Image
                       src={p.cover_url}
-                      alt={p.title || ""}
-                      className="absolute inset-0 h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      alt={p.title ?? "Property image"}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500 absolute inset-0"
+                      sizes="80px"
                     />
                   ) : (
                     <Icon className="h-6 w-6 opacity-80 group-hover:scale-110 transition-transform duration-500" />

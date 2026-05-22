@@ -19,19 +19,6 @@ export default function FavoritesPageClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [favoriteIds, setFavoriteIds] = useState<string[]>([]);
   const { t } = useLanguage();
-  useEffect(() => {
-    loadFavorites();
-
-    // Listen for favorite updates
-    const handleFavoriteUpdate = () => {
-      loadFavorites();
-    };
-
-    window.addEventListener("favorite-updated", handleFavoriteUpdate);
-    return () =>
-      window.removeEventListener("favorite-updated", handleFavoriteUpdate);
-  }, []);
-
   async function loadFavorites() {
     const ids = readFavoriteIds();
     setFavoriteIds(ids);
@@ -62,6 +49,19 @@ export default function FavoritesPageClient() {
       setIsLoading(false);
     }
   }
+
+  useEffect(() => {
+    loadFavorites();
+
+    // Listen for favorite updates
+    const handleFavoriteUpdate = () => {
+      loadFavorites();
+    };
+
+    window.addEventListener("favorite-updated", handleFavoriteUpdate);
+    return () =>
+      window.removeEventListener("favorite-updated", handleFavoriteUpdate);
+  }, []);
 
   function handleClearAll() {
     if (confirm(t("favorites.confirm_clear"))) {

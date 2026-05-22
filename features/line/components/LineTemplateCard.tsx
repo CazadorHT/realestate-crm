@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { 
   Home, MessageCircle, Mail, UserPlus, LogIn, 
   TrendingDown, CheckCircle, Tag, Palette, Loader2, Save, User, Clock, ExternalLink 
@@ -159,8 +160,15 @@ export function LineTemplateCard({
           <div className="relative mx-auto rounded-3xl p-3 bg-[#7488ab] shadow-inner max-w-[280px]">
             <div className="absolute top-2 left-1/2 -translate-x-1/2 w-10 h-1 bg-slate-600/30 rounded-full" />
             <div className="mt-4 flex gap-2">
-               <div className="h-8 w-8 rounded-full bg-slate-200 shrink-0 shadow-sm overflow-hidden border border-white/20">
-                  <img src={`https://ui-avatars.com/api/?name=${template.key}&background=random`} alt="" className="w-full h-full opacity-80" />
+                 <div className="relative h-8 w-8 rounded-full shrink-0 shadow-sm overflow-hidden border border-white/20">
+                  <Image
+                    src={`https://ui-avatars.com/api/?name=${template.key}&background=random`}
+                    alt={`Avatar for ${template.label}`}
+                    className="w-full h-full opacity-80"
+                    fill
+                    sizes="32px"
+                    unoptimized
+                  />
                </div>
                <div className="flex flex-col gap-1 max-w-[200px]">
                   <span className="text-[10px] text-white/70 font-bold ml-1">OA Service</span>
@@ -197,7 +205,14 @@ export function LineTemplateCard({
                     ) : (
                       <div className="bg-white">
                         <div className="h-32 bg-slate-200 w-full object-cover relative group">
-                          <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=500&q=60" alt="Property" className="w-full h-full object-cover" />
+                          <Image
+                            src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=500&q=60"
+                            alt="Property"
+                            className="w-full h-full object-cover"
+                            fill
+                            sizes="256px"
+                            unoptimized
+                          />
                           <div className="absolute top-2 right-2 bg-white/95 px-2 py-0.5 rounded-lg text-[9px] font-bold text-slate-800 shadow-sm border border-slate-100">
                             {template.key === "DEAL_SOLO" ? "🎉 SOLD OUT" : template.key === "DEAL_RENT" ? "📝 RENTED" : "FOR SALE"}
                           </div>

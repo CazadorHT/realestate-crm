@@ -272,7 +272,7 @@ export function TemplateEditorCard({
                 {tiktokConnected && tiktokMetadata?.display_name && (
                   <div className="flex items-center gap-1.5 ml-3 px-2 py-0.5 rounded-full bg-slate-900 text-white text-[10px] font-bold border border-slate-700 shadow-sm">
                     {tiktokMetadata.avatar_url ? (
-                      <img src={tiktokMetadata.avatar_url} alt="" className="h-3.5 w-3.5 rounded-full border border-slate-700" />
+                      <img src={tiktokMetadata.avatar_url} alt={`${tiktokMetadata.display_name || 'TikTok'} avatar`} className="h-3.5 w-3.5 rounded-full border border-slate-700" />
                     ) : (
                       <div className="h-3.5 w-3.5 rounded-full bg-slate-700 flex items-center justify-center">
                         <FaTiktok className="h-2 w-2" />
@@ -308,7 +308,7 @@ export function TemplateEditorCard({
                 {lineBotInfo?.displayName && (
                   <div className="flex items-center gap-1.5 ml-3 px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold border border-emerald-500 shadow-sm">
                     {lineBotInfo.pictureUrl ? (
-                      <img src={lineBotInfo.pictureUrl} alt="" className="h-3.5 w-3.5 rounded-full border border-emerald-500" />
+                      <img src={lineBotInfo.pictureUrl} alt={`${lineBotInfo.displayName || 'LINE'} avatar`} className="h-3.5 w-3.5 rounded-full border border-emerald-500" />
                     ) : (
                       <div className="h-3.5 w-3.5 rounded-full bg-emerald-500 flex items-center justify-center">
                         <FaLine className="h-2 w-2" />

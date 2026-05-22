@@ -42,11 +42,13 @@ export async function updateSystemConfig(config: Partial<SystemConfig>) {
   const current = await getSystemConfig();
   const newValue = { ...current, ...config };
 
-  const { error } = await supabase.from("site_settings").upsert({
+  const { error } = await supabase.from("system_settings_v3").upsert({
+    tenant_id: null,
+    category: "general",
     key: "system_config",
     value: newValue as Json,
     updated_at: new Date().toISOString(),
-  });
+  }, { onConflict: "tenant_id,category,key" });
 
   if (error) throw error;
   return newValue;

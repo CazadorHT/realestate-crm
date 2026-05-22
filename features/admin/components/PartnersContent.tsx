@@ -1,225 +1,341 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getPartners } from "@/features/admin/partners-actions";
-import { Handshake, Handshake as HandshakeIcon, CheckCircle, XCircle, Search, X } from "lucide-react";
-import { PartnersTable } from "@/features/admin/components/PartnersTable";
+import { useTransition, useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { SectionTitle } from "@/components/dashboard/SectionTitle";
-import { EmptyState } from "@/components/dashboard/EmptyState";
-import { CreatePartnerDialog } from "@/features/admin/components/CreatePartnerDialog";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { PaginationControls } from "@/components/ui/pagination-controls";
-import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
-import { PartnerRow } from "@/features/admin/partners-actions";
-import { Input } from "@/components/ui/input";
-import { TableSkeleton } from "@/components/ui/TableSkeleton";
-type Partner = PartnerRow;
+import { Loader2, Save, Share2, Info, LayoutGrid } from "lucide-react";
+import { updateSiteSettings } from "@/features/site-settings/actions";
+import { SiteSettings } from "@/features/site-settings/schema";
+import { PartnersTable } from "./PartnersTable";
+import { CreatePartnerDialog } from "./CreatePartnerDialog";
+import { getPartners, PartnerRow, seedDefaultPartners } from "@/features/admin/partners-actions";
+
+const formSchema = z.object({
+  partners_description: z.string().max(1000, "ความยาวต้องไม่เกิน 1,000 ตัวอักษร").optional().or(z.literal("")),
+  partners_description_en: z.string().max(1000, "Max 1,000 characters").optional().or(z.literal("")),
+  partners_description_cn: z.string().max(1000, "最多 1,000 个字符").optional().or(z.literal("")),
+  partners_description_ru: z.string().max(1000, "Максимум 1,000 символов").optional().or(z.literal("")),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
 interface PartnersContentProps {
   isSuperAdmin: boolean;
-  initialData?: Partner[];
-  initialCount?: number;
+  settings: SiteSettings;
+  initialPartners: PartnerRow[];
 }
 
-export function PartnersContent({ 
-  isSuperAdmin,
-  initialData = [],
-  initialCount = 0
-}: PartnersContentProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  
-  // URL Params state
-  const currentPage = parseInt(searchParams.get("page") || "1");
-  const searchQuery = searchParams.get("q") || "";
-  const pageSize = 10;
+export function PartnersContent({ isSuperAdmin, settings, initialPartners }: PartnersContentProps) {
+  const [isPending, startTransition] = useTransition();
+  const [partners, setPartners] = useState<PartnerRow[]>(initialPartners);
 
-  const [partners, setPartners] = useState<Partner[]>(initialData);
-  const [totalCount, setTotalCount] = useState(initialCount);
-  const [loading, setLoading] = useState(false);
-  const [open, setOpen] = useState(false);
-  const [searchInput, setSearchInput] = useState(searchQuery);
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      partners_description: settings.partners_description || "",
+      partners_description_en: settings.partners_description_en || "",
+      partners_description_cn: settings.partners_description_cn || "",
+      partners_description_ru: settings.partners_description_ru || "",
+    },
+  });
 
-  const fetchPartners = async (page: number, q: string) => {
-    setLoading(true);
-    try {
-      const result = await getPartners({
-        page,
-        pageSize,
-        search: q,
-      });
-      
-      if (result.success) {
-        setPartners(result.data);
-        setTotalCount(result.totalCount);
-        
-        // Handle out-of-bounds page
-        const maxPage = Math.ceil(result.totalCount / pageSize);
-        if (page > 1 && page > maxPage && maxPage > 0) {
-          updateUrl({ page: maxPage });
+  const { isDirty } = form.formState;
+
+  const onSubmit = (data: FormValues) => {
+    startTransition(async () => {
+      try {
+        const result = await updateSiteSettings(data);
+        if (result.success) {
+          toast.success("บันทึกข้อมูลคำอธิบายเรียบร้อยแล้ว");
+          form.reset(data);
+        } else {
+          toast.error(result.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
         }
-      }
-    } catch (error) {
-      console.error("Failed to fetch partners:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Sync fetch with search params
-  useEffect(() => {
-    fetchPartners(currentPage, searchQuery);
-  }, [currentPage, searchQuery]);
-
-  // Debounced Search logic
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchInput !== searchQuery) {
-        updateUrl({ q: searchInput, page: 1 });
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [searchInput]);
-
-  const updateUrl = (updates: Record<string, string | number | null>) => {
-    const params = new URLSearchParams(searchParams.toString());
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === "") {
-        params.delete(key);
-      } else {
-        params.set(key, String(value));
+      } catch (error) {
+        console.error("Failed to save partners description:", error);
+        toast.error("เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้ง");
       }
     });
-    router.push(`${pathname}?${params.toString()}`);
   };
 
-  const handleSuccess = () => {
-    setOpen(false);
-    fetchPartners(currentPage, searchQuery);
-    
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("success", "true");
-    router.push(`${pathname}?${params.toString()}`);
-  };
-
-  const clearSearch = () => {
-    setSearchInput("");
-    updateUrl({ q: null, page: 1 });
+  const handleRefresh = async () => {
+    const result = await getPartners({ page: 1, pageSize: 100 });
+    if (result.success) {
+      setPartners(result.data);
+    }
   };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
-      <SuccessAnimation />
       <PageHeader
-        title="พาร์ทเนอร์ (Partners)"
-        subtitle="จัดการพาร์ทเนอร์และบริษัทที่ร่วมงาน"
-        count={totalCount}
+        title="ช่องทางการตลาด (Marketing Channels)"
+        subtitle="จัดการข้อมูลคำอธิบายและ Badge ช่องทางการตลาดบนหน้าเว็บไซต์หลัก"
         icon="handshake"
-        actionSlot={
-          isSuperAdmin && <CreatePartnerDialog onSuccess={handleSuccess} />
-        }
         gradient="rose"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm  flex items-center gap-4 transition-all hover:shadow-md">
-          <div className="h-12 w-12 rounded-xl bg-rose-100 flex items-center justify-center text-rose-600">
-            <Handshake className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-sm text-slate-500 font-medium uppercase tracking-wider">
-              ทั้งหมด
-            </p>
-            <h3 className="text-2xl font-bold text-slate-900">
-              {totalCount}
-            </h3>
-          </div>
-        </div>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <Card className="border-slate-200 shadow-md overflow-hidden bg-white/80 backdrop-blur-xs">
+            <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-rose-100 rounded-xl text-rose-600">
+                    <Share2 className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl text-slate-850 font-bold">
+                      คำอธิบายส่วนช่องทางการตลาด (Marketing Channels Description)
+                    </CardTitle>
+                    <CardDescription className="text-sm mt-0.5 text-slate-500">
+                      ข้อความคำอธิบายเกี่ยวกับแพลตฟอร์มการโปรโมทและลงประกาศทรัพย์สินที่แสดงบนหน้าหลักของเว็บไซต์
+                    </CardDescription>
+                  </div>
+                </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
-          <div className="h-12 w-12 rounded-xl bg-emerald-100 flex items-center justify-center text-emerald-600">
-            <CheckCircle className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-sm text-slate-500 font-medium uppercase tracking-wider">
-              เปิดใช้งาน
-            </p>
-            <h3 className="text-2xl font-bold text-slate-900">
-              {partners.filter((p) => p.is_active).length}{" "}
-              <span className="text-xs font-normal text-slate-400"> (ในหน้านี้)</span>
-            </h3>
-          </div>
-        </div>
+                {isSuperAdmin && (
+                  <Button
+                    type="submit"
+                    disabled={isPending || !isDirty}
+                    size="lg"
+                    className="w-full sm:w-auto bg-rose-600 text-white hover:bg-rose-500 rounded-xl font-semibold shadow-md shadow-rose-200 transition-all duration-300 hover:shadow-lg flex items-center gap-2 disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none"
+                  >
+                    {isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Save className="h-4 w-4" />
+                    )}
+                    <span>บันทึกคำอธิบาย</span>
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="mb-6 flex items-start gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100">
+                <Info className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  เนื่องจากข้อกำหนดความเป็นส่วนตัวและการใช้งานเครื่องหมายการค้า (Brand Logo) ของพันธมิตรภายนอก
+                  ระบบจึงปรับเปลี่ยนการแสดงผลเป็นข้อความคำอธิบายและ Text Badge แทนรูปภาพโลโก้
+                  กรุณากรอกข้อมูลคำอธิบายแยกแต่ละภาษาตามที่แสดงผลจริงบนหน้าหลัก
+                </p>
+              </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4 transition-all hover:shadow-md">
-          <div className="h-12 w-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
-            <XCircle className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="text-sm text-slate-500 font-medium uppercase tracking-wider">
-              ปิดใช้งาน
-            </p>
-            <h3 className="text-2xl font-bold text-slate-900">
-              {partners.filter((p) => !p.is_active).length}{" "}
-              <span className="text-xs font-normal text-slate-400"> (ในหน้านี้)</span>
-            </h3>
-          </div>
-        </div>
-      </div>
+              <Tabs defaultValue="th" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 sm:flex bg-slate-100/80 p-1 rounded-xl gap-1.5 h-auto sm:h-[48px] mb-6 w-full sm:w-auto">
+                  <TabsTrigger
+                    value="th"
+                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-xs px-4 py-2 gap-2 flex items-center justify-center font-medium text-xs sm:text-sm transition-all"
+                  >
+                    <span className="fi fi-th rounded-sm shadow-xs shrink-0" />
+                    <span>ภาษาไทย</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="en"
+                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-xs px-4 py-2 gap-2 flex items-center justify-center font-medium text-xs sm:text-sm transition-all"
+                  >
+                    <span className="fi fi-us rounded-sm shadow-xs shrink-0" />
+                    <span>English</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="cn"
+                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-xs px-4 py-2 gap-2 flex items-center justify-center font-medium text-xs sm:text-sm transition-all"
+                  >
+                    <span className="fi fi-cn rounded-sm shadow-xs shrink-0" />
+                    <span>中文 (Chinese)</span>
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="ru"
+                    className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-xs px-4 py-2 gap-2 flex items-center justify-center font-medium text-xs sm:text-sm transition-all"
+                  >
+                    <span className="fi fi-ru rounded-sm shadow-xs shrink-0" />
+                    <span>Русский (Russian)</span>
+                  </TabsTrigger>
+                </TabsList>
 
-      <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <SectionTitle
-            title="รายการพาร์ทเนอร์"
-            subtitle="แสดงรายชื่อบริษัทพาร์ทเนอร์และลำดับการแสดงผล"
-          />
-          
-          <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-            <Input
-              placeholder="ค้นหาชื่อพาร์ทเนอร์..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className="pl-9 pr-9 bg-white border-slate-200 rounded-xl focus-visible:ring-rose-500"
-            />
-            {searchInput && (
-              <button
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 hover:text-slate-600 transition-colors"
-              >
-                <X className="h-4 w-4" />
-              </button>
+                {/* TH Content */}
+                <TabsContent value="th" className="space-y-4 outline-hidden focus:outline-hidden">
+                  <FormField
+                    control={form.control}
+                    name="partners_description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex justify-between items-center mb-1">
+                          <FormLabel className="text-sm font-semibold text-slate-700">คำอธิบายภาษาไทย (ภาษาหลัก)</FormLabel>
+                          <span className="text-xs text-slate-400">
+                            {field.value?.length || 0}/1000 ตัวอักษร
+                          </span>
+                        </div>
+                        <FormControl>
+                          <Textarea
+                            placeholder="กรอกคำอธิบายช่องทางการตลาดภาษาไทย..."
+                            disabled={!isSuperAdmin || isPending}
+                            className="rounded-xl min-h-[140px] border-slate-200 focus-visible:ring-rose-500 focus-visible:border-rose-500 text-sm leading-relaxed p-4 bg-white/50 focus:bg-white transition-all shadow-xs"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+
+                {/* EN Content */}
+                <TabsContent value="en" className="space-y-4 outline-hidden focus:outline-hidden">
+                  <FormField
+                    control={form.control}
+                    name="partners_description_en"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex justify-between items-center mb-1">
+                          <FormLabel className="text-sm font-semibold text-slate-700">English Description</FormLabel>
+                          <span className="text-xs text-slate-400">
+                            {field.value?.length || 0}/1000 chars
+                          </span>
+                        </div>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Enter English description..."
+                            disabled={!isSuperAdmin || isPending}
+                            className="rounded-xl min-h-[140px] border-slate-200 focus-visible:ring-rose-500 focus-visible:border-rose-500 text-sm leading-relaxed p-4 bg-white/50 focus:bg-white transition-all shadow-xs"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+
+                {/* CN Content */}
+                <TabsContent value="cn" className="space-y-4 outline-hidden focus:outline-hidden">
+                  <FormField
+                    control={form.control}
+                    name="partners_description_cn"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex justify-between items-center mb-1">
+                          <FormLabel className="text-sm font-semibold text-slate-700">Chinese Description (中文说明)</FormLabel>
+                          <span className="text-xs text-slate-400">
+                            {field.value?.length || 0}/1000 字
+                          </span>
+                        </div>
+                        <FormControl>
+                          <Textarea
+                            placeholder="输入中文描述..."
+                            disabled={!isSuperAdmin || isPending}
+                            className="rounded-xl min-h-[140px] border-slate-200 focus-visible:ring-rose-500 focus-visible:border-rose-500 text-sm leading-relaxed p-4 bg-white/50 focus:bg-white transition-all shadow-xs"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+
+                {/* RU Content */}
+                <TabsContent value="ru" className="space-y-4 outline-hidden focus:outline-hidden">
+                  <FormField
+                    control={form.control}
+                    name="partners_description_ru"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex justify-between items-center mb-1">
+                          <FormLabel className="text-sm font-semibold text-slate-700">Russian Description (Описание на русском)</FormLabel>
+                          <span className="text-xs text-slate-400">
+                            {field.value?.length || 0}/1000 симв.
+                          </span>
+                        </div>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Введите описание на русском языке..."
+                            disabled={!isSuperAdmin || isPending}
+                            className="rounded-xl min-h-[140px] border-slate-200 focus-visible:ring-rose-500 focus-visible:border-rose-500 text-sm leading-relaxed p-4 bg-white/50 focus:bg-white transition-all shadow-xs"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
+
+      {/* Marketing Channels CRUD Table */}
+      <Card className="border-slate-200 shadow-md overflow-hidden bg-white/80 backdrop-blur-xs">
+        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-rose-100 rounded-xl text-rose-600">
+                <LayoutGrid className="h-6 w-6" />
+              </div>
+              <div>
+                <CardTitle className="text-xl text-slate-850 font-bold">
+                  รายการช่องทางการตลาด (Marketing Channels Badges)
+                </CardTitle>
+                <CardDescription className="text-sm mt-0.5 text-slate-500">
+                  เพิ่ม ลบ แก้ไข และจัดเรียงช่องทางที่ใช้งานแสดงปักหมุด Badge บนหน้าเว็บไซต์ส่วนของลูกค้าทั่วไป
+                </CardDescription>
+              </div>
+            </div>
+
+            {isSuperAdmin && (
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                {partners.length === 0 && (
+                  <Button
+                    onClick={async () => {
+                      const res = await seedDefaultPartners();
+                      if (res.success) {
+                        toast.success(res.message);
+                        handleRefresh();
+                      } else {
+                        toast.error(res.message);
+                      }
+                    }}
+                    variant="outline"
+                    className="w-full sm:w-auto border-rose-200 text-rose-600 hover:bg-rose-50 font-bold rounded-xl h-[44px] px-4 transition-all"
+                  >
+                    นำเข้า 5 ช่องทางหลัก
+                  </Button>
+                )}
+                <CreatePartnerDialog onSuccess={handleRefresh} />
+              </div>
             )}
           </div>
-        </div>
-
-        {loading ? (
-          <TableSkeleton rowCount={pageSize} columnCount={5} />
-        ) : partners.length > 0 ? (
-          <div className="space-y-4">
-            <PartnersTable 
-              partners={partners} 
-              isSuperAdmin={isSuperAdmin} 
-              onRefresh={() => fetchPartners(currentPage, searchQuery)}
-            />
-            <PaginationControls
-              totalCount={totalCount}
-              pageSize={pageSize}
-              currentPage={currentPage}
-            />
-          </div>
-        ) : (
-          <EmptyState
-            title={searchQuery ? "ไม่พบข้อมูลที่ค้นหา" : "ยังไม่มีข้อมูลพาร์ทเนอร์"}
-            description={searchQuery ? `ไม่พบพาร์ทเนอร์ที่ตรงกับ "${searchQuery}"` : "เริ่มเพิ่มพาร์ทเนอร์รายแรกเพื่อแสดงบนหน้าเว็บไซต์ของคุณ"}
-            icon="handshake"
-            actionLabel={isSuperAdmin ? (searchQuery ? "ล้างการค้นหา" : "เพิ่มพาร์ทเนอร์") : undefined}
-            onAction={isSuperAdmin ? (searchQuery ? clearSearch : () => setOpen(true)) : undefined}
+        </CardHeader>
+        <CardContent className="p-6">
+          <PartnersTable 
+            partners={partners}
+            isSuperAdmin={isSuperAdmin}
+            onRefresh={handleRefresh}
           />
-        )}
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

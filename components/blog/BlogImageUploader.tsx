@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef } from "react";
 import { useDropzone } from "react-dropzone";
 import { Upload, X, Loader2, Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -142,11 +143,15 @@ export function BlogImageUploader({
 
         {preview ? (
           <div className="relative w-full h-full min-h-[200px]">
-            <img
-              src={preview}
-              alt="Cover"
-              className="w-full h-full object-cover absolute inset-0"
-            />
+            <div className="relative w-full h-full">
+              <Image
+                src={preview}
+                alt="Cover"
+                fill
+                className="object-cover absolute inset-0"
+                sizes="100vw"
+              />
+            </div>
             <div className="absolute top-2 right-2 flex gap-2">
               <Button
                 type="button"

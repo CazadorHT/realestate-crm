@@ -52,6 +52,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { RentNotificationRule, LINEGroup, SimpleProperty } from "../types";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import Image from "next/image";
 
 interface RuleListProps {
   initialRules: RentNotificationRule[];
@@ -100,7 +101,7 @@ export function RuleList({
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, pathname, router]);
+  }, [searchTerm, pathname, router, searchParams]);
 
   // Sync with server data when it changes (e.g. after router.refresh())
   useEffect(() => {
@@ -119,8 +120,8 @@ export function RuleList({
     if (!res.success) {
       toast.error("Failed to update status");
       // Revert
-      setRules((prev: any) =>
-        prev.map((r: any) =>
+      setRules((prev) =>
+        prev.map((r) =>
           r.id === id ? { ...r, is_active: currentStatus } : r,
         ),
       );
@@ -360,10 +361,13 @@ export function RuleList({
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-lg bg-slate-50 flex items-center justify-center shrink-0 overflow-hidden border border-slate-100">
                       {rule.properties?.property_images?.[0]?.image_url ? (
-                        <img
+                        <Image
                           src={rule.properties.property_images[0].image_url}
-                          alt=""
+                          alt={rule.properties?.title || "Property image"}
                           className="w-full h-full object-cover"
+                          width={48}
+                          height={48}
+                          unoptimized
                         />
                       ) : (
                         <Home className="w-5 h-5 text-slate-300" />
@@ -387,10 +391,13 @@ export function RuleList({
                           ? rule.line_groups[0]
                           : rule.line_groups;
                         return group?.picture_url ? (
-                          <img
+                          <Image
                             src={group.picture_url}
-                            alt=""
+                            alt={group.group_name || "LINE group"}
                             className="w-full h-full object-cover"
+                            width={32}
+                            height={32}
+                            unoptimized
                           />
                         ) : (
                           <Users className="w-4 h-4 text-slate-400" />

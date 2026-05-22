@@ -3,9 +3,9 @@ import Link from "next/link";
 import { getAllBlogPosts, BlogPost } from "@/lib/services/blog";
 import { getDeletedBlogPostsAction } from "@/features/blog/actions";
 import { Button } from "@/components/ui/button";
-import { BlogsTable } from "@/features/blogs/components/BlogsTable";
+import { BlogsTable } from "@/features/blog/components/BlogsTable";
 import { PageHeader } from "@/components/dashboard/PageHeader";
-import { BlogStats } from "@/features/blogs/components/BlogStats";
+import { BlogStats } from "@/features/blog/components/BlogStats";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
 

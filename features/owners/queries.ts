@@ -3,6 +3,7 @@ import { requireAuthContext } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
 import { mapDbError } from "@/lib/db-error";
 import type { Owner } from "./types";
+import { decrypt } from "@/lib/crypto";
 
 export async function getOwnerById(id: string): Promise<Owner | null> {
   const { supabase, tenantId } = await requireAuthContext();
@@ -30,13 +31,13 @@ export async function getOwnerById(id: string): Promise<Owner | null> {
 
   return {
     id: data.id,
-    full_name: data.display_name || "",
+    full_name: decrypt(data.display_name) || data.display_name || "",
     full_name_hash: social.full_name_hash || null,
-    phone: data.phone || null,
+    phone: decrypt(data.phone) || data.phone || null,
     phone_hash: social.phone_hash || null,
-    line_id: data.line_id || null,
-    facebook_url: social.facebook_url || null,
-    other_contact: social.other_contact || null,
+    line_id: decrypt(data.line_id) || data.line_id || null,
+    facebook_url: decrypt(social.facebook_url) || social.facebook_url || null,
+    other_contact: decrypt(social.other_contact) || social.other_contact || null,
     company_name: social.company_name || null,
     owner_type: social.owner_type || null,
     created_at: data.created_at,
@@ -76,13 +77,13 @@ export async function getOwners(): Promise<Owner[]> {
 
     return {
       id: row.id,
-      full_name: row.display_name || "",
+      full_name: decrypt(row.display_name) || row.display_name || "",
       full_name_hash: social.full_name_hash || null,
-      phone: row.phone || null,
+      phone: decrypt(row.phone) || row.phone || null,
       phone_hash: social.phone_hash || null,
-      line_id: row.line_id || null,
-      facebook_url: social.facebook_url || null,
-      other_contact: social.other_contact || null,
+      line_id: decrypt(row.line_id) || row.line_id || null,
+      facebook_url: decrypt(social.facebook_url) || social.facebook_url || null,
+      other_contact: decrypt(social.other_contact) || social.other_contact || null,
       company_name: social.company_name || null,
       owner_type: social.owner_type || null,
       created_at: row.created_at,
@@ -196,13 +197,13 @@ export async function getOwnersQuery({
 
     return {
       id: row.id,
-      full_name: row.display_name || "",
+      full_name: decrypt(row.display_name) || row.display_name || "",
       full_name_hash: social.full_name_hash || null,
-      phone: row.phone || null,
+      phone: decrypt(row.phone) || row.phone || null,
       phone_hash: social.phone_hash || null,
-      line_id: row.line_id || null,
-      facebook_url: social.facebook_url || null,
-      other_contact: social.other_contact || null,
+      line_id: decrypt(row.line_id) || row.line_id || null,
+      facebook_url: decrypt(social.facebook_url) || social.facebook_url || null,
+      other_contact: decrypt(social.other_contact) || social.other_contact || null,
       company_name: social.company_name || null,
       owner_type: social.owner_type || null,
       created_at: row.created_at,

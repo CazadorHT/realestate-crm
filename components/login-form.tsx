@@ -170,7 +170,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
           console.error("Auxiliary login actions failed:", e);
         }
 
-        window.location.href = "/protected";
+        router.push("/protected");
       } else if (view === "signup") {
         const { error } = await supabase.auth.signUp({
           email: data.email,

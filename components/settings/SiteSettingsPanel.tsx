@@ -36,6 +36,86 @@ import {
 import { SiteSettings } from "@/features/site-settings/schema";
 import { cn } from "@/lib/utils";
 
+interface SettingItemProps {
+  id: string;
+  keyName: keyof SiteSettings;
+  icon: any;
+  iconColor: string;
+  bgColor: string;
+  title: string;
+  description: string;
+  isEnabled: boolean;
+  onToggle: (key: keyof SiteSettings) => void;
+}
+
+const SettingItem = ({
+  id,
+  keyName,
+  icon: Icon,
+  iconColor,
+  bgColor,
+  title,
+  description,
+  isEnabled,
+  onToggle,
+}: SettingItemProps) => {
+  return (
+    <div
+      className={cn(
+        "group flex flex-col p-5 rounded-2xl border transition-all duration-300 h-full",
+        isEnabled
+          ? "bg-white border-slate-200 shadow-sm hover:border-blue-300"
+          : "bg-slate-50/50 border-slate-100 opacity-80",
+      )}
+    >
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "p-2 rounded-lg transition-transform duration-300 group-hover:scale-110",
+              bgColor,
+            )}
+          >
+            <Icon className={cn("h-5 w-5", iconColor)} />
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="flex flex-col xl:flex-row items-center gap-2">
+              <Label
+                htmlFor={id}
+                className="text-sm font-semibold text-slate-900 cursor-pointer line-clamp-2!"
+              >
+                {title}
+              </Label>
+              <Badge
+                variant={isEnabled ? "default" : "secondary"}
+                className={cn(
+                  "text-[10px] w-full xl:w-auto justify-center uppercase font-medium px-2 py-1 leading-none",
+                  isEnabled
+                    ? "bg-emerald-500 hover:bg-emerald-600"
+                    : "bg-slate-200",
+                )}
+              >
+                {isEnabled ? "Enabled" : "Disabled"}
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-2 items-center gap-3">
+        <p className="text-xs text-slate-500 leading-relaxed ">
+          {description}
+        </p>
+        <Switch
+          id={id}
+          checked={isEnabled}
+          onCheckedChange={() => onToggle(keyName)}
+          className="data-[state=checked]:bg-blue-600 scale-90"
+        />
+      </div>
+    </div>
+  );
+};
+
 export function SiteSettingsPanel() {
   const [settings, setSettings] = useState<SiteSettings>({
     smart_match_wizard_enabled: true,
@@ -130,82 +210,6 @@ export function SiteSettingsPanel() {
     );
   }
 
-  const SettingItem = ({
-    id,
-    keyName,
-    icon: Icon,
-    iconColor,
-    bgColor,
-    title,
-    description,
-  }: {
-    id: string;
-    keyName: keyof SiteSettings;
-    icon: any;
-    iconColor: string;
-    bgColor: string;
-    title: string;
-    description: string;
-  }) => {
-    const isEnabled = settings[keyName] as boolean;
-
-    return (
-      <div
-        className={cn(
-          "group flex flex-col p-5 rounded-2xl border transition-all duration-300 h-full",
-          isEnabled
-            ? "bg-white border-slate-200 shadow-sm hover:border-blue-300"
-            : "bg-slate-50/50 border-slate-100 opacity-80",
-        )}
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                "p-2 rounded-lg transition-transform duration-300 group-hover:scale-110",
-                bgColor,
-              )}
-            >
-              <Icon className={cn("h-5 w-5", iconColor)} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex flex-col xl:flex-row items-center gap-2">
-                <Label
-                  htmlFor={id}
-                  className="text-sm font-semibold text-slate-900 cursor-pointer line-clamp-2!"
-                >
-                  {title}
-                </Label>
-                <Badge
-                  variant={isEnabled ? "default" : "secondary"}
-                  className={cn(
-                    "text-[10px] w-full xl:w-auto justify-center uppercase font-medium px-2 py-1 leading-none",
-                    isEnabled
-                      ? "bg-emerald-500 hover:bg-emerald-600"
-                      : "bg-slate-200",
-                  )}
-                >
-                  {isEnabled ? "Enabled" : "Disabled"}
-                </Badge>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-2 items-center gap-3">
-          <p className="text-xs text-slate-500 leading-relaxed ">
-            {description}
-          </p>
-          <Switch
-            id={id}
-            checked={isEnabled}
-            onCheckedChange={() => handleToggle(keyName)}
-            className="data-[state=checked]:bg-blue-600 scale-90"
-          />
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/* Save Action Bar (Sticky or Floating) */}
@@ -292,6 +296,8 @@ export function SiteSettingsPanel() {
               bgColor="bg-purple-100"
               title="Smart Match Wizard"
               description="ระบบ AI วิเคราะห์ความต้องการลูกค้าและแนะนำอสังหาริมทรัพย์ที่เหมาะสมที่สุดให้ทันที"
+              isEnabled={settings.smart_match_wizard_enabled}
+              onToggle={handleToggle}
             />
 
             <SettingItem
@@ -302,6 +308,8 @@ export function SiteSettingsPanel() {
               bgColor="bg-blue-100"
               title="AI Real Estate Assistant"
               description="ผู้ช่วยอัจฉริยะที่พร้อมตอบคำถามโครงการและข้อมูลทรัพย์กับลูกค้าตลอด 24 ชั่วโมง"
+              isEnabled={settings.chatbot_enabled}
+              onToggle={handleToggle}
             />
 
             <SettingItem
@@ -312,6 +320,8 @@ export function SiteSettingsPanel() {
               bgColor="bg-emerald-100"
               title="Floating Contact Widgets"
               description="ปุ่มติดต่อด่วน (LINE/โทร) ที่ลอยอยู่มุมล่าง ช่วยให้ลูกค้าเข้าถึงคุณได้ง่ายขึ้นทุกขณะ"
+              isEnabled={settings.floating_contact_enabled}
+              onToggle={handleToggle}
             />
           </div>
         </Card>
@@ -342,6 +352,8 @@ export function SiteSettingsPanel() {
               bgColor="bg-indigo-100"
               title="Property Privacy Mode"
               description="Agent จะสามารถเข้าถึงและจัดการได้เฉพาะข้อมูลอสังหาริมทรัพย์ที่ตนเองดูแลเท่านั้น"
+              isEnabled={settings.isolation_properties_enabled}
+              onToggle={handleToggle}
             />
 
             <SettingItem
@@ -352,6 +364,8 @@ export function SiteSettingsPanel() {
               bgColor="bg-emerald-50"
               title="Lead Management Isolation"
               description="แยกฐานข้อมูลลูกค้าอย่างชัดเจน Agent จะเห็นเฉพาะลูกค้าที่ได้รับมอบหมายหรือหามาเอง"
+              isEnabled={settings.isolation_leads_enabled}
+              onToggle={handleToggle}
             />
 
             <SettingItem
@@ -362,6 +376,8 @@ export function SiteSettingsPanel() {
               bgColor="bg-amber-100"
               title="Deal & Contract Protection"
               description="จำกัดการเข้าถึงข้อมูลการปิดดีลและสัญญาเฉพาะเจ้าของเคสและผู้ดูแลระบบเท่านั้น"
+              isEnabled={settings.isolation_deals_enabled}
+              onToggle={handleToggle}
             />
           </div>
         </Card>

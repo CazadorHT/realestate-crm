@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 
 import {
@@ -40,7 +40,7 @@ export function TeamMembersDialog({
   const [isRemoving, setIsRemoving] = useState<string | null>(null);
   const [memberToRemove, setMemberToRemove] = useState<any>(null);
 
-  const fetchMembers = async () => {
+  const fetchMembers = useCallback(async () => {
     setIsLoading(true);
     try {
       const result = await getTeamMembersAction(teamId);
@@ -55,13 +55,13 @@ export function TeamMembersDialog({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [teamId]);
 
   useEffect(() => {
     if (isOpen && teamId) {
       fetchMembers();
     }
-  }, [isOpen, teamId]);
+  }, [isOpen, teamId, fetchMembers]);
 
   const handleRemoveMember = async () => {
     if (!memberToRemove) return;

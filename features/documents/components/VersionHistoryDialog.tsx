@@ -45,6 +45,7 @@ export function VersionHistoryDialog({
     if (open) {
       loadVersions();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, documentId]);
 
   async function loadVersions() {

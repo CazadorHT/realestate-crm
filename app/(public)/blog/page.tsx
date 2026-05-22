@@ -10,6 +10,7 @@ import {
 } from "@/lib/i18n";
 
 // New modular components
+import Link from "next/link";
 import { BlogHero } from "@/components/public/blog/BlogHero";
 import { BlogFeaturedPost } from "@/components/public/blog/BlogFeaturedPost";
 import { BlogSidebar } from "@/components/public/blog/BlogSidebar";
@@ -134,12 +135,9 @@ export default async function BlogListingPage({
                       : t("blog.latest_articles")}
                 </h2>
                 {(categoryFilter || tagFilter) && (
-                  <a
-                    href="/blog"
-                    className="text-sm text-blue-600 hover:underline"
-                  >
+                  <Link href="/blog" className="text-sm text-blue-600 hover:underline">
                     {t("blog.view_all")}
-                  </a>
+                  </Link>
                 )}
               </div>
 

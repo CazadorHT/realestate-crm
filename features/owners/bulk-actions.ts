@@ -5,6 +5,8 @@ import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { revalidatePath } from "next/cache";
 import { mapDbError } from "@/lib/db-error";
+import { getSystemConfig } from "@/lib/actions/system-config";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type BulkDeleteResult = {
   success: boolean;
@@ -19,7 +21,7 @@ export async function bulkDeleteOwnersAction(
   ids: string[]
 ): Promise<BulkDeleteResult> {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
     if (!ids || ids.length === 0) {
@@ -30,13 +32,84 @@ export async function bulkDeleteOwnersAction(
       };
     }
 
-    // Delete owners (cascade will handle related records)
-    const { error, count } = await supabase
+    const config = await getSystemConfig();
+    const isMultiTenant = config.multi_tenant_enabled;
+    const isAdminUser = role === "ADMIN";
+
+    // Non-admins must have a valid tenantId in multi-tenant mode
+    if (!isAdminUser && isMultiTenant && !tenantId) {
+      throw new Error("Tenant context required");
+    }
+
+    // Find existing owners matching the IDs (restricted to current tenant if non-admin)
+    let findQuery = supabase
       .from("identities_v3")
-      .delete({ count: "exact" })
+      .select("id, tenant_id")
       .eq("category", 2)
       .in("id", ids);
 
+    if (isMultiTenant && !isAdminUser && tenantId) {
+      findQuery = findQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: existingOwners, error: findError } = await findQuery;
+    if (findError) throw findError;
+
+    if (!existingOwners || existingOwners.length === 0) {
+      return {
+        success: false,
+        deletedCount: 0,
+        message: "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการลบ",
+      };
+    }
+
+    const targetIds = existingOwners.map((o) => o.id);
+
+    // Guard: Check if any of these owners have associated properties
+    const { data: propertiesWithOwners, error: propsError } = await supabase
+      .from("properties_core")
+      .select("owner_id")
+      .in("owner_id", targetIds);
+
+    if (propsError) throw propsError;
+
+    const ownersWithProps = new Set(
+      propertiesWithOwners?.map((p) => p.owner_id).filter(Boolean) as string[]
+    );
+
+    const safeIds = targetIds.filter((id) => !ownersWithProps.has(id));
+    const skippedCount = targetIds.length - safeIds.length;
+
+    if (safeIds.length === 0) {
+      return {
+        success: false,
+        deletedCount: 0,
+        message: "ไม่สามารถลบเจ้าของที่เลือกได้ เนื่องจากทุกท่านยังมีทรัพย์สินผูกพันอยู่ กรุณาลบหรือย้ายเจ้าของทรัพย์สินก่อนดำเนินการ",
+      };
+    }
+
+    const adminClient = createAdminClient();
+
+    // 1. Delete tenant memberships first to avoid foreign key violation
+    const { error: memberDeleteError } = await adminClient
+      .from("tenant_members_v3")
+      .delete()
+      .in("identity_id", safeIds);
+
+    if (memberDeleteError) throw memberDeleteError;
+
+    // 2. Delete owners
+    let deleteQuery = adminClient
+      .from("identities_v3")
+      .delete({ count: "exact" })
+      .eq("category", 2)
+      .in("id", safeIds);
+
+    if (isMultiTenant && !isAdminUser && tenantId) {
+      deleteQuery = deleteQuery.eq("tenant_id", tenantId);
+    }
+
+    const { error, count } = await deleteQuery;
     if (error) throw error;
 
     // Audit log
@@ -45,17 +118,22 @@ export async function bulkDeleteOwnersAction(
       {
         action: "owner.bulk_delete",
         entity: "identities_v3",
-        entityId: ids.join(","),
-        metadata: { deletedCount: count },
+        entityId: safeIds.join(","),
+        metadata: { deletedCount: count, skippedCount },
       }
     );
 
     revalidatePath("/protected/owners");
 
+    const deletedCount = count ?? safeIds.length;
+    const msg = skippedCount > 0
+      ? `ลบเจ้าของทรัพย์สำเร็จ ${deletedCount} รายการ (ข้าม ${skippedCount} รายการที่มีทรัพย์ผูกพันอยู่)`
+      : `ลบเจ้าของทรัพย์สำเร็จ ${deletedCount} รายการ`;
+
     return {
       success: true,
-      deletedCount: count ?? ids.length,
-      message: `ลบเจ้าของทรัพย์สำเร็จ ${count ?? ids.length} รายการ`,
+      deletedCount,
+      message: msg,
     };
   } catch (error) {
     console.error("bulkDeleteOwnersAction error:", error);

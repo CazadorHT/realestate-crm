@@ -54,6 +54,7 @@ export async function bulkDeletePartnersAction(
 
     revalidatePath("/protected/partners");
     revalidatePath("/admin/partners");
+    revalidatePath("/");
 
     return {
       success: true,

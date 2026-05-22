@@ -55,6 +55,26 @@ export async function GET(request: NextRequest) {
 
       console.log(`[Facebook Callback] Mapping page: ${pageName} (${pageId})`);
 
+      // Fetch user info/session to get tenant_id
+      let tenantId: string | null = null;
+      try {
+        const { createClient } = await import("@/lib/supabase/server");
+        const client = await createClient();
+        const { data: { user } } = await client.auth.getUser();
+        if (user) {
+          const { data: identity } = await client
+            .from("identities_v3")
+            .select("tenant_id")
+            .eq("id", user.id)
+            .maybeSingle();
+          if (identity?.tenant_id) {
+            tenantId = identity.tenant_id;
+          }
+        }
+      } catch (err) {
+        console.warn("Could not retrieve user context in Facebook callback, falling back to null", err);
+      }
+
       const supabase = createAdminClient();
       const updates = [
         { key: "meta_page_access_token", value: pageToken },
@@ -64,11 +84,23 @@ export async function GET(request: NextRequest) {
       ];
 
       for (const update of updates) {
-        await supabase.from("site_settings").upsert({
+        const { data: existing } = await supabase
+          .from("site_settings")
+          .select("tenant_id, category")
+          .eq("key", update.key)
+          .limit(1)
+          .maybeSingle();
+
+        const rowTenantId = existing?.tenant_id ?? tenantId ?? null;
+        const category = existing?.category || "general";
+
+        await supabase.from("system_settings_v3").upsert({
+          tenant_id: rowTenantId,
+          category,
           key: update.key,
           value: (await encryptValue(update.key, update.value)) as any,
           updated_at: new Date().toISOString(),
-        }, { onConflict: "key" });
+        }, { onConflict: "tenant_id,category,key" });
       }
     } else {
       console.warn("[Facebook Callback] No pages found for this user token.");

@@ -48,19 +48,59 @@ export async function bulkMarkAsReadyToPayAction(
       .eq("id", user.id)
       .single();
 
-    const { data, error } = await (
-      supabase.rpc as unknown as (
-        name: string,
-        args: Record<string, unknown>,
-      ) => Promise<{ data: { updated_count: number } | null; error: unknown }>
-    )("bulk_mark_commissions_as_ready_to_pay", {
-      p_commission_ids: commissionIds,
-      p_tenant_id: tenantId!,
-      p_user_id: user.id,
-      p_user_full_name: profile?.full_name || "System Admin",
-    });
+    let processedCount = 0;
 
-    if (error) throw new Error(mapDbError(error));
+    if (tenantId && tenantId !== "ALL") {
+      const { data, error } = await (
+        supabase.rpc as unknown as (
+          name: string,
+          args: Record<string, unknown>,
+        ) => Promise<{ data: { updated_count: number } | null; error: unknown }>
+      )("bulk_mark_commissions_as_ready_to_pay", {
+        p_commission_ids: commissionIds,
+        p_tenant_id: tenantId,
+        p_user_id: user.id,
+        p_user_full_name: profile?.full_name || "System Admin",
+      });
+
+      if (error) throw new Error(mapDbError(error));
+      processedCount = data?.updated_count || 0;
+    } else {
+      // Cross-branch mode or no specific tenant: Group commissions by their tenant_id first
+      const { data: commissions, error: fetchErr } = await supabase
+        .from("crm_deal_commissions_v3")
+        .select("id, tenant_id")
+        .in("id", commissionIds);
+
+      if (fetchErr) throw new Error(mapDbError(fetchErr));
+
+      const commissionsByTenant: Record<string, string[]> = {};
+      for (const c of (commissions || [])) {
+        if (c.tenant_id) {
+          if (!commissionsByTenant[c.tenant_id]) {
+            commissionsByTenant[c.tenant_id] = [];
+          }
+          commissionsByTenant[c.tenant_id].push(c.id);
+        }
+      }
+
+      for (const [tId, ids] of Object.entries(commissionsByTenant)) {
+        const { data, error } = await (
+          supabase.rpc as unknown as (
+            name: string,
+            args: Record<string, unknown>,
+          ) => Promise<{ data: { updated_count: number } | null; error: unknown }>
+        )("bulk_mark_commissions_as_ready_to_pay", {
+          p_commission_ids: ids,
+          p_tenant_id: tId,
+          p_user_id: user.id,
+          p_user_full_name: profile?.full_name || "System Admin",
+        });
+
+        if (error) throw new Error(mapDbError(error));
+        processedCount += data?.updated_count || 0;
+      }
+    }
 
     // 🛡️ Audit Hardening: Log the bulk action
     await logAudit({ supabase, user, role }, {
@@ -68,17 +108,17 @@ export async function bulkMarkAsReadyToPayAction(
       entity: "COMMISSION",
       entityId: "BULK_UPDATE",
       metadata: { 
-        summary: `อนุมัติรอจ่ายแบบกลุ่มสำเร็จ ${data?.updated_count || 0} รายการ`,
+        summary: `อนุมัติรอจ่ายแบบกลุ่มสำเร็จ ${processedCount} รายการ`,
         commissionIds, 
-        updated_count: data?.updated_count 
+        updated_count: processedCount 
       },
     });
 
     revalidatePath("/protected/finance/payouts");
     return {
       success: true,
-      processedCount: data?.updated_count || 0,
-      message: `อนุมัติรอจ่ายสำเร็จ ${data?.updated_count || 0} รายการ`,
+      processedCount,
+      message: `อนุมัติรอจ่ายสำเร็จ ${processedCount} รายการ`,
     };
   } catch (error: unknown) {
     logger.error("bulkMarkAsReady Error", error, { source: "finance-actions" });
@@ -100,13 +140,18 @@ export async function markAsReadyToPayAction(
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("crm_deal_commissions_v3")
       .update({
         status: "READY_TO_PAY",
       })
-      .eq("id", commissionId)
-      .eq("tenant_id", tenantId!)
+      .eq("id", commissionId);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data, error } = await query
       .select("id, amount, recipient_role, recipient_id")
       .single();
 
@@ -154,7 +199,11 @@ export async function createCommissionAdjustmentAction(payload: {
       .eq("id", payload.commission_id)
       .single();
 
-    if (currentCommission?.tenant_id !== tenantId) {
+    if (!currentCommission) {
+      throw new Error("ไม่พบรายการคอมมิชชันที่ต้องการปรับปรุง");
+    }
+
+    if (tenantId && tenantId !== "ALL" && currentCommission.tenant_id !== tenantId) {
       throw new Error(
         "ไม่สามารถเพิ่มรายการปรับปรุงข้ามสาขาได้ กรุณาสลับสาขาให้ถูกต้อง",
       );
@@ -168,7 +217,7 @@ export async function createCommissionAdjustmentAction(payload: {
         transaction_type: payload.adjustment_type,
         reference_entity: "COMMISSION",
         reference_id: payload.commission_id,
-        tenant_id: tenantId,
+        tenant_id: currentCommission.tenant_id,
         metadata: {
           description: payload.description,
           created_by: user.id
@@ -212,16 +261,16 @@ export async function recalculatePayoutTotalsAction(
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
-    if (!tenantId) {
-      throw new Error("กรุณาระบุสาขาเป้าหมายก่อนดำเนินการคำนวณใหม่");
-    }
-
-    const { data: rawCurrent, error: fetchErr } = await supabase
+    let query = supabase
       .from("crm_deal_commissions_v3")
       .select("*, deal:crm_deals_v3!crm_deal_commissions_v3_deal_id_fkey(commission_total)")
-      .eq("id", commissionId)
-      .eq("tenant_id", tenantId) // 🛡️ Strict tenant check
-      .single();
+      .eq("id", commissionId);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data: rawCurrent, error: fetchErr } = await query.single();
 
     if (fetchErr || !rawCurrent) throw new Error("ไม่พบข้อมูลรายการคอมมิชชัน");
     const current = rawCurrent as any;
@@ -244,7 +293,7 @@ export async function recalculatePayoutTotalsAction(
 
     const taxRate = await TaxService.resolveEffectiveRate(supabase, {
       agentId: current.recipient_id,
-      tenantId,
+      tenantId: current.tenant_id,
       explicitRate: current.tax_rate,
       globalDefaultWht,
     });
@@ -299,15 +348,20 @@ export async function recalculatePayoutTotalsAction(
       };
     }
 
-    const { error: updateErr } = await supabase
+    let updateQuery = supabase
       .from("crm_deal_commissions_v3")
       .update({
         tax_rate: taxRate,
         tax_amount: FinanceMath.toNumber(newWht),
         net_amount: FinanceMath.toNumber(newNetTransfer),
       })
-      .eq("id", commissionId)
-      .eq("tenant_id", tenantId!);
+      .eq("id", commissionId);
+
+    if (tenantId && tenantId !== "ALL") {
+      updateQuery = updateQuery.eq("tenant_id", tenantId);
+    }
+
+    const { error: updateErr } = await updateQuery;
 
     if (updateErr) throw new Error(mapDbError(updateErr));
 
@@ -367,12 +421,16 @@ export async function markAsPaidAction(
     }
 
     // 2. Fetch current record + adjustments
-    const { data: rawCurrent, error: fetchErr } = await supabase
+    let query = supabase
       .from("crm_deal_commissions_v3")
       .select("*, recipient:identities_v3!crm_deal_commissions_v3_recipient_id_fkey(display_name, line_id)")
-      .eq("id", commissionId)
-      .eq("tenant_id", tenantId) // 🛡️ ATOMIC TENANT CHECK
-      .single();
+      .eq("id", commissionId);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data: rawCurrent, error: fetchErr } = await query.single();
 
     if (fetchErr || !rawCurrent) throw new Error("ไม่พบข้อมูลรายการคอมมิชชัน");
     const current = rawCurrent as any;
@@ -493,7 +551,7 @@ export async function getSignedSlipUrlAction(slipUrl: string) {
     }
 
     // Security check: Must belong to current tenant
-    if (!filePath.includes(tenantId!)) {
+    if (tenantId && tenantId !== "ALL" && !filePath.includes(tenantId)) {
       throw new Error("คุณไม่มีสิทธิ์เข้าถึงไฟล์ชุดนี้ (Unauthorized Access)");
     }
 
@@ -724,7 +782,7 @@ export async function getWhtCertificateDataAction(commissionId: string) {
     assertStaff(await (await requireAuthContext()).role);
 
     // 1. Fetch record with everything needed for the certificate
-    const { data: rawCurrent, error: fetchErr } = await supabase
+    let query = supabase
       .from("crm_deal_commissions_v3")
       .select(
         `
@@ -736,9 +794,13 @@ export async function getWhtCertificateDataAction(commissionId: string) {
         recipient:identities_v3!crm_deal_commissions_v3_recipient_id_fkey(display_name, phone)
       `,
       )
-      .eq("id", commissionId)
-      .eq("tenant_id", tenantId!)
-      .single();
+      .eq("id", commissionId);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data: rawCurrent, error: fetchErr } = await query.single();
 
     if (fetchErr || !rawCurrent)
       throw new Error("ไม่พบข้อมูลสำหรับการออกใบรับรอง");
@@ -844,12 +906,16 @@ export async function getAgentWalletStatsAction(agentId: string): Promise<{
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
-    const { data: rawData, error } = await supabase
+    let query = supabase
       .from("crm_deal_commissions_v3")
       .select("*, recipient:identities_v3!crm_deal_commissions_v3_recipient_id_fkey(display_name, phone), deal:crm_deals_v3!crm_deal_commissions_v3_deal_id_fkey(id, status, property:properties_core(id, property_type, listing_type, details:properties_details(title), media:property_media_v3(url, is_cover)))")
-      .eq("recipient_id", agentId)
-      .eq("tenant_id", tenantId!)
-      .order("created_at", { ascending: false });
+      .eq("recipient_id", agentId);
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data: rawData, error } = await query.order("created_at", { ascending: false });
 
     if (error) throw new Error(mapDbError(error));
     const data = (rawData as any[]) || [];

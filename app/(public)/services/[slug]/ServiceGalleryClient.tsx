@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { ImageLightbox } from "@/components/public/ImageLightbox";
 
 interface ServiceGalleryClientProps {
@@ -37,11 +38,15 @@ export function ServiceGalleryClient({
             className="aspect-square rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all cursor-zoom-in group"
             onClick={() => handleImageClick(idx)}
           >
-            <img
-              src={img}
-              alt={`${title} gallery ${idx + 1}`}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
+            <div className="relative w-full h-full">
+              <Image
+                src={img}
+                alt={`${title} gallery ${idx + 1}`}
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                sizes="(max-width: 640px) 50vw, 33vw"
+              />
+            </div>
           </div>
         ))}
       </div>

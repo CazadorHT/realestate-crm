@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { 
   Plus, 
   X, 
@@ -88,7 +89,15 @@ export function ServiceImageUploader({
         {/* Gallery Items */}
         {isGallery && Array.isArray(value) && value.map((url, idx) => (
           <div key={url} className="group relative aspect-square rounded-2xl overflow-hidden border border-slate-200 bg-slate-50">
-            <img src={url} alt="รูปภาพแกลเลอรี" className="w-full h-full object-cover" />
+            <div className="relative w-full h-full">
+              <Image
+                src={url}
+                alt={`รูปภาพแกลเลอรี ${idx + 1}`}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 50vw, 25vw"
+              />
+            </div>
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
               <Button
                 variant="destructive"
@@ -105,7 +114,15 @@ export function ServiceImageUploader({
         {/* Single Item (Cover) */}
         {!isGallery && typeof value === 'string' && value && (
           <div className="relative aspect-video col-span-2 md:col-span-3 rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 group">
-             <img src={value} alt="รูปภาพหน้าปก" className="w-full h-full object-cover" />
+             <div className="relative w-full h-full">
+               <Image
+                 src={value}
+                 alt="รูปภาพหน้าปก"
+                 fill
+                 className="object-cover"
+                 sizes="(max-width: 1024px) 100vw, 50vw"
+               />
+             </div>
              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
               <Button
                 variant="secondary"

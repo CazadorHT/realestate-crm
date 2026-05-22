@@ -233,11 +233,11 @@ export function SidebarNav({
       description: "ฐานข้อมูลคำถามที่พบบ่อยสำหรับบริการตนเองของลูกค้า",
     },
     {
-      title: "พันธมิตร",
+      title: "ช่องทางการตลาด",
       href: "/protected/partners",
       icon: Globe,
       active: pathname?.startsWith("/protected/partners") ?? false,
-      description: "จัดการรายชื่อพาร์ทเนอร์และเครือข่ายความร่วมมือแบรนด์",
+      description: "จัดการช่องทางการตลาดและลงประกาศทรัพย์",
     },
     {
       title: "จัดการทำเล",

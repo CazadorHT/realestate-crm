@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 import { formatDistanceToNow } from "date-fns";
 import { th } from "date-fns/locale";
 import {
@@ -163,24 +164,33 @@ export function ConversationList({
                 selectedLeadId === conv.id ? categoryColor : "bg-transparent group-hover:bg-slate-200"
               )} />
               <div className="relative shrink-0">
-                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-100 shadow-inner text-slate-400">
+                <div className="relative h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-100 shadow-inner text-slate-400">
                   {lastMsg?.payload?.profile?.pictureUrl ? (
-                    <img
+                    <Image
                       src={lastMsg.payload.profile.pictureUrl}
                       className="h-full w-full object-cover"
-                      referrerPolicy="no-referrer"
+                      fill
+                      sizes="40px"
+                      unoptimized
+                      alt={conv.full_name || "Lead Avatar"}
                     />
                   ) : lastMsg?.payload?.pictureUrl ? (
-                    <img
+                    <Image
                       src={lastMsg.payload.pictureUrl}
                       className="h-full w-full object-cover"
-                      referrerPolicy="no-referrer"
+                      fill
+                      sizes="40px"
+                      unoptimized
+                      alt={conv.full_name || "Lead Avatar"}
                     />
                   ) : conv.note?.includes("Photo: http") ? (
-                    <img
-                      src={conv.note.match(/Photo: (https?:\/\/[^\s\n]+)/)?.[1]}
+                    <Image
+                      src={conv.note.match(/Photo: (https?:\/\/[^\s\n]+)/)?.[1] || ""}
                       className="h-full w-full object-cover"
-                      referrerPolicy="no-referrer"
+                      fill
+                      sizes="40px"
+                      unoptimized
+                      alt={conv.full_name || "Lead Avatar"}
                     />
                   ) : (
                     <User className="h-6 w-6" />

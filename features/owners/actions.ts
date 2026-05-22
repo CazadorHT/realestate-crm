@@ -9,6 +9,7 @@ import {
   assertStaff,
   authzFail,
 } from "@/lib/authz";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
 import { getSystemConfig } from "@/lib/actions/system-config";
@@ -207,7 +208,14 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
     const validated = ownerSchema.parse(input);
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
-    if (!ctx.tenantId) throw new Error("Tenant context required");
+    const config = await getSystemConfig();
+    const isMultiTenant = config.multi_tenant_enabled;
+    const isAdminUser = ctx.role === "ADMIN";
+
+    // Non-admins must have a valid tenantId in multi-tenant mode
+    if (!isAdminUser && isMultiTenant && !ctx.tenantId) {
+      throw new Error("Tenant context required");
+    }
 
     const { data: existing, error: findError } = await ctx.supabase
       .from("identities_v3")
@@ -220,8 +228,7 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
       return { success: false, message: "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ" };
     }
 
-    const config = await getSystemConfig();
-    if (config.multi_tenant_enabled && existing.tenant_id && existing.tenant_id !== ctx.tenantId && ctx.role !== "ADMIN") {
+    if (isMultiTenant && existing.tenant_id && ctx.tenantId && existing.tenant_id !== ctx.tenantId && !isAdminUser) {
       return { success: false, message: "คุณไม่มีสิทธิ์แก้ไขข้อมูลของสาขาอื่น" };
     }
 
@@ -236,7 +243,7 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
       phone_hash: generateBlindIndex(validated.phone),
     };
 
-    const { error } = await ctx.supabase
+    let updateQuery = ctx.supabase
       .from("identities_v3")
       .update({
         display_name: encrypt(validated.full_name) || "Unknown",
@@ -245,8 +252,13 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
         social_links: socialLinks,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", id)
-      .eq("tenant_id", ctx.tenantId);
+      .eq("id", id);
+
+    if (isMultiTenant && !isAdminUser && ctx.tenantId) {
+      updateQuery = updateQuery.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { error } = await updateQuery;
 
     if (error) throw error;
 
@@ -276,7 +288,14 @@ export async function deleteOwnerAction(id: string) {
   try {
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
-    if (!ctx.tenantId) throw new Error("Tenant context required");
+    const config = await getSystemConfig();
+    const isMultiTenant = config.multi_tenant_enabled;
+    const isAdminUser = ctx.role === "ADMIN";
+
+    // Non-admins must have a valid tenantId in multi-tenant mode
+    if (!isAdminUser && isMultiTenant && !ctx.tenantId) {
+      throw new Error("Tenant context required");
+    }
 
     const { data: existing, error: findError } = await ctx.supabase
       .from("identities_v3")
@@ -289,8 +308,7 @@ export async function deleteOwnerAction(id: string) {
       return { success: false, message: "ไม่พบข้อมูลเจ้าของทรัพย์ที่ต้องการ" };
     }
 
-    const config = await getSystemConfig();
-    if (config.multi_tenant_enabled && existing.tenant_id && existing.tenant_id !== ctx.tenantId && ctx.role !== "ADMIN") {
+    if (isMultiTenant && existing.tenant_id && ctx.tenantId && existing.tenant_id !== ctx.tenantId && !isAdminUser) {
       return { success: false, message: "คุณไม่มีสิทธิ์ลบข้อมูลของสาขาอื่น" };
     }
 
@@ -307,11 +325,27 @@ export async function deleteOwnerAction(id: string) {
       };
     }
 
-    const { error } = await ctx.supabase
+    const adminClient = createAdminClient();
+
+    // 1. Delete tenant memberships first to avoid foreign key violation
+    const { error: memberDeleteError } = await adminClient
+      .from("tenant_members_v3")
+      .delete()
+      .eq("identity_id", id);
+
+    if (memberDeleteError) throw memberDeleteError;
+
+    // 2. Delete the owner identity
+    let deleteQuery = adminClient
       .from("identities_v3")
       .delete()
-      .eq("id", id)
-      .eq("tenant_id", ctx.tenantId);
+      .eq("id", id);
+
+    if (isMultiTenant && !isAdminUser && ctx.tenantId) {
+      deleteQuery = deleteQuery.eq("tenant_id", ctx.tenantId);
+    }
+
+    const { error } = await deleteQuery;
 
     if (error) throw error;
 

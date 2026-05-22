@@ -112,7 +112,7 @@ export function BlogFeaturedPost({ post, language, t }: BlogFeaturedPostProps) {
                       src={post.profiles.avatar_url}
                       fill
                       className="object-cover"
-                      alt=""
+                      alt={post.profiles.full_name || "Author avatar"}
                       sizes="40px"
                     />
                   )}

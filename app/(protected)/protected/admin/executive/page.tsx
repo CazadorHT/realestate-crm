@@ -32,12 +32,7 @@ export default function ExecutiveDashboard() {
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
+  async function fetchData() {
     setLoading(true);
     try {
       const stats = await getExecutiveStatsAction();
@@ -48,7 +43,12 @@ export default function ExecutiveDashboard() {
       // 🛡️ Deliberate slight delay for smooth transition (UX Polish)
       setTimeout(() => setLoading(false), 300);
     }
-  };
+  }
+
+  useEffect(() => {
+    setMounted(true);
+    fetchData();
+  }, []);
 
   const totalLeads = data.reduce(
     (acc: number, curr: ExecutiveData) => acc + curr.leadCount,

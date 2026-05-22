@@ -12,9 +12,10 @@ import { PropertyCardSkeleton } from "@/components/public/PropertyCardSkeleton";
 import { 
   getPopularAreasAction, 
   getPublicProvincesAction 
-} from "@/features/public-data/popular-areas";
+} from "@/features/public/popular-areas";
 import { getPublicProperties } from "@/lib/services/properties";
 import { getBlogPosts } from "@/lib/services/blog";
+import { getPartners } from "@/features/admin/partners-actions";
 
 // Critical Above-the-Fold components (Stay static for visual stability)
 import { HeroSection } from "@/components/public/HeroSection";
@@ -138,13 +139,17 @@ export default async function LandingPage() {
     provinces,
     initialPropertiesData,
     hotDealsData,
-    initialPosts
+    initialPosts,
+    partnersRes
   ] = await Promise.all([
     getPublicProvincesAction(),
     getPublicProperties({ limit: 8 }),
     getPublicProperties({ filter: 'hot_deals', limit: 4 }),
-    getBlogPosts(undefined, 4)
+    getBlogPosts(undefined, 4),
+    getPartners({ activeOnly: true })
   ]);
+
+  const partners = partnersRes.success ? partnersRes.data : [];
 
   // 2. Resolve Initial Province (Prefer BKK)
   const bkkIndex = provinces.findIndex(p => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร");
@@ -249,7 +254,7 @@ export default async function LandingPage() {
       </div>
       
       <div className="min-h-[150px] md:min-h-[200px]">
-        <PartnerSection />
+        <PartnerSection partners={partners} />
       </div>
       
       {/* STRATEGIC CONVERSION: Hot Deals with optimized skeleton height */}
@@ -267,7 +272,7 @@ export default async function LandingPage() {
       )}
       
       {/* BELOW THE FOLD: Dynamic / Lazy with realistic height placeholders */}
-      <div className={initialProperties && initialProperties.length > 0 ? "min-h-[1200px] md:min-h-[1400px] flex flex-col" : "py-12 flex flex-col"}>
+      <div className={initialProperties && initialProperties.length > 0 ? "min-h-[1000px] md:min-h-[1100px] flex flex-col" : "py-12 flex flex-col"}>
         {initialProperties && initialProperties.length > 0 ? (
           <PropertyListingSection initialProperties={initialProperties} />
         ) : (

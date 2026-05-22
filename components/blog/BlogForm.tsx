@@ -29,7 +29,7 @@ import { translateTextAction } from "@/lib/ai/translation-actions";
 import { toast } from "sonner";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 
@@ -221,7 +221,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
       toast.error("รูปแบบ JSON ไม่ถูกต้อง");
     }
   };
-  const handleAiGenerated = (data: BlogAiResult) => {
+  const handleAiGenerated = useCallback((data: BlogAiResult) => {
     if (!data) return;
 
     // 🛡️ Force UI to acknowledge AI data
@@ -265,7 +265,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
       `ข้อมูลบทความ หมวดหมู่ และแท็ก ถูกเติมลงในฟอร์มเรียบร้อยแล้ว${scoreMsg} ✨`,
     );
     setIsAiGenerating(false);
-  };
+  }, [setValue]);
 
   // 🛡️ BACKGROUND GENERATION HANDLER
   useEffect(() => {
@@ -288,7 +288,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
       window.removeEventListener("BLOG_AI_GENERATION_ERROR", handleError);
       window.removeEventListener("BLOG_AI_GENERATED_SUCCESS", handleSuccess);
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [handleAiGenerated]);
 
   const [isTranslating, setIsTranslating] = useState(false);
 

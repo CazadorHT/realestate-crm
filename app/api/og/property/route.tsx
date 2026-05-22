@@ -112,7 +112,7 @@ export async function GET(req: NextRequest) {
                 height: "630px",
                 objectFit: "cover",
               }}
-              alt=""
+              alt={`${title} - ${type}`}
             />
           )}
 

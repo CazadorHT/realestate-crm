@@ -16,7 +16,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { PopularAreaItem } from "@/features/public-data/popular-areas";
+import type { PopularAreaItem } from "@/features/public/popular-areas";
 import { cn } from "@/lib/utils";
 
 type Province = { id: string; display: string };
@@ -176,7 +176,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
     }
     load();
     return () => controller.abort();
-  }, [activeProvince, provinces.length]);
+  }, [activeProvince, provinces.length, initialItems]);
 
   // Prefetching for "S-Tier" speed
   const prefetchProvince = async (provId: string) => {

@@ -220,7 +220,7 @@ export function MobileNav({
       active: pathname?.startsWith("/protected/faqs") ?? false,
     },
     {
-      title: "พันธมิตร",
+      title: "ช่องทางการตลาด",
       href: "/protected/partners",
       icon: Users,
       active: pathname?.startsWith("/protected/partners") ?? false,

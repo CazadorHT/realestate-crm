@@ -51,7 +51,11 @@ export type SiteSettingKey =
   | "line_channel_access_token"
   | "meta_page_name"
   | "brand_card"
-  | "facebook_app_id";
+  | "facebook_app_id"
+  | "partners_description"
+  | "partners_description_en"
+  | "partners_description_cn"
+  | "partners_description_ru";
 
 export interface SocialKeyword {
   keyword: string;
@@ -127,6 +131,10 @@ export interface SiteSettings {
   meta_page_name?: string;
   brand_card?: string;
   facebook_app_id?: string;
+  partners_description?: string;
+  partners_description_en?: string;
+  partners_description_cn?: string;
+  partners_description_ru?: string;
 }
 
 export const siteSettingsSchema = z.object({
@@ -205,6 +213,10 @@ export const siteSettingsSchema = z.object({
   meta_page_name: z.string().optional(),
   brand_card: z.string().or(z.literal("")).optional(),
   facebook_app_id: z.string().max(50).optional(),
+  partners_description: z.string().max(1000).optional().or(z.literal("")),
+  partners_description_en: z.string().max(1000).optional().or(z.literal("")),
+  partners_description_cn: z.string().max(1000).optional().or(z.literal("")),
+  partners_description_ru: z.string().max(1000).optional().or(z.literal("")),
 });
 
 export const SENSITIVE_KEYS: SiteSettingKey[] = [

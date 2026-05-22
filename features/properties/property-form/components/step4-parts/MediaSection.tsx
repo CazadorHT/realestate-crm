@@ -6,13 +6,13 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-import { Image, Layout } from "lucide-react";
+import { Image as ImageLucide, Layout } from "lucide-react";
 import {
   IMAGE_UPLOAD_POLICY,
   PropertyImageUploader,
 } from "@/components/property-image-uploader";
 import { useFormContext, type UseFormReturn } from "react-hook-form";
-import { PropertyFormValues } from "../../../schema";
+import type { PropertyFormValues } from "../../../schema";
 
 interface MediaSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
@@ -36,7 +36,7 @@ export const MediaSection = ({
       <div className="border-b border-slate-50 pb-3 sm:pb-4 mb-4 sm:mb-6">
         <div className="flex items-center gap-2 mb-1">
           <div className="p-1.5 sm:p-2 bg-blue-50 rounded-lg text-blue-600">
-            <Image className="w-4 h-4 sm:w-5 sm:h-5" />
+            <ImageLucide className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div className="flex flex-col">
             <h3 className="text-base sm:text-lg font-medium text-slate-900 tracking-tight">

@@ -37,6 +37,7 @@ import {
 } from "../actions";
 import { useRouter } from "next/navigation";
 import { LINEGroup, SimpleProperty } from "../types";
+import Image from "next/image";
 
 interface AddRuleDialogProps {
   groups: LINEGroup[];
@@ -406,10 +407,13 @@ export function AddRuleDialog({
                                     {selectedGroup ? (
                                       <div className="flex items-center gap-2 ">
                                         {selectedGroup.picture_url && (
-                                          <img
+                                          <Image
                                             src={selectedGroup.picture_url}
                                             className="w-5 h-5 rounded-full"
-                                            alt=""
+                                            alt={selectedGroup.group_name || "LINE group"}
+                                            width={20}
+                                            height={20}
+                                            unoptimized
                                           />
                                         )}
                                         <span className="text-slate-900">{selectedGroup.group_name}</span>
@@ -448,10 +452,13 @@ export function AddRuleDialog({
                                         }}
                                       >
                                         {group.picture_url ? (
-                                          <img
+                                          <Image
                                             src={group.picture_url}
                                             className="w-8 h-8 rounded-full border border-slate-100"
-                                            alt=""
+                                            alt={group.group_name || "LINE group"}
+                                            width={32}
+                                            height={32}
+                                            unoptimized
                                           />
                                         ) : (
                                           <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400 uppercase">

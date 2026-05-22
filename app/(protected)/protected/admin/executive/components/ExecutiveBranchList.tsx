@@ -24,6 +24,56 @@ interface ExecutiveBranchListProps {
   isLoading: boolean;
 }
 
+// 🛡️ Premium Skeleton Rows (Elite Symphony)
+const TableSkeleton = () =>
+  Array(5)
+    .fill(0)
+    .map((_, i) => (
+      <TableRow
+        key={i}
+        className="animate-pulse border-b border-slate-50 h-20"
+      >
+        <TableCell className="px-6 py-4">
+          <div className="h-6 w-40 bg-slate-100 rounded-lg" />
+        </TableCell>
+        <TableCell className="text-right">
+          <div className="h-6 w-12 bg-slate-100 rounded-md ml-auto" />
+        </TableCell>
+        <TableCell className="text-right">
+          <div className="h-6 w-12 bg-slate-100 rounded-md ml-auto" />
+        </TableCell>
+        <TableCell className="px-6 text-right">
+          <div className="h-8 w-24 bg-slate-100 rounded-full ml-auto" />
+        </TableCell>
+      </TableRow>
+    ));
+
+const CardSkeleton = () =>
+  Array(3)
+    .fill(0)
+    .map((_, i) => (
+      <div key={i} className="p-5 space-y-6 animate-pulse">
+        <div className="flex justify-between items-center">
+          <div className="h-6 w-40 bg-slate-100 rounded-lg" />
+          <div className="h-6 w-20 bg-slate-100 rounded-full" />
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          <div className="space-y-2">
+            <div className="h-3 w-12 bg-slate-50 rounded" />
+            <div className="h-5 w-16 bg-slate-100 rounded" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-12 bg-slate-50 rounded" />
+            <div className="h-5 w-16 bg-slate-100 rounded" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-3 w-12 bg-slate-50 rounded" />
+            <div className="h-5 w-16 bg-slate-100 rounded" />
+          </div>
+        </div>
+      </div>
+    ));
+
 export function ExecutiveBranchList({
   data,
   isLoading,
@@ -48,56 +98,6 @@ export function ExecutiveBranchList({
 
     return { rate, color, dot, label };
   };
-
-  // 🛡️ Premium Skeleton Rows (Elite Symphony)
-  const TableSkeleton = () =>
-    Array(5)
-      .fill(0)
-      .map((_, i) => (
-        <TableRow
-          key={i}
-          className="animate-pulse border-b border-slate-50 h-20"
-        >
-          <TableCell className="px-6 py-4">
-            <div className="h-6 w-40 bg-slate-100 rounded-lg" />
-          </TableCell>
-          <TableCell className="text-right">
-            <div className="h-6 w-12 bg-slate-100 rounded-md ml-auto" />
-          </TableCell>
-          <TableCell className="text-right">
-            <div className="h-6 w-12 bg-slate-100 rounded-md ml-auto" />
-          </TableCell>
-          <TableCell className="px-6 text-right">
-            <div className="h-8 w-24 bg-slate-100 rounded-full ml-auto" />
-          </TableCell>
-        </TableRow>
-      ));
-
-  const CardSkeleton = () =>
-    Array(3)
-      .fill(0)
-      .map((_, i) => (
-        <div key={i} className="p-5 space-y-6 animate-pulse">
-          <div className="flex justify-between items-center">
-            <div className="h-6 w-40 bg-slate-100 rounded-lg" />
-            <div className="h-6 w-20 bg-slate-100 rounded-full" />
-          </div>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <div className="h-3 w-12 bg-slate-50 rounded" />
-              <div className="h-5 w-16 bg-slate-100 rounded" />
-            </div>
-            <div className="space-y-2">
-              <div className="h-3 w-12 bg-slate-50 rounded" />
-              <div className="h-5 w-16 bg-slate-100 rounded" />
-            </div>
-            <div className="space-y-2">
-              <div className="h-3 w-12 bg-slate-50 rounded" />
-              <div className="h-5 w-16 bg-slate-100 rounded" />
-            </div>
-          </div>
-        </div>
-      ));
 
   return (
     <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden">

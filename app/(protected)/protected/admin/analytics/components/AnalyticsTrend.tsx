@@ -18,26 +18,26 @@ interface AnalyticsTrendProps {
   data: ViewsTrendData[];
 }
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white/80 backdrop-blur-md border border-slate-200 p-3 rounded-xl shadow-xl">
+        <p className="text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider">{label}</p>
+        <p className="text-sm font-bold text-blue-600">
+          {payload[0].value.toLocaleString()} Views
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function AnalyticsTrend({ data }: AnalyticsTrendProps) {
   // Format date for display
   const chartData = data.map((d) => ({
     ...d,
     formattedDate: format(new Date(d.date), "d MMM", { locale: th }),
   }));
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white/80 backdrop-blur-md border border-slate-200 p-3 rounded-xl shadow-xl">
-          <p className="text-xs font-bold text-slate-400 mb-1 uppercase tracking-wider">{label}</p>
-          <p className="text-sm font-bold text-blue-600">
-            {payload[0].value.toLocaleString()} Views
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <Card className="border-none shadow-soft overflow-hidden bg-white/50 backdrop-blur-sm">

@@ -19,10 +19,10 @@ export function dispatchSocialPostEvent(data: SocialPostEventData) {
   window.dispatchEvent(event);
 }
 
-export function useSocialPostEventListener(
+export function subscribeToSocialPostEvents(
   callback: (data: SocialPostEventData) => void,
 ) {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") return () => {};
 
   const handler = (event: Event) => {
     const customEvent = event as CustomEvent<SocialPostEventData>;

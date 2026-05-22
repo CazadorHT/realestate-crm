@@ -37,6 +37,15 @@ export function LanguageProvider({
   const [language, setLanguageState] = useState<Language>(initialLanguage);
   const [mounted, setMounted] = useState(false);
 
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    localStorage.setItem("app-language", lang);
+    document.cookie = `app-language=${lang}; path=/; max-age=31536000; SameSite=Lax`;
+
+    // Refresh to update server components (metadata, sidebars, etc)
+    router.refresh();
+  };
+
   useEffect(() => {
     setMounted(true);
 
@@ -64,15 +73,6 @@ export function LanguageProvider({
       }
     }
   }, [language]);
-
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
-    localStorage.setItem("app-language", lang);
-    document.cookie = `app-language=${lang}; path=/; max-age=31536000; SameSite=Lax`;
-
-    // Refresh to update server components (metadata, sidebars, etc)
-    router.refresh();
-  };
 
   const t = (key: string, params?: Record<string, string | number>) => {
     const dict = dictionaries[language];

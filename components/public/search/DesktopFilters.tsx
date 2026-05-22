@@ -104,6 +104,56 @@ interface DesktopFiltersProps {
   setBulkFilters: (updates: any) => void;
 }
 
+const Badge = ({
+  label,
+  onClear,
+  variant = "blue",
+  icon,
+}: {
+  label: string;
+  onClear: () => void;
+  variant?: "blue" | "slate" | "emerald" | "purple" | "rose";
+  icon?: React.ReactNode;
+}) => {
+  const variants = {
+    blue: "bg-blue-50 border-blue-100 text-blue-700",
+    slate: "bg-slate-50 border-slate-200 text-slate-700",
+    emerald: "bg-emerald-50 border-emerald-100 text-emerald-700",
+    purple: "bg-purple-50 border-purple-100 text-purple-700",
+    rose: "bg-rose-50 border-rose-100 text-rose-700",
+  };
+
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 border rounded-full text-xs font-bold shadow-sm transition-all animate-in zoom-in-95",
+        variants[variant],
+      )}
+    >
+      {icon}
+      <span>{label}</span>
+      <button
+        onClick={onClear}
+        className="ml-1 p-0.5 rounded-full hover:bg-black/5 transition-colors"
+      >
+        <svg
+          className="w-2.5 h-2.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={3}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+  );
+};
+
 export function DesktopFilters({
   keyword,
   setKeyword,
@@ -259,56 +309,6 @@ export function DesktopFilters({
     if (isNaN(num)) return val;
     if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
     return num.toLocaleString();
-  };
-
-  const Badge = ({
-    label,
-    onClear,
-    variant = "blue",
-    icon,
-  }: {
-    label: string;
-    onClear: () => void;
-    variant?: "blue" | "slate" | "emerald" | "purple" | "rose";
-    icon?: React.ReactNode;
-  }) => {
-    const variants = {
-      blue: "bg-blue-50 border-blue-100 text-blue-700",
-      slate: "bg-slate-50 border-slate-200 text-slate-700",
-      emerald: "bg-emerald-50 border-emerald-100 text-emerald-700",
-      purple: "bg-purple-50 border-purple-100 text-purple-700",
-      rose: "bg-rose-50 border-rose-100 text-rose-700",
-    };
-
-    return (
-      <div
-        className={cn(
-          "flex items-center gap-1.5 px-3 py-1.5 border rounded-full text-xs font-bold shadow-sm transition-all animate-in zoom-in-95",
-          variants[variant],
-        )}
-      >
-        {icon}
-        <span>{label}</span>
-        <button
-          onClick={onClear}
-          className="ml-1 p-0.5 rounded-full hover:bg-black/5 transition-colors"
-        >
-          <svg
-            className="w-2.5 h-2.5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={3}
-              d="M6 18L18 6M6 6l12 12"
-            />
-          </svg>
-        </button>
-      </div>
-    );
   };
 
   return (

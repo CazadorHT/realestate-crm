@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense } from "react";
+import Image from "next/image";
 import { getServices, type ServiceRow } from "@/features/services/actions";
 import Link from "next/link";
 import {
@@ -207,10 +208,12 @@ function ServicesContent() {
                 >
                   <div className="aspect-16/10  bg-slate-100 relative overflow-hidden">
                     {service.cover_image ? (
-                      <img
+                      <Image
                         src={service.cover_image}
                         alt={service.title}
-                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                        fill
+                        className="object-cover transition-transform duration-1000 group-hover:scale-110"
+                        sizes="(max-width: 768px) 100vw, 50vw"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">

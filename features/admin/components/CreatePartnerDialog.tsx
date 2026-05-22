@@ -30,10 +30,10 @@ export function CreatePartnerDialog({ onSuccess }: CreatePartnerDialogProps) {
           </div>
           <div className="flex flex-col text-left">
             <span className="text-xl font-bold text-slate-800 tracking-tight leading-tight">
-              เพิ่มพาร์ทเนอร์ใหม่
+              เพิ่มช่องทางการตลาดใหม่
             </span>
             <span className="text-[10px] uppercase font-bold text-slate-400 tracking-widest mt-0.5 ml-0.5">
-              Add New Partner Entity
+              Add New Marketing Channel
             </span>
           </div>
         </div>
@@ -41,14 +41,14 @@ export function CreatePartnerDialog({ onSuccess }: CreatePartnerDialogProps) {
       trigger={
         <Button
           size="lg"
-          className="bg-white text-slate-800 hover:bg-white/90 shadow-lg font-bold rounded-xl gap-2 px-6"
+          className="bg-rose-600 text-white hover:bg-rose-500 shadow-md shadow-rose-200 font-bold rounded-xl gap-2 px-6 hover:shadow-lg transition-all"
         >
           <Plus className="h-5 w-5" />
-          เพิ่มพาร์ทเนอร์
+          เพิ่มช่องทาง
         </Button>
       }
     >
-      <div className="p-6  bg-white rounded-b-2xl">
+      <div className="p-6 bg-white rounded-b-2xl">
         <PartnerForm
           onSuccess={handleSuccess}
           onCancel={() => setOpen(false)}

@@ -1,14 +1,13 @@
 "use client";
 
 import { m } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Calculator } from "lucide-react";
 import { Slider } from "../ui/slider";
 import { Button } from "@/components/ui/button";
 import { SectionBackground } from "./SectionBackground";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
-import { useEffect, useRef } from "react";
 import { useDebounce } from "use-debounce";
 import { siteConfig } from "@/lib/site-config";
 
@@ -22,15 +21,13 @@ export function MortgageCalculatorSection() {
   const downPaymentAmount = (propertyPrice * downPaymentPercent) / 100;
   const loanAmount = propertyPrice - downPaymentAmount;
 
-  // Monthly Payment Calculation: M = P[r(1+r)^n]/[(1+r)^n-1]
-  const calculateMonthlyPayment = () => {
+  const monthlyPayment = useMemo(() => {
     const r = interestRate / 100 / 12; // Monthly interest rate
     const n = termYears * 12; // Total payments
+    if (n === 0) return 0;
     if (r === 0) return loanAmount / n;
     return (loanAmount * r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-  };
-
-  const monthlyPayment = calculateMonthlyPayment();
+  }, [loanAmount, interestRate, termYears]);
 
   // Track mortgage calculation (debounced to avoid flooding GTM)
   const [debouncedPropertyPrice] = useDebounce(propertyPrice, 2000);
@@ -55,7 +52,7 @@ export function MortgageCalculatorSection() {
         monthly_payment: Math.round(monthlyPayment),
       });
     } catch (e) {}
-  }, [debouncedPropertyPrice, debouncedDownPayment, debouncedInterest, debouncedTerm]);
+  }, [debouncedPropertyPrice, debouncedDownPayment, debouncedInterest, debouncedTerm, monthlyPayment]);
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat(t("common.baht") === "฿" ? "th-TH" : "en-US", {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Dialog, DialogContent, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -54,10 +55,12 @@ export function ImageLightbox({ images, propertyTitle }: ImageLightboxProps) {
                 image.is_cover && "border-primary ring-2 ring-primary/20"
               )}
             >
-              <img
+              <Image
                 src={image.image_url}
                 alt={`${propertyTitle} - รูปที่ ${index + 1}`}
-                className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                fill
+                className="object-cover transition-transform group-hover:scale-110"
+                sizes="(max-width: 640px) 50vw, 25vw"
               />
               {image.is_cover && (
                 <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
@@ -110,11 +113,15 @@ export function ImageLightbox({ images, propertyTitle }: ImageLightboxProps) {
             )}
 
             {/* Current Image */}
-            <img
-              src={images[currentIndex].image_url}
-              alt={`${propertyTitle} - รูปที่ ${currentIndex + 1}`}
-              className="max-w-full max-h-full object-contain"
-            />
+            <div className="relative w-full h-full flex items-center justify-center">
+              <Image
+                src={images[currentIndex].image_url}
+                alt={`${propertyTitle} - รูปที่ ${currentIndex + 1}`}
+                fill
+                className="object-contain"
+                sizes="100vw"
+              />
+            </div>
 
             {/* Next Button */}
             {images.length > 1 && (

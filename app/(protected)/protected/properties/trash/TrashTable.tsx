@@ -63,12 +63,12 @@ export function TrashTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((propertyItem) => {
+          {data.map((propertyItem, index) => {
             // แปลง Type เพื่อให้ TypeScript รู้จัก original_price และ original_rental_price
             const property = propertyItem as ExtendedProperty;
 
             return (
-              <TableRow key={property.id || Math.random().toString()}>
+              <TableRow key={property.id || index}>
                 <TableCell>
                   <div className="h-12 w-20 bg-muted rounded-md overflow-hidden relative border border-slate-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}

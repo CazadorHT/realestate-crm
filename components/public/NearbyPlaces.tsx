@@ -87,7 +87,7 @@ export function NearbyPlaces({
         updateAIScore(5);
       }
     } catch (e) {}
-  }, [data.length, transits.length]);
+  }, [data.length, transits.length, propertyId, propertyTitle]);
 
   // Custom t function with explicit string return
   const t = (key: string): string => {

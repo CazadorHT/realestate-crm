@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Eye, RefreshCcw, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type ServiceRow } from "@/features/services/actions";
+import Image from "next/image";
 
 interface ServicesTableMobileProps {
   services: ServiceRow[];
@@ -40,10 +41,13 @@ export function ServicesTableMobile({
             <div className="flex items-start gap-4">
               <div className="h-16 w-24 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 shrink-0">
                 {(service as any).cover_image ? (
-                  <img
+                  <Image
                     src={(service as any).cover_image}
                     alt={service.title}
                     className="w-full h-full object-cover"
+                    fill
+                    sizes="96px"
+                    unoptimized
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-slate-300 text-[10px]">

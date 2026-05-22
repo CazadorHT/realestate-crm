@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Edit, ExternalLink, Users, Trash2, GripVertical, Loader2 } from "lucide-react";
+import { Edit, ExternalLink, Trash2, GripVertical, Loader2, Link2, PlusCircle, LayoutGrid } from "lucide-react";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
 import { bulkDeletePartnersAction } from "@/features/admin/partners-bulk-actions";
@@ -22,7 +22,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { EditPartnerDialog } from "./EditPartnerDialog";
 import { cn } from "@/lib/utils";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import Image from "next/image";
+import { getChannelStyle, BrandIcon } from "@/features/admin/partners-utils";
 
 // Dnd Kit Imports
 import { 
@@ -52,6 +52,8 @@ interface PartnersTableProps {
   isSuperAdmin?: boolean;
   onRefresh?: () => void;
 }
+
+
 
 export function PartnersTable({ 
   partners: initialPartners,
@@ -107,7 +109,7 @@ export function PartnersTable({
     const newIndex = partners.findIndex((p) => p.id === over.id);
 
     const currentPage = parseInt(searchParams.get("page") || "1");
-    const pageSize = 10;
+    const pageSize = 100;
     const offset = (currentPage - 1) * pageSize;
 
     const movedArray = arrayMove(partners, oldIndex, newIndex);
@@ -123,7 +125,7 @@ export function PartnersTable({
       const ids = newOrder.map((p) => p.id);
       const result = await reorderPartnersAction(ids, offset);
       if (result.success) {
-        toast.success(result.message);
+        toast.success("ปรับลำดับช่องทางเรียบร้อยแล้ว");
         if (onRefresh) {
           onRefresh();
         } else {
@@ -140,9 +142,6 @@ export function PartnersTable({
   };
 
   const handleSuccessFeedback = () => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("success", "true");
-    router.push(`${pathname}?${params.toString()}`);
     if (onRefresh) {
       onRefresh();
     } else {
@@ -202,7 +201,7 @@ export function PartnersTable({
           selectedCount={selectedCount}
           onClear={clearSelection}
           onDelete={handleBulkDelete}
-          entityName="พาร์ทเนอร์"
+          entityName="ช่องทาง"
           className={isPending ? "opacity-50 pointer-events-none" : ""}
         />
       )}
@@ -235,17 +234,14 @@ export function PartnersTable({
                 <TableHead className="w-[100px] font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
                   ลำดับ
                 </TableHead>
-                <TableHead className="w-[140px] font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
-                  โลโก้
+                <TableHead className="font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
+                  รูปแบบการแสดง Badges
                 </TableHead>
                 <TableHead className="font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
-                  ชื่อพาร์ทเนอร์
+                  ลิงก์เชื่อมโยง
                 </TableHead>
                 <TableHead className="font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
-                  เว็บไซต์
-                </TableHead>
-                <TableHead className="font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
-                  สถานะ
+                  สถานะหน้าแรก
                 </TableHead>
                 {isSuperAdmin && (
                   <TableHead className="text-right font-bold text-slate-900 px-6 uppercase tracking-wider text-[11px]">
@@ -258,19 +254,19 @@ export function PartnersTable({
               {partners.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
-                    className="text-center py-20 text-slate-400 bg-white"
+                    colSpan={7}
+                    className="text-center py-20 text-slate-450 bg-white"
                   >
                     <div className="flex flex-col items-center gap-3">
-                      <div className="p-4 bg-slate-50 rounded-full">
-                        <Users className="h-10 w-10 text-slate-200" />
+                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                        <LayoutGrid className="h-10 w-10 text-slate-300" />
                       </div>
                       <div>
-                        <p className="font-semibold text-slate-600">
-                          ยังไม่มีข้อมูลพาร์ทเนอร์
+                        <p className="font-bold text-slate-700">
+                          ยังไม่มีข้อมูลช่องทางการตลาด
                         </p>
-                        <p className="text-sm">
-                          เริ่มต้นเพิ่มพาร์ทเนอร์รายแรกของคุณ
+                        <p className="text-sm text-slate-400 mt-1">
+                          คุณสามารถเริ่มต้นโดยการคลิกปุ่ม เพิ่มช่องทาง เพื่อเริ่มสร้างช่องทางใหม่
                         </p>
                       </div>
                     </div>
@@ -306,112 +302,118 @@ export function PartnersTable({
         {!partners || partners.length === 0 ? (
           <div className="text-center py-20 bg-white rounded-2xl border border-dashed border-slate-200 text-slate-400 font-medium">
             <div className="flex flex-col items-center gap-3">
-              <Users className="h-10 w-10 text-slate-200" />
-              <p>ยังไม่มีข้อมูลพาร์ทเนอร์</p>
+              <LayoutGrid className="h-10 w-10 text-slate-355" />
+              <p>ยังไม่มีข้อมูลช่องทางการตลาด</p>
             </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {partners.map((partner) => (
-              <div
-                key={partner.id}
-                className={cn(
-                  "p-5 bg-white rounded-2xl border transition-all active:scale-[0.98] shadow-sm",
-                  isSelected(partner.id)
-                    ? "border-blue-200 bg-blue-50/30"
-                    : "border-slate-200",
-                )}
-                onClick={() => toggleSelect(partner.id)}
-              >
-                <div className="flex items-start justify-between gap-4 mb-4">
-                  <div className="flex items-start gap-4 min-w-0">
-                    <Checkbox
-                      checked={isSelected(partner.id)}
-                      onCheckedChange={() => toggleSelect(partner.id)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="rounded-md mt-1.5"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 uppercase">
-                          ลำดับ #{partner.sort_order ?? "-"}
-                        </span>
-                        {partner.is_active ? (
-                          <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 text-[10px] h-5 px-1.5 py-0">
-                            ใช้งาน
-                          </Badge>
-                        ) : (
-                          <Badge className="bg-slate-50 text-slate-400 border-slate-100 text-[10px] h-5 px-1.5 py-0">
-                            ปิด
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-100 p-2 flex items-center justify-center shrink-0 shadow-inner relative">
-                          <MobilePartnerLogo url={partner.logo_url} name={partner.name} />
+            {partners.map((partner) => {
+              const stylePreset = getChannelStyle(partner.name);
+              return (
+                <div
+                  key={partner.id}
+                  className={cn(
+                    "p-5 bg-white rounded-2xl border transition-all active:scale-[0.98] shadow-xs",
+                    isSelected(partner.id)
+                      ? "border-rose-200 bg-rose-50/20"
+                      : "border-slate-200",
+                  )}
+                  onClick={() => toggleSelect(partner.id)}
+                >
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <div className="flex items-start gap-4 min-w-0 w-full">
+                      <Checkbox
+                        checked={isSelected(partner.id)}
+                        onCheckedChange={() => toggleSelect(partner.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="rounded-md mt-1.5"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-3">
+                          <span className="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 uppercase font-bold">
+                            ลำดับ #{partner.sort_order ?? "-"}
+                          </span>
+                          {partner.is_active ? (
+                            <Badge className="bg-emerald-50 hover:bg-emerald-50 text-emerald-600 border-emerald-100 text-[10px] h-5 px-1.5 py-0 font-bold">
+                              เปิดใช้งาน
+                            </Badge>
+                          ) : (
+                            <Badge className="bg-slate-50 hover:bg-slate-50 text-slate-400 border-slate-200 text-[10px] h-5 px-1.5 py-0 font-bold">
+                              ปิดใช้งาน
+                            </Badge>
+                          )}
                         </div>
-                        <h4 className="font-bold text-slate-900 leading-tight line-clamp-2">
-                          {partner.name}
-                        </h4>
+                        <div className="flex items-center">
+                          <div className={cn(
+                            "inline-flex items-center gap-2.5 px-4 py-2 rounded-xl border text-sm font-bold shadow-xs transition-all duration-300",
+                            stylePreset.bg,
+                            stylePreset.text,
+                            stylePreset.border
+                          )}>
+                            <BrandIcon name={partner.name} className="w-4.5 h-4.5 shrink-0" />
+                            <span>{partner.name}</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-slate-50 gap-4">
-                  <div className="min-w-0">
-                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                      เว็บไซต์
-                    </span>
-                    {partner.website_url ? (
-                      <a
-                        href={partner.website_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="text-xs font-semibold text-blue-600 truncate flex items-center gap-1.5 hover:underline"
-                      >
-                        เยี่ยมชม <ExternalLink className="h-3 w-3" />
-                      </a>
-                    ) : (
-                      <span className="text-xs text-slate-300 italic">
-                        ไม่มีเว็บไซต์
+                  <div className="flex items-center justify-between pt-4 border-t border-slate-100 gap-4">
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
+                        ลิงก์เชื่อมโยง
                       </span>
-                    )}
-                  </div>
+                      {partner.website_url ? (
+                        <a
+                          href={partner.website_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs font-bold text-blue-600 truncate flex items-center gap-1 hover:underline"
+                        >
+                          {partner.website_url} <ExternalLink className="h-3 w-3 shrink-0" />
+                        </a>
+                      ) : (
+                        <span className="text-xs text-slate-350 italic">
+                          ไม่มีเว็บไซต์ปลายทาง
+                        </span>
+                      )}
+                    </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    {isSuperAdmin && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-10 px-4 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-100 rounded-xl font-medium transition-all active:scale-95"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingPartner(partner);
-                          }}
-                        >
-                          <Edit className="h-4 w-4 mr-2" />
-                          แก้ไข
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-10 w-10 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-100 rounded-xl transition-all active:scale-95"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setDeleteConfirmPartner(partner);
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </>
-                    )}
+                    <div className="flex items-center gap-2 shrink-0">
+                      {isSuperAdmin && (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-3 text-blue-600 border-blue-100 bg-blue-50/50 hover:bg-blue-100 rounded-xl font-bold text-xs transition-all active:scale-95"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingPartner(partner);
+                            }}
+                          >
+                            <Edit className="h-3.5 w-3.5 mr-1.5" />
+                            แก้ไข
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-9 w-9 text-rose-600 border-rose-100 bg-rose-50/50 hover:bg-rose-100 rounded-xl transition-all active:scale-95"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeleteConfirmPartner(partner);
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
@@ -420,25 +422,25 @@ export function PartnersTable({
       <ResponsiveDialog
         open={!!deleteConfirmPartner}
         onOpenChange={(open) => !open && setDeleteConfirmPartner(null)}
-        title="ยืนยันการลบพาร์ทเนอร์"
+        title="ยืนยันการลบช่องทางการตลาด"
         description={
           deleteConfirmPartner ? (
-            <p>
-              คุณแน่ใจหรือไม่ว่าต้องการลบพาร์ทเนอร์{" "}
+            <p className="text-sm text-slate-500 mt-2 leading-relaxed">
+              คุณแน่ใจหรือไม่ว่าต้องการลบช่องทางการตลาด{" "}
               <strong className="text-slate-900 font-bold">
                 "{deleteConfirmPartner.name}"
               </strong>{" "}
-              การดำเนินการนี้ไม่สามารถย้อนกลับได้
+              การลบข้อมูลนี้จะถูกย้ายออกจากหน้าแรกทันที และไม่สามารถกู้คืนข้อมูลกลับมาได้
             </p>
           ) : ""
         }
         footer={
-          <div className="flex flex-col sm:flex-row gap-2 w-full">
+          <div className="flex flex-col sm:flex-row gap-2 w-full mt-4">
             <Button
               variant="outline"
               disabled={isDeleting}
               onClick={() => setDeleteConfirmPartner(null)}
-              className="flex-1 rounded-xl h-12 font-bold text-slate-500 border-slate-200"
+              className="flex-1 rounded-xl h-12 font-bold text-slate-500 border-slate-200 h-11"
             >
               ยกเลิก
             </Button>
@@ -448,7 +450,7 @@ export function PartnersTable({
                 e.preventDefault();
                 if (deleteConfirmPartner) handleDelete(deleteConfirmPartner);
               }}
-              className="flex-1 rounded-xl h-12 px-8 font-bold bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-100 transition-all active:scale-95 border-none"
+              className="flex-1 rounded-xl h-12 px-8 font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-md shadow-rose-200 transition-all active:scale-95 border-none h-11"
             >
               {isDeleting ? (
                 <>
@@ -484,28 +486,6 @@ interface SortableRowProps {
   isSuperAdmin: boolean;
 }
 
-// 🛡️ Enterprise-Grade Hostname Validation Utility
-const isAllowedHost = (url: string) => {
-  if (!url) return false;
-  try {
-    const parsedUrl = new URL(url);
-    const host = parsedUrl.hostname;
-    const allowedHosts = [
-      "images.unsplash.com",
-      "api.dicebear.com",
-      "livinginsider.com",
-      "pgimgs.com",
-      "wikimedia.org",
-      "freepik.com"
-    ];
-    
-    return allowedHosts.some(allowed => host === allowed || host.endsWith("." + allowed)) || 
-           host.includes("supabase.co");
-  } catch {
-    return false;
-  }
-};
-
 function SortablePartnerRow({ 
   partner, 
   isSelected, 
@@ -515,9 +495,6 @@ function SortablePartnerRow({
   isSearchActive,
   isSuperAdmin
 }: SortableRowProps) {
-  const [imgError, setImgError] = useState(false);
-  const isSafe = isAllowedHost(partner.logo_url);
-  const finalSrc = (!imgError && isSafe) ? partner.logo_url : siteConfig.logo;
   const {
     attributes,
     listeners,
@@ -537,14 +514,16 @@ function SortablePartnerRow({
     opacity: isDragging ? 0.6 : 1,
   };
 
+  const stylePreset = getChannelStyle(partner.name);
+
   return (
     <TableRow
       ref={setNodeRef}
       style={style}
       className={cn(
-        "group hover:bg-slate-50/80 transition-all duration-200",
-        isSelected && "bg-blue-50/50",
-        isDragging && "shadow-xl bg-white border-2 border-blue-100 ring-4 ring-blue-500/10"
+        "group hover:bg-slate-50/50 transition-all duration-200",
+        isSelected && "bg-rose-50/10",
+        isDragging && "shadow-xl bg-white border-2 border-rose-100 ring-4 ring-rose-500/5"
       )}
     >
       <TableCell className="w-[40px] px-6 text-center">
@@ -552,7 +531,7 @@ function SortablePartnerRow({
           <div
             {...attributes}
             {...listeners}
-            className="cursor-grab active:cursor-grabbing p-2 text-slate-300 hover:text-blue-500 transition-colors"
+            className="cursor-grab active:cursor-grabbing p-2 text-slate-300 hover:text-rose-500 transition-colors"
           >
             <GripVertical className="w-5 h-5" />
           </div>
@@ -566,26 +545,21 @@ function SortablePartnerRow({
           className="rounded-md"
         />
       </TableCell>
-      <TableCell className="font-mono text-[13px] text-slate-500 px-6 font-medium">
+      <TableCell className="font-mono text-[13px] text-slate-500 px-6 font-bold">
         {partner.sort_order ?? "-"}
       </TableCell>
-      <TableCell className="px-6">
-        <div className="h-10 w-24 relative bg-slate-50 rounded-lg border border-slate-100 p-1 flex items-center justify-center shadow-inner group-hover:bg-white transition-colors">
-          <Image
-            src={finalSrc}
-            alt={partner.name}
-            fill
-            className={cn(
-              "object-contain p-1",
-              (imgError || !isSafe) && "opacity-20 grayscale"
-            )}
-            onError={() => setImgError(true)}
-            sizes="96px"
-          />
+      <TableCell className="px-6 py-4">
+        <div className="flex items-center">
+          <div className={cn(
+            "inline-flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-bold shadow-xs transition-all duration-300",
+            stylePreset.bg,
+            stylePreset.text,
+            stylePreset.border
+          )}>
+            <BrandIcon name={partner.name} className="w-4.5 h-4.5 shrink-0" />
+            <span>{partner.name}</span>
+          </div>
         </div>
-      </TableCell>
-      <TableCell className="font-bold text-slate-900 px-6 text-sm">
-        {partner.name}
       </TableCell>
       <TableCell className="px-6">
         {partner.website_url ? (
@@ -595,26 +569,26 @@ function SortablePartnerRow({
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 text-blue-600 hover:text-blue-700 hover:underline text-xs font-bold transition-colors"
           >
-            ไปที่เว็บ <ExternalLink className="w-3.5 h-3.5" />
+            {partner.website_url} <ExternalLink className="w-3.5 h-3.5 shrink-0" />
           </a>
         ) : (
-          <span className="text-slate-300 italic text-xs">ไม่มีเว็บไซต์</span>
+          <span className="text-slate-350 italic text-xs">ไม่มีเว็บไซต์เชื่อมโยง</span>
         )}
       </TableCell>
       <TableCell className="px-6">
         {partner.is_active ? (
-          <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/80 transition-colors text-[10px] uppercase font-bold px-2 py-0.5">
-            ใช้งาน
+          <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-100/80 transition-colors text-[10px] uppercase font-bold px-2.5 py-0.5">
+            เปิดใช้งาน
           </Badge>
         ) : (
-          <Badge className="bg-slate-50 text-slate-400 border-slate-100 hover:bg-slate-100/80 transition-colors text-[10px] uppercase font-bold px-2 py-0.5">
+          <Badge className="bg-slate-55 text-slate-400 border-slate-200 hover:bg-slate-100/80 transition-colors text-[10px] uppercase font-bold px-2.5 py-0.5">
             ปิดใช้งาน
           </Badge>
         )}
       </TableCell>
       {isSuperAdmin && (
         <TableCell className="text-right px-6">
-          <div className="flex justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
+          <div className="flex justify-end gap-1.5 opacity-100 md:opacity-0 group-hover:opacity-100 transition-all">
             <Button
               variant="ghost"
               size="icon"
@@ -641,27 +615,5 @@ function SortablePartnerRow({
         </TableCell>
       )}
     </TableRow>
-  );
-}
-
-import { siteConfig } from "@/lib/site-config";
-
-function MobilePartnerLogo({ url, name }: { url: string; name: string }) {
-  const [imgError, setImgError] = useState(false);
-  const isSafe = isAllowedHost(url);
-  const finalSrc = (!imgError && isSafe) ? url : siteConfig.logo;
-
-  return (
-    <Image
-      src={finalSrc}
-      alt={name}
-      fill
-      className={cn(
-        "object-contain p-2",
-        (imgError || !isSafe) && "opacity-20 grayscale"
-      )}
-      onError={() => setImgError(true)}
-      sizes="48px"
-    />
   );
 }

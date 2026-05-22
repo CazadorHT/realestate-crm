@@ -45,26 +45,29 @@ export function useExecutiveDashboard(
   }, [selectedTenantId, compareTenantId]);
 
   const handleGenerateAi = useCallback(async () => {
-    setIsGeneratingAi(true);
-    const processId = startProcess("AI กำลังวิเคราะห์ข้อมูลและจัดทำกลยุทธ์", {
-      type: "AI_GENERATION",
-      onRetry: handleGenerateAi
-    });
-    try {
-      const result = await generateExecutiveAiInsightsAction();
-      if (result.success && result.data) {
-        setAiInsights(result.data);
-        finishProcess(processId, "SUCCESS", "AI วิเคราะห์ข้อมูลสำเร็จ");
-      } else {
-        finishProcess(processId, "ERROR", result.message || "AI ไม่สามารถวิเคราะห์ได้ในขณะนี้");
+    async function execute() {
+      setIsGeneratingAi(true);
+      const processId = startProcess("AI กำลังวิเคราะห์ข้อมูลและจัดทำกลยุทธ์", {
+        type: "AI_GENERATION",
+        onRetry: execute
+      });
+      try {
+        const result = await generateExecutiveAiInsightsAction();
+        if (result.success && result.data) {
+          setAiInsights(result.data);
+          finishProcess(processId, "SUCCESS", "AI วิเคราะห์ข้อมูลสำเร็จ");
+        } else {
+          finishProcess(processId, "ERROR", result.message || "AI ไม่สามารถวิเคราะห์ได้ในขณะนี้");
+        }
+      } catch (error: unknown) {
+        console.error(error);
+        const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเรียก AI";
+        finishProcess(processId, "ERROR", msg);
+      } finally {
+        setIsGeneratingAi(false);
       }
-    } catch (error: unknown) {
-      console.error(error);
-      const msg = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเรียก AI";
-      finishProcess(processId, "ERROR", msg);
-    } finally {
-      setIsGeneratingAi(false);
     }
+    await execute();
   }, []); // Actions are stable
 
   const handleExport = useCallback(async (type: "excel" | "pdf") => {

@@ -223,6 +223,26 @@ function SortableRow({
   );
 }
 
+const SortIcon = ({
+  column,
+  navigatingSort,
+  sortBy,
+  sortOrder,
+}: {
+  column: string;
+  navigatingSort: string | null;
+  sortBy: string;
+  sortOrder: string;
+}) => {
+  if (navigatingSort === column) return <Loader2 className="ml-2 h-3 w-3 animate-spin text-blue-600" />;
+  if (sortBy !== column) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30" />;
+  return sortOrder === "asc" ? (
+    <ChevronUp className="ml-2 h-3 w-3 text-indigo-600" />
+  ) : (
+    <ChevronDown className="ml-2 h-3 w-3 text-indigo-600" />
+  );
+};
+
 export function PopularAreasTable({
   initialData,
   totalCount: initialTotal,
@@ -246,6 +266,7 @@ export function PopularAreasTable({
   const [data, setData] = useState(initialData);
   const [totalCount, setTotalCount] = useState(initialTotal);
   const [isPending, startTransition] = useTransition();
+  const [navigatingSort, setNavigatingSort] = useState<string | null>(null);
 
    useEffect(() => {
     setData(initialData);
@@ -261,7 +282,6 @@ export function PopularAreasTable({
   const [isAllAcrossSelected, setIsAllAcrossSelected] = useState(false);
    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [viewingAreaProperties, setViewingAreaProperties] = useState<PopularArea | null>(null);
-  const [navigatingSort, setNavigatingSort] = useState<string | null>(null);
 
   // Selection
   const allIds = useMemo(() => data.map((item) => item.id), [data]);
@@ -292,16 +312,6 @@ export function PopularAreasTable({
     }
     params.set("page", "1");
     router.push(`${pathname}?${params.toString()}`);
-  };
-
-   const SortIcon = ({ column }: { column: string }) => {
-    if (navigatingSort === column) return <Loader2 className="ml-2 h-3 w-3 animate-spin text-blue-600" />;
-    if (sortBy !== column) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30" />;
-    return sortOrder === "asc" ? (
-      <ChevronUp className="ml-2 h-3 w-3 text-indigo-600" />
-    ) : (
-      <ChevronDown className="ml-2 h-3 w-3 text-indigo-600" />
-    );
   };
 
   // Drag & Drop
@@ -473,16 +483,16 @@ export function PopularAreasTable({
                   </div>
                 </TableHead>
                 <TableHead className="w-[80px] font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("sort_order")}>
-                  <div className="flex items-center">ลำดับ <SortIcon column="sort_order" /></div>
+                  <div className="flex items-center">ลำดับ <SortIcon column="sort_order" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} /></div>
                 </TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("name")}>
-                  <div className="flex items-center">ชื่อพื้นที่ <span className="ml-1 opacity-50 font-normal">(Area Name)</span> <SortIcon column="name" /></div>
+                  <div className="flex items-center">ชื่อพื้นที่ <span className="ml-1 opacity-50 font-normal">(Area Name)</span> <SortIcon column="name" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} /></div>
                 </TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษาอังกฤษ <span className="opacity-50 font-normal">(EN)</span></TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษาจีน <span className="opacity-50 font-normal">(CN)</span></TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษารัสเซีย <span className="opacity-50 font-normal">(RU)</span></TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 text-center cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("property_count")}>
-                  <div className="flex items-center justify-center">ทรัพย์ <span className="ml-1 opacity-50 font-normal">(Stock)</span> <SortIcon column="property_count" /></div>
+                  <div className="flex items-center justify-center">ทรัพย์ <span className="ml-1 opacity-50 font-normal">(Stock)</span> <SortIcon column="property_count" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} /></div>
                 </TableHead>
                 <TableHead className="text-right font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">จัดการ</TableHead>
               </TableRow>

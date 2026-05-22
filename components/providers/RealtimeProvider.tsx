@@ -59,6 +59,7 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
   const retryTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const statusSmoothingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const toastIdRef = useRef<string | number | null>(null);
+  const connectRef = useRef<(key: string, entry: RegistryEntry) => Promise<void>>(null as any);
 
   // Status Smoothing: Only show ERROR if failure persists
   useEffect(() => {
@@ -79,9 +80,33 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [rawStatus]);
 
+  function handleRetry(key: string, entry: RegistryEntry) {
+    if (entry.retryCount >= 10) {
+      console.warn(`[Realtime] Max retries reached for ${key}`);
+      return;
+    }
+
+    // Exponential Backoff + Jitter (Masterclass Strategy)
+    const baseDelay = Math.min(INITIAL_RETRY_DELAY * Math.pow(2, entry.retryCount), MAX_RETRY_DELAY);
+    const jitter = Math.random() * 1000; // Add up to 1s random jitter
+    const delay = baseDelay + jitter;
+    
+    entry.retryCount++;
+
+    const timeout = setTimeout(() => {
+      if (connectRef.current) {
+        connectRef.current(key, entry);
+      }
+    }, delay);
+    retryTimeouts.current.set(key, timeout);
+  }
+
   const connect = useCallback(async (key: string, entry: RegistryEntry) => {
     if (entry.isConnecting) return;
     
+    entry.isConnecting = true;
+    setRawStatus('CONNECTING');
+
     if (retryTimeouts.current.has(key)) {
       clearTimeout(retryTimeouts.current.get(key));
       retryTimeouts.current.delete(key);
@@ -110,77 +135,75 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       console.error("[Realtime] Error checking session:", e);
     }
 
-    if (!supabase.realtime.isConnected()) {
-      supabase.realtime.connect();
-    }
-
-    entry.isConnecting = true;
-    setRawStatus('CONNECTING');
-
-    // Hardening: Use a unique sub-key for every connection attempt
-    // This prevents the "mismatch between server and client bindings" error
-    // which happens when reusing a channel name that still has stale bindings.
-    const attemptId = Date.now();
-    const channelName = `${key}:${attemptId}`;
-    
-    const channel = supabase
-      .channel(channelName)
-      .on(
-        "postgres_changes",
-        { event, schema: "public", table, filter },
-        (payload: RealtimePostgresChangesPayload<any>) => {
-          entry.callbacks.forEach((cb) => {
-            try { cb(payload); } catch (err) { console.error(`[Realtime] Callback error (${key}):`, err); }
-          });
-        }
-      )
-      .on("presence", { event: "sync" }, () => {
-        const state = channel.presenceState();
-        entry.presenceCallbacks.forEach(cb => cb(state));
-      })
-      .on("broadcast", { event: "*" }, ({ event, payload }) => {
-        entry.broadcastCallbacks.forEach(cb => cb(event, payload));
-      })
-      .subscribe((subscribeStatus, err) => {
-        entry.isConnecting = false;
-        if (subscribeStatus === "SUBSCRIBED") {
-          entry.retryCount = 0;
-          setRawStatus('CONNECTED');
-        } else if (subscribeStatus === "CHANNEL_ERROR" || subscribeStatus === "TIMED_OUT") {
-          const isTimeout = subscribeStatus === "TIMED_OUT";
-          console.error(
-            `🚨 [Realtime-Doctor] Subscriber ${isTimeout ? 'TIMEOUT' : 'ERROR'} for channel "${key}":`, 
-            {
-              status: subscribeStatus,
-              error: err,
-              timestamp: new Date().toISOString()
-            }
-          );
-          
-          setRawStatus('ERROR');
-          handleRetry(key, entry);
-        }
-      }, 20000); // 20s timeout
-    
-    entry.channel = channel;
-  }, []);
-
-  const handleRetry = (key: string, entry: RegistryEntry) => {
-    if (entry.retryCount >= 10) {
-      console.warn(`[Realtime] Max retries reached for ${key}`);
+    // Check if this entry is still the active one in the registry and still has subscribers.
+    // If it was cleaned up/unmounted during the async boundaries, abort to prevent leaks and clashes.
+    if (registry.current.get(key) !== entry || entry.refCount <= 0) {
+      entry.isConnecting = false;
       return;
     }
 
-    // Exponential Backoff + Jitter (Masterclass Strategy)
-    const baseDelay = Math.min(INITIAL_RETRY_DELAY * Math.pow(2, entry.retryCount), MAX_RETRY_DELAY);
-    const jitter = Math.random() * 1000; // Add up to 1s random jitter
-    const delay = baseDelay + jitter;
-    
-    entry.retryCount++;
+    try {
+      if (!supabase.realtime.isConnected()) {
+        supabase.realtime.connect();
+      }
 
-    const timeout = setTimeout(() => connect(key, entry), delay);
-    retryTimeouts.current.set(key, timeout);
-  };
+      // Hardening: Use a unique sub-key for every connection attempt
+      // This prevents the "mismatch between server and client bindings" error
+      // which happens when reusing a channel name that still has stale bindings.
+      const attemptId = Date.now();
+      const channelName = `${key}:${attemptId}`;
+      
+      const channel = supabase
+        .channel(channelName)
+        .on(
+          "postgres_changes",
+          { event, schema: "public", table, filter },
+          (payload: RealtimePostgresChangesPayload<any>) => {
+            entry.callbacks.forEach((cb) => {
+              try { cb(payload); } catch (err) { console.error(`[Realtime] Callback error (${key}):`, err); }
+            });
+          }
+        )
+        .on("presence", { event: "sync" }, () => {
+          const state = channel.presenceState();
+          entry.presenceCallbacks.forEach(cb => cb(state));
+        })
+        .on("broadcast", { event: "*" }, ({ event, payload }) => {
+          entry.broadcastCallbacks.forEach(cb => cb(event, payload));
+        })
+        .subscribe((subscribeStatus, err) => {
+          entry.isConnecting = false;
+          if (subscribeStatus === "SUBSCRIBED") {
+            entry.retryCount = 0;
+            setRawStatus('CONNECTED');
+          } else if (subscribeStatus === "CHANNEL_ERROR" || subscribeStatus === "TIMED_OUT") {
+            const isTimeout = subscribeStatus === "TIMED_OUT";
+            console.error(
+              `🚨 [Realtime-Doctor] Subscriber ${isTimeout ? 'TIMEOUT' : 'ERROR'} for channel "${key}":`, 
+              {
+                status: subscribeStatus,
+                error: err,
+                timestamp: new Date().toISOString()
+              }
+            );
+            
+            setRawStatus('ERROR');
+            handleRetry(key, entry);
+          }
+        }, 20000); // 20s timeout
+      
+      entry.channel = channel;
+    } catch (e) {
+      console.error(`[Realtime] Error during channel subscription setup for ${key}:`, e);
+      entry.isConnecting = false;
+      setRawStatus('ERROR');
+      handleRetry(key, entry);
+    }
+  }, [handleRetry]);
+
+  useEffect(() => {
+    connectRef.current = connect;
+  }, [connect]);
 
   const disconnectAll = useCallback(() => {
     registry.current.forEach((entry, key) => {

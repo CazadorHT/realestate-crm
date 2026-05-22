@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Send, Bot, User, Loader2 } from "lucide-react";
@@ -47,7 +48,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
         },
       ]);
     }
-  }, [t]);
+  }, [t, messages.length]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -204,10 +205,12 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                     >
                       <div className="aspect-video bg-slate-200 relative">
                         {prop.image ? (
-                          <img
+                          <Image
                             src={prop.image}
-                            alt={prop.title}
-                            className="w-full h-full object-cover"
+                            alt={prop.title || "Property image"}
+                            fill
+                            className="object-cover"
+                            sizes="200px"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-400 text-xs">

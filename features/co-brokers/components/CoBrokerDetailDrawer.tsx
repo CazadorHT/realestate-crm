@@ -58,12 +58,6 @@ export function CoBrokerDetailDrawer({
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  useEffect(() => {
-    if (isOpen && broker?.id) {
-      loadAllData();
-    }
-  }, [isOpen, broker]);
-
   async function loadAllData() {
     if (!broker?.id) return;
     setIsLoading(true);
@@ -83,6 +77,12 @@ export function CoBrokerDetailDrawer({
       setIsLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (isOpen && broker?.id) {
+      loadAllData();
+    }
+  }, [isOpen, broker]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

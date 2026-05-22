@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { getTemplatesAction } from "../template-actions";
 import {
   generateDocumentFromTemplateAction,
@@ -112,11 +113,24 @@ export function TemplateDialog({
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [paymentMethodDialogOpen, setPaymentMethodDialogOpen] = useState(false);
 
+  async function loadTemplates() {
+    try {
+      const data = await getTemplatesAction();
+      setTemplates(data || []);
+      if (data && data.length > 0) {
+        setSelectedTemplateId(data[0].id);
+      }
+    } catch (err) {
+      toast.error("โหลดต้นแบบสัญญาไม่สำเร็จ");
+    }
+  }
+
   useEffect(() => {
     if (open) {
       resetForm();
       loadTemplates();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, initialOwnerId, initialOwnerType]);
 
   // Debounced search
@@ -175,19 +189,8 @@ export function TemplateDialog({
       }
     };
     fetchDetails();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedOwnerId, initialOwnerId, targetOwnerType, initialOwnerType]);
-
-  async function loadTemplates() {
-    try {
-      const data = await getTemplatesAction();
-      setTemplates(data || []);
-      if (data && data.length > 0) {
-        setSelectedTemplateId(data[0].id);
-      }
-    } catch (err) {
-      toast.error("โหลดต้นแบบสัญญาไม่สำเร็จ");
-    }
-  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -898,10 +901,13 @@ export function TemplateDialog({
                   </div>
                   {slipPreview && (
                     <div className="h-16 w-16 relative rounded-xl overflow-hidden border-2 border-white shadow-md shrink-0">
-                      <img
+                      <Image
                         src={slipPreview}
                         alt="Slip"
                         className="object-cover h-full w-full"
+                        fill
+                        sizes="64px"
+                        unoptimized
                       />
                       <button
                         onClick={() => {

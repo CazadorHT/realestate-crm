@@ -12,7 +12,7 @@ import { Database } from "@/lib/database.types.generated";
 
 const partnerSchema = z.object({
   name: z.string().min(1, "กรุณาระบุชื่อพาร์ทเนอร์"),
-  logo_url: z.string().url("กรุณาระบุ URL รูปภาพที่ถูกต้อง"),
+  logo_url: z.string().url("กรุณาระบุ URL รูปภาพที่ถูกต้อง").optional().or(z.literal("")).nullable(),
   website_url: z.string().optional().nullable(),
   sort_order: z.number().optional().default(0),
   is_active: z.boolean().optional().default(true),
@@ -40,9 +40,10 @@ export async function getPartners(params?: {
   page?: number;
   pageSize?: number;
   search?: string;
+  activeOnly?: boolean;
 }) {
-  const { page = 1, pageSize = 10, search = "" } = params || {};
-  const cacheKey = `partners:list:${page}:${pageSize}:${search || "none"}`;
+  const { page = 1, pageSize = 100, search = "", activeOnly = false } = params || {};
+  const cacheKey = `partners:list:${page}:${pageSize}:${search || "none"}:${activeOnly ? "active" : "all"}`;
 
   // 1. Try Cache
   if (redis) {
@@ -54,15 +55,35 @@ export async function getPartners(params?: {
     }
   }
 
-  const { tenantId } = await requireAuthContext();
+  let tenantId: string | undefined = undefined;
+
+  if (!activeOnly) {
+    try {
+      const authCtx = await requireAuthContext();
+      tenantId = authCtx.tenantId;
+    } catch (e) {
+      return {
+        success: false,
+        message: "Unauthorized",
+        data: [],
+        totalCount: 0,
+      };
+    }
+  }
+
   const supabase = await createClient();
 
   try {
     let query = supabase
       .from("cms_content_v3")
       .select("id, title, cover_image, meta_data, status, created_at, updated_at", { count: "exact" })
-      .eq("content_type", "PARTNER")
-      .neq("status", "trash");
+      .eq("content_type", "PARTNER");
+
+    if (activeOnly) {
+      query = query.eq("status", "published");
+    } else {
+      query = query.neq("status", "trash");
+    }
 
     if (tenantId) {
       query = query.eq("tenant_id", tenantId);
@@ -274,7 +295,7 @@ export async function createPartner(input: CreatePartnerInput) {
           tenant_id: tenantId ?? null,
           author_id: user.id,
           title: { th: validated.name, default: validated.name },
-          cover_image: validated.logo_url,
+          cover_image: validated.logo_url || "",
           status: validated.is_active ? "published" : "draft",
           slug: `partner-${partnerId.slice(0, 8)}`,
           meta_data: {
@@ -302,6 +323,7 @@ export async function createPartner(input: CreatePartnerInput) {
     await resequencePartners();
 
     revalidatePath("/admin/partners");
+    revalidatePath("/protected/partners");
     revalidatePath("/");
     await clearPartnerCache();
     return { success: true, message: "สร้างพาร์ทเนอร์สำเร็จ" };
@@ -388,6 +410,7 @@ export async function updatePartner(input: UpdatePartnerInput) {
     await resequencePartners();
 
     revalidatePath("/admin/partners");
+    revalidatePath("/protected/partners");
     revalidatePath("/");
     await clearPartnerCache();
     return { success: true, message: "แก้ไขพาร์ทเนอร์สำเร็จ" };
@@ -434,6 +457,7 @@ export async function deletePartner(id: string) {
     await resequencePartners();
 
     revalidatePath("/admin/partners");
+    revalidatePath("/protected/partners");
     revalidatePath("/");
     await clearPartnerCache();
     return { success: true, message: "ลบพาร์ทเนอร์สำเร็จ" };
@@ -544,6 +568,7 @@ export async function reorderPartnersAction(ids: string[], offset: number = 0) {
     );
 
     revalidatePath("/admin/partners");
+    revalidatePath("/protected/partners");
     revalidatePath("/");
     await clearPartnerCache();
     
@@ -574,6 +599,64 @@ export async function uploadPartnerLogoAction(
     return result;
   } catch (error: unknown) {
     console.error("uploadPartnerLogoAction error:", error);
+    return { success: false, message: mapDbError(error) };
+  }
+}
+
+export async function seedDefaultPartners() {
+  try {
+    const { role, user, supabase, tenantId } = await requireAuthContext();
+    assertSystemAdmin(role);
+
+    const defaultPartners = [
+      { name: "Facebook", website_url: "https://www.facebook.com" },
+      { name: "Instagram", website_url: "https://www.instagram.com" },
+      { name: "TikTok", website_url: "https://www.tiktok.com" },
+      { name: "LivingInsider", website_url: "https://www.livinginsider.com" },
+      { name: "เว็บไซต์ของเรา", website_url: null },
+    ];
+
+    const inserts = defaultPartners.map((item, index) => {
+      const partnerId = crypto.randomUUID();
+      return {
+        id: partnerId,
+        content_type: "PARTNER",
+        tenant_id: tenantId ?? null,
+        author_id: user.id,
+        title: { th: item.name, default: item.name },
+        cover_image: "",
+        status: "published" as const,
+        slug: `partner-${partnerId.slice(0, 8)}`,
+        meta_data: {
+          website_url: item.website_url,
+          sort_order: index + 1,
+        },
+      };
+    });
+
+    const { error } = await supabase
+      .from("cms_content_v3")
+      .insert(inserts);
+
+    if (error) throw error;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "partner.bulk_create",
+        entity: "cms_content_v3",
+        metadata: { count: defaultPartners.length },
+      }
+    );
+
+    revalidatePath("/admin/partners");
+    revalidatePath("/protected/partners");
+    revalidatePath("/");
+    await clearPartnerCache();
+
+    return { success: true, message: "นำเข้าช่องทางมาตรฐาน 5 ช่องทางสำเร็จ" };
+  } catch (error: unknown) {
+    console.error("seedDefaultPartners error:", error);
     return { success: false, message: mapDbError(error) };
   }
 }

@@ -44,7 +44,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   let query = supabase
     .from("crm_leads_v3")
-    .select("id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, identity:identities_v3!inner(display_name, email, phone)", { count: "exact" });
+    .select("id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone)", { count: "exact" });
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -120,7 +120,7 @@ export async function getAllLeadIdsQuery(args: { q?: string; stage?: string } = 
   const q = (args.q ?? "").trim();
   const stage = (args.stage ?? "").trim();
 
-  let query = supabase.from("crm_leads_v3").select("id, identity:identities_v3!inner(display_name, phone, email)");
+  let query = supabase.from("crm_leads_v3").select("id, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, phone, email)");
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -153,7 +153,7 @@ export async function getLeadsForKanbanQuery() {
 
   let query = supabase
     .from("crm_leads_v3")
-    .select("id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, identity:identities_v3!inner(display_name)");
+    .select("id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name)");
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -179,7 +179,7 @@ export async function getLeadByIdQuery(id: string): Promise<LeadWithJoins | null
 
   let query = supabase
     .from("crm_leads_v3")
-    .select("id, stage, source, budget_min, budget_max, preferred_locations, ai_summary, created_at, updated_at, tenant_id, assigned_to, identity:identities_v3!inner(display_name, email, phone, line_id, social_links)")
+    .select("id, stage, source, budget_min, budget_max, preferred_locations, ai_summary, created_at, updated_at, tenant_id, assigned_to, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone, line_id, social_links)")
     .eq("id", id);
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
@@ -220,7 +220,7 @@ export async function getLeadWithActivitiesQuery(
 
     let query = supabase
       .from("crm_leads_v3")
-      .select("id, stage, source, budget_min, budget_max, preferred_locations, ai_summary, created_at, updated_at, tenant_id, assigned_to, identity:identities_v3!inner(display_name, email, phone, line_id, social_links)")
+      .select("id, stage, source, budget_min, budget_max, preferred_locations, ai_summary, created_at, updated_at, tenant_id, assigned_to, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone, line_id, social_links)")
       .eq("id", id);
 
     if (isMultiTenant && tenantId && tenantId !== "ALL") {

@@ -29,7 +29,7 @@ export {
   getGlobalPropertiesTableDataAction,
   getGlobalInventoryFilterCountsAction,
 } from "./actions/fetch";
-export { getPopularAreasAction } from "@/features/public-data/popular-areas";
+export { getPopularAreasAction } from "@/features/public/popular-areas";
 export { postPropertyToMetaAction } from "./actions/social";
 export { postPropertyToLineAction } from "./actions/line";
 export { incrementPropertyView } from "./actions/view";

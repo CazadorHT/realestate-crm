@@ -61,6 +61,7 @@ export function DocumentList({
 
   useEffect(() => {
     fetchDocs();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ownerId, ownerType, refreshTrigger]);
 
   const handleView = async (storagePath: string) => {

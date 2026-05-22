@@ -111,7 +111,7 @@ export function usePropertyFilters() {
   }, [
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
-    isHotDeal, minSize, maxSize, transitStation,
+    companyRegistered, isHotDeal, minSize, maxSize, transitStation,
   ]);
 
   const clearFilters = useCallback(() => {

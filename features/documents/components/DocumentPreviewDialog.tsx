@@ -24,12 +24,6 @@ export function DocumentPreviewDialog({
   const [content, setContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (open && !content) {
-      loadContent();
-    }
-  }, [open]);
-
   async function loadContent() {
     setLoading(true);
     try {
@@ -45,6 +39,13 @@ export function DocumentPreviewDialog({
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (open && !content) {
+      loadContent();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handlePrint = () => {
     const printWindow = window.open("", "_blank");

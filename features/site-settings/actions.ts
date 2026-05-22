@@ -130,6 +130,10 @@ const DEFAULT_SETTINGS: SiteSettings = {
   line_channel_access_token: "",
   meta_page_name: "",
   facebook_app_id: "",
+  partners_description: "เราโปรโมทและลงประกาศทรัพย์สินของคุณผ่านช่องทางการตลาดและโซเชียลมีเดียชั้นนำ เช่น Facebook, Instagram, TikTok, LivingInsider และเว็บไซต์ของเรา เพื่อความคุ้มค่าและโอกาสขายสำเร็จสูงสุด",
+  partners_description_en: "We promote and advertise your properties across leading channels and social media including Facebook, Instagram, TikTok, LivingInsider, and our website.",
+  partners_description_cn: "我们在领先的营销渠道和社交媒体上推广并发布您的房产，包括 Facebook, Instagram, TikTok, LivingInsider 以及我们的官方网站。",
+  partners_description_ru: "Мы продвигаем и публикуем вашу недвижимость на ведущих маркетинговых каналах и в социальных сетях, включая Facebook, Instagram, TikTok, LivingInsider и наш веб-сайт.",
 };
 
 /**
@@ -185,7 +189,8 @@ async function getSiteSettingsInternal(): Promise<SiteSettings> {
         "google_maps_url", "facebook_url", "instagram_url", "line_url", "tiktok_url",
         "line_id", "logo_light", "logo_dark", "favicon",
         "google_tag_manager_id", "meta_page_access_token", "line_channel_access_token", "meta_page_name",
-        "facebook_app_id"
+        "facebook_app_id",
+        "partners_description", "partners_description_en", "partners_description_cn", "partners_description_ru"
       ];
 
       if (key.includes("_post_template") || stringKeys.includes(key)) {
@@ -288,14 +293,16 @@ export async function updateSiteSetting(
     const userId = ctx.user.id;
     const encryptedValue = await encryptValue(key, value);
 
-    const { error } = await (supabase as any).from("site_settings").upsert(
+    const { error } = await (supabase as any).from("system_settings_v3").upsert(
       {
+        tenant_id: ctx.tenantId || null,
+        category: "general",
         key,
         value: (encryptedValue ?? "") as Json,
         updated_at: new Date().toISOString(),
         updated_by: userId,
       },
-      { onConflict: "key" },
+      { onConflict: "tenant_id,category,key" },
     );
 
     if (error) {
@@ -328,14 +335,27 @@ async function updateSiteSettingAdmin(
 
     const encryptedValue = await encryptValue(key, value);
 
-    const { error } = await (supabase as any).from("site_settings").upsert(
+    // Query existing row to preserve tenant_id and category
+    const { data: existing } = await supabase
+      .from("site_settings")
+      .select("tenant_id, category")
+      .eq("key", key)
+      .limit(1)
+      .maybeSingle();
+
+    const tenant_id = existing?.tenant_id || null;
+    const category = existing?.category || "general";
+
+    const { error } = await (supabase as any).from("system_settings_v3").upsert(
       {
+        tenant_id,
+        category,
         key,
         value: (encryptedValue ?? "") as Json,
         updated_at: new Date().toISOString(),
         updated_by: null,
       },
-      { onConflict: "key" },
+      { onConflict: "tenant_id,category,key" },
     );
 
     if (error) throw error;
@@ -426,6 +446,8 @@ export async function updateSiteSettings(
 
     const updates = await Promise.all(
       Object.entries(settings).map(async ([key, value]) => ({
+        tenant_id: ctx.tenantId || null,
+        category: "general",
         key,
         value: ((await encryptValue(key, value)) ?? "") as Json,
         updated_at: new Date().toISOString(),
@@ -434,8 +456,8 @@ export async function updateSiteSettings(
     );
 
     const { error } = await (supabase as any)
-      .from("site_settings")
-      .upsert(updates, { onConflict: "key" });
+      .from("system_settings_v3")
+      .upsert(updates, { onConflict: "tenant_id,category,key" });
 
     if (error) {
       console.error("Error updating site settings:", error);

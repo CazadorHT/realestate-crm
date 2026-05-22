@@ -16,6 +16,7 @@ import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations } from "@/lib/i18n";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
+import Image from "next/image";
 import { ServiceGalleryClient } from "./ServiceGalleryClient";
 import { ServiceViewCounter } from "@/components/services/ServiceViewCounter";
 
@@ -72,11 +73,16 @@ async function ServiceDetail({ params }: PageProps) {
       {/* Hero Header */}
       <div className="relative h-[60vh] min-h-[500px] w-full overflow-hidden">
         {service.cover_image ? (
-          <img
-            src={service.cover_image}
-            alt={service.title}
-            className="w-full h-full object-cover scale-105"
-          />
+          <div className="absolute inset-0">
+            <Image
+              src={service.cover_image}
+              alt={service.title}
+              fill
+              className="object-cover scale-105"
+              priority
+              sizes="100vw"
+            />
+          </div>
         ) : (
           <div className="w-full h-full bg-slate-900" />
         )}

@@ -104,6 +104,7 @@ export function usePropertyFormData(
     }
 
     loadData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, defaultValuesId, showAllOwners]); // Removed form from deps to avoid loops, watching province separately
 
   // Re-fetch popular areas when province changes

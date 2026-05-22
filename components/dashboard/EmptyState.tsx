@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   PlusCircle,
   Users,
@@ -124,24 +124,30 @@ export function EmptyState({
               {actionSlot}
             </div>
           ) : actionLabel && (actionHref || onAction) ? (
-            <Button
-              asChild={!!actionHref}
-              size="lg"
-              className="bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300 px-10 h-14 rounded-2xl text-base font-bold group animate-in fade-in slide-in-from-bottom-4 duration-1000"
-              onClick={onAction}
-            >
-              {actionHref ? (
-                <Link href={actionHref}>
-                  <ActionIcon className="h-5 w-5 mr-3 group-hover:scale-125 transition-transform" />
-                  {actionLabel}
-                </Link>
-              ) : (
+            actionHref ? (
+              <Link
+                href={actionHref}
+                onClick={onAction}
+                className={cn(
+                  buttonVariants({ size: "lg" }),
+                  "relative z-50 pointer-events-auto bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300 px-10 h-14 rounded-2xl text-base font-bold group animate-in fade-in slide-in-from-bottom-4 duration-1000 inline-flex items-center justify-center"
+                )}
+              >
+                <ActionIcon className="h-5 w-5 mr-3 group-hover:scale-125 transition-transform" />
+                {actionLabel}
+              </Link>
+            ) : (
+              <Button
+                size="lg"
+                className="relative z-50 bg-linear-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white shadow-xl shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300 px-10 h-14 rounded-2xl text-base font-bold group animate-in fade-in slide-in-from-bottom-4 duration-1000"
+                onClick={onAction}
+              >
                 <>
                   <ActionIcon className="h-5 w-5 mr-3 group-hover:scale-125 transition-transform" />
                   {actionLabel}
                 </>
-              )}
-            </Button>
+              </Button>
+            )
           ) : null}
         </div>
       </div>

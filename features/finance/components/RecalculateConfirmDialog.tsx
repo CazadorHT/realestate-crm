@@ -19,6 +19,24 @@ interface RecalculateConfirmDialogProps {
   } | null;
 }
 
+const ComparisonRow = ({ label, oldVal, newVal, symbol = "" }: any) => (
+  <div className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 font-medium">
+    <span className="text-[11px] text-slate-500 uppercase tracking-tighter">{label}</span>
+    <div className="flex items-center gap-3">
+      <span className="text-xs text-slate-400 line-through decoration-slate-300 opacity-60">
+        {symbol}{FinanceMath.format(oldVal)}
+      </span>
+      <ArrowRight className="w-3 h-3 text-slate-300" />
+      <span className={cn(
+        "text-sm font-bold",
+        newVal > oldVal ? "text-emerald-600" : newVal < oldVal ? "text-rose-600" : "text-slate-800"
+      )}>
+        {symbol}{FinanceMath.format(newVal)}
+      </span>
+    </div>
+  </div>
+);
+
 export const RecalculateConfirmDialog = ({
   isOpen,
   onClose,
@@ -31,24 +49,6 @@ export const RecalculateConfirmDialog = ({
   const { before, after, reason } = previewData;
   const isIncrease = after.net > before.net;
   const isNeutral = after.net === before.net;
-
-  const ComparisonRow = ({ label, oldVal, newVal, symbol = "" }: any) => (
-    <div className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0 font-medium">
-      <span className="text-[11px] text-slate-500 uppercase tracking-tighter">{label}</span>
-      <div className="flex items-center gap-3">
-        <span className="text-xs text-slate-400 line-through decoration-slate-300 opacity-60">
-          {symbol}{FinanceMath.format(oldVal)}
-        </span>
-        <ArrowRight className="w-3 h-3 text-slate-300" />
-        <span className={cn(
-          "text-sm font-bold",
-          newVal > oldVal ? "text-emerald-600" : newVal < oldVal ? "text-rose-600" : "text-slate-800"
-        )}>
-          {symbol}{FinanceMath.format(newVal)}
-        </span>
-      </div>
-    </div>
-  );
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

@@ -22,23 +22,26 @@ export function DuplicatePropertyButton({
   const [isPending, startTransition] = useTransition();
 
   const onDuplicate = async () => {
-    const processId = startProcess("คัดลอกข้อมูลทรัพย์", { 
-      type: "DUPLICATE",
-      onRetry: onDuplicate
-    });
-    
-    try {
-      const res = await duplicatePropertyAction(id);
-      if (!res.success || !res.propertyId) {
-        finishProcess(processId, "ERROR", res.message || "Duplicate ไม่สำเร็จ");
-        throw new Error(res.message || "Duplicate ไม่สำเร็จ");
+    async function execute() {
+      const processId = startProcess("คัดลอกข้อมูลทรัพย์", { 
+        type: "DUPLICATE",
+        onRetry: execute
+      });
+      
+      try {
+        const res = await duplicatePropertyAction(id);
+        if (!res.success || !res.propertyId) {
+          finishProcess(processId, "ERROR", res.message || "Duplicate ไม่สำเร็จ");
+          throw new Error(res.message || "Duplicate ไม่สำเร็จ");
+        }
+        finishProcess(processId, "SUCCESS", "สร้างสำเนาเรียบร้อย");
+        router.push(`/protected/properties#table`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการคัดลอก";
+        finishProcess(processId, "ERROR", msg);
       }
-      finishProcess(processId, "SUCCESS", "สร้างสำเนาเรียบร้อย");
-      window.location.href = `/protected/properties#table`;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการคัดลอก";
-      finishProcess(processId, "ERROR", msg);
     }
+    await execute();
   };
 
   return (

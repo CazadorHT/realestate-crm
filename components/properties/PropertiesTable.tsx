@@ -329,9 +329,7 @@ export function PropertiesTable({
     );
   }, [selectedIds, data, selectedCount]);
 
-  if (data.length === 0) {
-    return <PropertiesEmptyState />;
-  }
+
 
   const handleSuccessFeedback = () => {
     const params = new URLSearchParams(searchParams.toString());
@@ -445,6 +443,10 @@ export function PropertiesTable({
       return p?.requires_ai_review;
     });
   }, [selectedIds, data]);
+
+  if (data.length === 0) {
+    return <PropertiesEmptyState />;
+  }
 
   return (
     <div className="space-y-4">

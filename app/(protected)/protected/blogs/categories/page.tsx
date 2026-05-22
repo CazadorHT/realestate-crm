@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CategoryStatsCard,
   CategorySidebarStats,
-} from "@/features/blogs/components/CategoryStats";
+} from "@/features/blog/components/CategoryStats";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 
 export default async function CategoriesPage() {

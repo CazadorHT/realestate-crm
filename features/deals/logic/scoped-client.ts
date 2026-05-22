@@ -27,7 +27,6 @@ function createScopedProxy<T extends keyof Database["public"]["Tables"]>(
   // statically type dynamic property interception. Type safety is
   // enforced at the PUBLIC API surface (getScopedRevenueClient return
   // type and table name validation) rather than inside Proxy internals.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return new Proxy(builder, {
     get(target: any, prop: string) {
       const origMethod = target[prop];

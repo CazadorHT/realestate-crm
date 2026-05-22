@@ -131,13 +131,14 @@ export function SocialPostDialogMobile({
     }
   }, [isOpen, propertyId, selectedLangs, platform]);
 
+  const langsString = selectedLangs.join(",");
   useEffect(() => {
     if (isOpen && propertyId) {
       setStatus("IDLE");
       setResultMessage("");
       loadContent();
     }
-  }, [isOpen, propertyId, selectedLangs.join(","), platform, loadContent]);
+  }, [isOpen, propertyId, langsString, platform, loadContent]);
 
   const toggleLang = (l: Language) => {
     setSelectedLangs((prev) =>

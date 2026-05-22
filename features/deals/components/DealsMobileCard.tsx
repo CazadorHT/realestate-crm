@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 
 import Link from "next/link";
 import { format, differenceInHours, differenceInMonths } from "date-fns";
@@ -75,15 +76,17 @@ export function DealsMobileCard({
           {(() => {
             const property = deal.property;
             const images = property?.images;
-            const hasImage = images?.[0]?.image_url;
+            const coverImage = images?.find((img) => img.is_cover)?.image_url || images?.[0]?.image_url;
             
-            if (hasImage) {
-               const coverImage = images.find((img) => img.is_cover)?.image_url || images[0].image_url;
+            if (coverImage) {
               return (
-                <img
+                <Image
                   src={coverImage}
                   alt={deal.property?.title || "Property"}
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 384px"
+                  unoptimized
                 />
               );
             }

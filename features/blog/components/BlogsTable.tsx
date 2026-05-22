@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
-import { bulkDeleteBlogsAction } from "@/features/blogs/bulk-actions";
+import { bulkDeleteBlogsAction } from "@/features/blog/bulk-actions";
 import { toast } from "sonner";
 import { PaginationControls } from "@/components/ui/pagination-controls";
 import { DeleteBlogPostButton } from "@/app/(protected)/protected/blogs/_components/DeleteBlogPostButton";

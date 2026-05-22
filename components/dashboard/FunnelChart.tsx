@@ -87,8 +87,8 @@ export function FunnelChart({ data }: FunnelChartProps) {
                   padding: "12px",
                 }}
                 formatter={(value: any, name: any, props: any) => [
-                  <span className="font-black text-indigo-600">{value} รายการ</span>,
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{stepTranslation[props.payload.step] || props.payload.step}</span>,
+                  <span key="count" className="font-black text-indigo-600">{value} รายการ</span>,
+                  <span key="label" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{stepTranslation[props.payload.step] || props.payload.step}</span>,
                 ]}
               />
               <Bar dataKey="count" radius={[0, 8, 8, 0]} barSize={35}>

@@ -32,6 +32,68 @@ interface YearSelectorModalProps {
   availableYears: number[];
 }
 
+interface YearGridProps {
+  availableYears: number[];
+  selectedYear: number;
+  handleYearSelect: (year: number) => void;
+  currentYear: number;
+}
+
+const YearGrid = ({
+  availableYears,
+  selectedYear,
+  handleYearSelect,
+  currentYear
+}: YearGridProps) => (
+  <ScrollArea className="h-[300px] sm:h-[400px] p-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      {availableYears.length > 0 ? (
+        availableYears.map((y) => (
+          <Button
+            key={y}
+            variant={selectedYear === y ? "default" : "outline"}
+            onClick={() => handleYearSelect(y)}
+            className={cn(
+              "h-16 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all group relative overflow-hidden",
+              selectedYear === y 
+                ? "bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 border-none" 
+                : "border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30"
+            )}
+          >
+            <span className={cn(
+              "text-xs font-semibold uppercase tracking-tighter opacity-60",
+              selectedYear === y ? "text-indigo-100" : "text-slate-400"
+            )}>
+              พ.ศ. {y + 543}
+            </span>
+            <span className={cn(
+              "text-lg font-semibold tracking-tight",
+              selectedYear === y ? "text-white" : "text-slate-900"
+            )}>
+              {y}
+            </span>
+            {selectedYear === y && (
+              <div className="absolute top-1 right-1">
+                 <Check className="w-3 h-3 text-white/50" />
+              </div>
+            )}
+            {y === currentYear && (
+              <div className="absolute top-1 left-2">
+                 <span className="text-[8px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold uppercase">Current</span>
+              </div>
+            )}
+          </Button>
+        ))
+      ) : (
+        <div className="col-span-full py-20 text-center space-y-3">
+           <Clock className="w-10 h-10 text-slate-200 mx-auto" />
+           <p className="text-sm font-semibold text-slate-400">ยังไม่พบข้อมูลปีการเงินย้อนหลัง</p>
+        </div>
+      )}
+    </div>
+  </ScrollArea>
+);
+
 export function YearSelectorModal({
   isOpen,
   onOpenChange,
@@ -48,56 +110,6 @@ export function YearSelectorModal({
 
   const currentYear = new Date().getFullYear();
 
-  const YearGrid = () => (
-    <ScrollArea className="h-[300px] sm:h-[400px] p-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {availableYears.length > 0 ? (
-          availableYears.map((y) => (
-            <Button
-              key={y}
-              variant={selectedYear === y ? "default" : "outline"}
-              onClick={() => handleYearSelect(y)}
-              className={cn(
-                "h-16 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all group relative overflow-hidden",
-                selectedYear === y 
-                  ? "bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100 border-none" 
-                  : "border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30"
-              )}
-            >
-              <span className={cn(
-                "text-xs font-semibold uppercase tracking-tighter opacity-60",
-                selectedYear === y ? "text-indigo-100" : "text-slate-400"
-              )}>
-                พ.ศ. {y + 543}
-              </span>
-              <span className={cn(
-                "text-lg font-semibold tracking-tight",
-                selectedYear === y ? "text-white" : "text-slate-900"
-              )}>
-                {y}
-              </span>
-              {selectedYear === y && (
-                <div className="absolute top-1 right-1">
-                   <Check className="w-3 h-3 text-white/50" />
-                </div>
-              )}
-              {y === currentYear && (
-                <div className="absolute top-1 left-2">
-                   <span className="text-[8px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold uppercase">Current</span>
-                </div>
-              )}
-            </Button>
-          ))
-        ) : (
-          <div className="col-span-full py-20 text-center space-y-3">
-             <Clock className="w-10 h-10 text-slate-200 mx-auto" />
-             <p className="text-sm font-semibold text-slate-400">ยังไม่พบข้อมูลปีการเงินย้อนหลัง</p>
-          </div>
-        )}
-      </div>
-    </ScrollArea>
-  );
-
   if (isMobile) {
     return (
       <Drawer open={isOpen} onOpenChange={onOpenChange}>
@@ -111,7 +123,12 @@ export function YearSelectorModal({
               แสดงเฉพาะปีที่ระบบตรวจพบข้อมูลการเงินและคอมมิชชัน
             </DrawerDescription>
           </DrawerHeader>
-          <YearGrid />
+          <YearGrid
+            availableYears={availableYears}
+            selectedYear={selectedYear}
+            handleYearSelect={handleYearSelect}
+            currentYear={currentYear}
+          />
           <DrawerFooter className="pt-2">
             <DrawerClose asChild>
               <Button variant="ghost" className="rounded-xl h-12 font-semibold text-slate-500">ยกเลิก</Button>
@@ -137,7 +154,12 @@ export function YearSelectorModal({
            </DialogHeader>
         </div>
         <div className="p-2">
-           <YearGrid />
+           <YearGrid
+             availableYears={availableYears}
+             selectedYear={selectedYear}
+             handleYearSelect={handleYearSelect}
+             currentYear={currentYear}
+           />
         </div>
         <DialogFooter className="p-8 pt-0">
            <Button variant="ghost" onClick={() => onOpenChange(false)} className="rounded-xl font-semibold text-slate-400">ปิดหน้าต่าง</Button>

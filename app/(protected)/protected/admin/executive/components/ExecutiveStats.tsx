@@ -10,20 +10,21 @@ interface ExecutiveStatsProps {
   isLoading: boolean;
 }
 
+// 🛡️ Premium Skeleton Template
+const StatSkeleton = () => (
+  <div className="space-y-3">
+    <div className="h-4 w-24 bg-slate-200 animate-pulse rounded" />
+    <div className="h-8 w-32 bg-slate-200 animate-pulse rounded" />
+    <div className="h-3 w-40 bg-slate-100 animate-pulse rounded" />
+  </div>
+);
+
 export function ExecutiveStats({
   totalLeads,
   totalDeals,
   branchCount,
   isLoading,
 }: ExecutiveStatsProps) {
-  // 🛡️ Premium Skeleton Template
-  const StatSkeleton = () => (
-    <div className="space-y-3">
-      <div className="h-4 w-24 bg-slate-200 animate-pulse rounded" />
-      <div className="h-8 w-32 bg-slate-200 animate-pulse rounded" />
-      <div className="h-3 w-40 bg-slate-100 animate-pulse rounded" />
-    </div>
-  );
 
   return (
     <div className="grid gap-6 grid-cols-1 lg:grid-cols-3">

@@ -13,6 +13,15 @@ interface InventoryStatsProps {
   currentStatus?: string;
 }
 
+// 🛡️ Premium Skeleton for Stats
+const StatSkeleton = () => (
+  <div className="space-y-3">
+    <div className="h-4 w-12 bg-slate-100 animate-pulse rounded" />
+    <div className="h-4 w-24 bg-slate-100 animate-pulse rounded" />
+    <div className="h-8 w-16 bg-slate-200 animate-pulse rounded" />
+  </div>
+);
+
 export function InventoryStats({
   totalCount,
   activeCount,
@@ -21,14 +30,6 @@ export function InventoryStats({
   onFilterClick,
   currentStatus,
 }: InventoryStatsProps) {
-  // 🛡️ Premium Skeleton for Stats
-  const StatSkeleton = () => (
-    <div className="space-y-3">
-      <div className="h-4 w-12 bg-slate-100 animate-pulse rounded" />
-      <div className="h-4 w-24 bg-slate-100 animate-pulse rounded" />
-      <div className="h-8 w-16 bg-slate-200 animate-pulse rounded" />
-    </div>
-  );
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

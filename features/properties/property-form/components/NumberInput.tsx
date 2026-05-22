@@ -60,8 +60,9 @@ export function NumberInput({
 
   // Clear any pending timer on unmount
   React.useEffect(() => {
+    const timer = commitTimer.current;
     return () => {
-      if (commitTimer.current) window.clearTimeout(commitTimer.current);
+      if (timer) window.clearTimeout(timer);
     };
   }, []);
 

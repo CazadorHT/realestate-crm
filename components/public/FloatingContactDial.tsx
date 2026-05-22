@@ -71,7 +71,7 @@ export function FloatingContactDial() {
     }
 
     fetchContactInfo();
-  }, [t, settings.contact_phone]);
+  }, [t, settings.contact_phone, siteName]);
 
   useEffect(() => {
     const handleScroll = () => {

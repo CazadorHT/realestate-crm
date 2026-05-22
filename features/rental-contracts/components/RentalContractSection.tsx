@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { addMonths, subDays } from "date-fns";
@@ -103,7 +103,7 @@ export function RentalContractSection({
   const [open, setOpen] = useState(false);
   const today = new Date().toISOString().slice(0, 10);
 
-  const fetchContract = async () => {
+  const fetchContract = useCallback(async () => {
     setLoading(true);
     const res = await fetch(`/api/rental-contracts/${dealId}`);
     if (res.ok) {
@@ -113,12 +113,12 @@ export function RentalContractSection({
       setContract(null);
     }
     setLoading(false);
-  };
+  }, [dealId]);
 
   useEffect(() => {
     if (!["RENT", "SALE"].includes(dealType)) return;
     fetchContract();
-  }, [dealId, dealType]);
+  }, [dealId, dealType, fetchContract]);
 
   const form = useForm<ContractFormInput>({
     resolver: zodResolver(contractFormSchema) as unknown as Resolver<ContractFormInput>,
@@ -176,7 +176,8 @@ export function RentalContractSection({
         (initialRent ? initialRent * 1 : undefined),
       status: contract?.status ?? "DRAFT",
     });
-  }, [contract]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contract]); // intentionally omit form/dealId/today/defaultRent/defaultLeaseTerm — these are initialization-time values only
 
   const handleSubmit = async (vals: ContractFormInput) => {
     try {

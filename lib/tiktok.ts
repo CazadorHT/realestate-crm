@@ -1,5 +1,6 @@
 import { tiktokConfig } from "./tiktok-config";
 import { createAdminClient } from "./supabase/admin";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 export interface TikTokTokenResponse {
   access_token: string;
@@ -281,14 +282,46 @@ export async function getTikTokUserInfo(
  * Save TikTok token to site_settings (Simple singleton approach)
  */
 export async function saveTikTokToken(tokenData: TikTokTokenResponse) {
+  let tenantId: string | null = null;
+  try {
+    const supabaseUser = await createServerClient();
+    const { data: { user } } = await supabaseUser.auth.getUser();
+    if (user) {
+      const { data: identity } = await supabaseUser
+        .from("identities_v3")
+        .select("tenant_id")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (identity?.tenant_id) {
+        tenantId = identity.tenant_id;
+      }
+    }
+  } catch (err) {
+    console.warn("Could not retrieve user context for TikTok token, falling back to existing row or null", err);
+  }
+
   const supabase = createAdminClient();
-  const { error } = await supabase.from("site_settings").upsert({
+  
+  // Try to find if there is an existing row for 'tiktok_auth_token'
+  const { data: existing } = await supabase
+    .from("site_settings")
+    .select("tenant_id, category")
+    .eq("key", "tiktok_auth_token")
+    .limit(1)
+    .maybeSingle();
+
+  const tenant_id = existing?.tenant_id ?? tenantId ?? null;
+  const category = existing?.category || "general";
+
+  const { error } = await supabase.from("system_settings_v3").upsert({
+    tenant_id,
+    category,
     key: "tiktok_auth_token",
     value: {
       ...tokenData,
       updated_at: new Date().toISOString(),
     },
-  });
+  }, { onConflict: "tenant_id,category,key" });
 
   if (error) {
     console.error("Error saving TikTok token:", error);
@@ -299,12 +332,19 @@ export async function saveTikTokToken(tokenData: TikTokTokenResponse) {
  * Get active TikTok token from database
  */
 export async function getTikTokToken(): Promise<TikTokTokenResponse | null> {
-  const supabase = createAdminClient();
+  let supabase;
+  try {
+    supabase = await createServerClient();
+  } catch {
+    supabase = createAdminClient();
+  }
+
   const { data, error } = await supabase
     .from("site_settings")
     .select("value")
     .eq("key", "tiktok_auth_token")
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (error || !data) return null;
   return data.value as unknown as TikTokTokenResponse;

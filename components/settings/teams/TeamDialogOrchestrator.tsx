@@ -30,13 +30,6 @@ export function TeamDialogOrchestrator({
   const [viewingMembers, setViewingMembers] = useState<{ id: string; name: string } | null>(null);
   const [deletingTeam, setDeletingTeam] = useState<TeamWithManager | null>(null);
 
-  // --- Listeners ---
-  React.useEffect(() => {
-    const handleTriggerCreate = () => handleCreate();
-    window.addEventListener("trigger-create-team", handleTriggerCreate);
-    return () => window.removeEventListener("trigger-create-team", handleTriggerCreate);
-  }, []);
-
   // --- Handlers ---
   const handleCreate = () => {
     setEditingTeam(null);
@@ -47,6 +40,13 @@ export function TeamDialogOrchestrator({
     setEditingTeam(team);
     setIsFormOpen(true);
   };
+
+  // --- Listeners ---
+  React.useEffect(() => {
+    const handleTriggerCreate = () => handleCreate();
+    window.addEventListener("trigger-create-team", handleTriggerCreate);
+    return () => window.removeEventListener("trigger-create-team", handleTriggerCreate);
+  }, []);
 
   const handleSuccess = (updatedTeam: TeamWithManager) => {
     if (editingTeam) {

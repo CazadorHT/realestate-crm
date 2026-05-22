@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSocialPostEventListener } from "@/lib/social-post-events";
+import { subscribeToSocialPostEvents } from "@/lib/social-post-events";
 import { m, AnimatePresence } from "framer-motion";
 import { CheckCircle2, Loader2, X, ChevronUp, ChevronDown } from "lucide-react";
 import {
@@ -41,7 +41,7 @@ export function SocialPostMonitor() {
 
   // Listen to our custom social post events
   useEffect(() => {
-    const unsub = useSocialPostEventListener((data) => {
+    const unsub = subscribeToSocialPostEvents((data) => {
       if (data.type === "STARTED") {
         setTasks((prev) => [data.task, ...prev]);
         setIsMinimized(false); // Pop up if new task starts

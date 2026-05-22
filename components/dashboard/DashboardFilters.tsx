@@ -119,6 +119,16 @@ export function DashboardFilters({
     }
   }, [isAdmin]);
 
+  function updateFilter(updates: Record<string, string | null>) {
+    setIsUpdating(true);
+    // 📢 Dispatch global event so other components can spin immediately
+    window.dispatchEvent(new CustomEvent("dashboard:updating"));
+    
+    setPendingFilters(prev => ({ ...prev, ...updates }));
+    setIsRangeOpen(false);
+    setIsSelectorOpen(false);
+  }
+
   // --- Smart Persistence (Phase 3) ---
   useEffect(() => {
     // 1. Restore from localStorage on mount if no URL params
@@ -153,16 +163,6 @@ export function DashboardFilters({
     };
     localStorage.setItem("dashboard_preferences", JSON.stringify(prefs));
   }, [range, view, branchId, teamId, agentId, isCompareMode, compareId]);
-
-  const updateFilter = (updates: Record<string, string | null>) => {
-    setIsUpdating(true);
-    // 📢 Dispatch global event so other components can spin immediately
-    window.dispatchEvent(new CustomEvent("dashboard:updating"));
-    
-    setPendingFilters(prev => ({ ...prev, ...updates }));
-    setIsRangeOpen(false);
-    setIsSelectorOpen(false);
-  };
 
   return (
     <div className="relative z-20 flex flex-col gap-4 bg-white p-4 rounded-3xl border border-slate-200/60 shadow-sm w-full transition-all duration-300">

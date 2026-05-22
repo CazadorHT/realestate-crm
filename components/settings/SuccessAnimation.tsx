@@ -1,33 +1,41 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 
 export function SuccessAnimation() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const pathname = usePathname();
   const [show, setShow] = useState(false);
+  const [successVal, setSuccessVal] = useState<string | null>(null);
   const success = searchParams.get("success");
 
   useEffect(() => {
     if (success) {
+      setSuccessVal(success);
       setShow(true);
+    }
+  }, [success]);
+
+  useEffect(() => {
+    if (show) {
       const timer = setTimeout(() => {
         setShow(false);
         // Clean up URL after animation
-        const params = new URLSearchParams(searchParams.toString());
-        params.delete("success");
-        const newUrl = params.toString()
-          ? `${pathname}?${params.toString()}`
-          : pathname;
-        router.replace(newUrl, { scroll: false });
+        const params = new URLSearchParams(window.location.search);
+        if (params.has("success")) {
+          params.delete("success");
+          const newUrl = params.toString()
+            ? `${window.location.pathname}?${params.toString()}`
+            : window.location.pathname;
+          router.replace(newUrl, { scroll: false });
+        }
       }, 3000);
       return () => clearTimeout(timer);
     }
-  }, [success, pathname, router, searchParams]);
+  }, [show, router]);
 
   return (
     <AnimatePresence>
@@ -52,17 +60,17 @@ export function SuccessAnimation() {
               transition={{ delay: 0.2 }}
               className="text-xl font-bold text-slate-900"
             >
-              {success === "true"
+              {successVal === "true"
                 ? "บันทึกข้อมูลสำเร็จ!"
-                : success === "tiktok_connected"
+                : successVal === "tiktok_connected"
                   ? "เชื่อมต่อ TikTok สำเร็จแล้ว"
-                  : success === "facebook_connected"
+                  : successVal === "facebook_connected"
                     ? "เชื่อมต่อ Facebook สำเร็จแล้ว"
-                    : success === "google_connected"
+                    : successVal === "google_connected"
                       ? "เชื่อมต่อ Google สำเร็จแล้ว"
-                      : success === "line_connected"
+                      : successVal === "line_connected"
                         ? "เชื่อมต่อ LINE สำเร็จแล้ว"
-                        : success}
+                        : successVal}
             </m.p>
           </div>
 

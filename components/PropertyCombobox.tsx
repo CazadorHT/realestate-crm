@@ -21,6 +21,7 @@ import {
   Clock,
   XCircle,
 } from "lucide-react";
+import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -328,11 +329,15 @@ export function PropertyCombobox({
         )}
       >
         {selected?.cover_image_url ? (
-          <img
-            src={selected.cover_image_url}
-            alt={selected.title}
-            className="h-full w-full object-cover"
-          />
+          <div className="relative h-full w-full">
+            <Image
+              src={selected.cover_image_url}
+              alt={selected.title}
+              fill
+              className="object-cover"
+              sizes="48px"
+            />
+          </div>
         ) : (
           <Building2 className="h-4 w-4 text-slate-300" />
         )}
@@ -564,11 +569,15 @@ export function PropertyCombobox({
                     {/* Cover Image */}
                     <div className="relative h-44 sm:h-55 bg-slate-100 overflow-hidden">
                       {item.cover_image_url ? (
-                        <img
-                          src={item.cover_image_url}
-                          alt={item.title}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        />
+                        <div className="absolute inset-0">
+                          <Image
+                            src={item.cover_image_url}
+                            alt={item.title}
+                            fill
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            sizes="(max-width: 768px) 100vw, 300px"
+                          />
+                        </div>
                       ) : (
                         <div className="h-full w-full flex items-center justify-center">
                           <Building2 className="h-10 w-10 text-slate-300" />

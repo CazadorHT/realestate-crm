@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
+import Image from "next/image";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { deleteService, type ServiceRow } from "@/features/services/actions";
 import { toast } from "sonner";
@@ -110,12 +111,14 @@ export function ServicesTable({ services }: ServicesTableProps) {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-16 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 shrink-0">
+                      <div className="h-12 w-16 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 shrink-0 relative">
                         {service.cover_image ? (
-                          <img
+                          <Image
                             src={service.cover_image}
                             alt={service.title}
-                            className="w-full h-full object-cover"
+                            fill
+                            className="object-cover"
+                            sizes="64px"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-300 text-xs">

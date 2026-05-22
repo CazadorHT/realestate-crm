@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Send, User, MessageCircle, X, RefreshCw, ChevronDown, Check, Loader2 } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
@@ -54,15 +55,6 @@ export function MessageThread({ lead }: { lead: Conversation }) {
   const currentCategory = (lead.preferences as any)?.category || "CUSTOMER";
   const [isUpdatingCategory, setIsUpdatingCategory] = useState(false);
 
-  // Reset initial load and clear messages when switching leads
-  useEffect(() => {
-    setIsInitialLoad(true);
-    setMessages([]);
-    setOffset(0);
-    setHasMore(true);
-    fetchHistory(true);
-  }, [lead.id]);
-
   const fetchHistory = async (isNewLead = false) => {
     if (isLoading || (isLoadingMore && !isNewLead)) return;
     
@@ -115,6 +107,16 @@ export function MessageThread({ lead }: { lead: Conversation }) {
       setIsLoadingMore(false);
     }
   };
+
+  // Reset initial load and clear messages when switching leads
+  useEffect(() => {
+    setIsInitialLoad(true);
+    setMessages([]);
+    setOffset(0);
+    setHasMore(true);
+    fetchHistory(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lead.id]);
 
   const { subscribe, status, reconnect, broadcast, trackPresence } = useRealtime();
 
@@ -189,6 +191,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
       unsubscribe();
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lead.id, subscribe, trackPresence]);
 
   const handleTyping = () => {
@@ -211,6 +214,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
 
     if (topAnchorRef.current) observer.observe(topAnchorRef.current);
     return () => observer.disconnect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasMore, isLoading, isLoadingMore, offset]);
 
   // Intersection Observer for Seen Receipts
@@ -250,6 +254,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
         });
       }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length]);
 
   const handleSend = async () => {
@@ -338,24 +343,33 @@ export function MessageThread({ lead }: { lead: Conversation }) {
       {/* Header */}
       <div id="tour-inbox-thread-header" className="p-4 border-b border-slate-100 flex items-center justify-between bg-white shadow-sm z-10">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-inner text-slate-400">
+          <div className="relative h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-inner text-slate-400">
             {messages?.[0]?.payload?.profile?.pictureUrl ? (
-              <img
+              <Image
                 src={messages[0].payload.profile.pictureUrl!}
                 className="h-full w-full object-cover"
-                referrerPolicy="no-referrer"
+                fill
+                sizes="40px"
+                unoptimized
+                alt={lead.full_name || "Lead Avatar"}
               />
             ) : messages?.[0]?.payload?.pictureUrl ? (
-              <img
+              <Image
                 src={messages[0].payload.pictureUrl!}
                 className="h-full w-full object-cover"
-                referrerPolicy="no-referrer"
+                fill
+                sizes="40px"
+                unoptimized
+                alt={lead.full_name || "Lead Avatar"}
               />
             ) : lead.note?.includes("Photo: http") ? (
-              <img
+              <Image
                 src={lead.note.match(/Photo: (https?:\/\/[^\s\n]+)/)?.[1]!}
                 className="h-full w-full object-cover"
-                referrerPolicy="no-referrer"
+                fill
+                sizes="40px"
+                unoptimized
+                alt={lead.full_name || "Lead Avatar"}
               />
             ) : (
               <User className="h-6 w-6" />

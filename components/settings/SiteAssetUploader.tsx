@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useDropzone } from "react-dropzone";
 import {
   Upload,
@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   RefreshCw,
 } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,11 @@ export function SiteAssetUploader({
 }: SiteAssetUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [preview, setPreview] = useState(value || "");
+
+  // Sync preview with external value changes (e.g. form reset or parent updates)
+  useEffect(() => {
+    setPreview(value || "");
+  }, [value]);
 
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
@@ -133,7 +139,7 @@ export function SiteAssetUploader({
         <input {...getInputProps()} />
 
         {preview ? (
-          <div className="relative w-full h-full flex items-center justify-center p-4">
+          <div className="relative w-full h-full flex items-center justify-center p-4 min-h-[120px]">
             <img
               src={preview}
               alt="Asset Preview"

@@ -100,7 +100,8 @@ const KilometerInput = ({
         ? (currentMeters / 1000).toString()
         : "",
     );
-  }, [value]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]); // intentionally omit displayValue: adding it would create an infinite update loop
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newVal = e.target.value;
