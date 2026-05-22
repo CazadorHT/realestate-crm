@@ -1,6 +1,7 @@
 import { PropertyAdminHeader } from "./_components/PropertyAdminHeader";
 import { PropertyCRMDetails } from "./_components/PropertyCRMDetails";
 import { PropertyAdminSidebar } from "./_components/PropertyAdminSidebar";
+import { getOwnerById } from "@/features/owners/queries";
 import type { ListingType, PropertyType, PropertyStatus } from "@/features/properties/types";
 import type { 
   PropertyWithDetails, 
@@ -49,7 +50,7 @@ export default async function PropertyDetailsPage({
       .from("properties_core")
       .select(
         `
-        id, status, listing_type, property_type, sale_price, rent_price, currency, bedrooms, bathrooms, floor_area, land_area, location, created_at, updated_at,
+        id, status, listing_type, property_type, sale_price, rent_price, currency, bedrooms, bathrooms, floor_area, land_area, location, owner_id, assigned_to, created_at, updated_at,
         is_hot_deal, verified,
         tenant:tenants_v3 (id, name, slug),
         branch:branches_v3 (id, name),
@@ -112,15 +113,11 @@ export default async function PropertyDetailsPage({
   const ownerIdFromMeta = metaData?.owner_id;
   const popularAreaIdFromAddress = addressInfo?.popular_area_id;
 
+  const ownerId = rawData.owner_id || ownerIdFromMeta;
+
   // Fetch Owner & Popular Area separately
-  const [ownerResponse, popularAreaResponse] = await Promise.all([
-    ownerIdFromMeta
-      ? supabase
-          .from("owners")
-          .select("id, full_name, phone, line_id, facebook_url, other_contact")
-          .eq("id", ownerIdFromMeta)
-          .single()
-      : Promise.resolve({ data: null }),
+  const [ownerData, popularAreaResponse] = await Promise.all([
+    ownerId ? getOwnerById(ownerId) : Promise.resolve(null),
     popularAreaIdFromAddress
       ? supabase
           .from("popular_areas_v3")
@@ -129,8 +126,6 @@ export default async function PropertyDetailsPage({
           .single()
       : Promise.resolve({ data: null }),
   ]);
-
-  const ownerData = ownerResponse.data;
   const popularAreaV3 = popularAreaResponse.data;
 
   const pricingDetails = (details?.pricing_details || {}) as PropertyPricingV3;
@@ -235,8 +230,13 @@ export default async function PropertyDetailsPage({
       : null,
 
     owner: ownerData ? {
-      ...ownerData,
-      is_active: true, // Legacy owners fallback to active
+      id: ownerData.id,
+      full_name: ownerData.full_name,
+      phone: ownerData.phone ?? null,
+      line_id: ownerData.line_id ?? null,
+      facebook_url: ownerData.facebook_url ?? null,
+      other_contact: ownerData.other_contact ?? null,
+      is_active: true,
     } : null,
     
     // Transit & Nearby

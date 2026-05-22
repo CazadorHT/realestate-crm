@@ -71,7 +71,7 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
 
     const { data: core, error: coreErr } = await supabase
       .from("properties_core")
-      .select("id, tenant_id, branch_id, status, listing_type, property_type, sale_price, rent_price, currency, floor_area, land_area, is_exclusive, is_hot_deal, verified, created_at, updated_at")
+      .select("id, tenant_id, branch_id, status, listing_type, property_type, sale_price, rent_price, currency, floor_area, land_area, is_exclusive, is_hot_deal, verified, created_at, updated_at, owner_id, assigned_to, bedrooms, bathrooms, price_per_sqm")
       .eq("id", id)
       .single();
 
