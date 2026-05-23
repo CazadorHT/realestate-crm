@@ -264,6 +264,8 @@ export function DealsMobileCard({
                 <DeleteDealButton
                   dealId={deal.id}
                   leadId={deal.lead_id || ""}
+                  propertyName={deal.property?.title}
+                  customerName={deal.lead?.full_name}
                   onSuccess={() => {
                     router.refresh();
                     onRefresh?.();

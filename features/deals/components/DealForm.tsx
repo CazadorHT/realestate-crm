@@ -56,6 +56,33 @@ export function DealForm({
   const propertyId = form.watch("property_id");
   const dealType = form.watch("deal_type");
 
+  const selectedProperty = properties.find((p) => p.id === propertyId);
+  const allowedTypes = selectedProperty?.listing_type 
+    ? (selectedProperty.listing_type === "RENT" 
+      ? ["RENT"] 
+      : selectedProperty.listing_type === "SALE" 
+        ? ["SALE"] 
+        : ["RENT", "SALE"])
+    : ["RENT", "SALE"];
+
+  // Auto-adjust or restrict deal type based on property listing type
+  useEffect(() => {
+    if (!propertyId) return;
+    const selectedProperty = properties.find((p) => p.id === propertyId);
+    if (!selectedProperty || !selectedProperty.listing_type) return;
+
+    const type = selectedProperty.listing_type;
+    if (type === "RENT") {
+      if (dealType !== "RENT") {
+        form.setValue("deal_type", "RENT", { shouldDirty: true, shouldValidate: true });
+      }
+    } else if (type === "SALE") {
+      if (dealType !== "SALE") {
+        form.setValue("deal_type", "SALE", { shouldDirty: true, shouldValidate: true });
+      }
+    }
+  }, [propertyId, properties, form, dealType]);
+
   // Auto-calculate commission based on property price and deal type
   useEffect(() => {
     if (!propertyId || !dealType) return;
@@ -107,7 +134,7 @@ export function DealForm({
             render={({ field }) => (
               <FormItem className="w-full min-w-0">
                 <div className="flex items-center justify-between mb-2">
-                  <FormLabel className="text-slate-800 font-bold text-base flex items-center gap-2">
+                  <FormLabel className="text-slate-800 font-semibold text-sm flex items-center gap-2">
                     <span className="flex h-6 w-1 bg-blue-500 rounded-full" />
                     เลือกทรัพย์ที่เกี่ยวข้อง{" "}
                     <span className="text-red-500">*</span>
@@ -143,7 +170,7 @@ export function DealForm({
                       })()}
                   />
                 </FormControl>
-                <FormMessage className="text-xs font-bold" />
+                <FormMessage className="text-xs font-semibold" />
               </FormItem>
             )}
           />
@@ -169,7 +196,7 @@ export function DealForm({
                           {p.listing_type && LISTING_TYPE_LABELS[p.listing_type] && (
                             <span
                               className={cn(
-                                "text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg font-bold uppercase tracking-wider shadow-sm",
+                                "text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-lg font-semibold uppercase tracking-wider shadow-sm",
                                 LISTING_TYPE_LABELS[p.listing_type].className,
                               )}
                             >
@@ -181,7 +208,7 @@ export function DealForm({
                     )}
                     <div className="flex flex-col gap-1.5 min-w-0 flex-1">
                       <div className="flex items-start justify-between gap-2">
-                        <div className="font-semibold text-slate-900 leading-tight group-hover:text-blue-700 transition-colors text-sm sm:text-xl line-clamp-2 overflow-hidden">
+                        <div className="font-semibold text-slate-900 leading-tight group-hover:text-blue-700 transition-colors text-xs sm:text-base line-clamp-2 overflow-hidden">
                           {p.title}
                         </div>
                       </div>
@@ -206,12 +233,12 @@ export function DealForm({
                               ค่าเช่า / เดือน
                             </span>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-lg sm:text-xl font-semibold text-blue-700">
+                              <span className="text-sm sm:text-base font-semibold text-blue-700">
                                 {new Intl.NumberFormat("th-TH").format(
                                   rentalPrice,
                                 )}
                               </span>
-                              <span className="text-[10px] sm:text-xs text-slate-400 font-bold whitespace-nowrap">
+                              <span className="text-[10px] sm:text-xs text-slate-400 font-semibold whitespace-nowrap">
                                 บาท
                               </span>
                             </div>
@@ -224,12 +251,12 @@ export function DealForm({
                               ราคาขาย
                             </span>
                             <div className="flex items-baseline gap-1">
-                              <span className="text-lg sm:text-xl font-semibold text-emerald-700">
+                              <span className="text-sm sm:text-base font-semibold text-emerald-700">
                                 {new Intl.NumberFormat("th-TH").format(
                                   salePrice,
                                 )}
                               </span>
-                              <span className="text-[10px] sm:text-xs text-slate-400 font-bold whitespace-nowrap">
+                              <span className="text-[10px] sm:text-xs text-slate-400 font-semibold whitespace-nowrap">
                                 บาท
                               </span>
                             </div>
@@ -251,7 +278,7 @@ export function DealForm({
               name="lead_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-slate-800 font-bold text-base flex items-center gap-2 mb-2">
+                  <FormLabel className="text-slate-800 font-semibold text-sm flex items-center gap-2 mb-2">
                     <span className="flex h-6 w-1 bg-emerald-500 rounded-full" />
                     เลือกลูกค้า (ลีด) *
                   </FormLabel>
@@ -262,7 +289,7 @@ export function DealForm({
                       placeholder="ค้นหาลีดด้วยชื่อ เบอร์โทร หรือไอดี..."
                     />
                   </FormControl>
-                  <FormMessage className="text-xs font-bold" />
+                  <FormMessage className="text-xs font-semibold" />
                 </FormItem>
               )}
             />
@@ -274,36 +301,49 @@ export function DealForm({
 
   const renderStep2 = () => (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 px-6 py-4">
+      <div className="grid grid-cols-1 gap-4 px-6 py-4">
         {/* Deal Type */}
         <FormField
           control={form.control}
           name="deal_type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-slate-700 font-bold">
+              <FormLabel className="text-slate-700 font-semibold text-sm">
                 ประเภทดีล
               </FormLabel>
               <div className="flex gap-2">
                 {[
                   { value: "RENT", label: "🏠 เช่า" },
                   { value: "SALE", label: "💰 ซื้อ" },
-                ].map((opt) => (
-                  <Button
-                    key={opt.value}
-                    type="button"
-                    variant={field.value === opt.value ? "default" : "outline"}
-                    onClick={() => field.onChange(opt.value)}
-                    className={`flex-1 h-11 rounded-xl font-bold transition-all ${
-                      field.value === opt.value
-                        ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200"
-                        : "text-slate-600"
-                    }`}
-                  >
-                    {opt.label}
-                  </Button>
-                ))}
+                ].map((opt) => {
+                  const isAllowed = allowedTypes.includes(opt.value);
+                  return (
+                    <Button
+                      key={opt.value}
+                      type="button"
+                      disabled={!isAllowed}
+                      variant={field.value === opt.value ? "default" : "outline"}
+                      onClick={() => field.onChange(opt.value)}
+                      className={cn(
+                        "flex-1 h-11 rounded-xl font-semibold text-sm transition-all",
+                        field.value === opt.value
+                          ? "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200"
+                          : "text-slate-600",
+                        !isAllowed && "opacity-40 cursor-not-allowed bg-slate-50 border-slate-200 text-slate-300"
+                      )}
+                    >
+                      {opt.label}
+                    </Button>
+                  );
+                })}
               </div>
+              {selectedProperty?.listing_type && 
+               selectedProperty.listing_type !== "SALE_AND_RENT" && 
+               selectedProperty.listing_type !== "SALE_RENT" && (
+                <p className="text-[10px] text-amber-600 mt-1.5 font-semibold">
+                  * จำกัดเฉพาะดีล {selectedProperty.listing_type === "RENT" ? "เช่า" : "ขาย"} ตามประเภทประกาศของทรัพย์
+                </p>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -315,7 +355,7 @@ export function DealForm({
           name="status"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-slate-700 font-bold">สถานะ</FormLabel>
+              <FormLabel className="text-slate-700 font-semibold text-sm">สถานะ</FormLabel>
               <FormControl>
                 <DealStatusPicker
                   value={field.value}
@@ -333,7 +373,7 @@ export function DealForm({
           name="commission_amount"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-slate-700 font-bold">
+              <FormLabel className="text-slate-700 font-semibold text-sm">
                 คอมมิชชั่น (บาท)
               </FormLabel>
               <FormControl>
@@ -356,7 +396,7 @@ export function DealForm({
                       }
                     }
                   }}
-                  className="font-bold text-right h-11 rounded-xl border-slate-300 focus:ring-blue-500/10 text-emerald-600"
+                  className="font-semibold text-sm text-right h-11 rounded-xl border-slate-300 focus:ring-blue-500/10 text-emerald-600"
                 />
               </FormControl>
               <FormMessage />
@@ -404,7 +444,7 @@ export function DealForm({
 
       {/* Co-Agent Info */}
       <div className="pt-6 border-t border-slate-100 px-6">
-        <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+        <h4 className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-4">
           Co-Agent Information (Optional)
         </h4>
 
@@ -442,7 +482,7 @@ export function DealForm({
 
               <div
                 className={cn(
-                  "relative z-10 w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300",
+                  "relative z-10 w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300",
                   step === s.id
                     ? "bg-blue-600 text-white shadow-lg shadow-blue-200 scale-110"
                     : step > s.id
@@ -454,7 +494,7 @@ export function DealForm({
               </div>
               <span
                 className={cn(
-                  "mt-2 text-[10px] font-bold text-center transition-colors",
+                  "mt-2 text-[10px] font-semibold text-center transition-colors",
                   step === s.id ? "text-blue-600" : "text-slate-400",
                 )}
               >
@@ -484,7 +524,7 @@ export function DealForm({
             <div className="flex items-center gap-3">
               <div
                 className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ring-4",
+                  "w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm transition-all duration-300 ring-4",
                   step === s.id
                     ? "bg-blue-600 text-white ring-blue-50 shadow-lg shadow-blue-100"
                     : step > s.id
@@ -495,12 +535,12 @@ export function DealForm({
                 {step > s.id ? "✓" : s.id}
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest transition-colors group-hover:text-slate-500">
+                <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest transition-colors group-hover:text-slate-500">
                   Step 0{s.id}
                 </span>
                 <span
                   className={cn(
-                    "text-sm font-bold transition-colors whitespace-nowrap",
+                    "text-xs font-semibold transition-colors whitespace-nowrap",
                     step === s.id ? "text-slate-900" : "text-slate-400"
                   )}
                 >
@@ -522,69 +562,10 @@ export function DealForm({
         ))}
       </div>
 
-      <div className="transition-all duration-500 transform-gpu translate-y-0 opacity-100 mb-10">
-        {step === 1 && (
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden ring-1 ring-slate-100/50">
-            <div className="px-10 py-10">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 shadow-sm ring-1 ring-blue-100/50">
-                  <Building2 className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                    Section 01
-                  </h3>
-                  <p className="text-xl font-bold text-slate-900">ข้อมูลทรัพย์และลูกค้า</p>
-                </div>
-              </div>
-              <div className="relative">
-                {renderStep1()}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 2 && (
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden ring-1 ring-slate-100/50">
-            <div className="px-10 py-10">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 shadow-sm ring-1 ring-emerald-100/50">
-                  <Briefcase className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                    Section 02
-                  </h3>
-                  <p className="text-xl font-bold text-slate-900">รายละเอียดดีล</p>
-                </div>
-              </div>
-              <div className="relative">
-                {renderStep2()}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="bg-white rounded-3xl border border-slate-100 shadow-xl overflow-hidden ring-1 ring-slate-100/50">
-            <div className="px-10 py-10">
-              <div className="flex items-center gap-4 mb-10">
-                <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-600 shadow-sm ring-1 ring-orange-100/50">
-                  <Calendar className="w-6 h-6" />
-                </div>
-                <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                    Section 03
-                  </h3>
-                  <p className="text-xl font-bold text-slate-900">ระยะเวลาและข้อมูลอื่น</p>
-                </div>
-              </div>
-              <div className="relative">
-                {renderStep3()}
-              </div>
-            </div>
-          </div>
-        )}
+      <div className="transition-all duration-500 transform-gpu translate-y-0 opacity-100 mb-6">
+        {step === 1 && renderStep1()}
+        {step === 2 && renderStep2()}
+        {step === 3 && renderStep3()}
       </div>
     </div>
   );

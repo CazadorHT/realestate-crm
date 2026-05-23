@@ -56,14 +56,14 @@ export function StatsTimeFilter() {
             variant="outline"
             className="h-12 px-5 rounded-2xl bg-white border-slate-200 shadow-sm hover:border-blue-200 transition-all group flex items-center gap-3 active:scale-95"
           >
-            <div className="h-8 w-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
+            <div className="h-8 w-8 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600 group-hover:bg-blue-100! transition-colors">
               <Calendar className="h-4 w-4" />
             </div>
             <div className="flex flex-col items-start pr-4">
-              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest leading-none mb-1">
+              <span className="text-[10px] font-semibolduppercase tracking-widest leading-none mb-1">
                 ช่วงเวลาที่เลือก
               </span>
-              <span className="text-sm font-semibold text-slate-700 leading-none">
+              <span className="text-sm font-semibold leading-none">
                 {activeOption.label}{" "}
                 {activeOption.sublabel && (
                   <span className="text-[10px] text-slate-400 font-medium">{activeOption.sublabel}</span>

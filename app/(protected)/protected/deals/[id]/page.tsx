@@ -121,6 +121,8 @@ export default async function DealDetailPage({ params }: PageProps) {
               <DeleteDealButton
                 dealId={deal.id}
                 leadId={deal.lead_id || ""}
+                propertyName={deal.property?.title}
+                customerName={deal.lead?.full_name}
                 redirectPath={`/protected/leads/${deal.lead_id}`}
               />
             </div>

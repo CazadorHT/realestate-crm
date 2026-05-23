@@ -28,6 +28,7 @@ import {
 import { getScopedRevenueClient } from "./logic/scoped-client";
 import { getDealDiff } from "./logic/diff";
 import { FinanceMath } from "@/lib/finance/precision";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 // Helper: Adjust property stock and auto-update status using Atomic RPC
 async function adjustPropertyStock(
@@ -76,10 +77,26 @@ async function swapPropertyStock(
 
 export async function createDealAction(input: CreateDealInput) {
   try {
-    const { supabase, user, role, tenantId } = await requireAuthContext();
-    if (!tenantId) throw new Error("Tenant ID is required but missing");
+    const { supabase, user, role, tenantId: userTenantId } = await requireAuthContext();
     // Validate Input
     const validated = createDealSchema.parse(input);
+
+    const adminSupabase = createAdminClient();
+
+    // Fallback: If user is in "ALL" view, resolve tenantId from the selected property
+    let tenantId = userTenantId;
+    if (!tenantId && validated.property_id) {
+      const { data: propData } = await adminSupabase
+        .from("properties_core")
+        .select("tenant_id")
+        .eq("id", validated.property_id)
+        .single();
+      if (propData?.tenant_id) {
+        tenantId = propData.tenant_id;
+      }
+    }
+
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     // Auth Check: Agent & Admin can create deals
     assertAuthenticated({ userId: user.id, role });
@@ -113,7 +130,7 @@ export async function createDealAction(input: CreateDealInput) {
       }
     });
 
-    const scoped = getScopedRevenueClient(supabase, tenantId);
+    const scoped = getScopedRevenueClient(adminSupabase, tenantId);
 
     const { data, error } = await scoped
       .deals()
@@ -148,7 +165,7 @@ export async function createDealAction(input: CreateDealInput) {
     // Auto-update stock if deal is WON
     if (validated.status === "CLOSED_WIN" && validated.property_id) {
       await adjustPropertyStock(
-        { supabase, tenantId },
+        { supabase: adminSupabase, tenantId },
         validated.property_id,
         1,
         validated.deal_type,
@@ -188,16 +205,31 @@ export async function createDealAction(input: CreateDealInput) {
 
 export async function updateDealAction(input: UpdateDealInput) {
   try {
-    const { supabase, user, role, tenantId } = await requireAuthContext();
-    if (!tenantId) throw new Error("Tenant ID is required but missing");
-
+    const { supabase, user, role, tenantId: userTenantId } = await requireAuthContext();
     const validated = updateDealSchema.parse(input);
+
+    const adminSupabase = createAdminClient();
+
+    // Fallback: If user is in "ALL" view, resolve tenantId from the existing deal
+    let tenantId = userTenantId;
+    if (!tenantId && validated.id) {
+      const { data: dealData } = await adminSupabase
+        .from("crm_deals_v3")
+        .select("tenant_id")
+        .eq("id", validated.id)
+        .single();
+      if (dealData?.tenant_id) {
+        tenantId = dealData.tenant_id;
+      }
+    }
+
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     // Auth Check
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
 
-    const scoped = getScopedRevenueClient(supabase, tenantId);
+    const scoped = getScopedRevenueClient(adminSupabase, tenantId);
 
     const { data: currentDeal, error: currentErr } = await scoped
       .deals()
@@ -282,7 +314,7 @@ export async function updateDealAction(input: UpdateDealInput) {
 
     if (isPropertySwapped) {
       await swapPropertyStock(
-        { supabase, tenantId },
+        { supabase: adminSupabase, tenantId },
         prevStatus === "CLOSED_WIN" ? prevPropertyId : null,
         nextStatus === "CLOSED_WIN" ? nextPropertyId : null,
         currentDeal.deal_type,
@@ -291,7 +323,7 @@ export async function updateDealAction(input: UpdateDealInput) {
     } else if (nextPropertyId) {
       if (isBecameWon) {
         await adjustPropertyStock(
-          { supabase, tenantId },
+          { supabase: adminSupabase, tenantId },
           nextPropertyId,
           1,
           (validated.deal_type || currentDeal.deal_type) as "SALE" | "RENT",
@@ -310,7 +342,7 @@ export async function updateDealAction(input: UpdateDealInput) {
         }
       } else if (isNoLongerWon) {
         await adjustPropertyStock(
-          { supabase, tenantId },
+          { supabase: adminSupabase, tenantId },
           nextPropertyId,
           -1,
           currentDeal.deal_type as "SALE" | "RENT",
@@ -337,13 +369,29 @@ export async function updateDealAction(input: UpdateDealInput) {
 
 export async function deleteDealAction(dealId: string, leadId: string) {
   try {
-    const { supabase, user, role, tenantId } = await requireAuthContext();
+    const { supabase, user, role, tenantId: userTenantId } = await requireAuthContext();
+
+    const adminSupabase = createAdminClient();
+
+    // Fallback: If user is in "ALL" view, resolve tenantId from the existing deal
+    let tenantId = userTenantId;
+    if (!tenantId) {
+      const { data: dealData } = await adminSupabase
+        .from("crm_deals_v3")
+        .select("tenant_id")
+        .eq("id", dealId)
+        .single();
+      if (dealData?.tenant_id) {
+        tenantId = dealData.tenant_id;
+      }
+    }
+
     if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
 
-    const scoped = getScopedRevenueClient(supabase, tenantId);
+    const scoped = getScopedRevenueClient(adminSupabase, tenantId);
 
     const { data: count, error: deleteErr } = await (scoped.rpc as Function)(
       "bulk_delete_deals_atomic",
@@ -384,12 +432,27 @@ export async function deleteDealAction(dealId: string, leadId: string) {
 
 export async function calculateAndSaveCommissionsAction(dealId: string) {
   try {
-    const { supabase, user, role, tenantId } = await requireAuthContext();
-    if (!tenantId) throw new Error("Tenant ID is required but missing");
-
+    const { supabase, user, role, tenantId: userTenantId } = await requireAuthContext();
     assertStaff(role);
 
-    const scoped = getScopedRevenueClient(supabase, tenantId);
+    const adminSupabase = createAdminClient();
+
+    // Fallback: If user is in "ALL" view, resolve tenantId from the existing deal
+    let tenantId = userTenantId;
+    if (!tenantId) {
+      const { data: dealData } = await adminSupabase
+        .from("crm_deals_v3")
+        .select("tenant_id")
+        .eq("id", dealId)
+        .single();
+      if (dealData?.tenant_id) {
+        tenantId = dealData.tenant_id;
+      }
+    }
+
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
+
+    const scoped = getScopedRevenueClient(adminSupabase, tenantId);
 
     const { data: deal, error: dealErr } = await scoped
       .deals()
@@ -426,7 +489,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
     let agentProfiles: ProfileWithTax[] = [];
     
     if (agentIds.length > 0) {
-      const { data } = await supabase
+      const { data } = await adminSupabase
         .from("identities_v3")
         .select("id, social_links")
         .in("id", agentIds);
@@ -440,7 +503,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
 
     let coBrokerProfile: CoBrokerWithTax | null = null;
     if (deal.partner_co_broker_id) {
-      const { data } = await supabase
+      const { data } = await adminSupabase
         .from("identities_v3")
         .select("id, social_links")
         .eq("id", deal.partner_co_broker_id)

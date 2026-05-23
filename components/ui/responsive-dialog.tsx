@@ -26,6 +26,7 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import { m, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button";
 
 /**
  * 🛰️ ResponsiveDialog Context:
@@ -60,6 +61,7 @@ interface ResponsiveDialogProps {
   loadingText?: React.ReactNode;
   minHeight?: string;
   showCloseButton?: boolean;
+  confirmOnClose?: boolean;
 }
 
 export function ResponsiveDialog({
@@ -83,10 +85,13 @@ export function ResponsiveDialog({
   loadingText,
   minHeight = "200px",
   showCloseButton = true,
+  confirmOnClose,
 }: ResponsiveDialogProps) {
   const isMobile = useIsMobile();
   const [mounted, setMounted] = React.useState(false);
   const isNested = React.useContext(ResponsiveDialogContext);
+  const [isDirty, setIsDirty] = React.useState(false);
+  const [showConfirmClose, setShowConfirmClose] = React.useState(false);
 
   // 🛡️ Auto-Logic: Default to modal behavior unless explicitly disabled
   const finalModal = modal ?? true;
@@ -96,15 +101,79 @@ export function ResponsiveDialog({
     setMounted(true);
   }, []);
 
+  React.useEffect(() => {
+    if (open) {
+      setIsDirty(false);
+    }
+  }, [open]);
+
+  const handleInteract = () => {
+    setIsDirty(true);
+  };
+
+  const handleConfirmExit = () => {
+    setShowConfirmClose(false);
+    onOpenChange?.(false);
+  };
+
+  const handleCancelExit = () => {
+    setShowConfirmClose(false);
+  };
+
+  const handleOpenChange = (newOpen: boolean) => {
+    const shouldConfirm = confirmOnClose !== undefined ? confirmOnClose : isDirty;
+    if (!newOpen && shouldConfirm) {
+      setShowConfirmClose(true);
+    } else {
+      onOpenChange?.(newOpen);
+    }
+  };
+
   if (!mounted) {
     return trigger || null;
   }
+
+  const renderConfirmCloseDialog = () => {
+    if (!showConfirmClose) return null;
+    return (
+      <ResponsiveDialog
+        open={showConfirmClose}
+        onOpenChange={setShowConfirmClose}
+        title="ยืนยันการออกจากหน้าต่าง"
+        description="ข้อมูลที่คุณกรอกหรือแก้ไขอาจไม่ได้รับการบันทึก คุณแน่ใจหรือไม่ที่จะออกจากหน้านี้?"
+        className="sm:max-w-sm! z-200"
+        confirmOnClose={false}
+        footer={
+          <div className="flex flex-col sm:flex-row gap-3 w-full">
+            <Button
+              variant="outline"
+              type="button"
+              onClick={handleCancelExit}
+              className="flex-1 h-12 rounded-xl font-bold border-slate-200 text-slate-600"
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              variant="destructive"
+              type="button"
+              onClick={handleConfirmExit}
+              className="flex-1 h-12 rounded-xl font-bold bg-red-600 hover:bg-red-700 shadow-lg shadow-red-200 transition-all"
+            >
+              ยืนยันการออก
+            </Button>
+          </div>
+        }
+      />
+    );
+  };
 
   const renderContent = () => {
     return (
       <div
         className="relative w-full h-full"
         style={{ minHeight: isLoading ? minHeight : undefined }}
+        onInput={handleInteract}
+        onChange={handleInteract}
       >
         <AnimatePresence>
           {isLoading && (
@@ -183,121 +252,149 @@ export function ResponsiveDialog({
     );
   };
 
+  const handlePointerDownOutside = (e: Event) => {
+    const shouldConfirm = confirmOnClose !== undefined ? confirmOnClose : isDirty;
+    if (shouldConfirm) {
+      e.preventDefault();
+      setShowConfirmClose(true);
+    }
+  };
+
+  const handleEscapeKeyDown = (e: Event) => {
+    const shouldConfirm = confirmOnClose !== undefined ? confirmOnClose : isDirty;
+    if (shouldConfirm) {
+      e.preventDefault();
+      setShowConfirmClose(true);
+    }
+  };
+
   if (isMobile) {
+    const shouldConfirm = confirmOnClose !== undefined ? confirmOnClose : isDirty;
     return (
-      <Drawer
-        open={open}
-        onOpenChange={onOpenChange}
-        snapPoints={snapPoints}
-        activeSnapPoint={activeSnapPoint}
-        setActiveSnapPoint={onSnapPointChange}
-        shouldScaleBackground={finalScale}
-        modal={finalModal}
-      >
-        {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
-        <DrawerContent
+      <>
+        <Drawer
+          open={open}
+          onOpenChange={handleOpenChange}
+          snapPoints={snapPoints}
+          activeSnapPoint={activeSnapPoint}
+          setActiveSnapPoint={onSnapPointChange}
+          shouldScaleBackground={finalScale}
+          modal={finalModal}
+          dismissible={!shouldConfirm}
+        >
+          {trigger && <DrawerTrigger asChild>{trigger}</DrawerTrigger>}
+          <DrawerContent
+            className={cn(
+              "max-h-[96vh] flex flex-col pointer-events-auto",
+              className,
+            )}
+            onOpenAutoFocus={onOpenAutoFocus}
+            onCloseAutoFocus={onCloseAutoFocus}
+            onPointerDownOutside={handlePointerDownOutside}
+            onEscapeKeyDown={handleEscapeKeyDown}
+          >
+            {title ? (
+              <DrawerHeader className="shrink-0 text-left px-6 pt-5 pb-5 border-b border-slate-100 relative z-20 bg-white">
+                <DrawerTitle>{title}</DrawerTitle>
+                {description && (
+                  <DrawerDescription
+                    className="mt-1 text-[13px] leading-relaxed"
+                    asChild
+                  >
+                    <div>{description}</div>
+                  </DrawerDescription>
+                )}
+              </DrawerHeader>
+            ) : (
+              <VisuallyHidden>
+                <DrawerTitle>Dialog</DrawerTitle>
+                <DrawerDescription>
+                  Dialog description for accessibility
+                </DrawerDescription>
+              </VisuallyHidden>
+            )}
+            {!description && title && (
+              <VisuallyHidden>
+                <DrawerDescription>
+                  Dialog description for accessibility
+                </DrawerDescription>
+              </VisuallyHidden>
+            )}
+            <div className="flex-1 min-h-0 overflow-y-auto bg-white w-full relative z-10 transition-all duration-300">
+              <ResponsiveDialogContext.Provider value={true}>
+                {renderContent()}
+              </ResponsiveDialogContext.Provider>
+            </div>
+            {footer && (
+              <DrawerFooter className="shrink-0 pb-10 border-t border-slate-50 bg-white">
+                {footer}
+              </DrawerFooter>
+            )}
+          </DrawerContent>
+        </Drawer>
+        {renderConfirmCloseDialog()}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange} modal={finalModal}>
+        {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+        <DialogContent
           className={cn(
-            "max-h-[96vh] flex flex-col pointer-events-auto",
+            "max-w-lg flex flex-col max-h-[85vh] pointer-events-auto",
             className,
           )}
           onOpenAutoFocus={onOpenAutoFocus}
           onCloseAutoFocus={onCloseAutoFocus}
+          showCloseButton={showCloseButton}
+          onPointerDownOutside={handlePointerDownOutside}
+          onEscapeKeyDown={handleEscapeKeyDown}
         >
           {title ? (
-            <DrawerHeader className="shrink-0 text-left px-6 pt-5 pb-5 border-b border-slate-100 relative z-20 bg-white">
-              <DrawerTitle>{title}</DrawerTitle>
+            <DialogHeader className="shrink-0 px-6 pt-6 pb-5 pr-6 border-b border-slate-100">
+              <DialogTitle className="text-xl font-bold tracking-tight text-slate-900 leading-snug">
+                {title}
+              </DialogTitle>
               {description && (
-                <DrawerDescription
-                  className="mt-1 text-[13px] leading-relaxed"
+                <DialogDescription
+                  className="mt-1 text-[13px] text-slate-500 font-medium leading-relaxed"
                   asChild
                 >
                   <div>{description}</div>
-                </DrawerDescription>
+                </DialogDescription>
               )}
-            </DrawerHeader>
+            </DialogHeader>
           ) : (
             <VisuallyHidden>
-              <DrawerTitle>Dialog</DrawerTitle>
-              <DrawerDescription>
+              <DialogTitle>Dialog</DialogTitle>
+              <DialogDescription>
                 Dialog description for accessibility
-              </DrawerDescription>
+              </DialogDescription>
             </VisuallyHidden>
           )}
           {!description && title && (
             <VisuallyHidden>
-              <DrawerDescription>
+              <DialogDescription>
                 Dialog description for accessibility
-              </DrawerDescription>
+              </DialogDescription>
             </VisuallyHidden>
           )}
-          <div className="flex-1 min-h-0 overflow-y-auto bg-white w-full relative z-10 transition-all duration-300">
+          <div className="flex-1 min-h-0 overflow-y-auto w-full relative z-10 transition-all duration-300">
             <ResponsiveDialogContext.Provider value={true}>
               {renderContent()}
             </ResponsiveDialogContext.Provider>
           </div>
           {footer && (
-            <DrawerFooter className="shrink-0 pb-10 border-t border-slate-50 bg-white">
+            <DialogFooter className="shrink-0 pt-4 border-t border-slate-50 mt-2">
               {footer}
-            </DrawerFooter>
+            </DialogFooter>
           )}
-        </DrawerContent>
-      </Drawer>
-    );
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange} modal={finalModal}>
-      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent
-        className={cn(
-          "max-w-lg flex flex-col max-h-[85vh] pointer-events-auto",
-          className,
-        )}
-        onOpenAutoFocus={onOpenAutoFocus}
-        onCloseAutoFocus={onCloseAutoFocus}
-        showCloseButton={showCloseButton}
-      >
-        {title ? (
-          <DialogHeader className="shrink-0 px-6 pt-6 pb-5 pr-6 border-b border-slate-100">
-            <DialogTitle className="text-xl font-bold tracking-tight text-slate-900 leading-snug">
-              {title}
-            </DialogTitle>
-            {description && (
-              <DialogDescription
-                className="mt-1 text-[13px] text-slate-500 font-medium leading-relaxed"
-                asChild
-              >
-                <div>{description}</div>
-              </DialogDescription>
-            )}
-          </DialogHeader>
-        ) : (
-          <VisuallyHidden>
-            <DialogTitle>Dialog</DialogTitle>
-            <DialogDescription>
-              Dialog description for accessibility
-            </DialogDescription>
-          </VisuallyHidden>
-        )}
-        {!description && title && (
-          <VisuallyHidden>
-            <DialogDescription>
-              Dialog description for accessibility
-            </DialogDescription>
-          </VisuallyHidden>
-        )}
-        <div className="flex-1 min-h-0 overflow-y-auto w-full relative z-10 transition-all duration-300">
-          <ResponsiveDialogContext.Provider value={true}>
-            {renderContent()}
-          </ResponsiveDialogContext.Provider>
-        </div>
-        {footer && (
-          <DialogFooter className="shrink-0 pt-4 border-t border-slate-50 mt-2">
-            {footer}
-          </DialogFooter>
-        )}
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+      {renderConfirmCloseDialog()}
+    </>
   );
 }
 
