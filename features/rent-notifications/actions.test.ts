@@ -49,7 +49,7 @@ describe("Rent Notifications Module - Actions & Queries (เทสโหดๆ �
 
   describe("createRentNotificationRule", () => {
     it("should successfully create rent notification rule", async () => {
-      mockSupabase.mockTableResult("rent_notification_rules", { success: true });
+      mockSupabase.mockTableResult("rent_notification_rules_v3", { success: true });
 
       const input = {
         property_id: "123e4567-e89b-12d3-a456-426614174000",
@@ -84,14 +84,14 @@ describe("Rent Notifications Module - Actions & Queries (เทสโหดๆ �
 
   describe("updateRentNotificationRule & toggle", () => {
     it("should successfully update rule", async () => {
-      mockSupabase.mockTableResult("rent_notification_rules", { success: true });
+      mockSupabase.mockTableResult("rent_notification_rules_v3", { success: true });
 
       const result = await updateRentNotificationRule("rule-1", { notification_hour: 10 }, "tenant-1");
       expect(result.success).toBe(true);
     });
 
     it("should successfully toggle rule active state", async () => {
-      mockSupabase.mockTableResult("rent_notification_rules", { success: true });
+      mockSupabase.mockTableResult("rent_notification_rules_v3", { success: true });
 
       const result = await toggleRentNotificationRule("rule-1", false, "tenant-1");
       expect(result.success).toBe(true);
@@ -100,21 +100,21 @@ describe("Rent Notifications Module - Actions & Queries (เทสโหดๆ �
 
   describe("deleteRentNotificationRule & bulk delete/toggle", () => {
     it("should successfully delete single rule", async () => {
-      mockSupabase.mockTableResult("rent_notification_rules", { success: true });
+      mockSupabase.mockTableResult("rent_notification_rules_v3", { success: true });
 
       const result = await deleteRentNotificationRule("rule-1", "tenant-1");
       expect(result.success).toBe(true);
     });
 
     it("should successfully bulk delete rules", async () => {
-      mockSupabase.mockTableResult("rent_notification_rules", { success: true });
+      mockSupabase.mockTableResult("rent_notification_rules_v3", { success: true });
 
       const result = await deleteRentNotificationRules(["rule-1", "rule-2"], "tenant-1");
       expect(result.success).toBe(true);
     });
 
     it("should successfully bulk toggle rules", async () => {
-      mockSupabase.mockTableResult("rent_notification_rules", { success: true });
+      mockSupabase.mockTableResult("rent_notification_rules_v3", { success: true });
 
       const result = await toggleRentNotificationRules(["rule-1", "rule-2"], true, "tenant-1");
       expect(result.success).toBe(true);
@@ -124,19 +124,19 @@ describe("Rent Notifications Module - Actions & Queries (เทสโหดๆ �
   describe("testSendRentNotification", () => {
     it("should successfully send test rent notification flex message", async () => {
       mockSupabase
-        .mockTableResult("rent_notification_rules", {
+        .mockTableResult("rent_notification_rules_v3", {
           id: "rule-1",
           property_id: "prop-1",
-          line_group_id: "group-1",
+          channel_id: "group-1",
           language: "th",
-          properties: { title: "Condo A", price: 15000 },
-          line_groups: { group_id: "group-1" },
+          properties: { rent_price: 15000, currency: "THB", details: { title: { th: "Condo A" } }, property_images: [] },
+          channel: { id: "group-1" },
         })
-        .mockTableResult("rental_contracts", {
+        .mockTableResult("crm_deals_v3", {
           id: "contract-1",
-          end_date: "2026-12-31",
+          transaction_end_date: "2026-12-31",
         })
-        .mockTableResult("rent_notification_history", { success: true });
+        .mockTableResult("rent_notification_history_v3", { success: true });
 
       const result = await testSendRentNotification("rule-1", "tenant-1");
       expect(result.success).toBe(true);
@@ -148,14 +148,15 @@ describe("Rent Notifications Module - Actions & Queries (เทสโหดๆ �
 
     it("should handle error when no active rental contract found", async () => {
       mockSupabase
-        .mockTableResult("rent_notification_rules", {
+        .mockTableResult("rent_notification_rules_v3", {
           id: "rule-1",
           property_id: "prop-1",
-          line_group_id: "group-1",
-          properties: { title: "Condo A" },
-          line_groups: { group_id: "group-1" },
+          channel_id: "group-1",
+          language: "th",
+          properties: { rent_price: 15000, currency: "THB", details: { title: { th: "Condo A" } }, property_images: [] },
+          channel: { id: "group-1" },
         })
-        .mockTableResult("rental_contracts", null); // No active contract
+        .mockTableResult("crm_deals_v3", null); // No active contract
 
       const result = await testSendRentNotification("rule-1", "tenant-1");
       expect(result.success).toBe(false);

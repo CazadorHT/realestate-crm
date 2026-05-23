@@ -23,7 +23,7 @@ export async function getRentNotificationRules(
         bathrooms,
         floor_area,
         details:properties_details(title),
-        property_images:property_media_v3(image_url, is_cover),
+        property_images:property_media_v3(image_url:url, is_cover),
         deals:crm_deals_v3 (
           transaction_end_date
         )
@@ -160,7 +160,7 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
         `
         id, 
         details:properties_details(title),
-        property_images:property_media_v3(image_url, is_cover),
+        property_images:property_media_v3(image_url:url, is_cover),
         deals:crm_deals_v3!inner (
           id,
           status

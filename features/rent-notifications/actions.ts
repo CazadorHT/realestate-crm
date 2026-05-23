@@ -17,9 +17,9 @@ export async function createRentNotificationRule(
     const parsed = rentNotificationRuleSchema.parse(data);
     const supabase = await createClient();
 
-    const { error } = await supabase.from("rent_notification_rules").insert({
+    const { error } = await supabase.from("rent_notification_rules_v3").insert({
       property_id: parsed.property_id,
-      line_group_id: parsed.line_group_id,
+      channel_id: parsed.line_group_id,
       notification_day: parsed.notification_day,
       notification_hour: parsed.notification_hour,
       is_active: parsed.is_active,
@@ -43,9 +43,15 @@ export async function updateRentNotificationRule(
 ) {
   try {
     const supabase = await createClient();
+    const updateData: any = { ...data };
+    if (updateData.line_group_id) {
+      updateData.channel_id = updateData.line_group_id;
+      delete updateData.line_group_id;
+    }
+
     let query = supabase
-      .from("rent_notification_rules")
-      .update(data)
+      .from("rent_notification_rules_v3")
+      .update(updateData)
       .eq("id", id);
     
     if (tenantId && tenantId !== "ALL") {
@@ -67,7 +73,7 @@ export async function deleteRentNotificationRule(id: string, tenantId?: string |
   try {
     const supabase = await createClient();
     let query = supabase
-      .from("rent_notification_rules")
+      .from("rent_notification_rules_v3")
       .delete()
       .eq("id", id);
 
@@ -98,7 +104,7 @@ export async function deleteRentNotificationRules(ids: string[], tenantId?: stri
   try {
     const supabase = await createClient();
     let query = supabase
-      .from("rent_notification_rules")
+      .from("rent_notification_rules_v3")
       .delete()
       .in("id", ids);
 
@@ -121,7 +127,7 @@ export async function toggleRentNotificationRules(ids: string[], isActive: boole
   try {
     const supabase = await createClient();
     let query = supabase
-      .from("rent_notification_rules")
+      .from("rent_notification_rules_v3")
       .update({ is_active: isActive })
       .in("id", ids);
 
@@ -146,14 +152,20 @@ export async function testSendRentNotification(ruleId: string, tenantId?: string
     
     // 1. Fetch Rule with Security
     let ruleQuery = supabase
-      .from("rent_notification_rules")
+      .from("rent_notification_rules_v3")
       .select(`
-        id, property_id, line_group_id, notification_day, notification_hour, language, is_active, last_sent_at, created_at, tenant_id,
-        properties (
-          id, title, property_type, listing_type, status, price, rental_price, bedrooms, bathrooms, size_sqm,
-          property_images (image_url, is_cover, sort_order)
+        id, property_id, channel_id, notification_day, notification_hour, language, is_active, last_sent_at, created_at, tenant_id,
+        properties:properties_core!inner (
+          id, 
+          rent_price,
+          currency,
+          bedrooms,
+          bathrooms,
+          floor_area,
+          details:properties_details(title),
+          property_images:property_media_v3(image_url:url, is_cover)
         ),
-        line_groups (group_id)
+        channel:notification_channels_v3!inner (id, platform, external_channel_id, channel_name, picture_url)
       `)
       .eq("id", ruleId);
 
@@ -161,17 +173,36 @@ export async function testSendRentNotification(ruleId: string, tenantId?: string
       ruleQuery = ruleQuery.eq("tenant_id", tenantId);
     }
 
-    const { data: rule, error } = await ruleQuery.single();
+    const { data: rawRule, error } = await ruleQuery.single();
 
-    if (error || !rule) throw new Error("Rule not found or access denied");
+    if (error || !rawRule) throw new Error("Rule not found or access denied");
+
+    const imagesArr = rawRule.properties?.property_images || [];
+    const cover = imagesArr.find((img: any) => img.is_cover) || imagesArr[0];
+
+    const rule = {
+      ...rawRule,
+      line_group_id: rawRule.channel_id,
+      properties: rawRule.properties ? {
+        id: rawRule.properties.id,
+        title: rawRule.properties.details?.title?.th || rawRule.properties.details?.title?.en || "Unknown Property",
+        rental_price: rawRule.properties.rent_price,
+        currency: rawRule.properties.currency,
+        bedrooms: rawRule.properties.bedrooms,
+        bathrooms: rawRule.properties.bathrooms,
+        size_sqm: rawRule.properties.floor_area,
+        property_images: cover ? [{ image_url: cover.image_url }] : []
+      } : undefined
+    };
 
     // 2. Precise Contract Check (Matching Cron Logic)
     const { data: activeContract, error: contractError } = await supabase
-      .from("rental_contracts")
-      .select("id, deal_id, tenant_id, start_date, end_date, rent_price, status, created_at, deal:deals!inner(property_id)")
-      .eq("deal.property_id", rule.property_id)
-      .eq("status", "ACTIVE")
-      .gte("end_date", new Date().toISOString().split("T")[0])
+      .from("crm_deals_v3")
+      .select("id, tenant_id, transaction_date, transaction_end_date, total_amount, status, created_at, metadata, property_id")
+      .eq("property_id", rule.property_id)
+      .eq("deal_type", "RENT")
+      .in("status", ["WON", "CLOSED_WIN"])
+      .gte("transaction_end_date", new Date().toISOString().split("T")[0])
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -190,8 +221,8 @@ export async function testSendRentNotification(ruleId: string, tenantId?: string
       year: "numeric",
     });
 
-    const contractEndDate = activeContract.end_date
-      ? new Date(activeContract.end_date).toLocaleDateString(dateFormat, {
+    const contractEndDate = activeContract.transaction_end_date
+      ? new Date(activeContract.transaction_end_date).toLocaleDateString(dateFormat, {
           day: "numeric",
           month: "short",
           year: "numeric",
@@ -232,11 +263,11 @@ export async function testSendRentNotification(ruleId: string, tenantId?: string
     }
 
     // 4. Log Success to History
-    await supabase.from("rent_notification_history").insert({
+    await supabase.from("rent_notification_history_v3").insert({
       rule_id: rule.id,
       tenant_id: rule.tenant_id,
       property_id: rule.property_id,
-      line_group_id: rule.line_group_id,
+      channel_id: rule.channel_id,
       status: "SUCCESS",
       metadata: { is_test: true },
     });

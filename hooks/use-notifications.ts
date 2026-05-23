@@ -67,11 +67,15 @@ export function useNotifications() {
     }
   }, [tenantId]);
 
+// ✅ แบบใหม่: ทำงานแค่ตอน Mount ครั้งแรก
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    const fetchUser = async () => {
+      const supabase = createClient();
+      const { data } = await supabase.auth.getUser();
       setUserId(data.user?.id || null);
-    });
-  }, [supabase]);
+    };
+    fetchUser();
+  }, []); // 👈 ใส่เป็น Array ว่าง
 
   // Status monitoring is now handled globally by RealtimeProvider
 
@@ -125,7 +129,7 @@ export function useNotifications() {
     return () => {
       unsubscribe();
     };
-  }, [userId, tenantId, subscribe, fetchNotifications]);
+  }, [userId, tenantId, fetchNotifications]);
 
   // --- Intelligent Stacking (Grouping) ---
   const stackedNotifications = useMemo(() => {
