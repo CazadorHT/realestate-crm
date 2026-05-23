@@ -22,7 +22,22 @@ export async function getRentNotificationRules() {
     console.error("Error fetching rules:", error);
     return [];
   }
-  return data;
+  
+  return (data || []).map((r: any) => ({
+    ...r,
+    line_group_id: r.channel_id,
+    properties: r.property ? {
+      id: r.property.id,
+      title: r.property.details?.title?.th || r.property.details?.title?.en || "Unknown Property",
+    } : undefined,
+    line_groups: r.channel ? {
+      group_id: r.channel.id,
+      group_name: r.channel.channel_name,
+      picture_url: r.channel.picture_url,
+      platform: r.channel.platform,
+      external_channel_id: r.channel.external_channel_id
+    } : null,
+  }));
 }
 
 export async function getLineGroups() {
@@ -38,5 +53,12 @@ export async function getLineGroups() {
     console.error("Error fetching line groups:", error);
     return [];
   }
-  return data;
+  
+  return (data || []).map((c) => ({
+    group_id: c.id,
+    group_name: c.channel_name,
+    picture_url: c.picture_url,
+    platform: c.platform,
+    external_channel_id: c.external_channel_id,
+  }));
 }
