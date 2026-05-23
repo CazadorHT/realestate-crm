@@ -8,11 +8,16 @@ import { UserPlus } from "lucide-react";
 
 export function CreateOwnerDialog() {
   const [open, setOpen] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   return (
     <ResponsiveDialog
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={(val) => {
+        setOpen(val);
+        if (!val) setIsDirty(false);
+      }}
+      confirmOnClose={isDirty}
       title="เพิ่มเจ้าของทรัพย์ใหม่"
       trigger={
         <Button
@@ -27,6 +32,8 @@ export function CreateOwnerDialog() {
       <div className="mt-2 pb-6">
         <OwnerForm
           mode="create"
+          isInDialog
+          onDirtyChange={setIsDirty}
           onSuccess={() => setOpen(false)}
           onCancel={() => setOpen(false)}
         />

@@ -42,6 +42,7 @@ export function LeadActivityDialog({
   tenantId,
 }: LeadActivityDialogProps) {
   const [open, setOpen] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   const handleSubmit = async (values: LeadActivityFormValues) => {
     await onSubmitAction(values);
@@ -51,7 +52,11 @@ export function LeadActivityDialog({
   return (
     <ResponsiveDialog
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={(val) => {
+        setOpen(val);
+        if (!val) setIsDirty(false);
+      }}
+      confirmOnClose={isDirty}
       title={title}
       trigger={
         trigger || (
@@ -77,6 +82,7 @@ export function LeadActivityDialog({
           submitLabel={submitLabel}
           initialProperty={initialProperty}
           tenantId={tenantId}
+          onDirtyChange={setIsDirty}
         />
       </div>
     </ResponsiveDialog>

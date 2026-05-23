@@ -7,7 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { ResponsiveDialog, DialogClose, DrawerClose } from "@/components/ui/responsive-dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { ChevronDown, CheckCircle2, Shield, User as UserIcon, Eye } from "lucide-react";
 
@@ -44,6 +45,9 @@ export function AddMemberDialog({
   const [selectedProfileRole, setSelectedProfileRole] = useState<string | null>(null);
   const [isMemberPickerOpen, setIsMemberPickerOpen] = useState(false);
   const [memberSearch, setMemberSearch] = useState("");
+  const isMobile = useIsMobile();
+
+  const isDirty = newMember.email !== "" || searchQuery !== "";
 
   const availableProfiles = allProfiles.filter(
     (p) => !currentMembers.some((m) => m.identity_id === p.id)
@@ -67,6 +71,7 @@ export function AddMemberDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
+      confirmOnClose={isDirty}
       title={
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center">
@@ -78,14 +83,27 @@ export function AddMemberDialog({
       description={`ดึงพนักงานที่มีในระบบอยู่แล้วเข้าสู่สาขา ${branchName}`}
       footer={
         <div className="flex flex-row sm:flex-row gap-3 w-full">
-          <Button
-            type="button"
-            variant="ghost"
-            className="rounded-xl h-12 text-slate-500 hover:bg-white flex-1"
-            onClick={() => onOpenChange(false)}
-          >
-            ยกเลิก
-          </Button>
+          {isMobile ? (
+            <DrawerClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="rounded-xl h-12 text-slate-500 hover:bg-white flex-1"
+              >
+                ยกเลิก
+              </Button>
+            </DrawerClose>
+          ) : (
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="rounded-xl h-12 text-slate-500 hover:bg-white flex-1"
+              >
+                ยกเลิก
+              </Button>
+            </DialogClose>
+          )}
           <Button
             form="add-member-form"
             type="submit"

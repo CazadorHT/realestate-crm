@@ -27,6 +27,8 @@ const ACTIVITY_CONFIG: Record<string, { icon: any; color: string; label: string 
   SYSTEM: { icon: Settings, color: "bg-slate-100 text-slate-400", label: "ระบบ" },
 };
 
+import { useEffect } from "react";
+
 export function LeadActivityForm({
   onSubmitAction,
   defaultValues,
@@ -34,6 +36,7 @@ export function LeadActivityForm({
   submitLabel,
   initialProperty,
   tenantId,
+  onDirtyChange,
 }: {
   onSubmitAction: (values: LeadActivityFormValues) => Promise<void>;
   defaultValues?: Partial<LeadActivityFormValues>;
@@ -41,6 +44,7 @@ export function LeadActivityForm({
   submitLabel?: string;
   initialProperty?: { id: string; title: string } | null;
   tenantId?: string | null;
+  onDirtyChange?: (isDirty: boolean) => void;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -53,6 +57,11 @@ export function LeadActivityForm({
       property_id: defaultValues?.property_id ?? null,
     },
   });
+
+  const isDirty = form.formState.isDirty;
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const submit = (values: LeadActivityFormValues) => {
     setError(null);

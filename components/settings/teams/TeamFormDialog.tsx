@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { ResponsiveDialog, DialogClose, DrawerClose } from "@/components/ui/responsive-dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,6 +50,14 @@ export function TeamFormDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [managerOpen, setManagerOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const isMobile = useIsMobile();
+
+  const isDirty = useMemo(() => {
+    if (team) {
+      return name !== team.name || managerId !== team.manager_id;
+    }
+    return name.trim() !== "" || managerId !== null;
+  }, [name, managerId, team]);
 
   useEffect(() => {
     if (team) {
@@ -134,19 +143,34 @@ export function TeamFormDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
+      confirmOnClose={isDirty}
       title={team ? "แก้ไขข้อมูลทีม (Edit Team)" : "สร้างทีมใหม่ (New Team)"}
       description="ระบุชื่อทีมและเลือกหัวหน้าทีมที่รับผิดชอบในสาขานี้"
       footer={
         <div className="flex w-full gap-3 p-1">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            className="flex-1 h-12 rounded-2xl font-semibold text-slate-400 hover:bg-slate-100 italic"
-            disabled={isLoading}
-          >
-            ยกเลิก
-          </Button>
+          {isMobile ? (
+            <DrawerClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="flex-1 h-12 rounded-2xl font-semibold text-slate-400 hover:bg-slate-100 italic"
+                disabled={isLoading}
+              >
+                ยกเลิก
+              </Button>
+            </DrawerClose>
+          ) : (
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="flex-1 h-12 rounded-2xl font-semibold text-slate-400 hover:bg-slate-100 italic"
+                disabled={isLoading}
+              >
+                ยกเลิก
+              </Button>
+            </DialogClose>
+          )}
           <Button
             onClick={() => handleSubmit()}
             className="flex-2 h-12 rounded-2xl font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-slate-200 transition-all hover:scale-[1.02] active:scale-95"
