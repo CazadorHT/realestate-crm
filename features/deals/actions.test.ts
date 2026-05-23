@@ -4,6 +4,12 @@ import { createDealAction, updateDealAction } from './actions';
 import { requireAuthContext } from '@/lib/authz';
 
 // Mock the modules
+let mockCurrentClient: any = null;
+
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: vi.fn(() => mockCurrentClient),
+}));
+
 vi.mock('@/lib/authz', () => ({
   requireAuthContext: vi.fn(),
   assertAuthenticated: vi.fn(),
@@ -67,6 +73,7 @@ describe('Deal Actions - Branch Isolation & Stock', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockQuery = createMockQuery();
+    mockCurrentClient = mockSupabase;
   });
 
   const validUUID1 = '550e8400-e29b-41d4-a716-446655440000';

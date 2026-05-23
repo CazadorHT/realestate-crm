@@ -12,6 +12,8 @@ import { cn } from "@/lib/utils";
 interface DeleteDealButtonProps {
   dealId: string;
   leadId?: string;
+  propertyName?: string | null;
+  customerName?: string | null;
   /** optional client-side callback executed after successful delete */
   onSuccess?: () => void;
   /** optional path to redirect to after delete (client-side) */
@@ -25,6 +27,8 @@ interface DeleteDealButtonProps {
 export function DeleteDealButton({
   dealId,
   leadId,
+  propertyName,
+  customerName,
   onSuccess,
   redirectPath,
   iconOnly,
@@ -64,8 +68,29 @@ export function DeleteDealButton({
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
+      className="sm:max-w-sm!"
       title="ยืนยันการลบดีล"
-      description="การดำเนินการนี้ไม่สามารถย้อนกลับได้ ข้อมูลดีลและเอกสารที่เกี่ยวข้องจะถูกลบออกจากระบบถาวร"
+      description={
+        <div className="space-y-4">
+          <p>การดำเนินการนี้ไม่สามารถย้อนกลับได้ ข้อมูลดีลและเอกสารที่เกี่ยวข้องจะถูกลบออกจากระบบถาวร</p>
+          {(propertyName || customerName) && (
+            <div className="rounded-2xl bg-slate-50 border border-slate-100/50 p-4 text-xs text-slate-600 space-y-2 text-left shadow-inner">
+              {propertyName && (
+                <div className="flex gap-2">
+                  <span className="font-semibold text-slate-400 shrink-0 w-14">ทรัพย์สิน:</span>{" "}
+                  <span className="font-semibold text-slate-800 line-clamp-2">{propertyName}</span>
+                </div>
+              )}
+              {customerName && (
+                <div className="flex gap-2">
+                  <span className="font-semibold text-slate-400 shrink-0 w-14">ลูกค้า:</span>{" "}
+                  <span className="font-semibold text-slate-800">{customerName}</span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      }
       trigger={
         children ? (
           <div className={className}>{children}</div>

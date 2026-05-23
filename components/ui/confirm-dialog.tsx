@@ -138,7 +138,7 @@ export function ConfirmDialog({
                 ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-100"
                 : variant === "destructive"
                   ? "bg-red-600 hover:bg-red-700 text-white shadow-red-100"
-                  : "bg-slate-900 hover:bg-slate-800 text-white shadow-slate-100"
+                  : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-100"
             )}
             onClick={handleConfirm}
           >

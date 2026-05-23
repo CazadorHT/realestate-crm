@@ -9,13 +9,13 @@ import { createDealAction, updateDealAction } from "../actions";
 import { DealWithProperty, DealPropertyOption } from "../types";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus, Save } from "lucide-react";
+import { Loader2, Plus, Save, Building2, Briefcase, Calendar } from "lucide-react";
 import { RiEdit2Line } from "react-icons/ri";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TopLoader } from "@/components/ui/top-loader";
 
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { ResponsiveDialog, DialogClose, DrawerClose } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { DealForm } from "./DealForm";
 
@@ -196,17 +196,15 @@ export function DealFormDialog({
               ย้อนกลับ
             </Button>
           ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                form.reset();
-                setOpen(false);
-              }}
-              className="flex-1 h-12 rounded-xl font-bold text-slate-500"
-            >
-              ยกเลิก
-            </Button>
+            <DrawerClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500"
+              >
+                ยกเลิก
+              </Button>
+            </DrawerClose>
           )}
 
           {currentStep < 3 ? (
@@ -220,8 +218,11 @@ export function DealFormDialog({
           ) : (
             <Button
               type="button"
-              disabled={isSubmitting || !form.formState.isValid}
-              onClick={form.handleSubmit(onSubmit)}
+              disabled={isSubmitting}
+              onClick={form.handleSubmit(onSubmit, (errors) => {
+                const firstError = Object.values(errors)[0]?.message;
+                toast.error(firstError ? String(firstError) : "กรุณากรอกข้อมูลให้ถูกต้อง");
+              })}
               className="flex-2 h-12 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg shadow-emerald-200 transition-all gap-2"
             >
               {isSubmitting ? (
@@ -255,17 +256,15 @@ export function DealFormDialog({
               ย้อนกลับ
             </Button>
           ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                form.reset();
-                setOpen(false);
-              }}
-              className="flex-1 sm:flex-none h-12 px-6 text-slate-500 hover:text-slate-800 font-bold rounded-xl border border-slate-100"
-            >
-              ยกเลิก
-            </Button>
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="flex-1 sm:flex-none h-12 px-6 text-slate-500 hover:text-slate-800 font-bold rounded-xl border border-slate-100"
+              >
+                ยกเลิก
+              </Button>
+            </DialogClose>
           )}
         </div>
 
@@ -280,8 +279,11 @@ export function DealFormDialog({
         ) : (
           <Button
             type="button"
-            disabled={isSubmitting || !form.formState.isValid}
-            onClick={form.handleSubmit(onSubmit)}
+            disabled={isSubmitting}
+            onClick={form.handleSubmit(onSubmit, (errors) => {
+              const firstError = Object.values(errors)[0]?.message;
+              toast.error(firstError ? String(firstError) : "กรุณากรอกข้อมูลให้ถูกต้อง");
+            })}
             className="flex-1 sm:flex-none h-12 px-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/20 transition-all gap-2 font-bold disabled:opacity-50 disabled:grayscale"
           >
             {isSubmitting ? (
@@ -301,9 +303,36 @@ export function DealFormDialog({
     );
   };
 
+  const getStepHeader = () => {
+    switch (currentStep) {
+      case 1:
+        return {
+          icon: <Building2 className="w-5 h-5 text-blue-600" />,
+          iconBg: "bg-blue-50 ring-1 ring-blue-100/50",
+          title: "ข้อมูลทรัพย์และลูกค้า",
+        };
+      case 2:
+        return {
+          icon: <Briefcase className="w-5 h-5 text-emerald-600" />,
+          iconBg: "bg-emerald-50 ring-1 ring-emerald-100/50",
+          title: "รายละเอียดดีล",
+        };
+      case 3:
+        return {
+          icon: <Calendar className="w-5 h-5 text-orange-600" />,
+          iconBg: "bg-orange-50 ring-1 ring-orange-100/50",
+          title: "ระยะเวลาและข้อมูลอื่น",
+        };
+      default:
+        return null;
+    }
+  };
+  const stepHeader = getStepHeader();
+
   return (
     <ResponsiveDialog
       open={open}
+      confirmOnClose={form.formState.isDirty}
       onOpenChange={(val) => {
         setOpen(val);
         if (!val) {
@@ -311,8 +340,31 @@ export function DealFormDialog({
           form.reset(getInitialValues());
         }
       }}
-      title={isEditing ? "แก้ไขดีล" : "สร้างดีลใหม่"}
-      description="กรอกข้อมูลดีลที่เกี่ยวข้อง (วันที่เป็นค่าสามารถเว้นว่างได้)"
+      title={
+        <span className="flex items-center gap-3.5 text-left font-normal">
+          {stepHeader && (
+            <span className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-xs ${stepHeader.iconBg}`}>
+              {stepHeader.icon}
+            </span>
+          )}
+          <span className="flex flex-col">
+            <span className="flex items-center gap-2">
+              <span className="text-base font-bold text-slate-900">
+                {isEditing ? "แก้ไขดีล" : "สร้างดีลใหม่"}
+              </span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-500 font-semibold leading-none">
+                ขั้นตอนที่ {currentStep}/3
+              </span>
+            </span>
+            {stepHeader && (
+              <span className="text-xs text-slate-500 font-medium mt-0.5">
+                {stepHeader.title}
+              </span>
+            )}
+          </span>
+        </span>
+      }
+      description={undefined}
       className="md:max-w-4xl"
       shouldScaleBackground={false}
       onOpenAutoFocus={(e) => e.preventDefault()}

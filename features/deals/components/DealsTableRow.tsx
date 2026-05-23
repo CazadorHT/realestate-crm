@@ -190,6 +190,8 @@ export function DealsTableRow({
           <DeleteDealButton
             dealId={deal.id}
             leadId={deal.lead_id || ""}
+            propertyName={deal.property?.title}
+            customerName={deal.lead?.full_name}
             onSuccess={onRefresh}
           />
         </div>

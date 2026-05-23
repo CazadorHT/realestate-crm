@@ -323,6 +323,8 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                         <DeleteDealButton
                           dealId={deal.id}
                           leadId={deal.lead_id || ""}
+                          propertyName={deal.property?.title}
+                          customerName={deal.lead?.full_name}
                           onSuccess={() => router.refresh()}
                           className="w-full"
                         >
