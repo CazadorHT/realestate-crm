@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { FaFacebook, FaLine } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
+import { DrawerClose } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +29,7 @@ interface OwnerMobileViewProps {
   prevStep: () => void;
   handleCancel: () => void;
   onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  isInDialog?: boolean;
 }
 
 export function OwnerMobileView({
@@ -40,6 +42,7 @@ export function OwnerMobileView({
   prevStep,
   handleCancel,
   onSubmit,
+  isInDialog,
 }: OwnerMobileViewProps) {
   return (
     <div className="flex flex-col h-full bg-white">
@@ -256,14 +259,28 @@ export function OwnerMobileView({
               กลับ
             </Button>
           ) : (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleCancel}
-              className="h-14 px-6 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition-all"
-            >
-              ยกเลิก
-            </Button>
+            <>
+              {isInDialog ? (
+                <DrawerClose asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="h-14 px-6 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition-all"
+                  >
+                    ยกเลิก
+                  </Button>
+                </DrawerClose>
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleCancel}
+                  className="h-14 px-6 rounded-2xl font-bold text-slate-500 hover:bg-slate-50 transition-all"
+                >
+                  ยกเลิก
+                </Button>
+              )}
+            </>
           )}
 
           {currentStep < totalSteps ? (

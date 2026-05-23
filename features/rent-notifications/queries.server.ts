@@ -17,13 +17,15 @@ export async function getRentNotificationRules(
       id, property_id, channel_id, notification_day, notification_hour, language, is_active, last_sent_at, created_at, tenant_id,
       property:properties_core!inner (
         id, 
+        rent_price,
+        currency,
+        bedrooms,
+        bathrooms,
+        floor_area,
         details:properties_details(title),
-        property_images:property_media_v3(image_url),
+        property_images:property_media_v3(image_url, is_cover),
         deals:crm_deals_v3 (
-          transaction_end_date,
-          rental_contracts (
-            end_date
-          )
+          transaction_end_date
         )
       ),
       channel:notification_channels_v3!inner (id, platform, external_channel_id, channel_name, picture_url),
@@ -52,10 +54,51 @@ export async function getRentNotificationRules(
     throw new Error(dbErrorModule.mapDbError(error));
   }
 
-  const rules = (data || []).map((r) => ({
-    ...r,
-    notification_day: r.notification_day ?? 1,
-  })) as unknown as RentNotificationRule[];
+  const rules = (data || []).map((r: any) => {
+    const imagesArr = r.property?.property_images || [];
+    const cover = imagesArr.find((img: any) => img.is_cover) || imagesArr[0];
+
+    const deals = (r.property?.deals || []).map((d: any) => ({
+      rental_contracts: d.transaction_end_date ? [
+        {
+          end_date: d.transaction_end_date
+        }
+      ] : []
+    }));
+
+    return {
+      id: r.id,
+      property_id: r.property_id,
+      channel_id: r.channel_id,
+      line_group_id: r.channel_id,
+      notification_day: r.notification_day ?? 1,
+      notification_hour: r.notification_hour,
+      language: r.language,
+      is_active: r.is_active,
+      last_sent_at: r.last_sent_at,
+      created_at: r.created_at,
+      tenant_id: r.tenant_id,
+      properties: r.property ? {
+        id: r.property.id,
+        title: r.property.details?.title?.th || r.property.details?.title?.en || "Unknown Property",
+        rental_price: r.property.rent_price,
+        currency: r.property.currency,
+        bedrooms: r.property.bedrooms,
+        bathrooms: r.property.bathrooms,
+        size_sqm: r.property.floor_area,
+        property_images: cover ? [{ image_url: cover.image_url }] : [],
+        deals: deals
+      } : undefined,
+      line_groups: r.channel ? {
+        group_id: r.channel.id,
+        group_name: r.channel.channel_name,
+        picture_url: r.channel.picture_url,
+        platform: r.channel.platform,
+        external_channel_id: r.channel.external_channel_id
+      } : null,
+      tenants: r.tenant
+    };
+  }) as unknown as RentNotificationRule[];
 
   return { rules, count: count || 0 };
 }
@@ -81,7 +124,13 @@ export async function getLineGroups(tenantId?: string | null) {
     console.error("Error fetching line groups:", error);
     return [];
   }
-  return data;
+  return (data || []).map((c) => ({
+    group_id: c.id,
+    group_name: c.channel_name,
+    picture_url: c.picture_url,
+    platform: c.platform,
+    external_channel_id: c.external_channel_id,
+  }));
 }
 
 export async function getAllPropertiesSimple(tenantId?: string | null) {
@@ -111,18 +160,14 @@ export async function getAllPropertiesSimple(tenantId?: string | null) {
         `
         id, 
         details:properties_details(title),
-        property_images:property_media_v3(image_url),
+        property_images:property_media_v3(image_url, is_cover),
         deals:crm_deals_v3!inner (
           id,
-          status,
-          rental_contracts (
-            id,
-            status
-          )
+          status
         )
       `,
       )
-      .eq("deals.status", "CLOSED_WIN");
+      .in("deals.status", ["WON", "CLOSED_WIN"]);
 
     if (tenantId && tenantId !== "ALL") {
       query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
@@ -199,5 +244,15 @@ export async function getRentNotificationHistory(
     return { history: [], count: 0 };
   }
 
-  return { history: data || [], count: count || 0 };
+  const history = (data || []).map((r: any) => ({
+    ...r,
+    properties: r.property ? {
+      title: r.property.details?.title?.th || r.property.details?.title?.en || "Unknown Property"
+    } : undefined,
+    line_groups: r.channel ? {
+      group_name: r.channel.channel_name || "Unknown Group"
+    } : undefined
+  }));
+
+  return { history, count: count || 0 };
 }

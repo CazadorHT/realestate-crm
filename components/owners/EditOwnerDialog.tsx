@@ -19,14 +19,21 @@ export function EditOwnerDialog({
   onOpenChange: controlledOnOpenChange,
 }: EditOwnerDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = controlledOnOpenChange || setInternalOpen;
 
+  const handleOpenChange = (val: boolean) => {
+    setOpen(val);
+    if (!val) setIsDirty(false);
+  };
+
   return (
     <ResponsiveDialog
       open={open}
-      onOpenChange={setOpen}
+      onOpenChange={handleOpenChange}
+      confirmOnClose={isDirty}
       title={`แก้ไขข้อมูล: ${owner.full_name}`}
       trigger={trigger}
     >
@@ -35,6 +42,8 @@ export function EditOwnerDialog({
           mode="edit"
           id={owner.id}
           initialValues={owner}
+          isInDialog
+          onDirtyChange={setIsDirty}
           onSuccess={() => setOpen(false)}
           onCancel={() => setOpen(false)}
         />

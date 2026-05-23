@@ -22,7 +22,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { ResponsiveDialog, DialogClose, DrawerClose } from "@/components/ui/responsive-dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Search, ChevronDown, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -52,6 +53,9 @@ export function TransferMemberDialog({
   const [isTransferring, setIsTransferring] = useState(false);
   const [branchSearch, setBranchSearch] = useState("");
   const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const isMobile = useIsMobile();
+
+  const isDirty = targetTenantId !== "";
 
   const handleTransfer = async () => {
     if (!targetTenantId) return;
@@ -67,6 +71,7 @@ export function TransferMemberDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChange}
+      confirmOnClose={isDirty}
       title={
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center shadow-inner">
@@ -75,16 +80,28 @@ export function TransferMemberDialog({
           <span>ย้ายสาขาพนักงาน</span>
         </div>
       }
-      description="ดำเนินการย้ายสิทธิ์พนักงานไปยังส่วนงานอื่นในระบบ"
+      description="ดำเนินการย้ายสิทธิ์พนักงานไปยังส่วนงานอื่น in ระบบ"
       footer={
         <div className="flex gap-3 w-full p-4 sm:p-0">
-          <Button
-            variant="ghost"
-            className="rounded-xl h-12 text-slate-500 hover:bg-white flex-1"
-            onClick={() => onOpenChange(false)}
-          >
-            ยกเลิก
-          </Button>
+          {isMobile ? (
+            <DrawerClose asChild>
+              <Button
+                variant="ghost"
+                className="rounded-xl h-12 text-slate-500 hover:bg-white flex-1"
+              >
+                ยกเลิก
+              </Button>
+            </DrawerClose>
+          ) : (
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                className="rounded-xl h-12 text-slate-500 hover:bg-white flex-1"
+              >
+                ยกเลิก
+              </Button>
+            </DialogClose>
+          )}
           <Button
             className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl h-12 px-8 font-bold shadow-lg shadow-slate-200 transition-all active:scale-95 flex-2"
             disabled={!targetTenantId || isTransferring}

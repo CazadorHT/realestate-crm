@@ -2,7 +2,8 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { ResponsiveDialog, DialogClose, DrawerClose } from "@/components/ui/responsive-dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Select,
   SelectContent,
@@ -42,6 +43,9 @@ export function TransferBranchDialog({
   const [tenants, setTenants] = useState<{ id: string; name: string }[]>([]);
   const [selectedTenantId, setSelectedTenantId] = useState<string>("");
   const [loading, setLoading] = useState(true);
+  const isMobile = useIsMobile();
+
+  const isDirty = selectedTenantId !== "";
 
   useEffect(() => {
     if (open) {
@@ -79,6 +83,7 @@ export function TransferBranchDialog({
     <ResponsiveDialog
       open={open}
       onOpenChange={onOpenChangeAction}
+      confirmOnClose={isDirty}
       title={
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-blue-50 flex items-center justify-center">
@@ -94,14 +99,27 @@ export function TransferBranchDialog({
       }
       footer={
         <div className="flex flex-col sm:flex-row gap-3 w-full">
-          <Button
-            variant="ghost"
-            onClick={() => onOpenChangeAction(false)}
-            disabled={isPending}
-            className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
-          >
-            ยกเลิก
-          </Button>
+          {isMobile ? (
+            <DrawerClose asChild>
+              <Button
+                variant="ghost"
+                disabled={isPending}
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
+              >
+                ยกเลิก
+              </Button>
+            </DrawerClose>
+          ) : (
+            <DialogClose asChild>
+              <Button
+                variant="ghost"
+                disabled={isPending}
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
+              >
+                ยกเลิก
+              </Button>
+            </DialogClose>
+          )}
           {availableTenants.length > 0 && (
             <Button
               onClick={handleTransfer}

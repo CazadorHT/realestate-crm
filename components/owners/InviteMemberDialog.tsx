@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { ResponsiveDialog, DialogClose, DrawerClose } from "@/components/ui/responsive-dialog";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +28,7 @@ export function InviteMemberDialog({
 }: InviteMemberDialogProps) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isMobile = useIsMobile();
   const [formData, setFormData] = useState({
     email: "",
     role: "AGENT",
@@ -126,14 +128,27 @@ export function InviteMemberDialog({
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setOpen(false)}
-            className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
-          >
-            ยกเลิก
-          </Button>
+          {isMobile ? (
+            <DrawerClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
+              >
+                ยกเลิก
+              </Button>
+            </DrawerClose>
+          ) : (
+            <DialogClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                className="flex-1 h-12 rounded-xl font-bold text-slate-500 hover:bg-slate-100"
+              >
+                ยกเลิก
+              </Button>
+            </DialogClose>
+          )}
           <Button
             type="submit"
             disabled={isSubmitting || !formData.email}

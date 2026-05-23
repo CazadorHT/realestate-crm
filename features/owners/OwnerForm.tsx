@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -69,6 +69,8 @@ type Props =
       initialValues?: Partial<OwnerFormValues>;
       onSuccess?: () => void;
       onCancel?: () => void;
+      onDirtyChange?: (isDirty: boolean) => void;
+      isInDialog?: boolean;
     }
   | {
       mode: "edit";
@@ -76,6 +78,8 @@ type Props =
       initialValues: Owner | OwnerFormValues;
       onSuccess?: () => void;
       onCancel?: () => void;
+      onDirtyChange?: (isDirty: boolean) => void;
+      isInDialog?: boolean;
     };
 
 function toNull(v: string | null | undefined) {
@@ -104,6 +108,13 @@ export function OwnerForm(props: Props) {
       owner_type: props.initialValues?.owner_type ?? "individual",
     },
   });
+
+  // Notify parent of dirty state changes
+  const isDirty = form.formState.isDirty;
+  const onDirtyChange = props.onDirtyChange;
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const onSubmit = (values: FormShape) => {
     setError(null);
@@ -188,6 +199,7 @@ export function OwnerForm(props: Props) {
         prevStep={prevStep}
         handleCancel={handleCancel}
         onSubmit={form.handleSubmit(onSubmit)}
+        isInDialog={props.isInDialog}
       />
     );
   }
@@ -200,6 +212,7 @@ export function OwnerForm(props: Props) {
       mode={props.mode}
       handleCancel={handleCancel}
       onSubmit={form.handleSubmit(onSubmit)}
+      isInDialog={props.isInDialog}
     />
   );
 }

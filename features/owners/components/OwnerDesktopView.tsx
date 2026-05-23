@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { FaFacebook, FaLine } from "react-icons/fa";
 import { Button } from "@/components/ui/button";
+import { DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,7 @@ interface OwnerDesktopViewProps {
   mode: "create" | "edit";
   handleCancel: () => void;
   onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  isInDialog?: boolean;
 }
 
 export function OwnerDesktopView({
@@ -31,6 +33,7 @@ export function OwnerDesktopView({
   mode,
   handleCancel,
   onSubmit,
+  isInDialog,
 }: OwnerDesktopViewProps) {
   return (
     <form 
@@ -200,15 +203,28 @@ export function OwnerDesktopView({
 
       {/* Action Buttons (Sticky Bottom) - Premium Redesign */}
       <div className="sticky bottom-0 z-40 p-6 bg-white/90 backdrop-blur-xl border-t border-slate-100/80 flex items-center justify-end gap-4">
-        <Button
-          type="button"
-          variant="ghost"
-          disabled={isPending}
-          onClick={handleCancel}
-          className="h-12 px-8 rounded-2xl font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition-all"
-        >
-          ยกเลิก
-        </Button>
+        {isInDialog ? (
+          <DialogClose asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={isPending}
+              className="h-12 px-8 rounded-2xl font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition-all"
+            >
+              ยกเลิก
+            </Button>
+          </DialogClose>
+        ) : (
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={isPending}
+            onClick={handleCancel}
+            className="h-12 px-8 rounded-2xl font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100/50 transition-all"
+          >
+            ยกเลิก
+          </Button>
+        )}
 
         <Button
           type="submit"

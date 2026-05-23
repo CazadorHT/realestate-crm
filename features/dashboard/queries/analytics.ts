@@ -23,7 +23,8 @@ type TopPropertyRow = {
   price: number | null;
   rental_price: number | null;
   view_count: number | null;
-  details: { title: { th?: string; en?: string } | null } | null;
+  title: string | null;
+  title_en: string | null;
   property_images: { image_url: string; is_cover: boolean | null }[];
 };
 
@@ -93,9 +94,9 @@ export async function getAnalyticsStats(
     // 1. Get Top Properties (Paginated)
     let query = applyCommonFilters(
       supabase
-        .from("properties_core")
+        .from("properties")
         .select(
-          "id, slug, listing_type, property_type, price, rental_price, view_count, details:properties_details(title), property_images:property_media_v3(image_url, is_cover)",
+          "id, slug, listing_type:listing_type_int, property_type:property_type_int, price, rental_price, view_count, title, title_en, property_images:property_media_v3(image_url:url, is_cover)",
           { count: "exact" },
         )
     );
@@ -117,17 +118,17 @@ export async function getAnalyticsStats(
     if (summaryError) {
        console.error("❌ Analytics RPC Error Details:", summaryError);
        return {
-         topProperties: ((topProps as unknown as TopPropertyRow[]) || []).map((p) => ({
-           ...p,
-           title: p.details?.title?.th || p.details?.title?.en || "ไม่มีชื่อ",
-           slug: p.slug || "",
-           listing_type: getListingTypeFromDb(p.listing_type),
-           property_type: getPropertyTypeFromDb(p.property_type),
-           price: p.price || null,
-           rental_price: p.rental_price || null,
-           view_count: p.view_count || 0,
-           property_images: (p.property_images || []).map(img => ({ ...img, is_cover: !!img.is_cover }))
-         })),
+          topProperties: ((topProps as unknown as TopPropertyRow[]) || []).map((p) => ({
+            ...p,
+            title: p.title || p.title_en || "ไม่มีชื่อ",
+            slug: p.slug || "",
+            listing_type: getListingTypeFromDb(p.listing_type),
+            property_type: getPropertyTypeFromDb(p.property_type),
+            price: p.price || null,
+            rental_price: p.rental_price || null,
+            view_count: p.view_count || 0,
+            property_images: (p.property_images || []).map(img => ({ ...img, is_cover: !!img.is_cover }))
+          })),
          topPropertiesCount: topPropsCount || 0,
          topAreas: [],
          totalViews: 0,
@@ -172,7 +173,7 @@ export async function getAnalyticsStats(
     return {
       topProperties: ((topProps as unknown as TopPropertyRow[]) || []).map((p) => ({
         ...p,
-        title: p.details?.title?.th || p.details?.title?.en || "ไม่มีชื่อ",
+        title: p.title || p.title_en || "ไม่มีชื่อ",
         slug: p.slug || "",
         listing_type: getListingTypeFromDb(p.listing_type),
         property_type: getPropertyTypeFromDb(p.property_type),
