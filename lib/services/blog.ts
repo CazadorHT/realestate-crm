@@ -1,32 +1,44 @@
 import { createClient } from "@/lib/supabase/client";
-import type { Database } from "@/lib/database.types.generated";
-import type { BlogPostRow } from "@/features/blog/types";
+import type { BlogPost } from "@/features/blog/types";  // ✅ เพิ่ม BlogPost
+export type { BlogPost } from "@/features/blog/types";  // ✅
 
-export type BlogPost = BlogPostRow & {
-  profiles?: {
-    full_name: string | null;
-    avatar_url: string | null;
-  } | null
-};
 
-async function mapCmsRowsToBlogPosts(data: any[], supabase: any): Promise<BlogPost[]> {
+async function mapCmsRowsToBlogPosts(
+  data: any[],
+  supabase: any,
+): Promise<BlogPost[]> {
   if (!data || data.length === 0) return [];
-  
-  const authorIds = Array.from(new Set(data.map(r => r.author_id).filter(Boolean))) as string[];
-  let profilesMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
-  
+
+  const authorIds = Array.from(
+    new Set(data.map((r) => r.author_id).filter(Boolean)),
+  ) as string[];
+  let profilesMap: Record<
+    string,
+    { full_name: string | null; avatar_url: string | null }
+  > = {};
+
   if (authorIds.length > 0) {
-    const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", authorIds);
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url")
+      .in("id", authorIds);
     (profs || []).forEach((p: any) => {
       profilesMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
     });
   }
 
-  return data.map(row => {
+  return data.map((row) => {
     // ป้องกันกรณีที่ฟิลด์ใน DB เป็น null โดยใช้ fallback เป็น Object ว่าง {}
-    const titleObj = (typeof row.title === 'object' && row.title !== null) ? row.title : {};
-    const contentObj = (typeof row.content === 'object' && row.content !== null) ? row.content : {};
-    const metaObj = (typeof row.meta_data === 'object' && row.meta_data !== null) ? row.meta_data : {};
+    const titleObj =
+      typeof row.title === "object" && row.title !== null ? row.title : {};
+    const contentObj =
+      typeof row.content === "object" && row.content !== null
+        ? row.content
+        : {};
+    const metaObj =
+      typeof row.meta_data === "object" && row.meta_data !== null
+        ? row.meta_data
+        : {};
 
     return {
       id: row.id,
@@ -59,7 +71,7 @@ async function mapCmsRowsToBlogPosts(data: any[], supabase: any): Promise<BlogPo
       social_snippets: metaObj.social_snippets || null,
       structured_data: metaObj.structured_data || null,
       reading_time: metaObj.reading_time || null,
-      profiles: row.author_id ? (profilesMap[row.author_id] || null) : null
+      profiles: row.author_id ? profilesMap[row.author_id] || null : null,
     } as BlogPost;
   });
 }
@@ -67,10 +79,15 @@ async function mapCmsRowsToBlogPosts(data: any[], supabase: any): Promise<BlogPo
 /**
  * Get published blog posts with author info for public site
  */
-export async function getBlogPosts(category?: string, limit = 10, offset = 0): Promise<BlogPost[]> {
+export async function getBlogPosts(
+  category?: string,
+  limit = 10,
+  offset = 0,
+): Promise<BlogPost[]> {
   let supabase;
   if (typeof window === "undefined") {
-    const { createClient: createServerClient } = await import("@/lib/supabase/server");
+    const { createClient: createServerClient } =
+      await import("@/lib/supabase/server");
     supabase = await createServerClient();
   } else {
     supabase = createClient();
@@ -78,7 +95,10 @@ export async function getBlogPosts(category?: string, limit = 10, offset = 0): P
 
   let query = supabase
     .from("cms_content_v3")
-    .select("id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data")
+    .select(
+      "id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score",
+      { count: "exact" },
+    )
     .eq("content_type", "BLOG")
     .eq("status", "PUBLISHED")
     .order("published_at", { ascending: false })
@@ -103,20 +123,28 @@ export async function getBlogPosts(category?: string, limit = 10, offset = 0): P
  *//**
  * Get all blog posts with author info for admin dashboard
  */
-export async function getAllBlogPosts(page = 1, pageSize = 10): Promise<{ posts: BlogPost[]; count: number }> {
+export async function getAllBlogPosts(
+  page = 1,
+  pageSize = 10,
+): Promise<{ posts: BlogPost[]; count: number }> {
   let supabase;
   if (typeof window === "undefined") {
-    const { createClient: createServerClient } = await import("@/lib/supabase/server");
+    const { createClient: createServerClient } =
+      await import("@/lib/supabase/server");
     supabase = await createServerClient();
   } else {
     supabase = createClient();
   }
 
   const offset = (page - 1) * pageSize;
-  
+
   const { data, error, count } = await supabase
     .from("cms_content_v3")
-    .select("id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data", { count: "exact" })
+    // เพิ่ม seo_score เข้าไปใน select string ทุก query
+    .select(
+      "id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score",
+      { count: "exact" },
+    )
     .eq("content_type", "BLOG")
     .neq("status", "TRASH")
     .order("created_at", { ascending: false })
@@ -126,26 +154,28 @@ export async function getAllBlogPosts(page = 1, pageSize = 10): Promise<{ posts:
   if (error) {
     console.error("Error fetching all blog postsจาก Supabase:", error);
     // ป้องกันหน้า 500 ด้วยการส่งอาร์เรย์ว่างกลับไปให้หน้าบ้านจัดการต่อแทนการล่มระบบ
-    return { posts: [], count: 0 }; 
+    return { posts: [], count: 0 };
   }
 
   // แปลง Data อย่างปลอดภัย (อย่าลืมอัปเดตฟังก์ชัน mapCmsRowsToBlogPosts ให้เช็ก Object ด้วยนะครับ)
   const posts = await mapCmsRowsToBlogPosts(data || [], supabase);
-  
-  return { 
-    posts, 
-    count: count || 0 
-  };
 
+  return {
+    posts,
+    count: count || 0,
+  };
 }
 
 /**
  * Get single blog post by slug with author info
  */
-export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+export async function getBlogPostBySlug(
+  slug: string,
+): Promise<BlogPost | null> {
   let supabase;
   if (typeof window === "undefined") {
-    const { createClient: createServerClient } = await import("@/lib/supabase/server");
+    const { createClient: createServerClient } =
+      await import("@/lib/supabase/server");
     supabase = await createServerClient();
   } else {
     supabase = createClient();
@@ -153,7 +183,10 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 
   const { data, error } = await supabase
     .from("cms_content_v3")
-    .select("id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data")
+    .select(
+      "id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score",
+      { count: "exact" },
+    )
     .eq("content_type", "BLOG")
     .neq("status", "TRASH")
     .eq("slug", slug)
@@ -177,7 +210,8 @@ export async function getRelatedPosts(
 ): Promise<BlogPost[]> {
   let supabase;
   if (typeof window === "undefined") {
-    const { createClient: createServerClient } = await import("@/lib/supabase/server");
+    const { createClient: createServerClient } =
+      await import("@/lib/supabase/server");
     supabase = await createServerClient();
   } else {
     supabase = createClient();
@@ -185,7 +219,10 @@ export async function getRelatedPosts(
 
   const { data, error } = await supabase
     .from("cms_content_v3")
-    .select("id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data")
+    .select(
+      "id, slug, title, content, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score",
+      { count: "exact" },
+    )
     .eq("content_type", "BLOG")
     .eq("status", "PUBLISHED")
     .filter("meta_data->>category", "eq", category)

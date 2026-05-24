@@ -298,7 +298,7 @@ export async function deleteBlogPostAction(id: string): Promise<ActionResponse> 
   }
 }
 
-import { BlogPost } from "@/lib/services/blog";
+import { BlogPost } from "./types";  // ✅
 
 /**
  * Fetches deleted blog posts (Trash).

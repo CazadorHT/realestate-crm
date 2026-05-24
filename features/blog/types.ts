@@ -70,3 +70,10 @@ export interface RelatedLink {
   title: string;
   url: string;
 }
+
+export type BlogPost = BlogPostRow & {
+  profiles?: {
+    full_name: string | null;
+    avatar_url: string | null;
+  } | null;
+};

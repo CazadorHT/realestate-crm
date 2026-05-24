@@ -1,6 +1,5 @@
 import { Plus } from "lucide-react";
 import Link from "next/link";
-import { getAllBlogPosts, BlogPost } from "@/lib/services/blog";
 import { getDeletedBlogPostsAction } from "@/features/blog/actions";
 import { Button } from "@/components/ui/button";
 import { BlogsTable } from "@/features/blog/components/BlogsTable";
@@ -8,6 +7,8 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { BlogStats } from "@/features/blog/components/BlogStats";
 import { TableFooterStats } from "@/components/dashboard/TableFooterStats";
 import { SuccessAnimation } from "@/components/settings/SuccessAnimation";
+
+import { getAllBlogPosts, BlogPost } from "@/lib/services/blog";  // ✅ แค่นี้พอ
 
 export default async function BlogsPage(props: {
   searchParams: Promise<{ page?: string; success?: string; tab?: string }>;
