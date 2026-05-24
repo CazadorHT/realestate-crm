@@ -11,8 +11,10 @@ export type BlogPost = BlogPostRow & {
 
 async function mapCmsRowsToBlogPosts(data: any[], supabase: any): Promise<BlogPost[]> {
   if (!data || data.length === 0) return [];
+  
   const authorIds = Array.from(new Set(data.map(r => r.author_id).filter(Boolean))) as string[];
   let profilesMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
+  
   if (authorIds.length > 0) {
     const { data: profs } = await supabase.from("profiles").select("id, full_name, avatar_url").in("id", authorIds);
     (profs || []).forEach((p: any) => {
@@ -21,9 +23,10 @@ async function mapCmsRowsToBlogPosts(data: any[], supabase: any): Promise<BlogPo
   }
 
   return data.map(row => {
-    const titleObj = (row.title || {}) as Record<string, any>;
-    const contentObj = (row.content || {}) as Record<string, any>;
-    const metaObj = (row.meta_data || {}) as Record<string, any>;
+    // ป้องกันกรณีที่ฟิลด์ใน DB เป็น null โดยใช้ fallback เป็น Object ว่าง {}
+    const titleObj = (typeof row.title === 'object' && row.title !== null) ? row.title : {};
+    const contentObj = (typeof row.content === 'object' && row.content !== null) ? row.content : {};
+    const metaObj = (typeof row.meta_data === 'object' && row.meta_data !== null) ? row.meta_data : {};
 
     return {
       id: row.id,
@@ -44,7 +47,7 @@ async function mapCmsRowsToBlogPosts(data: any[], supabase: any): Promise<BlogPo
       cover_image: row.cover_image || null,
       is_published: row.status === "PUBLISHED",
       published_at: row.published_at || null,
-      tags: metaObj.tags || [],
+      tags: Array.isArray(metaObj.tags) ? metaObj.tags : [], // เช็กให้มั่นใจว่าเป็น Array
       author_id: row.author_id,
       view_count: metaObj.view_count || 0,
       created_at: row.created_at || null,
@@ -97,6 +100,8 @@ export async function getBlogPosts(category?: string, limit = 10, offset = 0): P
 
 /**
  * Get all blog posts with author info for admin dashboard
+ *//**
+ * Get all blog posts with author info for admin dashboard
  */
 export async function getAllBlogPosts(page = 1, pageSize = 10): Promise<{ posts: BlogPost[]; count: number }> {
   let supabase;
@@ -117,13 +122,21 @@ export async function getAllBlogPosts(page = 1, pageSize = 10): Promise<{ posts:
     .order("created_at", { ascending: false })
     .range(offset, offset + pageSize - 1);
 
+  // ดักจับ Error ตรงนี้ที่เดียวให้เบ็ดเสร็จ
   if (error) {
-    console.error("Error fetching all blog posts:", error);
-    throw new Error("Failed to fetch blog posts");
+    console.error("Error fetching all blog postsจาก Supabase:", error);
+    // ป้องกันหน้า 500 ด้วยการส่งอาร์เรย์ว่างกลับไปให้หน้าบ้านจัดการต่อแทนการล่มระบบ
+    return { posts: [], count: 0 }; 
   }
 
+  // แปลง Data อย่างปลอดภัย (อย่าลืมอัปเดตฟังก์ชัน mapCmsRowsToBlogPosts ให้เช็ก Object ด้วยนะครับ)
   const posts = await mapCmsRowsToBlogPosts(data || [], supabase);
-  return { posts, count: count || 0 };
+  
+  return { 
+    posts, 
+    count: count || 0 
+  };
+
 }
 
 /**
