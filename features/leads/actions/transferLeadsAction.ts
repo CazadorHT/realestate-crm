@@ -40,8 +40,8 @@ export async function transferLeadsAction(
 
     // 2) อัปเดตข้อมูล (Defense-in-depth: Force tenant filter)
     let updateQuery = ctx.supabase
-      .from("leads")
-      .update({ created_by: targetAgentId })
+      .from("crm_leads_v3")
+      .update({ assigned_to: targetAgentId })
       .in("id", leadIds);
 
     if (ctx.tenantId) {

@@ -97,7 +97,7 @@ export async function postPropertyToLineAction(
 
     // 5. บันทึก Timestamp
     await supabase
-      .from("properties")
+      .from("properties_core")
       .update({ posted_to_line_at: new Date().toISOString() })
       .eq("id", propertyId);
 

@@ -28,7 +28,7 @@ vi.mock('next/cache', () => ({
 
 vi.mock('@/lib/inngest/client', () => ({
   inngest: {
-    send: vi.fn(),
+    send: vi.fn().mockResolvedValue({ ids: ['test-event-id'] }),
   },
 }));
 

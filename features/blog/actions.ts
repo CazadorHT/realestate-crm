@@ -99,7 +99,7 @@ export async function createBlogPostAction(
       status: isPublishedFinal ? "PUBLISHED" : "DRAFT",
       published_at: validated.published_at || (isPublishedFinal ? new Date().toISOString() : null),
       author_id, // 🏗️ RELATIONAL
-      tenant_id: (user as any).tenant_id || (user as any).tenantId || "ALL",
+      tenant_id: user.tenantId && user.tenantId !== "ALL" ? user.tenantId : null,
       seo_score: validated.seo_score || null,
       meta_data: {
         excerpt: validated.excerpt || "",
@@ -717,7 +717,7 @@ export async function createCategoryAction(
         title: { th: validated.name, en: validated.name_en || null, cn: validated.name_cn || null, ru: validated.name_ru || null },
         slug,
         status: "PUBLISHED",
-        tenant_id: (user as any).tenant_id || (user as any).tenantId || "ALL"
+        tenant_id: user.tenantId && user.tenantId !== "ALL" ? user.tenantId : null
       })
       .select("id, slug, title")
       .single();

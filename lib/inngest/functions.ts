@@ -5,6 +5,7 @@ import { craftPropertyDescriptionPrompt } from "./ai-prompts";
 import { PROPERTY_IMAGES_BUCKET } from "@/features/properties/logic/images";
 import sharp from "sharp";
 import { logger } from "../logger";
+
 export * from "./functions/malware-scanner";
 export * from "./functions/user-management";
 export * from "./functions/storage";
@@ -72,13 +73,14 @@ export const processPropertyCreated = inngest.createFunction(
     const { property, coverImage } = await step.run(
       "fetch-property-data",
       async () => {
+        // ดึงข้อมูลจาก View properties เพื่อดึง tenant_id ออกมาใช้ด้วย
         const { data: prop, error: propErr } = await supabase
           .from("properties")
           .select(
             `
           id, title, property_type, listing_type, price, rental_price, 
           district, province, size_sqm, land_size_sqwah, bedrooms, 
-          bathrooms, is_pet_friendly, is_fully_furnished, is_new, popular_area
+          bathrooms, is_pet_friendly, is_fully_furnished, popular_area, tenant_id
         `,
           )
           .eq("id", propertyId)
@@ -87,7 +89,7 @@ export const processPropertyCreated = inngest.createFunction(
         if (propErr)
           throw new Error(`Fetch property failed: ${propErr.message}`);
 
-        // Fetch the cover image (or first image)
+        // Fetch the cover image (or first image) จากตารางจริง property_media_v3 (หรือผ่าน wrapper property_images)
         const { data: images } = await supabase
           .from("property_images")
           .select("storage_path")
@@ -99,6 +101,9 @@ export const processPropertyCreated = inngest.createFunction(
         return { property: prop, coverImage: images?.[0] || null };
       },
     );
+
+    // ดึง Tenant ID เผื่อไว้ใช้สำหรับ Multi-tenancy Isolation (ai_token_ledgers)
+    const tenantId = property?.tenant_id || null;
 
     // 🖼️ Step 2: Image Optimization (Sharp)
     const imagePart = await step.run("optimize-image", async () => {
@@ -178,12 +183,15 @@ export const processPropertyCreated = inngest.createFunction(
           vision_enabled: !!imagePart,
         };
       } catch (error: any) {
-        await supabase.from("ai_usage_logs").insert({
+        // เปลี่ยนจากตาราง ai_usage_logs ที่ไม่มีอยู่จริง ไปใช้ตารางจริง ai_token_ledgers
+        await supabase.from("ai_token_ledgers").insert({
           feature: "background-property-reviewer",
           model: "gemini-1.5-flash",
-          status: "failed",
-          error_message: error.message,
           user_id: userId,
+          tenant_id: tenantId,
+          prompt_tokens: 0,
+          completion_tokens: 0,
+          cost_thb: 0,
         });
         throw error;
       }
@@ -191,13 +199,12 @@ export const processPropertyCreated = inngest.createFunction(
 
     // 🧠 Step 4: Generate Semantic Embedding (Standard 768-dim)
     const embedding = await step.run("generate-embedding", async () => {
-      // Use the search summary or the Thai description for the vector
       const textToEmbed = aiResult.search_summary || aiResult.th || "";
       if (!textToEmbed) return null;
 
       try {
         const vector = await generateEmbedding(textToEmbed);
-        return vector;
+        return vector; // จะส่งกลับไปเป็นคาร์เรย์ตัวเลข number[]
       } catch (error) {
         logger.error("Embedding generation failed", error, {
           source: "inngest",
@@ -209,33 +216,75 @@ export const processPropertyCreated = inngest.createFunction(
 
     // 📢 Step 5: Safety Lock Update (Null Safety)
     await step.run("update-property-record", async () => {
-      // 🛡️ SECURITY: Dynamic object to prevent overwriting existing data with NULLs
-      const updateData: any = {
-        requires_ai_review: false,
-        updated_at: new Date().toISOString(),
-      };
-
-      if (aiResult.th) updateData.description = aiResult.th;
-      if (aiResult.en) updateData.description_en = aiResult.en;
-      if (aiResult.cn) updateData.description_cn = aiResult.cn;
-      if (aiResult.ru) updateData.description_ru = aiResult.ru;
-      if (aiResult.meta_title) updateData.meta_title = aiResult.meta_title;
-      if (aiResult.meta_description)
-        updateData.meta_description = aiResult.meta_description;
-      if (aiResult.search_summary)
-        updateData.ai_summary_content = aiResult.search_summary;
-      if (embedding) updateData.embedding = embedding;
-
-      const { error, count } = await supabase
-        .from("properties")
-        .update(updateData, { count: "exact" })
+      // 1. Update properties_core updated_at
+      const { error: coreErr, count } = await supabase
+        .from("properties_core")
+        .update({ updated_at: new Date().toISOString() }, { count: "exact" })
         .eq("id", propertyId);
 
-      if (error) throw new Error(`Update failed: ${error.message}`);
+      if (coreErr) throw new Error(`Core update failed: ${coreErr.message}`);
       if (count === 0)
         throw new Error("Property was deleted or not found during update.");
 
-      return { status: "updated", fields: Object.keys(updateData) };
+      // 2. Fetch existing details (แก้ไขจากคอลัมน์ id เป็น property_id ตามโครงสร้างตารางจริง)
+      const { data: details, error: detailsFetchErr } = await supabase
+        .from("properties_details")
+        .select("description, meta_data")
+        .eq("property_id", propertyId)
+        .maybeSingle();
+
+      if (detailsFetchErr) throw new Error(`Details fetch failed: ${detailsFetchErr.message}`);
+
+      if (details) {
+        const oldDesc = (details.description as Record<string, any>) || {};
+        const oldMeta = (details.meta_data as Record<string, any>) || {};
+
+        const newDesc = {
+          ...oldDesc,
+          ...(aiResult.th ? { th: aiResult.th } : {}),
+          ...(aiResult.en ? { en: aiResult.en } : {}),
+          ...(aiResult.cn ? { cn: aiResult.cn } : {}),
+          ...(aiResult.ru ? { ru: aiResult.ru } : {}),
+        };
+
+        const newMeta = {
+          ...oldMeta,
+          requires_ai_review: false,
+          ...(aiResult.meta_title ? { meta_title: aiResult.meta_title } : {}),
+          ...(aiResult.meta_description ? { meta_description: aiResult.meta_description } : {}),
+          ...(aiResult.search_summary ? { ai_summary_content: aiResult.search_summary } : {}),
+        };
+
+        // แก้ไขการเซ็ต condition จาก id เป็น property_id เพื่อไม่ให้บึ้มที่ฝั่ง database
+        const { error: detailsUpdateErr } = await supabase
+          .from("properties_details")
+          .update({
+            description: newDesc,
+            meta_data: newMeta,
+          })
+          .eq("property_id", propertyId);
+
+        if (detailsUpdateErr) throw new Error(`Details update failed: ${detailsUpdateErr.message}`);
+      }
+
+      // 3. Upsert into properties_ai (Hot/Cold Data Split)
+      if (embedding) {
+        // เพื่อป้องกันปัญหา Type Mismatch ของ Vector คอลัมน์ที่ถูกเจนมาเป็น string ใน TypeScript
+        // เราสามารถทำการแปลงเป็นสตริงรูปแบบสตูดิโอ หรือใช้ Type casting ครอบไว้
+        const vectorString = JSON.stringify(embedding);
+
+        const { error: aiErr } = await supabase
+          .from("properties_ai")
+          .upsert({
+            property_id: propertyId,
+            description_embedding: vectorString as unknown as string,
+            last_embedded_at: new Date().toISOString(),
+          }, { onConflict: "property_id" });
+
+        if (aiErr) throw new Error(`AI embedding upsert failed: ${aiErr.message}`);
+      }
+
+      return { status: "updated", fields: ["updated_at", "description", "meta_data", "description_embedding"] };
     });
 
     // 📊 Step 6: Audit & Cost Tracking
@@ -244,18 +293,19 @@ export const processPropertyCreated = inngest.createFunction(
       const completionTokens = aiResult.usage?.completionTokens || 0;
       const costThb = calculateGeminiCost(promptTokens, completionTokens);
 
-      const { error } = await supabase.from("ai_usage_logs").insert({
+      // แก้ไขให้เรียกใช้งานตารางจริง ai_token_ledgers ตัวแปรครบถ้วนตาม Schema
+      const { error } = await supabase.from("ai_token_ledgers").insert({
         feature: "background-property-reviewer",
         model: aiResult.model,
         prompt_tokens: promptTokens,
         completion_tokens: completionTokens,
         cost_thb: costThb,
-        status: "success",
         user_id: userId,
+        tenant_id: tenantId,
       });
 
       if (error) {
-        logger.error("Failed to log AI usage", error, {
+        logger.error("Failed to log AI usage to ledgers", error, {
           source: "inngest",
           propertyId,
         });

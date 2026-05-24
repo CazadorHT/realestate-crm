@@ -83,10 +83,13 @@ export function PayoutTable({
         <Table>
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent border-slate-100">
-              <TableHead className="w-[300px] text-[10px] uppercase tracking-widest font-semibold text-slate-400 pl-8 h-14">โครงการ / ทรัพย์สิน</TableHead>
+              <TableHead className="w-12 text-center h-14 pl-4"></TableHead>
+              <TableHead className="w-[200px] text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">โครงการ / ทรัพย์สิน</TableHead>
               <TableHead className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">เบิกจ่ายให้ (ผู้รับ)</TableHead>
-              <TableHead className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">ยอดโอน (สุทธิ)</TableHead>
               <TableHead className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">สถานะ</TableHead>
+              <TableHead className="text-right text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">ยอดคอมมิชชันดิบ</TableHead>
+              <TableHead className="text-right text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">หัก ณ ที่จ่าย (3%)</TableHead>
+              <TableHead className="text-right text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">ยอดโอน (สุทธิ)</TableHead>
               <TableHead className="text-center text-[10px] uppercase tracking-widest font-semibold text-slate-400 pr-8 h-14">จัดการ</TableHead>
             </TableRow>
           </TableHeader>

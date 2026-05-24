@@ -39,9 +39,12 @@ export async function updatePropertyEmbeddingAction(propertyId: string) {
     if (!vector) throw new Error("Failed to generate embedding");
 
     const { error: updateErr } = await (supabase as any)
-      .from("properties")
-      .update({ embedding: vector as unknown as string })
-      .eq("id", propertyId);
+      .from("properties_ai")
+      .upsert({
+        property_id: propertyId,
+        description_embedding: JSON.stringify(vector),
+        last_embedded_at: new Date().toISOString()
+      }, { onConflict: "property_id" });
 
     if (updateErr) throw new Error(updateErr.message);
     return { success: true };
@@ -61,15 +64,35 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
   assertStaff(role);
 
   try {
-    // 1. Fetch Lead Requirements
-    const { data: lead, error: leadErr } = await (supabase as any)
-      .from("leads")
-      .select("id, full_name, email, phone, line_id, budget_max, budget_min, preferred_property_types, assigned_to, tenant_id")
+    // 1. Fetch Lead Requirements from V3 tables
+    const { data: leadRow, error: leadErr } = await supabase
+      .from("crm_leads_v3")
+      .select("id, tenant_id, assigned_to, budget_min, budget_max, min_bedrooms, preferred_locations, utm_data, ai_summary, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone, line_id)")
       .eq("id", leadId)
       .eq("tenant_id", tenantId || "")
       .single();
 
-    if (leadErr || !lead) throw new Error("Lead not found");
+    if (leadErr || !leadRow) throw new Error("Lead not found");
+
+    const utmData = (leadRow.utm_data as Record<string, any>) || {};
+    const prefs = utmData.preferences || {};
+    const { decrypt } = await import("@/lib/crypto");
+
+    const lead = {
+      id: leadRow.id,
+      tenant_id: leadRow.tenant_id,
+      assigned_to: leadRow.assigned_to,
+      budget_min: leadRow.budget_min,
+      budget_max: leadRow.budget_max,
+      min_bedrooms: leadRow.min_bedrooms !== null && leadRow.min_bedrooms !== undefined ? Number(leadRow.min_bedrooms) : (prefs.min_bedrooms ? Number(prefs.min_bedrooms) : null),
+      preferred_locations: leadRow.preferred_locations,
+      preferred_property_types: prefs.property_types || null,
+      full_name: decrypt(leadRow.identity?.display_name) || "Unknown",
+      email: decrypt(leadRow.identity?.email) || null,
+      phone: decrypt(leadRow.identity?.phone) || null,
+      line_id: decrypt(leadRow.identity?.line_id) || null,
+      note: prefs.note || leadRow.ai_summary || null,
+    };
 
     // 2. Resolve Lead Intent (Purpose)
     // Since leads table doesn't store purpose natively, we check the most recent session
@@ -92,9 +115,9 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
     if (!vector) throw new Error("Failed to generate lead embedding");
 
     // Persist embedding for future quick matches
-    await (supabase as any)
-      .from("leads")
-      .update({ embedding: `[${vector.join(",")}]` })
+    await supabase
+      .from("crm_leads_v3")
+      .update({ requirements_embedding: `[${vector.join(",")}]` })
       .eq("id", leadId);
 
     // 🛡️ [PHASE 1] Use Hardened Security Definer RPC for candidate search

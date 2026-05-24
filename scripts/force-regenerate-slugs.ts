@@ -202,7 +202,7 @@ async function forceRegenerateSlugs() {
   let successCount = 0;
   for (const update of updates) {
     const { error } = await supabase
-      .from("properties")
+      .from("properties_core")
       .update({ slug: update.newSlug })
       .eq("id", update.id);
 

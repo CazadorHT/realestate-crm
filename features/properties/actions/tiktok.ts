@@ -149,7 +149,7 @@ export async function postPropertyToTikTokAction(
 
     // 6. บันทึกสถานะ
     await supabase
-      .from("properties")
+      .from("properties_core")
       .update({ posted_to_tiktok_at: new Date().toISOString() })
       .eq("id", propertyId);
 

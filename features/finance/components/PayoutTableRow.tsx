@@ -75,6 +75,13 @@ export const PayoutTableRow = React.memo(({
           />
         </TableCell>
         <TableCell>
+          <div className="flex flex-col max-w-[200px]">
+            <span className="font-semibold text-slate-800 truncate block" title={payout.property?.title}>
+              {payout.property?.title || "ไม่ทราบชื่อทรัพย์สิน"}
+            </span>
+          </div>
+        </TableCell>
+        <TableCell>
           <div className="flex flex-col">
             <span className="font-semibold text-slate-800 group-hover:text-indigo-600 transition-colors">{payout.agent?.full_name || 'ไม่ระบุชื่อ'}</span>
             <div className="flex items-center gap-1.5 mt-0.5">
@@ -215,7 +222,7 @@ export const PayoutTableRow = React.memo(({
       {/* 📊 Expanded Detail Row */}
       {isExpanded && (
         <TableRow className="bg-slate-50/50 border-t-0 hover:bg-slate-50/50">
-          <TableCell colSpan={7} className="p-0 border-t-0">
+          <TableCell colSpan={8} className="p-0 border-t-0">
             <div className="px-14 py-4 animate-in slide-in-from-top-2 duration-300">
               <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
                 <div className="flex justify-between items-start mb-4">

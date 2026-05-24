@@ -85,7 +85,7 @@ async function migratePropertySlugs() {
 
   for (const update of updates) {
     const { error } = await supabase
-      .from("properties")
+      .from("properties_core")
       .update({ slug: update.slug })
       .eq("id", update.id);
 

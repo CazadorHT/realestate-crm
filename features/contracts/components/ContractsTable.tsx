@@ -250,7 +250,7 @@ export function ContractsTable({
                           setNavigatingId(`deal-${contract.deal_id}`);
                           router.push(`/protected/deals/${contract.deal_id}`);
                         }}
-                        className="text-blue-600 hover:underline font-medium line-clamp-1 cursor-pointer relative"
+                        className="text-blue-600 max-w-sm! hover:underline font-medium line-clamp-1 cursor-pointer relative"
                       >
                         {navigatingId === `deal-${contract.deal_id}` && (
                           <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-1" />
@@ -581,7 +581,7 @@ function EmptyState() {
           <h3 className="text-xl sm:text-2xl font-bold text-slate-800">
             ยังไม่มีสัญญาเช่าในระบบ
           </h3>
-          <p className="text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">
+          <p className="text-sm text-slate-500 leading-relaxed mx-auto">
             การสร้างสัญญาเช่าต้องมีดีลที่มีสถานะ{" "}
             <span className="font-semibold text-emerald-600">"สำเร็จ"</span>{" "}
             เท่านั้น กรุณาไปหน้าดีลเพื่อปิดการขาย/เช่าก่อน

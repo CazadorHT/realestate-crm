@@ -220,7 +220,7 @@ bot.command("report", async (ctx) => {
   // 🚀 Robust Parallel Execution: Fetch all counts simultaneously with independent error handling
   const [newLeadsResult, activePropsResult] = await Promise.all([
     supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .select("id", { count: "exact", head: true })
       .gte("created_at", startOfDay.toISOString()),
     supabase
@@ -260,7 +260,7 @@ bot.command("stats_monthly", async (ctx) => {
   startOfMonth.setHours(0, 0, 0, 0);
 
   const [leadsRes, soldRes, topAgentRes] = await Promise.all([
-    supabase.from("leads").select("id", { count: "exact", head: true }).gte("created_at", startOfMonth.toISOString()),
+    supabase.from("crm_leads_v3").select("id", { count: "exact", head: true }).gte("created_at", startOfMonth.toISOString()),
     supabase.from("properties").select("id", { count: "exact", head: true }).eq("status", "SOLD").gte("updated_at", startOfMonth.toISOString()),
     supabase.from("deal_commissions").select("agent_id, profiles(full_name)").eq("status", "PAID").gte("paid_at", startOfMonth.toISOString())
   ]);
@@ -374,13 +374,18 @@ bot.on("callback_query:data", async (ctx) => {
     const leadId = data.split(":")[1];
 
     // Double-claim prevention: only update if currently unassigned
-    const { data: updatedLead, error } = await supabase
-      .from("leads")
+    const { data: updatedLeadRow, error } = await supabase
+      .from("crm_leads_v3")
       .update({ assigned_to: profile.id, stage: "CONTACTED" })
       .eq("id", leadId)
       .is("assigned_to", null) 
-      .select("full_name")
+      .select("id, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)")
       .maybeSingle();
+
+    const { decrypt } = await import("@/lib/crypto");
+    const updatedLead = updatedLeadRow ? {
+      full_name: decrypt((updatedLeadRow.identity as any)?.display_name) || "Unknown"
+    } : null;
 
     if (error) return ctx.answerCallbackQuery("❌ เกิดข้อผิดพลาดในการรับงาน");
     
@@ -417,8 +422,8 @@ bot.on("callback_query:data", async (ctx) => {
     const propId = data.split(":")[1];
 
     const { error } = await supabase
-      .from("properties")
-      .update({ status: "SOLD" })
+      .from("properties_core")
+      .update({ status: 4 })
       .eq("id", propId);
 
     if (error) return ctx.answerCallbackQuery("❌ ไม่สามารถอัปเดตสถานะทรัพย์ได้");

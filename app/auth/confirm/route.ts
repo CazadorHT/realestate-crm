@@ -74,9 +74,9 @@ async function handleNewSignup(supabase: any, user: any) {
 
     // 🛡️ [AUTO-TENANT ASSIGNMENT]
     const { data: membership } = await supabase
-      .from("tenant_members")
+      .from("tenant_members_v3")
       .select("id")
-      .eq("profile_id", user.id)
+      .eq("identity_id", user.id)
       .maybeSingle();
 
     if (!membership) {
@@ -98,9 +98,9 @@ async function handleNewSignup(supabase: any, user: any) {
         }
 
         if (targetTenantId) {
-          await supabase.from("tenant_members").insert({
+          await supabase.from("tenant_members_v3").insert({
             tenant_id: targetTenantId,
-            profile_id: user.id,
+            identity_id: user.id,
             role: "AGENT", 
           });
           

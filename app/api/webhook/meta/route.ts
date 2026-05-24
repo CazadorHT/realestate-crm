@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { metaConfig } from "@/lib/meta-config";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { encrypt, generateBlindIndex } from "@/lib/crypto";
 import {
   getMetaUserProfile,
   fetchFacebookLeadDetails,
@@ -206,22 +207,70 @@ async function handleFacebookChange(change: any) {
 
   if (!senderId) return;
 
+  const facebookPsidHash = generateBlindIndex(senderId);
+
   // 1. Find or Create Lead
-  let { data: lead } = await supabase
-    .from("leads")
-    .select("id")
-    .eq("facebook_psid", senderId)
-    .single();
+  const { data: identity } = await supabase
+    .from("identities_v3")
+    .select("id, crm_leads_v3(id)")
+    .eq("social_links->>facebook_psid_hash", facebookPsidHash)
+    .maybeSingle();
+
+  let lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;
 
   if (!lead) {
-    const { data: newLead, error: createError } = await supabase
-      .from("leads")
+    const { data: tenant } = await supabase
+      .from("tenants_v3")
+      .select("id")
+      .limit(1)
+      .single();
+    const tenantId = tenant?.id || null;
+
+    // Create Identity
+    const encryptedDisplayName = encrypt(senderName);
+    const encryptedFacebookPsid = encrypt(senderId);
+    
+    const { data: newIdentity, error: identityErr } = await supabase
+      .from("identities_v3")
       .insert({
-        full_name: senderName,
-        facebook_psid: senderId,
-        source: "FACEBOOK",
+        tenant_id: tenantId,
+        category: 2, // External
+        role: "LEAD",
+        display_name: encryptedDisplayName,
+        social_links: {
+          facebook_psid_hash: facebookPsidHash,
+          facebook_psid: encryptedFacebookPsid,
+          full_name_hash: generateBlindIndex(senderName),
+        },
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    if (identityErr || !newIdentity) {
+      console.error("[Meta Webhook] Error creating FB identity:", identityErr);
+      return;
+    }
+
+    await supabase.from("identity_secrets_v3").insert({
+      identity_id: newIdentity.id,
+      full_name_encrypted: encryptedDisplayName,
+      updated_at: new Date().toISOString()
+    });
+
+    const { data: newLead, error: createError } = await supabase
+      .from("crm_leads_v3")
+      .insert({
+        tenant_id: tenantId,
+        identity_id: newIdentity.id,
+        status: "ACTIVE",
         stage: "NEW",
-        note: `Auto-captured from FB ${field}. Verb: ${value.verb || "N/A"}`,
+        source: "FACEBOOK",
+        utm_data: {
+          preferences: {
+            note: `Auto-captured from FB ${field}. Verb: ${value.verb || "N/A"}`
+          }
+        }
       })
       .select("id")
       .single();
@@ -256,29 +305,76 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
 
   // 1. Find or Create Lead
   const idField = source === "FACEBOOK" ? "facebook_psid" : "instagram_sid";
+  const hashKey = `${idField}_hash`;
+  const senderIdHash = generateBlindIndex(senderId);
 
-  let { data: lead } = await supabase
-    .from("leads")
-    .select("id")
-    .eq(idField, senderId)
-    .single();
+  const { data: identity } = await supabase
+    .from("identities_v3")
+    .select("id, crm_leads_v3(id)")
+    .eq(`social_links->>${hashKey}`, senderIdHash)
+    .maybeSingle();
+
+  let lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;
 
   if (!lead) {
     const profile = await getMetaUserProfile(senderId, source);
+    const displayName = profile?.name || `${source} Contact`;
+    const encryptedDisplayName = encrypt(displayName);
+    const encryptedSenderId = encrypt(senderId);
 
-    // Explicitly construct insert object to avoid TS issues with dynamic keys
-    const insertData: any = {
-      full_name: profile?.name || `${source} Contact`,
-      source: source,
-      stage: "NEW",
-      avatar_url: profile?.profile_pic || null,
-      note: `Auto-captured from ${source}. Profile: ${JSON.stringify(profile)}`,
+    const { data: tenant } = await supabase
+      .from("tenants_v3")
+      .select("id")
+      .limit(1)
+      .single();
+    const tenantId = tenant?.id || null;
+
+    // Create Identity
+    const socialLinks: any = {
+      full_name_hash: generateBlindIndex(displayName),
     };
-    insertData[idField] = senderId;
+    socialLinks[hashKey] = senderIdHash;
+    socialLinks[idField] = encryptedSenderId;
+
+    const { data: newIdentity, error: identityErr } = await supabase
+      .from("identities_v3")
+      .insert({
+        tenant_id: tenantId,
+        category: 2, // External
+        role: "LEAD",
+        display_name: encryptedDisplayName,
+        social_links: socialLinks,
+        avatar_url: profile?.profile_pic || null,
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    if (identityErr || !newIdentity) {
+      console.error(`[Meta Webhook] Error creating ${source} identity:`, identityErr);
+      return;
+    }
+
+    await supabase.from("identity_secrets_v3").insert({
+      identity_id: newIdentity.id,
+      full_name_encrypted: encryptedDisplayName,
+      updated_at: new Date().toISOString()
+    });
 
     const { data: newLead, error: createError } = await supabase
-      .from("leads")
-      .insert(insertData)
+      .from("crm_leads_v3")
+      .insert({
+        tenant_id: tenantId,
+        identity_id: newIdentity.id,
+        status: "ACTIVE",
+        stage: "NEW",
+        source: source,
+        utm_data: {
+          preferences: {
+            note: `Auto-captured from ${source}. Profile: ${JSON.stringify(profile)}`
+          }
+        }
+      })
       .select("id")
       .single();
 
@@ -340,21 +436,69 @@ async function handleInstagramChange(change: any) {
   if (!senderId) return;
 
   // 1. Find or Create Lead
-  let { data: lead } = await supabase
-    .from("leads")
-    .select("id")
-    .eq("instagram_sid", senderId)
-    .single();
+  const instagramSidHash = generateBlindIndex(senderId);
+
+  const { data: identity } = await supabase
+    .from("identities_v3")
+    .select("id, crm_leads_v3(id)")
+    .eq("social_links->>instagram_sid_hash", instagramSidHash)
+    .maybeSingle();
+
+  let lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;
 
   if (!lead) {
-    const { data: newLead, error: createError } = await supabase
-      .from("leads")
+    const { data: tenant } = await supabase
+      .from("tenants_v3")
+      .select("id")
+      .limit(1)
+      .single();
+    const tenantId = tenant?.id || null;
+
+    // Create Identity
+    const encryptedDisplayName = encrypt(senderName);
+    const encryptedInstagramSid = encrypt(senderId);
+
+    const { data: newIdentity, error: identityErr } = await supabase
+      .from("identities_v3")
       .insert({
-        full_name: senderName,
-        instagram_sid: senderId,
-        source: "INSTAGRAM",
+        tenant_id: tenantId,
+        category: 2, // External
+        role: "LEAD",
+        display_name: encryptedDisplayName,
+        social_links: {
+          instagram_sid_hash: instagramSidHash,
+          instagram_sid: encryptedInstagramSid,
+          full_name_hash: generateBlindIndex(senderName),
+        },
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    if (identityErr || !newIdentity) {
+      console.error("[Meta Webhook] Error creating IG identity:", identityErr);
+      return;
+    }
+
+    await supabase.from("identity_secrets_v3").insert({
+      identity_id: newIdentity.id,
+      full_name_encrypted: encryptedDisplayName,
+      updated_at: new Date().toISOString()
+    });
+
+    const { data: newLead, error: createError } = await supabase
+      .from("crm_leads_v3")
+      .insert({
+        tenant_id: tenantId,
+        identity_id: newIdentity.id,
+        status: "ACTIVE",
         stage: "NEW",
-        note: `Auto-captured from IG ${field}.`,
+        source: "INSTAGRAM",
+        utm_data: {
+          preferences: {
+            note: `Auto-captured from IG ${field}.`
+          }
+        }
       })
       .select("id")
       .single();
@@ -389,21 +533,69 @@ async function handleWhatsAppWebhook(message: any, contact: any) {
   const supabase = createAdminClient() as any;
 
   // 1. Find or Create Lead by Phone
-  let { data: lead } = await supabase
-    .from("leads")
-    .select("id")
-    .eq("phone", from)
-    .single();
+  const phoneHash = generateBlindIndex(from);
+
+  const { data: identity } = await supabase
+    .from("identities_v3")
+    .select("id, crm_leads_v3(id)")
+    .eq("social_links->>phone_hash", phoneHash)
+    .maybeSingle();
+
+  let lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;
 
   if (!lead) {
-    const { data: newLead, error: createError } = await supabase
-      .from("leads")
+    const { data: tenant } = await supabase
+      .from("tenants_v3")
+      .select("id")
+      .limit(1)
+      .single();
+    const tenantId = tenant?.id || null;
+
+    // Create Identity
+    const encryptedDisplayName = encrypt(name);
+    const encryptedPhone = encrypt(from);
+
+    const { data: newIdentity, error: identityErr } = await supabase
+      .from("identities_v3")
       .insert({
-        full_name: name,
-        phone: from,
-        source: "WHATSAPP",
+        tenant_id: tenantId,
+        category: 2, // External
+        role: "LEAD",
+        display_name: encryptedDisplayName,
+        phone: encryptedPhone,
+        social_links: {
+          phone_hash: phoneHash,
+          full_name_hash: generateBlindIndex(name),
+        },
+        is_active: true,
+      })
+      .select("id")
+      .single();
+
+    if (identityErr || !newIdentity) {
+      console.error("[Meta Webhook] Error creating WA identity:", identityErr);
+      return;
+    }
+
+    await supabase.from("identity_secrets_v3").insert({
+      identity_id: newIdentity.id,
+      full_name_encrypted: encryptedDisplayName,
+      updated_at: new Date().toISOString()
+    });
+
+    const { data: newLead, error: createError } = await supabase
+      .from("crm_leads_v3")
+      .insert({
+        tenant_id: tenantId,
+        identity_id: newIdentity.id,
+        status: "ACTIVE",
         stage: "NEW",
-        note: "Auto-captured from WhatsApp Webhook",
+        source: "WHATSAPP",
+        utm_data: {
+          preferences: {
+            note: "Auto-captured from WhatsApp Webhook"
+          }
+        }
       })
       .select("id")
       .single();
@@ -715,12 +907,12 @@ async function handleKeywordAutomation(
 async function lookupPropertyByPostId(postId: string) {
   const supabase = createAdminClient();
 
-  // Search audit_logs for the social_post action with this post_id
+  // Search system_audit_logs_v3 for the social_post action with this post_id
   const { data, error } = await supabase
-    .from("audit_logs")
+    .from("system_audit_logs_v3")
     .select("entity_id")
     .eq("action", "property.social_post")
-    .filter("metadata->>post_id", "eq", postId)
+    .filter("new_data->>post_id", "eq", postId)
     .order("created_at", { ascending: false })
     .limit(1)
     .single();

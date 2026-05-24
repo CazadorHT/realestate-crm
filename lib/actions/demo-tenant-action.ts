@@ -20,23 +20,41 @@ export const createPropertySafe = createSafeAction(
   async (data, { supabase, userId, tenantId }) => {
     // tenantId is automatically validated by createSafeAction before this handler runs
 
-    const { data: property, error } = await supabase
-      .from("properties")
+    // 1. Insert into properties_core
+    const { data: core, error: coreError } = await supabase
+      .from("properties_core")
       .insert({
-        title: data.title,
-        price: data.price,
-        tenant_id: tenantId, // Explicitly tagging the data with the tenant
+        tenant_id: tenantId,
+        status: 0, // DRAFT
+        listing_type: 0, // SALE
+        property_type: 1, // CONDO
+        sale_price: data.price,
         created_by: userId,
-        // TODO: Use dynamic values or specific Enums in production. 
-        // Hardcoded for demo tenant functionality.
-        listing_type: "SALE",
-        property_type: "CONDO",
       })
-      .select("id, title, price")
+      .select("id")
       .single();
 
-    if (error) throw new Error(error.message);
+    if (coreError || !core) throw new Error(coreError?.message || "Failed to insert property core");
 
-    return property;
+    // 2. Insert into properties_details
+    const { error: detailsError } = await supabase
+      .from("properties_details")
+      .insert({
+        property_id: core.id!,
+        title: { th: data.title, en: data.title, cn: data.title, ru: data.title },
+        description: { th: "", en: "", cn: "", ru: "" },
+      });
+
+    if (detailsError) {
+      // rollback properties_core
+      await supabase.from("properties_core").delete().eq("id", core.id);
+      throw new Error(detailsError.message);
+    }
+
+    return {
+      id: core.id,
+      title: data.title,
+      price: data.price,
+    };
   },
 );

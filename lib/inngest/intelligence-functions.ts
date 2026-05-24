@@ -18,13 +18,23 @@ export const onLeadCreated = inngest.createFunction(
     // 🕵️ Step 1: Fetch Lead requirements
     const lead = await step.run("fetch-lead-details", async () => {
       const { data, error } = await supabase
-        .from("leads")
-        .select("id, full_name, email, phone, line_id, assigned_to, tenant_id")
+        .from("crm_leads_v3")
+        .select("id, assigned_to, tenant_id, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone, line_id)")
         .eq("id", leadId)
         .single();
 
       if (error) throw error;
-      return data;
+      
+      const { decrypt } = await import("@/lib/crypto");
+      return {
+        id: data.id,
+        assigned_to: data.assigned_to,
+        tenant_id: data.tenant_id,
+        full_name: decrypt(data.identity?.display_name) || "Unknown",
+        email: decrypt(data.identity?.email) || null,
+        phone: decrypt(data.identity?.phone) || null,
+        line_id: decrypt(data.identity?.line_id) || null,
+      };
     });
 
     // 🧠 Step 2: Generate Lead Embedding & Perform Vector Search
@@ -32,22 +42,27 @@ export const onLeadCreated = inngest.createFunction(
       const { constructLeadRequirementText, generateEmbedding } = await import("@/lib/ai/gemini");
       
       // 1. Re-fetch full lead data to get preferences for embedding
-      const { data: fullLead } = await supabase
-        .from("leads")
-        .select("*")
+      const { data: leadRow } = await supabase
+        .from("crm_leads_v3")
+        .select("budget_max, min_bedrooms, preferred_locations, ai_summary, utm_data")
         .eq("id", leadId)
         .single();
         
-      if (!fullLead) return [];
+      if (!leadRow) return [];
+
+      const utmData = (leadRow.utm_data as Record<string, any>) || {};
+      const prefs = utmData.preferences || {};
+      const preferredPropertyTypes = prefs.property_types || null;
+      const note = prefs.note || leadRow.ai_summary || null;
 
       // 2. Generate text description of requirements (Decrypt sensitive fields first)
       const { decrypt } = await import("@/lib/crypto");
       const requirementsText = constructLeadRequirementText({
-        budget_max: fullLead.budget_max,
-        preferred_property_types: fullLead.preferred_property_types,
-        preferred_locations: fullLead.preferred_locations,
-        min_bedrooms: fullLead.min_bedrooms,
-        note: fullLead.note ? decrypt(fullLead.note) : null
+        budget_max: leadRow.budget_max,
+        preferred_property_types: preferredPropertyTypes,
+        preferred_locations: leadRow.preferred_locations,
+        min_bedrooms: leadRow.min_bedrooms !== null && leadRow.min_bedrooms !== undefined ? Number(leadRow.min_bedrooms) : (prefs.min_bedrooms ? Number(prefs.min_bedrooms) : null),
+        note: note ? decrypt(note) : null
       });
 
       // 3. Generate Vector
@@ -56,7 +71,7 @@ export const onLeadCreated = inngest.createFunction(
 
       // 4. Save embedding to lead record for future use
       const vectorString = JSON.stringify(embedding);
-      await supabase.from("leads").update({ embedding: vectorString }).eq("id", leadId);
+      await supabase.from("crm_leads_v3").update({ requirements_embedding: vectorString }).eq("id", leadId);
 
       // 5. Find matches using RPC
       const { data: matchedProperties } = await supabase.rpc("match_properties", {

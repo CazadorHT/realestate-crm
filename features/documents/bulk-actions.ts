@@ -62,7 +62,7 @@ export async function bulkDeleteDocumentsAction(
     }
 
     // Delete from DB (filter by tenantId for safety)
-    let deleteQuery = supabase.from("documents").delete({ count: "exact" }).in("id", ids);
+    let deleteQuery = supabase.from("documents_v3").delete({ count: "exact" }).in("id", ids);
     if (tenantId && tenantId !== "ALL") {
       deleteQuery = deleteQuery.eq("tenant_id", tenantId);
     }

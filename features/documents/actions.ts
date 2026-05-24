@@ -23,7 +23,7 @@ export async function getDocumentsByOwner(
 
   let query = supabase
     .from("documents")
-    .select("id, owner_id, owner_type, document_type, file_name, storage_path, mime_type, size_bytes, version, parent_id, created_at, tenant_id, tenant:tenants(id, name)")
+    .select("id, owner_id, owner_type, document_type, file_name, storage_path, mime_type, size_bytes, version, parent_id, created_at, tenant_id, tenant:tenants(id, name), ai_summary, ai_verified_status, esign_status, esign_envelope_id, esign_signed_at")
     .eq("owner_id", ownerId)
     .eq("owner_type", ownerType);
 
@@ -38,7 +38,26 @@ export async function getDocumentsByOwner(
     return [];
   }
 
-  return data;
+  return (data || []).map((doc) => {
+    let parsedAnalysis = null;
+    let summaryText = doc.ai_summary;
+    if (doc.ai_summary) {
+      try {
+        const parsed = JSON.parse(doc.ai_summary);
+        if (parsed && typeof parsed === "object" && "summary" in parsed) {
+          parsedAnalysis = parsed;
+          summaryText = parsed.summary;
+        }
+      } catch (e) {
+        // Not JSON
+      }
+    }
+    return {
+      ...doc,
+      ai_summary: summaryText,
+      ai_analysis: parsedAnalysis,
+    };
+  });
 }
 
 export async function getAllDocuments(
@@ -70,7 +89,7 @@ export async function getAllDocuments(
 
   let query = supabase
     .from("documents")
-    .select("id, owner_id, owner_type, document_type, file_name, storage_path, mime_type, size_bytes, version, parent_id, created_at, tenant_id, tenant:tenants(id, name)", { count: "exact" });
+    .select("id, owner_id, owner_type, document_type, file_name, storage_path, mime_type, size_bytes, version, parent_id, created_at, tenant_id, tenant:tenants(id, name), ai_summary, ai_verified_status, esign_status, esign_envelope_id, esign_signed_at", { count: "exact" });
 
   if (tenantId && tenantId !== "ALL") {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
@@ -213,6 +232,21 @@ export async function getAllDocuments(
     } else if (doc.owner_type === "RENTAL_CONTRACT") {
       ownerData = { rental_contract: contractMap.get(doc.owner_id) };
     }
+
+    let parsedAnalysis = null;
+    let summaryText = doc.ai_summary;
+    if (doc.ai_summary) {
+      try {
+        const parsed = JSON.parse(doc.ai_summary);
+        if (parsed && typeof parsed === "object" && "summary" in parsed) {
+          parsedAnalysis = parsed;
+          summaryText = parsed.summary;
+        }
+      } catch (e) {
+        // Not JSON
+      }
+    }
+
     return {
       ...doc,
       id: doc.id!,
@@ -224,6 +258,8 @@ export async function getAllDocuments(
       size_bytes: doc.size_bytes ? Number(doc.size_bytes) : null,
       document_type: doc.document_type ?? "DOCUMENT",
       tenant: doc.tenant as any,
+      ai_summary: summaryText,
+      ai_analysis: parsedAnalysis,
       ...ownerData,
     } as unknown as DocumentWithRelations;
   });
@@ -259,18 +295,18 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
     }
 
     const { data, error } = await supabase
-      .from("documents")
+      .from("documents_v3")
       .insert({
-        ...validated,
+        owner_id: validated.owner_id,
         owner_entity: validated.owner_type,
-        size_bytes: validated.size_bytes || 0,
+        document_type: validated.document_type,
+        file_name: validated.file_name,
+        storage_path: validated.storage_path,
         tenant_id:
           tenantId && tenantId !== "ALL" ? tenantId : validated.tenant_id,
-        version: finalVersion,
-        created_by: user.id,
-        is_encrypted: false, // Phase 3 item
+        is_encrypted: false,
       })
-      .select("id, title, storage_path")
+      .select("id, file_name, storage_path")
       .single();
 
     if (error) throw new Error(mapDbError(error));
@@ -280,7 +316,14 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
     // /protected/leads/[id], /protected/properties/[id]
     // We can rely on router.refresh() on client side.
 
-    return { success: true, data };
+    return { 
+      success: true, 
+      data: {
+        id: data.id,
+        title: data.file_name,
+        storage_path: data.storage_path,
+      } 
+    };
   } catch (error: unknown) {
     console.error("Document Action error:", error);
     return { success: false, message: mapDbError(error) };
@@ -438,11 +481,11 @@ export async function deleteDocumentAction(id: string, storagePath: string) {
 
     const { error: dbError } = await (tenantId && tenantId !== "ALL"
       ? supabase
-          .from("documents")
+          .from("documents_v3")
           .delete()
           .eq("id", id)
           .eq("tenant_id", tenantId)
-      : supabase.from("documents").delete().eq("id", id));
+      : supabase.from("documents_v3").delete().eq("id", id));
 
     if (dbError) throw new Error(mapDbError(dbError));
 
@@ -630,12 +673,10 @@ export async function verifyAiAnalysisAction(
     });
 
     let updateQuery = supabase
-      .from("documents")
+      .from("documents_v3")
       .update({
-        ai_summary: validatedData.summary,
-        ai_analysis: validatedData,
-        ai_verified_at: new Date().toISOString(),
-        ai_verified_by: user.id,
+        ai_summary: JSON.stringify(validatedData),
+        ai_verified_status: "VERIFIED",
       })
       .eq("id", documentId);
 

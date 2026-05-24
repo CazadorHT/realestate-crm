@@ -27,8 +27,8 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
     
     scoped.deals().select("id");
     
-    const dealsBuilder = mockSupabase.from("deals");
-    expect(mockSupabase.from).toHaveBeenCalledWith("deals");
+    const dealsBuilder = mockSupabase.from("crm_deals_v3");
+    expect(mockSupabase.from).toHaveBeenCalledWith("crm_deals_v3");
     expect(dealsBuilder.eq).toHaveBeenCalledWith("tenant_id", tenantId);
   });
 
@@ -46,7 +46,7 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
     
     scoped.deals().insert(data);
     
-    const dealsBuilder = mockSupabase.from("deals");
+    const dealsBuilder = mockSupabase.from("crm_deals_v3");
     expect(dealsBuilder.insert).toHaveBeenCalledWith({
       ...data,
       tenant_id: tenantId,
@@ -63,7 +63,7 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
     
     scoped.deals().insert(data);
     
-    const dealsBuilder = mockSupabase.from("deals");
+    const dealsBuilder = mockSupabase.from("crm_deals_v3");
     expect(dealsBuilder.insert).toHaveBeenCalledWith([
       { ...data[0], tenant_id: tenantId },
       { ...data[1], tenant_id: tenantId },
@@ -76,8 +76,8 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
     
     scoped.commissions().delete();
     
-    const commsBuilder = mockSupabase.from("deal_commissions");
-    expect(mockSupabase.from).toHaveBeenCalledWith("deal_commissions");
+    const commsBuilder = mockSupabase.from("crm_deal_commissions_v3");
+    expect(mockSupabase.from).toHaveBeenCalledWith("crm_deal_commissions_v3");
     expect(commsBuilder.eq).toHaveBeenCalledWith("tenant_id", tenantId);
   });
 
@@ -105,7 +105,7 @@ describe("Scoped Revenue Client - Branch Isolation Verification", () => {
     
     scoped.deals().select("id");
     
-    const dealsBuilder = mockSupabase.from("deals");
+    const dealsBuilder = mockSupabase.from("crm_deals_v3");
     expect(dealsBuilder.eq).not.toHaveBeenCalled();
   });
 });
