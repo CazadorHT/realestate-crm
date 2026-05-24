@@ -6,6 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { PROPERTY_IMAGES_BUCKET } from "./logic/images";
 import { mapDbError } from "@/lib/db-error";
+import { PROPERTY_STATUS_DB_VALUE, PropertyStatus } from "./labels";
 
 /**
  * Result type for bulk operations
@@ -140,7 +141,7 @@ export async function bulkRestorePropertiesAction(
     }
 
     let query = supabase
-      .from("properties")
+      .from("properties_core")
       .update({ 
         deleted_at: null,
         updated_at: new Date().toISOString()
@@ -324,7 +325,7 @@ export async function bulkMovePropertiesToTenantAction(
     }
 
     const { error, count } = await supabase
-      .from("properties")
+      .from("properties_core")
       .update({
         tenant_id: tenantId,
         updated_at: new Date().toISOString(),
@@ -400,21 +401,12 @@ export async function bulkApproveAiReviewAction(
       return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
     }
 
-    let query = supabase
-      .from("properties")
-      .update({ 
-        requires_ai_review: false,
-        ai_reviewed_at: new Date().toISOString(),
-        ai_reviewed_by: user.id,
-        updated_at: new Date().toISOString()
-      })
-      .in("id", ids);
-      
-    if (role !== "ADMIN" && tenantId) {
-      query = query.eq("tenant_id", tenantId);
-    }
-
-    const { error, count } = await query;
+    // In V3, we use our postgres RPC bulk_approve_ai_review to safely update jsonb metadata in bulk
+    const { data: count, error } = await supabase.rpc("bulk_approve_ai_review", {
+      p_ids: ids,
+      p_user_id: user.id,
+      p_reviewed_at: new Date().toISOString(),
+    });
 
     if (error) throw error;
 
@@ -463,9 +455,9 @@ export async function bulkUpdateStatusAction(
 
     // กรองทรัพย์ที่เจ้าของสาขามีสิทธิ์จัดการ
     let query = supabase
-      .from("properties")
+      .from("properties_core")
       .update({ 
-        status: status as any,
+        status: PROPERTY_STATUS_DB_VALUE[status as PropertyStatus],
         updated_at: new Date().toISOString()
       })
       .in("id", ids);

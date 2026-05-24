@@ -673,10 +673,11 @@ export async function getPayoutQueueAction(filters?: {
       const netAmount = FinanceMath.calculateNetPayout(
         item.amount || 0,
         item.tax_amount || 0,
-        adjustments
+        adjustments.map((a: any) => ({ amount: Number(a.amount_net || 0) }))
       ).toNumber();
 
-      const propDetails = deal?.property?.details?.[0] as any;
+      const detailsVal = deal?.property?.details;
+      const propDetails = Array.isArray(detailsVal) ? detailsVal[0] : detailsVal;
       const propertyTitle = propDetails?.title?.th || propDetails?.title?.en || "ไม่ทราบชื่อทรัพย์สิน";
 
       return {
@@ -944,11 +945,12 @@ export async function getAgentWalletStatsAction(agentId: string): Promise<{
       const netAmount = FinanceMath.calculateNetPayout(
         c.amount || 0,
         c.tax_amount || 0,
-        adjustments,
+        adjustments.map((a: any) => ({ amount: Number(a.amount_net || 0) }))
       ).toNumber();
 
       const deal = c.deal as any;
-      const propDetails = deal?.property?.details?.[0] as any;
+      const detailsVal = deal?.property?.details;
+      const propDetails = Array.isArray(detailsVal) ? detailsVal[0] : detailsVal;
       const propertyTitle = propDetails?.title?.th || propDetails?.title?.en || "ไม่ทราบชื่อทรัพย์สิน";
 
       return {

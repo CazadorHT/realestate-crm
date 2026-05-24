@@ -75,7 +75,7 @@ export async function transferPropertyBranchAction(
 
     // Update tenant_id
     const { error } = await ctx.supabase
-      .from("properties")
+      .from("properties_core")
       .update({
         tenant_id: targetTenantId,
         updated_at: new Date().toISOString(),
@@ -147,9 +147,17 @@ export async function transferOwnerBranchAction(
 
     // Update tenant_id
     const { error } = await ctx.supabase
-      .from("owners")
+      .from("tenant_members_v3")
       .update({
         tenant_id: targetTenantId,
+      })
+      .eq("identity_id", ownerId)
+      .eq("role", "OWNER");
+
+    // Also update identities_v3 updated_at timestamp
+    await ctx.supabase
+      .from("identities_v3")
+      .update({
         updated_at: new Date().toISOString(),
       })
       .eq("id", ownerId);

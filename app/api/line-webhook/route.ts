@@ -10,6 +10,7 @@ import {
   getPopularAreaTranslations,
 } from "@/features/properties/queries.public";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { encrypt, decrypt, generateBlindIndex } from "@/lib/crypto";
 import { getLineProfile, saveOmniMessage, sendLineNotification } from "@/lib/line";
 import { siteConfig } from "@/lib/site-config";
 import { chatWithAI } from "@/features/chatbot/actions";
@@ -264,19 +265,68 @@ async function handleFollowEvent(event: LineEvent) {
 
   try {
     const profile = await getLineProfile(userId);
-    const { data: lead } = await supabase
-      .from("leads")
-      .select("id")
-      .eq("line_id", userId)
-      .single();
+    const lineIdHash = generateBlindIndex(userId);
+    if (!lineIdHash) return;
+
+    const { data: identity } = await supabase
+      .from("identities_v3")
+      .select("id, crm_leads_v3(id)")
+      .eq("social_links->>line_id_hash", lineIdHash)
+      .maybeSingle();
+
+    const lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;
 
     if (!lead) {
-      await supabase.from("leads").insert({
-        full_name: profile?.displayName || "LINE Contact",
-        line_id: userId,
-        source: "LINE",
+      const displayName = profile?.displayName || "LINE Contact";
+      const encryptedDisplayName = encrypt(displayName);
+      const encryptedLineId = encrypt(userId);
+
+      const { data: tenant } = await supabase
+        .from("tenants_v3")
+        .select("id")
+        .limit(1)
+        .single();
+      const tenantId = tenant?.id || null;
+
+      const { data: newIdentity, error: identityErr } = await supabase
+        .from("identities_v3")
+        .insert({
+          tenant_id: tenantId,
+          category: 2, // External
+          role: "LEAD",
+          display_name: encryptedDisplayName,
+          line_id: encryptedLineId,
+          social_links: {
+            line_id_hash: lineIdHash,
+            full_name_hash: generateBlindIndex(displayName),
+          },
+          is_active: true,
+        })
+        .select("id")
+        .single();
+
+      if (identityErr || !newIdentity) {
+        console.error("Error creating follow identity:", identityErr);
+        return;
+      }
+
+      await supabase.from("identity_secrets_v3").insert({
+        identity_id: newIdentity.id,
+        full_name_encrypted: encryptedDisplayName,
+        updated_at: new Date().toISOString()
+      });
+
+      await supabase.from("crm_leads_v3").insert({
+        tenant_id: tenantId,
+        identity_id: newIdentity.id,
+        status: "ACTIVE",
         stage: "NEW",
-        note: "Captured from follow event.",
+        source: "LINE",
+        utm_data: {
+          preferences: {
+            note: "Captured from follow event."
+          }
+        }
       });
     }
   } catch (err) {
@@ -505,30 +555,81 @@ async function handleIncomingChannelMessage(
   if (!userId) return;
 
   const supabase = createAdminClient();
+  const lineIdHash = generateBlindIndex(userId);
+  if (!lineIdHash) return;
 
-  const { data: lead } = await supabase
-    .from("leads")
-    .select("id, note, tenant_id")
-    .eq("line_id", userId)
+  const { data: leadRow } = await supabase
+    .from("crm_leads_v3")
+    .select("id, tenant_id, utm_data, ai_summary, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name)")
+    .eq("identity.social_links->>line_id_hash", lineIdHash)
     .maybeSingle();
 
-  let activeLeadId = lead?.id;
+  let activeLeadId = leadRow?.id;
+  const currentUtmData = (leadRow?.utm_data as Record<string, any>) || {};
+  const currentPrefs = currentUtmData.preferences || {};
+  const currentNote = currentPrefs.note || leadRow?.ai_summary || "";
 
-  if (!lead) {
+  if (!leadRow) {
     const profile = await getLineProfile(userId);
-    const { data: newLead, error: createError } = await supabase
-      .from("leads")
+    const displayName = profile?.displayName || "LINE Contact";
+    const encryptedDisplayName = encrypt(displayName);
+    const encryptedLineId = encrypt(userId);
+
+    const { data: tenant } = await supabase
+      .from("tenants_v3")
+      .select("id")
+      .limit(1)
+      .single();
+    const tenantId = tenant?.id || null;
+
+    // Create Identity
+    const { data: newIdentity, error: identityErr } = await supabase
+      .from("identities_v3")
       .insert({
-        full_name: profile?.displayName || "LINE Contact",
-        line_id: userId,
-        source: "LINE",
-        stage: "NEW",
-        note: `Auto-captured from LINE. Profile: ${JSON.stringify(profile)}`,
+        tenant_id: tenantId,
+        category: 2, // External
+        role: "LEAD",
+        display_name: encryptedDisplayName,
+        line_id: encryptedLineId,
+        social_links: {
+          line_id_hash: lineIdHash,
+          full_name_hash: generateBlindIndex(displayName),
+        },
+        is_active: true,
       })
       .select("id")
       .single();
 
-    if (createError) {
+    if (identityErr || !newIdentity) {
+      console.error("Error creating auto-identity:", identityErr);
+      return;
+    }
+
+    await supabase.from("identity_secrets_v3").insert({
+      identity_id: newIdentity.id,
+      full_name_encrypted: encryptedDisplayName,
+      updated_at: new Date().toISOString()
+    });
+
+    const noteText = `Auto-captured from LINE. Profile: ${JSON.stringify(profile)}`;
+    const { data: newLead, error: createError } = await supabase
+      .from("crm_leads_v3")
+      .insert({
+        tenant_id: tenantId,
+        identity_id: newIdentity.id,
+        status: "ACTIVE",
+        stage: "NEW",
+        source: "LINE",
+        utm_data: {
+          preferences: {
+            note: noteText
+          }
+        }
+      })
+      .select("id")
+      .single();
+
+    if (createError || !newLead) {
       console.error("Error creating auto-lead:", createError);
       return;
     }
@@ -542,18 +643,23 @@ async function handleIncomingChannelMessage(
       profile = await getLineProfile(userId);
       // 🔥 Update Lead Photo correctly
       if (profile?.pictureUrl) {
+        const updatedPrefs = {
+          ...currentPrefs,
+          note: `Photo: ${profile.pictureUrl}\n\n${currentNote}`
+        };
         await supabase
-          .from("leads")
-          .update({ note: `Photo: ${profile.pictureUrl}\n\n${lead?.note || ""}` })
+          .from("crm_leads_v3")
+          .update({
+            utm_data: {
+              ...currentUtmData,
+              preferences: updatedPrefs
+            }
+          })
           .eq("id", activeLeadId);
       }
     } catch (e) {}
 
-    let activeTenantId = lead?.tenant_id;
-    if (!lead && (activeLeadId)) {
-      // In case of new lead, we might need to fetch its tenant_id if assigned by trigger
-      // but for simplicity, we use undefined and let DB handle it if needed
-    }
+    let activeTenantId = leadRow?.tenant_id;
 
     await saveOmniMessage({
       lead_id: activeLeadId!,
@@ -617,11 +723,27 @@ async function handleInteractiveCommand(
     // 3. ดึงข้อมูลผู้ใช้ (Lead) และโปรไฟล์ LINE
     const supabase = createAdminClient();
     const profile = await getLineProfile(userId);
-    const { data: lead } = await supabase
-      .from("leads")
-      .select("id, full_name, phone, note, tenant_id")
-      .eq("line_id", userId)
+    const lineIdHash = generateBlindIndex(userId);
+    if (!lineIdHash) return;
+
+    const { data: leadRow } = await supabase
+      .from("crm_leads_v3")
+      .select("id, tenant_id, utm_data, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, phone)")
+      .eq("identity.social_links->>line_id_hash", lineIdHash)
       .maybeSingle();
+
+    const utmData = (leadRow?.utm_data as Record<string, any>) || {};
+    const prefs = utmData.preferences || {};
+    const currentNote = prefs.note || "";
+    const { decrypt } = await import("@/lib/crypto");
+    
+    const lead = leadRow ? {
+      id: leadRow.id,
+      tenant_id: leadRow.tenant_id,
+      full_name: decrypt(leadRow.identity?.display_name) || "Unknown",
+      phone: decrypt(leadRow.identity?.phone) || null,
+      note: currentNote,
+    } : null;
 
     // 4. แจ้งเตือนแอดมินทันที
     const adminAlert = `🔔 มีคนสนใจทรัพย์สิน!\n\nผู้สนใจ: ${profile?.displayName || lead?.full_name || "ลูกค้า LINE"}\nทรัพย์สิน: ${propertyTitle}\nรหัส: ${propertyId || "-"}\n\nกรุณาติดต่อกลับโดยด่วนครับ`;
@@ -653,7 +775,19 @@ async function handleInteractiveCommand(
     // 5. บันทึกข้อมูลเพิ่มลงในโน้ตของ Lead (ถ้ามี)
     if (lead && lead.id) {
       const newNote = `[${new Date().toLocaleString("th-TH")}] สนใจทรัพย์: ${propertyTitle} (ID: ${propertyId})\n${lead.note || ""}`;
-      await supabase.from("leads").update({ note: newNote }).eq("id", lead.id!);
+      const updatedPrefs = {
+        ...prefs,
+        note: newNote
+      };
+      await supabase
+        .from("crm_leads_v3")
+        .update({
+          utm_data: {
+            ...utmData,
+            preferences: updatedPrefs
+          }
+        })
+        .eq("id", lead.id!);
     }
     return;
   }

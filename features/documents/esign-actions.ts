@@ -51,7 +51,7 @@ export async function markAsSignedAction(documentId: string) {
 
     // 4. Update document status
     let updateQuery = supabase
-      .from("documents")
+      .from("documents_v3")
       .update({
         esign_status: "SIGNED",
         esign_signed_at: new Date().toISOString(),

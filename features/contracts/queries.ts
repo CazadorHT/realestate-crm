@@ -30,7 +30,7 @@ export async function getContracts({
       ),
       lead:crm_leads_v3 (
         id,
-        identity:identities_v3 (
+        identity:identities_v3!crm_leads_v3_identity_id_fkey (
           display_name,
           phone,
           email
@@ -38,7 +38,7 @@ export async function getContracts({
       )
     `,
     { count: "exact" },
-  ).eq("deal_type", "RENTAL").neq("status", "TERMINATED");
+  ).eq("deal_type", "RENT").neq("status", "TERMINATED");
 
   // If tenantId is provided and NOT "ALL", filter by it.
   if (tenantId && tenantId !== "ALL") {
@@ -135,7 +135,7 @@ export async function getAllContractIdsQuery({
 } = {}) {
   const { supabase, tenantId } = await requireAuthContext();
 
-  let query = supabase.from("crm_deals_v3").select("id").eq("deal_type", "RENTAL").neq("status", "TERMINATED");
+  let query = supabase.from("crm_deals_v3").select("id").eq("deal_type", "RENT").neq("status", "TERMINATED");
 
   if (tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);

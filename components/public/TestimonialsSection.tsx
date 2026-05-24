@@ -56,7 +56,7 @@ export function TestimonialsSection() {
       {/* Decorative Background */}
       <SectionBackground pattern="blobs" intensity="low" />
 
-      <div className="max-w-7xl mx-auto py-12 md:py-16 lg:py-24 px-4 md:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto py-12 px-4 md:px-6 lg:px-8">
         {/* SEO-Optimized Header */}
         <m.div
           className="text-center space-y-3 md:space-y-4 mb-10 md:mb-16"

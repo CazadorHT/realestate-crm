@@ -70,9 +70,9 @@ export async function POST(request: Request) {
     let autoBranchText = "";
     try {
       const { data: membership } = await supabase
-        .from("tenant_members")
+        .from("tenant_members_v3")
         .select("id")
-        .eq("profile_id", userId)
+        .eq("identity_id", userId)
         .maybeSingle();
 
       if (!membership) {
@@ -97,9 +97,9 @@ export async function POST(request: Request) {
         }
 
         if (targetTenantId) {
-          await supabase.from("tenant_members").insert({
+          await supabase.from("tenant_members_v3").insert({
             tenant_id: targetTenantId,
-            profile_id: userId,
+            identity_id: userId,
             role: "AGENT",
           });
           
@@ -113,11 +113,11 @@ export async function POST(request: Request) {
     }
 
     // 📝 Log Audit
-    await supabase.from("audit_logs").insert({
+    await supabase.from("system_audit_logs_v3").insert({
       action: "TELEGRAM_REPLY_APPROVE",
-      entity: "user",
+      entity_table: "user",
       entity_id: userId,
-      metadata: {
+      new_data: {
         role: "AGENT",
         admin_telegram_user: message.from?.username || message.from?.id,
         auto_branch: autoBranchText.includes("🏢")

@@ -32,7 +32,7 @@ export async function bulkDeleteLeadsAction(
 
     // Delete leads (cascade will handle related records)
     const { error, count } = await supabase
-      .from("leads")
+      .from("crm_leads_v3")
       .delete({ count: "exact" })
       .in("id", ids);
 

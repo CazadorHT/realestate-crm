@@ -347,10 +347,12 @@ async function runTrashCleanup() {
       return { message: "No trash to clean", count: 0 };
     }
 
-    const idsToDelete = (toDelete || []).map((p) => p.id);
+    const idsToDelete = (toDelete || [])
+      .map((p) => p.id)
+      .filter((id): id is string => !!id);
 
     const { error: deleteError } = await supabase
-      .from("properties")
+      .from("properties_core")
       .delete()
       .in("id", idsToDelete);
 
@@ -660,13 +662,13 @@ async function runMarketAlerts() {
             diff_percent: Math.round(diffPercent),
           });
 
-          // Log to audit_logs
-          await supabase.from("audit_logs").insert({
+          // Log to system_audit_logs_v3
+          await supabase.from("system_audit_logs_v3").insert({
             action: "MARKET_DROP_ALERT",
-            entity: "properties",
+            entity_table: "properties",
             entity_id: property.id,
-            user_id: property.created_by || "system",
-            metadata: {
+            actor_id: property.created_by || null,
+            new_data: {
               diff_percent: diffPercent,
               current_price: property.original_price,
               market_avg_sqm: avgMarketPricePerSqm,

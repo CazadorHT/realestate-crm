@@ -8,7 +8,7 @@ import {
   UpdateTemplateInput,
 } from "./schema";
 import { revalidatePath } from "next/cache";
-import { Database } from "@/lib/database.types";
+import { type Database } from "@/lib/database.types.generated";
 
 // 1. Get All Templates
 export async function getTemplatesAction() {
@@ -32,17 +32,27 @@ export async function getTemplatesAction() {
 // 2. Create Template (Admin only)
 export async function createTemplateAction(input: CreateTemplateInput) {
   try {
-    const { supabase, user, role } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertAdmin(role);
 
     const validated = createTemplateSchema.parse(input);
 
+    const slug = validated.name
+      ? validated.name.toLowerCase().replace(/[^a-z0-9\u0e00-\u0e7f]+/g, "-").replace(/(^-|-$)/g, "") + "-" + Date.now().toString().slice(-4)
+      : `template-${Date.now()}`;
+
     const { data, error } = await supabase
-      .from("contract_templates")
+      .from("cms_content_v3")
       .insert({
-        ...validated,
-        created_by: user.id,
-      } as Database["public"]["Tables"]["contract_templates"]["Insert"])
+        content_type: "CONTRACT_TEMPLATE",
+        title: { th: validated.name, en: validated.name },
+        slug,
+        content: { th: validated.content, en: validated.content },
+        meta_data: { excerpt: validated.description || "", category: validated.type },
+        status: validated.is_active ? "PUBLISHED" : "DRAFT",
+        author_id: user.id,
+        tenant_id: tenantId && tenantId !== "ALL" ? tenantId : null,
+      })
       .select("id")
       .single();
 
@@ -67,9 +77,42 @@ export async function updateTemplateAction(
 
     const validated = updateTemplateSchema.parse(input);
 
+    // Fetch existing cms_content record to merge values properly
+    const { data: existing, error: fetchErr } = await supabase
+      .from("cms_content_v3")
+      .select("title, content, meta_data, status")
+      .eq("id", id)
+      .single();
+
+    if (fetchErr) throw new Error(fetchErr.message);
+
+    const updatePayload: Database["public"]["Tables"]["cms_content_v3"]["Update"] = {};
+
+    if (validated.name !== undefined) {
+      const oldTitle = (existing.title as Record<string, any>) || {};
+      updatePayload.title = { ...oldTitle, th: validated.name };
+      // Also generate a new slug if name changed
+      updatePayload.slug = validated.name.toLowerCase().replace(/[^a-z0-9\u0e00-\u0e7f]+/g, "-").replace(/(^-|-$)/g, "") + "-" + Date.now().toString().slice(-4);
+    }
+    if (validated.content !== undefined) {
+      const oldContent = (existing.content as Record<string, any>) || {};
+      updatePayload.content = { ...oldContent, th: validated.content };
+    }
+    if (validated.description !== undefined || validated.type !== undefined) {
+      const oldMeta = (existing.meta_data as Record<string, any>) || {};
+      updatePayload.meta_data = {
+        ...oldMeta,
+        ...(validated.description !== undefined ? { excerpt: validated.description } : {}),
+        ...(validated.type !== undefined ? { category: validated.type } : {}),
+      };
+    }
+    if (validated.is_active !== undefined) {
+      updatePayload.status = validated.is_active ? "PUBLISHED" : "DRAFT";
+    }
+
     const { data, error } = await supabase
-      .from("contract_templates")
-      .update(validated)
+      .from("cms_content_v3")
+      .update(updatePayload)
       .eq("id", id)
       .select("id")
       .single();
@@ -91,8 +134,8 @@ export async function deleteTemplateAction(id: string) {
     assertAdmin(role);
 
     const { error } = await supabase
-      .from("contract_templates")
-      .update({ is_active: false })
+      .from("cms_content_v3")
+      .update({ status: "DRAFT" })
       .eq("id", id);
 
     if (error) throw new Error(error.message);

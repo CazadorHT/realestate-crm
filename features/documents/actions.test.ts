@@ -100,16 +100,18 @@ describe('AI Hallucination Mitigation Logic', () => {
       expect(result.success).toBe(true);
       
       // Verify that it actually calls Supabase now
-      expect(mockSupabase.from).toHaveBeenCalledWith('documents');
+      expect(mockSupabase.from).toHaveBeenCalledWith('documents_v3');
       
       // Verify that AI verification metadata is included
       const updatePayload = mockUpdate.mock.calls[0][0];
       expect(updatePayload).toMatchObject({
-        ai_summary: mockSummary,
-        ai_analysis: mockAnalysis,
-        ai_verified_by: mockUser.id,
+        ai_summary: JSON.stringify({
+          summary: mockSummary,
+          risks: ["Risk A"],
+          key_dates: [],
+        }),
+        ai_verified_status: "VERIFIED",
       });
-      expect(updatePayload.ai_verified_at).toBeDefined();
     });
   });
 });

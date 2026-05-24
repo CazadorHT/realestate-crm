@@ -347,6 +347,7 @@ export default function PayoutDashboardPage() {
         isOpen={isAdjustmentOpen}
         onClose={() => setIsAdjustmentOpen(false)}
         onSuccess={fetchPayouts}
+        payouts={payouts}
       />
 
       <PayoutCompletionDialog 

@@ -79,9 +79,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 4. Fetch Active Services
   const { data: services } = await supabase
-    .from("services")
+    .from("cms_content_v3")
     .select("slug, updated_at")
-    .eq("is_active", true)
+    .eq("content_type", "service")
+    .eq("status", "PUBLISHED")
     .not("slug", "is", null);
 
   const serviceRoutes: MetadataRoute.Sitemap = (services || []).map(

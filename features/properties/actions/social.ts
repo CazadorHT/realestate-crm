@@ -820,12 +820,12 @@ export async function postPropertyToMetaAction(
 
       if (platform === "FACEBOOK") {
         await supabase
-          .from("properties")
+          .from("properties_core")
           .update({ posted_to_facebook_at: new Date().toISOString() })
           .eq("id", propertyId);
       } else {
         await supabase
-          .from("properties")
+          .from("properties_core")
           .update({ posted_to_instagram_at: new Date().toISOString() })
           .eq("id", propertyId);
       }

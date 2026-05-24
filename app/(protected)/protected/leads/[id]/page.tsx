@@ -122,14 +122,18 @@ export default async function LeadDetailPage({
     }).then(res => res.data as unknown as PropertyV3Join[])
   ]);
 
-  const properties = (propertiesRaw ?? []).map((p) => ({
-    id: p.id,
-    title: (p.details?.[0]?.title as any)?.th || (p.details?.[0]?.title as any)?.en || "Untitled Property", 
-    price: p.sale_price,
-    rental_price: p.rent_price,
-    listing_type: p.listing_type,
-    cover_image: p.media?.[0]?.storage_path || null,
-  }));
+  const properties = (propertiesRaw ?? []).map((p) => {
+    const detailsVal = p.details;
+    const detailsObj = Array.isArray(detailsVal) ? detailsVal[0] : detailsVal;
+    return {
+      id: p.id,
+      title: (detailsObj?.title as any)?.th || (detailsObj?.title as any)?.en || "Untitled Property", 
+      price: p.sale_price,
+      rental_price: p.rent_price,
+      listing_type: p.listing_type,
+      cover_image: p.media?.[0]?.storage_path || null,
+    };
+  });
 
   // V3: Explicit Unpacking of JSONB Preferences (Strict Typing)
   const rawLead = lead as any;

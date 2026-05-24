@@ -340,14 +340,14 @@ export async function createPropertyAction(
     revalidateTag("dashboard-performance", "seconds");
 
     // 🚀 Step 6: Background Job (Non-blocking)
-    await inngest.send({
+    await (inngest.send({
       name: "property.created",
       data: {
         propertyId: core.id,
         userId: user.id,
         tenantId: tenantId,
       },
-    }).catch(e => console.warn("Inngest property.created skip:", e.message));
+    }) as any)?.catch((e: any) => console.warn("Inngest property.created skip:", e.message));
 
 
     return {
@@ -549,14 +549,14 @@ export async function duplicatePropertyAction(
     revalidateTag("dashboard-performance", "seconds");
 
     // 🚀 Step 4.5: Background Job (Non-blocking)
-    await inngest.send({
+    await (inngest.send({
       name: "property.created",
       data: {
         propertyId: newPropertyId,
         userId: user.id,
         tenantId: tenantId,
       },
-    }).catch(e => console.warn("Inngest property.created duplicate skip:", e.message));
+    }) as any)?.catch((e: any) => console.warn("Inngest property.created duplicate skip:", e.message));
 
 
     return {

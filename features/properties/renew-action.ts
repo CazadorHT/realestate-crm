@@ -11,7 +11,7 @@ export async function renewPropertyAction(id: string) {
     assertStaff(role);
 
     const { error } = await supabase
-      .from("properties")
+      .from("properties_core")
       .update({ updated_at: new Date().toISOString() })
       .eq("id", id);
 
