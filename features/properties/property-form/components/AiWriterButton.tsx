@@ -64,7 +64,7 @@ export function AiWriterButton({
               AI แต่งคำบรรยาย ✨
             </Button>
           </TooltipTrigger>
-          <TooltipContent className="bg-slate-900 text-white border-none shadow-xl px-4 py-2 text-xs">
+          <TooltipContent className="bg-slate-900 text-white z-102 border-none shadow-xl px-4 py-2 text-xs">
             <div className="flex items-center gap-2">
               <Sparkles className="w-3 h-3 text-amber-400" />
               <span>

@@ -483,7 +483,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row bg-white/50 backdrop-blur-sm border border-blue-100 p-1.5 rounded-2xl shadow-sm items-center gap-2 sm:gap-3">
+        <div className="flex flex-col  bg-white/50 backdrop-blur-sm border border-blue-100 p-1.5 rounded-2xl shadow-sm items-center gap-2 sm:gap-3">
           <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
             <AiWriterButton />
             <TooltipProvider>
@@ -505,7 +505,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                     AI Global Fix
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent className="bg-slate-900 text-white border-none shadow-xl px-4 py-2 text-xs">
+                <TooltipContent className="bg-slate-900 text-white border-none z-102 shadow-xl px-4 py-2 text-xs">
                   <div className="flex items-center gap-2">
                     <Languages className="w-3 h-3 text-blue-400" />
                     <span>AI Global Fix: ตรวจสอบและแปลข้อมูลทุกส่วนที่ยังไม่สมบูรณ์ให้ครบถ้วน 🌐</span>
