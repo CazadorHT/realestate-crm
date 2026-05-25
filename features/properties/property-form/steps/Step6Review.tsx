@@ -697,7 +697,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
           }
           language={previewLanguage}
         />
-        <div className="pt-16 sm:pt-20 md:pt-24 px-4 sm:px-6 lg:px-8 bg-white relative">
+        <div className="px-4 sm:px-6 lg:px-8 bg-white relative">
           <div className="max-w-screen-2xl mx-auto mt-4 sm:mt-6 md:mt-8">
             <section className="mb-6 md:mb-10">
               <PropertyGallery
