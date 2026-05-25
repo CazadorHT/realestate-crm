@@ -337,7 +337,7 @@ export function CookieConsent() {
                         onClick={() => setShowSettings(false)}
                         className="w-full sm:w-auto h-11 px-6 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-100"
                       >
-                        {T("common.confirm.cancel") || "Cancel"}
+                        {T("common.cookie_consent.cancel") || "Cancel"}
                       </Button>
                       <Button
                         variant="outline"
