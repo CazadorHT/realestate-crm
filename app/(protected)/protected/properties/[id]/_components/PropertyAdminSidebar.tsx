@@ -113,7 +113,18 @@ export function PropertyAdminSidebar({ property, language = "th" }: PropertyAdmi
                   variant="secondary"
                   className="mt-1 text-[10px] sm:text-xs h-auto max-w-full break-all whitespace-normal px-3 py-1.5"
                 >
-                  {property.property_source}
+                  {property.property_source.startsWith("http://") || property.property_source.startsWith("https://") ? (
+                    <a
+                      href={property.property_source}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:underline cursor-pointer text-blue-600 dark:text-blue-400"
+                    >
+                      {property.property_source}
+                    </a>
+                  ) : (
+                    property.property_source
+                  )}
                 </Badge>
               )}
             </div>

@@ -49,9 +49,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // 2. Fetch Active Properties
   const { data: properties } = await supabase
-    .from("properties")
+    .from("properties_core")
     .select("slug, updated_at")
-    .eq("status", "ACTIVE")
+    .eq("status", 1) // status 1 = Active/Available in v3
     .not("slug", "is", null);
 
   const propertyRoutes: MetadataRoute.Sitemap = (properties || []).map(

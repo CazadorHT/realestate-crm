@@ -734,7 +734,17 @@ export function SidebarNav({
               }
 
               return (
-                <div key={group.id} className="space-y-1">
+                <div 
+                  key={group.id} 
+                  className={cn(
+                    "rounded-xl p-1 transition-all duration-300",
+                    hasActiveItem
+                      ? "bg-blue-50/60 border border-blue-100/50 shadow-[0_2px_8px_-3px_rgba(59,130,246,0.05)]"
+                      : isOpen
+                      ? "bg-slate-50 border border-slate-100/60"
+                      : "border border-transparent"
+                  )}
+                >
                   {/* Group Header */}
                   <button
                     onClick={() => toggleGroup(group.id)}
@@ -742,8 +752,10 @@ export function SidebarNav({
                     className={cn(
                       "w-full flex h-12 items-center justify-between gap-3 rounded-xl px-4 transition-all duration-300 font-semibold text-[11px] uppercase tracking-[0.15em] relative group/header",
                       hasActiveItem
-                        ? "text-blue-700 bg-blue-50/50"
-                        : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/30",
+                        ? "text-blue-700 font-bold"
+                        : isOpen
+                        ? "text-slate-700 font-bold"
+                        : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/50",
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -772,7 +784,7 @@ export function SidebarNav({
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                        className="space-y-1 overflow-hidden"
+                        className="space-y-1 overflow-hidden mt-1 px-1 pb-1"
                       >
                         {group.items.map((item) => (
                           <NavItemContent
