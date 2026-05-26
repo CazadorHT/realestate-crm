@@ -2,7 +2,7 @@
 import { randomUUID } from "crypto";
 import { requireAuthContext, assertStaff, authzFail } from "@/lib/authz";
 import { validateImageFile } from "@/lib/file-validation";
-import { IMAGE_UPLOAD_POLICY } from "@/components/property-image-uploader";
+import { IMAGE_UPLOAD_POLICY } from "@/components/property-image-uploader/constants";
 import {
   MIME_TO_EXT,
   PROPERTY_IMAGES_BUCKET,
@@ -13,6 +13,7 @@ import {
 } from "../logic/images";
 import { mapDbError } from "@/lib/db-error";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export type UploadedImageResult = {
   path: string; // storage_path เช่น "properties/xxxx.jpg"
@@ -114,11 +115,13 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
       finalFileType = file.type;
     }
 
+    const adminSupabase = createAdminClient();
+
     // 3) Simple per-user rate limit based on property_image_uploads
     const cutoffIso = new Date(
       Date.now() - UPLOAD_RATE_WINDOW_MS,
     ).toISOString();
-    const { count: recentCount, error: rateErr } = await supabase
+    const { count: recentCount, error: rateErr } = await adminSupabase
       .from("property_image_uploads")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
@@ -131,7 +134,7 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
 
     const path = `${tenantId}/properties/${user.id}/${sessionId}/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await adminSupabase.storage
       .from(PROPERTY_IMAGES_BUCKET)
       .upload(path, processedBuffer, {
         cacheControl: "3600",
@@ -142,7 +145,7 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
     if (uploadError) throw uploadError;
 
     // Insert TEMP tracking row
-    const { error: trackErr } = await supabase
+    const { error: trackErr } = await adminSupabase
       .from("property_image_uploads")
       .insert({
         user_id: user.id,
@@ -153,12 +156,12 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
 
     if (trackErr) {
       // ถ้า track ไม่ได้ -> ลบไฟล์ทิ้งกัน orphan
-      await supabase.storage.from(PROPERTY_IMAGES_BUCKET).remove([path]);
+      await adminSupabase.storage.from(PROPERTY_IMAGES_BUCKET).remove([path]);
       throw trackErr;
     }
 
     // Construct URL manually or use getPublicUrl
-    const { data } = supabase.storage
+    const { data } = adminSupabase.storage
       .from(PROPERTY_IMAGES_BUCKET)
       .getPublicUrl(path);
 
@@ -215,7 +218,9 @@ export async function deletePropertyImageFromStorage(storagePath: string) {
 
   if (!ok) throw new Error("Invalid storage path (ownership mismatch)");
 
-  const { error: storageErr } = await supabase.storage
+  const adminSupabase = createAdminClient();
+
+  const { error: storageErr } = await adminSupabase.storage
     .from(PROPERTY_IMAGES_BUCKET)
     .remove([storagePath]);
 
@@ -228,7 +233,7 @@ export async function deletePropertyImageFromStorage(storagePath: string) {
   }
 
   // ✅ Soft delete tracking row TEMP (เปลี่ยนสถานะเป็น DELETED แทนการลบจริง เพื่อกันการบายพาส Rate Limit)
-  let del = supabase
+  let del = adminSupabase
     .from("property_image_uploads")
     .update({ status: "DELETED" })
     .eq("storage_path", storagePath)
@@ -256,7 +261,9 @@ export async function cleanupUploadSessionAction(sessionId: string) {
 
   if (!sessionId) return { success: true };
 
-  const { data, error } = await supabase
+  const adminSupabase = createAdminClient();
+
+  const { data, error } = await adminSupabase
     .from("property_image_uploads")
     .select("storage_path")
     .eq("user_id", user.id)
@@ -270,9 +277,9 @@ export async function cleanupUploadSessionAction(sessionId: string) {
     .filter((p): p is string => !!p);
 
   if (paths.length > 0) {
-    await supabase.storage.from(PROPERTY_IMAGES_BUCKET).remove(paths);
+    await adminSupabase.storage.from(PROPERTY_IMAGES_BUCKET).remove(paths);
 
-    await supabase
+    await adminSupabase
       .from("property_image_uploads")
       .update({ status: "DELETED" })
       .eq("user_id", user.id)

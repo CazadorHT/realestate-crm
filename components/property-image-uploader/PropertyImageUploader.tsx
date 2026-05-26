@@ -35,6 +35,7 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Info } from "lucide-react";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
+import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 export function PropertyImageUploader({
   sessionId,
@@ -57,10 +58,6 @@ export function PropertyImageUploader({
     const valuePaths = value ? value.filter(Boolean) : [];
 
     if (valuePaths.length > 0) {
-      const {
-        getPublicImageUrl,
-      } = require("@/features/properties/image-utils");
-
       // Create a map of initial images by storage path/url for quick lookup
       const initialMap = new Map<string, { image_url?: string; storage_path?: string; is_cover?: boolean }>();
       if (initialImages && initialImages.length > 0) {
@@ -106,9 +103,6 @@ export function PropertyImageUploader({
     }
 
     if (initialImages && initialImages.length > 0) {
-      const {
-        getPublicImageUrl,
-      } = require("@/features/properties/image-utils");
       return initialImages.map((img: { image_url?: string; storage_path?: string; is_cover?: boolean }, index) => {
         const preview_url =
           img.image_url && img.image_url.startsWith("http")
@@ -177,9 +171,6 @@ export function PropertyImageUploader({
 
     // Regenerate images from value with proper preview URLs
     try {
-      const {
-        getPublicImageUrl,
-      } = require("@/features/properties/image-utils");
       const syncedImages = valuePaths.map((path, index) => ({
         id: `synced-${Date.now()}-${index}`,
         storage_path: path,

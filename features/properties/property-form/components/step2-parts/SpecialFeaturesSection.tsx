@@ -4,16 +4,13 @@ import React from "react";
 import { useFormContext, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
 } from "@/components/ui/form";
-import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 import {
   Star,
   CheckCircle2,
@@ -45,16 +42,15 @@ import {
   ArrowUpCircle,
   Gem,
   MapPin,
-  Sparkles,
   Leaf,
   CalendarRange,
   Layout,
 } from "lucide-react";
 import {
   Tooltip,
-  TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  TooltipContent,
 } from "@/components/ui/tooltip";
 
 interface SpecialFeaturesSectionProps {
@@ -68,9 +64,16 @@ export function SpecialFeaturesSection({
 }: SpecialFeaturesSectionProps) {
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
+  
+  // ตรวจสอบสถานะสำหรับการกดเปิด-ปิดของตัวบอร์ดใหญ่
+  const isVerified = !!form.watch("verified");
+
   return (
-    <Card   className="col-span-2 border-slate-200/70 bg-white h-full relative overflow-hidden">
-      <CardHeader id="tour-property-special-features" className="space-y-3 sm:space-y-4 pb-4 px-4 sm:px-6 py-4 sm:py-6">
+    <Card className="col-span-2 border-slate-200/70 bg-white h-full relative overflow-hidden">
+      <CardHeader
+        id="tour-property-special-features"
+        className="space-y-3 sm:space-y-4 pb-4 px-4 sm:px-6 py-4 sm:py-6"
+      >
         <div className="flex items-center gap-3">
           <div className="p-2 rounded-xl bg-purple-100 text-purple-600">
             <Star className="h-5 w-5" />
@@ -87,36 +90,49 @@ export function SpecialFeaturesSection({
       </CardHeader>
 
       <CardContent className="space-y-6 sm:space-y-8 px-3 sm:px-6">
-        {/* Verified Listing Banner */}
+        {/* Verified Listing - ปรับโฉมจาก Switch มาเป็นสไตล์จิ้มกล่องแบบ FeatureChip ชนิดเต็มความกว้าง */}
         <FormField
           control={form.control}
           name="verified"
           render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-xl border border-blue-100 bg-blue-50/50 p-4 shadow-sm">
-              <div className="space-y-1">
-                <FormLabel className="flex items-center gap-2 text-base font-bold text-blue-700">
-                  <ShieldCheck className="h-5 w-5 text-blue-600" />
-                  Verified Listing
-                </FormLabel>
-                <p className="text-xs text-blue-600/80">
-                  เปิดตัวเลือกนี้เพื่อระบุว่าทรัพย์นี้ได้รับการตรวจสอบเอกสารสิทธิ์แล้ว
-                  (ช่วยเพิ่มความน่าเชื่อถือ)
-                </p>
-              </div>
+            <FormItem className="space-y-0">
               <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={(checked) => {
-                    field.onChange(checked);
-                    toast.success(
-                      checked
-                        ? "เปิด Verified Listing สำเร็จ"
-                        : "ปิด Verified Listing สำเร็จ",
-                    );
-                  }}
+                <button
+                  type="button"
                   disabled={isReadOnly}
-                  className="data-[state=checked]:bg-blue-600"
-                />
+                  onClick={() => field.onChange(!field.value)}
+                  className={cn(
+                    "w-full flex items-start sm:items-center gap-4 rounded-xl border p-4 transition-all shadow-sm text-left",
+                    "hover:shadow-md active:scale-[0.99]",
+                    isVerified
+                      ? "border-blue-200 bg-blue-50/70 text-blue-900 ring-1 ring-blue-400/20"
+                      : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50/80",
+                    isReadOnly && "opacity-50 cursor-not-allowed pointer-events-none",
+                  )}
+                >
+                  <div className={cn(
+                    "p-2 rounded-xl shrink-0 transition-colors",
+                    isVerified ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-400"
+                  )}>
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div className="space-y-0.5 flex-1">
+                    {/* ใช้ flex และ justify-between เพื่อดันสถานะไปขวาสุด */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className={cn("text-base font-bold", isVerified ? "text-blue-700" : "text-slate-700")}>
+                        Verified Listing
+                      </span>
+                      {isVerified && (
+                        <span className="text-xs font-medium px-2 py-0.5 bg-blue-600 text-white rounded-full shrink-0">
+                          เปิดใช้งาน
+                        </span>
+                      )}
+                    </div>
+                    <p className={cn("text-xs leading-relaxed w-[85%]", isVerified ? "text-blue-600/80" : "text-slate-400")}>
+                      ตรวจสอบเอกสารสิทธิ์และสัญญากับทาง Agent แล้ว (ช่วยเพิ่มความน่าเชื่อถือและการเข้าถึงของลูกค้า)
+                    </p>
+                  </div>
+                </button>
               </FormControl>
             </FormItem>
           )}
@@ -171,7 +187,7 @@ export function SpecialFeaturesSection({
             />
           </div>
         </div>
- 
+
         {/* Group 1b: Location & Transit */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
@@ -195,7 +211,7 @@ export function SpecialFeaturesSection({
             />
           </div>
         </div>
- 
+
         {/* Group 2: Condition & Decor */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
@@ -253,7 +269,7 @@ export function SpecialFeaturesSection({
             />
           </div>
         </div>
- 
+
         {/* Group 3: View & Direction */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
@@ -332,7 +348,7 @@ export function SpecialFeaturesSection({
             />
           </div>
         </div>
- 
+
         {/* Group 4: Office & Building Specs */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
@@ -441,7 +457,7 @@ export function SpecialFeaturesSection({
             />
           </div>
         </div>
- 
+
         {/* Group 5: Services */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
@@ -480,31 +496,23 @@ export function SpecialFeaturesSection({
 // Styled Feature Chip Component
 // ----------------------------------------------------------------------
 
-// Color Maps for "Active" state
 const COLOR_MAP: Record<string, string> = {
-  orange:
-    "border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-300",
+  orange: "border-orange-200 bg-orange-50 text-orange-700 hover:border-orange-300",
   blue: "border-blue-200 bg-blue-50 text-blue-700 hover:border-blue-300",
   green: "border-green-200 bg-green-50 text-green-700 hover:border-green-300",
-  emerald:
-    "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300",
+  emerald: "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300",
   red: "border-red-200 bg-red-50 text-red-700 hover:border-red-300",
-  purple:
-    "border-purple-200 bg-purple-50 text-purple-700 hover:border-purple-300",
-  indigo:
-    "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-300",
+  purple: "border-purple-200 bg-purple-50 text-purple-700 hover:border-purple-300",
+  indigo: "border-indigo-200 bg-indigo-50 text-indigo-700 hover:border-indigo-300",
   amber: "border-amber-200 bg-amber-50 text-amber-700 hover:border-amber-300",
   cyan: "border-cyan-200 bg-cyan-50 text-cyan-700 hover:border-cyan-300",
-  violet:
-    "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-300",
+  violet: "border-violet-200 bg-violet-50 text-violet-700 hover:border-violet-300",
   sky: "border-sky-200 bg-sky-50 text-sky-700 hover:border-sky-300",
   teal: "border-teal-200 bg-teal-50 text-teal-700 hover:border-teal-300",
-  fuchsia:
-    "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 hover:border-fuchsia-300",
+  fuchsia: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 hover:border-fuchsia-300",
   pink: "border-pink-200 bg-pink-50 text-pink-700 hover:border-pink-300",
 };
 
-// Icon Color Maps
 const ICON_COLOR_MAP: Record<string, string> = {
   orange: "text-orange-500",
   blue: "text-blue-500",
@@ -573,8 +581,7 @@ function FeatureChip({
                   isChecked
                     ? `${COLOR_MAP[color]} border-transparent ring-1 ring-offset-0`
                     : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50/80",
-                  disabled &&
-                    "opacity-50 cursor-not-allowed pointer-events-none",
+                  disabled && "opacity-50 cursor-not-allowed pointer-events-none",
                 )}
               >
                 <Icon
