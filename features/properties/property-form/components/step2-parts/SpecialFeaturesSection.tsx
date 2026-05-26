@@ -45,6 +45,17 @@ import {
   Leaf,
   CalendarRange,
   Layout,
+  // Luxury / Premium Icons
+  ChefHat,
+  GlassWater,
+  Bath,
+  ShirtIcon,
+  Flower2,
+  Car,
+  Flame,
+  Tv2,
+  Dumbbell,
+  Wine,
 } from "lucide-react";
 import {
   Tooltip,
@@ -267,6 +278,20 @@ export function SpecialFeaturesSection({
               color="indigo"
               disabled={isReadOnly}
             />
+            <FeatureChip
+              name="is_smart_home"
+              label="Smart Home"
+              icon={Cpu}
+              color="sky"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="has_private_pool"
+              label="สระส่วนตัว"
+              icon={Waves}
+              color="cyan"
+              disabled={isReadOnly}
+            />
           </div>
         </div>
 
@@ -483,6 +508,85 @@ export function SpecialFeaturesSection({
               label="จอดรถ > 1 คัน"
               icon={CheckCircle2}
               color="blue"
+              disabled={isReadOnly}
+            />
+          </div>
+        </div>
+
+        {/* Group 6: Luxury / Premium (บ้านหรู / พูลวิลล่า / คอนโด) */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
+            <Gem className="h-4 w-4" /> บ้านหรู / พูลวิลล่า / คอนโด
+          </h4>
+          <div className="flex flex-wrap gap-3">
+            <FeatureChip
+              name="has_large_kitchen"
+              label="ห้องครัวใหญ่"
+              icon={ChefHat}
+              color="amber"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="has_bar_counter"
+              label="เคาท์เตอร์บาร์"
+              icon={GlassWater}
+              color="purple"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="has_bathtub"
+              label="อ่างแช่ตัว"
+              icon={Bath}
+              color="cyan"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="has_walk_in_closet"
+              label="Walk-in Closet"
+              icon={ShirtIcon}
+              color="pink"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="has_private_garden"
+              label="สวนส่วนตัว"
+              icon={Flower2}
+              color="green"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="has_garage"
+              label="โรงจอดรถ (Garage)"
+              icon={Car}
+              color="sky"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="has_bbq_area"
+              label="พื้นที่ BBQ"
+              icon={Flame}
+              color="orange"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="has_home_theatre"
+              label="Home Theatre"
+              icon={Tv2}
+              color="indigo"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="has_private_gym"
+              label="Gym ส่วนตัว"
+              icon={Dumbbell}
+              color="emerald"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="has_wine_cellar"
+              label="Wine Cellar"
+              icon={Wine}
+              color="fuchsia"
               disabled={isReadOnly}
             />
           </div>

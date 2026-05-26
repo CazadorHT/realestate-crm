@@ -154,7 +154,7 @@ export function SmartEditor({
 
   return (
     <div
-      className="rounded-xl border border-slate-200 bg-white shadow-sm transition-[border,box-shadow] duration-200 focus-within:border-slate-300 focus-within:shadow-md flex flex-col overflow-hidden"
+      className="rounded-xl border border-slate-200 bg-white shadow-sm transition-[border,box-shadow] duration-200 focus-within:border-slate-300 focus-within:shadow-md flex flex-col overflow-hidden resize-y min-h-[300px]"
       style={{ height: height || 650 }}
     >
       <Toolbar

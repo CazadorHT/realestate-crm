@@ -1052,7 +1052,17 @@
       "flexible_lease": "Гибкая аренда",
       "fully_fitted": "Готовый офис",
       "ready_to_move": "Готов к въезду",
-      "family_friendly": "Семейный"
+      "family_friendly": "Семейный",
+      "large_kitchen": "Большая кухня",
+      "bar_counter": "Барная стойка",
+      "bathtub": "Ванна",
+      "walk_in_closet": "Гардеробная",
+      "private_garden": "Частный сад",
+      "garage": "Гараж",
+      "bbq_area": "Зона ББК",
+      "home_theatre": "Домашний кинотеатр",
+      "private_gym": "Частный зал для фитнеса",
+      "wine_cellar": "Винный погреб"
     },
     "transit_types": {
       "BTS": "BTS",

@@ -106,10 +106,17 @@ export function NumberInput({
           return;
         }
 
-        const num = Number(cleaned);
-        if (!isNaN(num)) {
-          // Format immediately for "auto-comma" effect
-          const formatted = formatNumber(num, decimals);
+        // Split integer and decimal parts to preserve trailing dot/zeros during typing
+        const parts = cleaned.split(".");
+        const integerPart = parts[0];
+        const decimalPart = parts[1];
+
+        const numInt = Number(integerPart);
+        if (!isNaN(numInt)) {
+          let formatted = formatNumber(numInt, 0);
+          if (parts.length > 1) {
+            formatted += "." + (decimalPart !== undefined ? decimalPart.slice(0, decimals) : "");
+          }
 
           // Basic caret preservation logic
           const cursorPosition = e.target.selectionStart || 0;

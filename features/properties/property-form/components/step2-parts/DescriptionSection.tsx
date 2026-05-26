@@ -20,7 +20,7 @@ const SmartEditor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-[500px] w-full bg-slate-50 animate-pulse rounded-xl border border-slate-200" />
+      <div className="h-[850px] w-full bg-slate-50 animate-pulse rounded-xl border border-slate-200" />
     ),
   },
 );
@@ -92,8 +92,8 @@ export function DescriptionSection({
   );
 
   return (
-    <div className="space-y-6 lg:col-span-4">
-      <Card className="border-slate-200/70 bg-white shadow-md overflow-hidden rounded-2xl">
+    <div className="lg:col-span-4 flex flex-col">
+      <Card className="border-slate-200/70 bg-white shadow-md overflow-hidden rounded-xl flex flex-col flex-1">
         <CardHeader className="space-y-3 px-4 sm:px-6 py-4 sm:py-6 border-b border-slate-50">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <SectionHeader
@@ -139,8 +139,8 @@ export function DescriptionSection({
           </div>
         </CardHeader>
 
-        <CardContent className="p-0">
-          <Tabs defaultValue="th" className="w-full ">
+        <CardContent className="p-0 flex-1 flex flex-col">
+          <Tabs defaultValue="th" className="w-full flex-1 flex flex-col">
             <div className="px-4 sm:px-6 pt-4">
               <TabsList className="bg-slate-100/80 p-1 rounded-xl w-full sm:w-auto grid grid-cols-4 sm:flex gap-1 h-[48px]">
                 <TabsTrigger
@@ -176,14 +176,14 @@ export function DescriptionSection({
 
             <TabsContent
               value="th"
-              className="mt-0 p-4 sm:p-6 focus-visible:ring-0"
+              className="mt-0 p-4 sm:p-6 focus-visible:ring-0 flex-1 flex flex-col"
             >
               <FormField
                 control={form.control}
                 name="description"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
+                  <FormItem className="flex-1 flex flex-col">
+                    <FormControl className="flex-1 flex flex-col">
                       <ErrorBoundary>
                         <SmartEditor
                           value={field.value ?? ""}
@@ -200,7 +200,7 @@ export function DescriptionSection({
                               shouldDirty: true,
                             })
                           }
-                          height={500}
+                          height="100%"
                         />
                       </ErrorBoundary>
                     </FormControl>
@@ -216,19 +216,19 @@ export function DescriptionSection({
 
             <TabsContent
               value="en"
-              className="mt-0 p-4 sm:p-6 focus-visible:ring-0"
+              className="mt-0 p-4 sm:p-6 focus-visible:ring-0 flex-1 flex flex-col"
             >
               <FormField
                 control={form.control}
                 name="description_en"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
+                  <FormItem className="flex-1 flex flex-col">
+                    <FormControl className="flex-1 flex flex-col">
                       <SmartEditor
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         disabled={isReadOnly}
-                        height={500}
+                        height="100%"
                         placeholder="Description in English..."
                       />
                     </FormControl>
@@ -240,19 +240,19 @@ export function DescriptionSection({
 
             <TabsContent
               value="cn"
-              className="mt-0 p-4 sm:p-6 focus-visible:ring-0"
+              className="mt-0 p-4 sm:p-6 focus-visible:ring-0 flex-1 flex flex-col"
             >
               <FormField
                 control={form.control}
                 name="description_cn"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
+                  <FormItem className="flex-1 flex flex-col">
+                    <FormControl className="flex-1 flex flex-col">
                       <SmartEditor
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         disabled={isReadOnly}
-                        height={500}
+                        height="100%"
                         placeholder="物业详情 (Chinese)..."
                       />
                     </FormControl>
@@ -264,19 +264,19 @@ export function DescriptionSection({
 
             <TabsContent
               value="ru"
-              className="mt-0 p-4 sm:p-6 focus-visible:ring-0"
+              className="mt-0 p-4 sm:p-6 focus-visible:ring-0 flex-1 flex flex-col"
             >
               <FormField
                 control={form.control}
                 name="description_ru"
                 render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
+                  <FormItem className="flex-1 flex flex-col">
+                    <FormControl className="flex-1 flex flex-col">
                       <SmartEditor
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         disabled={isReadOnly}
-                        height={500}
+                        height="100%"
                         placeholder="Описание (Russian)..."
                       />
                     </FormControl>

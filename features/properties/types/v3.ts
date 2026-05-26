@@ -3,7 +3,10 @@ import type { ListingType, PropertyType, PropertyStatus } from "../types";
 export interface PropertyAmenitiesV3 {
   floor?: number | null;
   parking_slots?: number | null;
-  office_capacity?: number | null;
+  office_capacity?: string | number | null;
+  maid_rooms?: number | null;
+  halls?: number | null;
+  dining_rooms?: number | null;
   is_pet_friendly?: boolean;
   is_corner_unit?: boolean;
   is_renovated?: boolean;
@@ -123,7 +126,10 @@ export interface PropertyWithDetails {
   land_size_sqwah: number | null;
   floor: number | null;
   parking_slots: number | null;
-  office_capacity: number | null;
+  office_capacity: string | number | null;
+  maid_rooms?: number | null;
+  halls?: number | null;
+  dining_rooms?: number | null;
   
   // Location & Address (Localized Objects)
   location: unknown; // PostGIS Point

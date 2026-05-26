@@ -1054,7 +1054,17 @@
       "flexible_lease": "Flexible Lease",
       "fully_fitted": "Fully Fitted",
       "ready_to_move": "Ready to Move In",
-      "family_friendly": "Family Friendly"
+      "family_friendly": "Family Friendly",
+      "large_kitchen": "Large Kitchen",
+      "bar_counter": "Bar Counter",
+      "bathtub": "Bathtub",
+      "walk_in_closet": "Walk-in Closet",
+      "private_garden": "Private Garden",
+      "garage": "Garage",
+      "bbq_area": "BBQ Area",
+      "home_theatre": "Home Theatre",
+      "private_gym": "Private Gym",
+      "wine_cellar": "Wine Cellar"
     },
     "transit_types": {
       "BTS": "BTS",

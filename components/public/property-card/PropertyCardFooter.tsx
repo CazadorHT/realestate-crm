@@ -26,7 +26,7 @@ export function PropertyCardFooter({
 
   if (variant === "minimal") {
     return (
-      <div className="px-3 sm:px-4 py-3 border-t border-slate-100 bg-white flex flex-col gap-3">
+      <div className="px-3 sm:px-4 py-3 border-t border-slate-100 bg-white flex flex-col gap-3 rounded-b-2xl sm:rounded-b-2xl md:rounded-b-3xl">
         {/* Price Section */}
         <div className="flex items-start justify-between">
           {/* Sale Column */}
@@ -92,7 +92,7 @@ export function PropertyCardFooter({
   }
 
   return (
-    <div className="h-auto sm:h-auto md:h-28 px-3 sm:px-3.5 md:px-4 py-2 sm:py-2.5 md:py-3 border-t border-slate-200 bg-white/60 flex flex-col justify-between gap-1 sm:gap-1.5 md:gap-2">
+    <div className="h-auto sm:h-auto md:h-28 px-3 sm:px-3.5 md:px-4 py-2 sm:py-2.5 md:py-3 border-t border-slate-200 bg-white/60 flex flex-col justify-between gap-1 sm:gap-1.5 md:gap-2 rounded-b-2xl sm:rounded-b-2xl md:rounded-b-3xl">
       <div className="min-w-0">
         {property.listing_type === "SALE_AND_RENT" ? (
           <div className="flex w-full items-start divide-x divide-slate-200">
@@ -102,8 +102,11 @@ export function PropertyCardFooter({
                 {t("common.sale")}
               </span>
               {prices.hasSaleDiscount ? (
-                <div className="flex flex-wrap items-baseline">
-                  <div className="order-2 flex items-center gap-1">
+                <div className="flex flex-col">
+                  <div className="text-base lg:text-md xl:text-lg font-bold text-rose-600">
+                    {formatPrice(prices.salePrice, language)}
+                  </div>
+                  <div className="flex items-center gap-1">
                     <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
                       {formatPrice(prices.originalPrice, language)}
                     </span>
@@ -111,12 +114,9 @@ export function PropertyCardFooter({
                       -{prices.saleDiscountPercent}%
                     </span>
                   </div>
-                  <div className="order-1 text-base lg:text-md xl:text-lg font-bold text-rose-600 truncate">
-                    {formatPrice(prices.salePrice, language)}
-                  </div>
                 </div>
               ) : (
-                <div className="text-base lg:text-md xl:text-lg font-bold text-slate-900 truncate">
+                <div className="text-base lg:text-md xl:text-lg font-bold text-slate-900">
                   {prices.salePrice > 0
                     ? formatPrice(prices.salePrice, language)
                     : t("common.contact_for_price")}
@@ -130,8 +130,14 @@ export function PropertyCardFooter({
                 {t("common.rent")}
               </span>
               {prices.hasRentalDiscount ? (
-                <div className="flex flex-wrap items-baseline">
-                  <div className="order-2 flex items-center gap-1">
+                <div className="flex flex-col">
+                  <div className="text-base lg:text-md xl:text-lg font-bold text-rose-600">
+                    {formatPrice(prices.rentalPrice, language)}
+                    <span className="text-[10px] text-slate-500 font-normal ml-0.5">
+                      {t("common.per_month_short")}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1">
                     <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
                       {formatPrice(prices.originalRentalPrice, language)}
                     </span>
@@ -139,16 +145,10 @@ export function PropertyCardFooter({
                       -{prices.rentalDiscountPercent}%
                     </span>
                   </div>
-                  <div className="order-1 text-base lg:text-md xl:text-lg font-bold text-rose-600 truncate">
-                    {formatPrice(prices.rentalPrice, language)}
-                    <span className="text-[10px] text-slate-500 font-normal ml-0.5">
-                      {t("common.per_month_short")}
-                    </span>
-                  </div>
                 </div>
               ) : (
                 <div className="flex flex-wrap items-baseline">
-                  <div className="text-base lg:text-md xl:text-lg font-bold text-slate-900 truncate">
+                  <div className="text-base lg:text-md xl:text-lg font-bold text-slate-900">
                     {prices.rentalPrice > 0
                       ? formatPrice(prices.rentalPrice, language)
                       : t("common.contact_for_price")}
@@ -162,12 +162,12 @@ export function PropertyCardFooter({
           </div>
         ) : (
           <>
-            <div className="text-[10px] md:text-xs text-stone-400 uppercase tracking-tight">
+            <div className="text-[10px] md:text-xs text-slate-900 uppercase tracking-tight font-bold">
               {property.listing_type === "RENT"
                 ? t("common.rent_price")
                 : t("common.sale_price")}
             </div>
-            <div className="text-base lg:text-md xl:text-lg font-bold text-[#1B263B] truncate flex items-baseline gap-1 md:gap-2">
+            <div className="text-base lg:text-md xl:text-lg font-bold text-[#1B263B] flex flex-wrap items-baseline gap-1 md:gap-2">
               {(property.listing_type === "SALE" && prices.hasSaleDiscount) || 
                (property.listing_type === "RENT" && prices.hasRentalDiscount) ? (
                 <div className="flex flex-col">
@@ -219,7 +219,7 @@ export function PropertyCardFooter({
         {(property.listing_type === "RENT" ||
           property.listing_type === "SALE_AND_RENT") &&
           property.min_contract_months && (
-            <div className="flex items-center gap-1 text-[9px] md:text-[11px] text-slate-400 font-medium italic">
+            <div className="flex items-center gap-1 text-[9px] md:text-[11px] text-slate-400 font-bold italic">
               <div className="w-1 h-1 rounded-full bg-slate-300" />
               {t("common.contract")} {property.min_contract_months}{" "}
               {t("common.months_short")}

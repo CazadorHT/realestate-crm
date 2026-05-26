@@ -279,7 +279,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
             {fields.map((item, index) => (
               <div
                 key={item.id}
-                className="grid grid-cols-1 gap-4 p-4 sm:p-5 bg-slate-50/50 rounded-2xl border border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200 relative group"
+                className="grid grid-cols-1 gap-4  p-4 sm:p-5 bg-slate-50/50 rounded-2xl border border-slate-100 animate-in fade-in slide-in-from-top-2 duration-200 relative group"
               >
                 {/* Delete Button - Positioned top-right */}
                 <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -295,7 +295,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                 </div>
 
                 {/* Core Info: Type, Distance, Time */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr_1fr] gap-4">
                   {/* Transit Type */}
                   <FormField
                     control={form.control}
@@ -312,7 +312,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                           disabled={isLoadingTypes}
                         >
                           <FormControl>
-                            <SelectTrigger className="w-full h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
+                            <SelectTrigger className="w-full! h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
                               {isLoadingTypes ? (
                                 <div className="flex items-center gap-2">
                                   <Loader2 className="h-3 w-3 animate-spin" />
@@ -344,9 +344,9 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                 </SelectItem>
                               ))
                             ) : (
-                              ["BTS", "MRT", "ARL"].map((code) => (
+                              ["BTS", "MRT", "ARL", "EXPRESSWAY", "MAIN_ROAD"].map((code) => (
                                 <SelectItem key={code} value={code} className="py-2.5">
-                                  {code}
+                                  {code === "EXPRESSWAY" ? "จุดขึ้นลงทางด่วน" : code === "MAIN_ROAD" ? "ถนนหลัก" : code}
                                 </SelectItem>
                               ))
                             )}

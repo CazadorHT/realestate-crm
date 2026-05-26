@@ -1,6 +1,6 @@
 "use client";
 
-import { BedDouble, Bath, Car, Maximize, Building2, Home, Users } from "lucide-react";
+import { BedDouble, Bath, Car, Maximize, Building2, Home, Users, Sparkles, Sofa, Utensils } from "lucide-react";
 import {
   useLanguage,
   dictionaries,
@@ -12,7 +12,10 @@ interface PropertySpecsProps {
   bedrooms?: number | null;
   bathrooms?: number | null;
   parking?: number | null;
-  office_capacity?: number | null;
+  office_capacity?: string | number | null;
+  maid_rooms?: number | null;
+  halls?: number | null;
+  dining_rooms?: number | null;
   sizeSqm?: number | null;
   landSize?: number | null;
   floor?: number | null;
@@ -25,6 +28,9 @@ export function PropertySpecs({
   bathrooms,
   parking,
   office_capacity,
+  maid_rooms,
+  halls,
+  dining_rooms,
   sizeSqm,
   landSize,
   floor,
@@ -92,6 +98,27 @@ export function PropertySpecs({
       suffix: t("property.specs.unit_desk"),
       icon: <Users className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
       show: !!office_capacity,
+    },
+    {
+      label: language === "en" ? "Maid Room" : language === "cn" ? "保姆房" : language === "ru" ? "Комната прислуги" : "ห้องแม่บ้าน",
+      value: maid_rooms,
+      suffix: language === "en" ? "room" : language === "cn" ? "间" : language === "ru" ? "комн." : "ห้อง",
+      icon: <Sparkles className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
+      show: !!maid_rooms,
+    },
+    {
+      label: language === "en" ? "Large Hall" : language === "cn" ? "大厅" : language === "ru" ? "Зал" : "ห้องโถงใหญ่",
+      value: halls,
+      suffix: language === "en" ? "room" : language === "cn" ? "间" : language === "ru" ? "комн." : "ห้อง",
+      icon: <Sofa className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
+      show: !!halls,
+    },
+    {
+      label: language === "en" ? "Dining Room" : language === "cn" ? "餐厅" : language === "ru" ? "Столовая" : "ห้องอาหาร",
+      value: dining_rooms,
+      suffix: language === "en" ? "room" : language === "cn" ? "间" : language === "ru" ? "комн." : "ห้อง",
+      icon: <Utensils className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
+      show: !!dining_rooms,
     },
   ].filter(
     (item) => item.show && item.value !== null && item.value !== undefined,

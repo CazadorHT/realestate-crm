@@ -43,9 +43,20 @@ describe('Property Utilities (Enterprise Business Rules)', () => {
   });
 
   describe('Formatting Utils', () => {
-    it('should format price with Thai Baht symbol by default', () => {
-      expect(formatPrice(1000000)).toContain('฿');
-      expect(formatPrice(1000000)).toContain('1,000,000');
+    it('should format price correctly based on language and magnitude', () => {
+      // Under 1 million
+      expect(formatPrice(600000, 'th')).toBe('฿ 600,000');
+      expect(formatPrice(600000, 'en')).toBe('฿ 600,000');
+
+      // 1 million or above (Thai)
+      expect(formatPrice(1000000, 'th')).toBe('1 ล้านบาท');
+      expect(formatPrice(26500000, 'th')).toBe('26.5 ล้านบาท');
+      expect(formatPrice(1500000, 'th')).toBe('1.5 ล้านบาท');
+
+      // 1 million or above (International)
+      expect(formatPrice(1000000, 'en')).toBe('฿ 1M');
+      expect(formatPrice(26500000, 'en')).toBe('฿ 26.5M');
+      expect(formatPrice(1500000, 'en')).toBe('฿ 1.5M');
     });
   });
 

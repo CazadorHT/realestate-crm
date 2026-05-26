@@ -172,6 +172,9 @@ export default async function PropertyDetailsPage({
     floor: amenities.floor || null,
     parking_slots: amenities.parking_slots || null,
     office_capacity: amenities.office_capacity || null,
+    maid_rooms: amenities.maid_rooms || null,
+    halls: amenities.halls || null,
+    dining_rooms: amenities.dining_rooms || null,
     is_pet_friendly: !!amenities.is_pet_friendly,
     is_corner_unit: !!amenities.is_corner_unit,
     is_renovated: !!amenities.is_renovated,
@@ -365,6 +368,9 @@ export default async function PropertyDetailsPage({
                   floor={property.floor}
                   type={property.property_type}
                   language={lang}
+                  maid_rooms={property.maid_rooms}
+                  halls={property.halls}
+                  dining_rooms={property.dining_rooms}
                 />
 
                 {/* Badges ticker */}

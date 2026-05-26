@@ -166,6 +166,10 @@ export async function updatePropertyAction(
       google_maps_link: addressInfo?.maps_link || "",
       images: (existingMeta?.images as string[]) || [],
       property_source: (existingMeta?.property_source as string) || "",
+      office_capacity: (details?.amenities as Record<string, any>)?.office_capacity || undefined,
+      maid_rooms: (details?.amenities as Record<string, any>)?.maid_rooms || undefined,
+      halls: (details?.amenities as Record<string, any>)?.halls || undefined,
+      dining_rooms: (details?.amenities as Record<string, any>)?.dining_rooms || undefined,
     };
 
     const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
@@ -304,6 +308,20 @@ export async function updatePropertyAction(
           office_capacity: safeValues.office_capacity,
           orientation: safeValues.orientation,
           parking_type: safeValues.parking_type,
+          maid_rooms: safeValues.maid_rooms,
+          halls: safeValues.halls,
+          dining_rooms: safeValues.dining_rooms,
+          // Luxury / Premium Features
+          has_large_kitchen: safeValues.has_large_kitchen,
+          has_bar_counter: safeValues.has_bar_counter,
+          has_bathtub: safeValues.has_bathtub,
+          has_walk_in_closet: safeValues.has_walk_in_closet,
+          has_private_garden: safeValues.has_private_garden,
+          has_garage: safeValues.has_garage,
+          has_bbq_area: safeValues.has_bbq_area,
+          has_home_theatre: safeValues.has_home_theatre,
+          has_private_gym: safeValues.has_private_gym,
+          has_wine_cellar: safeValues.has_wine_cellar,
         },
         pricing_details: {
           maintenance_fee: safeValues.maintenance_fee,

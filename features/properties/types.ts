@@ -177,7 +177,10 @@ export interface PropertyDetail {
   land_area: number | null;
   land_size_sqwah: number | null; 
   parking_slots: number | null;
-  office_capacity: number | null;
+  office_capacity: string | null;
+  maid_rooms?: number | null;
+  halls?: number | null;
+  dining_rooms?: number | null;
   min_contract_months: number | null;
   province: string | null;
   district: string | null;

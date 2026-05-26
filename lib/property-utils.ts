@@ -186,10 +186,21 @@ export function getPriceFormatter(language: string = "th") {
   );
 }
 
-/**
- * Format price with currency based on language
- */
 export function formatPrice(value: number, language: string = "th"): string {
+  if (value >= 1000000) {
+    const millions = value / 1000000;
+    const formattedMillions = Number(millions.toFixed(2));
+    
+    if (language === "th") {
+      return `${formattedMillions.toLocaleString("th-TH")} ล้านบาท`;
+    } else if (language === "cn") {
+      return `฿ ${formattedMillions.toLocaleString("zh-CN")}M`;
+    } else if (language === "ru") {
+      return `฿ ${formattedMillions.toLocaleString("ru-RU")}M`;
+    } else {
+      return `฿ ${formattedMillions.toLocaleString("en-US")}M`;
+    }
+  }
   return `฿ ${getPriceFormatter(language).format(value)}`;
 }
 

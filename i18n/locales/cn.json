@@ -1058,7 +1058,17 @@
       "flexible_lease": "灵活租期",
       "fully_fitted": "精装修",
       "ready_to_move": "即可入住",
-      "family_friendly": "适合家庭"
+      "family_friendly": "适合家庭",
+      "large_kitchen": "大厨房",
+      "bar_counter": "吧台",
+      "bathtub": "浴缸",
+      "walk_in_closet": "行走衣橱",
+      "private_garden": "私人花园",
+      "garage": "车库 (Garage)",
+      "bbq_area": "BBQ 小芙草",
+      "home_theatre": "家庭影院",
+      "private_gym": "私人健身房",
+      "wine_cellar": "酒窖"
     },
     "transit_types": {
       "BTS": "曼谷轻轨 (BTS)",

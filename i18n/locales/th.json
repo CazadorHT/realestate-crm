@@ -1048,7 +1048,17 @@
       "flexible_lease": "สัญญาเช่ายืดหยุ่น",
       "fully_fitted": "ตกแต่งกึ่งสำเร็จรูป",
       "ready_to_move": "พร้อมเข้าอยู่",
-      "family_friendly": "เหมาะสำหรับครอบครัว"
+      "family_friendly": "เหมาะสำหรับครอบครัว",
+      "large_kitchen": "ห้องครัวใหญ่",
+      "bar_counter": "เคาท์เตอร์บาร์",
+      "bathtub": "อ่างแช่ตัว",
+      "walk_in_closet": "Walk-in Closet",
+      "private_garden": "สวนส่วนตัว",
+      "garage": "โรงจอดรถ (Garage)",
+      "bbq_area": "พื้นที่ BBQ",
+      "home_theatre": "Home Theatre",
+      "private_gym": "Gym ส่วนตัว",
+      "wine_cellar": "Wine Cellar"
     },
     "transit_types": {
       "BTS": "BTS",

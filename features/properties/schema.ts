@@ -57,7 +57,10 @@ export const PropertySchema = z
     electricity_charge: z.string().optional().nullable(),
     water_charge: z.string().optional().nullable(),
     rent_free_period_days: z.coerce.number().optional().nullable(),
-    office_capacity: z.coerce.number().optional().nullable(),
+    office_capacity: z.string().optional().nullable(),
+    maid_rooms: z.coerce.number().optional().nullable(),
+    halls: z.coerce.number().optional().nullable(),
+    dining_rooms: z.coerce.number().optional().nullable(),
 
     // 🏢 Stock Management
     total_units: z.coerce
@@ -116,14 +119,14 @@ export const PropertySchema = z
     transit_station_name_en: z.string().optional().nullable(),
     transit_station_name_cn: z.string().optional().nullable(),
     transit_station_name_ru: z.string().optional().nullable(),
-    transit_type: z.enum(TRANSIT_TYPE_ENUM).optional().nullable(),
+    transit_type: z.string().optional().nullable(),
     transit_distance_meters: z.coerce.number().optional().nullable(),
 
     // Multiple Transit Stations (JSONB)
     nearby_transits: z
       .array(
         z.object({
-          type: z.enum(TRANSIT_TYPE_ENUM),
+          type: z.string(),
           station_name: z.string().optional(),
           distance_meters: z.coerce.number().optional(),
           time: z.string().optional(), // เวลาเดินทาง (นาที)
@@ -191,6 +194,18 @@ export const PropertySchema = z
     is_never_lived_in: z.boolean(),
     requires_ai_review: z.boolean(),
     has_nearby_places: z.boolean(),
+
+    // 🏡 Luxury / Premium Features
+    has_large_kitchen: z.boolean(),
+    has_bar_counter: z.boolean(),
+    has_bathtub: z.boolean(),
+    has_walk_in_closet: z.boolean(),
+    has_private_garden: z.boolean(),
+    has_garage: z.boolean(),
+    has_bbq_area: z.boolean(),
+    has_home_theatre: z.boolean(),
+    has_private_gym: z.boolean(),
+    has_wine_cellar: z.boolean(),
     version: z.number().optional(),
 
     feature_ids: z.array(z.string()).optional(),

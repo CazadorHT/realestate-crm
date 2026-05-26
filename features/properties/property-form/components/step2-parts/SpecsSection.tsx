@@ -32,6 +32,12 @@ import {
   Droplets,
   Zap,
   Users,
+  Sparkles,
+  Sofa,
+  Utensils,
+  Minus,
+  Plus,
+  AlertTriangle,
 } from "lucide-react";
 import { useFormContext, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
@@ -44,6 +50,8 @@ interface SpecsSectionProps {
 export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) {
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
+  const bedrooms = form.watch("bedrooms");
+
   return (
     <Card className="border-slate-200/70 bg-white">
       <CardHeader className="space-y-4">
@@ -74,13 +82,16 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
               </h4>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 gap-4">
               {[
                 { name: "bedrooms", label: "ห้องนอน", icon: BedDouble },
                 { name: "bathrooms", label: "ห้องน้ำ", icon: Bath },
                 { name: "parking_slots", label: "ที่จอดรถ", icon: CarFront },
                 { name: "floor", label: "ชั้นที่", icon: Building2 },
                 { name: "office_capacity", label: "รองรับจำนวนที่นั่ง", icon: Users },
+                { name: "maid_rooms", label: "ห้องแม่บ้าน", icon: Sparkles },
+                { name: "halls", label: "ห้องโถงใหญ่", icon: Sofa },
+                { name: "dining_rooms", label: "ห้องอาหาร", icon: Utensils },
               ].map((item) => (
                 <FormField
                   key={item.name}
@@ -93,19 +104,68 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
                         {item.label}
                       </FormLabel>
                       <FormControl>
-                        <NumberInput
-                          {...field}
-                          placeholder="ระบุ"
-                          disabled={isReadOnly}
-                          className={[
-                            "h-9 rounded-lg border-slate-200 bg-white text-center text-sm",
-                            "text-slate-900",
-                            "focus:border-purple-500 focus:ring-purple-500/20 focus:ring-2",
-                            isReadOnly ? "bg-slate-50 text-slate-600" : "",
-                            fieldState.error ? "border-rose-400" : "",
-                          ].join(" ")}
-                        />
+                        {item.name === "office_capacity" ? (
+                          <Input
+                            {...field}
+                            value={field.value ?? ""}
+                            placeholder="เช่น 4-5"
+                            disabled={isReadOnly}
+                            className={[
+                              "h-9 rounded-lg border-slate-200 bg-white text-center text-sm",
+                              "text-slate-900 focus:border-purple-500 focus:ring-purple-500/20 focus:ring-2",
+                              isReadOnly ? "bg-slate-50 text-slate-600" : "",
+                              fieldState.error ? "border-rose-400" : "",
+                            ].join(" ")}
+                          />
+                        ) : (
+                          <div className={`flex items-center justify-between gap-1 border rounded-lg p-1 bg-white focus-within:border-purple-500 focus-within:ring-purple-500/20 focus-within:ring-2 transition-all ${
+                            fieldState.error ? "border-rose-400" : "border-slate-200"
+                          }`}>
+                            <button
+                              type="button"
+                              disabled={isReadOnly || !field.value || Number(field.value) <= 0}
+                              onClick={() => {
+                                const val = Number(field.value) || 0;
+                                if (val > 0) {
+                                  field.onChange(val - 1);
+                                }
+                              }}
+                              className="w-7 h-7 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 flex items-center justify-center shrink-0 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                            >
+                              <Minus className="h-3 w-3" />
+                            </button>
+                            
+                            <NumberInput
+                              {...field}
+                              placeholder="0"
+                              disabled={isReadOnly}
+                              className={[
+                                "h-7 w-full border-0 bg-transparent text-center text-sm p-0 focus:ring-0 focus:border-transparent focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0",
+                                "text-slate-900",
+                                isReadOnly ? "text-slate-600" : "",
+                              ].join(" ")}
+                            />
+
+                            <button
+                              type="button"
+                              disabled={isReadOnly}
+                              onClick={() => {
+                                const val = Number(field.value) || 0;
+                                field.onChange(val + 1);
+                              }}
+                              className="w-7 h-7 rounded-md bg-slate-50 hover:bg-slate-100 text-slate-600 hover:text-slate-900 flex items-center justify-center shrink-0 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
                       </FormControl>
+                      {item.name === "bathrooms" && Number(bedrooms) > 0 && (Number(field.value) || 0) === 0 && (
+                        <div className="mt-1 text-[10px] font-semibold text-amber-600 flex items-center gap-1 animate-in fade-in duration-200">
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                          <span>กรุณาตรวจสอบจำนวนห้องน้ำ</span>
+                        </div>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -138,6 +198,7 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
                 disabled={isReadOnly}
                 emphasize
                 size="sm"
+                decimals={2}
                 className="font-normal"
                 labelClassName=" "
               />
@@ -155,6 +216,7 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
                 disabled={isReadOnly}
                 emphasize
                 size="sm"
+                decimals={2}
                 className="font-normal"
                 labelClassName=" "
               />

@@ -11,6 +11,8 @@ INSERT INTO public.ref_master_data (type, code, label, is_active, sort_order, me
 ('TRANSIT_TYPE', 'SRT_RED', '{"th": "รถไฟฟ้าสายสีแดง", "en": "SRT Red Line", "cn": "泰国国家铁路红线", "ru": "Красная линия SRT"}', true, 70, '{"color": "#f43f5e"}'),
 ('TRANSIT_TYPE', 'GOLD', '{"th": "รถไฟฟ้าสายสีทอง", "en": "Gold Line", "cn": "金线", "ru": "Золотая линия"}', true, 80, '{"color": "#d97706"}'),
 ('TRANSIT_TYPE', 'BRT', '{"th": "รถโดยสารด่วนพิเศษ BRT", "en": "BRT Bus", "cn": "快速公交系统 BRT", "ru": "Автобус BRT"}', true, 90, '{"color": "#06b6d4"}'),
+('TRANSIT_TYPE', 'EXPRESSWAY', '{"th": "จุดขึ้นลงทางด่วน", "en": "Expressway Connection", "cn": "高速公路", "ru": "Шоссе"}', true, 100, '{"color": "#f97316"}'),
+('TRANSIT_TYPE', 'MAIN_ROAD', '{"th": "ถนนหลัก", "en": "Main Road", "cn": "主干道", "ru": "Главная дорога"}', true, 110, '{"color": "#8b5cf6"}'),
 ('TRANSIT_TYPE', 'OTHER', '{"th": "อื่นๆ", "en": "Other", "cn": "其他", "ru": "Другое"}', true, 999, '{"color": "#64748b"}')
 ON CONFLICT (type, code) DO UPDATE SET
   label = EXCLUDED.label,
