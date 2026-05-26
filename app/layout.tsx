@@ -18,6 +18,9 @@ import { Suspense } from "react";
 import { cookies, headers } from "next/headers";
 import { siteConfig } from "@/lib/site-config";
 import { getSiteSettings } from "@/features/site-settings/actions";
+import { createClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
+import { getProvinceName } from "@/lib/utils/provinces";
 // Removed force-dynamic to allow Next.js to optimize routing and enable SSG where possible.
 // Next.js will still dynamically render where cookies() or other dynamic functions are used.
 const prompt = Prompt({
@@ -39,14 +42,117 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: 'cover',
 };
+interface ActiveLocation {
+  popular_area: string | null;
+  popular_area_en: string | null;
+  popular_area_cn: string | null;
+  popular_area_ru: string | null;
+  province: string | null;
+}
+
+// 🔒 Caching Active Property Locations for SEO Performance (1-hour TTL)
+const getActiveLocations = unstable_cache(
+  async (): Promise<ActiveLocation[]> => {
+    try {
+      const supabase = await createClient();
+      const { data } = await supabase
+        .from("properties_core")
+        .select("popular_area, popular_area_en, popular_area_cn, popular_area_ru, province")
+        .eq("status", 1); // 1 = Active / Available
+      return (data || []) as ActiveLocation[];
+    } catch (err) {
+      console.error("Failed to fetch active property locations:", err);
+      return [];
+    }
+  },
+  ["active-property-locations"],
+  { revalidate: 3600, tags: ["active-property-locations"] }
+);
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getServerTranslations();
+  const { t, language } = await getServerTranslations();
   const settings = await getSiteSettings();
 
   const siteName = settings.site_name || siteConfig.name;
-  const siteDesc =
-    settings.site_description || t("metadata.default_description");
+  
+  // Smart Fallback: Use the database-configured description for Thai (th).
+  // For other languages (en, cn, ru), always fallback to the localized translation files (JSON) for SEO precision.
+  const siteDesc = language === "th"
+    ? (settings.site_description || t("metadata.default_description"))
+    : t("metadata.default_description");
+
+  const headersList = await headers();
+  const rawPathname = headersList.get("x-pathname") || "/";
+
+  // Strip locale prefix from rawPathname to get canonical clean path
+  let cleanPathname = rawPathname;
+  const parts = rawPathname.split("/");
+  if (parts.length > 1 && ["th", "en", "cn", "ru"].includes(parts[1])) {
+    cleanPathname = "/" + parts.slice(2).join("/");
+  }
+  if (cleanPathname === "") {
+    cleanPathname = "/";
+  }
+
+  // Ensure trailing slashes aren't doubled
+  const canonicalUrl = `${siteConfig.url}${cleanPathname === "/" ? "" : cleanPathname}`;
+
+  // 🔄 Fetch and build dynamic keywords based on active DB listings
+  const locations = await getActiveLocations();
+  
+  let activeAreas: string[] = [];
+  let activeProvinces: string[] = [];
+  
+  if (locations && locations.length > 0) {
+    activeAreas = Array.from(
+      new Set(
+        locations.map((loc: ActiveLocation) => {
+          if (language === "en") return (loc.popular_area_en || loc.popular_area) || "";
+          if (language === "cn") return (loc.popular_area_cn || loc.popular_area) || "";
+          if (language === "ru") return (loc.popular_area_ru || loc.popular_area) || "";
+          return loc.popular_area || "";
+        }).filter(Boolean)
+      )
+    ).slice(0, 10) as string[]; // Limit to top 10 areas to prevent tag bloating
+
+    activeProvinces = Array.from(
+      new Set(
+        locations.map((loc: ActiveLocation) => loc.province || "").filter(Boolean)
+      )
+    ).slice(0, 5) as string[]; // Limit to top 5 provinces
+  }
+
+  // Combine static fallback keywords with DB dynamic ones
+  const baseKeywordsStr = t("metadata.keywords") || "";
+  const baseKeywords = baseKeywordsStr ? baseKeywordsStr.split(",").map(k => k.trim()) : [];
+  const dynamicKeywords: string[] = [];
+
+  activeAreas.forEach((area) => {
+    if (language === "en") {
+      dynamicKeywords.push(`office space in ${area}`, `condo for rent ${area}`);
+    } else if (language === "cn") {
+      dynamicKeywords.push(`${area}写字楼`, `${area}公寓出租`);
+    } else if (language === "ru") {
+      dynamicKeywords.push(`офис в ${area}`, `аренда кондо ${area}`);
+    } else {
+      dynamicKeywords.push(`เช่าออฟฟิศ${area}`, `คอนโด${area}`);
+    }
+  });
+
+  activeProvinces.forEach((prov) => {
+    const localizedProv = getProvinceName(prov, language);
+    if (language === "en") {
+      dynamicKeywords.push(`property in ${localizedProv}`, `luxury villa ${localizedProv}`);
+    } else if (language === "cn") {
+      dynamicKeywords.push(`${localizedProv}房产`, `${localizedProv}别墅购买`);
+    } else if (language === "ru") {
+      dynamicKeywords.push(`недвижимость ${localizedProv}`, `купить виллу ${localizedProv}`);
+    } else {
+      dynamicKeywords.push(`ซื้อบ้าน${localizedProv}`, `บ้านเดี่ยว${localizedProv}`);
+    }
+  });
+
+  const finalKeywords = Array.from(new Set([...baseKeywords, ...dynamicKeywords, siteName]));
 
   return {
     metadataBase: new URL(siteConfig.url),
@@ -55,7 +161,17 @@ export async function generateMetadata(): Promise<Metadata> {
       template: `%s | ${siteName}`,
     },
     description: siteDesc,
-    keywords: [...siteConfig.keywords, "Real Estate Thailand", siteName],
+    keywords: finalKeywords,
+    alternates: {
+      canonical: canonicalUrl || `${siteConfig.url}/`,
+      languages: {
+        th: `${siteConfig.url}/th${cleanPathname === "/" ? "" : cleanPathname}`,
+        en: `${siteConfig.url}/en${cleanPathname === "/" ? "" : cleanPathname}`,
+        "zh-Hans": `${siteConfig.url}/cn${cleanPathname === "/" ? "" : cleanPathname}`,
+        ru: `${siteConfig.url}/ru${cleanPathname === "/" ? "" : cleanPathname}`,
+        "x-default": canonicalUrl || `${siteConfig.url}/`,
+      },
+    },
     openGraph: {
       type: "website",
       locale: "th_TH",

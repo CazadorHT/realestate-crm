@@ -7,6 +7,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = siteConfig.url;
   const supabase = await createClient();
 
+  // Helper to generate alternate language objects for search engine indexing
+  const getAlternates = (path: string) => {
+    // Ensure trailing slash is clean
+    const cleanPath = path === "/" ? "" : path;
+    return {
+      languages: {
+        th: `${baseUrl}/th${cleanPath}`,
+        en: `${baseUrl}/en${cleanPath}`,
+        cn: `${baseUrl}/cn${cleanPath}`,
+        ru: `${baseUrl}/ru${cleanPath}`,
+      },
+    };
+  };
+
   // 1. Static Routes
   const staticRoutes: MetadataRoute.Sitemap = [
     {
@@ -14,36 +28,42 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1,
+      alternates: getAlternates("/"),
     },
     {
       url: `${baseUrl}/properties`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.9,
+      alternates: getAlternates("/properties"),
     },
     {
       url: `${baseUrl}/services`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
+      alternates: getAlternates("/services"),
     },
     {
       url: `${baseUrl}/blog`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 0.8,
+      alternates: getAlternates("/blog"),
     },
     {
       url: `${baseUrl}/contact`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.5,
+      alternates: getAlternates("/contact"),
     },
     {
       url: `${baseUrl}/about`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.5,
+      alternates: getAlternates("/about"),
     },
   ];
 
@@ -60,6 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(prop.updated_at),
       changeFrequency: "weekly",
       priority: 0.7,
+      alternates: getAlternates(`/properties/${prop.slug}`),
     }),
   );
 
@@ -75,6 +96,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     lastModified: blog.updated_at ? new Date(blog.updated_at) : new Date(),
     changeFrequency: "monthly",
     priority: 0.6,
+    alternates: getAlternates(`/blog/${blog.slug}`),
   }));
 
   // 4. Fetch Active Services
@@ -93,6 +115,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         : new Date(),
       changeFrequency: "monthly",
       priority: 0.6,
+      alternates: getAlternates(`/services/${service.slug}`),
     }),
   );
 

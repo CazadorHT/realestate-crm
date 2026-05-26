@@ -5,36 +5,44 @@ import { Button } from "@/components/ui/button";
 import { Clock } from "lucide-react";
 import { FaFacebook, FaLine, FaInstagram, FaTiktok } from "react-icons/fa";
 import { useLanguage } from "@/components/providers/LanguageProvider";
-
-const socialLinks = [
-  {
-    icon: FaFacebook,
-    name: "Facebook",
-    href: "https://facebook.com/yourpage",
-    color: "text-[#1877F2] bg-[#1877F2]/10 hover:bg-[#1877F2] hover:text-white",
-  },
-  {
-    icon: FaLine,
-    name: "Line",
-    href: "https://line.me/R/ti/p/@your-line-id",
-    color: "text-[#06C755] bg-[#06C755]/10 hover:bg-[#06C755] hover:text-white",
-  },
-  {
-    icon: FaInstagram,
-    name: "Instagram",
-    href: "https://instagram.com/yourpage",
-    color: "text-[#E4405F] bg-[#E4405F]/10 hover:bg-[#E4405F] hover:text-white",
-  },
-  {
-    icon: FaTiktok,
-    name: "TikTok",
-    href: "https://tiktok.com/@yourpage",
-    color: "text-[#000000] bg-slate-100 hover:bg-black hover:text-white",
-  },
-];
+import { siteConfig } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
 export function ContactSidebar() {
   const { t } = useLanguage();
+  const settings = useSiteConfig();
+
+  const facebookUrl = settings.facebook_url || siteConfig.links.facebook;
+  const lineUrl = settings.line_url || siteConfig.links.line;
+  const instagramUrl = settings.instagram_url || siteConfig.links.instagram;
+  const tiktokUrl = settings.tiktok_url || siteConfig.links.tiktok;
+
+  const socialLinks = [
+    {
+      icon: FaFacebook,
+      name: "Facebook",
+      href: facebookUrl,
+      color: "text-[#1877F2] bg-[#1877F2]/10 hover:bg-[#1877F2] hover:text-white",
+    },
+    {
+      icon: FaLine,
+      name: "Line",
+      href: lineUrl,
+      color: "text-[#06C755] bg-[#06C755]/10 hover:bg-[#06C755] hover:text-white",
+    },
+    {
+      icon: FaInstagram,
+      name: "Instagram",
+      href: instagramUrl,
+      color: "text-[#E4405F] bg-[#E4405F]/10 hover:bg-[#E4405F] hover:text-white",
+    },
+    {
+      icon: FaTiktok,
+      name: "TikTok",
+      href: tiktokUrl,
+      color: "text-[#000000] bg-slate-100 hover:bg-black hover:text-white",
+    },
+  ];
 
   const businessHours = [
     { day: t("contact.sidebar_mon_fri"), hours: "09:00 - 18:00" },
@@ -86,7 +94,7 @@ export function ContactSidebar() {
             {socialLinks.map((social, index) => (
               <a
                 key={index}
-                href={social.href}
+                href={social.href || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`aspect-square rounded-2xl flex items-center justify-center transition-all duration-300 hover:scale-110 hover:shadow-lg ${social.color}`}
@@ -117,7 +125,7 @@ export function ContactSidebar() {
             {t("contact.sidebar_quick_desc2")}
           </p>
           <a
-            href="https://line.me/R/ti/p/@your-line-id"
+            href={lineUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="block"
@@ -132,3 +140,4 @@ export function ContactSidebar() {
     </div>
   );
 }
+

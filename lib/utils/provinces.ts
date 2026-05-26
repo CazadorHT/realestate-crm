@@ -102,8 +102,8 @@ export function getProvinceName(thaiName: string, lang: string): string {
   if (!thaiName) return "";
   if (lang === "th") return thaiName;
 
-  // Normalize: trim and remove "จ." prefix if present
-  const cleanName = thaiName.replace(/^จ\./, "").trim();
+  // Normalize: trim and remove "จังหวัด" or "จ." prefix if present
+  const cleanName = thaiName.replace(/^(จังหวัด|จ\.)/, "").trim();
 
   const mapped = PROVINCES[cleanName];
   if (mapped) {

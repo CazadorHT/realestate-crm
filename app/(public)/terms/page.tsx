@@ -20,10 +20,6 @@ export async function generateMetadata(): Promise<Metadata> {
     title: `${t("terms.title")} | ${siteName}`,
     description: t("terms.hero_desc"),
     applicationName: siteName,
-    alternates: {
-      // ✅ FIX: Use PRODUCTION_URL so canonical is always the production domain
-      canonical: `${PRODUCTION_URL}/terms`,
-    },
     robots: "index, follow",
   };
 }

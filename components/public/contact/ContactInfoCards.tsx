@@ -8,16 +8,24 @@ import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { FaLine } from "react-icons/fa6";
 
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+
 export function ContactInfoCards() {
   const { t } = useLanguage();
+  const settings = useSiteConfig();
+
+  const phone = settings.contact_phone || siteConfig.contact.phone;
+  const email = settings.contact_email || siteConfig.contact.email;
+  const lineId = settings.line_id || siteConfig.contact.lineId;
+  const lineUrl = settings.line_url || siteConfig.links.line;
 
   const contactInfo = [
     {
       icon: Phone,
       title: t("contact.info_phone"),
-      value: siteConfig.contact.phone,
+      value: phone,
       subtitle: t("contact.info_phone_sub"),
-      href: `tel:${siteConfig.contact.phone.replace(/[^0-9+]/g, "")}`,
+      href: `tel:${phone.replace(/[^0-9+]/g, "")}`,
       iconColor: "text-blue-400",
       iconBg: "bg-blue-500/15",
       glowBorder: "group-hover:border-blue-500/30",
@@ -25,9 +33,9 @@ export function ContactInfoCards() {
     {
       icon: Mail,
       title: t("contact.info_email"),
-      value: siteConfig.contact.email,
+      value: email,
       subtitle: t("contact.info_email_sub"),
-      href: `mailto:${siteConfig.contact.email}`,
+      href: `mailto:${email}`,
       iconColor: "text-purple-400",
       iconBg: "bg-purple-500/15",
       glowBorder: "group-hover:border-purple-500/30",
@@ -35,14 +43,15 @@ export function ContactInfoCards() {
     {
       icon: FaLine,
       title: t("contact.info_line"),
-      value: siteConfig.contact.lineId,
+      value: lineId,
       subtitle: t("contact.info_line_sub"),
-      href: siteConfig.links.line,
+      href: lineUrl,
       iconColor: "text-green-400",
       iconBg: "bg-green-500/15",
       glowBorder: "group-hover:border-green-500/30",
     },
   ];
+
 
   const container: any = {
     hidden: { opacity: 0 },

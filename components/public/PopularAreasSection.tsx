@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { MapPin, ArrowRight } from "lucide-react";
@@ -256,7 +257,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
               </span>
 
               {/* Province Switcher UI: Integrated Inline */}
-              {provinces.length > 1 && (
+              {provinces.length > 0 && (
                 <div className="flex-1 min-w-full sm:min-w-[250px] md:min-w-[300px] select-none relative my-4  xl:my-0">
                   <AnimatePresence mode="wait">
                     <m.div
@@ -275,35 +276,37 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                       className="flex items-center w-full"
                     >
                       {/* Elite Superscript Label (Next Province) */}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => setActiveProvIndex(nextProvIndex)}
-                              onMouseEnter={() => {
-                                prefetchProvince(provinces[nextProvIndex]?.id);
-                                setIsNextHovered(true);
-                              }}
-                              onMouseLeave={() => setIsNextHovered(false)}
-                              className="absolute -top-4 md:-top-7 left-0 flex items-center gap-2 group/sup cursor-pointer"
-                            >
-                              <span className={cn(
-                                "text-[10px] md:text-xs font-semibold tracking-[0.3em] text-blue-700 uppercase transition-all duration-500 origin-left italic",
-                                isNextHovered ? "text-blue-800 tracking-[0.5em] scale-110" : "group-hover/sup:text-blue-800 group-hover/sup:tracking-[0.5em] group-hover/sup:scale-110"
-                              )}>
-                                {t("home.popular_areas.next_label")}: {nextDisplay}
-                              </span>
-                              <div className={cn(
-                                "h-px w-0 bg-blue-400/20 transition-all duration-700",
-                                isNextHovered ? "w-12" : "group-hover/sup:w-12"
-                              )} />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent className="bg-slate-900 text-white border-none shadow-xl">
-                            <p className="text-xs font-bold font-heading">{t("home.popular_areas.switch_to")} {nextDisplay}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      {provinces.length > 1 && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => setActiveProvIndex(nextProvIndex)}
+                                onMouseEnter={() => {
+                                  prefetchProvince(provinces[nextProvIndex]?.id);
+                                  setIsNextHovered(true);
+                                }}
+                                onMouseLeave={() => setIsNextHovered(false)}
+                                className="absolute -top-4 md:-top-7 left-0 flex items-center gap-2 group/sup cursor-pointer"
+                              >
+                                <span className={cn(
+                                  "text-[10px] md:text-xs font-semibold tracking-[0.3em] text-blue-700 uppercase transition-all duration-500 origin-left italic",
+                                  isNextHovered ? "text-blue-800 tracking-[0.5em] scale-110" : "group-hover/sup:text-blue-800 group-hover/sup:tracking-[0.5em] group-hover/sup:scale-110"
+                                )}>
+                                  {t("home.popular_areas.next_label")}: {nextDisplay}
+                                </span>
+                                <div className={cn(
+                                  "h-px w-0 bg-blue-400/20 transition-all duration-700",
+                                  isNextHovered ? "w-12" : "group-hover/sup:w-12"
+                                )} />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-slate-900 text-white border-none shadow-xl">
+                              <p className="text-xs font-bold font-heading">{t("home.popular_areas.switch_to")} {nextDisplay}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
 
                       {/* Active Label & Switcher */}
                       <div className="flex items-center justify-between xl:justify-start w-full gap-3 group/label  ">
@@ -320,40 +323,42 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                           </Tooltip>
                         </TooltipProvider>
 
-                        <button
-                          onClick={() => setActiveProvIndex(nextProvIndex)}
-                          onMouseEnter={() => {
-                            prefetchProvince(provinces[nextProvIndex]?.id);
-                            setIsNextHovered(true);
-                          }}
-                          onMouseLeave={() => setIsNextHovered(false)}
-                          disabled={isLoading}
-                          aria-label={t("home.popular_areas.switch_to") + " " + nextDisplay}
-                          className="p-1.5 xs:p-2 rounded-lg xs:rounded-xl bg-slate-100 hover:bg-blue-600 text-blue-400 hover:text-white transition-all! group-active:scale-90 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <m.div
-                            animate={
-                              isLoading
-                                ? { rotate: 360 }
-                                : { rotate: activeProvIndex * 180 }
-                            }
-                            transition={
-                              isLoading
-                                ? {
-                                    duration: 1,
-                                    repeat: Infinity,
-                                    ease: "linear",
-                                  }
-                                : {
-                                    type: "spring",
-                                    stiffness: 200,
-                                    damping: 15,
-                                  }
-                            }
+                        {provinces.length > 1 && (
+                          <button
+                            onClick={() => setActiveProvIndex(nextProvIndex)}
+                            onMouseEnter={() => {
+                              prefetchProvince(provinces[nextProvIndex]?.id);
+                              setIsNextHovered(true);
+                            }}
+                            onMouseLeave={() => setIsNextHovered(false)}
+                            disabled={isLoading}
+                            aria-label={t("home.popular_areas.switch_to") + " " + nextDisplay}
+                            className="p-1.5 xs:p-2 rounded-lg xs:rounded-xl bg-slate-100 hover:bg-blue-600 text-blue-400 hover:text-white transition-all! group-active:scale-90 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            <RefreshCw className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
-                          </m.div>
-                        </button>
+                            <m.div
+                              animate={
+                                isLoading
+                                  ? { rotate: 360 }
+                                  : { rotate: activeProvIndex * 180 }
+                              }
+                              transition={
+                                isLoading
+                                  ? {
+                                      duration: 1,
+                                      repeat: Infinity,
+                                      ease: "linear",
+                                    }
+                                  : {
+                                      type: "spring",
+                                      stiffness: 200,
+                                      damping: 15,
+                                    }
+                              }
+                            >
+                              <RefreshCw className="h-4 w-4 xs:h-5 xs:w-5 sm:h-6 sm:w-6" />
+                            </m.div>
+                          </button>
+                        )}
                       </div>
                     </m.div>
                   </AnimatePresence>
@@ -381,16 +386,8 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <button
-                    onClick={() => {
-                      const provinceId = provinces[activeProvIndex]?.id;
-                      const qp = new URLSearchParams({ type: "ALL" });
-                      if (provinceId) qp.set("province", provinceId);
-                      router.push(`/?${qp.toString()}#latest-properties`);
-                      document
-                        .getElementById("latest-properties")
-                        ?.scrollIntoView({ behavior: "smooth" });
-                    }}
+                  <Link
+                    href={`/properties?province=${encodeURIComponent(provinces[activeProvIndex]?.id || "กรุงเทพมหานคร")}`}
                     data-aos="fade-left"
                     suppressHydrationWarning
                     className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all! duration-300! hover:scale-105 flex items-center justify-center"
@@ -406,7 +403,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                       <span>{t("common.view_all")}</span>
                       <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform! duration-300!" />
                     </div>
-                  </button>
+                  </Link>
                 </TooltipTrigger>
                 <TooltipContent className="text-sm font-medium">
                   {t("common.view_all")} {activeDisplay}
@@ -496,57 +493,56 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                 isDragging ? "cursor-grabbing scale-[0.99]" : "cursor-grab"
               }`}
             >
-              {items.map((it, index) => (
-                <button
-                  key={it.key}
-                  type="button"
-                  onClick={(e) => {
-                    if (isDragging) return e.preventDefault();
-                    const qp = new URLSearchParams({
-                      area: it.popular_area,
-                    });
-                    router.push(`/?${qp.toString()}#latest-properties`);
-                  }}
-                  {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (index * 100).toString() } : {})}
-                  className="group w-[220px] sm:w-[260px] relative isolate shrink-0 rounded-xl sm:rounded-4xl overflow-hidden bg-slate-900 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all! duration-500! text-left snap-start"
-                >
-                  {/* Image & Overlays */}
-                  <div className="absolute inset-0 -z-10">
-                    <Image
-                      src={it.cover || "/images/area-placeholder1.jpg"}
-                      alt={it.popular_area}
-                      fill
-                      sizes="(max-width: 640px) 220px, 260px"
-                      className="object-cover transition-transform! duration-1000! group-hover:scale-110 "
-                    />
-                    {/* Double Gradient for readability */}
-                    <div className="absolute inset-0 bg-black/10 transition-opacity! duration-500! group-hover:opacity-40" />
-                    <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/10 to-transparent opacity-90" />
-                  </div>
-
-                  <div className="relative p-5 sm:p-6 h-[160px] sm:h-[180px] flex flex-col justify-end">
-                    {/* ชื่อทำเล: ขยับขึ้นเสมอในมือถือ และขยับเมื่อ Hover ใน Desktop */}
-                    <div className="transform transition-transform! duration-500! -translate-y-10 lg:translate-y-0 lg:group-hover:-translate-y-10">
-                      <h3 className="text-white text-xl sm:text-2xl font-semibold tracking-tight drop-shadow-lg">
-                        {getLocaleValue(it, "popular_area", language)}
-                      </h3>
+              {items.map((it, index) => {
+                const href = `/properties?popular_area=${encodeURIComponent(it.popular_area)}`;
+                return (
+                  <Link
+                    key={it.key}
+                    href={href}
+                    onClick={(e) => {
+                      if (isDragging) return e.preventDefault();
+                    }}
+                    {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": (index * 100).toString() } : {})}
+                    className="group w-[220px] sm:w-[260px] relative isolate shrink-0 rounded-xl sm:rounded-4xl overflow-hidden bg-slate-900 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all! duration-500! text-left snap-start block"
+                  >
+                    {/* Image & Overlays */}
+                    <div className="absolute inset-0 -z-10">
+                      <Image
+                        src={it.cover || "/images/area-placeholder1.jpg"}
+                        alt={it.popular_area}
+                        fill
+                        sizes="(max-width: 640px) 220px, 260px"
+                        className="object-cover transition-transform! duration-1000! group-hover:scale-110 "
+                      />
+                      {/* Double Gradient for readability */}
+                      <div className="absolute inset-0 bg-black/10 transition-opacity! duration-500! group-hover:opacity-40" />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/10 to-transparent opacity-90" />
                     </div>
-                    {/* แถวข้อมูล: แสดงเลยในมือถือ และแสดงเมื่อ Hover ใน Desktop */}
-                    <div className="absolute bottom-5 sm:bottom-6 left-5 sm:left-6 right-5 sm:right-6 flex items-center justify-between opacity-100 lg:opacity-0 lg:group-hover:opacity-100 translate-y-0 lg:translate-y-2 lg:group-hover:translate-y-0 transition-all! duration-300! gap-4">
-                      <p className="bg-white/30 backdrop-blur-md border border-white/30 text-white/90 text-[10px] sm:text-[11px] font-medium px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-xl truncate max-w-[60%]">
-                        {it.count.toLocaleString()}{" "}
-                        {t("property_listing.found_suffix")}
-                      </p>
-                      <div className="flex items-center gap-1 text-white text-[10px] sm:text-xs font-semibold uppercase tracking-wider shrink-0">
-                        <span className="hidden sm:inline truncate max-w-[80px]">
-                          {t("home.popular_areas.explore")}
-                        </span>
-                        <ArrowRight className="h-3 w-3 shrink-0 transition-transform! lg:group-hover:translate-x-1" />
+
+                    <div className="relative p-5 sm:p-6 h-[160px] sm:h-[180px] flex flex-col justify-end">
+                      {/* ชื่อทำเล: ขยับขึ้นเสมอในมือถือ และขยับเมื่อ Hover ใน Desktop */}
+                      <div className="transform transition-transform! duration-500! -translate-y-10 lg:translate-y-0 lg:group-hover:-translate-y-10">
+                        <h3 className="text-white text-xl sm:text-2xl font-semibold tracking-tight drop-shadow-lg">
+                          {getLocaleValue(it, "popular_area", language)}
+                        </h3>
+                      </div>
+                      {/* แถวข้อมูล: แสดงเลยในมือถือ และแสดงเมื่อ Hover ใน Desktop */}
+                      <div className="absolute bottom-5 sm:bottom-6 left-5 sm:left-6 right-5 sm:right-6 flex items-center justify-between opacity-100 lg:opacity-0 lg:group-hover:opacity-100 translate-y-0 lg:translate-y-2 lg:group-hover:translate-y-0 transition-all! duration-300! gap-4">
+                        <p className="bg-white/30 backdrop-blur-md border border-white/30 text-white/90 text-[10px] sm:text-[11px] font-medium px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-xl truncate max-w-[60%]">
+                          {it.count.toLocaleString()}{" "}
+                          {t("property_listing.found_suffix")}
+                        </p>
+                        <div className="flex items-center gap-1 text-white text-[10px] sm:text-xs font-semibold uppercase tracking-wider shrink-0">
+                          <span className="hidden sm:inline truncate max-w-[80px]">
+                            {t("home.popular_areas.explore")}
+                          </span>
+                          <ArrowRight className="h-3 w-3 shrink-0 transition-transform! lg:group-hover:translate-x-1" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

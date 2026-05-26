@@ -511,9 +511,9 @@ export function PropertyHeader({
                     )}
                   </div>
 
-                  <h2 className="text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-tight line-clamp-2">
+                  <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold text-slate-900 leading-tight line-clamp-2">
                     {localizedTitle}
-                  </h2>
+                  </h1>
 
                   <div className="flex items-center text-slate-600 gap-4 font-normal text-sm">
                     <div className="flex items-center gap-2">

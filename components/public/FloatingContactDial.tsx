@@ -195,9 +195,9 @@ export function FloatingContactDial() {
           </button>
         </div>
 
-        {/* Generic/Office Channels */}
+        {/* Messenger */}
         <a
-          href="https://m.me/yourpage"
+          href={settings.facebook_url ? `https://m.me/${settings.facebook_url.split("/").pop()}` : "https://m.me/vcconnectasset"}
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center gap-2"
@@ -213,7 +213,7 @@ export function FloatingContactDial() {
 
         {/* Line */}
         <a
-          href="https://line.me/ti/p/@cazador"
+          href={settings.line_url || siteConfig.links.line}
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center gap-2"

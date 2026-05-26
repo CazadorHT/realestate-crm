@@ -9,29 +9,7 @@ import { publicPropertyFilterSchema } from "@/features/public/schema";
 
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const { t } = await getServerTranslations();
-  const canonicalUrl = `${siteConfig.url}/properties`;
-  return {
-    title: t("metadata.search_title"),
-    description: t("metadata.search_description"),
-    alternates: {
-      canonical: canonicalUrl,
-      languages: {
-        "th-TH": `${canonicalUrl}?lang=th`,
-        "en-US": `${canonicalUrl}?lang=en`,
-        "zh-CN": `${canonicalUrl}?lang=cn`,
-        "ru-RU": `${canonicalUrl}?lang=ru`,
-        "x-default": canonicalUrl,
-      },
-    },
-  };
-}
-
-export default async function PublicPropertiesPage(props: { searchParams: Promise<any> }) {
-  const searchParams = await props.searchParams;
-  
-  // 🔄 Map searchParams to GetPropertiesOptions (Synced with API Route)
+function parseSearchParamsToOptions(searchParams: any): GetPropertiesOptions {
   const rawParams: Record<string, any> = {};
   Object.entries(searchParams).forEach(([key, value]) => {
     if (typeof value !== 'string') return;
@@ -78,7 +56,33 @@ export default async function PublicPropertiesPage(props: { searchParams: Promis
   });
 
   const parsed = publicPropertyFilterSchema.safeParse(rawParams);
-  const options = parsed.success ? (parsed.data as GetPropertiesOptions) : { limit: 12 };
+  return parsed.success ? (parsed.data as GetPropertiesOptions) : { limit: 12 };
+}
+
+export async function generateMetadata(props: { searchParams: Promise<any> }): Promise<Metadata> {
+  const { t } = await getServerTranslations();
+  const searchParams = await props.searchParams;
+  const options = parseSearchParamsToOptions(searchParams);
+  
+  // Call cached getPublicProperties (limiting to 1 since we only need to check if there are 0 results)
+  const initialData = await getPublicProperties({ ...options, limit: 1 });
+  const hasNoResults = initialData.properties.length === 0;
+
+  return {
+    title: t("metadata.search_title"),
+    description: t("metadata.search_description"),
+    ...(hasNoResults && {
+      robots: {
+        index: false,
+        follow: true,
+      },
+    }),
+  };
+}
+
+export default async function PublicPropertiesPage(props: { searchParams: Promise<any> }) {
+  const searchParams = await props.searchParams;
+  const options = parseSearchParamsToOptions(searchParams);
   
   // ⚡ Prefetch initial data on the server
   const initialData = await getPublicProperties({ ...options, limit: 12, includeFacets: true });

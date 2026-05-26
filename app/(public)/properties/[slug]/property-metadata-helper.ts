@@ -80,16 +80,6 @@ export async function generatePropertyMetadataAsync(slug: string): Promise<Metad
     title: pageTitle,
     description: pageDesc,
     keywords: keywords,
-    alternates: {
-      canonical: canonicalUrl,
-      languages: {
-        "th-TH": `${canonicalUrl}?lang=th`,
-        "en-US": `${canonicalUrl}?lang=en`,
-        "zh-CN": `${canonicalUrl}?lang=cn`,
-        "ru-RU": `${canonicalUrl}?lang=ru`,
-        "x-default": canonicalUrl,
-      },
-    },
     openGraph: {
       title: pageTitle,
       description: pageDesc,

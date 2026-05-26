@@ -24,9 +24,6 @@ export async function generateMetadata(): Promise<Metadata> {
     title: `${t("privacy.title")} | ${siteName}`,
     description: t("privacy.hero_desc"),
     applicationName: siteName,
-    alternates: {
-      canonical: `${PRODUCTION_URL}/privacy-policy`,
-    },
     robots: "index, follow",
   };
 }

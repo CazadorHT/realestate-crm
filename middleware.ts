@@ -61,12 +61,37 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // 🌏 Auto-Language Detection (IP & Locale based)
+  // 🌏 Auto-Language Detection & URL Path Localization
+  const SUPPORTED_LOCALES = ["th", "en", "cn", "ru"];
+  const pathParts = pathname.split("/");
+  const firstPart = pathParts[1]?.toLowerCase();
+  const isLocalePath = SUPPORTED_LOCALES.includes(firstPart);
+  
+  let detectedLang: string | null = null;
+  let pathnameWithoutLocale = pathname;
+
+  if (isLocalePath) {
+    detectedLang = firstPart;
+    pathnameWithoutLocale = "/" + pathParts.slice(2).join("/");
+    if (pathnameWithoutLocale === "") {
+      pathnameWithoutLocale = "/";
+    }
+  }
+
   const hasLangCookie = request.cookies.has("app-language");
-  if (!hasLangCookie) {
+  const currentCookieLang = request.cookies.get("app-language")?.value;
+
+  // Set detectedLang if not matching the current path prefix
+  if (isLocalePath && detectedLang !== currentCookieLang) {
+    response.cookies.set("app-language", detectedLang!, {
+      path: "/",
+      maxAge: 31536000,
+      sameSite: "lax",
+    });
+  } else if (!isLocalePath && !hasLangCookie) {
+    // Auto-detect browser/IP language on default root paths
     const acceptLang = request.headers.get("accept-language")?.toLowerCase();
     const country = request.headers.get("x-vercel-ip-country")?.toUpperCase();
-    let detectedLang: string | null = null;
 
     if (country) {
       if (country === "CN" || country === "HK" || country === "TW") detectedLang = "cn";
@@ -98,6 +123,9 @@ export async function middleware(request: NextRequest) {
       });
     }
   }
+
+  // Active language for downstream routing
+  const activeLang = detectedLang || currentCookieLang || "th";
 
   // 3. 🛡️ Identification & Bypass Logic
   const ip = getClientIp(request);
@@ -193,11 +221,31 @@ export async function middleware(request: NextRequest) {
     const requestHeaders = new Headers(request.headers);
     requestHeaders.set("x-pathname", pathname);
 
-    const finalResponse = NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      },
-    });
+    // Inject active language into Cookie header for downstream Server Components
+    let cookieHeader = request.headers.get("cookie") || "";
+    if (cookieHeader.includes("app-language=")) {
+      cookieHeader = cookieHeader.replace(/app-language=[^;]*/, `app-language=${activeLang}`);
+    } else {
+      cookieHeader = cookieHeader ? `${cookieHeader}; app-language=${activeLang}` : `app-language=${activeLang}`;
+    }
+    requestHeaders.set("cookie", cookieHeader);
+
+    let finalResponse;
+    if (isLocalePath) {
+      const rewriteUrl = request.nextUrl.clone();
+      rewriteUrl.pathname = pathnameWithoutLocale;
+      finalResponse = NextResponse.rewrite(rewriteUrl, {
+        request: {
+          headers: requestHeaders,
+        },
+      });
+    } else {
+      finalResponse = NextResponse.next({
+        request: {
+          headers: requestHeaders,
+        },
+      });
+    }
 
     // Sync cookies from authResponse/language logic to the final response
     response.cookies.getAll().forEach((cookie) => {

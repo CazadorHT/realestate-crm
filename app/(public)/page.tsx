@@ -114,16 +114,6 @@ export async function generateMetadata(): Promise<Metadata> {
       description: t("metadata.home_description"),
       images: [`${siteConfig.url}${siteConfig.ogImage}`],
     },
-    alternates: {
-      canonical: siteConfig.url,
-      languages: {
-        "th-TH": `${siteConfig.url}?lang=th`,
-        "en-US": `${siteConfig.url}?lang=en`,
-        "zh-CN": `${siteConfig.url}?lang=cn`,
-        "ru-RU": `${siteConfig.url}?lang=ru`,
-        "x-default": siteConfig.url,
-      },
-    },
     other: {
       "tiktok-developers-site-verification": siteConfig.verificationTokens.tiktok,
       "tiktok-site-verification": siteConfig.verificationTokens.tiktok,

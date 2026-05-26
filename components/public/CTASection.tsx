@@ -8,10 +8,12 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { useState, useEffect } from "react";
 
 import { siteConfig } from "@/lib/site-config";
+import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
 export function CTASection() {
   const { t } = useLanguage();
   const [isMounted, setIsMounted] = useState(false);
+  const settings = useSiteConfig();
   useEffect(() => setIsMounted(true), []);
 
   // Schema.org Action for SEO
@@ -119,7 +121,7 @@ export function CTASection() {
           </Link>
 
           <a
-            href={siteConfig.links.line}
+            href={settings.line_url || siteConfig.links.line}
             target="_blank"
             rel="noopener noreferrer"
           >
