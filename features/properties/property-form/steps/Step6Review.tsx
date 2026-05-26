@@ -153,6 +153,8 @@ type Feature = {
 type Profile = {
   id: string;
   full_name: string | null;
+  display_name: string | null;
+  email: string | null;
   avatar_url: string | null;
   phone: string | null;
   line_id: string | null;
@@ -190,7 +192,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
       if (values.feature_ids && values.feature_ids.length > 0) {
         const { data } = await db
           .from("features")
-          .select("id, name, icon_key, category")
+          .select("id, name, name_en, name_cn, name_ru, icon_key, category")
           .in("id", values.feature_ids);
         if (data) setActiveFeatures(data);
       } else {
@@ -204,7 +206,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
       if (user) {
         const { data: profile } = await supabase
           .from("profiles")
-          .select("id, full_name, avatar_url, phone, line_id, wechat_user_id, whatsapp_user_id")
+          .select("id, full_name, display_name, email, avatar_url, phone, line_id, wechat_user_id, whatsapp_user_id")
           .eq("id", user.id)
           .single();
 
@@ -932,6 +934,9 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                   data={(values.nearby_places || []).map(p => ({
                     category: p.category || "Other",
                     name: p.name || "",
+                    name_en: p.name_en || undefined,
+                    name_cn: p.name_cn || undefined,
+                    name_ru: p.name_ru || undefined,
                     distance: p.distance_meters !== undefined ? (p.distance_meters / 1000).toString() : undefined,
                     time: p.time,
                   }))}
@@ -986,7 +991,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                 />
                 <div className="sticky top-24">
                   <AgentSidebar
-                    agentName={currentUser?.full_name}
+                    agentName={currentUser?.full_name || currentUser?.display_name || currentUser?.email}
                     agentImage={currentUser?.avatar_url}
                     agentPhone={currentUser?.phone}
                     agentLine={currentUser?.line_id}

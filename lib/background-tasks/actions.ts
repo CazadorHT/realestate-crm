@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext } from "@/lib/authz";
 import { Database } from "@/lib/database.types";
+import { getSystemConfig } from "@/lib/actions/system-config";
 
 export type BackgroundTaskResult = {
   success: boolean;
@@ -25,14 +26,19 @@ export async function createBackgroundTaskAction(params: {
 }): Promise<BackgroundTaskResult> {
   try {
     const { supabase, user, tenantId } = await requireAuthContext();
-    if (!tenantId) throw new Error("Tenant ID is required");
+    let finalTenantId = tenantId;
+    if (!finalTenantId) {
+      const config = await getSystemConfig();
+      finalTenantId = config.default_tenant_id ?? undefined;
+    }
+    if (!finalTenantId) throw new Error("Tenant ID is required");
 
     // 🕵️ DEDUPLICATION: ป้องกันการทำงานซ้ำ (Idempotency)
     // หากมีงานชื่อเดียวกัน และ Payload เดียวกันที่กำลังรันอยู่ ให้ใช้ของเดิม
     const { data: existingTasks } = await supabase
       .from("background_tasks")
       .select("id, status")
-      .eq("tenant_id", tenantId)
+      .eq("tenant_id", finalTenantId)
       .eq("name", params.name)
       .eq("status", "PROCESSING")
       .limit(1);
@@ -58,7 +64,7 @@ export async function createBackgroundTaskAction(params: {
       payload: params.payload,
       status: "PROCESSING",
       user_id: user.id,
-      tenant_id: tenantId,
+      tenant_id: finalTenantId,
       priority: params.priority || 0,
     };
 
@@ -90,8 +96,7 @@ export async function updateBackgroundTaskAction(params: {
   result?: any;
 }): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId } = await requireAuthContext();
-    if (!tenantId) throw new Error("Tenant ID is required");
+    const { supabase, tenantId, user, role } = await requireAuthContext();
 
     const updateData: BackgroundTaskUpdate = {
       status: params.status,
@@ -102,11 +107,20 @@ export async function updateBackgroundTaskAction(params: {
       result: params.result, // 👈 ส่งเข้าฐานข้อมูล (ต้องมั่นใจว่าตารางมีคอลัมน์นี้)
     } as any;
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("background_tasks")
       .update(updateData)
-      .eq("id", params.id)
-      .eq("tenant_id", tenantId)
+      .eq("id", params.id);
+
+    if (role !== "ADMIN") {
+      if (tenantId) {
+        query = query.eq("tenant_id", tenantId);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+    }
+
+    const { data, error } = await query
       .select()
       .single();
 
@@ -124,13 +138,19 @@ export async function updateBackgroundTaskAction(params: {
  */
 export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId } = await requireAuthContext();
-    if (!tenantId) throw new Error("Tenant ID is required");
+    const { supabase, tenantId, user, role } = await requireAuthContext();
 
-    const { data, error } = await supabase
-      .from("background_tasks")
-      .select("*")
-      .eq("tenant_id", tenantId)
+    let query = supabase.from("background_tasks").select("*");
+
+    if (role !== "ADMIN") {
+      if (tenantId) {
+        query = query.eq("tenant_id", tenantId);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+    }
+
+    const { data, error } = await query
       .order("created_at", { ascending: false })
       .limit(50);
 
@@ -148,18 +168,26 @@ export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> 
  */
 export async function cancelBackgroundTaskAction(id: string): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId } = await requireAuthContext();
-    if (!tenantId) throw new Error("Tenant ID is required");
+    const { supabase, tenantId, user, role } = await requireAuthContext();
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("background_tasks")
       .update({ 
         is_cancelled: true,
         status: "ERROR",
         message: "ยกเลิกโดยผู้ใช้"
       })
-      .eq("id", id)
-      .eq("tenant_id", tenantId)
+      .eq("id", id);
+
+    if (role !== "ADMIN") {
+      if (tenantId) {
+        query = query.eq("tenant_id", tenantId);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+    }
+
+    const { data, error } = await query
       .select()
       .single();
 
@@ -177,14 +205,22 @@ export async function cancelBackgroundTaskAction(id: string): Promise<Background
  */
 export async function pruneBackgroundTasksAction(): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId } = await requireAuthContext();
-    if (!tenantId) throw new Error("Tenant ID is required");
+    const { supabase, tenantId, user, role } = await requireAuthContext();
 
-    const { error } = await supabase
+    let query = supabase
       .from("background_tasks")
       .delete()
-      .eq("tenant_id", tenantId)
       .in("status", ["SUCCESS", "ERROR"]);
+
+    if (role !== "ADMIN") {
+      if (tenantId) {
+        query = query.eq("tenant_id", tenantId);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
 
@@ -200,14 +236,22 @@ export async function pruneBackgroundTasksAction(): Promise<BackgroundTaskResult
  */
 export async function deleteBackgroundTasksAction(ids: string[]): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId } = await requireAuthContext();
-    if (!tenantId) throw new Error("Tenant ID is required");
+    const { supabase, tenantId, user, role } = await requireAuthContext();
 
-    const { error } = await supabase
+    let query = supabase
       .from("background_tasks")
       .delete()
-      .eq("tenant_id", tenantId)
       .in("id", ids);
+
+    if (role !== "ADMIN") {
+      if (tenantId) {
+        query = query.eq("tenant_id", tenantId);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
 
@@ -223,17 +267,25 @@ export async function deleteBackgroundTasksAction(ids: string[]): Promise<Backgr
  */
 export async function autoPruneOldTasksAction(): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId } = await requireAuthContext();
-    if (!tenantId) throw new Error("Tenant ID is required");
+    const { supabase, tenantId, user, role } = await requireAuthContext();
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const { error } = await supabase
+    let query = supabase
       .from("background_tasks")
       .delete()
-      .eq("tenant_id", tenantId)
       .lt("created_at", sevenDaysAgo.toISOString());
+
+    if (role !== "ADMIN") {
+      if (tenantId) {
+        query = query.eq("tenant_id", tenantId);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
 
@@ -248,21 +300,29 @@ export async function autoPruneOldTasksAction(): Promise<BackgroundTaskResult> {
  */
 export async function markStuckTasksAsErrorAction(): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId } = await requireAuthContext();
-    if (!tenantId) throw new Error("Tenant ID is required");
+    const { supabase, tenantId, user, role } = await requireAuthContext();
 
     const twoHoursAgo = new Date();
     twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
 
-    const { error } = await supabase
+    let query = supabase
       .from("background_tasks")
       .update({ 
         status: "ERROR", 
         message: "งานถูกระงับเนื่องจากใช้เวลานานเกินกำหนด (Timeout)" 
       })
-      .eq("tenant_id", tenantId)
       .eq("status", "PROCESSING")
       .lt("created_at", twoHoursAgo.toISOString());
+
+    if (role !== "ADMIN") {
+      if (tenantId) {
+        query = query.eq("tenant_id", tenantId);
+      } else {
+        query = query.eq("user_id", user.id);
+      }
+    }
+
+    const { error } = await query;
 
     if (error) throw error;
 

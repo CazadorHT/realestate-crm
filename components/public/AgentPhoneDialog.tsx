@@ -94,7 +94,7 @@ export function AgentPhoneDialog({
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[400px] rounded-4xl p-0 overflow-hidden border-none shadow-2xl bg-white">
+      <DialogContent className="sm:max-w-sm! rounded-4xl p-0 overflow-hidden border-none shadow-2xl bg-white">
         <DialogHeader className="p-8 bg-linear-to-br from-blue-600 via-blue-700 to-indigo-800 text-white relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
           <DialogTitle className="text-xl font-bold flex items-center gap-2">
@@ -108,7 +108,7 @@ export function AgentPhoneDialog({
 
         <div className="p-6 space-y-6">
           <div className="bg-slate-50 rounded-2xl p-6 border border-slate-100 flex flex-col items-center justify-center gap-3">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+            <span className="text-xs font-bold text-slate-400! uppercase tracking-widest">
               {t("property.phone_number") || "เบอร์โทรศัพท์"}
             </span>
             <span className="text-3xl font-black text-slate-900 tracking-tight">
@@ -119,7 +119,7 @@ export function AgentPhoneDialog({
           <div className="grid grid-cols-1 gap-3">
             <Button
               variant="outline"
-              className="h-14 rounded-2xl border-slate-200 hover:border-blue-200 hover:bg-blue-50 text-slate-700 font-bold text-lg transition-all"
+              className="h-14 rounded-2xl border-slate-200 hover:border-blue-200 hover:bg-blue-50 text-slate-700! font-bold text-lg transition-all"
               onClick={handleCopy}
             >
               {copied ? (

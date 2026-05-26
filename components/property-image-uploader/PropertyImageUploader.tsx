@@ -128,6 +128,7 @@ export function PropertyImageUploader({
   const imagesRef = useRef<ImageItem[]>(images);
   const prevValueRef = useRef<string[]>(value);
   const isUploadingRef = useRef(false);
+  const activeUploadProcessIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     imagesRef.current = images;
@@ -191,8 +192,17 @@ export function PropertyImageUploader({
     const paths = images
       .filter((img) => img.storage_path)
       .map((img) => img.storage_path as string);
-    if (onChange) onChange(paths);
-  }, [images, onChange]);
+
+    // Prevent infinite rendering loop by comparing generated paths with current value
+    const valuePaths = value ? value.filter(Boolean) : [];
+    const hasChanged =
+      paths.length !== valuePaths.length ||
+      paths.some((path, idx) => path !== valuePaths[idx]);
+
+    if (hasChanged && onChange) {
+      onChange(paths);
+    }
+  }, [images, onChange, value]);
 
   // Cleanup on unmount: revoke blob + clean temp session
   useEffect(() => {
@@ -204,6 +214,14 @@ export function PropertyImageUploader({
             URL.revokeObjectURL(img.preview_url);
           } catch {}
         }
+      }
+
+      // If active upload task was running, abort/error it out in DB so it doesn't hang
+      if (activeUploadProcessIdRef.current) {
+        const pid = activeUploadProcessIdRef.current;
+        import("@/lib/process-monitor").then(({ finishProcess }) => {
+          finishProcess(pid, "ERROR", "หยุดอัปโหลดเนื่องจากออกจากหน้าเพจ");
+        });
       }
 
       if (!cleanupOnUnmount) return;
@@ -260,6 +278,7 @@ export function PropertyImageUploader({
       const processId = startProcess(`อัปโหลดรูปภาพ (${acceptedFiles.length} รูป)`, {
         type: "IMAGE_UPLOAD",
       });
+      activeUploadProcessIdRef.current = processId;
 
       // Step 2: Process each file in background (Sequential to avoid overloading)
       const { validateImageFile } = await import("@/lib/file-validation");
@@ -358,6 +377,7 @@ export function PropertyImageUploader({
       }
 
       isUploadingRef.current = false;
+      activeUploadProcessIdRef.current = null;
     },
     [disabled, images.length, maxFiles, maxFileSizeMB, sessionId],
   );

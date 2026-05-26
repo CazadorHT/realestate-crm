@@ -157,7 +157,7 @@ export async function createPropertyAction(
         floor_area: propertyData.size_sqm,
         land_area: propertyData.land_size_sqwah,
         owner_id: safeValues.owner_id,
-        assigned_to: safeValues.assigned_to,
+        assigned_to: safeValues.assigned_to || user.id,
         created_by: user.id,
         is_exclusive: !!safeValues.is_exclusive,
         verified: !!safeValues.verified,

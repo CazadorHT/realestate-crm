@@ -74,7 +74,7 @@ export async function updatePropertyAction(
       .select(`
         id, tenant_id, status, listing_type, property_type, sale_price, rent_price, 
         bedrooms, bathrooms, floor_area, land_area, branch_id, owner_id, assigned_to, 
-        is_exclusive, verified, h3_index_res8,
+        is_exclusive, verified, h3_index_res8, created_by,
         properties_details (
           title, description, amenities, address_info, pricing_details, transit_info, meta_data
         )
@@ -231,7 +231,7 @@ export async function updatePropertyAction(
         floor_area: safeValues.size_sqm,
         land_area: safeValues.land_size_sqwah,
         owner_id: safeValues.owner_id,
-        assigned_to: safeValues.assigned_to,
+        assigned_to: safeValues.assigned_to || data.created_by || user.id,
         is_exclusive: !!safeValues.is_exclusive,
         verified: !!safeValues.verified,
         h3_index_res8: safeValues.h3_index_res8,
