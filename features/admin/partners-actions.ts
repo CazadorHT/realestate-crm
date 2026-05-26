@@ -45,8 +45,8 @@ export async function getPartners(params?: {
   const { page = 1, pageSize = 100, search = "", activeOnly = false } = params || {};
   const cacheKey = `partners:list:${page}:${pageSize}:${search || "none"}:${activeOnly ? "active" : "all"}`;
 
-  // 1. Try Cache
-  if (redis) {
+  // 1. Try Cache (Skip for activeOnly as it is on public/homepage which uses ISR)
+  if (redis && !activeOnly) {
     try {
       const cached = await redis.get(cacheKey);
       if (cached) return cached as { success: boolean; data: PartnerRow[]; totalCount: number };
@@ -135,7 +135,7 @@ export async function getPartners(params?: {
     };
 
     // 2. Write to Cache (TTL 1 hour)
-    if (redis && result.data.length > 0) {
+    if (redis && !activeOnly && result.data.length > 0) {
       try {
         await redis.set(cacheKey, result, { ex: 3600 });
       } catch (e) {

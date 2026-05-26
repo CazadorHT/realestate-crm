@@ -5,6 +5,8 @@ import { getSiteSettings } from "@/features/site-settings/actions";
 import { getPartners } from "@/features/admin/partners-actions";
 import { Skeleton } from "@/components/ui/skeleton";
 
+export const dynamic = "force-dynamic";
+
 export default async function PartnersPage() {
   const [authContext, settings, partnersRes] = await Promise.all([
     requireAuthContext(),
