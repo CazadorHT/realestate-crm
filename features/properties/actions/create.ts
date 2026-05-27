@@ -533,17 +533,64 @@ export async function duplicatePropertyAction(
       return { success: false, message: mapDbError(detailsErr) ?? "Duplicate Details ไม่สำเร็จ" };
     }
 
-    // ✅ Step 4.2: copy images rows & files
+    // ✅ Step 4.2: copy images rows & files (Copying actual files in storage to prevent broken images on deletion)
     if (media && media.length > 0) {
-      const newMedia = media.map((img) => ({
-        property_id: newPropertyId,
-        storage_path: img.storage_path,
-        url: img.url,
-        is_cover: img.is_cover,
-        sort_order: img.sort_order,
-        media_type: img.media_type,
-      }));
-      await supabase.from("property_media_v3").insert(newMedia);
+      const newMedia = [];
+      for (const img of media) {
+        if (img.storage_path) {
+          const parts = img.storage_path.split("/");
+          const filename = parts[parts.length - 1];
+          const fileParts = filename.split(".");
+          const ext = fileParts.length > 1 ? fileParts.pop() : "webp";
+          const newFilename = `${randomUUID()}.${ext}`;
+          const newPath = `${tenantId}/properties/${user.id}/duplicate/${newFilename}`;
+
+          // Copy file in Supabase Storage
+          const { error: copyErr } = await supabase.storage
+            .from(PROPERTY_IMAGES_BUCKET)
+            .copy(img.storage_path, newPath);
+
+          if (!copyErr) {
+            const { data: publicUrlData } = supabase.storage
+              .from(PROPERTY_IMAGES_BUCKET)
+              .getPublicUrl(newPath);
+
+            newMedia.push({
+              property_id: newPropertyId,
+              storage_path: newPath,
+              url: publicUrlData.publicUrl,
+              is_cover: img.is_cover,
+              sort_order: img.sort_order,
+              media_type: img.media_type,
+            });
+
+            // Tracking row in property_image_uploads
+            await supabase
+              .from("property_image_uploads")
+              .insert({
+                user_id: user.id,
+                session_id: `dup-${newPropertyId.slice(0, 8)}`,
+                storage_path: newPath,
+                status: "ATTACHED",
+                property_id: newPropertyId,
+              });
+          } else {
+            console.error(`Failed to copy storage file from ${img.storage_path} to ${newPath}:`, copyErr);
+            // Fallback: reuse path if copy fails
+            newMedia.push({
+              property_id: newPropertyId,
+              storage_path: img.storage_path,
+              url: img.url,
+              is_cover: img.is_cover,
+              sort_order: img.sort_order,
+              media_type: img.media_type,
+            });
+          }
+        }
+      }
+      if (newMedia.length > 0) {
+        await supabase.from("property_media_v3").insert(newMedia);
+      }
     }
 
     // ✅ Step 4.3: copy agent & feature relations
