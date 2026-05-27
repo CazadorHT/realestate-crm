@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Phone, Mail, ChevronLeft, Loader2 } from "lucide-react";
@@ -134,10 +135,12 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
         {/* Match Summary */}
         <div className="flex gap-4 mb-6 bg-slate-50 p-3 rounded-xl border border-slate-100">
           <div className="w-16 h-16 rounded-lg bg-slate-200 overflow-hidden shrink-0">
-            <img
+            <Image
               src={match.image_url}
-              className="w-full h-full object-cover"
               alt={match.title}
+              fill
+              sizes="64px"
+              className="object-cover"
             />
           </div>
           <div>
