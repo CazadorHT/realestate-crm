@@ -526,8 +526,8 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
 
                       <div className="relative p-5 sm:p-6 h-[160px] sm:h-[180px] flex flex-col justify-end">
                         {/* ชื่อทำเล: ขยับขึ้นเสมอในมือถือ และขยับเมื่อ Hover ใน Desktop */}
-                        <div className="transform transition-transform! duration-500! -translate-y-10 lg:translate-y-0 lg:group-hover:-translate-y-10">
-                          <h3 className="text-white text-xl sm:text-2xl font-semibold tracking-tight drop-shadow-lg truncate">
+                        <div className="transform transition-transform! duration-300! -translate-y-10 lg:translate-y-0 lg:group-hover:-translate-y-10">
+                          <h3 className="text-white text-xl sm:text-2xl  font-semibold tracking-tight drop-shadow-lg truncate ">
                             {getLocaleValue(it, "popular_area", language)}
                           </h3>
                         </div>
