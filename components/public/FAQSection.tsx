@@ -14,29 +14,21 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocalizedField } from "@/lib/i18n";
+import { type FAQItem } from "@/lib/services/faqs";
 
-// FAQ Type definition with localized fields
-type FAQ = {
-  id: string;
-  question: string;
-  question_en?: string;
-  question_cn?: string;
-  question_ru?: string;
-  answer: string;
-  answer_en?: string;
-  answer_cn?: string;
-  answer_ru?: string;
-  category: string;
-  view_count?: number;
-};
-
-export function FAQSection() {
+export function FAQSection({ initialFaqs = [] }: { initialFaqs?: FAQItem[] }) {
   const { t, language } = useLanguage();
-  const [faqs, setFaqs] = useState<FAQ[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [faqs, setFaqs] = useState<FAQItem[]>(initialFaqs);
+  const [loading, setLoading] = useState(initialFaqs.length === 0);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
+    // Skip client fetch if we already have server-provided FAQs
+    if (initialFaqs.length > 0) {
+      setLoading(false);
+      setIsMounted(true);
+      return;
+    }
     async function fetchFAQs() {
       const supabase = createClient();
       const { data } = await supabase
@@ -48,7 +40,7 @@ export function FAQSection() {
         .limit(5);
 
       if (data) {
-        const mapped: FAQ[] = data.map((item) => {
+        const mapped: FAQItem[] = data.map((item) => {
           const titleObj = (typeof item.title === "object" && item.title !== null && !Array.isArray(item.title) ? item.title : { th: String(item.title || "") }) as Record<string, string>;
           const contentObj = (typeof item.content === "object" && item.content !== null && !Array.isArray(item.content) ? item.content : { th: String(item.content || "") }) as Record<string, string>;
           const metaObj = (typeof item.meta_data === "object" && item.meta_data !== null && !Array.isArray(item.meta_data) ? item.meta_data : {}) as Record<string, unknown>;
@@ -72,31 +64,13 @@ export function FAQSection() {
       setIsMounted(true);
     }
     fetchFAQs();
-  }, []);
+  }, [initialFaqs.length]);
 
   // if (loading) return null; // Removed to prevent layout shift
   if (!loading && faqs.length === 0) return null;
 
   const stripHtml = (html: string) => {
     return html.replace(/<[^>]*>?/gm, "");
-  };
-
-  // Schema.org FAQPage Structure
-  const structuredData = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: faqs.map((faq) => {
-      const question = getLocalizedField<string>(faq, "question", language) || "";
-      const answer = getLocalizedField<string>(faq, "answer", language) || "";
-      return {
-        "@type": "Question",
-        name: question,
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: stripHtml(answer),
-        },
-      };
-    }),
   };
 
   return (
@@ -110,10 +84,6 @@ export function FAQSection() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-600/20 rounded-full blur-[100px]" />
       </div>
 
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-      />
       <m.div
         className="max-w-7xl px-4 md:px-6 lg:px-8 mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-12 items-start"
         initial={{ opacity: 0, y: 20 }}

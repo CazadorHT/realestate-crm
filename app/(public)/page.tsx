@@ -16,6 +16,8 @@ import {
 import { getPublicProperties } from "@/lib/services/properties";
 import { getBlogPosts } from "@/lib/services/blog";
 import { getPartners } from "@/features/admin/partners-actions";
+import { getServerFAQs, type FAQItem } from "@/lib/services/faqs";
+import { getLocalizedField } from "@/lib/i18n";
 
 // Critical Above-the-Fold components (Stay static for visual stability)
 import { HeroSection } from "@/components/public/HeroSection";
@@ -122,7 +124,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function LandingPage() {
-  const { t } = await getServerTranslations();
+  const { t, language } = await getServerTranslations();
 
   // ⚡️ Parallel execution for maximum performance (S-Tier Speed)
   const [
@@ -130,13 +132,15 @@ export default async function LandingPage() {
     initialPropertiesData,
     hotDealsData,
     initialPosts,
-    partnersRes
+    partnersRes,
+    serverFaqs
   ] = await Promise.all([
     getPublicProvincesAction(),
     getPublicProperties({ limit: 8 }),
     getPublicProperties({ filter: 'hot_deals', limit: 4 }),
     getBlogPosts(undefined, 4),
-    getPartners({ activeOnly: true })
+    getPartners({ activeOnly: true }),
+    getServerFAQs()
   ]);
 
   const partners = partnersRes.success ? partnersRes.data : [];
@@ -150,6 +154,25 @@ export default async function LandingPage() {
 
   const initialProperties = initialPropertiesData.properties;
   const hotDeals = hotDealsData.properties;
+
+  // 4. Build FAQPage JSON-LD server-side so Googlebot sees real mainEntity[]
+  const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, "");
+  const faqJsonLd = serverFaqs.length > 0 ? {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: serverFaqs.map((faq: FAQItem) => {
+      const question = getLocalizedField<string>(faq, "question", language) || faq.question;
+      const answer = getLocalizedField<string>(faq, "answer", language) || faq.answer;
+      return {
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: stripHtml(answer),
+        },
+      };
+    }),
+  } : null;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -225,10 +248,18 @@ export default async function LandingPage() {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50 overflow-x-hidden scroll-smooth selection:bg-blue-100">
+      {/* RealEstateAgent Schema */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {/* FAQPage Schema — server-rendered so Googlebot sees real mainEntity[] */}
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
       
       {/* ABOVE THE FOLD: Static for maximum First Impression & Zero CLS */}
       <div className="relative">
@@ -285,7 +316,7 @@ export default async function LandingPage() {
       </div>
       
       <div>
-        <RecentlyViewedSection />
+        <RecentlyViewedSection recommendedProperties={initialProperties} />
       </div>
       
       <div className="min-h-[500px] md:min-h-[600px]">
@@ -305,7 +336,7 @@ export default async function LandingPage() {
       </div>
       
       <div className="min-h-[400px] md:min-h-[500px]">
-        <FAQSection />
+        <FAQSection initialFaqs={serverFaqs} />
       </div>
       
       <div className="min-h-[500px] md:min-h-[600px]">

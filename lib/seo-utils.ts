@@ -835,13 +835,24 @@ export function generateStructuredData(
     },
   };
 
-  // Offer Details
+  // Offer Details — typed as Service to avoid Product schema warnings (shippingDetails, gtin etc.)
   if (data.price || data.rental_price) {
     structuredData.mainEntity.offers = {
       "@type": "Offer",
       price: data.price || data.rental_price,
       priceCurrency: "THB",
       availability: "https://schema.org/InStock",
+      itemOffered: {
+        "@type": "Service",
+        name: data.listing_type === "RENT"
+          ? `${data.property_type || "Property"} for Rent`
+          : `${data.property_type || "Property"} for Sale`,
+        serviceType: "Real Estate Brokerage",
+        areaServed: {
+          "@type": "Country",
+          name: "Thailand",
+        },
+      },
     };
   }
 

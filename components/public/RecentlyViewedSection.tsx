@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import {
   readRecentProperties,
@@ -40,8 +40,12 @@ export function RecentlyViewedSection({
   const [scrollLeft, setScrollLeft] = useState(0);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
+  const initializedRef = useRef(false);
 
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
     const timer = setTimeout(() => {
       const recentItems = readRecentProperties();
       if (recentItems.length === 0) {
@@ -204,49 +208,55 @@ export function RecentlyViewedSection({
     );
   }
 
-  const schemaData = {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    "@id": `${siteConfig.url}/#recently-viewed-list`,
-    name: showingRecommended
-      ? t("recently_viewed.schema_rec_name")
-      : t("recently_viewed.schema_recent_name"),
-    description: showingRecommended
-      ? t("recently_viewed.schema_rec_desc")
-      : t("recently_viewed.schema_recent_desc"),
-    numberOfItems: items.length,
-    itemListElement: items.slice(0, 10).map((item, index) => ({
-      "@type": "ListItem",
-      position: index + 1,
-      item: {
-        "@type": "Product",
-        name: getLocaleValue(item, "title", language),
-        url: item.slug
-          ? `${siteConfig.url}/properties/${item.slug}`
-          : `${siteConfig.url}/properties/${item.id}`,
-        image: item.image_url || `${siteConfig.url}${siteConfig.ogImage}`,
-        aggregateRating: {
-          "@type": "AggregateRating",
-          ratingValue: "5",
-          reviewCount: "1",
-        },
-        offers: {
-          "@type": "Offer",
-          price: Math.max(1, item.price || item.rental_price || 0),
-          priceCurrency: "THB",
-          availability: "https://schema.org/InStock",
+  const schemaScript = useMemo(() => {
+    const schemaData = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "@id": `${siteConfig.url}/#recently-viewed-list`,
+      name: showingRecommended
+        ? t("recently_viewed.schema_rec_name")
+        : t("recently_viewed.schema_recent_name"),
+      description: showingRecommended
+        ? t("recently_viewed.schema_rec_desc")
+        : t("recently_viewed.schema_recent_desc"),
+      numberOfItems: items.length,
+      itemListElement: items.slice(0, 10).map((item, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Product",
+          name: getLocaleValue(item, "title", language),
+          url: item.slug
+            ? `${siteConfig.url}/properties/${item.slug}`
+            : `${siteConfig.url}/properties/${item.id}`,
+          image: item.image_url || `${siteConfig.url}${siteConfig.ogImage}`,
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: "5",
+            reviewCount: "1",
+          },
+          offers: {
+            "@type": "Offer",
+            price: Math.max(1, item.price || item.rental_price || 0),
+            priceCurrency: "THB",
+            availability: "https://schema.org/InStock",
+          }
         }
-      }
-    })),
-  };
+      })),
+    };
 
-  return (
-    <section className="min-h-[450px] md:min-h-[500px] py-10 md:py-12 px-4 md:px-6 lg:px-8 bg-slate-50 border-t border-slate-100 overflow-hidden relative z-0">
-      <SectionBackground pattern="blobs" intensity="low" />
+    return (
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
       />
+    );
+  }, [items, showingRecommended, language, t]);
+
+  return (
+    <section className="min-h-[450px] md:min-h-[500px] py-10 md:py-12 px-4 md:px-6 lg:px-8 bg-slate-50 border-t border-slate-100 overflow-hidden relative z-0">
+      <SectionBackground pattern="blobs" intensity="low" />
+      {schemaScript}
       <div className={cn("max-w-7xl mx-auto px-4 md:px-6 lg:px-8", containerClassName)}>
         <RecentlyViewedHeader
           showingRecommended={showingRecommended}
