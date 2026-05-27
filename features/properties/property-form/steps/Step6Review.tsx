@@ -723,6 +723,10 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                   floor={values.floor}
                   type={values.property_type}
                   language={previewLanguage}
+                  office_capacity={values.office_capacity}
+                  maid_rooms={values.maid_rooms}
+                  halls={values.halls}
+                  dining_rooms={values.dining_rooms}
                 />
 
                 <PropertyBadgesSection

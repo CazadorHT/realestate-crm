@@ -26,9 +26,8 @@ export function AnimationProvider({ children }: AnimationProviderProps) {
       mirror: false,
       offset: 40,
       throttleDelay: 200, // 🚀 Boost: Reduce reflow frequency during scroll
-      // 🛠️ HARDENING: Disable MutationObserver on mobile to prevent Forced Reflows
-      disableMutationObserver: isMobile,
-      disable: false,
+      disableMutationObserver: false, // Ensure dynamic elements are parsed correctly
+      disable: isMobile, // Disable on mobile to prevent layout shifts and hidden element bugs
     });
   }, []);
 

@@ -138,8 +138,13 @@ export async function createPropertyAction(
       new Set([...(seoData.metaKeywords || []), ...finalKeywords]),
     );
 
-    // --- V3 SMART ORCHESTRATOR: ATOMIC INSERTION ---
-    
+    // Calculate is_hot_deal status
+    const isHotDeal = !!(
+      (propertyData.price && propertyData.original_price && Number(propertyData.price) < Number(propertyData.original_price)) ||
+      (propertyData.rental_price && propertyData.original_rental_price && Number(propertyData.rental_price) < Number(propertyData.original_rental_price)) ||
+      (mergedKeywords && mergedKeywords.some((k: string) => ["hot deal", "hotdeal", "hot_deal"].includes(k.toLowerCase().trim())))
+    );
+
     // 1. Insert into properties_core (Hot Table)
     const { data: core, error: coreError } = await supabase
       .from("properties_core")
@@ -160,6 +165,7 @@ export async function createPropertyAction(
         assigned_to: safeValues.assigned_to || user.id,
         created_by: user.id,
         is_exclusive: !!safeValues.is_exclusive,
+        is_hot_deal: isHotDeal,
         verified: !!safeValues.verified,
         h3_index_res8: safeValues.h3_index_res8,
         price_per_sqm: safeValues.price_per_sqm,

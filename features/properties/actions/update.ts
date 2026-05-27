@@ -220,6 +220,13 @@ export async function updatePropertyAction(
 
     // 4) --- V3 SMART ORCHESTRATOR: ATOMIC UPDATE ---
     
+    // Calculate is_hot_deal status
+    const isHotDeal = !!(
+      (safeValues.price && safeValues.original_price && Number(safeValues.price) < Number(safeValues.original_price)) ||
+      (safeValues.rental_price && safeValues.original_rental_price && Number(safeValues.rental_price) < Number(safeValues.original_rental_price)) ||
+      (mergedKeywords && mergedKeywords.some((k: string) => ["hot deal", "hotdeal", "hot_deal"].includes(k.toLowerCase().trim())))
+    );
+
     // 4.1 Update properties_core (Hot Table)
     const { error: coreUpdateError } = await supabase
       .from("properties_core")
@@ -237,6 +244,7 @@ export async function updatePropertyAction(
         owner_id: safeValues.owner_id,
         assigned_to: safeValues.assigned_to || data.created_by || user.id,
         is_exclusive: !!safeValues.is_exclusive,
+        is_hot_deal: isHotDeal,
         verified: !!safeValues.verified,
         h3_index_res8: safeValues.h3_index_res8,
         price_per_sqm: safeValues.price_per_sqm,

@@ -316,9 +316,9 @@
     animation: fade-in 0.5s ease-out forwards;
   }
 
-  /* Mobile UX: larger tappable targets for buttons on small screens */
+  /* Mobile UX: larger tappable targets for buttons on small screens (excluding circular icon buttons) */
   @media (max-width: 640px) {
-    button {
+    button:not([class*="rounded-full"]):not(.rounded-full) {
       min-height: 44px;
       padding-top: 0.5rem;
       padding-bottom: 0.5rem;
