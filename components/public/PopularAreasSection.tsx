@@ -465,9 +465,11 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
               </button>
             </div>
           ) : !items.length ? (
-            <div
+            <m.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
               className="rounded-[2.5rem] border-2 border-dashed border-blue-200 bg-blue-50/80 p-12 mb-8 md:p-16 text-center shadow-xs"
-              data-aos="fade-up"
             >
               <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-blue-300">
                 <MapPin className="h-8 w-8" />
@@ -478,7 +480,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
               <p className="text-slate-500 font-medium">
                 {t("home.popular_areas.no_data")}
               </p>
-            </div>
+            </m.div>
           ) : (
             <div
               ref={scrollContainerRef}
