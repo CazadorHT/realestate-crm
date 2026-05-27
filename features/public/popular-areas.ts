@@ -51,8 +51,8 @@ export const getPublicProvincesAction = unstable_cache(
       return [];
     }
   },
-  ["public-provinces-list-v4"],
-  { revalidate: 86400, tags: ["provinces"] }
+  ["public-provinces-list-v5"],
+  { revalidate: 60, tags: ["provinces", "popular-areas", "public-data"] }
 );
 
 /**
@@ -178,7 +178,7 @@ export const getPopularAreasAction = unstable_cache(
       return [];
     }
   },
-  ["popular-areas-cache-v6"],
-  { revalidate: 3600, tags: ["popular-areas"] }
+  ["popular-areas-cache-v7"],
+  { revalidate: 60, tags: ["popular-areas", "public-data"] }
 );
 

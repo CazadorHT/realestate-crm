@@ -515,7 +515,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                         className="object-cover transition-transform! duration-1000! group-hover:scale-110 "
                       />
                       {/* Double Gradient for readability */}
-                      <div className="absolute inset-0 bg-black/10 transition-opacity! duration-500! group-hover:opacity-40" />
+                      <div className="absolute inset-0 bg-black/30 transition-opacity! duration-500! group-hover:opacity-40" />
                       <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/10 to-transparent opacity-90" />
                     </div>
 
