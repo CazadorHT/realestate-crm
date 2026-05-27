@@ -5,6 +5,7 @@ import { syncCommissionPayment } from "@/lib/inngest/finance-functions";
 import { dailyContractExpiryCheck } from "@/lib/inngest/contract-functions";
 import { onLeadCreated, onUserLogin } from "@/lib/inngest/intelligence-functions";
 import { onBlogGenerateRequested } from "@/lib/inngest/functions/blog-functions";
+import { weeklyPartitionMaintenance } from "@/lib/inngest/partition-functions";
 
 // ✅ Export the Inngest API route handler
 export const { GET, POST, PUT } = serve({
@@ -17,5 +18,7 @@ export const { GET, POST, PUT } = serve({
     onLeadCreated,
     onUserLogin,
     onBlogGenerateRequested,
+    weeklyPartitionMaintenance,
   ],
 });
+
