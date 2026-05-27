@@ -13,7 +13,7 @@ BEGIN
     VALUES
         (v_tenant_id, 'general', 'site_name', '"VC Connect Asset"', now(), null),
         (v_tenant_id, 'general', 'company_name', '"VC Connect Asset Co., Ltd."', now(), null),
-        (v_tenant_id, 'general', 'site_description', '"ระบบจัดการอสังหาริมทรัพย์และพอร์ทัลประกาศขาย-เช่า"', now(), null),
+        (v_tenant_id, 'general', 'site_description', '"VC Connect Asset นายหน้าอสังหาริมทรัพย์มืออาชีพ บริการรับฝากขาย ฝากเช่า บ้าน คอนโด และที่ดิน ครบวงจร ดูแลและให้คำปรึกษาอย่างใกล้ชิดในทุกขั้นตอน เพื่อให้คุณได้ข้อเสนอที่ดีที่สุด"', now(), null),
         (v_tenant_id, 'general', 'contact_phone', '"02-096-2588"', now(), null),
         (v_tenant_id, 'general', 'contact_email', '"vcconnect.asset@gmail.com"', now(), null),
         (v_tenant_id, 'general', 'contact_address', '"20th Floor, G Tower, Ratchadaphisek Road, Huai Khwang Subdistrict, Huai Khwang District, Bangkok 10310"', now(), null),
