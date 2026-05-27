@@ -38,12 +38,12 @@ export function BlogRelatedSuggestions({
       try {
         const supabase = createClient();
         
-        // Fetch posts in the same category
         let query = supabase
-          .from("blog_posts")
-          .select("id, title, slug, category")
-          .eq("category", category)
-          .is("deleted_at", null)
+          .from("cms_content_v3")
+          .select("id, title, slug, meta_data")
+          .eq("content_type", "BLOG")
+          .neq("status", "TRASH")
+          .filter("meta_data->>category", "eq", category)
           .limit(5);
 
         if (currentPostId) {
@@ -51,7 +51,17 @@ export function BlogRelatedSuggestions({
         }
 
         const { data } = await query;
-        setSuggestions((data || []) as RelatedPost[]);
+        const mapped: RelatedPost[] = (data || []).map((item: any) => {
+          const titleObj = typeof item.title === "object" && item.title !== null ? item.title : {};
+          const metaObj = typeof item.meta_data === "object" && item.meta_data !== null ? item.meta_data : {};
+          return {
+            id: item.id,
+            title: titleObj.th || titleObj.en || String(item.title || ""),
+            slug: item.slug,
+            category: metaObj.category || category,
+          };
+        });
+        setSuggestions(mapped);
       } catch (error) {
         console.error("Error fetching SEO suggestions:", error);
       } finally {

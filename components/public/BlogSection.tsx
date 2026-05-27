@@ -14,7 +14,7 @@ import { getLocalizedField } from "@/lib/i18n";
 // Removed date-fns imports to reduce bundle size. Using native Intl API instead.
 import { siteConfig } from "@/lib/site-config";
 
-import { BlogPost } from "@/lib/services/blog";
+import type { BlogPost } from "@/features/blog/types";
 import { m } from "framer-motion";
 
 const getCategoryKey = (category: string) => {
@@ -42,30 +42,55 @@ export function BlogSection({ initialPosts = [] }: { initialPosts?: BlogPost[] }
         return;
       }
       
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("blog_posts")
-        .select(`
-          id, slug, title, title_en, title_cn, title_ru, excerpt, excerpt_en, excerpt_cn, excerpt_ru, cover_image, category, published_at,
-          profiles:author_id (
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq("is_published", true)
-        .order("published_at", { ascending: false })
-        .limit(4);
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from("cms_content_v3")
+          .select("id, slug, title, cover_image, status, published_at, author_id, created_at, updated_at, meta_data, seo_score")
+          .eq("content_type", "BLOG")
+          .eq("status", "PUBLISHED")
+          .order("published_at", { ascending: false })
+          .limit(4);
 
-      if (data) {
-        setPosts(data as BlogPost[]);
+        if (data) {
+          const mapped: BlogPost[] = data.map((item: any) => {
+            const titleObj = typeof item.title === "object" && item.title !== null ? item.title : {};
+            const metaObj = typeof item.meta_data === "object" && item.meta_data !== null ? item.meta_data : {};
+            return {
+              id: item.id,
+              slug: item.slug,
+              title: titleObj.th || "",
+              title_en: titleObj.en || null,
+              title_cn: titleObj.cn || null,
+              title_ru: titleObj.ru || null,
+              content: "",
+              excerpt: metaObj.excerpt || "",
+              excerpt_en: metaObj.excerpt_en || null,
+              excerpt_cn: metaObj.excerpt_cn || null,
+              excerpt_ru: metaObj.excerpt_ru || null,
+              category: metaObj.category || null,
+              cover_image: item.cover_image || null,
+              is_published: item.status === "PUBLISHED",
+              published_at: item.published_at || null,
+              tags: [],
+              author_id: item.author_id,
+              view_count: metaObj.view_count || 0,
+              created_at: item.created_at || null,
+              updated_at: item.updated_at || null,
+              profiles: null,
+            } as unknown as BlogPost;
+          });
+          setPosts(mapped);
+        }
+      } catch (err) {
+        console.error("Error fetching fallback blog posts:", err);
+      } finally {
+        setLoading(false);
+        setIsMounted(true);
       }
-      setLoading(false);
-      setIsMounted(true);
     }
     fetchPosts();
   }, [initialPosts]);
-
-  if (!loading && posts.length === 0) return null;
 
   // Schema.org Blog for SEO
   const schemaData = {
@@ -146,9 +171,9 @@ export function BlogSection({ initialPosts = [] }: { initialPosts?: BlogPost[] }
           </Link>
         </div>
 
-        <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:mx-0 md:px-0 md:pb-0 md:overflow-visible ">
-          {loading
-            ? Array.from({ length: 4 }).map((_, idx) => (
+        {loading ? (
+          <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:mx-0 md:px-0 md:pb-0 md:overflow-visible">
+            {Array.from({ length: 4 }).map((_, idx) => (
                 <div
                   key={idx}
                   className="w-[260px] flex-none md:w-full snap-center shrink-0 mr-4 md:mr-0 bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 flex flex-col h-full"
@@ -178,22 +203,25 @@ export function BlogSection({ initialPosts = [] }: { initialPosts?: BlogPost[] }
                     </div>
                   </div>
                 </div>
-              ))
-            : posts.map((post, index) => {
-                const title = getLocalizedField<string>(
-                  post,
-                  "title",
-                  language,
-                );
-                const excerpt = getLocalizedField<string>(
-                  post,
-                  "excerpt",
-                  language,
-                );
+              ))}
+          </div>
+        ) : posts.length > 0 ? (
+          <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide -mx-4 px-4 pb-4 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-6 md:mx-0 md:px-0 md:pb-0 md:overflow-visible">
+            {posts.map((post, index) => {
+              const title = getLocalizedField<string>(
+                post,
+                "title",
+                language,
+              );
+              const excerpt = getLocalizedField<string>(
+                post,
+                "excerpt",
+                language,
+              );
 
-                return (
-                  <m.div
-                    key={post.id}
+              return (
+                <m.div
+                  key={post.id}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
@@ -319,7 +347,20 @@ export function BlogSection({ initialPosts = [] }: { initialPosts?: BlogPost[] }
                   </m.div>
                 );
               })}
-        </div>
+          </div>
+        ) : (
+          <div className="w-full flex flex-col items-center justify-center text-center py-12 px-4 bg-white/50 backdrop-blur-xs rounded-3xl border border-slate-100/80 shadow-xs min-h-[350px] md:min-h-[400px]">
+            <div className="w-14 h-14 mb-4 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100 shadow-2xs">
+              <BookOpen className="w-6 h-6 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-700 mb-1">
+              {t("blog.no_articles") || "ไม่มีบทความในขณะนี้"}
+            </h3>
+            <p className="text-slate-500 max-w-sm text-sm">
+              {t("blog.check_back_later") || "ขณะนี้ระบบกำลังจัดเตรียมบทความใหม่ๆ โปรดกลับมาตรวจสอบอีกครั้งในภายหลัง"}
+            </p>
+          </div>
+        )}
       </div>
     </m.section>
   );

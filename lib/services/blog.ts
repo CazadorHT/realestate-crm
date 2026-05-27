@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/client";
+import { createClient } from "@/lib/supabase/server";
 import type { BlogPost } from "@/features/blog/types";  // ✅ เพิ่ม BlogPost
 export type { BlogPost } from "@/features/blog/types";  // ✅
 
@@ -84,14 +84,7 @@ export async function getBlogPosts(
   limit = 10,
   offset = 0,
 ): Promise<BlogPost[]> {
-  let supabase;
-  if (typeof window === "undefined") {
-    const { createClient: createServerClient } =
-      await import("@/lib/supabase/server");
-    supabase = await createServerClient();
-  } else {
-    supabase = createClient();
-  }
+  const supabase = await createClient();
 
   let query = supabase
     .from("cms_content_v3")
@@ -120,22 +113,12 @@ export async function getBlogPosts(
 
 /**
  * Get all blog posts with author info for admin dashboard
- *//**
- * Get all blog posts with author info for admin dashboard
  */
 export async function getAllBlogPosts(
   page = 1,
   pageSize = 10,
 ): Promise<{ posts: BlogPost[]; count: number }> {
-  let supabase;
-  if (typeof window === "undefined") {
-    const { createClient: createServerClient } =
-      await import("@/lib/supabase/server");
-    supabase = await createServerClient();
-  } else {
-    supabase = createClient();
-  }
-
+  const supabase = await createClient();
   const offset = (page - 1) * pageSize;
 
   const { data, error, count } = await supabase
@@ -172,14 +155,7 @@ export async function getAllBlogPosts(
 export async function getBlogPostBySlug(
   slug: string,
 ): Promise<BlogPost | null> {
-  let supabase;
-  if (typeof window === "undefined") {
-    const { createClient: createServerClient } =
-      await import("@/lib/supabase/server");
-    supabase = await createServerClient();
-  } else {
-    supabase = createClient();
-  }
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("cms_content_v3")
@@ -208,14 +184,7 @@ export async function getRelatedPosts(
   category: string,
   limit: number = 3,
 ): Promise<BlogPost[]> {
-  let supabase;
-  if (typeof window === "undefined") {
-    const { createClient: createServerClient } =
-      await import("@/lib/supabase/server");
-    supabase = await createServerClient();
-  } else {
-    supabase = createClient();
-  }
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("cms_content_v3")
