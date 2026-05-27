@@ -38,9 +38,10 @@ export default function ContactPageClient({
           <div className="w-full">
             {/* Desktop Version: Premium Glassmorphism Card */}
             <div className="hidden lg:block">
-              <div
-                data-aos="fade-up"
-                data-aos-delay="600"
+              <m.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
               >
                 <Card className="relative shadow-2xl shadow-black/20 border-white/10 bg-white/[0.07] backdrop-blur-xl overflow-hidden ring-1 ring-white/10 rounded-3xl">
                   <div className="absolute top-0 left-0 right-0 h-1 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-60" />
@@ -61,18 +62,19 @@ export default function ContactPageClient({
                     <ContactForm />
                   </CardContent>
                 </Card>
-              </div>
+              </m.div>
             </div>
 
             {/* Mobile/Tablet Version: Simple Trigger within Hero */}
             <div className="lg:hidden mt-8 md:mt-12">
-              <div
-                data-aos="fade-up"
-                data-aos-delay="600"
+              <m.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.6 }}
                 className="w-full max-w-sm mx-auto"
               >
                 <ContactForm />
-              </div>
+              </m.div>
             </div>
           </div>
         }

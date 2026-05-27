@@ -7,6 +7,7 @@ import { getProvinceName } from "@/lib/utils/provinces";
 import { getTypeColor, formatPrice as utilFormatPrice } from "@/lib/property-utils";
 import { FavoriteButton } from "@/components/public/FavoriteButton";
 import { getCardPrice } from "./RecentlyViewedUtils";
+import { m } from "framer-motion";
 
 interface RecentlyViewedCardProps {
   item: RecentProperty;
@@ -23,11 +24,10 @@ export function RecentlyViewedCard({
   isDragging,
   disableAos = false,
 }: RecentlyViewedCardProps) {
-  return (
+  const cardContent = (
     <Link
       href={item.slug ? `/properties/${item.slug}` : `/properties/${item.id}`}
-      className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] bg-white rounded-[1.5rem] md:rounded-4xl border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all! duration-500! snap-start shrink-0 group relative isolate hover:-translate-y-1"
-      {...(!disableAos && { "data-aos": "fade-left" })}
+      className="block w-full h-full bg-white rounded-[1.5rem] md:rounded-4xl border border-slate-100 overflow-hidden hover:shadow-md hover:shadow-blue-500/10 transition-all! duration-500! group relative isolate hover:-translate-y-1"
       onClick={(e) => {
         if (isDragging) e.preventDefault();
       }}
@@ -201,5 +201,25 @@ export function RecentlyViewedCard({
         </div>
       </div>
     </Link>
+  );
+
+  if (disableAos) {
+    return (
+      <div className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] snap-start shrink-0">
+        {cardContent}
+      </div>
+    );
+  }
+
+  return (
+    <m.div
+      initial={{ opacity: 0, x: 20 }}
+      whileInView={{ opacity: 1, x: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4 }}
+      className="min-w-[260px] w-[260px] md:min-w-[300px] md:w-[300px] snap-start shrink-0"
+    >
+      {cardContent}
+    </m.div>
   );
 }

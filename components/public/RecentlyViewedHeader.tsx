@@ -1,5 +1,6 @@
 import { History, Lightbulb, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { m } from "framer-motion";
 
 interface RecentlyViewedHeaderProps {
   showingRecommended: boolean;
@@ -14,11 +15,8 @@ export function RecentlyViewedHeader({
   handleClear,
   disableAos = false,
 }: RecentlyViewedHeaderProps) {
-  return (
-    <div
-      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2 md:mb-4"
-      {...(!disableAos && { "data-aos": "fade-up" })}
-    >
+  const headerContent = (
+    <>
       <div className="flex items-start sm:items-center gap-2 md:gap-3">
         <div
           className={`p-2 md:p-2.5 rounded-xl md:rounded-2xl ${
@@ -70,6 +68,26 @@ export function RecentlyViewedHeader({
           <Trash2 className="h-5 w-4" />
         </Button>
       )}
-    </div>
+    </>
+  );
+
+  if (disableAos) {
+    return (
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2 md:mb-4">
+        {headerContent}
+      </div>
+    );
+  }
+
+  return (
+    <m.div
+      initial={{ opacity: 0, y: -20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+      className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2 md:mb-4"
+    >
+      {headerContent}
+    </m.div>
   );
 }

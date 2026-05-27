@@ -220,9 +220,12 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
       <div className="max-w-screen-2xl mx-auto sm:px-4 md:px-6 lg:px-8">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between px-4 ">
-          <div
+          <m.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
             className="space-y-4 px-4 md:px-0 flex-1"
-            {...(isMounted ? { "data-aos": "fade-right" } : {})}
           >
             {/* Animated Badge with Glass Effect */}
             <div className="inline-flex items-center gap-2 rounded-full bg-blue-500/10 backdrop-blur-md px-4 py-2 text-sm font-bold border border-blue-200/50 shadow-[0_4px_12px_rgba(59,130,246,0.1)] hover:shadow-[0_4px_20px_rgba(59,130,246,0.2)] transition-all! duration-300! group cursor-default">
@@ -365,14 +368,16 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                 </div>
               )}
             </h2>
-          </div>
+          </m.div>
         </div>
 
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8 px-4! md:px-0">
-          <div
-            className="flex flex-col px-4 md:px-0 "
-            data-aos="fade-right"
-            suppressHydrationWarning
+          <m.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col px-4 md:px-0"
           >
             <h2 className="text-base xs:text-base sm:text-xl md:text-2xl lg:text-3xl font-medium text-slate-600 leading-relaxed">
               {t("home.popular_areas.subtitle-2")}
@@ -381,15 +386,19 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
             <p className="text-slate-600 text-sm sm:text-base md:lg leading-relaxed">
               {t("home.popular_areas.description")}
             </p>
-          </div>
-          <div className=" w-full md:w-auto md:shrink-0 px-4 md:px-0 ">
+          </m.div>
+          <m.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="w-full md:w-auto md:shrink-0 px-4 md:px-0"
+          >
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Link
                     href={`/properties?province=${encodeURIComponent(provinces[activeProvIndex]?.id || "กรุงเทพมหานคร")}`}
-                    data-aos="fade-left"
-                    suppressHydrationWarning
                     className="group relative h-12 w-full md:w-auto px-8 overflow-hidden rounded-2xl bg-linear-to-r from-blue-600 to-blue-500 text-white font-semibold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all! duration-300! hover:scale-105 flex items-center justify-center"
                   >
                     {/* Animated gradient overlay */}
@@ -410,7 +419,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          </div>
+          </m.div>
         </div>
 
         {/* Content Area - Fixed height to prevent layout shift */}
@@ -442,9 +451,11 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
               </div>
             </div>
           ) : hasError ? (
-            <div
+            <m.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
               className="rounded-[2.5rem] border-2 border-dashed border-red-200 bg-red-50/50 p-12 md:p-16 md:mb-10 text-center"
-              data-aos="fade-up"
             >
               <div className="bg-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm text-red-500">
                 <RefreshCw className="h-8 w-8" />
@@ -463,7 +474,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
               >
                 {t("common.retry") || "Retry"}
               </button>
-            </div>
+            </m.div>
           ) : !items.length ? (
             <m.div
               initial={{ opacity: 0, y: 15 }}

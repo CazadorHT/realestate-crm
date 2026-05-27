@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { m } from "framer-motion";
 
 export function CTASection() {
   const { t } = useLanguage();
@@ -62,9 +63,12 @@ export function CTASection() {
 
       <div className="max-w-7xl mx-auto text-center space-y-6 md:space-y-8 relative z-10">
         {/* Trust Stats */}
-        <div
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
           className="flex flex-wrap justify-center gap-3 md:gap-6 mb-6 md:mb-8"
-          {...(isMounted ? { "data-aos": "fade-up" } : {})}
         >
           {STATS.map((stat, idx) => (
             <div
@@ -79,11 +83,14 @@ export function CTASection() {
               </span>
             </div>
           ))}
-        </div>
+        </m.div>
 
-        <h2
+        <m.h2
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.1 }}
           className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold leading-tight"
-          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "100" } : {})}
         >
           <span className="text-slate-900">{t("home.hero.title_main")}</span>
           <br />
@@ -92,22 +99,28 @@ export function CTASection() {
           </span>
           <br />
           <span className="text-slate-900">{t("home.hero.title_sub")}</span>
-        </h2>
+        </m.h2>
 
-        <p
+        <m.p
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.2 }}
           className="text-base md:text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto"
-          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "200" } : {})}
         >
           {t("home.hero.description")}
           <span className="font-semibold text-slate-900">
             {" "}
             {t("common.free")} {t("common.no_cost")}
           </span>
-        </p>
+        </m.p>
 
-        <div
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.3 }}
           className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center pt-2 md:pt-4"
-          {...(isMounted ? { "data-aos": "fade-up", "data-aos-delay": "300" } : {})}
         >
           <Link href="/properties">
             <Button
@@ -134,15 +147,18 @@ export function CTASection() {
               {t("common.contact_line")}
             </Button>
           </a>
-        </div>
+        </m.div>
 
         {/* Small trust message */}
-        <p
+        <m.p
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.4 }}
           className="text-xs md:text-sm text-slate-500 pt-2 md:pt-4"
-          {...(isMounted ? { "data-aos": "fade-up" } : {})}
         >
           {t("home.cta.trust_message")}
-        </p>
+        </m.p>
       </div>
     </section>
   );

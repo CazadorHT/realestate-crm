@@ -13,6 +13,7 @@ import {
 import Link from "next/link";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
+import { m } from "framer-motion";
 
 interface PropertyTypeCardProps {
   icon: React.ElementType;
@@ -180,25 +181,27 @@ export function PropertyTypeGrid({
 
       <div className="max-w-screen-2xl mx-auto relative z-10 px-4 md:px-6 lg:px-8  ">
         {/* SEO-Optimized Section Header */}
-        <div className="text-center mb-10" data-aos="fade-up">
+        <m.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-10"
+        >
           <h2 className="text-2xl md:text-4xl font-semibold text-slate-900 mb-4 tracking-tight">
             {t("home.property_types.title")}{" "}
             <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
               {t("home.property_types.description")}
             </span>
           </h2>
-          <p
-            className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto"
-            data-aos="fade-up"
-            data-aos-delay="100"
-          >
+          <p className="text-base md:text-lg text-slate-600 max-w-2xl mx-auto">
             {t("property_listing.title")}{" "}
             <span className="font-semibold text-blue-600">
               {t("common.rent_buy")}
             </span>{" "}
             {t("common.verified_100")}
           </p>
-        </div>
+        </m.div>
 
         {/* PropertyTypeCard wrapper - Mobile: horizontal scroll, Desktop: grid */}
         <div className="flex md:grid  md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8  gap-2 md:gap-4 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0  xl:px-4">
@@ -212,14 +215,16 @@ export function PropertyTypeGrid({
                 </div>
               ))
             : propertyTypes.map((type, idx) => (
-                <div
+                <m.div
                   key={idx}
-                  data-aos="fade-up"
-                  data-aos-delay={idx * 50}
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: idx * 0.05 }}
                   className="shrink-0 w-[160px] md:w-auto snap-center "
                 >
                   <PropertyTypeCard {...type} />
-                </div>
+                </m.div>
               ))}
         </div>
       </div>
