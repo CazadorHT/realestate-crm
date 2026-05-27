@@ -174,10 +174,10 @@ export function PublicNav() {
     })),
   };
   const currentLangFlag = {
-    th: <span className="fi fi-th h-5 w-7 inline-block rounded-sm shadow-sm" />,
-    en: <span className="fi fi-us h-5 w-7 inline-block rounded-sm shadow-sm" />,
-    cn: <span className="fi fi-cn h-5 w-7 inline-block rounded-sm shadow-sm" />,
-    ru: <span className="fi fi-ru h-5 w-7 inline-block rounded-sm shadow-sm" />,
+    th: <span className="fi fi-th h-5 w-7 inline-block  shadow-sm" />,
+    en: <span className="fi fi-us h-5 w-7 inline-block  shadow-sm" />,
+    cn: <span className="fi fi-cn h-5 w-7 inline-block  shadow-sm" />,
+    ru: <span className="fi fi-ru h-5 w-7 inline-block  shadow-sm" />,
   };
 
   return (
@@ -268,11 +268,11 @@ export function PublicNav() {
                     >
                       <DropdownMenuItem
                         onClick={() => setLanguage("th")}
-                        className={`cursor-pointer ${language === "th" ? "bg-slate-50" : ""}`}
+                        className={`cursor-pointer ${language === "th" ? "" : ""}`}
                       >
                         <div className="flex justify-between items-center w-full">
                           <div className="flex items-center">
-                            <span className="fi fi-th h-4 w-6 inline-block mr-3 rounded-sm shadow-sm" />
+                            <span className="fi fi-th h-4 w-6 inline-block mr-3 shadow-sm" />
                             <span className="font-medium">Thai</span>
                           </div>
                           {language === "th" && (
@@ -282,11 +282,11 @@ export function PublicNav() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setLanguage("en")}
-                        className={`cursor-pointer ${language === "en" ? "bg-slate-50" : ""}`}
+                        className={`cursor-pointer ${language === "en" ? "" : ""}`}
                       >
                         <div className="flex justify-between items-center w-full">
                           <div className="flex items-center">
-                            <span className="fi fi-us h-4 w-6 inline-block mr-3 rounded-sm shadow-sm" />
+                            <span className="fi fi-us h-4 w-6 inline-block mr-3  shadow-sm" />
                             <span className="font-medium">English</span>
                           </div>
                           {language === "en" && (
@@ -296,11 +296,11 @@ export function PublicNav() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setLanguage("cn")}
-                        className={`cursor-pointer ${language === "cn" ? "bg-slate-50" : ""}`}
+                        className={`cursor-pointer ${language === "cn" ? "" : ""}`}
                       >
                         <div className="flex justify-between items-center w-full">
                           <div className="flex items-center">
-                            <span className="fi fi-cn h-4 w-6 inline-block mr-3 rounded-sm shadow-sm" />
+                            <span className="fi fi-cn h-4 w-6 inline-block mr-3  shadow-sm" />
                             <span className="font-medium">Chinese</span>
                           </div>
                           {language === "cn" && (
@@ -310,11 +310,11 @@ export function PublicNav() {
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => setLanguage("ru")}
-                        className={`cursor-pointer ${language === "ru" ? "bg-slate-50" : ""}`}
+                        className={`cursor-pointer ${language === "ru" ? "" : ""}`}
                       >
                         <div className="flex justify-between items-center w-full">
                           <div className="flex items-center">
-                            <span className="fi fi-ru h-4 w-6 inline-block mr-3 rounded-sm shadow-sm" />
+                            <span className="fi fi-ru h-4 w-6 inline-block mr-3  shadow-sm" />
                             <span className="font-medium">Russian</span>
                           </div>
                           {language === "ru" && (
@@ -331,7 +331,7 @@ export function PublicNav() {
                     className="gap-2 text-slate-600 font-medium opacity-50 cursor-wait px-2"
                     aria-label="Loading language"
                   >
-                    <span className="fi fi-th h-3 w-4 rounded-sm shadow-sm" />
+                    <span className="fi fi-th h-3 w-4  shadow-sm" />
                     <span className="uppercase text-xs font-bold text-slate-500">
                       TH
                     </span>
