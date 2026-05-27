@@ -24,6 +24,18 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const path = pathname.toLowerCase();
 
+  const ua = request.headers.get("user-agent")?.toLowerCase() || "";
+  const isCrawler = 
+    ua.includes("googlebot") || 
+    ua.includes("google-certificates-bridge") ||
+    ua.includes("google-compliance-checking") ||
+    ua.includes("bingbot") || 
+    ua.includes("tiktokbot") || 
+    ua.includes("facebookexternalhit") || 
+    ua.includes("facebot") || 
+    ua.includes("facebookplatform") || 
+    ua.includes("linebot");
+
   // 1. 🛡️ Check Path Exclusion (Static files & System paths)
   const STATIC_EXTENSIONS = [
     ".js", ".css", ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", 
@@ -89,29 +101,34 @@ export async function proxy(request: NextRequest) {
       sameSite: "lax",
     });
   } else if (!isLocalePath && !hasLangCookie) {
-    // Auto-detect browser/IP language on default root paths
-    const acceptLang = request.headers.get("accept-language")?.toLowerCase();
-    const country = request.headers.get("x-vercel-ip-country")?.toUpperCase();
+    if (isCrawler) {
+      // Force Thai language for search crawlers/bots on root paths to ensure Google indexes the Thai version
+      detectedLang = "th";
+    } else {
+      // Auto-detect browser/IP language on default root paths
+      const acceptLang = request.headers.get("accept-language")?.toLowerCase();
+      const country = request.headers.get("x-vercel-ip-country")?.toUpperCase();
 
-    if (country) {
-      if (country === "CN" || country === "HK" || country === "TW") detectedLang = "cn";
-      else if (country === "RU") detectedLang = "ru";
-      else if (country === "TH") detectedLang = "th";
-      else detectedLang = "en";
-    }
+      if (country) {
+        if (country === "CN" || country === "HK" || country === "TW") detectedLang = "cn";
+        else if (country === "RU") detectedLang = "ru";
+        else if (country === "TH") detectedLang = "th";
+        else detectedLang = "en";
+      }
 
-    if (!detectedLang && acceptLang) {
-      const primaryLang = acceptLang.split(',')[0];
-      if (primaryLang.startsWith("th")) detectedLang = "th";
-      else if (primaryLang.startsWith("en")) detectedLang = "en";
-      else if (primaryLang.startsWith("zh")) detectedLang = "cn";
-      else if (primaryLang.startsWith("ru")) detectedLang = "ru";
-      
-      if (!detectedLang) {
-        if (acceptLang.includes("th")) detectedLang = "th";
-        else if (acceptLang.includes("en")) detectedLang = "en";
-        else if (acceptLang.includes("zh")) detectedLang = "cn";
-        else if (acceptLang.includes("ru")) detectedLang = "ru";
+      if (!detectedLang && acceptLang) {
+        const primaryLang = acceptLang.split(',')[0];
+        if (primaryLang.startsWith("th")) detectedLang = "th";
+        else if (primaryLang.startsWith("en")) detectedLang = "en";
+        else if (primaryLang.startsWith("zh")) detectedLang = "cn";
+        else if (primaryLang.startsWith("ru")) detectedLang = "ru";
+        
+        if (!detectedLang) {
+          if (acceptLang.includes("th")) detectedLang = "th";
+          else if (acceptLang.includes("en")) detectedLang = "en";
+          else if (acceptLang.includes("zh")) detectedLang = "cn";
+          else if (acceptLang.includes("ru")) detectedLang = "ru";
+        }
       }
     }
 
@@ -132,17 +149,7 @@ export async function proxy(request: NextRequest) {
   const isWhitelistedIp = isWhitelisted(ip);
   const isBypassed = isInternalBypass(request);
   
-  const ua = request.headers.get("user-agent")?.toLowerCase() || "";
-  const isCrawler = 
-    ua.includes("googlebot") || 
-    ua.includes("google-certificates-bridge") ||
-    ua.includes("google-compliance-checking") ||
-    ua.includes("bingbot") || 
-    ua.includes("tiktokbot") || 
-    ua.includes("facebookexternalhit") || 
-    ua.includes("facebot") || 
-    ua.includes("facebookplatform") || 
-    ua.includes("linebot");
+  // Use isCrawler declared at the top
 
   const isWebhook = ["/api/webhook", "/api/callback", "/auth/callback", "/api/auth/callback", "/api/line-webhook"].some(p => path.startsWith(p));
   const isBypassPath = isWebhook || isCrawler;

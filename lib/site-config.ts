@@ -22,7 +22,7 @@ const siteUrl = isDev
 export const siteConfig = {
   name: "VC Connect Asset",
   company: "VC Connect Asset Co., Ltd.",
-  description: "ระบบจัดการอสังหาริมทรัพย์และพอร์ทัลประกาศขาย-เช่า",
+  description: "VC Connect Asset นายหน้าอสังหาริมทรัพย์มืออาชีพ บริการรับฝากขาย ฝากเช่า บ้าน คอนโด และที่ดิน ครบวงจร ดูแลและให้คำปรึกษาอย่างใกล้ชิดในทุกขั้นตอน เพื่อให้คุณได้ข้อเสนอที่ดีที่สุด",
   url: siteUrl,
   logo: "/images/branding/vcc-asset/logo-dark.svg",
   logoDark: "/images/branding/vcc-asset/logo-light.svg",
