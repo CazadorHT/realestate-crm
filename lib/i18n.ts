@@ -40,6 +40,37 @@ export function getLocalizedField<T>(
  */
 export async function getServerLanguage(): Promise<Language> {
   try {
+    const { headers } = await import("next/headers");
+    const headersList = await headers();
+    
+    // 1. Detect language from original URL pathname (via x-pathname header)
+    const rawPathname = headersList.get("x-pathname") || "/";
+    const pathParts = rawPathname.split("/");
+    const firstPart = pathParts[1]?.toLowerCase();
+    
+    if (firstPart === "th") return "th";
+    if (firstPart === "en") return "en";
+    if (firstPart === "cn") return "cn";
+    if (firstPart === "ru") return "ru";
+
+    // 2. Force Thai language for crawlers/search bots on unlocalized default paths (SEO requirement)
+    const ua = headersList.get("user-agent")?.toLowerCase() || "";
+    const isCrawler = 
+      ua.includes("googlebot") || 
+      ua.includes("google-certificates-bridge") ||
+      ua.includes("google-compliance-checking") ||
+      ua.includes("bingbot") || 
+      ua.includes("tiktokbot") || 
+      ua.includes("facebookexternalhit") || 
+      ua.includes("facebot") || 
+      ua.includes("facebookplatform") || 
+      ua.includes("linebot");
+
+    if (isCrawler) {
+      return "th";
+    }
+
+    // 3. Fallback to app-language cookie
     const { cookies } = await import("next/headers");
     const cookieStore = await cookies();
     const cookieLang = cookieStore.get("app-language")?.value as Language;
@@ -47,29 +78,25 @@ export async function getServerLanguage(): Promise<Language> {
       return cookieLang;
     }
 
-    // [ELITE FALLBACK] If no cookie, detect via Headers (for the very first load)
-    const { headers } = await import("next/headers");
-    const headersList = await headers();
+    // 4. [ELITE FALLBACK] If no cookie, detect via Headers (for the very first load)
     const acceptLang = headersList.get("accept-language")?.toLowerCase();
     const country = headersList.get("x-vercel-ip-country")?.toUpperCase();
 
-    // 1. Check Device Language (Smart Parsing for user preference)
+    // Check Device Language (Smart Parsing for user preference)
     if (acceptLang) {
-      // First, check the primary (first) language preferred by the device
       const primaryLang = acceptLang.split(',')[0];
       if (primaryLang.startsWith("th")) return "th";
       if (primaryLang.startsWith("en")) return "en";
       if (primaryLang.startsWith("zh")) return "cn";
       if (primaryLang.startsWith("ru")) return "ru";
 
-      // If primary is not supported, check if any of our supported languages are in their list
       if (acceptLang.includes("th")) return "th";
       if (acceptLang.includes("en")) return "en";
       if (acceptLang.includes("zh")) return "cn";
       if (acceptLang.includes("ru")) return "ru";
     }
 
-    // 2. Fallback to IP-based Location (For tourists/visitors)
+    // Fallback to IP-based Location (For tourists/visitors)
     if (country === "CN" || country === "HK" || country === "TW") return "cn";
     if (country === "RU") return "ru";
     if (country && country !== "TH") return "en";
