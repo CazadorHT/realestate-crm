@@ -20,7 +20,7 @@ import {
  * 3. Crawler blocking issues (White-listing Google/FB bots)
  * 4. CSP Violations (Centralized security headers)
  */
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const path = pathname.toLowerCase();
 
@@ -278,7 +278,7 @@ export async function middleware(request: NextRequest) {
   }
 }
 
-export default middleware;
+export default proxy;
 
 export const config = {
   matcher: [
