@@ -1,5 +1,5 @@
-"use client";
-
+import Link from "next/link";
+import { CheckSquare, Square } from "lucide-react";
 import { 
   HiMapPin, 
   HiHome, 
@@ -40,11 +40,17 @@ const PROPERTY_TYPE_ICONS: Record<string, any> = {
 interface PropertyCardInfoProps {
   property: PropertyCardProps;
   areaProvince: string;
+  isInCompare?: boolean;
+  onCompareClick?: (e: React.MouseEvent) => void;
+  handleCardClick?: () => void;
 }
 
 export function PropertyCardInfo({
   property,
   areaProvince,
+  isInCompare = false,
+  onCompareClick,
+  handleCardClick,
 }: PropertyCardInfoProps) {
   const { language, t } = useLanguage();
   const typeColor = getTypeColor(property.property_type);
@@ -57,27 +63,63 @@ export function PropertyCardInfo({
   const localizedTitle = getLocaleValue(property, "title", language);
 
   return (
-    <div className="space-y-1 mb-3">
+    <div className="space-y-2 mb-3">
+      {/* Top row: Badge and Compare button (outside detail links) */}
       <div className="flex justify-between items-center gap-4 mb-2">
         <span
-          className={`flex items-center gap-1.5 text-[10px] sm:text-[11px] md:text-xs font-semibold ${typeColor.text} ${typeColor.bg} px-2 sm:px-2.5 md:px-3 py-0.5 sm:py-0.5 md:py-1 rounded-full uppercase tracking-wide shadow-xs`}
+          className={`flex items-center gap-1.5 text-[10px] sm:text-[11px] md:text-xs font-semibold ${typeColor.text} ${typeColor.bg} px-2 py-0.5 md:py-1  rounded-lg uppercase tracking-wide shadow-xs`}
         >
-          <IconComponent className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+          <IconComponent className="h-3.5 w-3.5 " />
           {typeLabel}
         </span>
-        <div className="flex items-center gap-1 text-stone-500 min-w-0 flex-1 justify-end">
-          <HiMapPin className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-          <span className="text-xs truncate whitespace-nowrap">
-            {getSafeText(
-              areaProvince,
-              getProvinceName("กรุงเทพมหานคร", language),
-            )}
-          </span>
-        </div>
+
+        {/* Compare Checkbox - Optimized Touch Target */}
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (onCompareClick) onCompareClick(e);
+          }}
+          className={`flex items-center gap-1.5 text-xs font-semibold px-2 py-1 rounded-lg border transition-all duration-200 cursor-pointer touch-manipulation min-h-[30px]! ${
+            isInCompare 
+              ? "bg-blue-50 border-blue-200/60 text-blue-600 font-bold" 
+              : "bg-transparent border-transparent text-slate-400 hover:text-slate-600"
+          }`}
+        >
+          {isInCompare ? (
+            <CheckSquare className="h-3.5 w-3.5 text-blue-600" />
+          ) : (
+            <Square className="h-3.5 w-3.5 text-slate-400" />
+          )}
+          <span className="text-[11px] sm:text-xs">{t("common.compare")}</span>
+        </button>
       </div>
-      <h3 className="text-sm sm:text-base md:text-lg font-semibold tracking-wide text-slate-800 line-clamp-2 group-hover:text-blue-800 transition-all duration-300 ease-in-out">
-        {localizedTitle}
-      </h3>
+
+      {/* Title block link */}
+      <Link 
+        href={`/properties/${property.slug || property.id}`}
+        className="block group-hover:text-blue-600 transition-colors"
+        onClick={handleCardClick}
+      >
+        <h3 className="text-sm sm:text-base md:text-base font-semibold tracking-wide text-slate-800 line-clamp-2 leading-snug group-hover:text-blue-800 transition-all duration-300 ease-in-out">
+          {localizedTitle}
+        </h3>
+      </Link>
+
+      {/* Location block link below the title */}
+      <Link
+        href={`/properties/${property.slug || property.id}`}
+        className="flex items-center gap-1 text-stone-500 min-w-0"
+        onClick={handleCardClick}
+      >
+        <HiMapPin className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+        <span className="text-xs truncate whitespace-nowrap hover:text-blue-600 transition-colors">
+          {getSafeText(
+            areaProvince,
+            getProvinceName("กรุงเทพมหานคร", language),
+          )}
+        </span>
+      </Link>
     </div>
   );
 }

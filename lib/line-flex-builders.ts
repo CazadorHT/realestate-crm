@@ -1563,11 +1563,11 @@ export function buildSocialPostFlex(
 
 
   const propertyTypeLabel_I18N: Record<string, Record<string, string>> = {
-    HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "独栋别墅", ru: "Дом" },
+    HOUSE: { th: "บ้านเดี่ยว", en: "Single House", cn: "独栋别墅", ru: "Дом" },
     CONDO: { th: "คอนโด", en: "Condo", cn: "公寓", ru: "Кондо" },
     TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅", ru: "Таунхаус" },
     LAND: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" },
-    OFFICE_BUILDING: { th: "สำนักงานออฟฟิศ", en: "Office Building", cn: "办公楼", ru: "Офисное здание" },
+    OFFICE_BUILDING: { th: "สำนักงานออฟฟิศ", en: "Office Space", cn: "办公楼", ru: "Офисное здание" },
     WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
     COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial Building", cn: "商用建筑", ru: "Коммерческое здание" },
     VILLA: { th: "วิลล่า", en: "Villa", cn: "别墅", ru: "Вилла" },

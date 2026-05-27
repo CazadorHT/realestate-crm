@@ -101,13 +101,13 @@ export interface PropertyDataForSEO {
  */
 const SEO_LABELS: Record<string, Record<string, string>> = {
   // Property Types
-  HOUSE: { th: "บ้านเดี่ยว", en: "House", cn: "别墅", ru: "Дом" },
+  HOUSE: { th: "บ้านเดี่ยว", en: "Single House", cn: "别墅", ru: "Дом" },
   CONDO: { th: "คอนโด", en: "Condo", cn: "公寓", ru: "Кондо" },
   TOWNHOME: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅", ru: "Таунхаус" },
   LAND: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" },
   OFFICE_BUILDING: {
     th: "อาคารสำนักงานออฟฟิศ",
-    en: "Office Building",
+    en: "Office Space",
     cn: "办公楼",
     ru: "Офисное здание",
   },

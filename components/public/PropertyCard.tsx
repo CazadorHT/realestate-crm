@@ -260,31 +260,8 @@ function PropertyCardComponent({
       ref={cardRef} 
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className="group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[360px] md:max-w-none mx-auto bg-white shadow-md h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10"
+      className={`group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[360px] md:max-w-none mx-auto bg-white shadow-md h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10 transition-shadow ${isInCompare ? "ring-2 ring-blue-500/80 bg-blue-50/5" : ""}`}
     >
-      <style jsx global>{`
-        @keyframes fire-flicker {
-          0% { transform: scale(1) rotate(-12deg) translateZ(0); }
-          50% { transform: scale(1.05) rotate(-11deg) translateZ(0); opacity: 0.9; }
-          100% { transform: scale(1) rotate(-12deg) translateZ(0); }
-        }
-        @keyframes glow-pulse {
-          0% { opacity: 0.3; transform: scale(1) translateZ(0); }
-          50% { opacity: 0.5; transform: scale(1.15) translateZ(0); }
-          100% { opacity: 0.3; transform: scale(1) translateZ(0); }
-        }
-      `}</style>
-      {isHotDeal && (
-        <div className="absolute -top-5 -left-3 md:-top-7 md:-left-5 z-40 block select-none pointer-events-none transform-gpu will-change-[transform,opacity]">
-          <div className="relative">
-            <div className="absolute inset-0 bg-red-500 rounded-full blur-md animate-[glow-pulse_3s_infinite_ease-in-out] will-change-[transform,opacity]"></div>
-            <div className="relative bg-linear-to-br from-red-500 to-orange-600 text-white p-2 md:p-2.5 rounded-full shadow-[0_4px_16px_rgba(239,68,68,0.4)] border border-white/20 transform animate-[fire-flicker_4s_infinite_ease-in-out] group-hover:animate-none group-hover:rotate-0 group-hover:scale-110 transition-all duration-700 ease-out will-change-transform">
-              <PiFireFill className="h-4 w-4 md:h-5 md:w-5 lg:h-6 lg:w-6 fill-yellow-200 drop-shadow-[0_0_8px_rgba(254,240,138,0.6)]" />
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Main Image Area - Interactive but not a button/link itself (contains buttons) */}
       <div className="relative overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl">
         <PropertyCardImage
@@ -296,6 +273,8 @@ function PropertyCardComponent({
           onFavoriteClick={handleFavoriteClick}
           comparisonBadges={comparisonBadges}
           areaProvince={areaProvince}
+          isInCompare={isInCompare}
+          onCompareClick={handleCompareClick}
         />
         {/* Overlay Link for the Image Area */}
         <Link 
@@ -306,33 +285,27 @@ function PropertyCardComponent({
         />
       </div>
 
-      <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 mt-2 sm:mt-2 md:mt-3 gap-y-2 sm:gap-y-2 md:gap-y-3 grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col relative">
-        {/* Title & Info Link Wrapper */}
-        <Link 
-          href={`/properties/${property.slug || property.id}`}
-          className="block group-hover:text-blue-600 transition-colors"
-          onClick={handleCardClick}
-        >
-          <PropertyCardInfo property={property} areaProvince={areaProvince} />
-        </Link>
+      <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 mt-0 md:mt-1 gap-y-2 sm:gap-y-2 md:gap-y-3 grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col relative">
+        <PropertyCardInfo 
+          property={property} 
+          areaProvince={areaProvince} 
+          isInCompare={isInCompare}
+          onCompareClick={handleCompareClick}
+          handleCardClick={handleCardClick}
+        />
         
         <PropertyCardSpecs property={property} />
         <PropertyCardFeatures features={property.features} />
-        
-        {/* Compare Action - Outside of main links */}
-        <button
-          onClick={handleCompareClick}
-          aria-label={`${isInCompare ? t("common.compare") : t("common.compare")} ${property.title}`}
-          className={`mt-3 flex items-center gap-1.5 text-xs font-medium transition-all duration-200 z-20 w-fit ${isInCompare ? "text-blue-600" : "text-slate-400 hover:text-slate-600"}`}
-        >
-          {isInCompare ? <CheckSquare className="h-4 w-4" /> : <Square className="h-4 w-4" />}
-          {t("common.compare")}
-        </button>
       </div>
 
       {/* Footer - Contains potential separate links/actions */}
       <div className="relative z-20">
-        <PropertyCardFooter property={property} variant={footerVariant || property.footerVariant} />
+        <PropertyCardFooter 
+          property={property} 
+          variant={footerVariant || property.footerVariant} 
+          isInCompare={isInCompare}
+          onCompareClick={handleCompareClick}
+        />
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 
-import { Clock } from "lucide-react";
+import { Clock, CheckSquare, Square } from "lucide-react";
 // Removed date-fns imports to reduce bundle size. Using native Intl API instead.
 import { formatPrice, getOfficePrice } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
@@ -11,9 +11,13 @@ import { getEffectivePrice } from "@/lib/property-hardened-utils";
 export function PropertyCardFooter({
   property,
   variant = "default",
+  isInCompare = false,
+  onCompareClick,
 }: {
   property: PropertyCardProps;
   variant?: "default" | "minimal";
+  isInCompare?: boolean;
+  onCompareClick?: (e: React.MouseEvent) => void;
 }) {
   const { t, language } = useLanguage();
   const [mounted, setMounted] = React.useState(false);
@@ -95,7 +99,7 @@ export function PropertyCardFooter({
     <div className="h-auto sm:h-auto md:h-28 px-3 sm:px-3.5 md:px-4 py-2 sm:py-2.5 md:py-3 border-t border-slate-200 bg-white/60 flex flex-col justify-between gap-1 sm:gap-1.5 md:gap-2 rounded-b-2xl sm:rounded-b-2xl md:rounded-b-3xl">
       <div className="min-w-0">
         {property.listing_type === "SALE_AND_RENT" ? (
-          <div className="flex w-full items-start divide-x divide-slate-200">
+          <div className="flex w-full items-stretch divide-x divide-slate-200">
             {/* SALE PRICE BLOCK */}
             <div className="flex-1 flex flex-col pr-2 md:pr-3 min-w-0">
               <span className="text-[10px] sm:text-[11px] md:text-xs font-bold uppercase tracking-tight mb-0.5">
@@ -107,7 +111,7 @@ export function PropertyCardFooter({
                     {formatPrice(prices.salePrice, language)}
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
+                    <span className="text-[10px] text-slate-500 font-semibold line-through decoration-slate-500/70">
                       {formatPrice(prices.originalPrice, language)}
                     </span>
                     <span className="text-xs font-semibold bg-rose-50 text-rose-600 border border-rose-100 px-1 rounded-sm">
@@ -138,7 +142,7 @@ export function PropertyCardFooter({
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-slate-400 line-through decoration-slate-400/50">
+                    <span className="text-[10px] text-slate-500 font-semibold line-through decoration-slate-500/70">
                       {formatPrice(prices.originalRentalPrice, language)}
                     </span>
                     <span className="text-xs font-semibold bg-orange-50 text-orange-600 border border-orange-100 px-1 rounded-sm">
@@ -172,7 +176,7 @@ export function PropertyCardFooter({
                (property.listing_type === "RENT" && prices.hasRentalDiscount) ? (
                 <div className="flex flex-col">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400 font-bold line-through decoration-slate-400/70">
+                    <span className="text-xs text-slate-500 font-extrabold line-through decoration-slate-500/80">
                       {formatPrice(
                         property.listing_type === "SALE" ? prices.originalPrice : prices.originalRentalPrice,
                         language,

@@ -250,7 +250,7 @@
       "townhome": "Townhome",
       "townhome_desc": "Prime location, perfect for living & business",
       "office": "Office",
-      "office_building": "Office Building",
+      "office_building": "Office Space",
       "office_desc": "Ready-to-use office in CBD core",
       "warehouse": "Warehouse",
       "warehouse_desc": "Large warehouse space for all businesses",
@@ -864,12 +864,12 @@
     "pdpa_note": "Note: This agreement complies with the Personal Data Protection Act B.E. 2562 (PDPA)."
   },
   "property_types": {
-    "house": "House",
+    "house": "Single House",
     "condo": "Condo",
     "townhome": "Townhome",
     "land": "Land",
     "commercial": "Commercial",
-    "office_building": "Office Building",
+    "office_building": "Office Space",
     "office": "Office",
     "villa": "Villa",
     "pool_villa": "Pool Villa",

@@ -174,10 +174,10 @@ export function PublicNav() {
     })),
   };
   const currentLangFlag = {
-    th: <span className="fi fi-th h-4 w-6 shadow-sm" />,
-    en: <span className="fi fi-us h-4 w-6 shadow-sm" />,
-    cn: <span className="fi fi-cn h-4 w-6 shadow-sm" />,
-    ru: <span className="fi fi-ru h-4 w-6 shadow-sm" />,
+    th: <span className="fi fi-th h-5 w-7 inline-block rounded-sm shadow-sm" />,
+    en: <span className="fi fi-us h-5 w-7 inline-block rounded-sm shadow-sm" />,
+    cn: <span className="fi fi-cn h-5 w-7 inline-block rounded-sm shadow-sm" />,
+    ru: <span className="fi fi-ru h-5 w-7 inline-block rounded-sm shadow-sm" />,
   };
 
   return (
@@ -440,8 +440,7 @@ export function PublicNav() {
                     <SheetTrigger asChild>
                       <Button
                         variant="ghost"
-                        size="icon"
-                        className="text-slate-600 hover:bg-slate-100"
+                        className="text-slate-600 hover:bg-slate-100 h-10 w-12 flex items-center justify-center p-0"
                         aria-label={t("nav.change_language") || "Change language"}
                       >
                         {currentLangFlag[language]}
