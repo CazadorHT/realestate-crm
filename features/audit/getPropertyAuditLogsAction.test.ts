@@ -20,6 +20,8 @@ describe("getPropertyAuditLogsAction - Branch Isolation & Data Fetching", () => 
       from: vi.fn().mockReturnThis(),
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      or: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       range: vi.fn().mockReturnThis(),
     };

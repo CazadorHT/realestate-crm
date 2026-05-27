@@ -501,7 +501,7 @@ export async function getPropertyAuditLogsAction(
       .from("system_audit_logs_v3")
       .select("id, actor_id, action, entity_table, entity_id, new_data, tenant_id, created_at", { count: "exact" })
       .eq("entity_id", propertyId)
-      .eq("entity_table", "properties");
+      .in("entity_table", ["properties", "properties_core"]);
 
     if (tenantId && tenantId !== "ALL") {
       query = query.eq("tenant_id", tenantId);
@@ -595,7 +595,7 @@ export async function getAuditStatsAction(
       .from("system_audit_logs_v3")
       .select("action, actor_id", { count: "exact" })
       .eq("entity_id", propertyId)
-      .eq("entity_table", "properties");
+      .in("entity_table", ["properties", "properties_core"]);
 
     if (tenantId && tenantId !== "ALL") {
       query = query.eq("tenant_id", tenantId);
