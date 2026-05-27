@@ -71,45 +71,48 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
   if (UUID_RE.test(slugOrId)) {
     query = query.eq("id", slugOrId);
   } else {
-    // Search by slug in properties_details.address_info.slug
-    let detailMatch = null as any;
+    let resolvedId: string | null = null;
 
+    // Search by slug in properties_details.address_info.slug
     const { data: byAddress } = await supabase
       .from("properties_details")
       .select("property_id")
       .contains("address_info", { slug: slugOrId })
       .maybeSingle();
 
-    if (byAddress) detailMatch = byAddress;
+    if (byAddress?.property_id) {
+      resolvedId = byAddress.property_id;
+    }
 
     // Fallback: slug stored in meta_data.slug
-    if (!detailMatch) {
+    if (!resolvedId) {
       const { data: byMeta } = await supabase
         .from("properties_details")
         .select("property_id")
         .filter("meta_data->>slug", "eq", slugOrId)
         .maybeSingle();
-      if (byMeta) detailMatch = byMeta;
+      if (byMeta?.property_id) {
+        resolvedId = byMeta.property_id;
+      }
     }
 
     // Final fallback: legacy `properties_core.slug` column
-    if (!detailMatch) {
+    if (!resolvedId) {
       const { data: coreBySlug } = await supabase
         .from("properties_core")
         .select("id")
         .eq("slug", slugOrId)
         .maybeSingle();
-      if (coreBySlug) {
-        query = query.eq("id", coreBySlug.id);
+      if (coreBySlug?.id) {
+        resolvedId = coreBySlug.id;
       }
     }
 
-    if (!detailMatch && !query._single) {
-      // If still not found and we didn't set query by core slug, return null
+    if (!resolvedId) {
       return null;
     }
 
-    if (detailMatch) query = query.eq("id", detailMatch.property_id);
+    query = query.eq("id", resolvedId);
   }
 
   const { data: rawData, error } = await query.maybeSingle();

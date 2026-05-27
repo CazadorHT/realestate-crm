@@ -239,11 +239,23 @@ export async function generateMetadata({
 
   const title = getLocaleValue(service, "title", language);
   const description = getLocaleValue(service, "description", language);
+  const canonicalUrl = `${siteConfig.url}/services/${encodeURIComponent(slug)}`;
 
   return {
     title: `${title} | Premium Services`,
     description: description || `Explore our ${title} service.`,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        th: `${siteConfig.url}/th/services/${encodeURIComponent(slug)}`,
+        en: `${siteConfig.url}/en/services/${encodeURIComponent(slug)}`,
+        "zh-Hans": `${siteConfig.url}/cn/services/${encodeURIComponent(slug)}`,
+        ru: `${siteConfig.url}/ru/services/${encodeURIComponent(slug)}`,
+        "x-default": canonicalUrl,
+      },
+    },
     openGraph: {
+      url: canonicalUrl,
       images: service.cover_image ? [service.cover_image] : [],
     },
   };

@@ -52,6 +52,8 @@ export async function generateMetadata({
     COVER_IMAGE = `${siteConfig.url}${COVER_IMAGE}`;
   }
 
+  const canonicalUrl = `${siteConfig.url}/blog/${encodeURIComponent(decodedSlug)}`;
+
   return {
     title: `${getLocalizedField(post, "title", language)} | ${t("blog.article_label")}`,
     description:
@@ -60,9 +62,20 @@ export async function generateMetadata({
     keywords: `${
       post.category
     }, ${t("home.hero.title_highlight")}, ${post.tags?.join(", ")}`,
+    alternates: {
+      canonical: canonicalUrl,
+      languages: {
+        th: `${siteConfig.url}/th/blog/${encodeURIComponent(decodedSlug)}`,
+        en: `${siteConfig.url}/en/blog/${encodeURIComponent(decodedSlug)}`,
+        "zh-Hans": `${siteConfig.url}/cn/blog/${encodeURIComponent(decodedSlug)}`,
+        ru: `${siteConfig.url}/ru/blog/${encodeURIComponent(decodedSlug)}`,
+        "x-default": canonicalUrl,
+      },
+    },
     openGraph: {
       title: getLocalizedField(post, "title", language),
       description: getLocalizedField(post, "excerpt", language) || "",
+      url: canonicalUrl,
       images: [COVER_IMAGE],
       type: "article",
       publishedTime: post.published_at || undefined,
