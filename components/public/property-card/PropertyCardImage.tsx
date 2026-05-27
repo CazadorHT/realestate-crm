@@ -42,6 +42,7 @@ export function PropertyCardImage({
   const { t, language } = useLanguage();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isInteracted, setIsInteracted] = useState(false);
+  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   
   // Quick Share States
@@ -272,6 +273,10 @@ export function PropertyCardImage({
               key={index}
               className="relative h-full w-full shrink-0 snap-start"
             >
+              {/* Shimmer placeholder while image is loading */}
+              {!loadedImages[index] && (
+                <div className="absolute inset-0 z-10 bg-slate-200 animate-pulse" />
+              )}
               <Image
                 src={img}
                 alt={`${
@@ -287,9 +292,12 @@ export function PropertyCardImage({
                 } - Image ${index + 1}`}
                 fill
                 sizes="(max-width: 640px) 95vw, (max-width: 1024px) 48vw, (max-width: 1280px) 31vw, 23vw"
-                className="object-cover object-top transform-gpu will-change-transform"
+                className={`object-cover object-top transform-gpu will-change-transform transition-[filter] duration-500 ${
+                  loadedImages[index] ? "blur-0" : "blur-sm"
+                }`}
                 priority={priority && index === 0}
                 {...(!(priority && index === 0) && { loading: "lazy" })}
+                onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
               />
             </div>
           ))}
@@ -302,7 +310,7 @@ export function PropertyCardImage({
 
       {/* Pagination Dots */}
       {isInteracted && displayImages.length > 1 && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20 pointer-events-none opacity-100 xl:opacity-0 xl:group-hover/image:opacity-100 transition-opacity duration-300">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20 pointer-events-none opacity-100 xl:opacity-0 xl:group-hover/imgwrap:opacity-100 transition-opacity duration-300">
           {displayImages
             .slice(
               Math.floor(activeImageIndex / 10) * 10,
@@ -326,14 +334,14 @@ export function PropertyCardImage({
         <>
           <button
             onClick={scrollPrev}
-            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/image:opacity-100 transition-all duration-300 shadow-sm"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/imgwrap:opacity-100 transition-all duration-300 shadow-sm"
             aria-label="Previous image"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <button
             onClick={scrollNext}
-            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/image:opacity-100 transition-all duration-300 shadow-sm"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-30 hidden lg:flex items-center justify-center w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 backdrop-blur-md text-white border border-white/30 opacity-0 group-hover/imgwrap:opacity-100 transition-all duration-300 shadow-sm"
             aria-label="Next image"
           >
             <ChevronRight className="w-5 h-5" />

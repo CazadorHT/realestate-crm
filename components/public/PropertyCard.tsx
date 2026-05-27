@@ -260,10 +260,10 @@ function PropertyCardComponent({
       ref={cardRef} 
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      className={`group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[360px] md:max-w-none mx-auto bg-white shadow-md h-full flex flex-col transition-all duration-300 hover:shadow-xl hover:-translate-y-1 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10 transition-shadow ${isInCompare ? "ring-2 ring-blue-500/80 bg-blue-50/5" : ""}`}
+      className={`group relative isolate rounded-2xl sm:rounded-2xl md:rounded-3xl w-full max-w-[360px] md:max-w-none mx-auto bg-white shadow-md h-full flex flex-col transform transition-all duration-300 hover:shadow-xl hover:-translate-y-1 before:content-[''] before:absolute before:inset-0 before:rounded-2xl sm:before:rounded-2xl md:before:rounded-3xl before:ring-inset before:pointer-events-none before:z-10 ${isInCompare ? "ring-2 ring-blue-500/80 bg-blue-50/5" : ""}`}
     >
       {/* Main Image Area - Interactive but not a button/link itself (contains buttons) */}
-      <div className="relative overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl">
+      <div className="group/imgwrap relative overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl">
         <PropertyCardImage
           property={property}
           priority={priority}
