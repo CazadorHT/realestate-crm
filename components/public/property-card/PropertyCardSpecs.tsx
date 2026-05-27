@@ -19,7 +19,7 @@ export function PropertyCardSpecs({
           <div className="flex items-center justify-center h-4 w-4 md:h-5 md:w-5 shrink-0">
             <BedDouble
               className="h-full w-full text-slate-500"
-              strokeWidth={2}
+              strokeWidth={1.5}
             />
           </div>
           <span className="text-xs sm:text-xs md:text-sm font-semibold text-slate-600">
@@ -33,7 +33,7 @@ export function PropertyCardSpecs({
           <div className="flex items-center justify-center h-4 w-4 md:h-5 md:w-5 shrink-0">
             <Bath
               className="h-full w-full text-slate-500"
-              strokeWidth={2}
+              strokeWidth={1.5}
             />
           </div>
           <span className="text-xs md:text-sm font-semibold text-slate-600">
@@ -47,7 +47,7 @@ export function PropertyCardSpecs({
           <div className="flex items-center justify-center h-4 w-4 md:h-5 md:w-5 shrink-0">
             <Car
               className="h-full w-full text-slate-500"
-              strokeWidth={2}
+              strokeWidth={1.5}
             />
           </div>
           <span className="text-xs md:text-sm font-semibold text-slate-600">
@@ -61,7 +61,7 @@ export function PropertyCardSpecs({
           <div className="flex items-center justify-center h-4 w-4 md:h-5 md:w-5 shrink-0">
             <Expand
               className="h-full w-full text-slate-500"
-              strokeWidth={2}
+              strokeWidth={1.5}
             />
           </div>
           <span className="text-xs md:text-sm font-semibold text-slate-600">
@@ -76,9 +76,9 @@ export function PropertyCardSpecs({
       {property.land_size_sqwah ? (
         <div className="flex items-center gap-1.5 md:gap-2">
           <div className="flex items-center justify-center h-4 w-4 md:h-5 md:w-5 shrink-0 ">
-            <PiResizeBold
+            <PiResize
               className="h-full w-full text-slate-500"
-              strokeWidth={2}
+              strokeWidth={1.5}
             />
           </div>
           <span className="text-xs md:text-sm font-semibold text-slate-600">
