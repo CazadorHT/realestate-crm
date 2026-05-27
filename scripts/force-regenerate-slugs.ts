@@ -28,13 +28,13 @@ interface PropertyForSlug {
   size_sqm: number | null;
   property_type: string | null;
   district: string | null;
-  district_en: string | null;
+  district_en?: string | null;
   province: string | null;
-  province_en: string | null;
+  province_en?: string | null;
   popular_area: string | null;
   popular_area_en: string | null;
   subdistrict: string | null;
-  subdistrict_en: string | null;
+  subdistrict_en?: string | null;
   original_price: number | null;
   price: number | null;
   original_rental_price: number | null;
@@ -290,7 +290,7 @@ async function forceRegenerateSlugs() {
 
   const { data, error: fetchError } = await supabase.from("properties").select(`
       id, title, title_en, slug, bedrooms, bathrooms, size_sqm, property_type, 
-      district, district_en, province, province_en, popular_area, popular_area_en, subdistrict, subdistrict_en, 
+      district, province, popular_area, popular_area_en, subdistrict, 
       original_price, price, original_rental_price, rental_price, nearby_transits, nearby_places,
       is_pet_friendly, is_corner_unit, is_renovated, is_fully_furnished, is_selling_with_tenant, is_foreigner_quota,
       is_hot_deal, verified, amenities,
