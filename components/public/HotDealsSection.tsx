@@ -84,35 +84,30 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
 
       {/* Moving Gradient Blobs */}
       <div
-        className="absolute top-[-10%] left-[-15%] w-[500px] h-[500px] bg-red-600/50 rounded-full mix-blend-screen filter blur-[100px] z-0"
-        style={{ animation: "blob 2s ease-in-out infinite" }}
+        className="absolute top-[-10%] left-[-15%] w-[500px] h-[500px] bg-red-600/50 rounded-full mix-blend-screen filter blur-[100px] z-0 md:animate-[blob_2s_ease-in-out_infinite]"
       />
       <div
-        className="absolute left-[70%] top-[50%] w-[500px] h-[500px] bg-orange-600/50 rounded-full mix-blend-screen filter blur-[100px] z-0"
+        className="absolute left-[70%] top-[50%] w-[500px] h-[500px] bg-orange-600/50 rounded-full mix-blend-screen filter blur-[100px] z-0 md:animate-[blob-horizontal_2s_ease-in-out_infinite]"
         style={{
-          animation: "blob-horizontal 2s ease-in-out infinite",
           marginLeft: "-250px",
           marginTop: "-250px",
         }}
       />
       <div
-        className="absolute top-[-20%] right-[-10%] w-[400px] h-[400px] bg-orange-500/80 rounded-full mix-blend-screen filter blur-[100px] z-0"
+        className="absolute top-[-20%] right-[-10%] w-[400px] h-[400px] bg-orange-500/80 rounded-full mix-blend-screen filter blur-[100px] z-0 md:animate-[blob-reverse_2.5s_ease-in-out_infinite]"
         style={{
-          animation: "blob-reverse 2.5s ease-in-out infinite",
           animationDelay: "2s",
         }}
       />
       <div
-        className="absolute bottom-[-10%] left-[5%] w-[600px] h-[600px] bg-fuchsia-600/60 rounded-full mix-blend-screen filter blur-[120px] z-0"
+        className="absolute bottom-[-10%] left-[5%] w-[600px] h-[600px] bg-fuchsia-600/60 rounded-full mix-blend-screen filter blur-[120px] z-0 md:animate-[blob-horizontal_3s_ease-in-out_infinite]"
         style={{
-          animation: "blob-horizontal 3s ease-in-out infinite",
           animationDelay: "4s",
         }}
       />
       <div
-        className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-rose-500/50 rounded-full mix-blend-screen filter blur-[100px] z-0"
+        className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-rose-500/50 rounded-full mix-blend-screen filter blur-[100px] z-0 md:animate-[blob-vertical_4s_ease-in-out_infinite]"
         style={{
-          animation: "blob-vertical 4s ease-in-out infinite",
           animationDelay: "4s",
         }}
       />

@@ -574,7 +574,7 @@ export function PropertyCardImage({
                 className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-bold rounded-2xl bg-slate-100 hover:bg-slate-200 transition-all text-slate-800 active:scale-98"
               >
                 <Share2 className="w-5 h-5 text-slate-600" />
-                <span>{language === "th" ? "แชร์ระบบ" : "System Share"}</span>
+                <span>{language === "th" ? "แชร์ภายนอก" : "System Share"}</span>
               </button>
             )}
 
@@ -596,7 +596,7 @@ export function PropertyCardImage({
               {copied ? (
                 <>
                   <Check className="w-5 h-5 text-emerald-400" />
-                  <span>{language === "th" ? "คัดลอกสำเร็จแล้ว!" : "Link Copied!"}</span>
+                  <span>{language === "th" ? "คัดลอกสำเร็จแล้ว!" : "Copied!"}</span>
                 </>
               ) : (
                 <>
