@@ -740,6 +740,17 @@ export function FAQsTable({
                 ระบบจะไม่สามารถกู้คืนข้อมูลเหล่านี้ได้อีกในอนาคต
               </p>
             </div>
+            <div className="bg-rose-50 p-4 rounded-xl border border-rose-100 space-y-2">
+              <p className="text-xs text-rose-700 font-bold">
+                พิมพ์ <span className="underline">DELETE_ALL</span> เพื่อยืนยัน:
+              </p>
+              <Input
+                value={confirmName}
+                onChange={(e) => setConfirmName(e.target.value)}
+                placeholder="พิมพ์ตัวใหญ่ทั้งหมด..."
+                className="h-10 border-rose-200 focus:border-rose-400 focus:ring-rose-400 font-mono bg-white"
+              />
+            </div>
             <p className="text-center text-slate-500 px-4">กรุณายืนยันการดำเนินงานเพื่อความปลอดภัย</p>
           </div>
         }
@@ -755,9 +766,9 @@ export function FAQsTable({
             </Button>
             <Button
               onClick={handleEmptyTrash}
-              disabled={isLoading}
+              disabled={isLoading || confirmName !== "DELETE_ALL"}
               variant="destructive"
-              className="flex-1 h-12 rounded-2xl font-bold bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100"
+              className="flex-1 h-12 rounded-2xl font-bold bg-red-600 hover:bg-red-700 shadow-xl shadow-red-100 disabled:opacity-50 disabled:grayscale"
             >
               {isLoading ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
