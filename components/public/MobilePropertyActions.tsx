@@ -58,7 +58,7 @@ export function MobilePropertyActions({
             </Avatar>
             <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
           </div>
-          <div className="hidden xs:block">
+          <div className="hidden sm:block">
             <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tight leading-none mb-1">
               {t("property.managed_by")}
             </div>
