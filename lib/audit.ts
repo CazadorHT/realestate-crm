@@ -36,11 +36,20 @@ export async function recordAuditLog(options: AuditLogOptions) {
     }
 
     // 2. Record to Database (system_audit_logs_v3 table)
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const isSingleUuid = entityId && UUID_REGEX.test(entityId);
+    
+    const dbEntityId = isSingleUuid ? entityId : null;
+    const dbMetadata = { ...metadata };
+    if (entityId && !isSingleUuid) {
+      dbMetadata.bulk_ids = entityId.split(",");
+    }
+
     const { error } = await supabase.from("system_audit_logs_v3").insert({
       action,
       entity_table: entity,
-      entity_id: entityId,
-      new_data: metadata,
+      entity_id: dbEntityId,
+      new_data: dbMetadata,
       tenant_id: finalTenantId,
       actor_id: finalUserId,
     });
