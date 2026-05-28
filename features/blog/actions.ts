@@ -513,6 +513,50 @@ export async function bulkPermanentDeleteBlogAction(ids: string[]): Promise<Acti
 }
 
 /**
+ * Bulk restores multiple blog posts from trash.
+ */
+export async function bulkRestoreBlogAction(ids: string[]): Promise<ActionResponse> {
+  try {
+    if (!ids || ids.length === 0) {
+      return { success: false, message: "กรุณาเลือกบทความที่ต้องการกู้คืน" };
+    }
+
+    const supabase = await createClient();
+    const user = await getCurrentProfile();
+
+    if (!user || !["ADMIN", "MANAGER"].includes(user.role)) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    const { error, count } = await supabase
+      .from("cms_content_v3")
+      .update({ 
+        status: "DRAFT",
+        updated_at: new Date().toISOString()
+      })
+      .eq("content_type", "BLOG")
+      .in("id", ids);
+
+    if (error) throw error;
+
+    revalidatePath("/protected/blogs");
+    revalidatePath("/blog");
+    
+    return {
+      success: true,
+      message: `กู้คืนจำนวน ${count || ids.length} บทความเรียบร้อยแล้ว`,
+    };
+  } catch (error: unknown) {
+    console.error("Bulk restore blog error:", error);
+    return {
+      success: false,
+      message: mapDbError(error),
+    };
+  }
+}
+
+
+/**
  * Bulk updates the publication status of multiple blog posts.
  */
 export async function bulkUpdateBlogStatusAction(

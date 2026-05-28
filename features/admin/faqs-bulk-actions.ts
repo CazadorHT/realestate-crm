@@ -185,3 +185,132 @@ export async function purgeOldTrashAction(): Promise<BulkDeleteResult> {
     };
   }
 }
+
+/**
+ * Bulk restore FAQs from trash
+ */
+export async function bulkRestoreFaqsAction(
+  ids: string[]
+): Promise<BulkDeleteResult> {
+  try {
+    const { supabase, user, role, tenantId } = await requireAuthContext();
+    assertStaff(role);
+
+    if (!ids || ids.length === 0) {
+      return {
+        success: false,
+        deletedCount: 0,
+        message: "ไม่มีรายการที่เลือก",
+      };
+    }
+
+    let query = supabase
+      .from("cms_content_v3")
+      .update({ 
+        status: "published",
+        updated_at: new Date().toISOString()
+      })
+      .eq("content_type", "FAQ")
+      .in("id", ids);
+
+    if (tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { error, count } = await query.select("id");
+
+    if (error) throw error;
+
+    const actualCount = count || ids.length;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "faq.bulk_restore",
+        entity: "cms_content_v3",
+        entityId: ids.join(","),
+        metadata: { restoredCount: actualCount },
+      }
+    );
+
+    revalidatePath("/protected/faqs");
+    revalidatePath("/admin/faqs");
+    await clearFaqCache();
+
+    return {
+      success: true,
+      deletedCount: actualCount,
+      message: `กู้คืนข้อมูลสำเร็จ ${actualCount} รายการ`,
+    };
+  } catch (error) {
+    console.error("bulkRestoreFaqsAction error:", error);
+    return {
+      success: false,
+      deletedCount: 0,
+      message: mapDbError(error),
+    };
+  }
+}
+
+/**
+ * Bulk permanently delete FAQs from trash
+ */
+export async function bulkPermanentDeleteFaqsAction(
+  ids: string[]
+): Promise<BulkDeleteResult> {
+  try {
+    const { supabase, user, role, tenantId } = await requireAuthContext();
+    assertStaff(role);
+
+    if (!ids || ids.length === 0) {
+      return {
+        success: false,
+        deletedCount: 0,
+        message: "ไม่มีรายการที่เลือก",
+      };
+    }
+
+    let query = supabase
+      .from("cms_content_v3")
+      .delete()
+      .eq("content_type", "FAQ")
+      .in("id", ids);
+
+    if (tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { error, count } = await query.select("id");
+
+    if (error) throw error;
+
+    const actualCount = count || ids.length;
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "faq.bulk_permanent_delete",
+        entity: "cms_content_v3",
+        entityId: ids.join(","),
+        metadata: { deletedCount: actualCount },
+      }
+    );
+
+    revalidatePath("/protected/faqs");
+    revalidatePath("/admin/faqs");
+    await clearFaqCache();
+
+    return {
+      success: true,
+      deletedCount: actualCount,
+      message: `ลบข้อมูลสำเร็จถาวร ${actualCount} รายการ`,
+    };
+  } catch (error) {
+    console.error("bulkPermanentDeleteFaqsAction error:", error);
+    return {
+      success: false,
+      deletedCount: 0,
+      message: mapDbError(error),
+    };
+  }
+}

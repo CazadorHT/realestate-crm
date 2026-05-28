@@ -44,6 +44,7 @@ import {
   deleteBlogPostAction,
   restoreBlogPostAction,
   permanentDeleteBlogPostAction,
+  bulkRestoreBlogAction,
 } from "@/features/blog/actions";
 
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
@@ -317,6 +318,23 @@ export function BlogsTable({
     });
   };
 
+  const handleBulkRestore = async () => {
+    return new Promise<void>((resolve) => {
+      startTransition(async () => {
+        const ids = Array.from(selectedIds);
+        const result = await bulkRestoreBlogAction(ids);
+        if (result.success) {
+          toast.success(result.message);
+          clearSelection();
+          handleSuccessFeedback();
+        } else {
+          toast.error(result.message || "เกิดข้อผิดพลาด");
+        }
+        resolve();
+      });
+    });
+  };
+
   // 🚩 ALWAYS RENDER TABS AT THE TOP
   const TabHeader = (
     <div className="flex items-center gap-2 border-b border-slate-100 pb-1 mb-4">
@@ -417,7 +435,17 @@ export function BlogsTable({
         onDeleteLabel={isTrash ? "ลบถาวร" : "ย้ายลงถังขยะ"}
         className={cn(isPending && "opacity-50 pointer-events-none")}
         extraActions={
-          !isTrash && (
+          isTrash ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleBulkRestore}
+              className="h-8 rounded-lg border-slate-200 text-xs font-bold gap-1.5 bg-white hover:bg-slate-50 text-slate-700"
+            >
+              <RotateCcw className="h-3.5 w-3.5 text-green-600" />
+              กู้คืนข้อมูล
+            </Button>
+          ) : (
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"

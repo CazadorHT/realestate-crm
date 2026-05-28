@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Edit, Trash2, HelpCircle, RotateCcw, Trash, AlertTriangle, Eye, Search, X } from "lucide-react";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
-import { bulkMoveToTrashAction, emptyFaqTrashAction } from "@/features/admin/faqs-bulk-actions";
+import { bulkMoveToTrashAction, emptyFaqTrashAction, bulkRestoreFaqsAction, bulkPermanentDeleteFaqsAction } from "@/features/admin/faqs-bulk-actions";
 import { moveToTrashAction, restoreFaqAction, permanentDeleteFaqAction } from "@/features/admin/faqs-actions";
 import { toast } from "sonner";
 import { useState  } from "react";
@@ -113,6 +113,34 @@ export function FAQsTable({
     const ids = Array.from(selectedIds);
     setIsLoading(true);
     const result = await bulkMoveToTrashAction(ids);
+    setIsLoading(false);
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+      handleSuccessFeedback();
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    const ids = Array.from(selectedIds);
+    setIsLoading(true);
+    const result = await bulkRestoreFaqsAction(ids);
+    setIsLoading(false);
+    if (result.success) {
+      toast.success(result.message);
+      clearSelection();
+      handleSuccessFeedback();
+    } else {
+      toast.error(result.message || "เกิดข้อผิดพลาด");
+    }
+  };
+
+  const handleBulkPermanentDelete = async () => {
+    const ids = Array.from(selectedIds);
+    setIsLoading(true);
+    const result = await bulkPermanentDeleteFaqsAction(ids);
     setIsLoading(false);
     if (result.success) {
       toast.success(result.message);
@@ -261,9 +289,23 @@ export function FAQsTable({
           <BulkActionToolbar
             selectedCount={selectedCount}
             onClear={clearSelection}
-            onDelete={isTrash ? async () => {} : handleBulkTrash}
+            onDelete={isTrash ? handleBulkPermanentDelete : handleBulkTrash}
             entityName="คำถาม"
-            onDeleteLabel={isTrash ? "กู้คืนข้อมูล" : "ย้ายลงถังขยะ"}
+            onDeleteLabel={isTrash ? "ลบถาวร" : "ย้ายลงถังขยะ"}
+            extraActions={
+              isTrash ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleBulkRestore}
+                  disabled={isLoading}
+                  className="h-11 text-xs bg-white hover:bg-blue-50! border-blue-200! text-blue-700! font-medium rounded-xl"
+                >
+                  <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                  กู้คืนข้อมูล
+                </Button>
+              ) : undefined
+            }
           />
         )}
 
