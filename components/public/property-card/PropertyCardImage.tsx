@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Heart, PawPrint, ChevronLeft, ChevronRight, CheckSquare, Square, MoreVertical, Share2, Copy, Check } from "lucide-react";
 import { IoShieldCheckmark } from "react-icons/io5";
 import { getTypeLabel, getListingBadge } from "@/lib/property-utils";
@@ -269,9 +270,10 @@ export function PropertyCardImage({
           className={`flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none ${!isInteracted ? "overflow-hidden" : ""}`}
         >
           {(!isInteracted ? displayImages.slice(0, 1) : displayImages).map((img, index) => (
-            <div
+            <Link
               key={index}
-              className="relative h-full w-full shrink-0 snap-start"
+              href={`/properties/${property.slug || property.id}`}
+              className="relative h-full w-full shrink-0 snap-start block"
             >
               {/* Shimmer placeholder while image is loading */}
               {!loadedImages[index] && (
@@ -299,7 +301,7 @@ export function PropertyCardImage({
                 {...(!(priority && index === 0) && { loading: "lazy" })}
                 onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
               />
-            </div>
+            </Link>
           ))}
         </div>
       ) : (
