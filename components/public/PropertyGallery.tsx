@@ -368,6 +368,7 @@ export function PropertyGallery({
                   alt=""
                   containerClassName="absolute inset-0"
                   className="object-cover blur-xl opacity-80 scale-105"
+                  sizes="10vw"
                   onImageError={handleImageError}
                   failedImages={failedImages}
                   showFallback={false}
@@ -416,6 +417,7 @@ export function PropertyGallery({
               alt=""
               containerClassName="absolute inset-0"
               className="object-cover blur-xl opacity-70 scale-105 group-hover/main:scale-105 transition-transform duration-700"
+              sizes="10vw"
               onImageError={handleImageError}
               failedImages={failedImages}
               showFallback={false}
@@ -474,6 +476,7 @@ export function PropertyGallery({
                       alt=""
                       containerClassName="absolute inset-0"
                       className="object-cover blur-lg opacity-40 scale-105 group-hover/sub:scale-110 transition-transform duration-500"
+                      sizes="10vw"
                       onImageError={handleImageError}
                       failedImages={failedImages}
                       showFallback={false}
