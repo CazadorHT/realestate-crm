@@ -206,8 +206,10 @@ export async function cancelBackgroundTaskAction(id: string): Promise<Background
       .select("*")
       .eq("id", id)
       .single();
-
-    if (fetchError || !currentTask) throw new Error("Task not found");
+    if (fetchError || !currentTask) {
+      console.warn(`[BackgroundTask] cancel: Task ${id} not found in database. Treating as success for client to clear.`);
+      return { success: true, message: "Task not found in DB, cleared locally" };
+    }
 
     const payload = currentTask.payload && typeof currentTask.payload === "object" ? (currentTask.payload as any) : {};
     
