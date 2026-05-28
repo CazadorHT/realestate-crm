@@ -67,52 +67,16 @@ export function RecentlyViewedCard({
           </div>
         )}
 
-        {/* Price Badge */}
-        <div
-          className={`absolute top-3 left-3 backdrop-blur-md border text-xs font-medium px-3 py-1.5 rounded-full shadow-sm flex flex-col gap-0.5 ${
-            (item.original_price && item.price && item.original_price > item.price) ||
-            (item.original_rental_price &&
-              item.rental_price &&
-              item.original_rental_price > item.rental_price) ||
-            item.price_text?.includes("(-")
-              ? "bg-red-500! border-red-600 text-white"
-              : "bg-white/90 border-white/40 text-blue-700"
-          }`}
-        >
-          {item.listing_type === "SALE" &&
-            item.original_price &&
-            item.price &&
-            item.original_price > item.price && (
-              <span className="text-[10px] text-white/80 line-through decoration-white/50">
-                {utilFormatPrice(item.original_price, language)}
-              </span>
-            )}
-          {item.listing_type === "RENT" &&
-            item.original_rental_price &&
+        {/* Hot Deal / Discount Badge */}
+        {((item.original_price && item.price && item.original_price > item.price) ||
+          (item.original_rental_price &&
             item.rental_price &&
-            item.original_rental_price > item.rental_price && (
-              <span className="text-[10px] text-white/80 line-through decoration-white/50">
-                {utilFormatPrice(item.original_rental_price, language)}
-              </span>
-            )}
-          {item.listing_type === "SALE_AND_RENT" && (
-            <div className="flex flex-col -space-y-0.5">
-              {item.original_price && item.price && item.original_price > item.price && (
-                <span className="text-[9px] text-white/80 line-through decoration-white/50">
-                  {utilFormatPrice(item.original_price, language)}
-                </span>
-              )}
-              {item.original_rental_price &&
-                item.rental_price &&
-                item.original_rental_price > item.rental_price && (
-                  <span className="text-[9px] text-white/80 line-through decoration-white/50">
-                    {utilFormatPrice(item.original_rental_price, language)}
-                  </span>
-                )}
-            </div>
-          )}
-          <div className="font-bold whitespace-nowrap">{getCardPrice(item, t, language)}</div>
-        </div>
+            item.original_rental_price > item.rental_price) ||
+          item.price_text?.includes("(-")) && (
+          <div className="absolute top-3 left-3 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-sm z-10">
+            🔥 HOT DEAL
+          </div>
+        )}
 
         {/* Favorite Button */}
         <div className="absolute top-3 right-3 z-10">
@@ -126,6 +90,53 @@ export function RecentlyViewedCard({
 
       {/* Content Section */}
       <div className="p-4 md:p-5">
+        {/* Price Info Container */}
+        <div className="flex flex-col gap-0.5 mb-3">
+          {item.listing_type === "SALE" &&
+            item.original_price &&
+            item.price &&
+            item.original_price > item.price && (
+              <span className="text-xs text-slate-400 line-through decoration-slate-400/70">
+                {utilFormatPrice(item.original_price, language)}
+              </span>
+            )}
+          {item.listing_type === "RENT" &&
+            item.original_rental_price &&
+            item.rental_price &&
+            item.original_rental_price > item.rental_price && (
+              <span className="text-xs text-slate-400 line-through decoration-slate-400/70">
+                {utilFormatPrice(item.original_rental_price, language)}
+              </span>
+            )}
+          {item.listing_type === "SALE_AND_RENT" && (
+            <div className="flex gap-2">
+              {item.original_price && item.price && item.original_price > item.price && (
+                <span className="text-[10px] text-slate-400 line-through decoration-slate-400/70">
+                  {utilFormatPrice(item.original_price, language)}
+                </span>
+              )}
+              {item.original_rental_price &&
+                item.rental_price &&
+                item.original_rental_price > item.rental_price && (
+                  <span className="text-[10px] text-slate-400 line-through decoration-slate-400/70">
+                    {utilFormatPrice(item.original_rental_price, language)}
+                  </span>
+                )}
+            </div>
+          )}
+          <span className={`text-base md:text-lg font-extrabold ${
+            (item.original_price && item.price && item.original_price > item.price) ||
+            (item.original_rental_price &&
+              item.rental_price &&
+              item.original_rental_price > item.rental_price) ||
+            item.price_text?.includes("(-")
+              ? "text-rose-600"
+              : "text-blue-600"
+          }`}>
+            {getCardPrice(item, t, language)}
+          </span>
+        </div>
+
         <h3 className="font-bold text-slate-900 truncate mb-2 group-hover:text-blue-600 transition-colors">
           {getLocaleValue(item, "title", language)}
         </h3>

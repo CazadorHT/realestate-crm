@@ -13,8 +13,13 @@ export async function checkOfficeSizeAvailability(
 ): Promise<{ size: string; count: number }[]> {
   const supabase = await createClient();
 
+  // Get active office sizes from DB to count dynamically
+  const { data: sizesData } = await supabase
+    .from("smart_match_office_sizes")
+    .select("id, min_sqm, max_sqm")
+    .eq("is_active", true);
+
   // Query to count properties by size range
-  // S: < 40, M: 40-70, L: 71-100, XL: > 100
   let query = supabase
     .from("properties")
     .select("size_sqm, id")
@@ -30,9 +35,22 @@ export async function checkOfficeSizeAvailability(
 
   const { data, error } = await query;
 
-  if (error) {
+  if (error || !data) {
     console.error("Error checking office inventory:", error);
     return [];
+  }
+
+  if (sizesData && sizesData.length > 0) {
+    return sizesData.map((opt: any) => {
+      const min = opt.min_sqm;
+      const max = opt.max_sqm;
+      const count = data.filter((p: any) => {
+        const size = p.size_sqm || 0;
+        return size >= min && size <= max;
+      }).length;
+
+      return { size: opt.id, count };
+    });
   }
 
   const counts = {

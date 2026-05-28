@@ -14,42 +14,31 @@ export function OfficeSizeStep({
   onSelect,
   isLoading,
 }: OfficeSizeStepProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const hasChecked = Object.keys(availableSizes).length > 0;
 
   const renderOptions = () => {
     if (officeSizes.length > 0) {
       return officeSizes.map((opt) => {
-        const sizeKey = opt.label.match(/\((S|M|L|XL)\)/)?.[1] || "";
-        const count = availableSizes[sizeKey] ?? 0;
+        const sizeKey = opt.label.match(/\((S|M|L|XL)\)/)?.[1] || opt.id.replace("size_", "").toUpperCase();
+        const count = availableSizes[opt.id] ?? availableSizes[sizeKey] ?? 0;
         const isDisabled = isLoading || (hasChecked && count === 0);
 
-        // Try to translate based on size key (S, M, L, XL)
+        // Prioritize DB configured label based on active language
+        const dbLabel =
+          (language === "en" ? opt.label_en :
+           language === "cn" ? opt.label_cn :
+           language === "ru" ? opt.label_ru : null) || opt.label;
+
+        // Try to get localized description from translation files based on size key
         const lowerKey = sizeKey.toLowerCase();
-        const localizedSize = t(
-          `smart_match.office_size_labels.${lowerKey}_size`,
-        );
         const localizedDesc = t(
           `smart_match.office_size_labels.${lowerKey}_desc`,
         );
 
-        // Fallback to label parsing if translation missing
-        const labelStr = opt.label;
-        const secondParenIndex = labelStr.indexOf("(", 1);
-        const fallbackSize =
-          secondParenIndex !== -1
-            ? labelStr.substring(0, secondParenIndex).trim()
-            : labelStr;
-        const fallbackDesc =
-          secondParenIndex !== -1
-            ? labelStr.substring(secondParenIndex).trim()
-            : "";
-
-        const displaySize = localizedSize.includes("_size")
-          ? fallbackSize
-          : localizedSize;
+        const displaySize = dbLabel;
         const displayDesc = localizedDesc.includes("_desc")
-          ? fallbackDesc
+          ? ""
           : localizedDesc;
 
         return (
@@ -70,7 +59,7 @@ export function OfficeSizeStep({
               </span>
             )}
             <span className="font-bold text-lg line-clamp-2 wrap-break-word text-balance">
-              ({sizeKey}) {displaySize}
+              {sizeKey ? `(${sizeKey}) ` : ""}{displaySize}
             </span>
             {displayDesc && (
               <p

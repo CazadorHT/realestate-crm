@@ -36,13 +36,13 @@ export function convertToRecentProperty(
             100,
         );
         parts.push(
-          `${utilFormatPrice(prop.rental_price, language)}/${t(
+          `${utilFormatPrice(prop.rental_price, language)}${t(
             "recently_viewed.per_month_short",
           )} (-${discountPercent}%)`,
         );
       } else {
         parts.push(
-          `${utilFormatPrice(prop.rental_price, language)}/${t(
+          `${utilFormatPrice(prop.rental_price, language)}${t(
             "recently_viewed.per_month_short",
           )}`,
         );
@@ -77,9 +77,9 @@ export function convertToRecentProperty(
       price_text = `${utilFormatPrice(
         prop.rental_price!,
         language,
-      )}/${t("recently_viewed.per_month_short")} (-${discountPercent}%)`;
+      )}${t("recently_viewed.per_month_short")} (-${discountPercent}%)`;
     } else if (prop.rental_price) {
-      price_text = `${utilFormatPrice(prop.rental_price, language)}/${t(
+      price_text = `${utilFormatPrice(prop.rental_price, language)}${t(
         "recently_viewed.per_month_short",
       )}`;
     }
@@ -156,7 +156,7 @@ export function getCardPrice(
     if (saleP) parts.push(utilFormatPrice(saleP, language));
     if (rentP)
       parts.push(
-        `${utilFormatPrice(rentP, language)}/${t(
+        `${utilFormatPrice(rentP, language)}${t(
           "recently_viewed.per_month_short",
         )}`,
       );
@@ -167,7 +167,7 @@ export function getCardPrice(
 
   if (isSale && saleP) return utilFormatPrice(saleP, language);
   if (isRent && rentP)
-    return `${utilFormatPrice(rentP, language)}/${t(
+    return `${utilFormatPrice(rentP, language)}${t(
       "recently_viewed.per_month_short",
     )}`;
 
