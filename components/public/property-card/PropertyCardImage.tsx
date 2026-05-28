@@ -447,7 +447,6 @@ export function PropertyCardImage({
             <div
               ref={shareMenuRef}
               onClick={(e) => {
-                e.preventDefault();
                 e.stopPropagation();
               }}
               className="absolute top-11 right-0 w-48 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-100 p-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-0.5 text-slate-700"
@@ -550,7 +549,6 @@ export function PropertyCardImage({
         >
           <div 
             onClick={(e) => {
-              e.preventDefault();
               e.stopPropagation();
             }}
             className="p-6 flex flex-col gap-3 text-slate-700"
