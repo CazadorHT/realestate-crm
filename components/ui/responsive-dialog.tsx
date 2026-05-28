@@ -104,8 +104,21 @@ export function ResponsiveDialog({
   React.useEffect(() => {
     if (open) {
       setIsDirty(false);
+    } else if (mounted) {
+      const cleanup = () => {
+        document.body.style.pointerEvents = "";
+      };
+      cleanup();
+      const t1 = setTimeout(cleanup, 100);
+      const t2 = setTimeout(cleanup, 300);
+      const t3 = setTimeout(cleanup, 500);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+        clearTimeout(t3);
+      };
     }
-  }, [open]);
+  }, [open, mounted]);
 
   const handleInteract = () => {
     setIsDirty(true);
