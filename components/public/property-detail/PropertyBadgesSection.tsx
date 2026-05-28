@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useRef, useState } from "react";
 import {
   Clock,
@@ -39,11 +38,15 @@ import {
   ArrowUpCircle,
   CalendarRange,
   Layout,
+  MapPin,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import type { Database } from "@/lib/database.types.generated";
-import { useLanguage, dictionaries } from "@/components/providers/LanguageProvider";
+import {
+  useLanguage,
+  dictionaries,
+} from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
 
 import { type Language } from "@/lib/i18n";
@@ -96,6 +99,7 @@ interface BadgeProperty {
   is_fully_fitted?: boolean | null;
   listing_type?: string | null;
   created_at?: string | null;
+  property_type?: string | null;
 }
 
 interface PropertyBadgesSectionProps {
@@ -205,7 +209,8 @@ export function PropertyBadgesSection({
       condition: property.is_hot_deal,
       label: t("property.badges.hot_deal"),
       icon: Flame,
-      color: "bg-red-50 text-red-600 font-bold border border-red-200 animate-pulse",
+      color:
+        "bg-red-50 text-red-600 font-bold border border-red-200 animate-pulse",
     },
     {
       condition: property.verified,
@@ -228,13 +233,17 @@ export function PropertyBadgesSection({
       color: "bg-indigo-50 text-indigo-800",
     },
     {
-      condition: property.near_transit || property.meta_keywords?.includes("ทำเลดี เดินทางสะดวก"),
+      condition:
+        property.near_transit ||
+        property.meta_keywords?.includes("ทำเลดี เดินทางสะดวก"),
       label: t("property.badges.good_location"),
-      icon: TrainFront,
+      icon: MapPin,
       color: "bg-blue-50 text-blue-800",
     },
     {
-      condition: !property.is_bare_shell || property.meta_keywords?.includes("พร้อมเข้าอยู่"),
+      condition:
+        !property.is_bare_shell ||
+        property.meta_keywords?.includes("พร้อมเข้าอยู่"),
       label: t("property.badges.ready_to_move"),
       icon: CheckCircle2,
       color: "bg-emerald-50 text-emerald-800",
@@ -288,7 +297,9 @@ export function PropertyBadgesSection({
 
     // 📋 Standard Stats
     {
-      condition: (property.bedrooms || 0) >= 2 || property.meta_keywords?.includes("เหมาะสำหรับครอบครัว"),
+      condition:
+        (property.bedrooms || 0) >= 2 ||
+        property.meta_keywords?.includes("เหมาะสำหรับครอบครัว"),
       label: t("property.badges.family_friendly"),
       icon: Users,
       color: "bg-purple-50 text-purple-800",
@@ -481,7 +492,40 @@ export function PropertyBadgesSection({
     },
   ];
 
+  const getDefaultBadges = () => {
+    const tLower = property.property_type?.toLowerCase() || "";
+    if (tLower.includes("office")) {
+      return [
+        { condition: true, label: t("property.badges.good_location"), icon: MapPin, color: "bg-blue-50 text-blue-800" },
+        { condition: true, label: t("property.badges.access_247"), icon: CheckCircle2, color: "bg-indigo-50 text-indigo-700" },
+        { condition: true, label: t("property.badges.fiber_optic"), icon: Wifi, color: "bg-sky-50 text-sky-700" },
+      ];
+    }
+    if (tLower.includes("condo")) {
+      return [
+        { condition: true, label: t("property.badges.good_location"), icon: MapPin, color: "bg-blue-50 text-blue-800" },
+        { condition: true, label: t("property.badges.ready_to_move"), icon: CheckCircle2, color: "bg-emerald-50 text-emerald-800" },
+        { condition: true, label: t("property.badges.city_view"), icon: Building2, color: "bg-slate-100 text-slate-700" },
+      ];
+    }
+    if (tLower.includes("townhome") || tLower.includes("commercial")) {
+      return [
+        { condition: true, label: t("property.badges.good_location"), icon: MapPin, color: "bg-blue-50 text-blue-800" },
+        { condition: true, label: t("property.badges.ready_to_move"), icon: CheckCircle2, color: "bg-emerald-50 text-emerald-800" },
+        { condition: true, label: t("property.badges.multi_parking"), icon: CheckCircle2, color: "bg-blue-50 text-blue-700" },
+      ];
+    }
+    return [
+      { condition: true, label: t("property.badges.good_location"), icon: MapPin, color: "bg-blue-50 text-blue-800" },
+      { condition: true, label: t("property.badges.ready_to_move"), icon: CheckCircle2, color: "bg-emerald-50 text-emerald-800" },
+      { condition: true, label: t("property.badges.family_friendly"), icon: Users, color: "bg-purple-50 text-purple-800" },
+    ];
+  };
+
+  const defaultBadges = getDefaultBadges();
+
   const filteredBadges = badgeItems.filter((item) => item.condition);
+  const displayBadges = filteredBadges.length > 0 ? filteredBadges : defaultBadges;
 
   // Synchronize dragging with window-level events for maximum reliability
   useEffect(() => {
@@ -608,7 +652,7 @@ export function PropertyBadgesSection({
               isDragging ? "cursor-grabbing" : "cursor-grab"
             }`}
           >
-            {filteredBadges.map((item, idx) => (
+            {displayBadges.map((item, idx) => (
               <Badge
                 key={idx}
                 className={`rounded-full px-4 py-2 font-medium border-none whitespace-nowrap gap-1.5 shadow-xs transition-colors shrink-0 pointer-events-none ${item.color}`}
@@ -639,7 +683,7 @@ export function PropertyBadgesSection({
           <>
             {t("property.special_features_description")}{" "}
             <span className="text-blue-600 font-bold">
-              {filteredBadges.length}
+              {displayBadges.length}
             </span>{" "}
             {t("property.special_features_count")}
           </>
@@ -647,7 +691,7 @@ export function PropertyBadgesSection({
       >
         <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            {filteredBadges.map((item, idx) => (
+            {displayBadges.map((item, idx) => (
               <div
                 key={idx}
                 className={cn(

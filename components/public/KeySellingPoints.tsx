@@ -12,12 +12,14 @@ interface KeySellingPointsProps {
   points?: KeySellingPoint[];
   listingType: "SALE" | "RENT" | "SALE_AND_RENT";
   language?: Language;
+  propertyType?: string | null;
 }
 
 export function KeySellingPoints({
   points = [],
   listingType,
   language: customLanguage,
+  propertyType,
 }: KeySellingPointsProps) {
   const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
@@ -29,12 +31,39 @@ export function KeySellingPoints({
     return key.split(".").reduce((prev, curr) => prev?.[curr], dict) || key;
   };
 
-  // Default points if none provided (Fallbacks for now)
-  const defaultPoints: KeySellingPoint[] = [
-    { name: t("property.highlights.great_location"), icon: "map-pin" },
-    { name: t("property.highlights.ready_to_move"), icon: "armchair" },
-    { name: t("property.highlights.family_friendly"), icon: "users" },
-  ];
+  // Get dynamic default points based on property type
+  const getDefaultPoints = () => {
+    const tLower = propertyType?.toLowerCase() || "";
+    if (tLower.includes("office")) {
+      return [
+        { name: t("property.badges.good_location"), icon: "map-pin" },
+        { name: t("property.badges.access_247"), icon: "check-circle-2" },
+        { name: t("property.badges.fiber_optic"), icon: "wifi" },
+      ];
+    }
+    if (tLower.includes("condo")) {
+      return [
+        { name: t("property.badges.good_location"), icon: "map-pin" },
+        { name: t("property.badges.ready_to_move"), icon: "check-circle-2" },
+        { name: t("property.badges.city_view"), icon: "building-2" },
+      ];
+    }
+    if (tLower.includes("townhome") || tLower.includes("commercial")) {
+      return [
+        { name: t("property.badges.good_location"), icon: "map-pin" },
+        { name: t("property.badges.ready_to_move"), icon: "check-circle-2" },
+        { name: t("property.badges.multi_parking"), icon: "check-circle-2" },
+      ];
+    }
+    // Default (HOUSE, VILLA, etc.)
+    return [
+      { name: t("property.badges.good_location"), icon: "map-pin" },
+      { name: t("property.badges.ready_to_move"), icon: "check-circle-2" },
+      { name: t("property.badges.family_friendly"), icon: "users" },
+    ];
+  };
+
+  const defaultPoints = getDefaultPoints();
 
   const displayLimit = 4;
   const displayPoints = points.length > 0 ? points : defaultPoints;

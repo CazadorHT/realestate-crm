@@ -13,7 +13,7 @@ export function PropertyCardSpecs({
   const { t } = useLanguage();
 
   return (
-    <div className="flex flex-wrap items-center text-xs text-slate-600 gap-x-4 sm:gap-x-5 md:gap-x-6 gap-y-1.5 sm:gap-y-2 mt-auto">
+    <div className="flex flex-wrap items-center text-xs text-slate-600 gap-x-3 gap-y-1.5 sm:gap-y-2 mt-auto">
       {property.bedrooms ? (
         <div className="flex items-center gap-1.5 md:gap-2">
           <div className="flex items-center justify-center h-4 w-4 md:h-5 md:w-5 shrink-0">
