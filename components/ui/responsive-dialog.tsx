@@ -129,6 +129,18 @@ export function ResponsiveDialog({
     }
   };
 
+  const handleCloseAutoFocus = (event: Event) => {
+    // 1. Prevent default to avoid iOS focusing the triggering element which triggers viewport/reflow jump.
+    event.preventDefault();
+    
+    // 2. Clear pointer-events: none from body in case Radix UI fails to remove it in time on WebKit.
+    setTimeout(() => {
+      document.body.style.pointerEvents = "";
+    }, 50);
+
+    onCloseAutoFocus?.(event);
+  };
+
   if (!mounted) {
     return trigger || null;
   }
@@ -289,7 +301,7 @@ export function ResponsiveDialog({
               className,
             )}
             onOpenAutoFocus={onOpenAutoFocus}
-            onCloseAutoFocus={onCloseAutoFocus}
+            onCloseAutoFocus={handleCloseAutoFocus}
             onPointerDownOutside={handlePointerDownOutside}
             onEscapeKeyDown={handleEscapeKeyDown}
           >
@@ -347,7 +359,7 @@ export function ResponsiveDialog({
             className,
           )}
           onOpenAutoFocus={onOpenAutoFocus}
-          onCloseAutoFocus={onCloseAutoFocus}
+          onCloseAutoFocus={handleCloseAutoFocus}
           showCloseButton={showCloseButton}
           onPointerDownOutside={handlePointerDownOutside}
           onEscapeKeyDown={handleEscapeKeyDown}

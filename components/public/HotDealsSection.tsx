@@ -42,38 +42,7 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
     });
   }, [properties, topInterest]);
 
-  // Touch handling refs for directional swipe detection
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const isHorizontalSwipe = useRef<boolean | null>(null);
 
-  // Touch handlers: detect horizontal vs vertical swipe direction
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    isHorizontalSwipe.current = null; // reset direction
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!scrollRef.current) return;
-
-    const dx = Math.abs(e.touches[0].clientX - touchStartX.current);
-    const dy = Math.abs(e.touches[0].clientY - touchStartY.current);
-
-    // Determine direction on first significant move (threshold: 5px)
-    if (isHorizontalSwipe.current === null && (dx > 5 || dy > 5)) {
-      isHorizontalSwipe.current = dx > dy;
-    }
-
-    // If vertical swipe: let browser handle scrolling naturally
-    if (isHorizontalSwipe.current === false) {
-      scrollRef.current.style.overflowX = "hidden";
-    }
-  };
-
-  const handleTouchEnd = () => {
-    isHorizontalSwipe.current = null;
-  };
 
   useEffect(() => {
     async function loadHotDeals() {
@@ -259,9 +228,6 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
           <div
             ref={scrollRef}
             className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory scroll-pl-4 sm:scroll-pl-6 md:scroll-pl-0 py-4 px-4 sm:px-6 md:px-6 lg:px-8 md:py-0 after:content-[''] after:w-px after:shrink-0 md:after:hidden"
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
           >
             {displayProperties.slice(0, 4).map((property, index) => (
               <m.div
