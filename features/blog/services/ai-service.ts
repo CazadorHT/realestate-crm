@@ -5,7 +5,6 @@ import { getAiModelConfig } from "@/features/ai-settings/actions";
 import { generateText, getModel } from "@/lib/ai/gemini";
 import { logAiUsage } from "@/features/ai-monitor/actions";
 import { uploadBlogImage } from "./storage-service";
-import DOMPurify from "isomorphic-dompurify";
 import { z } from "zod";
 
 /**
@@ -243,6 +242,7 @@ export async function generateBlogPost(
 
     // Sanitize HTML
     const contentKeys = ['content', 'content_en', 'content_cn', 'content_ru'] as const;
+    const DOMPurify = (await import("isomorphic-dompurify")).default;
     for (const key of contentKeys) {
       const contentValue = finalBlogData[key];
       if (contentValue && typeof contentValue === 'string' && contentValue.length > 10) {
