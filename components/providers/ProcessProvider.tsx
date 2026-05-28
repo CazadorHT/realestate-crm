@@ -115,6 +115,15 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
                 })
               );
             }
+
+            if (
+              updatedTask.status === "ERROR" && 
+              updatedPayload.type === "BLOG_GENERATION"
+            ) {
+              window.dispatchEvent(new CustomEvent("BLOG_AI_GENERATION_ERROR"));
+              const errMsg = updatedTask.error_log || updatedPayload.message || "เกิดข้อผิดพลาดในการรัน AI ในระบบพื้นหลัง";
+              toast.error(`สร้างบทความล้มเหลว: ${errMsg}`);
+            }
           }
         )
         .on(
