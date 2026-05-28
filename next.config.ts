@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
       fullUrl: true,
     },
   },
+  serverExternalPackages: ["jsdom", "isomorphic-dompurify"],
   /* Add your Next.js config here */
 
   images: {

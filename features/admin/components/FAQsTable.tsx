@@ -247,7 +247,7 @@ export function FAQsTable({
               variant="outline"
               size="sm"
               onClick={() => setIsEmptyTrashConfirm(true)}
-              className="h-11 px-4 text-rose-600 border-rose-200 bg-rose-50/50 hover:bg-rose-50 rounded-xl font-bold transition-all"
+              className="h-11 px-4 text-rose-600! border-rose-200 bg-rose-50/50 hover:bg-rose-50 rounded-xl font-bold transition-all"
             >
               <Trash className="w-4 h-4 mr-2" />
               ล้างถังขยะ
