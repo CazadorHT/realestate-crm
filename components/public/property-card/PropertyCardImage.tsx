@@ -42,7 +42,6 @@ export function PropertyCardImage({
 }: PropertyCardImageProps) {
   const { t, language } = useLanguage();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [isInteracted, setIsInteracted] = useState(false);
   const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   
@@ -258,18 +257,15 @@ export function PropertyCardImage({
 
   return (
     <div 
-      onMouseEnter={() => setIsInteracted(true)}
-      onTouchStartCapture={() => setIsInteracted(true)}
       className="group/image relative aspect-square sm:aspect-4/3 md:aspect-square h-auto sm:h-auto md:h-[300px] w-full overflow-hidden rounded-t-2xl sm:rounded-t-2xl md:rounded-t-3xl bg-slate-200 group-hover:after:bg-black/5"
     >
       {displayImages.length > 0 ? (
         <div
           ref={scrollRef}
-          onScroll={isInteracted ? handleScroll : undefined}
-          onPointerDown={() => setIsInteracted(true)}
-          className={`flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none ${!isInteracted ? "overflow-hidden" : ""}`}
+          onScroll={handleScroll}
+          className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none"
         >
-          {(!isInteracted ? displayImages.slice(0, 1) : displayImages).map((img, index) => (
+          {displayImages.map((img, index) => (
             <Link
               key={index}
               href={`/properties/${property.slug || property.id}`}
@@ -311,7 +307,7 @@ export function PropertyCardImage({
       )}
 
       {/* Pagination Dots */}
-      {isInteracted && displayImages.length > 1 && (
+      {displayImages.length > 1 && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1 z-20 pointer-events-none opacity-100 xl:opacity-0 xl:group-hover/imgwrap:opacity-100 transition-opacity duration-300">
           {displayImages
             .slice(
