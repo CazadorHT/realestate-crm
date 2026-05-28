@@ -110,6 +110,7 @@ function PropertyCardComponent({
   priority = false,
   compareWith,
   footerVariant,
+  hideShare = false,
 }: {
   property: PropertyCardProps;
   priority?: boolean;
@@ -119,6 +120,7 @@ function PropertyCardComponent({
     date: string | null;
   };
   footerVariant?: "default" | "minimal";
+  hideShare?: boolean;
 }) {
   const { t, language } = useLanguage();
   const [isInCompare, setIsInCompare] = useState(false);
@@ -275,6 +277,7 @@ function PropertyCardComponent({
           areaProvince={areaProvince}
           isInCompare={isInCompare}
           onCompareClick={handleCompareClick}
+          hideShare={hideShare}
         />
       </div>
 

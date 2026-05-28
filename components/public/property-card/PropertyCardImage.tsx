@@ -26,6 +26,7 @@ interface PropertyCardImageProps {
   isHotDeal?: boolean;
   isInCompare: boolean;
   onCompareClick: (e: React.MouseEvent) => void;
+  hideShare?: boolean;
 }
 
 export function PropertyCardImage({
@@ -39,6 +40,7 @@ export function PropertyCardImage({
   isHotDeal = false,
   isInCompare,
   onCompareClick,
+  hideShare = false,
 }: PropertyCardImageProps) {
   const { t, language } = useLanguage();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -423,110 +425,112 @@ export function PropertyCardImage({
         </button>
 
         {/* Share Button Group */}
-        <div className="relative">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setShowShareMenu(!showShareMenu);
-            }}
-            aria-label="Share property"
-            className={`p-2 rounded-full backdrop-blur-md transition-all duration-300 ${
-              showShareMenu
-                ? "bg-[#1B263B] text-white shadow-lg"
-                : "bg-white/40 text-[#1B263B] hover:bg-[#1B263B] hover:text-white"
-            }`}
-          >
-            <Share2 className="w-4 h-4" />
-          </button>
-
-          {/* Quick Share Dropdown Menu (Desktop/sm+ only) */}
-          {showShareMenu && !isMobile && (
-            <div
-              ref={shareMenuRef}
+        {!hideShare && (
+          <div className="relative">
+            <button
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
+                setShowShareMenu(!showShareMenu);
               }}
-              className="absolute top-11 right-0 w-48 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-100 p-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-0.5 text-slate-700"
+              aria-label="Share property"
+              className={`p-2 rounded-full backdrop-blur-md transition-all duration-300 ${
+                showShareMenu
+                  ? "bg-[#1B263B] text-white shadow-lg"
+                  : "bg-white/40 text-[#1B263B] hover:bg-[#1B263B] hover:text-white"
+              }`}
             >
-              {canShare && (
+              <Share2 className="w-4 h-4" />
+            </button>
+
+            {/* Quick Share Dropdown Menu (Desktop/sm+ only) */}
+            {showShareMenu && !isMobile && (
+              <div
+                ref={shareMenuRef}
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+                className="absolute top-11 right-0 w-48 bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-slate-100 p-1.5 z-40 animate-in fade-in slide-in-from-top-2 duration-150 flex flex-col gap-0.5 text-slate-700"
+              >
+                {canShare && (
+                  <button
+                    onClick={async (e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      try {
+                        await navigator.share({
+                          title: property.title,
+                          url: `${window.location.origin}/properties/${property.slug || property.id}`,
+                        });
+                      } catch (err) {
+                        console.error("Error sharing:", err);
+                      }
+                      setShowShareMenu(false);
+                    }}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors text-left"
+                  >
+                    <Share2 className="w-4 h-4 text-slate-500" />
+                    <span>{language === "th" ? "แชร์ภายนอก" : "Share Menu"}</span>
+                  </button>
+                )}
+
                 <button
-                  onClick={async (e) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    try {
-                      await navigator.share({
-                        title: property.title,
-                        url: `${window.location.origin}/properties/${property.slug || property.id}`,
-                      });
-                    } catch (err) {
-                      console.error("Error sharing:", err);
-                    }
+                    const url = `${window.location.origin}/properties/${property.slug || property.id}`;
+                    navigator.clipboard.writeText(url);
+                    setCopied(true);
+                    setTimeout(() => {
+                      setCopied(false);
+                      setShowShareMenu(false);
+                    }, 1200);
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors text-left w-full"
+                >
+                  <Copy className="w-4 h-4 text-slate-500" />
+                  <span>{copied ? (language === "th" ? "คัดลอกแล้ว!" : "Copied!") : (language === "th" ? "คัดลอกลิงก์" : "Copy Link")}</span>
+                </button>
+
+                <a
+                  href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(
+                    `${window.location.origin}/properties/${property.slug || property.id}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setShowShareMenu(false);
                   }}
                   className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors text-left"
                 >
-                  <Share2 className="w-4 h-4 text-slate-500" />
-                  <span>{language === "th" ? "แชร์ภายนอก" : "Share Menu"}</span>
-                </button>
-              )}
+                  <svg className="w-4 h-4 text-[#06C755] fill-current" viewBox="0 0 24 24">
+                    <path d="M24 10.3c0-5.7-5.4-10.3-12-10.3S0 4.6 0 10.3c0 5.1 4.3 9.3 10.1 10.1.4.1.9.3 1 .6.1.3.1.8 0 1.1l-.4 2.3c-.1.7.3.3.7-.1l4.7-4.7c3.4-1.2 7.9-4.3 7.9-9.3zm-16.5 3.5c-.3 0-.6-.3-.6-.6v-5.2c0-.3.3-.6.6-.6s.6.3.6.6v5.2c0 .3-.3.6-.6.6zm3.3 0c-.3 0-.6-.3-.6-.6v-5.2c0-.3.3-.6.6-.6s.6.3.6.6v2.1l2-2.3c.1-.1.3-.2.5-.2.4 0 .7.3.7.7 0 .2-.1.4-.2.5l-1.5 1.7 1.8 2.5c.1.2.2.4.2.6 0 .4-.3.7-.7.7-.3 0-.5-.1-.6-.3l-1.7-2.4-.5.6v1.5c0 .3-.3.6-.6.6zm5.8 0c-.3 0-.6-.3-.6-.6v-5.2c0-.3.3-.6.6-.6s.6.3.6.6v5.2c0 .3-.3.6-.6.6zm3.5-.6c0 .3-.3.6-.6.6h-2.3c-.3 0-.6-.3-.6-.6v-5.2c0-.3.3-.6.6-.6s.6.3.6.6v4.6h1.7c.3 0 .6.3.6.6z"/>
+                  </svg>
+                  <span>LINE</span>
+                </a>
 
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  const url = `${window.location.origin}/properties/${property.slug || property.id}`;
-                  navigator.clipboard.writeText(url);
-                  setCopied(true);
-                  setTimeout(() => {
-                    setCopied(false);
+                <a
+                  href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
+                    `${window.location.origin}/properties/${property.slug || property.id}`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setShowShareMenu(false);
-                  }, 1200);
-                }}
-                className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors text-left w-full"
-              >
-                <Copy className="w-4 h-4 text-slate-500" />
-                <span>{copied ? (language === "th" ? "คัดลอกแล้ว!" : "Copied!") : (language === "th" ? "คัดลอกลิงก์" : "Copy Link")}</span>
-              </button>
-
-              <a
-                href={`https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(
-                  `${window.location.origin}/properties/${property.slug || property.id}`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowShareMenu(false);
-                }}
-                className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors text-left"
-              >
-                <svg className="w-4 h-4 text-[#06C755] fill-current" viewBox="0 0 24 24">
-                  <path d="M24 10.3c0-5.7-5.4-10.3-12-10.3S0 4.6 0 10.3c0 5.1 4.3 9.3 10.1 10.1.4.1.9.3 1 .6.1.3.1.8 0 1.1l-.4 2.3c-.1.7.3.3.7-.1l4.7-4.7c3.4-1.2 7.9-4.3 7.9-9.3zm-16.5 3.5c-.3 0-.6-.3-.6-.6v-5.2c0-.3.3-.6.6-.6s.6.3.6.6v5.2c0 .3-.3.6-.6.6zm3.3 0c-.3 0-.6-.3-.6-.6v-5.2c0-.3.3-.6.6-.6s.6.3.6.6v2.1l2-2.3c.1-.1.3-.2.5-.2.4 0 .7.3.7.7 0 .2-.1.4-.2.5l-1.5 1.7 1.8 2.5c.1.2.2.4.2.6 0 .4-.3.7-.7.7-.3 0-.5-.1-.6-.3l-1.7-2.4-.5.6v1.5c0 .3-.3.6-.6.6zm5.8 0c-.3 0-.6-.3-.6-.6v-5.2c0-.3.3-.6.6-.6s.6.3.6.6v5.2c0 .3-.3.6-.6.6zm3.5-.6c0 .3-.3.6-.6.6h-2.3c-.3 0-.6-.3-.6-.6v-5.2c0-.3.3-.6.6-.6s.6.3.6.6v4.6h1.7c.3 0 .6.3.6.6z"/>
-                </svg>
-                <span>LINE</span>
-              </a>
-
-              <a
-                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(
-                  `${window.location.origin}/properties/${property.slug || property.id}`
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowShareMenu(false);
-                }}
-                className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors text-left"
-              >
-                <svg className="w-4 h-4 text-[#1877F2] fill-current" viewBox="0 0 24 24">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-                <span>Facebook</span>
-              </a>
-            </div>
-          )}
-        </div>
+                  }}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-50 transition-colors text-left"
+                >
+                  <svg className="w-4 h-4 text-[#1877F2] fill-current" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                  <span>Facebook</span>
+                </a>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       {displayBadgeLabel && (
@@ -536,7 +540,7 @@ export function PropertyCardImage({
       )}
 
       {/* Quick Share Responsive Dialog/Drawer (Mobile only) */}
-      {isMobile && (
+      {!hideShare && isMobile && (
         <ResponsiveDialog
           open={showShareMenu}
           onOpenChange={setShowShareMenu}
