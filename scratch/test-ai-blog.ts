@@ -3,23 +3,15 @@ import path from "path";
 dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 async function test() {
-  console.log("Testing generateBlogPost with keyword 'โฮมออฟฟิศ VS ออฟฟิศให้เช่า'...");
+  console.log("Testing generateText directly with model 'gemini-2.5-flash'...");
   try {
-    const { generateBlogPost } = await import("../features/blog/services/ai-service");
-    const result = await generateBlogPost(
-      "โฮมออฟฟิศ VS ออฟฟิศให้เช่า",
-      "เจ้าของธุรกิจมือใหม่",
-      "มืออาชีพ",
-      "Short", // Short length for faster test
-      [],
-      "Realistic"
+    const { generateText } = await import("../lib/ai/gemini");
+    const result = await generateText(
+      "ทดสอบพิมพ์คำทักทายภาษาอังกฤษสั้นๆ 1 คำ",
+      "gemini-2.5-flash"
     );
     console.log("SUCCESS! Result generated:");
-    console.log("Title:", result.title);
-    console.log("Slug:", result.slug);
-    console.log("Excerpt:", result.excerpt);
-    console.log("Content length:", result.content?.length);
-    console.log("Cover Image:", result.cover_image);
+    console.log("Response:", result.text.trim());
   } catch (error: any) {
     console.error("FAILED! AI generation error:", error);
   }

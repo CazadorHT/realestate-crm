@@ -56,6 +56,18 @@ export const onBlogGenerateRequested = inngest.createFunction(
 
       // 💾 Step 2: Save to Database using existing action
       const dbResult = await step.run("save-to-database", async () => {
+        // Check cancellation before writing draft to database
+        const { data: task } = await supabase
+          .from("system_task_queue")
+          .select("status, payload")
+          .eq("id", taskId)
+          .single();
+        
+        const payload = task?.payload && typeof task.payload === "object" ? (task.payload as any) : {};
+        if (task?.status === "CANCELLED" || task?.status === "ERROR" || payload.is_cancelled) {
+          throw new Error("USER_CANCELLED");
+        }
+
         // We override author_id to ensure it's saved correctly in background
         const result = await createBlogPostAction({
           ...aiResult,
@@ -70,6 +82,18 @@ export const onBlogGenerateRequested = inngest.createFunction(
 
       // ✅ Step 3: Mark Task as Success and Store Result
       await step.run("finalize-task", async () => {
+        // Double check cancellation before finalizing
+        const { data: task } = await supabase
+          .from("system_task_queue")
+          .select("status, payload")
+          .eq("id", taskId)
+          .single();
+        
+        const payload = task?.payload && typeof task.payload === "object" ? (task.payload as any) : {};
+        if (task?.status === "CANCELLED" || task?.status === "ERROR" || payload.is_cancelled) {
+          throw new Error("USER_CANCELLED");
+        }
+
         await updateBackgroundTaskAction({
           id: taskId,
           status: "SUCCESS",
