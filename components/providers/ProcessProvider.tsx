@@ -66,17 +66,20 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
       const supabase = createClient();
       
       const channel = supabase
-        .channel(`background_tasks_${tenantId}`)
+        .channel(`system_task_queue_${tenantId}`)
         .on(
           "postgres_changes",
           { 
             event: "UPDATE", 
             schema: "public", 
-            table: "background_tasks",
-            filter: `tenant_id=eq.${tenantId}` 
+            table: "system_task_queue"
           },
           (payload) => {
             const updatedTask = payload.new as any;
+            const updatedPayload = updatedTask.payload && typeof updatedTask.payload === "object" ? (updatedTask.payload as any) : {};
+            
+            // Application-level tenant filter
+            if (updatedPayload.tenant_id !== tenantId) return;
             
             window.dispatchEvent(
               new CustomEvent("app-process-event", {
@@ -84,31 +87,31 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
                   type: "PROCESS_UPDATED",
                   id: updatedTask.id,
                   status: updatedTask.status,
-                  message: updatedTask.message,
-                  resultLink: updatedTask.result_link,
-                  errorDetails: updatedTask.error_details,
+                  message: updatedPayload.message || updatedTask.error_log || "",
+                  resultLink: updatedPayload.result_link,
+                  errorDetails: updatedTask.error_log || updatedPayload.error_details,
                 },
               })
             );
 
             if (updatedTask.status === "SUCCESS") {
-              toast.success(`สำเร็จ: ${updatedTask.name}`, {
-                description: updatedTask.message,
-                action: updatedTask.result_link ? {
+              toast.success(`สำเร็จ: ${updatedTask.task_name}`, {
+                description: updatedPayload.message,
+                action: updatedPayload.result_link ? {
                   label: "ดูผลลัพธ์",
-                  onClick: () => window.open(updatedTask.result_link, "_blank")
+                  onClick: () => window.open(updatedPayload.result_link, "_blank")
                 } : undefined
               });
             }
 
             if (
               updatedTask.status === "SUCCESS" && 
-              updatedTask.type === "BLOG_GENERATION" && 
-              updatedTask.result
+              updatedPayload.type === "BLOG_GENERATION" && 
+              updatedPayload.result
             ) {
               window.dispatchEvent(
                 new CustomEvent("BLOG_AI_GENERATED_SUCCESS", { 
-                  detail: updatedTask.result 
+                  detail: updatedPayload.result 
                 })
               );
             }
@@ -119,8 +122,7 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
           {
             event: "DELETE",
             schema: "public",
-            table: "background_tasks",
-            filter: `tenant_id=eq.${tenantId}`
+            table: "system_task_queue"
           },
           (payload) => {
             const deletedId = (payload.old as any).id;

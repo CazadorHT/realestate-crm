@@ -843,13 +843,16 @@ export async function generateBlogPostAction(
   imageStyle: string = "Realistic",
   taskId?: string,
 ) {
+  let finalTaskId = taskId;
   try {
     const { user, tenantId } = await requireAuthContext();
     const { t } = await getServerTranslations();
     if (!user) return { success: false, message: "Unauthorized" };
 
     // 🏗️ Step 1: Use provided taskId or create a unique one
-    const finalTaskId = taskId || uuidv4();
+    if (!finalTaskId) {
+      finalTaskId = uuidv4();
+    }
 
     // 🚀 Step 2: Trigger Inngest Background Worker (TRUE Non-blocking)
     // We don't await this if we want it to be super fast, 
@@ -926,6 +929,21 @@ export async function generateBlogPostAction(
         };
       } catch (syncError: any) {
         console.error("❌ Both Inngest and Sync generation failed:", syncError);
+        
+        if (finalTaskId) {
+          try {
+            const { updateBackgroundTaskAction } = await import("@/lib/background-tasks/actions");
+            await updateBackgroundTaskAction({
+              id: finalTaskId,
+              status: "ERROR",
+              message: `สร้างบทความล้มเหลว: ${syncError.message || "ข้อผิดพลาดระบบ"}`,
+              error_details: syncError.message || "Unknown error during sync fallback"
+            });
+          } catch (dbErr) {
+            console.error("Failed to update background task state to ERROR in sync fallback:", dbErr);
+          }
+        }
+
         return {
           success: false,
           message: `ไม่สามารถเชื่อมต่อกับ AI ได้ (${syncError.message || "Network Error"}). กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ตของคุณครับ`,
@@ -934,9 +952,25 @@ export async function generateBlogPostAction(
     }
   } catch (error: unknown) {
     console.error("AI Generate blog error:", error);
+    const errMessage = error instanceof Error ? error.message : "AI ประมวลผลล้มเหลว กรุณาลองใหม่อีกครั้ง";
+    
+    if (finalTaskId) {
+      try {
+        const { updateBackgroundTaskAction } = await import("@/lib/background-tasks/actions");
+        await updateBackgroundTaskAction({
+          id: finalTaskId,
+          status: "ERROR",
+          message: `สร้างบทความล้มเหลว: ${errMessage}`,
+          error_details: errMessage
+        });
+      } catch (dbErr) {
+        console.error("Failed to update background task state to ERROR in outer catch:", dbErr);
+      }
+    }
+
     return {
       success: false,
-      message: error instanceof Error ? error.message : "AI ประมวลผลล้มเหลว กรุณาลองใหม่อีกครั้ง",
+      message: errMessage,
     };
   }
 }

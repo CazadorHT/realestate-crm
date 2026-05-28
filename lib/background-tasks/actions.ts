@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireAuthContext } from "@/lib/authz";
 import { Database } from "@/lib/database.types";
 import { getSystemConfig } from "@/lib/actions/system-config";
@@ -10,9 +10,6 @@ export type BackgroundTaskResult = {
   message?: string;
   data?: any;
 };
-
-type BackgroundTaskInsert = Database["public"]["Tables"]["background_tasks"]["Insert"];
-type BackgroundTaskUpdate = Database["public"]["Tables"]["background_tasks"]["Update"];
 
 /**
  * บันทึกงานใหม่ลงฐานข้อมูล
@@ -25,7 +22,7 @@ export async function createBackgroundTaskAction(params: {
   priority?: number;
 }): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, user, tenantId } = await requireAuthContext();
+    const { tenantId, user } = await requireAuthContext();
     let finalTenantId = tenantId;
     if (!finalTenantId) {
       const config = await getSystemConfig();
@@ -33,43 +30,47 @@ export async function createBackgroundTaskAction(params: {
     }
     if (!finalTenantId) throw new Error("Tenant ID is required");
 
+    const adminSupabase = createAdminClient();
+
     // 🕵️ DEDUPLICATION: ป้องกันการทำงานซ้ำ (Idempotency)
-    // หากมีงานชื่อเดียวกัน และ Payload เดียวกันที่กำลังรันอยู่ ให้ใช้ของเดิม
-    const { data: existingTasks } = await supabase
-      .from("background_tasks")
-      .select("id, status")
-      .eq("tenant_id", finalTenantId)
-      .eq("name", params.name)
+    // ค้นหางานที่ชื่อเหมือนกันและกำลังทำอยู่ในระบบ
+    const { data: existingTasks } = await adminSupabase
+      .from("system_task_queue")
+      .select("id, status, payload")
+      .eq("task_name", params.name)
       .eq("status", "PROCESSING")
-      .limit(1);
+      .limit(10);
 
     if (existingTasks && existingTasks.length > 0) {
-      // ตรวจสอบ payload เชิงลึก (เทียบ JSON string)
-      const { data: fullTask } = await supabase
-        .from("background_tasks")
-        .select("*")
-        .eq("id", existingTasks[0].id)
-        .single();
-      
-      if (fullTask && JSON.stringify((fullTask as any).payload) === JSON.stringify(params.payload)) {
-        console.log(`[BackgroundTask] Found duplicate task: ${params.name}. Skipping...`);
-        return { success: true, data: fullTask, message: "DUPLICATE_PREVENTED" };
+      for (const task of existingTasks) {
+        const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
+        if (
+          payload.tenant_id === finalTenantId &&
+          JSON.stringify(payload.client_payload) === JSON.stringify(params.payload)
+        ) {
+          console.log(`[BackgroundTask] Found duplicate task: ${params.name}. Skipping...`);
+          return { success: true, data: task, message: "DUPLICATE_PREVENTED" };
+        }
       }
     }
 
-    const taskData: BackgroundTaskInsert = {
+    const taskData = {
       id: params.id,
-      name: params.name,
-      type: params.type,
-      payload: params.payload,
-      status: "PROCESSING",
-      user_id: user.id,
-      tenant_id: finalTenantId,
+      task_name: params.name,
       priority: params.priority || 0,
+      status: "PROCESSING",
+      run_at: new Date().toISOString(),
+      payload: {
+        client_payload: params.payload || {},
+        type: params.type,
+        user_id: user.id,
+        tenant_id: finalTenantId,
+        message: "กำลังประมวลผล...",
+      }
     };
 
-    const { data, error } = await supabase
-      .from("background_tasks")
+    const { data, error } = await adminSupabase
+      .from("system_task_queue")
       .insert(taskData)
       .select()
       .single();
@@ -96,31 +97,41 @@ export async function updateBackgroundTaskAction(params: {
   result?: any;
 }): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId, user, role } = await requireAuthContext();
+    const { tenantId, user, role } = await requireAuthContext();
+    const adminSupabase = createAdminClient();
 
-    const updateData: BackgroundTaskUpdate = {
+    // ดึง Payload เดิมมาผสาน
+    const { data: currentTask } = await adminSupabase
+      .from("system_task_queue")
+      .select("payload")
+      .eq("id", params.id)
+      .single();
+
+    const existingPayload = currentTask?.payload && typeof currentTask.payload === "object" ? (currentTask.payload as any) : {};
+
+    const updatedPayload = {
+      ...existingPayload,
+      ...(params.result ? { result: params.result } : {}),
+      ...(params.result_link ? { result_link: params.result_link } : {}),
+      ...(params.message ? { message: params.message } : {}),
+      ...(params.error_details ? { error_details: params.error_details } : {}),
+      ...(params.is_cancelled !== undefined ? { is_cancelled: params.is_cancelled } : {}),
+    };
+
+    const updateData: any = {
       status: params.status,
-      message: params.message,
-      result_link: params.result_link,
-      error_details: params.error_details,
-      is_cancelled: params.is_cancelled,
-      result: params.result, // 👈 ส่งเข้าฐานข้อมูล (ต้องมั่นใจว่าตารางมีคอลัมน์นี้)
-    } as any;
+      error_log: params.error_details || params.message || null,
+      payload: updatedPayload,
+    };
 
-    let query = supabase
-      .from("background_tasks")
-      .update(updateData)
-      .eq("id", params.id);
-
-    if (role !== "ADMIN") {
-      if (tenantId) {
-        query = query.eq("tenant_id", tenantId);
-      } else {
-        query = query.eq("user_id", user.id);
-      }
+    if (params.status === "SUCCESS" || params.status === "ERROR") {
+      updateData.completed_at = new Date().toISOString();
     }
 
-    const { data, error } = await query
+    const { data, error } = await adminSupabase
+      .from("system_task_queue")
+      .update(updateData)
+      .eq("id", params.id)
       .select()
       .single();
 
@@ -138,25 +149,43 @@ export async function updateBackgroundTaskAction(params: {
  */
 export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId, user, role } = await requireAuthContext();
+    const { tenantId, user, role } = await requireAuthContext();
+    const adminSupabase = createAdminClient();
 
-    let query = supabase.from("background_tasks").select("*");
-
-    if (role !== "ADMIN") {
-      if (tenantId) {
-        query = query.eq("tenant_id", tenantId);
-      } else {
-        query = query.eq("user_id", user.id);
-      }
-    }
+    let query = adminSupabase.from("system_task_queue").select("*");
 
     const { data, error } = await query
-      .order("created_at", { ascending: false })
+      .order("run_at", { ascending: false })
       .limit(50);
 
     if (error) throw error;
 
-    return { success: true, data };
+    // กรองระดับ Application ตาม Tenant หรือ User เพื่อความปลอดภัย (Tenant Isolation)
+    const filteredData = (data || []).filter((task: any) => {
+      const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
+      if (role === "ADMIN") return true;
+      if (tenantId) {
+        return payload.tenant_id === tenantId;
+      }
+      return payload.user_id === user.id;
+    }).map((task: any) => {
+      const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
+      return {
+        id: task.id,
+        name: task.task_name,
+        status: task.status,
+        message: payload.message || task.error_log || "",
+        created_at: task.run_at,
+        completed_at: task.completed_at,
+        type: payload.type,
+        payload: payload.client_payload,
+        result_link: payload.result_link,
+        error_details: task.error_log || payload.error_details,
+        result: payload.result,
+      };
+    });
+
+    return { success: true, data: filteredData };
   } catch (error: any) {
     console.error("getBackgroundTasksAction error:", error);
     return { success: false, message: error.message };
@@ -168,26 +197,45 @@ export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> 
  */
 export async function cancelBackgroundTaskAction(id: string): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId, user, role } = await requireAuthContext();
+    const { tenantId, user, role } = await requireAuthContext();
+    const adminSupabase = createAdminClient();
 
-    let query = supabase
-      .from("background_tasks")
-      .update({ 
-        is_cancelled: true,
-        status: "ERROR",
-        message: "ยกเลิกโดยผู้ใช้"
-      })
-      .eq("id", id);
+    // ดึงข้อมูลปัจจุบันเพื่อเช็คสิทธิ์ก่อนยกเลิก
+    const { data: currentTask, error: fetchError } = await adminSupabase
+      .from("system_task_queue")
+      .select("*")
+      .eq("id", id)
+      .single();
 
+    if (fetchError || !currentTask) throw new Error("Task not found");
+
+    const payload = currentTask.payload && typeof currentTask.payload === "object" ? (currentTask.payload as any) : {};
+    
+    // ตรวจสอบความปลอดภัย
     if (role !== "ADMIN") {
-      if (tenantId) {
-        query = query.eq("tenant_id", tenantId);
-      } else {
-        query = query.eq("user_id", user.id);
+      if (tenantId && payload.tenant_id !== tenantId) {
+        throw new Error("Unauthorized tenant access");
+      }
+      if (!tenantId && payload.user_id !== user.id) {
+        throw new Error("Unauthorized user access");
       }
     }
 
-    const { data, error } = await query
+    const updatedPayload = {
+      ...payload,
+      is_cancelled: true,
+      message: "ยกเลิกการทำงานโดยผู้ใช้"
+    };
+
+    const { data, error } = await adminSupabase
+      .from("system_task_queue")
+      .update({ 
+        status: "ERROR", // หรือ "CANCELLED"
+        error_log: "ยกเลิกการทำงานโดยผู้ใช้",
+        completed_at: new Date().toISOString(),
+        payload: updatedPayload
+      })
+      .eq("id", id)
       .select()
       .single();
 
@@ -205,24 +253,31 @@ export async function cancelBackgroundTaskAction(id: string): Promise<Background
  */
 export async function pruneBackgroundTasksAction(): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId, user, role } = await requireAuthContext();
+    const { tenantId, user, role } = await requireAuthContext();
+    const adminSupabase = createAdminClient();
 
-    let query = supabase
-      .from("background_tasks")
-      .delete()
-      .in("status", ["SUCCESS", "ERROR"]);
+    // ดึงงานที่ต้องการประเมินก่อนลบ เพื่อทำ Application-level filter
+    const { data, error: fetchError } = await adminSupabase
+      .from("system_task_queue")
+      .select("id, payload")
+      .in("status", ["SUCCESS", "ERROR", "completed", "failed"]);
 
-    if (role !== "ADMIN") {
-      if (tenantId) {
-        query = query.eq("tenant_id", tenantId);
-      } else {
-        query = query.eq("user_id", user.id);
-      }
+    if (fetchError) throw fetchError;
+
+    const idsToDelete = (data || []).filter((task: any) => {
+      const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
+      if (role === "ADMIN") return true;
+      if (tenantId) return payload.tenant_id === tenantId;
+      return payload.user_id === user.id;
+    }).map((task: any) => task.id);
+
+    if (idsToDelete.length > 0) {
+      const { error } = await adminSupabase
+        .from("system_task_queue")
+        .delete()
+        .in("id", idsToDelete);
+      if (error) throw error;
     }
-
-    const { error } = await query;
-
-    if (error) throw error;
 
     return { success: true };
   } catch (error: any) {
@@ -236,24 +291,31 @@ export async function pruneBackgroundTasksAction(): Promise<BackgroundTaskResult
  */
 export async function deleteBackgroundTasksAction(ids: string[]): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId, user, role } = await requireAuthContext();
+    const { tenantId, user, role } = await requireAuthContext();
+    const adminSupabase = createAdminClient();
 
-    let query = supabase
-      .from("background_tasks")
-      .delete()
+    // ดึงงานเพื่อตรวจสอบสิทธิ์
+    const { data, error: fetchError } = await adminSupabase
+      .from("system_task_queue")
+      .select("id, payload")
       .in("id", ids);
 
-    if (role !== "ADMIN") {
-      if (tenantId) {
-        query = query.eq("tenant_id", tenantId);
-      } else {
-        query = query.eq("user_id", user.id);
-      }
+    if (fetchError) throw fetchError;
+
+    const idsToDelete = (data || []).filter((task: any) => {
+      const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
+      if (role === "ADMIN") return true;
+      if (tenantId) return payload.tenant_id === tenantId;
+      return payload.user_id === user.id;
+    }).map((task: any) => task.id);
+
+    if (idsToDelete.length > 0) {
+      const { error } = await adminSupabase
+        .from("system_task_queue")
+        .delete()
+        .in("id", idsToDelete);
+      if (error) throw error;
     }
-
-    const { error } = await query;
-
-    if (error) throw error;
 
     return { success: true };
   } catch (error: any) {
@@ -267,25 +329,15 @@ export async function deleteBackgroundTasksAction(ids: string[]): Promise<Backgr
  */
 export async function autoPruneOldTasksAction(): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId, user, role } = await requireAuthContext();
+    const adminSupabase = createAdminClient();
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    let query = supabase
-      .from("background_tasks")
+    const { error } = await adminSupabase
+      .from("system_task_queue")
       .delete()
-      .lt("created_at", sevenDaysAgo.toISOString());
-
-    if (role !== "ADMIN") {
-      if (tenantId) {
-        query = query.eq("tenant_id", tenantId);
-      } else {
-        query = query.eq("user_id", user.id);
-      }
-    }
-
-    const { error } = await query;
+      .lt("run_at", sevenDaysAgo.toISOString());
 
     if (error) throw error;
 
@@ -300,31 +352,38 @@ export async function autoPruneOldTasksAction(): Promise<BackgroundTaskResult> {
  */
 export async function markStuckTasksAsErrorAction(): Promise<BackgroundTaskResult> {
   try {
-    const { supabase, tenantId, user, role } = await requireAuthContext();
+    const adminSupabase = createAdminClient();
 
     const twoHoursAgo = new Date();
     twoHoursAgo.setHours(twoHoursAgo.getHours() - 2);
 
-    let query = supabase
-      .from("background_tasks")
-      .update({ 
-        status: "ERROR", 
-        message: "งานถูกระงับเนื่องจากใช้เวลานานเกินกำหนด (Timeout)" 
-      })
+    const { data: stuckTasks, error: fetchError } = await adminSupabase
+      .from("system_task_queue")
+      .select("id, payload")
       .eq("status", "PROCESSING")
-      .lt("created_at", twoHoursAgo.toISOString());
+      .lt("run_at", twoHoursAgo.toISOString());
 
-    if (role !== "ADMIN") {
-      if (tenantId) {
-        query = query.eq("tenant_id", tenantId);
-      } else {
-        query = query.eq("user_id", user.id);
+    if (fetchError) throw fetchError;
+
+    if (stuckTasks && stuckTasks.length > 0) {
+      for (const task of stuckTasks) {
+        const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
+        const updatedPayload = {
+          ...payload,
+          message: "งานถูกระงับเนื่องจากใช้เวลานานเกินกำหนด (Timeout)"
+        };
+
+        await adminSupabase
+          .from("system_task_queue")
+          .update({
+            status: "ERROR",
+            error_log: "Timeout",
+            completed_at: new Date().toISOString(),
+            payload: updatedPayload
+          })
+          .eq("id", task.id);
       }
     }
-
-    const { error } = await query;
-
-    if (error) throw error;
 
     return { success: true };
   } catch (error: any) {
