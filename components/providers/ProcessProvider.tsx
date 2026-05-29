@@ -24,8 +24,6 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
 
   // 🛡️ Load from Database on mount (Enterprise Persistence)
   useEffect(() => {
-    if (!tenantId) return;
-
     const syncWithDB = async () => {
       try {
         const { getBackgroundTasksAction, autoPruneOldTasksAction, markStuckTasksAsErrorAction } = await import("@/lib/background-tasks/actions");
@@ -66,7 +64,7 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
       const supabase = createClient();
       
       const channel = supabase
-        .channel(`system_task_queue_${tenantId}`)
+        .channel(tenantId ? `system_task_queue_${tenantId}` : "system_task_queue_global")
         .on(
           "postgres_changes",
           { 
@@ -78,8 +76,9 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
             const updatedTask = payload.new as any;
             const updatedPayload = updatedTask.payload && typeof updatedTask.payload === "object" ? (updatedTask.payload as any) : {};
             
-            // Application-level tenant filter
-            if (updatedPayload.tenant_id !== tenantId) return;
+            // Application-level tenant filter (Allow if global view, no tenant, or matching tenant)
+            const isMatch = !tenantId || tenantId === "ALL" || updatedPayload.tenant_id === tenantId;
+            if (!isMatch) return;
             
             window.dispatchEvent(
               new CustomEvent("app-process-event", {
