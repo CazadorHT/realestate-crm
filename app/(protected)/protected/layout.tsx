@@ -36,7 +36,7 @@ export default async function ProtectedLayout({
 
   // 2. Critical: Check staff access BEFORE running any other queries
   // This prevents the "Error Digest" crash when unauthorized users access the page
-  if (!isStaff(profile.role)) {
+  if (!isStaff(profile.role) || !profile.is_active) {
     return redirect("/auth/pending");
   }
 

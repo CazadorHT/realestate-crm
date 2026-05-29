@@ -90,8 +90,6 @@ async function handleNewSignup(supabase: any, user: any) {
       }
     );
 
-    // 🛡️ [AUTO-TENANT ASSIGNMENT - DISABLED FOR PENDING STATE]
-    // 1. Ensure identities_v3 record exists with default 'USER' role (requires approval)
     const { data: existingIdentity } = await supabase
       .from("identities_v3")
       .select("id")
@@ -99,25 +97,26 @@ async function handleNewSignup(supabase: any, user: any) {
       .maybeSingle();
 
     if (!existingIdentity) {
-      console.log(`[handleNewSignup] Creating identities_v3 record with USER role for new user: ${user.id}`);
+      console.log(`[handleNewSignup] Creating identities_v3 record with AGENT role for new user: ${user.id}`);
       await supabase.from("identities_v3").insert({
         id: user.id,
-        role: "USER", // Default role requiring admin approval
-        category: 1,  // Customer/User category
+        role: "AGENT", // Default role is AGENT now
+        category: 1,  
+        is_active: false, // Must be approved by admin
       });
 
-      // Sync role: "USER" to auth.users app_metadata
+      // Sync role: "AGENT" to auth.users app_metadata
       try {
         const { createAdminClient } = await import("@/lib/supabase/admin");
         const adminSupabase = createAdminClient();
         await adminSupabase.auth.admin.updateUserById(user.id, {
           app_metadata: {
-            role: "USER"
+            role: "AGENT"
           }
         });
-        console.log(`✅ [AuthSync] Initial metadata set to USER for user ${user.id}`);
+        console.log(`✅ [AuthSync] Initial metadata set to AGENT for user ${user.id}`);
       } catch (syncErr) {
-        console.error("❌ [AuthSync] Error syncing initial USER metadata:", syncErr);
+        console.error("❌ [AuthSync] Error syncing initial AGENT metadata:", syncErr);
       }
     }
   }

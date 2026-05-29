@@ -22,22 +22,23 @@ export async function POST(request: NextRequest) {
     if (!existingIdentity) {
       console.log(`[Auth Sync API] Creating identities_v3 record with USER role for OAuth user: ${user.id}`);
       
-      // 1. Insert identity record with default USER role
+      // 1. Insert identity record with default AGENT role and is_active: false
       await supabase.from("identities_v3").insert({
         id: user.id,
-        role: "USER", 
+        role: "AGENT", 
         category: 1,  
+        is_active: false,
       });
 
-      // Sync role: "USER" to auth.users metadata
+      // Sync role: "AGENT" to auth.users metadata
       try {
         const adminSupabase = createAdminClient();
         await adminSupabase.auth.admin.updateUserById(user.id, {
           app_metadata: {
-            role: "USER"
+            role: "AGENT"
           }
         });
-        console.log(`✅ [Auth Sync API] Initial USER metadata synced for user ${user.id}`);
+        console.log(`✅ [Auth Sync API] Initial AGENT metadata synced (is_active: false) for user ${user.id}`);
       } catch (syncErr) {
         console.error("❌ [Auth Sync API] Metadata sync error:", syncErr);
       }

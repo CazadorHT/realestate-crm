@@ -29,11 +29,11 @@ export default function PendingApprovalPage() {
         // 1. Initial check
         const { data: profile } = await supabase
           .from("profiles")
-          .select("role")
+          .select("is_active")
           .eq("id", user.id)
           .single();
 
-        if (isSubscribed && profile && profile.role !== "USER") {
+        if (isSubscribed && profile && profile.is_active) {
           setIsApproved(true);
           router.push("/protected");
           return;
@@ -54,9 +54,9 @@ export default function PendingApprovalPage() {
               if (!isSubscribed) return;
               console.log("[REALTIME] Profile updated:", payload);
               
-              // Safely extract the new role from the payload
-              const newRole = (payload.new as { role?: string }).role;
-              if (newRole && newRole !== "USER") {
+              // Safely extract the new active status from the payload
+              const isActive = (payload.new as { is_active?: boolean }).is_active;
+              if (isActive) {
                 setIsApproved(true);
                 router.push("/protected");
               }
@@ -125,14 +125,14 @@ export default function PendingApprovalPage() {
                 return;
               }
 
-              // 2. ตรวจสอบข้อมูลจาก DB profiles โดยตรง (เพราะแอดมินแก้ไข role ที่ตารางนี้)
+              // 2. ตรวจสอบข้อมูลจาก DB profiles โดยตรง
               const { data: profile } = await supabase
                 .from("profiles")
-                .select("role")
+                .select("is_active")
                 .eq("id", user.id)
                 .maybeSingle();
 
-              if (profile && profile.role !== "USER") {
+              if (profile && profile.is_active) {
                 // บังคับรีเฟรช Session เพื่อดึงสิทธิ์ (JWT app_metadata role) ล่าสุดจาก Supabase
                 await supabase.auth.refreshSession();
                 setIsApproved(true);

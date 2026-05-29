@@ -60,11 +60,38 @@ export async function POST(request: Request) {
     const { error: updateError } = await supabase
       .from("profiles")
       .update({ 
-        role: "AGENT" // Strictly typed through Database types
+        role: "AGENT",
+        is_active: true
       })
       .eq("id", userId);
 
     if (updateError) throw updateError;
+
+    // 2. Update identities_v3 table (System Master Record)
+    const { error: identityUpdateError } = await supabase
+      .from("identities_v3")
+      .update({
+        role: "AGENT",
+        is_active: true,
+        updated_at: new Date().toISOString()
+      })
+      .eq("id", userId);
+
+    if (identityUpdateError) {
+      console.error("[TELEGRAM_WEBHOOK] Failed to update identities_v3 role:", identityUpdateError);
+    }
+
+    // 3. Sync role: "AGENT" to auth.users metadata
+    try {
+      await supabase.auth.admin.updateUserById(userId, {
+        app_metadata: {
+          role: "AGENT"
+        }
+      });
+      console.log(`✅ [Telegram Webhook] Auth metadata role: AGENT synced for user ${userId}`);
+    } catch (syncErr) {
+      console.error("❌ [Telegram Webhook] Auth metadata sync error:", syncErr);
+    }
     
     // 🛡️ [AUTO-TENANT ASSIGNMENT]
     let autoBranchText = "";
