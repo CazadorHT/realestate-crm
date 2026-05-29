@@ -107,6 +107,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAiGenerating, setIsAiGenerating] = useState(false);
+  const [generationTaskId, setGenerationTaskId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState("content");
   const [successData, setSuccessData] = useState<{
     slug: string;
@@ -269,14 +270,24 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
   // 🛡️ BACKGROUND GENERATION HANDLER
   useEffect(() => {
-    const handleStart = () => setIsAiGenerating(true);
-    const handleError = () => setIsAiGenerating(false);
+    const handleStart = (event: any) => {
+      setIsAiGenerating(true);
+      const id = event.detail?.taskId;
+      if (id) {
+        setGenerationTaskId(id);
+      }
+    };
+    const handleError = () => {
+      setIsAiGenerating(false);
+      setGenerationTaskId(null);
+    };
     const handleSuccess = (event: any) => {
       const data = event.detail;
       if (data) {
         handleAiGenerated(data);
       }
       setIsAiGenerating(false);
+      setGenerationTaskId(null);
     };
 
     window.addEventListener("BLOG_AI_GENERATION_START", handleStart);
@@ -397,6 +408,27 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
                 <div className="h-2 w-2 bg-emerald-500 rounded-full animate-ping" />
                 <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Background Sync Active</span>
               </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors mt-2 text-xs"
+                onClick={async () => {
+                  if (generationTaskId) {
+                    try {
+                      const { cancelBackgroundTaskAction } = await import("@/lib/background-tasks/actions");
+                      await cancelBackgroundTaskAction(generationTaskId);
+                      toast.success("ยกเลิกการสร้างบทความแล้ว");
+                    } catch (err) {
+                      console.error("Failed to cancel background task:", err);
+                    }
+                  }
+                  setIsAiGenerating(false);
+                  setGenerationTaskId(null);
+                }}
+              >
+                ยกเลิกการทำงาน
+              </Button>
             </div>
           </div>
         )}

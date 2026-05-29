@@ -67,7 +67,7 @@ export function BlogAiGenerator({ onGenerated }: BlogAiGeneratorProps) {
     setIsLoading(true);
     
     // 📢 NOTIFY START: Tell the main form that AI has started working
-    window.dispatchEvent(new CustomEvent("BLOG_AI_GENERATION_START"));
+    window.dispatchEvent(new CustomEvent("BLOG_AI_GENERATION_START", { detail: { taskId } }));
 
     try {
       const result = await generateBlogPostAction(
