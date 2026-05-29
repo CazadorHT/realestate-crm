@@ -143,7 +143,7 @@ export const onBlogGenerateRequested = inngest.createFunction(
           status: "DRAFT",
           published_at: null,
           author_id: authorId,
-          tenant_id: finalTenantId && finalTenantId !== "ALL" ? finalTenantId : null,
+          tenant_id: finalTenantId && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(finalTenantId) ? finalTenantId : null,
           seo_score: aiResult.seo_score || null,
           meta_data: {
             excerpt: aiResult.excerpt || "",
