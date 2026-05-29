@@ -11,44 +11,43 @@ export default function AuthCallbackClientPage() {
   useEffect(() => {
     const supabase = createClient();
 
-    const handleSession = async () => {
-      const params = new URLSearchParams(window.location.search);
-      const error = params.get("error");
-      const errorDescription = params.get("error_description");
-
-      if (error) {
-        setErrorMsg(errorDescription || error);
-        return;
+    const syncSessionAndRedirect = async () => {
+      try {
+        await fetch("/api/auth/sync", { method: "POST" });
+      } catch (err) {
+        console.error("Failed to sync auth session to backend DB:", err);
       }
 
+      // Get user profile role to determine where to redirect
+      const { data: { user } } = await supabase.auth.getUser();
+      const role = user?.app_metadata?.role;
+
+      if (role === "AGENT" || role === "MANAGER" || role === "ADMIN") {
+        router.push("/protected");
+      } else {
+        router.push("/auth/pending");
+      }
+    };
+
+    const handleSession = async () => {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (session) {
+        await syncSessionAndRedirect();
+        return;
+      }
 
       if (sessionError) {
         setErrorMsg(sessionError.message);
         return;
       }
 
-      // Helper function to sync session to backend database
-      const syncSessionAndRedirect = async () => {
-        try {
-          await fetch("/api/auth/sync", { method: "POST" });
-        } catch (err) {
-          console.error("Failed to sync auth session to backend DB:", err);
-        }
+      const params = new URLSearchParams(window.location.search);
+      const error = params.get("error");
+      const errorDescription = params.get("error_description");
 
-        // Get user profile role to determine where to redirect
-        const { data: { user } } = await supabase.auth.getUser();
-        const role = user?.app_metadata?.role;
-
-        if (role === "AGENT" || role === "MANAGER" || role === "ADMIN") {
-          router.push("/protected");
-        } else {
-          router.push("/auth/pending");
-        }
-      };
-
-      if (session) {
-        await syncSessionAndRedirect();
+      if (error) {
+        setErrorMsg(errorDescription || error);
         return;
       }
 

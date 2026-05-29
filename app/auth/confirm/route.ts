@@ -21,6 +21,14 @@ export async function GET(request: NextRequest) {
 
   const supabase = await createClient();
 
+  // 1. Check if user is already logged in (concurrency recovery)
+  const { data: { user: existingUser } } = await supabase.auth.getUser();
+  if (existingUser) {
+    console.log("✅ [Auth Confirm] User already authenticated via existing session");
+    await handleNewSignup(supabase, existingUser);
+    return redirect("/auth/pending");
+  }
+
   if (token_hash && type) {
     const { data, error } = await supabase.auth.verifyOtp({
       type,
@@ -28,10 +36,16 @@ export async function GET(request: NextRequest) {
     });
     if (!error && data?.user) {
       await handleNewSignup(supabase, data.user);
-      const role = data.user.app_metadata?.role;
-      const targetPath = (role === "AGENT" || role === "MANAGER" || role === "ADMIN") ? next : "/auth/pending";
-      return redirect(targetPath);
+      return redirect("/auth/pending");
     } else {
+      // Check again if we got authenticated concurrently (e.g. by another request prefetching)
+      const { data: { user: retryUser } } = await supabase.auth.getUser();
+      if (retryUser) {
+        console.log("✅ [Auth Confirm] Recovered: User authenticated concurrently");
+        await handleNewSignup(supabase, retryUser);
+        return redirect("/auth/pending");
+      }
+
       console.error("❌ [Auth Confirm] Verify OTP Error:", error);
       return redirect(
         `/auth/error?error=${encodeURIComponent(error?.message || "Verify OTP failed")}`,
@@ -43,10 +57,16 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data?.user) {
       await handleNewSignup(supabase, data.user);
-      const role = data.user.app_metadata?.role;
-      const targetPath = (role === "AGENT" || role === "MANAGER" || role === "ADMIN") ? next : "/auth/pending";
-      return redirect(targetPath);
+      return redirect("/auth/pending");
     } else {
+      // Check again if we got authenticated concurrently
+      const { data: { user: retryUser } } = await supabase.auth.getUser();
+      if (retryUser) {
+        console.log("✅ [Auth Confirm] Recovered: User authenticated concurrently");
+        await handleNewSignup(supabase, retryUser);
+        return redirect("/auth/pending");
+      }
+
       console.error("❌ [Auth Confirm] Supabase Auth Code Exchange Error:", error);
       return redirect(
         `/auth/error?error=${encodeURIComponent(error?.message || "Code exchange failed")}`,
