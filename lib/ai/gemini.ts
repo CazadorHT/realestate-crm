@@ -66,6 +66,7 @@ export function getModel(modelName: string = DEFAULT_MODEL, options?: {
   systemInstruction?: string;
   responseMimeType?: "application/json" | "text/plain";
   maxOutputTokens?: number;
+  temperature?: number;
 }) {
   const genAI = getClient();
   if (!genAI) return null;
@@ -81,18 +82,20 @@ export function getModel(modelName: string = DEFAULT_MODEL, options?: {
     modelOptions.systemInstruction = options.systemInstruction;
   }
 
-  if (options?.responseMimeType) {
+  if (options?.responseMimeType || options?.maxOutputTokens || options?.temperature !== undefined) {
     modelOptions.generationConfig = {
       ...modelOptions.generationConfig,
-      responseMimeType: options.responseMimeType,
     };
-  }
-
-  if (options?.maxOutputTokens) {
-    modelOptions.generationConfig = {
-      ...modelOptions.generationConfig,
-      maxOutputTokens: options.maxOutputTokens,
-    };
+    
+    if (options?.responseMimeType) {
+      modelOptions.generationConfig.responseMimeType = options.responseMimeType;
+    }
+    if (options?.maxOutputTokens) {
+      modelOptions.generationConfig.maxOutputTokens = options.maxOutputTokens;
+    }
+    if (options?.temperature !== undefined) {
+      modelOptions.generationConfig.temperature = options.temperature;
+    }
   }
 
   return genAI.getGenerativeModel(modelOptions, {
@@ -162,6 +165,7 @@ export async function generateText(
     systemInstruction?: string;
     responseMimeType?: "application/json" | "text/plain";
     maxOutputTokens?: number;
+    temperature?: number;
   }
 ): Promise<AiGenerationResult> {
   const genAI = getClient();

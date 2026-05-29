@@ -212,12 +212,13 @@ export async function generateBlogPost(
   try {
     console.log(`[AI-BLOG] Starting generation for: ${keyword} using model: ${modelName}`);
 
-    const response = await generateText(prompt, modelName, 0.7, { // Increased temperature to prevent looping
+    const response = await generateText(prompt, modelName, 0, {
       systemInstruction,
       //@ts-ignore
       responseMimeType: "application/json",
       // 🛡️ SECURITY: Increased limit to prevent truncation on "Long" articles
       maxOutputTokens: 8192, 
+      temperature: 0.7,
     });
     
     if (!response) throw new Error("AI returned an empty response");
