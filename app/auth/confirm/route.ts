@@ -87,6 +87,22 @@ async function handleNewSignup(supabase: any, user: any) {
     );
 
     // 🛡️ [AUTO-TENANT ASSIGNMENT]
+    // 1. Ensure identities_v3 record exists (Source of Truth for authz)
+    const { data: existingIdentity } = await supabase
+      .from("identities_v3")
+      .select("id")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (!existingIdentity) {
+      console.log(`[handleNewSignup] Creating identities_v3 record for new user: ${user.id}`);
+      await supabase.from("identities_v3").insert({
+        id: user.id,
+        role: "AGENT", // Default role
+        category: 1,   // Default category
+      });
+    }
+
     const { data: membership } = await supabase
       .from("tenant_members_v3")
       .select("id")

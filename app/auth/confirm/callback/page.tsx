@@ -28,15 +28,25 @@ export default function AuthCallbackClientPage() {
         return;
       }
 
-      if (session) {
+      // Helper function to sync session to backend database
+      const syncSessionAndRedirect = async () => {
+        try {
+          await fetch("/api/auth/sync", { method: "POST" });
+        } catch (err) {
+          console.error("Failed to sync auth session to backend DB:", err);
+        }
         router.push("/protected");
+      };
+
+      if (session) {
+        await syncSessionAndRedirect();
         return;
       }
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
           if (event === "SIGNED_IN" && session) {
-            router.push("/protected");
+            await syncSessionAndRedirect();
           }
         }
       );
