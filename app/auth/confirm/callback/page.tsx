@@ -35,7 +35,16 @@ export default function AuthCallbackClientPage() {
         } catch (err) {
           console.error("Failed to sync auth session to backend DB:", err);
         }
-        router.push("/protected");
+
+        // Get user profile role to determine where to redirect
+        const { data: { user } } = await supabase.auth.getUser();
+        const role = user?.app_metadata?.role;
+
+        if (role === "AGENT" || role === "MANAGER" || role === "ADMIN" || role === "USER") {
+          router.push("/protected");
+        } else {
+          router.push("/auth/pending");
+        }
       };
 
       if (session) {

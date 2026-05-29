@@ -20,14 +20,27 @@ export async function POST(request: NextRequest) {
       .maybeSingle();
 
     if (!existingIdentity) {
-      console.log(`[Auth Sync API] Creating identities_v3 record for OAuth user: ${user.id}`);
+      console.log(`[Auth Sync API] Creating identities_v3 record with USER role for OAuth user: ${user.id}`);
       
-      // 1. Insert identity record
+      // 1. Insert identity record with default USER role
       await supabase.from("identities_v3").insert({
         id: user.id,
-        role: "AGENT", 
+        role: "USER", 
         category: 1,  
       });
+
+      // Sync role: "USER" to auth.users metadata
+      try {
+        const adminSupabase = createAdminClient();
+        await adminSupabase.auth.admin.updateUserById(user.id, {
+          app_metadata: {
+            role: "USER"
+          }
+        });
+        console.log(`✅ [Auth Sync API] Initial USER metadata synced for user ${user.id}`);
+      } catch (syncErr) {
+        console.error("❌ [Auth Sync API] Metadata sync error:", syncErr);
+      }
 
       // 2. Logging and Audit Trail
       await notifySignupAction(
@@ -38,53 +51,6 @@ export async function POST(request: NextRequest) {
           avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture
         }
       );
-
-      // 3. Auto-Tenant Assignment
-      const { data: membership } = await supabase
-        .from("tenant_members_v3")
-        .select("id")
-        .eq("identity_id", user.id)
-        .maybeSingle();
-
-      if (!membership) {
-        const { getSystemConfig } = await import("@/lib/actions/system-config");
-        const config = await getSystemConfig();
-        let targetTenantId = config.default_tenant_id;
-
-        if (!targetTenantId) {
-          const { data: firstTenant } = await supabase
-            .from("tenants")
-            .select("id")
-            .eq("is_deleted", false)
-            .order("created_at", { ascending: true })
-            .limit(1)
-            .maybeSingle();
-          
-          if (firstTenant) targetTenantId = firstTenant.id;
-        }
-
-        if (targetTenantId) {
-          await supabase.from("tenant_members_v3").insert({
-            tenant_id: targetTenantId,
-            identity_id: user.id,
-            role: "AGENT", 
-          });
-          
-          // Sync App Metadata to Auth schema
-          try {
-            const adminSupabase = createAdminClient();
-            await adminSupabase.auth.admin.updateUserById(user.id, {
-              app_metadata: {
-                tenant_id: targetTenantId,
-                role: "AGENT"
-              }
-            });
-            console.log(`✅ [Auth Sync API] Metadata synced for user ${user.id}`);
-          } catch (syncErr) {
-            console.error("❌ [Auth Sync API] Metadata sync error:", syncErr);
-          }
-        }
-      }
     }
 
     return NextResponse.json({ success: true });

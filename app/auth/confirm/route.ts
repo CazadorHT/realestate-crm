@@ -28,7 +28,9 @@ export async function GET(request: NextRequest) {
     });
     if (!error && data?.user) {
       await handleNewSignup(supabase, data.user);
-      return redirect(next);
+      const role = data.user.app_metadata?.role;
+      const targetPath = (role === "AGENT" || role === "MANAGER" || role === "ADMIN" || role === "USER") ? next : "/auth/pending";
+      return redirect(targetPath);
     } else {
       console.error("❌ [Auth Confirm] Verify OTP Error:", error);
       return redirect(
@@ -41,7 +43,9 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data?.user) {
       await handleNewSignup(supabase, data.user);
-      return redirect(next);
+      const role = data.user.app_metadata?.role;
+      const targetPath = (role === "AGENT" || role === "MANAGER" || role === "ADMIN" || role === "USER") ? next : "/auth/pending";
+      return redirect(targetPath);
     } else {
       console.error("❌ [Auth Confirm] Supabase Auth Code Exchange Error:", error);
       return redirect(
@@ -86,8 +90,8 @@ async function handleNewSignup(supabase: any, user: any) {
       }
     );
 
-    // 🛡️ [AUTO-TENANT ASSIGNMENT]
-    // 1. Ensure identities_v3 record exists (Source of Truth for authz)
+    // 🛡️ [AUTO-TENANT ASSIGNMENT - DISABLED FOR PENDING STATE]
+    // 1. Ensure identities_v3 record exists with default 'USER' role (requires approval)
     const { data: existingIdentity } = await supabase
       .from("identities_v3")
       .select("id")
@@ -95,64 +99,25 @@ async function handleNewSignup(supabase: any, user: any) {
       .maybeSingle();
 
     if (!existingIdentity) {
-      console.log(`[handleNewSignup] Creating identities_v3 record for new user: ${user.id}`);
+      console.log(`[handleNewSignup] Creating identities_v3 record with USER role for new user: ${user.id}`);
       await supabase.from("identities_v3").insert({
         id: user.id,
-        role: "AGENT", // Default role
-        category: 1,   // Default category
+        role: "USER", // Default role requiring admin approval
+        category: 1,  // Customer/User category
       });
-    }
 
-    const { data: membership } = await supabase
-      .from("tenant_members_v3")
-      .select("id")
-      .eq("identity_id", user.id)
-      .maybeSingle();
-
-    if (!membership) {
+      // Sync role: "USER" to auth.users app_metadata
       try {
-        const { getSystemConfig } = await import("@/lib/actions/system-config");
-        const config = await getSystemConfig();
-        let targetTenantId = config.default_tenant_id;
-
-        if (!targetTenantId) {
-          const { data: firstTenant } = await supabase
-            .from("tenants")
-            .select("id")
-            .eq("is_deleted", false)
-            .order("created_at", { ascending: true })
-            .limit(1)
-            .maybeSingle();
-          
-          if (firstTenant) targetTenantId = firstTenant.id;
-        }
-
-        if (targetTenantId) {
-          await supabase.from("tenant_members_v3").insert({
-            tenant_id: targetTenantId,
-            identity_id: user.id,
-            role: "AGENT", 
-          });
-          
-          // 🛡️ [SYNC TO AUTH METADATA]
-          try {
-            const { createAdminClient } = await import("@/lib/supabase/admin");
-            const adminSupabase = createAdminClient();
-            await adminSupabase.auth.admin.updateUserById(user.id, {
-              app_metadata: {
-                tenant_id: targetTenantId,
-                role: "AGENT"
-              }
-            });
-            console.log(`✅ [AuthSync] Initial metadata set for user ${user.id}`);
-          } catch (syncErr) {
-            console.error("❌ [AuthSync] Error:", syncErr);
+        const { createAdminClient } = await import("@/lib/supabase/admin");
+        const adminSupabase = createAdminClient();
+        await adminSupabase.auth.admin.updateUserById(user.id, {
+          app_metadata: {
+            role: "USER"
           }
-
-          console.log(`✅ [Auto-Tenant] User ${user.id} assigned to tenant ${targetTenantId}`);
-        }
-      } catch (err) {
-        console.error("❌ [Auto-Tenant] Error:", err);
+        });
+        console.log(`✅ [AuthSync] Initial metadata set to USER for user ${user.id}`);
+      } catch (syncErr) {
+        console.error("❌ [AuthSync] Error syncing initial USER metadata:", syncErr);
       }
     }
   }
