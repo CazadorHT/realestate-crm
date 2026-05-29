@@ -117,20 +117,32 @@ export async function generateBlogPost(
 
   let lengthInstruction = "";
   let minWords = "";
+  let sectionCount = "";
+  let tableCount = "";
+  let faqCount = "";
 
   switch (length) {
     case "Short":
       lengthInstruction = "เขียนแบบกระชับ (Concise) เน้นสาระสำคัญ";
-      minWords = "ประมาณ 1,000";
+      minWords = "ประมาณ 600 - 800";
+      sectionCount = "4-5 หัวข้อ";
+      tableCount = "อย่างน้อย 1 ตารางเพื่อสรุปข้อมูล";
+      faqCount = "3 ข้อ";
       break;
     case "Long":
       lengthInstruction = "เขียนแบบเจาะลึกพิเศษ (Comprehensive In-depth Guide) พร้อมสถิติและข้อมูลอ้างอิง";
-      minWords = "ประมาณ 2,500 - 3,500";
+      minWords = "ประมาณ 2,000 - 2,500";
+      sectionCount = "10-12 หัวข้อ";
+      tableCount = "อย่างน้อย 3 ตารางเพื่อเปรียบเทียบข้อมูลหรือสรุปราคา/ทำเล";
+      faqCount = "5 ข้อ";
       break;
     case "Medium":
     default:
       lengthInstruction = "เขียนแบบมาตรฐาน (Professional SEO Article) สมดุลระหว่างเนื้อหาและรายละเอียด";
-      minWords = "ประมาณ 1,500 - 2,000";
+      minWords = "ประมาณ 1,200 - 1,500";
+      sectionCount = "6-8 หัวข้อ";
+      tableCount = "อย่างน้อย 2 ตารางเพื่อเปรียบเทียบข้อมูล";
+      faqCount = "4 ข้อ";
       break;
   }
 
@@ -145,16 +157,16 @@ export async function generateBlogPost(
 
     โครงสร้างเนื้อหา (Mandatory Structure):
     1. Introduction: เปิดเรื่องให้น่าสนใจ พร้อม Focus Keyword ใน 100 คำแรก
-    2. Detailed Content: แบ่งเป็น 15-17 หัวข้อ (ใช้ <h2>, <h3>, <h4> เท่านั้น) 
+    2. Detailed Content: แบ่งเป็น ${sectionCount} (ใช้ <h2>, <h3>, <h4> เท่านั้น) 
        - เนื้อหาต้องลึกซึ้ง ไม่ใช่น้ำเยอะ 
        - ใส่สถิติหรือตัวเลขประกอบให้น่าเชื่อถือ
     3. Interactive Elements: 
-       - ตาราง HTML (<table>) อย่างน้อย 3-4 ตาราง เพื่อเปรียบเทียบข้อมูลหรือสรุปราคา/ทำเล
+       - ตาราง HTML (<table>) ${tableCount}
        - ใส่ [Infographic Ideas: ...] แทรกระหว่างเนื้อหาเพื่อบอกว่าจุดนี้ควรมีรูปอะไรประกอบ
     4. Link Strategy:
        - EXTERNAL: ลิงก์ไปยัง Forbes, World Bank, หรือสำนักข่าวอสังหาฯ ใหญ่ๆ (ใช้ <a href="..." target="_blank" rel="nofollow">)
        - INTERNAL: ${relatedLinks.length > 0 ? relatedLinks.map(link => `<a href="${link.url}">${link.title}</a>`).join(', ') : "ไม่มีลิงก์ภายใน"}
-    5. FAQ Section (ฝังใน HTML): คำถามพบบ่อย 5-6 ข้อ ใช้โครงสร้าง <h3>คำถาม</h3><p>คำตอบ</p>
+    5. FAQ Section (ฝังใน HTML): คำถามพบบ่อย ${faqCount} ใช้โครงสร้าง <h3>คำถาม</h3><p>คำตอบ</p>
     6. Conclusion: สรุปจบพร้อมสรุปใจความสำคัญในรูปแบบ Checklist หรือ Bullet points
     7. High-Conversion CTA: ออกแบบปุ่ม 2-3 สไตล์ (เช่น "ปรึกษาผู้เชี่ยวชาญ", "ดูรายละเอียดโครงการ", "ดาวน์โหลดคู่มือ")
        - ครอบด้วย <div class="flex flex-wrap gap-4 mt-8 mb-4">
