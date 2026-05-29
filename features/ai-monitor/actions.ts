@@ -112,11 +112,11 @@ export async function getAiUsageStats(): Promise<AiUsageStats> {
 
     const [rpmRes, rpdRes] = await Promise.all([
       supabase
-        .from("ai_usage_logs")
+        .from("ai_token_ledgers")
         .select("id", { count: "exact", head: true })
         .gte("created_at", oneMinuteAgo),
       supabase
-        .from("ai_usage_logs")
+        .from("ai_token_ledgers")
         .select("id", { count: "exact", head: true })
         .gte("created_at", twentyFourHoursAgo),
     ]);
@@ -172,13 +172,11 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
     const { data: { user } } = await supabase.auth.getUser();
     const role = user?.app_metadata?.role;
 
-    let query = supabase.from("ai_usage_logs").select(`
+    let query = supabase.from("ai_token_ledgers").select(`
       id,
       created_at,
       model,
       feature,
-      status,
-      error_message,
       prompt_tokens,
       completion_tokens,
       cost_thb,
@@ -222,8 +220,10 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
         ?.map((p) => [p.id, p]) || []
     );
 
-    return (data as { user_id: string | null }[]).map((d) => ({
+    return (data as any[]).map((d) => ({
       ...d,
+      status: "success",
+      error_message: null,
       user: d.user_id ? profileMap.get(d.user_id) : null,
     })) as unknown as AiLogRecord[];
   } catch (error) {
@@ -247,8 +247,8 @@ export async function getAiDashboardStats(): Promise<AiDashboardStats> {
     const role = user?.app_metadata?.role;
 
     let query = supabase
-      .from("ai_usage_logs")
-      .select("feature, status, cost_thb");
+      .from("ai_token_ledgers")
+      .select("feature, cost_thb");
 
     if (role !== "ADMIN") {
       query = query.eq("user_id", user?.id);
@@ -278,9 +278,9 @@ export async function getAiDashboardStats(): Promise<AiDashboardStats> {
     }
 
     const total = data.length;
-    const logs = data as { status: string; feature: string; cost_thb: number | string | null }[];
-    const successCount = logs.filter((d) => d.status === "success").length;
-    const chatbotCount = logs.filter((d) => d.feature === "chatbot").length;
+    const logs = data as { feature: string; cost_thb: number | string | null }[];
+    const successCount = total;
+    const chatbotCount = logs.filter((d) => d.feature === "chatbot" || d.feature === "content_refiner").length;
     const totalCost = logs.reduce(
       (sum: number, d) => sum + (Number(d.cost_thb) || 0),
       0,

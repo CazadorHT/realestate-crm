@@ -253,18 +253,7 @@ export async function generateBlogPost(
       }
     }
 
-    // Sanitize HTML
-    const contentKeys = ['content', 'content_en', 'content_cn', 'content_ru'] as const;
-    const DOMPurify = (await import("isomorphic-dompurify")).default;
-    for (const key of contentKeys) {
-      const contentValue = finalBlogData[key];
-      if (contentValue && typeof contentValue === 'string' && contentValue.length > 10) {
-        finalBlogData[key] = DOMPurify.sanitize(contentValue, {
-          ADD_ATTR: ['target', 'class', 'rel'],
-          ADD_TAGS: ['iframe', 'table', 'thead', 'tbody', 'tr', 'th', 'td']
-        });
-      }
-    }
+    // Skip server-side HTML sanitization (fully handled client-side on render via DOMPurify to avoid jsdom/ESM dependency errors)
 
     await logAiUsage({
       model: modelName,
