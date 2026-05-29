@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { type EmailOtpType } from "@supabase/supabase-js";
 import { redirect } from "next/navigation";
-import { type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { notifySignupAction } from "@/features/audit/actions";
 
 export async function GET(request: NextRequest) {
@@ -10,6 +10,14 @@ export async function GET(request: NextRequest) {
   const type = searchParams.get("type") as EmailOtpType | null;
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/protected";
+
+  console.log("🔍 [Auth Confirm] Incoming Request URL:", request.url);
+  console.log("🔍 [Auth Confirm] Search Params:", {
+    token_hash: token_hash ? `${token_hash.substring(0, 8)}...` : null,
+    type,
+    code: code ? `${code.substring(0, 8)}...` : null,
+    next
+  });
 
   const supabase = await createClient();
 
@@ -22,6 +30,7 @@ export async function GET(request: NextRequest) {
       await handleNewSignup(supabase, data.user);
       return redirect(next);
     } else {
+      console.error("❌ [Auth Confirm] Verify OTP Error:", error);
       return redirect(
         `/auth/error?error=${encodeURIComponent(error?.message || "Verify OTP failed")}`,
       );
@@ -34,16 +43,21 @@ export async function GET(request: NextRequest) {
       await handleNewSignup(supabase, data.user);
       return redirect(next);
     } else {
-      console.error("Supabase Auth Code Exchange Error:", error);
+      console.error("❌ [Auth Confirm] Supabase Auth Code Exchange Error:", error);
       return redirect(
         `/auth/error?error=${encodeURIComponent(error?.message || "Code exchange failed")}`,
       );
     }
   }
 
-  return redirect(
-    `/auth/error?error=${encodeURIComponent("No token hash, type or code found")}`,
-  );
+  console.warn("⚠️ [Auth Confirm] No token_hash/type or code found in URL params. Redirecting to client-side callback page to parse hash...");
+  
+  // ส่งไปหน้า Client-side เพื่อตรวจสอบ Token ใน Hash (#access_token=...)
+  const clientRedirectUrl = new URL("/auth/confirm", request.url);
+  searchParams.forEach((value, key) => {
+    clientRedirectUrl.searchParams.set(key, value);
+  });
+  return NextResponse.redirect(clientRedirectUrl);
 }
 
 /**
