@@ -200,6 +200,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
           link: "/protected/settings/users",
         });
 
+        reset();
         setSuccess("ส่งอีเมลยืนยันไปแล้วนะ! ไปเช็คดูใน Inbox ได้เลย");
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(
@@ -209,6 +210,7 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
           },
         );
         if (error) throw error;
+        reset();
         setSuccess("เราส่งลิงก์รีเซ็ตรหัสผ่านไปให้ทางอีเมลแล้วนะ!");
       }
     } catch (error: unknown) {
@@ -284,386 +286,401 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
             transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
             className="will-change-[transform,opacity,filter]"
           >
-            <form
-              onSubmit={handleSubmit(onFormSubmit)}
-              className="space-y-4 sm:space-y-6"
-            >
-              {/* Honeypot Field (Invisible to users) */}
-              <div className="sr-only opacity-0 absolute -z-50 pointer-events-none">
-                <input
-                  {...register("honeypot")}
-                  tabIndex={-1}
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="space-y-4">
-                {/* Email */}
+            {success ? (
+              <div className="space-y-6 text-center py-4">
+                <m.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="mx-auto w-16 h-16 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/5 animate-pulse"
+                >
+                  <CheckCircle2 className="h-8 w-8" />
+                </m.div>
                 <div className="space-y-2">
-                  <Label
-                    htmlFor="email"
-                    className={cn(
-                      "text-xs font-medium uppercase tracking-[0.15em] ml-1 transition-colors",
-                      isLogin ? "text-slate-400" : "text-slate-500",
-                    )}
-                  >
-                    อีเมล
-                  </Label>
-                  <div className="relative group">
-                    <div
-                      className={cn(
-                        "absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300",
-                        isLogin
-                          ? "text-slate-400 group-focus-within:text-blue-600"
-                          : isSignUp
-                            ? "text-slate-600 group-focus-within:text-purple-500"
-                            : "text-slate-600 group-focus-within:text-amber-500",
-                      )}
-                    >
-                      <Mail className="h-4.5 w-4.5" />
-                    </div>
-                    <Input
-                      {...register("email")}
-                      id="email"
-                      type="email"
-                      placeholder="name@company.com"
-                      className={cn(
-                        "pl-12 h-12 rounded-xl transition-all text-sm",
-                        isLogin
-                          ? "bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/5"
-                          : isSignUp
-                            ? "bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:ring-purple-500/10"
-                            : "bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-amber-500/50 focus:ring-amber-500/10",
-                        errors.email &&
-                          "border-red-500/50 focus:border-red-500",
-                      )}
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="text-[10px] text-red-500 ml-1 font-medium">
-                      {errors.email.message}
-                    </p>
-                  )}
+                  <h3 className="text-lg font-bold text-white">ดำเนินการสำเร็จ</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed px-4">
+                    {success}
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    handleSetView("login");
+                  }}
+                  className="w-full h-14 text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98] bg-linear-to-r from-blue-700 via-blue-600 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white gap-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span>กลับไปหน้าเข้าสู่ระบบ</span>
+                </Button>
+              </div>
+            ) : (
+              <form
+                onSubmit={handleSubmit(onFormSubmit)}
+                className="space-y-4 sm:space-y-6"
+              >
+                {/* Honeypot Field (Invisible to users) */}
+                <div className="sr-only opacity-0 absolute -z-50 pointer-events-none">
+                  <input
+                    {...register("honeypot")}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
                 </div>
 
-                {/* Password - Hidden in Forgot View */}
-                {!isForgot && (
+                <div className="space-y-4">
+                  {/* Email */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between ml-1">
-                      <Label
-                        htmlFor="password"
-                        className={cn(
-                          "text-xs font-medium uppercase tracking-[0.15em] transition-colors",
-                          isLogin ? "text-slate-400" : "text-slate-500",
-                        )}
-                      >
-                        รหัสผ่าน
-                      </Label>
-                      {isLogin && (
-                        <button
-                          type="button"
-                          onClick={() => handleSetView("forgot-password")}
-                          className="text-[11px] font-semibold text-blue-600 hover:text-blue-500 transition-colors underline decoration-blue-500/20 underline-offset-4"
-                        >
-                          ลืมรหัสผ่าน?
-                        </button>
+                    <Label
+                      htmlFor="email"
+                      className={cn(
+                        "text-xs font-medium uppercase tracking-[0.15em] ml-1 transition-colors",
+                        isLogin ? "text-slate-400" : "text-slate-500",
                       )}
-                    </div>
+                    >
+                      อีเมล
+                    </Label>
                     <div className="relative group">
                       <div
                         className={cn(
                           "absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300",
                           isLogin
                             ? "text-slate-400 group-focus-within:text-blue-600"
-                            : "text-slate-600 group-focus-within:text-purple-500",
+                            : isSignUp
+                              ? "text-slate-600 group-focus-within:text-purple-500"
+                              : "text-slate-600 group-focus-within:text-amber-500",
                         )}
                       >
-                        <Lock className="h-4.5 w-4.5" />
+                        <Mail className="h-4.5 w-4.5" />
                       </div>
                       <Input
-                        {...register("password")}
-                        id="password"
-                        type={showPassword ? "text" : "password"}
+                        {...register("email")}
+                        id="email"
+                        type="email"
+                        placeholder="name@company.com"
                         className={cn(
-                          "pl-12 pr-12 h-12 rounded-xl transition-all text-sm",
+                          "pl-12 h-12 rounded-xl transition-all text-sm",
                           isLogin
                             ? "bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/5"
-                            : "bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:ring-purple-500/10",
-                          errors.password &&
+                            : isSignUp
+                              ? "bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:ring-purple-500/10"
+                              : "bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-amber-500/50 focus:ring-amber-500/10",
+                          errors.email &&
                             "border-red-500/50 focus:border-red-500",
                         )}
                       />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                        {showPassword && (
+                    </div>
+                    {errors.email && (
+                      <p className="text-[10px] text-red-500 ml-1 font-medium">
+                        {errors.email.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Password - Hidden in Forgot View */}
+                  {!isForgot && (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between ml-1">
+                        <Label
+                          htmlFor="password"
+                          className={cn(
+                            "text-xs font-medium uppercase tracking-[0.15em] transition-colors",
+                            isLogin ? "text-slate-400" : "text-slate-500",
+                          )}
+                        >
+                          รหัสผ่าน
+                        </Label>
+                        {isLogin && (
                           <button
                             type="button"
-                            onClick={() => handleCopyPassword(form.getValues("password") || "")}
+                            onClick={() => handleSetView("forgot-password")}
+                            className="text-[11px] font-semibold text-blue-600 hover:text-blue-500 transition-colors underline decoration-blue-500/20 underline-offset-4"
+                          >
+                            ลืมรหัสผ่าน?
+                          </button>
+                        )}
+                      </div>
+                      <div className="relative group">
+                        <div
+                          className={cn(
+                            "absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300",
+                            isLogin
+                              ? "text-slate-400 group-focus-within:text-blue-600"
+                              : "text-slate-600 group-focus-within:text-purple-500",
+                          )}
+                        >
+                          <Lock className="h-4.5 w-4.5" />
+                        </div>
+                        <Input
+                          {...register("password")}
+                          id="password"
+                          type={showPassword ? "text" : "password"}
+                          className={cn(
+                            "pl-12 pr-12 h-12 rounded-xl transition-all text-sm",
+                            isLogin
+                              ? "bg-slate-50/50 border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-blue-500 focus:ring-blue-500/5"
+                              : "bg-white/5 border-white/10 text-white placeholder:text-slate-600 focus:border-purple-500/50 focus:ring-purple-500/10",
+                            errors.password &&
+                              "border-red-500/50 focus:border-red-500",
+                          )}
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                          {showPassword && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopyPassword(form.getValues("password") || "")}
+                              className={cn(
+                                "p-1.5 rounded-lg transition-colors",
+                                isLogin
+                                  ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
+                                  : "text-slate-500 hover:text-purple-400 hover:bg-white/5",
+                              )}
+                            >
+                              {copied ? (
+                                <Check className="h-4 w-4 text-emerald-500" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
                             className={cn(
                               "p-1.5 rounded-lg transition-colors",
                               isLogin
-                                ? "text-slate-400 hover:text-blue-600 hover:bg-blue-50"
-                                : "text-slate-500 hover:text-purple-400 hover:bg-white/5",
+                                ? "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+                                : "text-slate-600 hover:text-slate-400 hover:bg-white/5",
                             )}
                           >
-                            {copied ? (
-                              <Check className="h-4 w-4 text-emerald-500" />
+                            {showPassword ? (
+                              <EyeOff className="h-4.5 w-4.5" />
                             ) : (
-                              <Copy className="h-4 w-4" />
+                              <Eye className="h-4.5 w-4.5" />
                             )}
                           </button>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className={cn(
-                            "p-1.5 rounded-lg transition-colors",
-                            isLogin
-                              ? "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
-                              : "text-slate-600 hover:text-slate-400 hover:bg-white/5",
-                          )}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-4.5 w-4.5" />
-                          ) : (
-                            <Eye className="h-4.5 w-4.5" />
-                          )}
-                        </button>
+                        </div>
                       </div>
+                      {errors.password && (
+                        <p className="text-[10px] text-red-500 ml-1 font-medium">
+                          {errors.password.message}
+                        </p>
+                      )}
                     </div>
-                    {errors.password && (
-                      <p className="text-[10px] text-red-500 ml-1 font-medium">
-                        {errors.password.message}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Remember Me (Login only) */}
-                {isLogin && (
-                  <div className="flex items-center space-x-2 ml-1">
-                    <input
-                      type="checkbox"
-                      id="rememberMe"
-                      {...register("rememberMe")}
-                      className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <label
-                      htmlFor="rememberMe"
-                      className="text-xs font-medium text-slate-500 cursor-pointer"
-                    >
-                      จดจำฉันในระบบ
-                    </label>
-                  </div>
-                )}
-
-                {/* Confirm Password (Signup only) */}
-                {isSignUp && (
-                  <m.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    className="space-y-2 overflow-hidden"
-                  >
-                    <Label
-                      htmlFor="confirmPassword"
-                      className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 ml-1"
-                    >
-                      ยืนยันรหัสผ่าน
-                    </Label>
-                    <div className="relative group">
-                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-purple-500 transition-all duration-300">
-                        <CheckCircle2 className="h-4.5 w-4.5" />
-                      </div>
-                      <Input
-                        {...register("confirmPassword")}
-                        id="confirmPassword"
-                        type={showPassword ? "text" : "password"}
-                        className={cn(
-                          "pl-12 h-12 bg-white/5 border-white/10 text-white placeholder:text-slate-600 rounded-xl focus:border-purple-500/50 focus:ring-purple-500/10 transition-all text-sm",
-                          errors.confirmPassword &&
-                            "border-red-500/50 focus:border-red-500",
-                        )}
-                      />
-                    </div>
-                    {errors.confirmPassword && (
-                      <p className="text-[10px] text-red-500 ml-1 font-medium">
-                        {errors.confirmPassword.message}
-                      </p>
-                    )}
-                  </m.div>
-                )}
-              </div>
-
-              {error && (
-                <m.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className={cn(
-                    "p-3 rounded-xl border transition-colors",
-                    isLogin
-                      ? "bg-red-50 border-red-100"
-                      : "bg-red-500/10 border-red-500/20",
                   )}
-                >
-                  <p
+
+                  {/* Remember Me (Login only) */}
+                  {isLogin && (
+                    <div className="flex items-center space-x-2 ml-1">
+                      <input
+                        type="checkbox"
+                        id="rememberMe"
+                        {...register("rememberMe")}
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label
+                        htmlFor="rememberMe"
+                        className="text-xs font-medium text-slate-500 cursor-pointer"
+                      >
+                        จดจำฉันในระบบ
+                      </label>
+                    </div>
+                  )}
+
+                  {/* Confirm Password (Signup only) */}
+                  {isSignUp && (
+                    <m.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      className="space-y-2 overflow-hidden"
+                    >
+                      <Label
+                        htmlFor="confirmPassword"
+                        className="text-[10px] font-bold uppercase tracking-[0.15em] text-slate-500 ml-1"
+                      >
+                        ยืนยันรหัสผ่าน
+                      </Label>
+                      <div className="relative group">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-purple-500 transition-all duration-300">
+                          <CheckCircle2 className="h-4.5 w-4.5" />
+                        </div>
+                        <Input
+                          {...register("confirmPassword")}
+                          id="confirmPassword"
+                          type={showPassword ? "text" : "password"}
+                          className={cn(
+                            "pl-12 h-12 bg-white/5 border-white/10 text-white placeholder:text-slate-600 rounded-xl focus:border-purple-500/50 focus:ring-purple-500/10 transition-all text-sm",
+                            errors.confirmPassword &&
+                              "border-red-500/50 focus:border-red-500",
+                          )}
+                        />
+                      </div>
+                      {errors.confirmPassword && (
+                        <p className="text-[10px] text-red-500 ml-1 font-medium">
+                          {errors.confirmPassword.message}
+                        </p>
+                      )}
+                    </m.div>
+                  )}
+                </div>
+
+                {error && (
+                  <m.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     className={cn(
-                      "text-[13px] font-semibold flex items-center gap-2",
-                      isLogin ? "text-red-600" : "text-red-400",
+                      "p-3 rounded-xl border transition-colors",
+                      isLogin
+                        ? "bg-red-50 border-red-100"
+                        : "bg-red-500/10 border-red-500/20",
                     )}
                   >
-                    <span
+                    <p
                       className={cn(
-                        "shrink-0 w-4 h-4 flex items-center justify-center rounded-full text-[8px]",
-                        isLogin ? "bg-red-100" : "bg-red-500/20",
+                        "text-[13px] font-semibold flex items-center gap-2",
+                        isLogin ? "text-red-600" : "text-red-400",
                       )}
                     >
-                      ⚠️
-                    </span>
-                    {error}
-                  </p>
-                </m.div>
-              )}
+                      <span
+                        className={cn(
+                          "shrink-0 w-4 h-4 flex items-center justify-center rounded-full text-[8px]",
+                          isLogin ? "bg-red-100" : "bg-red-500/20",
+                        )}
+                      >
+                        ⚠️
+                      </span>
+                      {error}
+                    </p>
+                  </m.div>
+                )}
 
-              {success && (
-                <m.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="p-3 rounded-xl bg-green-500/10 border border-green-500/20"
-                >
-                  <p className="text-[13px] text-green-400 font-semibold flex items-center gap-2">
-                    <CheckCircle2 className="h-4 w-4" />
-                    {success}
-                  </p>
-                </m.div>
-              )}
-
-              <div className="pt-2 ">
-                <Button
-                  type="submit"
-                  className={cn(
-                    "w-full h-14  text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98]",
-                    isLogin
-                      ? "bg-linear-to-r from-blue-700 via-blue-600 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white"
-                      : isSignUp
-                        ? "bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
-                        : "bg-linear-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white",
-                  )}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <span className="flex items-center gap-2">
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                      แป๊บน้า...
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-2">
-                      {isLogin
-                        ? "เข้าสู่ระบบ"
-                        : isSignUp
-                          ? "ลงทะเบียน"
-                          : "ส่งลิงก์กู้คืน"}
-                      <ArrowLeft className="h-4 w-4 rotate-180" />
-                    </span>
-                  )}
-                </Button>
-              </div>
-
-              {/* Social Login Options - Hidden in Forgot View */}
-              {!isForgot && <SocialAuthButtons isLogin={isLogin} />}
-
-              <div className="text-center space-y-6 pt-4">
-                <p
-                  className={cn(
-                    "text-xs font-medium transition-colors",
-                    isLogin ? "text-slate-500" : "text-slate-500",
-                  )}
-                >
-                  {isForgot
-                    ? "นึกรหัสออกแล้วหรอ?"
-                    : isLogin
-                      ? "ยังไม่มีบัญชีหรอ?"
-                      : "มีบัญชีอยู่แล้ว?"}{" "}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleSetView(
-                        isForgot ? "login" : isLogin ? "signup" : "login",
-                      )
-                    }
+                <div className="pt-2 ">
+                  <Button
+                    type="submit"
                     className={cn(
-                      "underline underline-offset-8 transition-all font-bold",
+                      "w-full h-14  text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98]",
                       isLogin
-                        ? "text-blue-600 hover:text-blue-700 decoration-blue-500/30"
+                        ? "bg-linear-to-r from-blue-700 via-blue-600 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white"
                         : isSignUp
-                          ? "text-purple-400 hover:text-purple-300 decoration-purple-500/30"
-                          : "text-amber-400 hover:text-amber-300 decoration-amber-500/30",
+                          ? "bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white"
+                          : "bg-linear-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white",
+                    )}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                        แป๊บน้า...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        {isLogin
+                          ? "เข้าสู่ระบบ"
+                          : isSignUp
+                            ? "ลงทะเบียน"
+                            : "ส่งลิงก์กู้คืน"}
+                        <ArrowLeft className="h-4 w-4 rotate-180" />
+                      </span>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Social Login Options - Hidden in Forgot View */}
+                {!isForgot && <SocialAuthButtons isLogin={isLogin} />}
+
+                <div className="text-center space-y-6 pt-4">
+                  <p
+                    className={cn(
+                      "text-xs font-medium transition-colors",
+                      isLogin ? "text-slate-500" : "text-slate-500",
                     )}
                   >
                     {isForgot
-                      ? "กลับไปเข้าสู่ระบบ"
+                      ? "นึกรหัสออกแล้วหรอ?"
                       : isLogin
-                        ? "สมัครสมาชิกที่นี่"
-                        : "เข้าสู่ระบบเลย"}
-                  </button>
-                </p>
-
-                {/* PDPA Notice */}
-                <p className="text-[11px] text-slate-500 font-medium leading-relaxed opacity-70">
-                  การเข้าสู่ระบบถือว่าคุณยอมรับ{" "}
-                  <button
-                    type="button"
-                    className="underline hover:text-blue-500 transition-colors"
-                  >
-                    ข้อกำหนดการใช้งาน
-                  </button>{" "}
-                  และ{" "}
-                  <button
-                    type="button"
-                    className="underline hover:text-blue-500 transition-colors"
-                  >
-                    นโยบายความเป็นส่วนตัว
-                  </button>
-                </p>
-
-                <div className="flex items-center justify-center gap-3 pt-2">
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-full border transition-all",
-                      isLogin
-                        ? "bg-blue-50 border-blue-100"
-                        : "bg-white/3 border-white/5",
-                    )}
-                  >
-                    <BsShieldFillCheck
+                        ? "ยังไม่มีบัญชีหรอ?"
+                        : "มีบัญชีอยู่แล้ว?"}{" "}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleSetView(
+                          isForgot ? "login" : isLogin ? "signup" : "login",
+                        )
+                      }
                       className={cn(
-                        "h-3.5 w-3.5",
-                        isLogin ? "text-blue-600" : "text-blue-500",
+                        "underline underline-offset-8 transition-all font-bold",
+                        isLogin
+                          ? "text-blue-600 hover:text-blue-700 decoration-blue-500/30"
+                          : isSignUp
+                            ? "text-purple-400 hover:text-purple-300 decoration-purple-500/30"
+                            : "text-amber-400 hover:text-amber-300 decoration-amber-500/30",
                       )}
-                    />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                      AES-256 Secure
-                    </span>
-                  </div>
-                  <div
-                    className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-full border transition-all",
-                      isLogin
-                        ? "bg-emerald-50 border-emerald-100"
-                        : "bg-white/3 border-white/5",
-                    )}
-                  >
-                    <SiSupabase
+                    >
+                      {isForgot
+                        ? "กลับไปเข้าสู่ระบบ"
+                        : isLogin
+                          ? "สมัครสมาชิกที่นี่"
+                          : "เข้าสู่ระบบเลย"}
+                    </button>
+                  </p>
+
+                  {/* PDPA Notice */}
+                  <p className="text-[11px] text-slate-500 font-medium leading-relaxed opacity-70">
+                    การเข้าสู่ระบบถือว่าคุณยอมรับ{" "}
+                    <button
+                      type="button"
+                      className="underline hover:text-blue-500 transition-colors"
+                    >
+                      ข้อกำหนดการใช้งาน
+                    </button>{" "}
+                    และ{" "}
+                    <button
+                      type="button"
+                      className="underline hover:text-blue-500 transition-colors"
+                    >
+                      นโยบายความเป็นส่วนตัว
+                    </button>
+                  </p>
+
+                  <div className="flex items-center justify-center gap-3 pt-2">
+                    <div
                       className={cn(
-                        "h-3.5 w-3.5",
-                        isLogin ? "text-emerald-500" : "text-emerald-500",
+                        "flex items-center gap-2 px-3 py-2 rounded-full border transition-all",
+                        isLogin
+                          ? "bg-blue-50 border-blue-100"
+                          : "bg-white/3 border-white/5",
                       )}
-                    />
-                    <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
-                      Supabase Cloud
-                    </span>
+                    >
+                      <BsShieldFillCheck
+                        className={cn(
+                          "h-3.5 w-3.5",
+                          isLogin ? "text-blue-600" : "text-blue-500",
+                        )}
+                      />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                        AES-256 Secure
+                      </span>
+                    </div>
+                    <div
+                      className={cn(
+                        "flex items-center gap-2 px-3 py-2 rounded-full border transition-all",
+                        isLogin
+                          ? "bg-emerald-50 border-emerald-100"
+                          : "bg-white/3 border-white/5",
+                      )}
+                    >
+                      <SiSupabase
+                        className={cn(
+                          "h-3.5 w-3.5",
+                          isLogin ? "text-emerald-500" : "text-emerald-500",
+                        )}
+                      />
+                      <span className="text-[9px] font-bold uppercase tracking-widest text-slate-500">
+                        Supabase Cloud
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </form>
+              </form>
+            )}
           </m.div>
         </AnimatePresence>
       </m.div>

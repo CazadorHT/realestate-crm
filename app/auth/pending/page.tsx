@@ -16,6 +16,19 @@ export default function PendingApprovalPage() {
   const supabase = createClient();
   const router = useRouter();
   const [isApproved, setIsApproved] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (countdown === null) return;
+    if (countdown <= 0) {
+      router.push("/protected");
+      return;
+    }
+    const timer = setTimeout(() => {
+      setCountdown(prev => (prev !== null ? prev - 1 : null));
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [countdown, router]);
 
   useEffect(() => {
     let channel: import("@supabase/supabase-js").RealtimeChannel | undefined;
@@ -35,7 +48,7 @@ export default function PendingApprovalPage() {
 
         if (isSubscribed && profile && profile.is_active) {
           setIsApproved(true);
-          router.push("/protected");
+          setCountdown(5);
           return;
         }
 
@@ -58,7 +71,7 @@ export default function PendingApprovalPage() {
               const isActive = (payload.new as { is_active?: boolean }).is_active;
               if (isActive) {
                 setIsApproved(true);
-                router.push("/protected");
+                setCountdown(5);
               }
             }
           )
@@ -117,6 +130,10 @@ export default function PendingApprovalPage() {
 
         <Button
           onClick={async () => {
+            if (isApproved) {
+              router.push("/protected");
+              return;
+            }
             try {
               // 1. ดึง user ปัจจุบัน
               const { data: { user } } = await supabase.auth.getUser();
@@ -136,7 +153,7 @@ export default function PendingApprovalPage() {
                 // บังคับรีเฟรช Session เพื่อดึงสิทธิ์ (JWT app_metadata role) ล่าสุดจาก Supabase
                 await supabase.auth.refreshSession();
                 setIsApproved(true);
-                router.push("/protected");
+                setCountdown(5);
               } else {
                 alert("สถานะบัญชีของคุณยังอยู่ระหว่างรออนุมัติ (หากแอนมินอนุมัติแล้ว กรุณากดตรวจสอบอีกครั้งครับ)");
               }
@@ -145,12 +162,17 @@ export default function PendingApprovalPage() {
               window.location.reload();
             }
           }}
-          className="w-full h-14 text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98] bg-amber-500 hover:bg-amber-600 text-slate-950 gap-2 cursor-pointer"
+          className={cn(
+            "w-full h-14 text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98] gap-2 cursor-pointer",
+            isApproved 
+              ? "bg-emerald-500 hover:bg-emerald-600 text-white" 
+              : "bg-amber-500 hover:bg-amber-600 text-slate-950"
+          )}
         >
           {isApproved ? (
             <>
-              <CheckCircle2 className="h-5 w-5 text-emerald-950 animate-pulse" />
-              <span>เข้าสู่ระบบได้เลย! 🎉</span>
+              <CheckCircle2 className="h-5 w-5 text-white animate-pulse" />
+              <span>อนุมัติแล้ว! เข้าสู่ระบบใน ({countdown}) 🚀</span>
             </>
           ) : (
             <>
