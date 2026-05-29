@@ -456,7 +456,7 @@ export async function notifySignupAction(
 
     try {
       const { createAdminClient } = await import("@/lib/supabase/admin");
-      const supabaseAdmin = createAdminClient("internal");
+      const supabaseAdmin = createAdminClient();
       const { error: rpcError } = await supabaseAdmin.rpc("notify_admins_of_signup" as any, {
         p_email: email,
       });
@@ -468,13 +468,29 @@ export async function notifySignupAction(
       console.error("[NOTIFY] In-app Notification failed for Signup:", notifErr);
     }
 
-    // 🔔 New: Add In-app notification for Signup with Approval Hint
-    await notifyAdminsAction({
-      type: "SYSTEM",
-      title: "มีผู้สมัครสมาชิกใหม่ 🆕",
-      message: `มีผู้ใช้ใหม่สมัครสมาชิกด้วยอีเมล ${email} (รอการอนุมัติสิทธิ์ Agent 🛡️)`,
-      link: "/protected/settings/users",
-    });
+    try {
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const supabaseAdmin = createAdminClient();
+      
+      const { data: admins } = await supabaseAdmin
+        .from("profiles")
+        .select("id")
+        .eq("role", "ADMIN");
+
+      if (admins && admins.length > 0) {
+        const notifications = admins.map((admin) => ({
+          user_id: admin.id,
+          type: "SYSTEM",
+          title: "มีผู้สมัครสมาชิกใหม่ 🆕",
+          message: `มีผู้ใช้ใหม่สมัครสมาชิกด้วยอีเมล ${email} (รอการอนุมัติสิทธิ์ Agent 🛡️)`,
+          link: "/protected/settings/users",
+        }));
+
+        await supabaseAdmin.from("notifications_v3").insert(notifications);
+      }
+    } catch (adminNotifErr) {
+      console.error("[NOTIFY] Admin notification creation bypass failed:", adminNotifErr);
+    }
   } catch (error) {
     console.error("[NOTIFY] Error in notifySignupAction:", error);
   }
