@@ -40,7 +40,7 @@ export default function AuthCallbackClientPage() {
         const { data: { user } } = await supabase.auth.getUser();
         const role = user?.app_metadata?.role;
 
-        if (role === "AGENT" || role === "MANAGER" || role === "ADMIN" || role === "USER") {
+        if (role === "AGENT" || role === "MANAGER" || role === "ADMIN") {
           router.push("/protected");
         } else {
           router.push("/auth/pending");

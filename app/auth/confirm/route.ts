@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     if (!error && data?.user) {
       await handleNewSignup(supabase, data.user);
       const role = data.user.app_metadata?.role;
-      const targetPath = (role === "AGENT" || role === "MANAGER" || role === "ADMIN" || role === "USER") ? next : "/auth/pending";
+      const targetPath = (role === "AGENT" || role === "MANAGER" || role === "ADMIN") ? next : "/auth/pending";
       return redirect(targetPath);
     } else {
       console.error("❌ [Auth Confirm] Verify OTP Error:", error);
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     if (!error && data?.user) {
       await handleNewSignup(supabase, data.user);
       const role = data.user.app_metadata?.role;
-      const targetPath = (role === "AGENT" || role === "MANAGER" || role === "ADMIN" || role === "USER") ? next : "/auth/pending";
+      const targetPath = (role === "AGENT" || role === "MANAGER" || role === "ADMIN") ? next : "/auth/pending";
       return redirect(targetPath);
     } else {
       console.error("❌ [Auth Confirm] Supabase Auth Code Exchange Error:", error);

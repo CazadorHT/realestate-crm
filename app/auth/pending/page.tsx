@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { PremiumAuthLayout } from "@/components/auth/premium-auth-layout";
 import { Button } from "@/components/ui/button";
-import { Clock, ArrowLeft, ShieldCheck } from "lucide-react";
+import { Clock, ArrowLeft, ShieldCheck, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
@@ -15,6 +15,7 @@ export default function PendingApprovalPage() {
   const { t } = useLanguage();
   const supabase = createClient();
   const router = useRouter();
+  const [isApproved, setIsApproved] = useState(false);
 
   useEffect(() => {
     let channel: import("@supabase/supabase-js").RealtimeChannel | undefined;
@@ -33,6 +34,7 @@ export default function PendingApprovalPage() {
           .single();
 
         if (isSubscribed && profile && profile.role !== "USER") {
+          setIsApproved(true);
           router.push("/protected");
           return;
         }
@@ -55,6 +57,7 @@ export default function PendingApprovalPage() {
               // Safely extract the new role from the payload
               const newRole = (payload.new as { role?: string }).role;
               if (newRole && newRole !== "USER") {
+                setIsApproved(true);
                 router.push("/protected");
               }
             }
@@ -114,36 +117,35 @@ export default function PendingApprovalPage() {
 
         <Button
           onClick={async () => {
+            if (!isApproved) return;
             try {
-              // บังคับรีเฟรช Session เพื่อดึงสิทธิ์ (JWT app_metadata role) ล่าสุดจาก Supabase
               const { data: { session }, error } = await supabase.auth.refreshSession();
               if (error) throw error;
-              
-              if (session?.user?.app_metadata?.role && session.user.app_metadata.role !== "USER") {
-                router.push("/protected");
-              } else {
-                // เช็คจาก DB ตรงๆ เผื่อกรณี sync ล่าช้า
-                const { data: profile } = await supabase
-                  .from("profiles")
-                  .select("role")
-                  .eq("id", session?.user?.id || "")
-                  .single();
-
-                if (profile && profile.role !== "USER") {
-                  router.push("/protected");
-                } else {
-                  alert("สถานะบัญชีของคุณยังเป็น USER (รอการอนุมัติ) กรุณารอแอดมินดำเนินการ หรือติดต่อผู้ดูแลระบบครับ");
-                }
-              }
+              router.push("/protected");
             } catch (err: any) {
               console.error("Refresh session failed:", err);
-              // Fallback refresh หน้าจอ
               window.location.reload();
             }
           }}
-          className="w-full h-14 text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98] bg-amber-500 hover:bg-amber-600 text-slate-950 gap-2"
+          disabled={!isApproved}
+          className={cn(
+            "w-full h-14 text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98] gap-2",
+            isApproved 
+              ? "bg-emerald-500 hover:bg-emerald-600 text-white cursor-pointer" 
+              : "bg-white/5 text-slate-500 border border-white/5 cursor-not-allowed"
+          )}
         >
-          🔄 ตรวจสอบสถานะการอนุมัติอีกครั้ง
+          {isApproved ? (
+            <>
+              <CheckCircle2 className="h-5 w-5 text-emerald-200 animate-pulse" />
+              <span>เข้าสู่ระบบได้เลย! 🎉</span>
+            </>
+          ) : (
+            <>
+              <Clock className="h-5 w-5 animate-spin" />
+              <span>รอการยืนยันสิทธิ์จากแอดมิน...</span>
+            </>
+          )}
         </Button>
 
         <Button
