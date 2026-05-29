@@ -117,12 +117,17 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
             }
 
             if (
-              updatedTask.status === "ERROR" && 
+              (updatedTask.status === "ERROR" || updatedTask.status === "CANCELLED") && 
               updatedPayload.type === "BLOG_GENERATION"
             ) {
               window.dispatchEvent(new CustomEvent("BLOG_AI_GENERATION_ERROR"));
-              const errMsg = updatedTask.error_log || updatedPayload.message || "เกิดข้อผิดพลาดในการรัน AI ในระบบพื้นหลัง";
-              toast.error(`สร้างบทความล้มเหลว: ${errMsg}`);
+              const isCancelled = updatedTask.status === "CANCELLED";
+              const errMsg = updatedTask.error_log || updatedPayload.message || "การทำงานถูกยกเลิก";
+              if (isCancelled) {
+                toast.error("การสร้างบทความถูกยกเลิกแล้ว");
+              } else {
+                toast.error(`สร้างบทความล้มเหลว: ${errMsg}`);
+              }
             }
           }
         )
