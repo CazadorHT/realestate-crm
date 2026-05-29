@@ -103,6 +103,9 @@ async function handleNewSignup(supabase: any, user: any) {
         role: "AGENT", // Default role is AGENT now
         category: 1,  
         is_active: false, // Must be approved by admin
+        display_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        email: user.email || null,
       });
 
       // Sync role: "AGENT" to auth.users app_metadata

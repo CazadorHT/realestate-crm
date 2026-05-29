@@ -46,7 +46,7 @@ export async function getCurrentProfile(): Promise<Profile | null> {
   // 2. ดึงข้อมูลแบบแยกกัน (ตาราง identities_v3 และ profiles) เพื่อเลี่ยงการใช้ Join query ที่ต้องการ constraint
   const { data: identityData, error: identityError } = await supabase
     .from("identities_v3")
-    .select("id, tenant_id, category, role, display_name, email, phone, line_id, is_active, created_at, updated_at")
+    .select("id, tenant_id, category, role, display_name, email, avatar_url, phone, line_id, is_active, created_at, updated_at")
     .eq("id", user.id)
     .maybeSingle();
 

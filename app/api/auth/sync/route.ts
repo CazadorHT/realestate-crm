@@ -28,6 +28,9 @@ export async function POST(request: NextRequest) {
         role: "AGENT", 
         category: 1,  
         is_active: false,
+        display_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+        email: user.email || null,
       });
 
       // Sync role: "AGENT" to auth.users metadata
