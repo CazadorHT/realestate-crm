@@ -19,6 +19,7 @@ const TiptapEditor = dynamic(() => import("../TiptapEditor").then(mod => mod.Tip
 interface BlogContentTabProps {
   form: UseFormReturn<BlogPostInput>;
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onTitleEnChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRegenerateSlug: () => void;
   isTranslating: boolean;
   onTranslateContentOnly: () => void;
@@ -27,6 +28,7 @@ interface BlogContentTabProps {
 export function BlogContentTab({
   form,
   onTitleChange,
+  onTitleEnChange,
   onRegenerateSlug,
   isTranslating,
   onTranslateContentOnly,
@@ -79,13 +81,18 @@ export function BlogContentTab({
               <FormItem className="space-y-2">
                 <FormLabel className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
                   <Languages className="w-3 h-3" /> Title (English)
+                  <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">SEO Slug</span>
                 </FormLabel>
                 <FormControl>
                   <Input
                     {...field}
                     value={field.value ?? ""}
                     className="h-10 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-sm"
-                    placeholder="English title..."
+                    placeholder="English title (used for URL slug)..."
+                    onChange={(e) => {
+                      field.onChange(e);
+                      onTitleEnChange(e);
+                    }}
                   />
                 </FormControl>
               </FormItem>
@@ -165,7 +172,7 @@ export function BlogContentTab({
                 </div>
               </FormControl>
               <FormDescription className="text-xs text-slate-500">
-                URL จะถูกสร้างอัตโนมัติจากหัวข้อ หรือกดปุ่ม <b>Magic Slug</b> เพื่อให้ AI ช่วยปรับแต่งให้สวยงาม
+                URL สร้างอัตโนมัติจาก <b>English title</b> (SEO ดีที่สุด) หรือกด <b>Magic Slug</b> เพื่อ regenerate
               </FormDescription>
               <FormMessage />
             </FormItem>

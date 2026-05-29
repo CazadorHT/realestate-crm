@@ -178,22 +178,38 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const watchedContent = watch("content");
   const watchedIsPublished = watch("is_published");
 
-  // Auto-generate slug from title
+  // Auto-generate slug from title (prefer English title for SEO)
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const title = e.target.value;
     setValue("title", title);
     if (!initialData) {
-      const slug = generateBlogSlug(title);
+      // Use English title if available, otherwise transliterate Thai
+      const titleEn = watch("title_en");
+      const slugSource = titleEn?.trim() ? titleEn.trim() : title;
+      const slug = generateBlogSlug(slugSource);
+      setValue("slug", slug);
+    }
+  };
+
+  // Also update slug when title_en changes (only for new posts)
+  const handleTitleEnChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const titleEn = e.target.value;
+    setValue("title_en", titleEn);
+    if (!initialData) {
+      const slug = generateBlogSlug(titleEn || watch("title") || "");
       setValue("slug", slug);
     }
   };
 
   const regenerateSlug = () => {
+    // Prefer English title for SEO-friendly slug
+    const titleEn = watch("title_en");
     const title = watch("title");
-    if (title) {
-      const slug = generateBlogSlug(title);
+    const slugSource = titleEn?.trim() ? titleEn.trim() : title;
+    if (slugSource) {
+      const slug = generateBlogSlug(slugSource);
       setValue("slug", slug, { shouldDirty: true });
-      toast.success("เจนเนอเรต URL ใหม่เรียบร้อย ✨");
+      toast.success(`เจนเนอเรต URL จาก${titleEn?.trim() ? "ชื่อภาษาอังกฤษ" : "ชื่อภาษาไทย"}เรียบร้อย ✨`);
     }
   };
 
@@ -517,6 +533,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
             <BlogContentTab
               form={form}
               onTitleChange={handleTitleChange}
+              onTitleEnChange={handleTitleEnChange}
               onRegenerateSlug={regenerateSlug}
               isTranslating={isTranslating || isTranslatingContent}
               onTranslateContentOnly={handleTranslateContentOnly}
