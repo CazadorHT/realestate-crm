@@ -1533,7 +1533,7 @@ export function buildSocialPostFlex(
   // If we're getting a localhost URL in a production-like context (LINE requires HTTPS), 
   // or if the URL is empty/missing, use the verified production domain as a robust fallback.
   if (!baseUrl || baseUrl.includes("localhost") || !baseUrl.startsWith("http")) {
-    baseUrl = "https://realestate-crm-rho.vercel.app";
+    baseUrl = "https://vccasset.com";
   }
   
   baseUrl = baseUrl.replace(/\/$/, "");

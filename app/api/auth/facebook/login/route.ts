@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { metaConfig } from "@/lib/meta-config";
-import { getBaseUrl } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   const appId = metaConfig.appId;
-  const baseUrl = getBaseUrl(request);
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";
   const redirectUri = encodeURIComponent(`${baseUrl}/api/auth/callback/facebook`);
   
   const scope = [

@@ -63,11 +63,14 @@ export function formatTimeAgo(dateString: string): string {
  * Useful for OAuth redirects and absolute URL generation.
  */
 export function getBaseUrl(request: Request) {
+  // Always prefer the canonical app URL to avoid Vercel deployment URL mismatches
+  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+
   const host = request.headers.get("host");
   const protocol = host?.includes("localhost") ? "http" : "https";
 
   // Fallback for cases without Host header (e.g., Edge functions or background tasks)
-  if (!host) return process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "";
+  if (!host) return process.env.NEXT_PUBLIC_SITE_URL || "https://vccasset.com";
 
   return `${protocol}://${host}`;
 }

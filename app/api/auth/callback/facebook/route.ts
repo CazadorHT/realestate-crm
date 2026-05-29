@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { metaConfig } from "@/lib/meta-config";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { encryptValue } from "@/features/site-settings/actions";
-import { getBaseUrl } from "@/lib/utils";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -25,7 +24,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const baseUrl = getBaseUrl(request);
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";
     const redirectUri = `${baseUrl}/api/auth/callback/facebook`;
 
     // 1. Exchange code for user access token
