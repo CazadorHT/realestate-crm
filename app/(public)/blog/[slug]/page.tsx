@@ -13,6 +13,7 @@ import {
   getServerTranslations,
   getServerLanguage,
   getLocalizedField,
+  type Language,
 } from "@/lib/i18n";
 import type { Locale } from "date-fns";
 import type { Metadata } from "next";
@@ -211,7 +212,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-9">
-            <BlogDetailContent post={post} author={author} t={t} language={language} />
+            <BlogDetailContent post={post} author={author} dict={dictionaries[language as Language]} language={language} />
 
             {/* View Counter (Client-side) */}
             <BlogViewCounter id={post.id} />
@@ -223,7 +224,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             title={post.title}
             relatedPosts={relatedPosts}
             language={language}
-            t={t}
+            dict={dictionaries[language as Language]}
           />
         </div>
       </div>

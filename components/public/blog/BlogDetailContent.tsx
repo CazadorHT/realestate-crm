@@ -32,16 +32,25 @@ interface BlogDetailContentProps {
     avatar?: string;
     bio?: string;
   };
-  t: (key: string, options?: any) => string;
+  dict: Record<string, any>;
   language: string;
 }
 
 export function BlogDetailContent({
   post,
   author,
-  t,
+  dict,
   language,
 }: BlogDetailContentProps) {
+  const t = (key: string, params?: Record<string, string | number>): string => {
+    let value = key.split(".").reduce((prev: any, curr: string) => prev?.[curr], dict as any) || key;
+    if (params && typeof value === "string") {
+      Object.entries(params).forEach(([k, v]) => {
+        value = (value as string).replace(`{${k}}`, String(v));
+      });
+    }
+    return value as string;
+  };
   const [contactOpen, setContactOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
 
