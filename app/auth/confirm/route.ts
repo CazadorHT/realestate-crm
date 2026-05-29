@@ -9,14 +9,12 @@ export async function GET(request: NextRequest) {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/protected";
 
   console.log("🔍 [Auth Confirm] Incoming Request URL:", request.url);
   console.log("🔍 [Auth Confirm] Search Params:", {
     token_hash: token_hash ? `${token_hash.substring(0, 8)}...` : null,
     type,
     code: code ? `${code.substring(0, 8)}...` : null,
-    next
   });
 
   const supabase = await createClient();
@@ -26,7 +24,7 @@ export async function GET(request: NextRequest) {
   if (existingUser) {
     console.log("✅ [Auth Confirm] User already authenticated via existing session");
     await handleNewSignup(supabase, existingUser);
-    return redirect("/auth/pending");
+    return redirect(await getSmartRedirect(supabase, existingUser.id));
   }
 
   if (token_hash && type) {
@@ -36,14 +34,14 @@ export async function GET(request: NextRequest) {
     });
     if (!error && data?.user) {
       await handleNewSignup(supabase, data.user);
-      return redirect("/auth/pending");
+      return redirect(await getSmartRedirect(supabase, data.user.id));
     } else {
       // Check again if we got authenticated concurrently (e.g. by another request prefetching)
       const { data: { user: retryUser } } = await supabase.auth.getUser();
       if (retryUser) {
         console.log("✅ [Auth Confirm] Recovered: User authenticated concurrently");
         await handleNewSignup(supabase, retryUser);
-        return redirect("/auth/pending");
+        return redirect(await getSmartRedirect(supabase, retryUser.id));
       }
 
       console.error("❌ [Auth Confirm] Verify OTP Error:", error);
@@ -57,14 +55,14 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && data?.user) {
       await handleNewSignup(supabase, data.user);
-      return redirect("/auth/pending");
+      return redirect(await getSmartRedirect(supabase, data.user.id));
     } else {
       // Check again if we got authenticated concurrently
       const { data: { user: retryUser } } = await supabase.auth.getUser();
       if (retryUser) {
         console.log("✅ [Auth Confirm] Recovered: User authenticated concurrently");
         await handleNewSignup(supabase, retryUser);
-        return redirect("/auth/pending");
+        return redirect(await getSmartRedirect(supabase, retryUser.id));
       }
 
       console.error("❌ [Auth Confirm] Supabase Auth Code Exchange Error:", error);
@@ -85,22 +83,54 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * 🛡️ Helper to handle new signup logic (Logging + Auto-Tenant)
+ * 🛡️ Smart Redirect: ตรวจสอบสถานะ user เพื่อเลือก redirect ที่เหมาะสม
+ * - User ที่ approved แล้ว (is_active + staff role) → /protected
+ * - User ที่ยังรออนุมัติ → /auth/pending
+ */
+async function getSmartRedirect(supabase: any, userId: string): Promise<string> {
+  try {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_active, role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    if (profile?.is_active) {
+      const role = (profile.role as string || "").toUpperCase();
+      if (role === "ADMIN" || role === "AGENT" || role === "MANAGER" || role === "OWNER") {
+        console.log(`✅ [Auth Confirm] User ${userId} is approved staff (${role}), redirecting to /protected`);
+        return "/protected";
+      }
+    }
+  } catch (err) {
+    console.error("[Auth Confirm] Smart redirect check failed:", err);
+  }
+  
+  return "/auth/pending";
+}
+
+/**
+ * 🛡️ Helper to handle new signup logic (Logging + Identity Creation)
+ * เช็คจาก identities_v3 โดยตรง — ไม่พึ่ง timing window
  */
 async function handleNewSignup(supabase: any, user: any) {
-  // 1. Check if it's a new signup
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id, created_at")
+  // 1. เช็คว่ามี identities_v3 record อยู่แล้วหรือยัง (แหล่งความจริงเดียว)
+  const { data: existingIdentity } = await supabase
+    .from("identities_v3")
+    .select("id")
     .eq("id", user.id)
     .maybeSingle();
 
-  const isNewSignup = !profile || (
-    profile.created_at && 
-    (new Date().getTime() - new Date(profile.created_at).getTime() < 30000)
-  );
+  // ถ้ามี identity แล้ว = ไม่ใช่ user ใหม่ → ข้ามไป
+  if (existingIdentity) {
+    console.log(`[handleNewSignup] Identity already exists for user ${user.id}, skipping.`);
+    return;
+  }
 
-  if (isNewSignup) {
+  // 2. New user! → แจ้งเตือนแอดมิน
+  console.log(`[handleNewSignup] New user detected: ${user.id}, processing signup...`);
+  
+  try {
     await notifySignupAction(
       user.email || user.user_metadata?.email || "Unknown OAuth User",
       user.id,
@@ -109,38 +139,50 @@ async function handleNewSignup(supabase: any, user: any) {
         avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture
       }
     );
+  } catch (notifyErr) {
+    console.error("[handleNewSignup] Notification failed (non-blocking):", notifyErr);
+  }
 
-    const { data: existingIdentity } = await supabase
-      .from("identities_v3")
-      .select("id")
-      .eq("id", user.id)
-      .maybeSingle();
+  // 3. สร้าง identities_v3 record ด้วย role = AGENT, is_active = false
+  console.log(`[handleNewSignup] Creating identities_v3 record with AGENT role for new user: ${user.id}`);
+  const { error: insertError } = await supabase.from("identities_v3").insert({
+    id: user.id,
+    role: "AGENT",
+    category: 1,  
+    is_active: false, // Must be approved by admin
+    display_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+    avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
+    email: user.email || null,
+  });
 
-    if (!existingIdentity) {
-      console.log(`[handleNewSignup] Creating identities_v3 record with AGENT role for new user: ${user.id}`);
-      await supabase.from("identities_v3").insert({
-        id: user.id,
-        role: "AGENT", // Default role is AGENT now
-        category: 1,  
-        is_active: false, // Must be approved by admin
-        display_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-        avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-        email: user.email || null,
-      });
+  if (insertError) {
+    console.error("[handleNewSignup] Failed to create identities_v3:", insertError);
+    return;
+  }
 
-      // Sync role: "AGENT" to auth.users app_metadata
-      try {
-        const { createAdminClient } = await import("@/lib/supabase/admin");
-        const adminSupabase = createAdminClient();
-        await adminSupabase.auth.admin.updateUserById(user.id, {
-          app_metadata: {
-            role: "AGENT"
-          }
-        });
-        console.log(`✅ [AuthSync] Initial metadata set to AGENT for user ${user.id}`);
-      } catch (syncErr) {
-        console.error("❌ [AuthSync] Error syncing initial AGENT metadata:", syncErr);
+  // 4. Sync profiles.role → AGENT (DB trigger สร้าง profiles ด้วย role = USER, ต้อง sync ให้ตรง)
+  const { error: profileUpdateError } = await supabase
+    .from("profiles")
+    .update({ role: "AGENT" })
+    .eq("id", user.id);
+
+  if (profileUpdateError) {
+    console.error("[handleNewSignup] Failed to sync profiles.role to AGENT:", profileUpdateError);
+  } else {
+    console.log(`✅ [handleNewSignup] profiles.role synced to AGENT for user ${user.id}`);
+  }
+
+  // 5. Sync role: "AGENT" to auth.users app_metadata
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminSupabase = createAdminClient();
+    await adminSupabase.auth.admin.updateUserById(user.id, {
+      app_metadata: {
+        role: "AGENT"
       }
-    }
+    });
+    console.log(`✅ [AuthSync] Initial metadata set to AGENT for user ${user.id}`);
+  } catch (syncErr) {
+    console.error("❌ [AuthSync] Error syncing initial AGENT metadata:", syncErr);
   }
 }
