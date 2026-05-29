@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
   console.warn("⚠️ [Auth Confirm] No token_hash/type or code found in URL params. Redirecting to client-side callback page to parse hash...");
   
   // ส่งไปหน้า Client-side เพื่อตรวจสอบ Token ใน Hash (#access_token=...)
-  const clientRedirectUrl = new URL("/auth/confirm", request.url);
+  const clientRedirectUrl = new URL("/auth/confirm/callback", request.url);
   searchParams.forEach((value, key) => {
     clientRedirectUrl.searchParams.set(key, value);
   });

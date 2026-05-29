@@ -12,7 +12,6 @@ export default function AuthCallbackClientPage() {
     const supabase = createClient();
 
     const handleSession = async () => {
-      // 1. ตรวจสอบว่ามี error ใน URL หรือไม่
       const params = new URLSearchParams(window.location.search);
       const error = params.get("error");
       const errorDescription = params.get("error_description");
@@ -22,7 +21,6 @@ export default function AuthCallbackClientPage() {
         return;
       }
 
-      // 2. ตรวจสอบ Session จาก Supabase client (มันจะคอยดึง hash อัตโนมัติอยู่แล้ว)
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
       if (sessionError) {
@@ -31,12 +29,10 @@ export default function AuthCallbackClientPage() {
       }
 
       if (session) {
-        // ล็อกอินสำเร็จ ย้ายไปหน้าหลัก
         router.push("/protected");
         return;
       }
 
-      // 3. ฟังการเปลี่ยนแปลงของ auth state (เช่น ตอนยิงกลับมาแล้ว session โหลดเสร็จ)
       const { data: { subscription } } = supabase.auth.onAuthStateChange(
         async (event, session) => {
           if (event === "SIGNED_IN" && session) {
@@ -45,7 +41,6 @@ export default function AuthCallbackClientPage() {
         }
       );
 
-      // ตั้ง timeout เพื่อแสดง error หากไม่มีอะไรเกิดขึ้นใน 10 วินาที
       const timer = setTimeout(() => {
         setErrorMsg("เข้าสู่ระบบใช้เวลานานเกินไป หรือไม่พบรหัสโทเค็น");
       }, 10000);
