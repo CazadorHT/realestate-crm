@@ -117,33 +117,45 @@ export default function PendingApprovalPage() {
 
         <Button
           onClick={async () => {
-            if (!isApproved) return;
             try {
-              const { data: { session }, error } = await supabase.auth.refreshSession();
-              if (error) throw error;
-              router.push("/protected");
+              // 1. ดึง user ปัจจุบัน
+              const { data: { user } } = await supabase.auth.getUser();
+              if (!user) {
+                window.location.reload();
+                return;
+              }
+
+              // 2. ตรวจสอบข้อมูลจาก DB profiles โดยตรง (เพราะแอดมินแก้ไข role ที่ตารางนี้)
+              const { data: profile } = await supabase
+                .from("profiles")
+                .select("role")
+                .eq("id", user.id)
+                .maybeSingle();
+
+              if (profile && profile.role !== "USER") {
+                // บังคับรีเฟรช Session เพื่อดึงสิทธิ์ (JWT app_metadata role) ล่าสุดจาก Supabase
+                await supabase.auth.refreshSession();
+                setIsApproved(true);
+                router.push("/protected");
+              } else {
+                alert("สถานะบัญชีของคุณยังอยู่ระหว่างรออนุมัติ (หากแอนมินอนุมัติแล้ว กรุณากดตรวจสอบอีกครั้งครับ)");
+              }
             } catch (err: any) {
               console.error("Refresh session failed:", err);
               window.location.reload();
             }
           }}
-          disabled={!isApproved}
-          className={cn(
-            "w-full h-14 text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98] gap-2",
-            isApproved 
-              ? "bg-emerald-500 hover:bg-emerald-600 text-white cursor-pointer" 
-              : "bg-white/5 text-slate-500 border border-white/5 cursor-not-allowed"
-          )}
+          className="w-full h-14 text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98] bg-amber-500 hover:bg-amber-600 text-slate-950 gap-2 cursor-pointer"
         >
           {isApproved ? (
             <>
-              <CheckCircle2 className="h-5 w-5 text-emerald-200 animate-pulse" />
+              <CheckCircle2 className="h-5 w-5 text-emerald-950 animate-pulse" />
               <span>เข้าสู่ระบบได้เลย! 🎉</span>
             </>
           ) : (
             <>
-              <Clock className="h-5 w-5 animate-spin" />
-              <span>รอการยืนยันสิทธิ์จากแอดมิน...</span>
+              <Clock className="h-5 w-5" />
+              <span>🔄 ตรวจสอบสถานะการอนุมัติอีกครั้ง</span>
             </>
           )}
         </Button>
