@@ -29,23 +29,27 @@ export const dailyContractExpiryCheck = inngest.createFunction(
       });
 
       const { data, error } = await supabase
-        .from("rental_contracts")
+        .from("crm_deals_v3")
         .select(`
           id,
-          end_date,
+          transaction_end_date,
           status,
-          deals (
-            id,
-            properties (title),
-            leads (
-              full_name,
-              assigned_to,
-              agent:profiles!assigned_to (telegram_id)
+          properties (
+            title
+          ),
+          leads (
+            full_name,
+            assigned_to,
+            agent:identities_v3!assigned_to (
+              profiles (
+                telegram_id
+              )
             )
           )
         `)
-        .in("end_date", targetDates)
-        .eq("status", "ACTIVE");
+        .in("transaction_end_date", targetDates)
+        .eq("status", "WON")
+        .eq("deal_type", "RENT");
 
       if (error) throw error;
       return data || [];
@@ -57,7 +61,8 @@ export const dailyContractExpiryCheck = inngest.createFunction(
       const now = new Date();
 
       for (const contract of expiringContracts) {
-        const endDate = new Date(contract.end_date);
+        if (!contract.transaction_end_date) continue;
+        const endDate = new Date(contract.transaction_end_date);
         const diffDays = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         
         // Extract joined data safely with proper typing
@@ -65,20 +70,22 @@ export const dailyContractExpiryCheck = inngest.createFunction(
           properties: { title: string } | null;
           leads: { 
             full_name: string | null; 
-            agent: { telegram_id: string | null } | null; 
+            agent: { 
+              profiles: { telegram_id: string | null } | null;
+            } | null;
           } | null;
         };
 
-        const deal = (Array.isArray(contract.deals) ? contract.deals[0] : contract.deals) as unknown as JoinedDeal | null;
+        const deal = contract as unknown as JoinedDeal | null;
         const propertyName = deal?.properties?.title || "Unknown Property";
         const customerName = deal?.leads?.full_name || "Unknown Customer";
-        const agentTgId = deal?.leads?.agent?.telegram_id;
+        const agentTgId = deal?.leads?.agent?.profiles?.telegram_id;
 
         const message = formatContractExpiryNotification({
           contractId: contract.id,
           propertyName,
           customerName,
-          endDate: contract.end_date,
+          endDate: contract.transaction_end_date,
           daysRemaining: diffDays,
         });
 
