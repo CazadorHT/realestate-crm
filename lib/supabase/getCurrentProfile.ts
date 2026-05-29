@@ -43,20 +43,25 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     return null;
   }
 
-  // 2. ดึงข้อมูลแบบ Join ระหว่าง Identity (Source of Truth) และ Profile (Business Details)
-  const { data, error: identityError } = await supabase
+  // 2. ดึงข้อมูลแบบแยกกัน (ตาราง identities_v3 และ profiles) เพื่อเลี่ยงการใช้ Join query ที่ต้องการ constraint
+  const { data: identityData, error: identityError } = await supabase
     .from("identities_v3")
-    .select(`
-      *,
-      profile:profiles!id(
-        *
-      )
-    `)
+    .select("id, tenant_id, category, role, display_name, email, phone, line_id, is_active, created_at, updated_at")
     .eq("id", user.id)
-    .single();
+    .maybeSingle();
 
-  const identity = data as unknown as IdentityWithProfile;
-  const profile = identity?.profile;
+  let profileData = null;
+  if (identityData) {
+    const { data: pData } = await supabase
+      .from("profiles")
+      .select("id, full_name, display_name, email, avatar_url, phone, role, bio, line_id, line_user_id, telegram_id, facebook_url, whatsapp_id, wechat_id, tax_id, tax_address, bank_code, bank_account_no, bank_account_name, other_bank_name, notification_preferences, metadata, is_active, last_seen_at, created_at, updated_at, deleted_at, last_login_at, last_ip, nickname, signature_url, wechat_user_id, whatsapp_user_id")
+      .eq("id", user.id)
+      .maybeSingle();
+    profileData = pData;
+  }
+
+  const identity = identityData as unknown as IdentityRow;
+  const profile = profileData as unknown as ProfileRow | null;
 
   if (identityError || !identity) {
     console.warn("Identity not found in DB, using auth metadata", identityError);

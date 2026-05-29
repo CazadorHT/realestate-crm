@@ -113,6 +113,40 @@ export default function PendingApprovalPage() {
         </m.div>
 
         <Button
+          onClick={async () => {
+            try {
+              // บังคับรีเฟรช Session เพื่อดึงสิทธิ์ (JWT app_metadata role) ล่าสุดจาก Supabase
+              const { data: { session }, error } = await supabase.auth.refreshSession();
+              if (error) throw error;
+              
+              if (session?.user?.app_metadata?.role && session.user.app_metadata.role !== "USER") {
+                router.push("/protected");
+              } else {
+                // เช็คจาก DB ตรงๆ เผื่อกรณี sync ล่าช้า
+                const { data: profile } = await supabase
+                  .from("profiles")
+                  .select("role")
+                  .eq("id", session?.user?.id || "")
+                  .single();
+
+                if (profile && profile.role !== "USER") {
+                  router.push("/protected");
+                } else {
+                  alert("สถานะบัญชีของคุณยังเป็น USER (รอการอนุมัติ) กรุณารอแอดมินดำเนินการ หรือติดต่อผู้ดูแลระบบครับ");
+                }
+              }
+            } catch (err: any) {
+              console.error("Refresh session failed:", err);
+              // Fallback refresh หน้าจอ
+              window.location.reload();
+            }
+          }}
+          className="w-full h-14 text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98] bg-amber-500 hover:bg-amber-600 text-slate-950 gap-2"
+        >
+          🔄 ตรวจสอบสถานะการอนุมัติอีกครั้ง
+        </Button>
+
+        <Button
           asChild
           className="w-full h-14 text-base font-bold shadow-2xl rounded-xl transition-all active:scale-[0.98] bg-linear-to-r from-slate-800 to-slate-900 hover:from-slate-700 hover:to-slate-800 text-white border border-white/10"
         >
