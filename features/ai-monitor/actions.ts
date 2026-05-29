@@ -59,7 +59,6 @@ export async function logAiUsage(input: AiLogInput) {
       p_prompt_tokens: input.promptTokens || 0,
       p_completion_tokens: input.completionTokens || 0,
       p_cost_thb: costThb,
-      p_user_id: finalUserId || null, // 👈 ส่ง User ID ไปที่ RPC
     });
 
     if (error) {

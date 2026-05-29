@@ -124,25 +124,25 @@ export async function generateBlogPost(
   switch (length) {
     case "Short":
       lengthInstruction = "เขียนแบบกระชับ (Concise) เน้นสาระสำคัญ";
-      minWords = "ประมาณ 600 - 800";
-      sectionCount = "4-5 หัวข้อ";
+      minWords = "ประมาณ 300 - 450";
+      sectionCount = "3-4 หัวข้อ";
       tableCount = "อย่างน้อย 1 ตารางเพื่อสรุปข้อมูล";
       faqCount = "3 ข้อ";
       break;
     case "Long":
       lengthInstruction = "เขียนแบบเจาะลึกพิเศษ (Comprehensive In-depth Guide) พร้อมสถิติและข้อมูลอ้างอิง";
-      minWords = "ประมาณ 2,000 - 2,500";
-      sectionCount = "10-12 หัวข้อ";
-      tableCount = "อย่างน้อย 3 ตารางเพื่อเปรียบเทียบข้อมูลหรือสรุปราคา/ทำเล";
-      faqCount = "5 ข้อ";
+      minWords = "ประมาณ 1,000 - 1,200";
+      sectionCount = "6-8 หัวข้อ";
+      tableCount = "อย่างน้อย 2 ตารางเพื่อเปรียบเทียบข้อมูลหรือสรุปราคา/ทำเล";
+      faqCount = "4 ข้อ";
       break;
     case "Medium":
     default:
       lengthInstruction = "เขียนแบบมาตรฐาน (Professional SEO Article) สมดุลระหว่างเนื้อหาและรายละเอียด";
-      minWords = "ประมาณ 1,200 - 1,500";
-      sectionCount = "6-8 หัวข้อ";
-      tableCount = "อย่างน้อย 2 ตารางเพื่อเปรียบเทียบข้อมูล";
-      faqCount = "4 ข้อ";
+      minWords = "ประมาณ 600 - 800";
+      sectionCount = "4-5 หัวข้อ";
+      tableCount = "อย่างน้อย 1-2 ตารางเพื่อเปรียบเทียบข้อมูล";
+      faqCount = "3 ข้อ";
       break;
   }
 
