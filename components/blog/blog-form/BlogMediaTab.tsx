@@ -4,7 +4,6 @@ import React from "react";
 import { UseFormReturn } from "react-hook-form";
 import { BlogPostInput } from "@/features/blog/types";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -12,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { ImageIcon, Tag, Calendar as CalendarIcon } from "lucide-react";
 import { BlogImageUploader } from "../BlogImageUploader";
 import { CategoryDialog } from "../CategoryDialog";
+import { CategoryResponsiveSelect } from "./CategoryResponsiveSelect";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -20,6 +20,7 @@ interface BlogMediaTabProps {
   form: UseFormReturn<BlogPostInput>;
   categories: { id: string; name: string }[];
 }
+
 
 export function BlogMediaTab({ form, categories }: BlogMediaTabProps) {
   return (
@@ -75,27 +76,13 @@ export function BlogMediaTab({ form, categories }: BlogMediaTabProps) {
                   <FormLabel className="text-slate-700 font-medium">
                     หมวดหมู่
                   </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-11 border-slate-200">
-                        <SelectValue placeholder="เลือกหมวดหมู่" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="General">General</SelectItem>
-                      {categories.map(
-                        (cat) =>
-                          cat.name !== "General" && (
-                            <SelectItem key={cat.id} value={cat.name}>
-                              {cat.name}
-                            </SelectItem>
-                          ),
-                      )}
-                    </SelectContent>
-                  </Select>
+                  <FormControl>
+                    <CategoryResponsiveSelect
+                      value={field.value || ""}
+                      onValueChange={field.onChange}
+                      categories={categories}
+                    />
+                  </FormControl>
                   <div className="pt-2">
                     <CategoryDialog categories={categories} />
                   </div>

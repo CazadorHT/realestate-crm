@@ -80,7 +80,7 @@ export const blogGenerateRequestedEvent = eventType("blog.generate.requested", {
     length: string;
     imageStyle: string;
     authorId: string;
-    tenantId: string;
+    tenantId: string | null;
   }>(),
 });
 

@@ -115,6 +115,29 @@ export async function generateBlogPost(
   const aiConfig = await getAiModelConfig();
   const modelName = aiConfig.blog_generator_model;
 
+  // 📂 Fetch real categories from the database so AI maps to them directly
+  let categoriesList: string[] = [];
+  try {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const supabaseAdmin = createAdminClient();
+    const { data: dbCategories } = await supabaseAdmin
+      .from("cms_content_v3")
+      .select("title")
+      .eq("content_type", "CATEGORY");
+    
+    if (dbCategories) {
+      categoriesList = dbCategories
+        .map((c: any) => ((c.title || {}) as Record<string, any>).th)
+        .filter(Boolean);
+    }
+  } catch (err) {
+    console.error("Failed to fetch real categories for AI generator:", err);
+  }
+
+  const categoriesInstruction = categoriesList.length > 0
+    ? `${categoriesList.map(c => `"${c}"`).join(", ")}`
+    : `"คู่มือซื้อขายบ้าน", "การลงทุนอสังหาฯ", "เทรนด์และสถิติตลาด", "ไลฟ์สไตล์และการแต่งบ้าน", "รีวิวโครงการและทำเล"`;
+
   let lengthInstruction = "";
   let minWords = "";
   let sectionCount = "";
@@ -186,7 +209,7 @@ export async function generateBlogPost(
       "excerpt": "150-160 chars summary for SEO",
       "excerpt_en": "...",
       "content": "Full HTML Content (TH) including Table, FAQ, Infographic Ideas, and CTAs",
-      "category": "...",
+      "category": "เลือกจากรายการนี้เท่านั้น: ${categoriesInstruction}",
       "tags": "tag1, tag2, tag3",
       "seo_score": 95,
       "faqs": [

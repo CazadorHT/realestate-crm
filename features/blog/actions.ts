@@ -869,7 +869,7 @@ export async function generateBlogPostAction(
           length,
           imageStyle,
           authorId: user.id,
-          tenantId: tenantId || "default",
+          tenantId: tenantId || null,
           metadata: {
             userAgent: (await (await import("next/headers")).headers()).get("user-agent") || "unknown",
             referer: (await (await import("next/headers")).headers()).get("referer") || "unknown",
