@@ -563,7 +563,7 @@ export function BlogsTable({
                             {navigatingId === post.id && (
                               <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-1" />
                             )}
-                            <span className="font-bold line-clamp-1 text-slate-900 group-hover:text-blue-600 transition-colors">
+                            <span className="font-bold line-clamp-1 truncate text-slate-900 group-hover:text-blue-600 transition-colors">
                               {post.title}
                             </span>
                           </div>

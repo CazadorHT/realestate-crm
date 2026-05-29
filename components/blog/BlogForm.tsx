@@ -356,6 +356,37 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     }
   };
 
+  const [isTranslatingContent, setIsTranslatingContent] = useState(false);
+
+  const handleTranslateContentOnly = async () => {
+    const content = form.getValues("content");
+    if (!content || content.trim() === "" || content === "<p></p>") {
+      toast.error("กรุณาระบุเนื้อหาภาษาไทยก่อนแปลภาษา");
+      return;
+    }
+
+    const processId = startProcess("กำลังแปลเฉพาะเนื้อหาบทความ (AI Content Translator)", {
+      onRetry: handleTranslateContentOnly
+    });
+
+    setIsTranslatingContent(true);
+    try {
+      const contentRes = await translateTextAction(content, "html");
+      form.setValue("content_en", contentRes.en, { shouldDirty: true });
+      form.setValue("content_cn", contentRes.cn, { shouldDirty: true });
+      form.setValue("content_ru", contentRes.ru, { shouldDirty: true });
+
+      finishProcess(processId, "SUCCESS", "แปลเฉพาะเนื้อหาเรียบร้อยแล้ว ✨");
+      form.setValue("requires_ai_review", true, { shouldDirty: true });
+    } catch (error: unknown) {
+      console.error("Translation error:", error);
+      const msg = error instanceof Error ? error.message : "การแปลขัดข้อง";
+      finishProcess(processId, "ERROR", msg);
+    } finally {
+      setIsTranslatingContent(false);
+    }
+  };
+
   async function onSubmit(data: BlogPostInput) {
     setIsSubmitting(true);
     try {
@@ -451,6 +482,8 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
           jsonInput={jsonInput}
           setJsonInput={setJsonInput}
           onImport={handleImport}
+          isTranslating={isTranslating}
+          onTranslate={handleTranslateBlog}
         />
 
         {/* Main Content with Tabs */}
@@ -483,10 +516,10 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
           <TabsContent value="content">
             <BlogContentTab
               form={form}
-              isTranslating={isTranslating}
-              onTranslate={handleTranslateBlog}
               onTitleChange={handleTitleChange}
               onRegenerateSlug={regenerateSlug}
+              isTranslating={isTranslating || isTranslatingContent}
+              onTranslateContentOnly={handleTranslateContentOnly}
             />
           </TabsContent>
 

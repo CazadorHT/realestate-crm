@@ -3,7 +3,7 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Eye, EyeOff, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Save, Loader2, Languages } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { UseFormReturn } from "react-hook-form";
 import { BlogPostInput } from "@/features/blog/types";
@@ -25,6 +25,8 @@ interface BlogHeaderProps {
   jsonInput: string;
   setJsonInput: (input: string) => void;
   onImport: () => void;
+  isTranslating: boolean;
+  onTranslate: () => void;
 }
 
 export function BlogHeader({
@@ -38,6 +40,8 @@ export function BlogHeader({
   jsonInput,
   setJsonInput,
   onImport,
+  isTranslating,
+  onTranslate,
 }: BlogHeaderProps) {
   const router = useRouter();
   const watchedIsPublished = form.watch("is_published");
@@ -110,6 +114,22 @@ export function BlogHeader({
                 }
               />
             </div>
+
+            {/* AI Translator */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onTranslate}
+              disabled={isTranslating || !watchedTitle?.trim()}
+              className="gap-2 border-violet-200 text-violet-700! hover:bg-violet-50 h-10 md:h-12 text-xs md:text-sm font-semibold"
+            >
+              {isTranslating ? (
+                <Loader2 className="h-4 w-4 animate-spin text-violet-600" />
+              ) : (
+                <Languages className="h-4 w-4 text-violet-600" />
+              )}
+              {isTranslating ? "กำลังแปลภาษา..." : "แปลภาษาด้วย AI ทั้งหมด"}
+            </Button>
 
             <Button
               type="submit"

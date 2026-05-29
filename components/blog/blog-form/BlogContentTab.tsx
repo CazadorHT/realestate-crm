@@ -18,18 +18,18 @@ const TiptapEditor = dynamic(() => import("../TiptapEditor").then(mod => mod.Tip
 
 interface BlogContentTabProps {
   form: UseFormReturn<BlogPostInput>;
-  isTranslating: boolean;
-  onTranslate: () => void;
   onTitleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRegenerateSlug: () => void;
+  isTranslating: boolean;
+  onTranslateContentOnly: () => void;
 }
 
 export function BlogContentTab({
   form,
-  isTranslating,
-  onTranslate,
   onTitleChange,
   onRegenerateSlug,
+  isTranslating,
+  onTranslateContentOnly,
 }: BlogContentTabProps) {
   return (
     <div className="space-y-6">
@@ -54,21 +54,6 @@ export function BlogContentTab({
                 <FormLabel className="text-slate-700 font-medium">
                   หัวข้อบทความ (ไทย) <span className="text-red-500">*</span>
                 </FormLabel>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={onTranslate}
-                  disabled={isTranslating}
-                  className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1.5 transition-all text-xs"
-                >
-                  {isTranslating ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Sparkles className="h-3.5 w-3.5 text-amber-500" />
-                  )}
-                  AI แปลทุกส่วนเป็น EN/CN/RU
-                </Button>
               </div>
               <FormControl>
                 <Input
@@ -200,6 +185,22 @@ export function BlogContentTab({
               <p className="text-sm text-slate-500">เขียนเนื้อหาด้วย Rich Text Editor แยกตามภาษา</p>
             </div>
           </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onTranslateContentOnly}
+            disabled={isTranslating || !form.watch("content")?.trim()}
+            className="self-start md:self-center gap-1.5 border-purple-200 text-purple-700! hover:bg-purple-50 h-9 text-xs font-semibold"
+          >
+            {isTranslating ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-600" />
+            ) : (
+              <Languages className="h-3.5 w-3.5 text-purple-600" />
+            )}
+            แปลเฉพาะเนื้อหาส่วนนี้ (EN/CN/RU) 
+          </Button>
         </div>
 
         <Tabs defaultValue="th" className="w-full">
