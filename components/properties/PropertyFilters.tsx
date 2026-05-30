@@ -38,6 +38,7 @@ type Filters = {
   fullyFurnished: string;
   allBranches: string;
   needsAiReview: string;
+  assignedToMe: string;
 };
 
 const DEFAULT_FILTERS: Filters = {
@@ -59,6 +60,7 @@ const DEFAULT_FILTERS: Filters = {
   fullyFurnished: "",
   allBranches: "",
   needsAiReview: "",
+  assignedToMe: "",
 };
 
 interface PropertyFiltersProps {
@@ -97,6 +99,7 @@ export function PropertyFilters({
     fullyFurnished: searchParams.get("fullyFurnished") || "",
     allBranches: searchParams.get("allBranches") || "",
     needsAiReview: searchParams.get("needsAiReview") || "",
+    assignedToMe: searchParams.get("assignedToMe") || "",
   });
 
   const applyFilters = useMemo(() => {
@@ -192,6 +195,8 @@ export function PropertyFilters({
         searchParams.get("allBranches") || DEFAULT_FILTERS.allBranches,
       needsAiReview:
         searchParams.get("needsAiReview") || DEFAULT_FILTERS.needsAiReview,
+      assignedToMe:
+        searchParams.get("assignedToMe") || DEFAULT_FILTERS.assignedToMe,
     }));
   }, [searchParams]);
 
@@ -268,7 +273,7 @@ export function PropertyFilters({
           <TrashButton />
         </div>
 
-        {/* ✨ Sentinel Quick Filter Chip */}
+        {/* ✨ Sentinel Quick Filter Chip & Own Properties Chip */}
         <div className="flex items-center gap-2 ml-auto lg:ml-0">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -314,6 +319,53 @@ export function PropertyFilters({
               className="bg-slate-900 border-slate-800 text-white font-medium"
             >
               แสดงเฉพาะรายการที่ AI ร่างข้อมูลให้ (รอคุณตรวจสอบ)
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                id="tour-property-my-filter"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const nextVal =
+                    filters.assignedToMe === "true" ? "" : "true";
+                  setFilters({ ...filters, assignedToMe: nextVal });
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (nextVal === "true") params.set("assignedToMe", "true");
+                  else params.delete("assignedToMe");
+                  params.delete("page");
+                  startTransition(() => {
+                    router.push(
+                      `/protected/properties?${params.toString()}#table`,
+                      { scroll: false },
+                    );
+                  });
+                }}
+                className={cn(
+                  "h-9 rounded-full px-4 border-dashed transition-all duration-300",
+                  filters.assignedToMe === "true"
+                    ? "bg-blue-50! border-blue-400 text-blue-700! shadow-sm ring-1 ring-blue-200"
+                    : "bg-white! text-slate-500! hover:border-blue-300 hover:bg-slate-50",
+                )}
+              >
+                <span
+                  className={cn(
+                    "mr-1.5 flex h-2 w-2 rounded-full",
+                    filters.assignedToMe === "true"
+                      ? "bg-blue-600 animate-pulse"
+                      : "bg-slate-300",
+                  )}
+                />
+                👤 ทรัพย์ของฉัน
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="bottom"
+              className="bg-slate-900 border-slate-800 text-white font-medium"
+            >
+              แสดงเฉพาะรายการทรัพย์สินที่คุณได้รับมอบหมาย
             </TooltipContent>
           </Tooltip>
         </div>

@@ -64,6 +64,7 @@ export default async function PropertiesPage({
     petFriendly?: string;
     fullyFurnished?: string;
     allBranches?: string;
+    assignedToMe?: string;
     page?: string;
   }>;
 }) {

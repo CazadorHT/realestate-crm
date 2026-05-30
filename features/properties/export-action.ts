@@ -16,6 +16,7 @@ import { getSystemConfig } from "@/lib/actions/system-config";
 import { PropertyStatus, PropertyType, ListingType } from "./types";
 
 const PROPERTY_COLUMNS: ExcelColumn[] = [
+  { key: "id", header: "รหัสทรัพย์", width: 36 },
   { key: "title", header: "ชื่อทรัพย์", width: 30 },
   { key: "property_type", header: "ประเภท", width: 15 },
   {
@@ -32,23 +33,43 @@ const PROPERTY_COLUMNS: ExcelColumn[] = [
     format: formatThaiCurrency,
   },
   {
+    key: "original_price",
+    header: "ราคาขายตั้งต้น",
+    width: 15,
+    format: formatThaiCurrency,
+  },
+  {
     key: "rental_price",
     header: "ราคาเช่า/เดือน",
+    width: 15,
+    format: formatThaiCurrency,
+  },
+  {
+    key: "original_rental_price",
+    header: "ราคาเช่าตั้งต้น",
     width: 15,
     format: formatThaiCurrency,
   },
   { key: "bedrooms", header: "ห้องนอน", width: 10 },
   { key: "bathrooms", header: "ห้องน้ำ", width: 10 },
   { key: "size_sqm", header: "พื้นที่ (ตร.ม.)", width: 12 },
+  { key: "land_size_sqwah", header: "พื้นที่ดิน (ตร.วา)", width: 15 },
+  { key: "floor", header: "ชั้น", width: 8 },
+  { key: "parking_slots", header: "ที่จอดรถ (คัน)", width: 12 },
   { key: "district", header: "เขต/อำเภอ", width: 15 },
   { key: "subdistrict", header: "แขวง/ตำบล", width: 15 },
   { key: "province", header: "จังหวัด", width: 15 },
+  { key: "postal_code", header: "รหัสไปรษณีย์", width: 12 },
+  { key: "address_line1", header: "ที่อยู่", width: 30 },
+  { key: "google_maps_link", header: "ลิงก์ Google Maps", width: 30 },
   {
-    key: "is_near_train",
+    key: "near_transit",
     header: "ใกล้รถไฟฟ้า",
     width: 12,
     format: formatBoolean,
   },
+  { key: "transit_station_name", header: "สถานีรถไฟฟ้าใกล้เคียง", width: 20 },
+  { key: "transit_distance_meters", header: "ระยะห่างจากสถานี (เมตร)", width: 22 },
   {
     key: "is_pet_friendly",
     header: "เลี้ยงสัตว์ได้",
@@ -56,8 +77,69 @@ const PROPERTY_COLUMNS: ExcelColumn[] = [
     format: formatBoolean,
   },
   {
+    key: "is_fully_furnished",
+    header: "ตกแต่งครบ",
+    width: 12,
+    format: formatBoolean,
+  },
+  {
+    key: "is_corner_unit",
+    header: "ห้องมุม",
+    width: 12,
+    format: formatBoolean,
+  },
+  {
+    key: "is_renovated",
+    header: "รีโนเวทแล้ว",
+    width: 12,
+    format: formatBoolean,
+  },
+  {
+    key: "is_selling_with_tenant",
+    header: "ขายพร้อมผู้เช่า",
+    width: 12,
+    format: formatBoolean,
+  },
+  {
+    key: "is_foreigner_quota",
+    header: "โควตาต่างชาติ",
+    width: 12,
+    format: formatBoolean,
+  },
+  {
+    key: "is_hot_deal",
+    header: "Hot Deal",
+    width: 12,
+    format: formatBoolean,
+  },
+  {
+    key: "is_exclusive",
+    header: "Exclusive Listing",
+    width: 12,
+    format: formatBoolean,
+  },
+  { key: "ceiling_height", header: "ความสูงเพดาน (ม.)", width: 15 },
+  { key: "orientation", header: "ทิศทางหน้าต่าง/ระเบียง", width: 20 },
+  { key: "parking_type", header: "ประเภทที่จอดรถ", width: 15 },
+  { key: "co_agent_name", header: "ชื่อ Co-Agent", width: 20 },
+  { key: "co_agent_phone", header: "เบอร์โทร Co-Agent", width: 18 },
+  { key: "co_agent_sale_commission_percent", header: "ค่าคอม Co-Agent (%)", width: 20 },
+  { key: "commission_sale_percentage", header: "ค่าคอมขาย (%)", width: 15 },
+  { key: "commission_rent_months", header: "ค่าคอมเช่า (เดือน)", width: 18 },
+  { key: "total_units", header: "ยูนิตทั้งหมด", width: 12 },
+  { key: "sold_units", header: "ยูนิตขายแล้ว", width: 12 },
+  { key: "view_count", header: "ยอดผู้ชม", width: 10 },
+  { key: "property_source", header: "แหล่งที่มาทรัพย์", width: 18 },
+  { key: "description", header: "รายละเอียด", width: 40 },
+  {
     key: "created_at",
     header: "สร้างเมื่อ",
+    width: 15,
+    format: formatThaiDate,
+  },
+  {
+    key: "updated_at",
+    header: "แก้ไขล่าสุด",
     width: 15,
     format: formatThaiDate,
   },
@@ -83,10 +165,11 @@ export async function exportPropertiesAction(
     petFriendly?: string;
     fullyFurnished?: string;
     allBranches?: string;
+    assignedToMe?: string;
   },
 ) {
   const ctx = await requireAuthContext();
-  const { supabase, role, tenantId } = ctx;
+  const { supabase, role, tenantId, user } = ctx;
   assertStaff(role);
 
   const config = await getSystemConfig();
@@ -94,7 +177,17 @@ export async function exportPropertiesAction(
 
   let query = supabase
     .from("properties")
-    .select("id, title, property_type, listing_type, status, price, original_price, rental_price, original_rental_price, bedrooms, bathrooms, size_sqm, district, subdistrict, province, near_transit, is_pet_friendly, created_at, tenant_id")
+    .select(`
+      id, title, property_type, listing_type, status, price, original_price, 
+      rental_price, original_rental_price, bedrooms, bathrooms, size_sqm, 
+      land_size_sqwah, floor, parking_slots, district, subdistrict, province, 
+      postal_code, address_line1, google_maps_link, near_transit, transit_station_name, 
+      transit_distance_meters, is_pet_friendly, is_fully_furnished, is_corner_unit, 
+      is_renovated, is_selling_with_tenant, is_foreigner_quota, is_hot_deal, is_exclusive, 
+      ceiling_height, orientation, parking_type, co_agent_name, co_agent_phone, 
+      co_agent_sale_commission_percent, commission_sale_percentage, commission_rent_months, 
+      total_units, sold_units, view_count, property_source, description, created_at, updated_at, tenant_id
+    `)
     .is("deleted_at", null);
 
   if (ids && ids.length > 0) {
@@ -118,6 +211,7 @@ export async function exportPropertiesAction(
       petFriendly,
       fullyFurnished,
       allBranches,
+      assignedToMe,
     } = filters;
 
     if (isMultiTenant) {
@@ -179,6 +273,9 @@ export async function exportPropertiesAction(
     }
     if (fullyFurnished === "true") {
       query = query.eq("is_fully_furnished", true);
+    }
+    if (assignedToMe === "true" && user?.id) {
+      query = query.eq("assigned_to", user.id);
     }
 
     // Price Range

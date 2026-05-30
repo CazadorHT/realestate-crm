@@ -59,13 +59,14 @@ export async function getPropertiesTableData(params: {
   fullyFurnished?: string;
   allBranches?: string;
   needsAiReview?: string;
+  assignedToMe?: string;
   page?: string;
 }): Promise<{
   tableData: PropertyTableData[];
   count: number;
   filterMetadata: Partial<TableQueryResult>[];
 }> {
-  const { supabase, role, tenantId } = await requireAuthContext();
+  const { supabase, role, tenantId, user } = await requireAuthContext();
   assertStaff(role);
 
   const config = await getSystemConfig();
@@ -262,6 +263,9 @@ export async function getPropertiesTableData(params: {
   if (params.needsAiReview === "true") {
     query = query.eq("requires_ai_review", true);
   }
+  if (params.assignedToMe === "true" && user?.id) {
+    query = query.eq("assigned_to", user.id);
+  }
 
   // Price Range with fallback
   const priceField = listing === "RENT" ? "rental_price" : "price";
@@ -352,7 +356,7 @@ export async function getPropertiesTableData(params: {
         // This restores the UI logic while keeping the payload as small as possible.
         let q = supabase
           .from("properties")
-          .select("status, property_type, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, province, popular_area, near_transit, is_fully_furnished, requires_ai_review")
+          .select("status, property_type, listing_type, price, rental_price, original_price, original_rental_price, bedrooms, bathrooms, province, popular_area, near_transit, is_fully_furnished, requires_ai_review, assigned_to")
           .is("deleted_at", null);
 
         if (isMultiTenant) {
@@ -361,6 +365,9 @@ export async function getPropertiesTableData(params: {
           } else {
             q = q.eq("tenant_id", tenantId);
           }
+        }
+        if (params.assignedToMe === "true" && user?.id) {
+          q = q.eq("assigned_to", user.id);
         }
         return q;
       })(),
