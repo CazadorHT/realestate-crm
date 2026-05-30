@@ -37,6 +37,12 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface SocialActionResult {
   success: boolean;
@@ -51,6 +57,7 @@ export function PropertyRowActions({
   isAdmin,
   isMultiTenant,
   className,
+  cannotEdit,
 }: {
   id: string;
   title?: string;
@@ -59,6 +66,7 @@ export function PropertyRowActions({
   isAdmin?: boolean;
   isMultiTenant?: boolean;
   className?: string;
+  cannotEdit?: boolean;
 }) {
   const isMobile = useIsMobile();
   const [showTransferDialog, setShowTransferDialog] = useState(false);
@@ -188,17 +196,39 @@ export function PropertyRowActions({
             </Button>
 
             {/* Action: Edit */}
-            <Button
-              variant="outline"
-              className="justify-start h-12 text-slate-700! border-slate-200 hover:bg-slate-50 transition-all font-medium"
-              asChild
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Link href={`/protected/properties/${id}/edit`}>
-                <Edit className="mr-3 h-5 w-5 text-slate-400" />
-                <span className="text-[14px]">แก้ไข</span>
-              </Link>
-            </Button>
+            {cannotEdit ? (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-block w-full">
+                      <Button
+                        variant="outline"
+                        className="justify-start h-12 text-slate-400 border-slate-200 opacity-60 w-full font-medium cursor-not-allowed"
+                        disabled
+                      >
+                        <Edit className="mr-3 h-5 w-5 text-slate-300" />
+                        <span className="text-[14px]">แก้ไข</span>
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
+                    ไม่สามารถแก้ไขทรัพย์สินของผู้อื่นได้
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <Button
+                variant="outline"
+                className="justify-start h-12 text-slate-700! border-slate-200 hover:bg-slate-50 transition-all font-medium"
+                asChild
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <Link href={`/protected/properties/${id}/edit`}>
+                  <Edit className="mr-3 h-5 w-5 text-slate-400" />
+                  <span className="text-[14px]">แก้ไข</span>
+                </Link>
+              </Button>
+            )}
 
             {/* Action: Copy Link */}
             <Button

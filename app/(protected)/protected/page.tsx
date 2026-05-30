@@ -85,6 +85,7 @@ import { ProactiveSetupTrigger } from "@/components/dashboard/ProactiveSetupTrig
 import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 import { siteConfig } from "@/lib/site-config";
 import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { AnalyticsSection } from "@/components/dashboard/AnalyticsSection";
 import { getActiveTenantCookie } from "@/lib/actions/tenant-context";
 import { isStaff } from "@/lib/authz";
@@ -210,7 +211,10 @@ export default async function DashboardPage(props: {
           </ErrorBoundary>
         </MotionStaggerItem>
 
-        <MotionStaggerItem className="space-y-6 bg-linear-to-br from-blue-50/50 via-indigo-50 to-blue-50/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-indigo-100/50 shadow-sm min-h-[600px]">
+        <MotionStaggerItem className={cn(
+          "space-y-6 bg-linear-to-br from-blue-50/50 via-indigo-50 to-blue-50/50 p-4 sm:p-6 lg:p-8 rounded-3xl border border-indigo-100/50 shadow-sm",
+          profile?.role === "AGENT" ? "min-h-[400px]" : "min-h-[600px]"
+        )}>
           {/* ตัวกรอง */}
           <ErrorBoundary fallback={<div className="p-4 bg-white rounded-2xl shadow-sm border border-red-100 text-red-500 text-xs">ตัวกรองขัดข้อง</div>}>
             <DashboardFilters
@@ -300,18 +304,20 @@ export default async function DashboardPage(props: {
                   </div>
 
                   {/* ตัวแทนยอดเยี่ยม */}
-                  <ErrorBoundary fallback={<MiniErrorFallback />}>
-                    <Suspense fallback={<ListSkeleton />}>
-                      <TopAgentsWrapper
-                        tenantId={tenantId}
-                        role={profile?.role}
-                        multiTenantEnabled={multiTenantEnabled}
-                        branchId={branchId}
-                        teamId={teamId}
-                        range={range}
-                      />
-                    </Suspense>
-                  </ErrorBoundary>
+                  {profile?.role !== "AGENT" && (
+                    <ErrorBoundary fallback={<MiniErrorFallback />}>
+                      <Suspense fallback={<ListSkeleton />}>
+                        <TopAgentsWrapper
+                          tenantId={tenantId}
+                          role={profile?.role}
+                          multiTenantEnabled={multiTenantEnabled}
+                          branchId={branchId}
+                          teamId={teamId}
+                          range={range}
+                        />
+                      </Suspense>
+                    </ErrorBoundary>
+                  )}
                 </>
               ) : (
                 <div className="p-8 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col items-center justify-center text-center">

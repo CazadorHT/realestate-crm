@@ -596,6 +596,8 @@ export function PropertiesTable({
                 const ageBadge = getListingAgeBadge(property.status, property.created_at);
                 const salePriceChange = getPriceChangeInfo(property.price, property.original_price ?? null);
                 const rentPriceChange = getPriceChangeInfo(property.rental_price, property.original_rental_price ?? null);
+                const isSelf = !!(currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase());
+                const cannotEdit = !isAdminOrManager && !isSelf;
                 return (
                 <TableRow
                   id={`property-row-${property.id}`}
@@ -950,24 +952,46 @@ export function PropertiesTable({
                           <Eye className="h-3.5 w-3.5" />
                         )}
                       </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 text-slate-400 hover:text-amber-700 hover:bg-amber-50"
-                        onClick={() => {
-                          setNavigatingId(`edit-${property.id}`);
-                          router.push(`/protected/properties/${property.id}/edit`);
-                        }}
-                        disabled={navigatingId === `edit-${property.id}`}
-                      >
-                        {navigatingId === `edit-${property.id}` ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Edit3 className="h-3.5 w-3.5" />
-                        )}
-                      </Button>
+                      {cannotEdit ? (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-7 w-7 text-slate-300 cursor-not-allowed"
+                                  disabled
+                                >
+                                  <Edit3 className="h-3.5 w-3.5" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
+                              ไม่สามารถแก้ไขทรัพย์สินของผู้อื่นได้
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-7 w-7 text-slate-400 hover:text-amber-700 hover:bg-amber-50"
+                          onClick={() => {
+                            setNavigatingId(`edit-${property.id}`);
+                            router.push(`/protected/properties/${property.id}/edit`);
+                          }}
+                          disabled={navigatingId === `edit-${property.id}`}
+                        >
+                          {navigatingId === `edit-${property.id}` ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Edit3 className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      )}
                       <DuplicatePropertyButton id={property.id} className="h-7 w-7 text-slate-400 hover:text-purple-600 hover:bg-purple-50" />
-                      <PropertyRowActions id={property.id} title={property.title} status={property.status} tenantId={property.tenant_id} isAdmin={isAdmin} isMultiTenant={isMultiTenant} className="h-7 w-7" />
+                      <PropertyRowActions id={property.id} title={property.title} status={property.status} tenantId={property.tenant_id} isAdmin={isAdmin} isMultiTenant={isMultiTenant} className="h-7 w-7" cannotEdit={cannotEdit} />
                     </div>
                   </TableCell>
                 </TableRow>
@@ -980,7 +1004,10 @@ export function PropertiesTable({
         {/* Mobile/Tablet Card View - Premium Responsive Grid */}
         <div className="lg:hidden p-3 min-[400px]:p-4 min-[500px]:p-6">
           <div className="grid grid-cols-1 gap-3 min-[400px]:gap-4 min-[500px]:gap-6">
-            {data.map((property) => (
+            {data.map((property) => {
+              const isSelf = !!(currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase());
+              const cannotEdit = !isAdminOrManager && !isSelf;
+              return (
               <div
                 key={property.id}
                 className={cn(
@@ -1020,6 +1047,7 @@ export function PropertiesTable({
                       tenantId={property.tenant_id}
                       isAdmin={isAdmin}
                       isMultiTenant={isMultiTenant}
+                      cannotEdit={cannotEdit}
                     />
                   </div>
                 </div>
@@ -1186,27 +1214,50 @@ export function PropertiesTable({
                           <Eye className="h-4 w-4" />
                         )}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
-                        onClick={() => {
-                          setNavigatingId(`edit-m-${property.id}`);
-                          router.push(`/protected/properties/${property.id}/edit`);
-                        }}
-                        disabled={navigatingId === `edit-m-${property.id}`}
-                      >
-                        {navigatingId === `edit-m-${property.id}` ? (
-                          <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
-                        ) : (
-                          <Edit3 className="h-4 w-4" />
-                        )}
-                      </Button>
+                      {cannotEdit ? (
+                        <TooltipProvider delayDuration={200}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-slate-300 cursor-not-allowed"
+                                  disabled
+                                >
+                                  <Edit3 className="h-4 w-4" />
+                                </Button>
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
+                              ไม่สามารถแก้ไขทรัพย์สินของผู้อื่นได้
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg"
+                          onClick={() => {
+                            setNavigatingId(`edit-m-${property.id}`);
+                            router.push(`/protected/properties/${property.id}/edit`);
+                          }}
+                          disabled={navigatingId === `edit-m-${property.id}`}
+                        >
+                          {navigatingId === `edit-m-${property.id}` ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-amber-600" />
+                          ) : (
+                            <Edit3 className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
               </div>
-            ))}
+            );
+          })}
           </div>
         </div>
       </div>
