@@ -371,4 +371,42 @@ export async function uploadSignatureAction(
   return { path: filePath, publicUrl };
 }
 
+/**
+ * ส่งข้อความทดสอบ LINE Flex Message
+ */
+export async function testLineNotificationAction(lineUserId: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const ctx = await requireAuthContext();
+    const { data: profile } = await ctx.supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", ctx.user.id)
+      .single();
+
+    const cleanLineUserId = lineUserId?.trim();
+    if (!cleanLineUserId) {
+      return { success: false, message: "กรุณาระบุรหัสไอดีผู้ใช้ไลน์ (LINE User ID) ก่อนทำการทดสอบ" };
+    }
+
+    const { notifyAgentOfSmartMatch } = await import("@/lib/line/messaging");
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+
+    await notifyAgentOfSmartMatch({
+      lineUserId: cleanLineUserId,
+      agentName: profile?.full_name || "Agent",
+      leadName: "ลูกค้าทดสอบ (Test Lead)",
+      propertyTitle: "บ้านเดี่ยวหรูย่านทองหล่อ (Test Property)",
+      matchScore: 0.95,
+      propertyImageUrl: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80",
+      propertyUrl: `${siteUrl}/protected/properties`,
+      leadUrl: `${siteUrl}/protected/leads`,
+    });
+
+    return { success: true, message: "ระบบได้ทำการส่งการ์ด Flex Message ทดสอบไปยังไลน์ของคุณเรียบร้อยแล้ว!" };
+  } catch (error: any) {
+    console.error("testLineNotificationAction error:", error);
+    return { success: false, message: error.message || "เกิดข้อผิดพลาดในการส่งข้อความทดสอบ" };
+  }
+}
+
 

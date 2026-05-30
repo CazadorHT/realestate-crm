@@ -110,39 +110,56 @@ export function OwnerProperties({ properties, ownerId }: OwnerPropertiesProps) {
                   </div>
                 )}
                 <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
-                        {prop.title || "ไม่ระบุชื่อโครงการ"}
-                      </h3>
-                      {getStatusBadge(prop.status)}
+                  <div className="flex items-start gap-4 flex-1 min-w-0">
+                    {/* Property Cover Image */}
+                    <div className="h-16 w-24 rounded-lg bg-slate-100 border border-slate-200 overflow-hidden shrink-0 relative">
+                      {prop.main_image_url ? (
+                        <img
+                          src={prop.main_image_url}
+                          alt={prop.title || "Property cover"}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-50 text-slate-300">
+                          <Building2 className="h-6 w-6" />
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-3 text-sm text-slate-500 mb-2">
-                      <span className="flex items-center gap-1">
-                        <Tag className="h-3.5 w-3.5" />
-                        {prop.listing_type === "SALE"
-                          ? "ขาย"
-                          : prop.listing_type === "RENT"
-                            ? "เช่า"
-                            : "ขาย / เช่า"}
-                      </span>
-                      <span className="text-slate-300">•</span>
-                      <span>{prop.property_type}</span>
-                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-medium text-slate-900 group-hover:text-blue-600 transition-colors line-clamp-1">
+                          {prop.title || "ไม่ระบุชื่อโครงการ"}
+                        </h3>
+                        {getStatusBadge(prop.status)}
+                      </div>
 
-                    <div className="flex items-center gap-2 text-sm text-slate-500">
-                      <MapPin className="h-3.5 w-3.5 text-slate-400" />
-                      <span className="line-clamp-1">
-                        {[
-                          prop.popular_area,
-                          prop.subdistrict,
-                          prop.district,
-                          prop.province,
-                        ]
-                          .filter(Boolean)
-                          .join(", ") || "ไม่ระบุที่ตั้ง"}
-                      </span>
+                      <div className="flex items-center gap-3 text-sm text-slate-500 mb-2">
+                        <span className="flex items-center gap-1">
+                          <Tag className="h-3.5 w-3.5" />
+                          {prop.listing_type === "SALE"
+                            ? "ขาย"
+                            : prop.listing_type === "RENT"
+                              ? "เช่า"
+                              : "ขาย / เช่า"}
+                        </span>
+                        <span className="text-slate-300">•</span>
+                        <span>{prop.property_type}</span>
+                      </div>
+
+                      <div className="flex items-center gap-2 text-sm text-slate-500">
+                        <MapPin className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="line-clamp-1">
+                          {[
+                            prop.popular_area,
+                            prop.subdistrict,
+                            prop.district,
+                            prop.province,
+                          ]
+                            .filter(Boolean)
+                            .join(", ") || "ไม่ระบุที่ตั้ง"}
+                        </span>
+                      </div>
                     </div>
                   </div>
 

@@ -194,12 +194,23 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
           .single();
 
         if (profile?.line_user_id) {
+          const { data: propData } = await (supabase as any)
+            .from("properties")
+            .select("main_image_url")
+            .eq("id", topMatch.id)
+            .maybeSingle();
+
+          const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+
           await notifyAgentOfSmartMatch({
             lineUserId: profile.line_user_id,
             agentName: profile.full_name || "Agent",
             leadName: lead.full_name || "New Lead",
             propertyTitle: topMatch.title,
             matchScore: topMatch.match_score / 100, // Normalized for notification
+            propertyImageUrl: propData?.main_image_url || null,
+            propertyUrl: `${siteUrl}/protected/properties/${topMatch.id}`,
+            leadUrl: `${siteUrl}/protected/leads/${lead.id}`,
           });
         }
       }

@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Info, Signature } from "lucide-react";
 import imageCompression from "browser-image-compression";
-import { updateProfileAction, uploadSignatureAction } from "./actions";
+import { updateProfileAction, uploadSignatureAction, testLineNotificationAction } from "./actions";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -156,6 +156,28 @@ export function ProfileInfoForm({
   const [bankSearch, setBankSearch] = useState("");
   const [signatureUrl, setSignatureUrl] = useState<string | null>(initialSignatureUrl || null);
   const [isUploadingSignature, setIsUploadingSignature] = useState(false);
+  const [isTestingLine, setIsTestingLine] = useState(false);
+
+  const handleTestLineNotification = async (lineUserId: string) => {
+    if (!lineUserId || !lineUserId.trim()) {
+      toast.error("กรุณาระบุรหัสไอดีผู้ใช้ไลน์ (LINE User ID) ก่อนทำการทดสอบ");
+      return;
+    }
+    setIsTestingLine(true);
+    try {
+      const result = await testLineNotificationAction(lineUserId);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message || "เกิดข้อผิดพลาดในการส่งข้อความทดสอบ");
+      }
+    } catch (error: any) {
+      console.error(error);
+      toast.error("เกิดข้อผิดพลาดในการส่งข้อความทดสอบ");
+    } finally {
+      setIsTestingLine(false);
+    }
+  };
 
   const handleSignatureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -540,6 +562,26 @@ export function ProfileInfoForm({
                       </AnimatePresence>
                     </div>
                   </FormControl>
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <span className="text-[10px] text-slate-400">
+                      *โปรดบันทึกโปรไฟล์ก่อนทดสอบ หรือใส่ ID แล้วกดทดสอบยิงได้ทันที
+                    </span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={!field.value || isTestingLine}
+                      onClick={() => handleTestLineNotification(field.value || "")}
+                      className="h-8 px-3 rounded-lg border-emerald-200 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-colors"
+                    >
+                      {isTestingLine ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Send className="h-3.5 w-3.5" />
+                      )}
+                      ทดลองยิง LINE
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

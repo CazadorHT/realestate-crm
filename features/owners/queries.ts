@@ -191,9 +191,31 @@ export async function getOwnersQuery({
     throw new Error(mapDbError(error));
   }
 
-  const owners: Owner[] = (data || []).map((row: any) => {
+  const rawOwners = data || [];
+  const creatorIds = Array.from(
+    new Set(
+      rawOwners
+        .map((r: any) => (r.social_links as Record<string, any>)?.created_by)
+        .filter(Boolean)
+    )
+  ) as string[];
+
+  const creatorsMap: Record<string, string> = {};
+  if (creatorIds.length > 0) {
+    const { data: creatorsData } = await supabase
+      .from("identities_v3")
+      .select("id, display_name")
+      .in("id", creatorIds);
+
+    (creatorsData || []).forEach((c: any) => {
+      creatorsMap[c.id] = decrypt(c.display_name) || c.display_name || "Unknown";
+    });
+  }
+
+  const owners: Owner[] = rawOwners.map((row: any) => {
     const social = (row.social_links as Record<string, any>) || {};
     const propCount = row.properties?.[0]?.count || 0;
+    const creatorId = social.created_by || null;
 
     return {
       id: row.id,
@@ -209,7 +231,8 @@ export async function getOwnersQuery({
       created_at: row.created_at,
       updated_at: row.updated_at,
       tenant_id: row.tenant_id,
-      created_by: social.created_by || null,
+      created_by: creatorId,
+      created_by_name: creatorId ? (creatorsMap[creatorId] || "ไม่ทราบชื่อผู้สร้าง") : "ไม่ทราบชื่อผู้สร้าง",
       property_count: propCount,
     };
   });

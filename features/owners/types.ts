@@ -18,6 +18,7 @@ export interface Owner {
   updated_at?: string | null;
   tenant_id?: string | null;
   created_by?: string | null;
+  created_by_name?: string | null;
   property_count?: number;
 }
 

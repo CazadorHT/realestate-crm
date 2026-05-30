@@ -292,6 +292,7 @@ export function OwnersTable({
                 <TableHead>เบอร์โทร</TableHead>
                 <TableHead>LINE</TableHead>
                 <TableHead>Facebook</TableHead>
+                <TableHead>ผู้บันทึก</TableHead>
                 <TableHead className="text-right">จำนวนทรัพย์</TableHead>
                 <TableHead className="text-right">จัดการ</TableHead>
               </TableRow>
@@ -365,11 +366,20 @@ export function OwnersTable({
                   </TableCell>
                   {/* LINE */}
                   <TableCell>
-                    {owner.line_id || (
+                    {owner.line_id ? (
+                      <a
+                        href={`https://line.me/ti/p/~${owner.line_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline text-emerald-600 font-medium"
+                      >
+                        {owner.line_id}
+                      </a>
+                    ) : (
                       <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
-                  {/* Facebook */}
+                   {/* Facebook */}
                   <TableCell>
                     {owner.facebook_url ? (
                       <a
@@ -383,6 +393,10 @@ export function OwnersTable({
                     ) : (
                       <span className="text-muted-foreground">-</span>
                     )}
+                  </TableCell>
+                  {/* ผู้สร้างข้อมูล */}
+                  <TableCell>
+                    <span className="text-sm text-slate-500 font-medium">{owner.created_by_name || "-"}</span>
                   </TableCell>
                   {/* จำนวนทรัพย์ */}
                   <TableCell className="text-right">
@@ -509,6 +523,11 @@ export function OwnersTable({
                               สาขา: {owner.tenants.name}
                             </div>
                           )}
+                          {owner.created_by_name && (
+                            <div className="bg-purple-50 text-[10px] font-semibold text-purple-700 px-2.5 py-1 rounded-full uppercase tracking-tighter border border-purple-100/50">
+                              โดย: {owner.created_by_name}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -540,19 +559,22 @@ export function OwnersTable({
 
                         <div className="grid grid-cols-2 gap-2">
                           {/* LINE Pill */}
-                          <div
+                          <a
+                            href={owner.line_id ? `https://line.me/ti/p/~${owner.line_id}` : "#"}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className={cn(
                               "flex items-center justify-center gap-2 min-h-[46px] rounded-2xl transition-all font-semibold text-sm px-2",
                               owner.line_id
                                 ? "bg-emerald-50/50 text-emerald-700 border border-emerald-100/50 hover:bg-emerald-600 hover:text-white"
-                                : "bg-slate-50 text-slate-300 border border-slate-100",
+                                : "bg-slate-50 text-slate-300 border border-slate-100 cursor-not-allowed pointer-events-none",
                             )}
                           >
                             <FaLine className="h-4 w-4 shrink-0 mb-0.5" />
                             <span className="truncate">
                               {owner.line_id || "LINE"}
                             </span>
-                          </div>
+                          </a>
 
                           {/* Facebook Action */}
                           <a

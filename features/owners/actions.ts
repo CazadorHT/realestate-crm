@@ -237,7 +237,18 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
     const isOwner = existingSocial.created_by === ctx.user.id;
 
     if (!isOwner && !canBypassOwnership) {
-      return { success: false, message: "คุณไม่มีสิทธิ์แก้ไขข้อมูลเจ้าของทรัพย์สินของผู้อื่น" };
+      let creatorName = "ไม่ทราบชื่อผู้สร้าง";
+      if (existingSocial.created_by) {
+        const { data: creator } = await ctx.supabase
+          .from("identities_v3")
+          .select("display_name")
+          .eq("id", existingSocial.created_by)
+          .maybeSingle();
+        if (creator?.display_name) {
+          creatorName = decrypt(creator.display_name) || creator.display_name;
+        }
+      }
+      return { success: false, message: `คุณไม่มีสิทธิ์แก้ไขข้อมูลเจ้าของทรัพย์สินของผู้อื่น (สิทธิ์การจัดการเป็นของ ${creatorName})` };
     }
     const socialLinks = {
       ...existingSocial,
@@ -323,7 +334,18 @@ export async function deleteOwnerAction(id: string) {
     const isOwner = existingSocial.created_by === ctx.user.id;
 
     if (!isOwner && !canBypassOwnership) {
-      return { success: false, message: "คุณไม่มีสิทธิ์ลบข้อมูลเจ้าของทรัพย์สินของผู้อื่น" };
+      let creatorName = "ไม่ทราบชื่อผู้สร้าง";
+      if (existingSocial.created_by) {
+        const { data: creator } = await ctx.supabase
+          .from("identities_v3")
+          .select("display_name")
+          .eq("id", existingSocial.created_by)
+          .maybeSingle();
+        if (creator?.display_name) {
+          creatorName = decrypt(creator.display_name) || creator.display_name;
+        }
+      }
+      return { success: false, message: `คุณไม่มีสิทธิ์ลบข้อมูลเจ้าของทรัพย์สินของผู้อื่น (สิทธิ์การจัดการเป็นของ ${creatorName})` };
     }
 
     const { count, error: countErr } = await ctx.supabase
