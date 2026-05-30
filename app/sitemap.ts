@@ -65,6 +65,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5,
       alternates: getAlternates("/about"),
     },
+    {
+      url: `${baseUrl}/deposit`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+      alternates: getAlternates("/deposit"),
+    },
   ];
 
   // 2. Fetch Active Properties

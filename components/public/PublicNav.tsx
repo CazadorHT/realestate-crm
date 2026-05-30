@@ -24,9 +24,6 @@ import {
   SheetTrigger,
   SheetClose,
 } from "@/components/ui/sheet";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
-import { DepositWizard } from "./deposit/DepositWizard";
-import { CheckCircle } from "lucide-react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { cn } from "@/lib/utils";
 
@@ -37,8 +34,6 @@ export function PublicNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [isDepositOpen, setIsDepositOpen] = useState(false);
-  const [isDepositSuccess, setIsDepositSuccess] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const lastScrollPos = useRef(typeof window !== "undefined" ? window.scrollY : 0);
   const currentOffset = useRef(64);
@@ -368,67 +363,28 @@ export function PublicNav() {
 
                 {/* CTA Buttons */}
                 <div className="flex items-center gap-2 ml-2">
-                  <Link href="/properties">
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="hover:bg-blue-500! hover:border-blue-500! hover:text-white! "
-                    >
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="hover:bg-blue-500! hover:border-blue-500! hover:text-white! cursor-pointer"
+                  >
+                    <Link href="/properties">
                       <Search className="h-4 w-4 mr-1" />
                       {t("home.search_btn")}
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
 
-                  <ResponsiveDialog
-                    open={isDepositOpen}
-                    onOpenChange={(open) => {
-                      setIsDepositOpen(open);
-                      if (!open) setIsDepositSuccess(false);
-                    }}
-                    trigger={
-                      <Button
-                        size="lg"
-                        className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium outline-none ring-0 border-0 text-white"
-                      >
-                        <Key className="h-4 w-4 mr-1" />
-                        {t("nav.deposit")}
-                      </Button>
-                    }
-                    className="sm:max-w-[720px] lg:max-w-[800px] p-0 border-0 gap-0 rounded-3xl"
+                  <Button
+                    asChild
+                    size="lg"
+                    className="cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-md font-medium outline-none ring-0 border-0 text-white"
                   >
-                    {isDepositSuccess ? (
-                      <div className="text-center py-20 px-6 space-y-8 animate-in fade-in zoom-in duration-500">
-                        <div className="w-24 h-24 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                          <CheckCircle className="h-12 w-12" />
-                        </div>
-                        <div className="space-y-3">
-                          <h3 className="text-2xl md:text-3xl font-bold text-slate-900 leading-tight">
-                            {t("deposit.success.title")}
-                          </h3>
-                          <p className="text-slate-500 text-base md:text-lg max-w-sm mx-auto">
-                            {t("deposit.success.message")}
-                          </p>
-                        </div>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            setIsDepositSuccess(false);
-                            setIsDepositOpen(false);
-                          }}
-                          className="mt-6 border-slate-200 hover:bg-slate-50 rounded-2xl px-12 py-7 text-base font-bold transition-all hover:scale-105 active:scale-95 shadow-sm"
-                        >
-                          {t("common.close")}
-                        </Button>
-                      </div>
-                    ) : (
-                      <DepositWizard
-                        onSuccessAction={() => setIsDepositSuccess(true)}
-                        onCancelAction={() => setIsDepositOpen(false)}
-                        location="Navbar"
-                        
-                      />
-                    )}
-                  </ResponsiveDialog>
+                    <Link href="/deposit">
+                      <Key className="h-4 w-4 mr-1" />
+                      {t("nav.deposit")}
+                    </Link>
+                  </Button>
                 </div>
               </div>
 
@@ -599,31 +555,34 @@ export function PublicNav() {
               ))}
 
               <div className="pt-4 border-t border-slate-200 flex flex-col gap-3" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
-                <div className="flex gap-2 sm:gap-3">
-                  <Link
-                    href="/properties"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex-1 min-w-0"
+                {/* Mobile Search/Consignment CTA */}
+                <div className="flex gap-3 pt-2">
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="flex-1 min-w-0 cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50 py-6 text-sm sm:text-base"
                   >
-                    <Button
-                      variant="outline"
-                      size="lg"
-                      className="w-full cursor-pointer border-blue-600 text-blue-600 hover:bg-blue-50 py-6  text-sm sm:text-base"
+                    <Link
+                      href="/properties"
+                      onClick={() => setMobileMenuOpen(false)}
                     >
                       <Search className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 shrink-0" />
                       <span className="truncate">{t("home.search_btn")}</span>
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                   <Button
+                    asChild
                     size="lg"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      setIsDepositOpen(true);
-                    }}
-                    className="flex-1 min-w-0 cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6  text-sm sm:text-base outline-none ring-0 border-0 text-white"
+                    className="flex-1 min-w-0 cursor-pointer bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 py-6 text-sm sm:text-base outline-none ring-0 border-0 text-white"
                   >
-                    <Key className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 shrink-0" />
-                    <span className="truncate">{t("nav.deposit")}</span>
+                    <Link
+                      href="/deposit"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Key className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2 shrink-0" />
+                      <span className="truncate">{t("nav.deposit")}</span>
+                    </Link>
                   </Button>
                 </div>
               </div>

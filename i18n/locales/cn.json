@@ -357,7 +357,9 @@
     "contact_title": "联系我们 | {siteName} — 免费房产咨询与一对一精准匹配",
     "contact_description": "无论您是想委托出租出售房产，还是寻找理想的办公与居住空间，欢迎立即联系 VC Connect Asset。我们承诺在24小时内通过您方便的渠道快速答复。",
     "services_title": "我们的服务 — 全流程一站式卓越资产管理 | {siteName}",
-    "services_description": "提供真正零隐形收费的专业全套房产服务：包含海外高端推广、精准房源对接、银行贷款协助及全流程法务过户支持，直至钥匙顺利交接完毕。"
+    "services_description": "提供真正零隐形收费的专业全套房产服务：包含海外高端推广、精准房源对接、银行贷款协助及全流程法务过户支持，直至钥匙顺利交接完毕。",
+    "deposit_title": "免费委托出租/出售房屋和公寓 — 房产代理服务 | {siteName}",
+    "deposit_description": "通过 VC Connect Asset 免费委托出租或出售您的房产。我们在泰国（曼谷、普吉岛）提供免费房产推广、专业经纪以及房屋、公寓和写字楼交易服务。"
   },
   "loading": {
     "search_dream_home": "正在为您寻找梦想之所...",

@@ -50,6 +50,7 @@ export function PublicFooter() {
   const about = [
     { name: t("nav.properties"), href: "/properties" },
     { name: t("nav.services"), href: "/services" },
+    { name: t("nav.deposit"), href: "/deposit" },
     { name: t("nav.blog"), href: "/blog" },
     { name: t("nav.about"), href: "/about" },
     { name: t("nav.contact"), href: "/contact" },

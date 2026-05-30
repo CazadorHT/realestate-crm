@@ -357,7 +357,9 @@
     "contact_title": "Contact Us | {siteName} — Free Property Consultation & Fast Reply",
     "contact_description": "Looking to list your property or find your dream space? Contact VC Connect Asset today. Get free consultations and expert matching. We respond within 24 hours via your preferred channels.",
     "services_title": "Our Services — End-to-End Real Estate Solutions | {siteName}",
-    "services_description": "Full-service property management with zero hidden fees. We handle premium marketing, property sourcing, banking/loan coordination, and legal paperwork until the keys are handed over."
+    "services_description": "Full-service property management with zero hidden fees. We handle premium marketing, property sourcing, banking/loan coordination, and legal paperwork until the keys are handed over.",
+    "deposit_title": "List Your Property for Sale & Rent — Free Consignment | {siteName}",
+    "deposit_description": "Consign your property for sale or rent with VC Connect Asset. Free property listing, marketing, and professional brokerage services for houses, condos, and offices in Thailand."
   },
   "loading": {
     "search_dream_home": "Finding your dream places...",
