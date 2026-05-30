@@ -4,6 +4,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { requireAuthContext } from "@/lib/authz";
 import { logAudit } from "@/lib/audit";
 import { mapDbError } from "@/lib/db-error";
+import { getStatusFromDb } from "../labels";
 
 /**
  * Soft delete a property by setting deleted_at to now
@@ -15,7 +16,7 @@ export async function softDeleteProperty(id: string) {
     const { supabase, tenantId, role } = ctx;
 
     // 🛡️ SECURITY LOCK 1: Always check boundary if scoped, otherwise fetch first
-    let query = supabase.from("properties").select("status, tenant_id").eq("id", id);
+    let query = supabase.from("properties_core").select("status, tenant_id, created_by, assigned_to").eq("id", id);
     if (tenantId) {
       query = query.eq("tenant_id", tenantId);
     }
@@ -49,10 +50,20 @@ export async function softDeleteProperty(id: string) {
       }
     }
 
-    // 💰 REVENUE PROTECTION: SOLD/RENTED objects are protected
-    const isRevenueAsset = ["SOLD", "RENTED"].includes(prop.status || "");
+    const propStatusStr = getStatusFromDb(prop.status);
+    const isRevenueAsset = ["SOLD", "RENTED"].includes(propStatusStr || "");
     const canBypass = role === "ADMIN" || role === "MANAGER";
 
+    // 🛡️ SECURITY LOCK 1.5: Verify ownership or management override
+    const isOwner = prop.created_by === ctx.user.id || prop.assigned_to === ctx.user.id;
+    if (!isOwner && !canBypass) {
+      return {
+        success: false,
+        error: "คุณไม่มีสิทธิ์ลบทรัพย์สินของผู้อื่น",
+      };
+    }
+
+    // 💰 REVENUE PROTECTION: SOLD/RENTED objects are protected
     if (isRevenueAsset && !canBypass) {
       return {
         success: false,
@@ -180,7 +191,7 @@ export async function permanentDeleteProperty(id: string) {
     const ctx = await requireAuthContext();
     const { supabase, tenantId, role } = ctx;
 
-    let query = supabase.from("properties").select("status, tenant_id").eq("id", id);
+    let query = supabase.from("properties_core").select("status, tenant_id, created_by, assigned_to").eq("id", id);
     if (tenantId) {
       query = query.eq("tenant_id", tenantId);
     }
@@ -210,7 +221,18 @@ export async function permanentDeleteProperty(id: string) {
       }
     }
 
-    const isRevenueAsset = ["SOLD", "RENTED"].includes(prop.status || "");
+    const propStatusStr = getStatusFromDb(prop.status);
+    const isRevenueAsset = ["SOLD", "RENTED"].includes(propStatusStr || "");
+    const canBypass = role === "ADMIN" || role === "MANAGER";
+    const isOwner = prop.created_by === ctx.user.id || prop.assigned_to === ctx.user.id;
+
+    if (!isOwner && !canBypass) {
+      return {
+        success: false,
+        error: "คุณไม่มีสิทธิ์ลบทรัพย์สินของผู้อื่น",
+      };
+    }
+
     if (isRevenueAsset && role !== "ADMIN") {
       return {
         success: false,

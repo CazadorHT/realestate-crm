@@ -10,6 +10,22 @@ export async function renewPropertyAction(id: string) {
     const { supabase, user, role } = await requireAuthContext();
     assertStaff(role);
 
+    // Fetch the property to check ownership/permission
+    const { data: property, error: fetchErr } = await supabase
+      .from("properties_core")
+      .select("created_by, assigned_to")
+      .eq("id", id)
+      .single();
+
+    if (fetchErr || !property) throw new Error("ไม่พบข้อมูลทรัพย์");
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = property.created_by === user.id || property.assigned_to === user.id;
+
+    if (!isOwner && !canBypassOwnership) {
+      throw new Error("คุณไม่มีสิทธิ์ดันประกาศทรัพย์สินของผู้อื่น");
+    }
+
     const { error } = await supabase
       .from("properties_core")
       .update({ updated_at: new Date().toISOString() })

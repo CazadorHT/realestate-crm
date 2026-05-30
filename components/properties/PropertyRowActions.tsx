@@ -113,6 +113,7 @@ export function PropertyRowActions({
     prevDialogOpen.current = isSocialDialogOpen;
   }, [isSocialDialogOpen]);
   const showTransferButton = isAdmin && isMultiTenant;
+  const canDelete = !cannotEdit;
   const handlePostToSocial = async (
     platform: "FACEBOOK" | "INSTAGRAM" | "LINE" | "TIKTOK",
   ) => {
@@ -244,31 +245,67 @@ export function PropertyRowActions({
             </Button>
 
             {/* Action: Renew */}
-            <Button
-              variant="outline"
-              className="justify-start h-12 text-blue-600! border-blue-100 hover:bg-blue-50 transition-all font-medium"
-              onClick={() => {
-                setIsMenuOpen(false);
-                handleRenew();
-              }}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="mr-3 h-5 w-5"
+            {cannotEdit ? (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-block w-full">
+                      <Button
+                        variant="outline"
+                        className="justify-start h-12 text-slate-400 border-slate-200 opacity-60 w-full font-medium cursor-not-allowed"
+                        disabled
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="mr-3 h-5 w-5 text-slate-300"
+                        >
+                          <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                          <path d="M3 3v5h5" />
+                          <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                          <path d="M16 16h5v5" />
+                        </svg>
+                        <span className="text-[14px]">ดันประกาศ</span>
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
+                    ไม่สามารถดันประกาศทรัพย์สินของผู้อื่นได้
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : (
+              <Button
+                variant="outline"
+                className="justify-start h-12 text-blue-600! border-blue-100 hover:bg-blue-50 transition-all font-medium"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  handleRenew();
+                }}
               >
-                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                <path d="M3 3v5h5" />
-                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
-                <path d="M16 16h5v5" />
-              </svg>
-              <span className="text-[14px]">ดันประกาศ</span>
-            </Button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mr-3 h-5 w-5"
+                >
+                  <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                  <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+                  <path d="M16 16h5v5" />
+                </svg>
+                <span className="text-[14px]">ดันประกาศ</span>
+              </Button>
+            )}
           </div>
 
           {/* Social Actions Group */}
@@ -361,7 +398,7 @@ export function PropertyRowActions({
             </Button>
           </div>
 
-          {(showTransferButton || isAdmin) && (
+          {(showTransferButton || canDelete) && (
             <>
               <div className="h-px bg-slate-100 my-1 mx-2" />
               {showTransferButton && (
@@ -378,16 +415,18 @@ export function PropertyRowActions({
                 </Button>
               )}
 
-              <DeletePropertyMenuItem
-                status={status}
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  setNextAction(() => () => {
-                    setShowDeleteDialog(true);
-                    setIsDeleteConfirmed(false);
-                  });
-                }}
-              />
+              {canDelete && (
+                <DeletePropertyMenuItem
+                  status={status}
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    setNextAction(() => () => {
+                      setShowDeleteDialog(true);
+                      setIsDeleteConfirmed(false);
+                    });
+                  }}
+                />
+              )}
             </>
           )}
         </div>
