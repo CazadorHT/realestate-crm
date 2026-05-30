@@ -50,12 +50,12 @@ export function SocialAuthButtons({ isLogin }: SocialAuthButtonsProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="flex flex-col gap-4">
         <Button
           type="button"
           variant="outline"
           className={cn(
-            "h-12 rounded-xl transition-all font-bold gap-2 text-xs hover:scale-[1.02]",
+            "w-full h-12 rounded-xl transition-all font-bold gap-2 text-xs hover:scale-[1.02]",
             isLogin
               ? "border-slate-200 bg-white hover:bg-slate-50 text-slate-700! hover:border-blue-500/30"
               : "border-white/5 bg-white/3 hover:bg-white/8 text-white hover:border-purple-500/30",
@@ -65,21 +65,6 @@ export function SocialAuthButtons({ isLogin }: SocialAuthButtonsProps) {
           <FcGoogle className="h-6! w-6!" />
          
           Google
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          className={cn(
-            "h-12 rounded-xl transition-all font-bold gap-2 text-xs hover:scale-[1.02]",
-            isLogin
-              ? "border-slate-200 bg-white hover:bg-slate-50 text-slate-700! hover:border-blue-500/30"
-              : "border-white/5 bg-white/3 hover:bg-white/8 text-white hover:border-purple-500/30",
-          )}
-          onClick={() => handleOAuth("facebook")}
-        >
-          <FaFacebook className="h-6! w-6! text-blue-600" />
-          Facebook
         </Button>
       </div>
     </div>
