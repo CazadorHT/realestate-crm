@@ -82,7 +82,7 @@ export async function upsertContractAction(
     }
 
     // Fetch existing deal to merge metadata
-    let fetchQuery = supabase.from("crm_deals_v3").select("id, tenant_id, metadata, status, transaction_date, transaction_end_date").eq("id", targetDealId);
+    let fetchQuery = supabase.from("crm_deals_v3").select("id, tenant_id, metadata, status, transaction_date, transaction_end_date, created_by, agent_id").eq("id", targetDealId);
     if (ctx.tenantId && ctx.tenantId !== "ALL") {
       fetchQuery = fetchQuery.eq("tenant_id", ctx.tenantId);
     }
@@ -90,6 +90,13 @@ export async function upsertContractAction(
     const { data: existingDeal, error: fetchErr } = await fetchQuery.single();
     if (fetchErr || !existingDeal) {
       return { success: false, message: "ไม่พบข้อมูลดีลที่ต้องการ" };
+    }
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = existingDeal.created_by === user.id || existingDeal.agent_id === user.id;
+
+    if (!isOwner && !canBypassOwnership) {
+      return { success: false, message: "คุณไม่มีสิทธิ์จัดการสัญญานี้เนื่องจากไม่ได้เป็นผู้รับผิดชอบดีลดังกล่าว" };
     }
 
     const currentMeta = (existingDeal.metadata as Record<string, Json>) || {};
@@ -160,7 +167,7 @@ export async function deleteContractAction(id: string) {
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
 
-    let fetchQuery = supabase.from("crm_deals_v3").select("id").eq("id", id);
+    let fetchQuery = supabase.from("crm_deals_v3").select("id, created_by, agent_id").eq("id", id);
     if (ctx.tenantId && ctx.tenantId !== "ALL") {
       fetchQuery = fetchQuery.eq("tenant_id", ctx.tenantId);
     }
@@ -168,6 +175,13 @@ export async function deleteContractAction(id: string) {
     const { data: existing, error: fetchErr } = await fetchQuery.single();
     if (fetchErr || !existing) {
       return { success: false, message: "ไม่พบสัญญาที่ต้องการ" };
+    }
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = existing.created_by === user.id || existing.agent_id === user.id;
+
+    if (!isOwner && !canBypassOwnership) {
+      return { success: false, message: "คุณไม่มีสิทธิ์ลบสัญญานี้เนื่องจากไม่ได้เป็นผู้รับผิดชอบดีลดังกล่าว" };
     }
 
     const { error } = await supabase

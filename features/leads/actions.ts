@@ -190,11 +190,17 @@ export const updateLeadAction = createSafeAction(
     // 1. Get current identity ID, tenant ID, and utm_data from the lead
     const { data: leadRef, error: leadRefErr } = await supabase
       .from("crm_leads_v3")
-      .select("identity_id, tenant_id, utm_data")
+      .select("identity_id, tenant_id, utm_data, assigned_to")
       .eq("id", id)
       .single();
 
     if (leadRefErr || !leadRef) throw new Error("ไม่พบข้อมูลลีด");
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = leadRef.assigned_to === userId;
+    if (!isOwner && !canBypassOwnership) {
+      throw new Error("คุณไม่มีสิทธิ์แก้ไขลีดของผู้อื่น");
+    }
 
     // Security check: Verify tenant membership if not admin
     if (role !== "ADMIN" && leadRef.tenant_id) {
@@ -303,11 +309,17 @@ export const deleteLeadAction = createSafeAction(
   async ({ id }, { supabase, tenantId, userId, role }) => {
     const { data: lead, error: leadErr } = await supabase
       .from("crm_leads_v3")
-      .select("tenant_id")
+      .select("tenant_id, assigned_to")
       .eq("id", id)
       .single();
 
     if (leadErr || !lead) throw new Error("ไม่พบข้อมูลลีด");
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = lead.assigned_to === userId;
+    if (!isOwner && !canBypassOwnership) {
+      throw new Error("คุณไม่มีสิทธิ์ลบลีดของผู้อื่น");
+    }
 
     if (role !== "ADMIN" && lead.tenant_id) {
       if (tenantId !== lead.tenant_id) {
@@ -346,14 +358,21 @@ export const createLeadActivityAction = createSafeAction(
   }),
   async ({ leadId, values }, { supabase, userId, tenantId, role }) => {
     // Verify lead exists and user has access
+    // Verify lead exists and check ownership
     const { data: lead, error: leadErr } = await supabase
       .from("crm_leads_v3")
-      .select("tenant_id")
+      .select("tenant_id, assigned_to")
       .eq("id", leadId)
       .single();
 
     if (leadErr || !lead)
       throw new Error("ไม่พบข้อมูล Lead หรือคุณไม่มีสิทธิ์");
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = lead.assigned_to === userId;
+    if (!isOwner && !canBypassOwnership) {
+      throw new Error("คุณไม่มีสิทธิ์จัดการกิจกรรมของลีดผู้อื่น");
+    }
 
     const leadTenantId = lead.tenant_id;
     if (role !== "ADMIN" && leadTenantId) {
@@ -400,12 +419,18 @@ export const updateLeadActivityAction = createSafeAction(
     // Security check for lead ownership
     const { data: lead, error: leadErr } = await supabase
       .from("crm_leads_v3")
-      .select("tenant_id")
+      .select("tenant_id, assigned_to")
       .eq("id", leadId)
       .single();
 
     if (leadErr || !lead)
       throw new Error("ไม่พบข้อมูล Lead หรือคุณไม่มีสิทธิ์");
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = lead.assigned_to === userId;
+    if (!isOwner && !canBypassOwnership) {
+      throw new Error("คุณไม่มีสิทธิ์จัดการกิจกรรมของลีดผู้อื่น");
+    }
 
     if (role !== "ADMIN" && lead.tenant_id) {
       if (tenantId !== lead.tenant_id) {
@@ -448,12 +473,18 @@ export const deleteLeadActivityAction = createSafeAction(
     // Security check for lead ownership
     const { data: lead, error: leadErr } = await supabase
       .from("crm_leads_v3")
-      .select("tenant_id")
+      .select("tenant_id, assigned_to")
       .eq("id", leadId)
       .single();
 
     if (leadErr || !lead)
       throw new Error("ไม่พบข้อมูล Lead หรือคุณไม่มีสิทธิ์");
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = lead.assigned_to === userId;
+    if (!isOwner && !canBypassOwnership) {
+      throw new Error("คุณไม่มีสิทธิ์จัดการกิจกรรมของลีดผู้อื่น");
+    }
 
     if (role !== "ADMIN" && lead.tenant_id) {
       if (tenantId !== lead.tenant_id) {
@@ -491,11 +522,17 @@ export const updateLeadStageAction = createSafeAction(
   async ({ id, stage }, { supabase, tenantId, userId, role }) => {
     const { data: lead, error: leadErr } = await supabase
       .from("crm_leads_v3")
-      .select("tenant_id")
+      .select("tenant_id, assigned_to")
       .eq("id", id)
       .single();
 
     if (leadErr || !lead) throw new Error("ไม่พบข้อมูลลีด");
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = lead.assigned_to === userId;
+    if (!isOwner && !canBypassOwnership) {
+      throw new Error("คุณไม่มีสิทธิ์แก้ไขลีดของผู้อื่น");
+    }
 
     if (role !== "ADMIN" && lead.tenant_id) {
       if (tenantId !== lead.tenant_id) {
@@ -727,11 +764,17 @@ export const updateLeadPDPAAction = createSafeAction(
   async ({ id, consent }, { supabase, tenantId, userId, role }) => {
     const { data: lead, error: leadErr } = await supabase
       .from("crm_leads_v3")
-      .select("utm_data, tenant_id")
+      .select("utm_data, tenant_id, assigned_to")
       .eq("id", id)
       .single();
 
     if (leadErr || !lead) throw new Error("ไม่พบข้อมูลลีด");
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = lead.assigned_to === userId;
+    if (!isOwner && !canBypassOwnership) {
+      throw new Error("คุณไม่มีสิทธิ์แก้ไขลีดของผู้อื่น");
+    }
 
     if (role !== "ADMIN" && lead.tenant_id) {
       if (tenantId !== lead.tenant_id) {
@@ -771,15 +814,21 @@ export const transferLeadAction = createSafeAction(
     targetTenantId: z.string().uuid(),
   }),
   async ({ id, targetTenantId }, { supabase, tenantId, userId, role }) => {
-    // 1. Verify lead exists
+    // 1. Verify lead exists and check ownership
     const { data: lead, error: leadErr } = await supabase
       .from("crm_leads_v3")
-      .select("id, tenant_id, identities_v3!identity_id(display_name)")
+      .select("id, tenant_id, assigned_to, identities_v3!identity_id(display_name)")
       .eq("id", id)
       .single();
 
     if (leadErr || !lead) {
       throw new Error("ไม่พบข้อมูล Lead หรือคุณไม่มีสิทธิ์โอนย้ายลูกค้าคนนี้");
+    }
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = lead.assigned_to === userId;
+    if (!isOwner && !canBypassOwnership) {
+      throw new Error("คุณไม่มีสิทธิ์โอนย้ายลีดของผู้อื่น");
     }
 
     const leadTenantId = lead.tenant_id;

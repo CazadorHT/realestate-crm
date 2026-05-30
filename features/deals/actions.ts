@@ -233,12 +233,19 @@ export async function updateDealAction(input: UpdateDealInput) {
 
     const { data: currentDeal, error: currentErr } = await scoped
       .deals()
-      .select("id, status, property_id, deal_type, tenant_id, transaction_date, metadata")
+      .select("id, status, property_id, deal_type, tenant_id, transaction_date, metadata, created_by, agent_id")
       .eq("id", validated.id)
       .single();
 
     if (currentErr || !currentDeal) {
       return { success: false, message: "Deal not found" };
+    }
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = currentDeal.created_by === user.id || currentDeal.agent_id === user.id;
+
+    if (!isOwner && !canBypassOwnership) {
+      return { success: false, message: "คุณไม่มีสิทธิ์แก้ไขดีลของผู้อื่น" };
     }
 
     const prevStatus = currentDeal.status;
@@ -373,23 +380,29 @@ export async function deleteDealAction(dealId: string, leadId: string) {
 
     const adminSupabase = createAdminClient();
 
-    // Fallback: If user is in "ALL" view, resolve tenantId from the existing deal
-    let tenantId = userTenantId;
-    if (!tenantId) {
-      const { data: dealData } = await adminSupabase
-        .from("crm_deals_v3")
-        .select("tenant_id")
-        .eq("id", dealId)
-        .single();
-      if (dealData?.tenant_id) {
-        tenantId = dealData.tenant_id;
-      }
+    // Fetch deal information to verify ownership and resolve tenantId
+    const { data: dealData, error: findErr } = await adminSupabase
+      .from("crm_deals_v3")
+      .select("tenant_id, created_by, agent_id")
+      .eq("id", dealId)
+      .single();
+
+    if (findErr || !dealData) {
+      return { success: false, message: "ไม่พบข้อมูลดีล" };
     }
 
+    const tenantId = userTenantId || dealData.tenant_id;
     if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     assertAuthenticated({ userId: user.id, role });
     assertStaff(role);
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = dealData.created_by === user.id || dealData.agent_id === user.id;
+
+    if (!isOwner && !canBypassOwnership) {
+      return { success: false, message: "คุณไม่มีสิทธิ์ลบดีลของผู้อื่น" };
+    }
 
     const scoped = getScopedRevenueClient(adminSupabase, tenantId);
 
@@ -459,6 +472,7 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
       .select(`
         id,
         created_by,
+        agent_id,
         partner_co_broker_id,
         commission_total,
         property_id,
@@ -471,6 +485,13 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
       .single();
 
     if (dealErr || !deal) throw new Error("ไม่พบข้อมูลดีล");
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const isOwner = deal.created_by === user.id || deal.agent_id === user.id;
+
+    if (!isOwner && !canBypassOwnership) {
+      throw new Error("คุณไม่มีสิทธิ์คำนวณคอมมิชชั่นของดีลผู้อื่น");
+    }
 
     const rulesRes = await getCommissionRulesAction();
     const globalDefaultWht = rulesRes.success ? (rulesRes.data?.defaultWhtRate || 3) : 3;

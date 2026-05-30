@@ -36,8 +36,9 @@ export async function deletePropertyAction(formData: FormData) {
 
     if (propErr || !property) throw new Error("Property not found");
 
-    // 0.1) Authorization: Only Owner or Admin can delete
-    if (property.created_by !== user.id && !isAdmin(role)) {
+    // 0.1) Authorization: Only Owner, Admin or Manager can delete
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    if (property.created_by !== user.id && !canBypassOwnership) {
       throw new Error("Forbidden: You can only delete your own properties");
     }
 

@@ -162,6 +162,29 @@ export async function updateBlogPostAction(
       return { success: false, message: "Unauthorized" };
     }
 
+    const { data: existingPost, error: findError } = await supabase
+      .from("cms_content_v3")
+      .select("author_id, tenant_id")
+      .eq("content_type", "BLOG")
+      .eq("id", id)
+      .single();
+
+    if (findError || !existingPost) {
+      return { success: false, message: "ไม่พบข้อมูลบทความที่ต้องการ" };
+    }
+
+    const isMultiTenant = user.tenantId && user.tenantId !== "ALL";
+    if (isMultiTenant && existingPost.tenant_id && existingPost.tenant_id !== user.tenantId && user.role !== "ADMIN") {
+      return { success: false, message: "คุณไม่มีสิทธิ์แก้ไขบทความของสาขาอื่น" };
+    }
+
+    const canBypassOwnership = user.role === "ADMIN" || user.role === "MANAGER";
+    const isAuthor = existingPost.author_id === user.id;
+
+    if (!isAuthor && !canBypassOwnership) {
+      return { success: false, message: "คุณไม่มีสิทธิ์แก้ไขบทความของผู้อื่น" };
+    }
+
     // 🖋️ INTELLIGENCE: Handle Slugs (Uniqueness check only if changed)
     let finalSlug = validated.slug;
     if (!finalSlug || finalSlug.trim() === "") {
@@ -269,6 +292,29 @@ export async function deleteBlogPostAction(id: string): Promise<ActionResponse> 
 
     if (!user || !["ADMIN", "MANAGER", "AGENT"].includes(user.role)) {
       return { success: false, message: "Unauthorized" };
+    }
+
+    const { data: existingPost, error: findError } = await supabase
+      .from("cms_content_v3")
+      .select("author_id, tenant_id")
+      .eq("content_type", "BLOG")
+      .eq("id", id)
+      .single();
+
+    if (findError || !existingPost) {
+      return { success: false, message: "ไม่พบข้อมูลบทความที่ต้องการ" };
+    }
+
+    const isMultiTenant = user.tenantId && user.tenantId !== "ALL";
+    if (isMultiTenant && existingPost.tenant_id && existingPost.tenant_id !== user.tenantId && user.role !== "ADMIN") {
+      return { success: false, message: "คุณไม่มีสิทธิ์ลบบทความของสาขาอื่น" };
+    }
+
+    const canBypassOwnership = user.role === "ADMIN" || user.role === "MANAGER";
+    const isAuthor = existingPost.author_id === user.id;
+
+    if (!isAuthor && !canBypassOwnership) {
+      return { success: false, message: "คุณไม่มีสิทธิ์ลบบทความของผู้อื่น" };
     }
 
     const { error } = await supabase

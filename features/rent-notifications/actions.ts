@@ -7,15 +7,75 @@ import {
   RentNotificationRuleInput,
 } from "./schema";
 
+import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { mapDbError } from "@/lib/db-error";
 import { generateRentNotificationFlex, getLocaleDateFormat, getPropertyDisplayInfo } from "./utils";
+
+async function checkPropertyAccess(supabase: any, user: any, role: string, propertyId: string) {
+  const canBypass = role === "ADMIN" || role === "MANAGER";
+  if (canBypass) return true;
+
+  const { data: prop, error } = await supabase
+    .from("properties_core")
+    .select("created_by, assigned_to")
+    .eq("id", propertyId)
+    .single();
+
+  if (error || !prop) {
+    throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
+  }
+
+  const isOwner = prop.created_by === user.id || prop.assigned_to === user.id;
+  if (!isOwner) {
+    throw new Error("คุณไม่มีสิทธิ์จัดการกฎการแจ้งเตือนสำหรับทรัพย์สินของผู้อื่น");
+  }
+  return true;
+}
+
+async function checkRuleAccess(supabase: any, user: any, role: string, ruleId: string) {
+  const { data: rule, error } = await supabase
+    .from("rent_notification_rules_v3")
+    .select("property_id")
+    .eq("id", ruleId)
+    .single();
+
+  if (error || !rule) {
+    throw new Error("ไม่พบกฎการแจ้งเตือนที่ต้องการ");
+  }
+
+  await checkPropertyAccess(supabase, user, role, rule.property_id);
+}
+
+async function checkRulesAccess(supabase: any, user: any, role: string, ruleIds: string[]) {
+  const { data: rules, error } = await supabase
+    .from("rent_notification_rules_v3")
+    .select("property_id")
+    .in("id", ruleIds);
+
+  if (error || !rules) {
+    throw new Error("ไม่พบกฎการแจ้งเตือนที่ต้องการ");
+  }
+
+  for (const rule of rules) {
+    await checkPropertyAccess(supabase, user, role, rule.property_id);
+  }
+}
 
 export async function createRentNotificationRule(
   data: RentNotificationRuleInput,
 ) {
   try {
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
     const parsed = rentNotificationRuleSchema.parse(data);
-    const supabase = await createClient();
+    if (!parsed.property_id) {
+      return { success: false, message: "กรุณาระบุรหัสทรัพย์สิน" };
+    }
+    if (!parsed.tenant_id) {
+      return { success: false, message: "กรุณาระบุรหัสสาขา" };
+    }
+    await checkPropertyAccess(supabase, user, role, parsed.property_id);
 
     const { error } = await supabase.from("rent_notification_rules_v3").insert({
       property_id: parsed.property_id,
@@ -42,7 +102,11 @@ export async function updateRentNotificationRule(
   tenantId?: string | null,
 ) {
   try {
-    const supabase = await createClient();
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
+    await checkRuleAccess(supabase, user, role, id);
+
     const updateData: any = { ...data };
     if (updateData.line_group_id) {
       updateData.channel_id = updateData.line_group_id;
@@ -71,7 +135,11 @@ export async function updateRentNotificationRule(
 
 export async function deleteRentNotificationRule(id: string, tenantId?: string | null) {
   try {
-    const supabase = await createClient();
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
+    await checkRuleAccess(supabase, user, role, id);
+
     let query = supabase
       .from("rent_notification_rules_v3")
       .delete()
@@ -102,7 +170,11 @@ export async function toggleRentNotificationRule(
 
 export async function deleteRentNotificationRules(ids: string[], tenantId?: string | null) {
   try {
-    const supabase = await createClient();
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
+    await checkRulesAccess(supabase, user, role, ids);
+
     let query = supabase
       .from("rent_notification_rules_v3")
       .delete()
@@ -125,7 +197,11 @@ export async function deleteRentNotificationRules(ids: string[], tenantId?: stri
 
 export async function toggleRentNotificationRules(ids: string[], isActive: boolean, tenantId?: string | null) {
   try {
-    const supabase = await createClient();
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
+    await checkRulesAccess(supabase, user, role, ids);
+
     let query = supabase
       .from("rent_notification_rules_v3")
       .update({ is_active: isActive })
@@ -148,7 +224,10 @@ export async function toggleRentNotificationRules(ids: string[], isActive: boole
 
 export async function testSendRentNotification(ruleId: string, tenantId?: string | null) {
   try {
-    const supabase = await createClient();
+    const { supabase, user, role } = await requireAuthContext();
+    assertStaff(role);
+
+    await checkRuleAccess(supabase, user, role, ruleId);
     
     // 1. Fetch Rule with Security
     let ruleQuery = supabase
@@ -185,7 +264,7 @@ export async function testSendRentNotification(ruleId: string, tenantId?: string
       line_group_id: rawRule.channel_id,
       properties: rawRule.properties ? {
         id: rawRule.properties.id,
-        title: rawRule.properties.details?.title?.th || rawRule.properties.details?.title?.en || "Unknown Property",
+        title: (rawRule.properties.details as any)?.title?.th || (rawRule.properties.details as any)?.title?.en || "Unknown Property",
         rental_price: rawRule.properties.rent_price,
         currency: rawRule.properties.currency,
         bedrooms: rawRule.properties.bedrooms,
@@ -270,7 +349,7 @@ export async function testSendRentNotification(ruleId: string, tenantId?: string
       channel_id: rule.channel_id,
       status: "SUCCESS",
       metadata: { is_test: true },
-    });
+    } as any);
 
     return { success: true };
   } catch (err: unknown) {

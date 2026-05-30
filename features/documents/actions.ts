@@ -280,6 +280,30 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
 
     const validated = createDocumentSchema.parse(input);
 
+    const canBypass = role === "ADMIN" || role === "MANAGER";
+
+    if (!canBypass) {
+      if (validated.owner_type === "PROPERTY") {
+        const { data: prop } = await supabase.from("properties_core").select("created_by, assigned_to").eq("id", validated.owner_id).single();
+        const isOwner = prop && (prop.created_by === user.id || prop.assigned_to === user.id);
+        if (!isOwner) {
+          return { success: false, message: "คุณไม่มีสิทธิ์จัดการเอกสารของทรัพย์สินผู้อื่น" };
+        }
+      } else if (validated.owner_type === "LEAD") {
+        const { data: lead } = await supabase.from("leads").select("created_by, assigned_to").eq("id", validated.owner_id).single();
+        const isOwner = lead && (lead.created_by === user.id || lead.assigned_to === user.id);
+        if (!isOwner) {
+          return { success: false, message: "คุณไม่มีสิทธิ์จัดการเอกสารของลีดผู้อื่น" };
+        }
+      } else if (validated.owner_type === "DEAL" || validated.owner_type === "RENTAL_CONTRACT") {
+        const { data: deal } = await supabase.from("crm_deals_v3").select("created_by, agent_id").eq("id", validated.owner_id).single();
+        const isOwner = deal && (deal.created_by === user.id || deal.agent_id === user.id);
+        if (!isOwner) {
+          return { success: false, message: "คุณไม่มีสิทธิ์จัดการเอกสารของดีล/สัญญาผู้อื่น" };
+        }
+      }
+    }
+
     // If parent_id is provided, we might want to automatically increment the version
     // based on the parent's version if not provided in input
     let finalVersion = validated.version || 1;
@@ -468,8 +492,42 @@ export async function getDocumentVersionsAction(documentId: string) {
 // 4. Delete Document
 export async function deleteDocumentAction(id: string, storagePath: string) {
   try {
-    const { supabase, role, tenantId } = await requireAuthContext();
+    const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
+
+    const { data: doc, error: fetchDocErr } = await supabase
+      .from("documents")
+      .select("owner_id, owner_type")
+      .eq("id", id)
+      .single();
+
+    if (fetchDocErr || !doc) {
+      return { success: false, message: "ไม่พบเอกสารที่ต้องการลบ" };
+    }
+
+    const canBypass = role === "ADMIN" || role === "MANAGER";
+
+    if (!canBypass) {
+      if (doc.owner_type === "PROPERTY") {
+        const { data: prop } = await supabase.from("properties_core").select("created_by, assigned_to").eq("id", doc.owner_id).single();
+        const isOwner = prop && (prop.created_by === user.id || prop.assigned_to === user.id);
+        if (!isOwner) {
+          return { success: false, message: "คุณไม่มีสิทธิ์ลบเอกสารของทรัพย์สินผู้อื่น" };
+        }
+      } else if (doc.owner_type === "LEAD") {
+        const { data: lead } = await supabase.from("leads").select("created_by, assigned_to").eq("id", doc.owner_id).single();
+        const isOwner = lead && (lead.created_by === user.id || lead.assigned_to === user.id);
+        if (!isOwner) {
+          return { success: false, message: "คุณไม่มีสิทธิ์ลบเอกสารของลีดผู้อื่น" };
+        }
+      } else if (doc.owner_type === "DEAL" || doc.owner_type === "RENTAL_CONTRACT") {
+        const { data: deal } = await supabase.from("crm_deals_v3").select("created_by, agent_id").eq("id", doc.owner_id).single();
+        const isOwner = deal && (deal.created_by === user.id || deal.agent_id === user.id);
+        if (!isOwner) {
+          return { success: false, message: "คุณไม่มีสิทธิ์ลบเอกสารของดีล/สัญญาผู้อื่น" };
+        }
+      }
+    }
 
     // 1. Delete from Storage
     const { error: storageError } = await supabase.storage

@@ -233,6 +233,12 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
     }
 
     const existingSocial = (existing.social_links as Record<string, any>) || {};
+    const canBypassOwnership = ctx.role === "ADMIN" || ctx.role === "MANAGER";
+    const isOwner = existingSocial.created_by === ctx.user.id;
+
+    if (!isOwner && !canBypassOwnership) {
+      return { success: false, message: "คุณไม่มีสิทธิ์แก้ไขข้อมูลเจ้าของทรัพย์สินของผู้อื่น" };
+    }
     const socialLinks = {
       ...existingSocial,
       facebook_url: encrypt(validated.facebook_url),
@@ -299,7 +305,7 @@ export async function deleteOwnerAction(id: string) {
 
     const { data: existing, error: findError } = await ctx.supabase
       .from("identities_v3")
-      .select("id, tenant_id")
+      .select("id, tenant_id, social_links")
       .eq("id", id)
       .eq("category", 2)
       .single();
@@ -310,6 +316,14 @@ export async function deleteOwnerAction(id: string) {
 
     if (isMultiTenant && existing.tenant_id && ctx.tenantId && existing.tenant_id !== ctx.tenantId && !isAdminUser) {
       return { success: false, message: "คุณไม่มีสิทธิ์ลบข้อมูลของสาขาอื่น" };
+    }
+
+    const existingSocial = (existing.social_links as Record<string, any>) || {};
+    const canBypassOwnership = ctx.role === "ADMIN" || ctx.role === "MANAGER";
+    const isOwner = existingSocial.created_by === ctx.user.id;
+
+    if (!isOwner && !canBypassOwnership) {
+      return { success: false, message: "คุณไม่มีสิทธิ์ลบข้อมูลเจ้าของทรัพย์สินของผู้อื่น" };
     }
 
     const { count, error: countErr } = await ctx.supabase

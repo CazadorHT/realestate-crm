@@ -122,7 +122,7 @@ export async function restoreProperty(id: string) {
     const { supabase, tenantId, role } = ctx;
 
     // Fetch the property first to verify access if tenantId is undefined
-    let query = supabase.from("properties").select("tenant_id").eq("id", id);
+    let query = supabase.from("properties_core").select("tenant_id, created_by, assigned_to").eq("id", id);
     if (tenantId) {
       query = query.eq("tenant_id", tenantId);
     }
@@ -150,6 +150,16 @@ export async function restoreProperty(id: string) {
           error: "คุณไม่มีสิทธิ์เข้าถึงสาขาของทรัพย์สินนี้",
         };
       }
+    }
+
+    const canBypass = role === "ADMIN" || role === "MANAGER";
+    const isOwner = prop.created_by === ctx.user.id || prop.assigned_to === ctx.user.id;
+
+    if (!isOwner && !canBypass) {
+      return {
+        success: false,
+        error: "คุณไม่มีสิทธิ์กู้คืนทรัพย์สินของผู้อื่น",
+      };
     }
 
     let updateQuery = supabase
