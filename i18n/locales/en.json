@@ -1215,6 +1215,15 @@
       "description": "บัญชีของคุณถูกสร้างเรียบร้อยแล้ว แต่อยู่ในระหว่างการรอตรวจสอบและกำหนดสิทธิ์การเข้าถึงจากผู้ดูแลระบบ",
       "notice": "เราจะแจ้งให้คุณทราบเมื่อบัญชีของคุณได้รับการอนุมัติเรียบร้อยแล้ว",
       "back_to_login": "กลับไปหน้าเข้าสู่ระบบ"
+    },
+    "data_deletion": {
+      "title": "Data Deletion Request",
+      "subtitle": "Check the status of your data deletion request",
+      "code_label": "Confirmation Code",
+      "status_label": "Request Status",
+      "status_pending": "Request logged and scheduled for deletion",
+      "desc": "Under GDPR and Facebook Platform Policies, your request has been logged. Your connected Facebook data is scheduled to be deleted.",
+      "back_to_login": "Back to Login"
     }
   },
   "recently_viewed": {
