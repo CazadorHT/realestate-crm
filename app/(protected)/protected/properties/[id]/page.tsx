@@ -62,11 +62,7 @@ export default async function PropertyDetailsPage({
         ),
         agents:property_agents (
           identity:identities_v3 (
-            id, display_name, phone, email, avatar_url, line_id, is_active,
-            profile:profiles (
-              wechat_user_id,
-              whatsapp_user_id
-            )
+            id, display_name, phone, email, avatar_url, line_id, is_active
           )
         ),
         property_images (
@@ -114,9 +110,10 @@ export default async function PropertyDetailsPage({
   const popularAreaIdFromAddress = addressInfo?.popular_area_id;
 
   const ownerId = rawData.owner_id || ownerIdFromMeta;
+  const agentIds = (rawData.agents?.map((a: any) => a.identity?.id).filter(Boolean) || []) as string[];
 
-  // Fetch Owner & Popular Area separately
-  const [ownerData, popularAreaResponse] = await Promise.all([
+  // Fetch Owner, Popular Area & Agent Profiles separately
+  const [ownerData, popularAreaResponse, profilesResponse] = await Promise.all([
     ownerId ? getOwnerById(ownerId) : Promise.resolve(null),
     popularAreaIdFromAddress
       ? supabase
@@ -125,8 +122,24 @@ export default async function PropertyDetailsPage({
           .eq("id", popularAreaIdFromAddress)
           .single()
       : Promise.resolve({ data: null }),
+    agentIds.length > 0
+      ? supabase
+          .from("profiles")
+          .select("id, wechat_user_id, whatsapp_user_id")
+          .in("id", agentIds)
+      : Promise.resolve({ data: null })
   ]);
   const popularAreaV3 = popularAreaResponse.data;
+
+  let profilesMap: Record<string, { wechat_user_id: string | null, whatsapp_user_id: string | null }> = {};
+  if (profilesResponse && 'data' in profilesResponse && profilesResponse.data) {
+    (profilesResponse.data as any[]).forEach((p: any) => {
+      profilesMap[p.id] = {
+        wechat_user_id: p.wechat_user_id,
+        whatsapp_user_id: p.whatsapp_user_id
+      };
+    });
+  }
 
   const pricingDetails = (details?.pricing_details || {}) as PropertyPricingV3;
 
@@ -224,8 +237,8 @@ export default async function PropertyDetailsPage({
           email: mainAgentIdentity.email,
           line_id: mainAgentIdentity.line_id,
           avatar_url: mainAgentIdentity.avatar_url,
-          wechat_user_id: (Array.isArray(mainAgentIdentity.profile) ? mainAgentIdentity.profile[0] : mainAgentIdentity.profile)?.wechat_user_id || null,
-          whatsapp_user_id: (Array.isArray(mainAgentIdentity.profile) ? mainAgentIdentity.profile[0] : mainAgentIdentity.profile)?.whatsapp_user_id || null,
+          wechat_user_id: profilesMap[mainAgentIdentity.id]?.wechat_user_id || null,
+          whatsapp_user_id: profilesMap[mainAgentIdentity.id]?.whatsapp_user_id || null,
           facebook_url: null,
           other_contact: null,
           is_active: !!mainAgentIdentity.is_active,

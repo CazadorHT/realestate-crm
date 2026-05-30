@@ -67,11 +67,19 @@ const AdminQuickLinksTab = dynamic(() => import("@/features/site-settings/compon
   loading: () => <div className="grid grid-cols-1 md:grid-cols-2 gap-4"><Skeleton className="h-32" /><Skeleton className="h-32" /></div>
 });
 
+import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
+import { redirect } from "next/navigation";
+
 export default async function SettingsPage({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
+  const profile = await getCurrentProfile();
+  if (!profile || profile.role === "AGENT") {
+    redirect("/protected");
+  }
+
   const resolvedParams = await searchParams;
   await cookies(); // Force dynamic rendering
   const activeTab = (resolvedParams?.tab as string) || "general";

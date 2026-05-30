@@ -60,6 +60,30 @@ export async function updateSession(request: NextRequest) {
     };
   }
 
+  // 1.5 🛡️ Admin Route Access Control: Protect restricted admin paths from AGENT roles
+  if (user && request.nextUrl.pathname.startsWith("/protected/admin")) {
+    const isAllowedPath = 
+      request.nextUrl.pathname.startsWith("/protected/admin/popular-areas") || 
+      request.nextUrl.pathname.startsWith("/protected/admin/master-data");
+    
+    if (!isAllowedPath) {
+      // Query the role from DB to be certain of the role
+      const { data: identity } = await supabase
+        .from("identities_v3")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (identity?.role === "AGENT") {
+        console.log("[AUTH DEBUG] AGENT role blocked from accessing admin path:", request.nextUrl.pathname);
+        return {
+          response: NextResponse.redirect(new URL("/protected", request.url)),
+          user
+        };
+      }
+    }
+  }
+
   // 2. 🛡️ [PHASE 2] Administrative MFA Enforcement (AAL2)
   // Protect ADMIN and MANAGER roles with Mandatory MFA
   const role = user?.app_metadata?.role as string | undefined;

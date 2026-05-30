@@ -244,7 +244,7 @@ export function SidebarNav({
       href: "/protected/admin/popular-areas",
       icon: MapPin,
       active: pathname?.startsWith("/protected/admin/popular-areas") ?? false,
-      roles: ["AGENT", "ADMIN" ,"MANAGER" ],
+      roles: ["ADMIN" ,"MANAGER", "AGENT"],
       description: "กำหนดจุดทำเลทองและพื้นที่ยอดนิยมในคลังข้อมูลแบรนด์",
     },
     {
@@ -289,7 +289,7 @@ export function SidebarNav({
       href: "/protected/settings",
       icon: Settings,
       active: pathname === "/protected/settings",
-      roles: ["ADMIN", "AGENT", "MANAGER"],
+      roles: ["ADMIN", "MANAGER"],
       description: "ปรับแต่งการทำงานของระบบและสิทธิ์การเข้าถึงข้อมูลสาขา",
     },
   ];

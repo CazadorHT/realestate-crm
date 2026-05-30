@@ -132,6 +132,9 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
 
     try {
       if (view === "login") {
+        // Set remember_me cookie for 5 minutes to guide server client session lifetime
+        document.cookie = `remember_me=${!!data.rememberMe}; path=/; max-age=300; SameSite=Lax`;
+
         const { error } = await supabase.auth.signInWithPassword({
           email: data.email,
           password: data.password || "",

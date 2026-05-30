@@ -15,6 +15,7 @@ export async function createClient() {
 
   try {
     const cookieStore = await cookies();
+    const rememberMe = cookieStore.get("remember_me")?.value !== "false";
 
     return createServerClient<Database>(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,13 +27,20 @@ export async function createClient() {
           },
           setAll(cookiesToSet) {
             try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                const finalOptions = {
                   ...options,
-                  sameSite: "lax",
+                  sameSite: "lax" as const,
                   path: "/",
-                }),
-              );
+                };
+
+                if (!rememberMe) {
+                  delete finalOptions.maxAge;
+                  delete (finalOptions as any).expires;
+                }
+
+                cookieStore.set(name, value, finalOptions);
+              });
             } catch {
               // The `setAll` method was called from a Server Component.
               // This can be ignored if you have proxy refreshing

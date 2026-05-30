@@ -5,6 +5,7 @@ import { ListSkeleton } from "./skeletons/ListSkeleton";
 import { PropertyStatus, PropertyType, ListingType } from "@/features/properties/types";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { getCurrentProfile } from "@/lib/supabase/getCurrentProfile";
 
 interface PropertyImage {
   url?: string;
@@ -64,12 +65,16 @@ export async function RecentPropertiesSection({
     .order("created_at", { ascending: false })
     .limit(5);
 
+  const profile = await getCurrentProfile();
+  const isAgent = profile?.role === "AGENT";
+
   if (tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
   }
 
-  if (userId && userId !== "ALL") {
-    query = query.eq("assigned_to", userId);
+  const targetUserId = isAgent ? profile?.id : (userId && userId !== "ALL" ? userId : undefined);
+  if (targetUserId) {
+    query = query.or(`assigned_to.eq.${targetUserId},created_by.eq.${targetUserId}`);
   }
 
   const { data: propertiesResult } = await query;

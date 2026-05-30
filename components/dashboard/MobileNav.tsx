@@ -230,14 +230,14 @@ export function MobileNav({
       href: "/protected/admin/popular-areas",
       icon: MapPin,
       active: pathname?.startsWith("/protected/admin/popular-areas") ?? false,
-      roles: ["AGENT", "ADMIN","MANAGER"],
+      roles: ["ADMIN","MANAGER", "AGENT"],
     },
     {
       title: "ข้อมูลการเดินทางและสถานที่",
       href: "/protected/admin/master-data",
       icon: Database,
       active: pathname?.startsWith("/protected/admin/master-data") ?? false,
-      roles: ["ADMIN", "MANAGER","AGENT"],
+      roles: ["ADMIN", "MANAGER", "AGENT"],
     },
   ];
 
@@ -254,7 +254,7 @@ export function MobileNav({
       href: "/protected/settings",
       icon: Settings,
       active: pathname === "/protected/settings",
-      roles: ["ADMIN", "AGENT", "MANAGER"],
+      roles: ["ADMIN", "MANAGER"],
     },
   ];
 
