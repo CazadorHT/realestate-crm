@@ -920,6 +920,7 @@ export function PropertiesTable({
                       id={property.id}
                       value={property.status as PropertyStatus}
                       className="h-7 w-[110px] text-[11px] px-2"
+                      disabled={cannotEdit}
                     />
                   </TableCell>
 

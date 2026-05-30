@@ -512,7 +512,7 @@ export async function updatePropertyStatusAction(input: {
     const { data: existing, error: fetchErr } = await supabase
       .from("properties_core")
       .select(`
-        id, tenant_id, status,
+        id, tenant_id, status, created_by, assigned_to,
         properties_details ( title, meta_data )
       `)
       .eq("id", input.id)
@@ -526,6 +526,14 @@ export async function updatePropertyStatusAction(input: {
     type MultiLang = { th?: string; en?: string; cn?: string; ru?: string };
     const details = existing.properties_details as unknown as { title: MultiLang; meta_data: Record<string, unknown> } | null;
     const meta = details?.meta_data;
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const createdBy = existing.created_by || (meta?.created_by as string | undefined);
+    const isOwner = (createdBy && createdBy === user.id) || (existing.assigned_to === user.id);
+
+    if (!isOwner && !canBypassOwnership) {
+      return { success: false, message: "คุณไม่มีสิทธิ์เปลี่ยนสถานะทรัพย์สินของผู้อื่น" };
+    }
     
     if (meta?.requires_ai_review && input.status !== "DRAFT") {
       return { success: false, message: "กรุณาตรวจสอบข้อมูล AI ในหน้าแก้ไขก่อนเปลี่ยนสถานะ" };

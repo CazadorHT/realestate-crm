@@ -27,6 +27,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function statusTone(status: PropertyStatus) {
   const style = PROPERTY_STATUS_STYLES[status] || PROPERTY_STATUS_STYLES.DRAFT;
@@ -37,6 +43,7 @@ export function PropertyStatusSelect(props: {
   id: string;
   value: PropertyStatus;
   className?: string;
+  disabled?: boolean;
 }) {
   const [value, setValue] = useState<PropertyStatus>(props.value);
   const [isPending, startTransition] = useTransition();
@@ -44,6 +51,43 @@ export function PropertyStatusSelect(props: {
 
   const router = useRouter();
   const label = useMemo(() => PROPERTY_STATUS_LABELS[value]?.th || value, [value]);
+  if (props.disabled) {
+    const style = PROPERTY_STATUS_STYLES[value] || PROPERTY_STATUS_STYLES.DRAFT;
+    return (
+      <TooltipProvider delayDuration={200}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className="inline-block w-full">
+              <Button
+                id={`status-trigger-${props.id}`}
+                variant="outline"
+                size="sm"
+                disabled
+                className={cn(
+                  "h-8 rounded-full w-full px-3 shadow-sm font-bold text-[11px] border-slate-200 opacity-60 cursor-not-allowed",
+                  statusTone(value),
+                  props.className,
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <div
+                    className={cn(
+                      "h-2 w-2 rounded-full shrink-0 shadow-sm",
+                      style.dot,
+                    )}
+                  />
+                  <span className="truncate flex-1">{label}</span>
+                </div>
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
+            ไม่สามารถเปลี่ยนสถานะทรัพย์สินของผู้อื่นได้
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);

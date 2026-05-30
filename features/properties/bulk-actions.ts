@@ -6,7 +6,7 @@ import { logAudit } from "@/lib/audit";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { PROPERTY_IMAGES_BUCKET } from "./logic/images";
 import { mapDbError } from "@/lib/db-error";
-import { PROPERTY_STATUS_DB_VALUE, PropertyStatus } from "./labels";
+import { PROPERTY_STATUS_DB_VALUE, PropertyStatus, getStatusFromDb } from "./labels";
 
 /**
  * Result type for bulk operations
@@ -33,10 +33,10 @@ export async function bulkDeletePropertiesAction(
       return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
     }
 
-    // กรองทรัพย์ที่ติดดีลสำคัญ (Signed/Closed) หรือสถานะห้ามลบ
+    // กรองทรัพย์ที่ติดดีลสำคัญ (Signed/Closed) หรือสถานะห้ามลบ และสิทธิ์ในการลบ
     let statusQuery = supabase
-      .from("properties")
-      .select("id, status")
+      .from("properties_core")
+      .select("id, status, created_by, assigned_to")
       .in("id", ids);
       
     if (role !== "ADMIN" && tenantId) {
@@ -56,10 +56,24 @@ export async function bulkDeletePropertiesAction(
     }
     const { data: activeDeals } = await dealsQuery;
 
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
     const blockedIds = new Set<string>();
+    
     propertiesStatus?.forEach((p) => {
-      if ((p.status === "SOLD" || p.status === "RENTED") && p.id) blockedIds.add(p.id);
+      if (!p.id) return;
+      const statusStr = getStatusFromDb(p.status);
+      if (statusStr === "SOLD" || statusStr === "RENTED") {
+        blockedIds.add(p.id);
+        return;
+      }
+      if (!canBypassOwnership) {
+        const isOwner = p.created_by === user.id || p.assigned_to === user.id;
+        if (!isOwner) {
+          blockedIds.add(p.id);
+        }
+      }
     });
+    
     activeDeals?.forEach((d) => {
       if (d.property_id) blockedIds.add(d.property_id);
     });
@@ -453,20 +467,41 @@ export async function bulkUpdateStatusAction(
       return { success: false, count: 0, message: "ไม่มีรายการที่เลือก" };
     }
 
+    // ดึงสิทธิ์ของแต่ละทรัพย์เพื่อตรวจสอบสิทธิ์การเปลี่ยนสถานะ
+    let permissionQuery = supabase
+      .from("properties_core")
+      .select("id, created_by, assigned_to")
+      .in("id", ids);
+      
+    if (role !== "ADMIN" && tenantId) {
+      permissionQuery = permissionQuery.eq("tenant_id", tenantId);
+    }
+    const { data: properties, error: permissionErr } = await permissionQuery;
+
+    if (permissionErr || !properties) {
+      return { success: false, count: 0, message: "ไม่สามารถดึงข้อมูลทรัพย์เพื่อตรวจสอบสิทธิ์ได้" };
+    }
+
+    const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
+    const allowedIds = properties
+      .filter((p) => {
+        if (canBypassOwnership) return true;
+        return p.created_by === user.id || p.assigned_to === user.id;
+      })
+      .map((p) => p.id);
+
+    if (allowedIds.length === 0) {
+      return { success: false, count: 0, message: "คุณไม่มีสิทธิ์เปลี่ยนสถานะทรัพย์สินของผู้อื่น" };
+    }
+
     // กรองทรัพย์ที่เจ้าของสาขามีสิทธิ์จัดการ
-    let query = supabase
+    const { error, count } = await supabase
       .from("properties_core")
       .update({ 
         status: PROPERTY_STATUS_DB_VALUE[status as PropertyStatus],
         updated_at: new Date().toISOString()
       })
-      .in("id", ids);
-      
-    if (role !== "ADMIN" && tenantId) {
-      query = query.eq("tenant_id", tenantId);
-    }
-
-    const { error, count } = await query;
+      .in("id", allowedIds);
 
     if (error) throw error;
 
@@ -475,7 +510,7 @@ export async function bulkUpdateStatusAction(
       {
         action: "property.bulk_update_status",
         entity: "properties",
-        entityId: ids.join(","),
+        entityId: allowedIds.join(","),
         metadata: { count, newStatus: status },
       }
     );
@@ -489,7 +524,7 @@ export async function bulkUpdateStatusAction(
 
     return { 
       success: true, 
-      count: count ?? ids.length, 
+      count: count ?? allowedIds.length, 
       message: `อัปเดตสถานะเป็น ${status} สำเร็จ ${count} รายการ` 
     };
   } catch (error) {
