@@ -1,8 +1,36 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { uploadPropertyImageAction, deletePropertyImageFromStorage } from './images';
-import { requireAuthContext, assertStaff } from '@/lib/authz';
+import { requireAuthContext } from '@/lib/authz';
 
-// 1. Mock Globals & Dependencies
+// 1. Define mockSupabase at top level so all mocks can reference it
+const mockStorage = {
+  copy: vi.fn().mockResolvedValue({ data: {}, error: null }),
+  remove: vi.fn().mockResolvedValue({ data: [], error: null }),
+  upload: vi.fn().mockResolvedValue({ error: null }),
+  getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'http://cdn/p1.webp' } })),
+};
+
+const mockSupabase: any = {
+  from: vi.fn().mockReturnThis(),
+  select: vi.fn().mockReturnThis(),
+  insert: vi.fn().mockReturnThis(),
+  update: vi.fn().mockReturnThis(),
+  delete: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  gte: vi.fn().mockReturnThis(),
+  single: vi.fn().mockReturnThis(),
+  maybeSingle: vi.fn().mockReturnThis(),
+  storage: {
+    from: vi.fn().mockReturnValue(mockStorage),
+  },
+  then: vi.fn().mockImplementation((resolve: any) => resolve({ data: [], error: null, count: 0 })),
+};
+
+// Mock admin client to return our local mockSupabase
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: vi.fn(() => mockSupabase),
+}));
+
+// Mock Authz
 vi.mock('@/lib/authz', () => ({
   requireAuthContext: vi.fn(),
   assertStaff: vi.fn(),
@@ -26,7 +54,7 @@ vi.mock('@/lib/file-validation', () => ({
   validateImageFile: vi.fn(() => Promise.resolve({ valid: true })),
 }));
 
-// Mock Sharp carefully for both CJS/ESM access
+// Mock Sharp
 vi.mock('sharp', () => ({
   default: vi.fn(() => ({
     resize: vi.fn().mockReturnThis(),
@@ -35,33 +63,19 @@ vi.mock('sharp', () => ({
   })),
 }));
 
+// Now import the actions after mocking
+import { uploadPropertyImageAction, deletePropertyImageFromStorage } from './images';
+
 describe('Property Image Actions - Security & Validation', () => {
   const mockUserId = 'user-123';
   const mockSessionId = 'test-session-999';
-
-  const mockSupabase: any = {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    insert: vi.fn().mockReturnThis(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    gte: vi.fn().mockReturnThis(),
-    single: vi.fn().mockReturnThis(),
-    maybeSingle: vi.fn().mockReturnThis(),
-    storage: {
-      from: vi.fn().mockReturnThis(),
-      upload: vi.fn().mockResolvedValue({ error: null }),
-      remove: vi.fn().mockResolvedValue({ data: [], error: null }),
-      getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'http://cdn/p1.webp' } })),
-    },
-    then: vi.fn().mockImplementation((resolve: any) => resolve({ data: [], error: null, count: 0 })),
-  };
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockSupabase.from.mockReturnValue(mockSupabase);
     mockSupabase.select.mockReturnValue(mockSupabase);
+    mockSupabase.insert.mockReturnValue(mockSupabase);
+    mockSupabase.update.mockReturnValue(mockSupabase);
     mockSupabase.eq.mockReturnValue(mockSupabase);
     mockSupabase.gte.mockReturnValue(mockSupabase);
     mockSupabase.single.mockReturnValue(mockSupabase);
@@ -107,9 +121,9 @@ describe('Property Image Actions - Security & Validation', () => {
       const result = await uploadPropertyImageAction(getMockFormData());
 
       expect(result.success).toBe(false);
-      // ✅ 🛡️ Verify storage cleanup was called on rollback
+      // Verify storage cleanup was called on rollback
       expect(mockSupabase.storage.from).toHaveBeenCalledWith('property-images');
-      expect(mockSupabase.storage.remove).toHaveBeenCalled();
+      expect(mockStorage.remove).toHaveBeenCalled();
     });
   });
 
@@ -125,7 +139,7 @@ describe('Property Image Actions - Security & Validation', () => {
       const result = await deletePropertyImageFromStorage(validPath);
 
       expect(result.success).toBe(true);
-      expect(mockSupabase.storage.remove).toHaveBeenCalledWith([validPath]);
+      expect(mockStorage.remove).toHaveBeenCalledWith([validPath]);
     });
   });
 });

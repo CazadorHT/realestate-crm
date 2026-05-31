@@ -1,16 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   softDeleteProperty,
-  restoreProperty,
   permanentDeleteProperty,
 } from "./property-trash";
+
+// 🛠️ ต้องดึงrequireAuthContext มาเพื่อใช้ vi.mocked() ในเคสด้านล่าง
 import { requireAuthContext } from "@/lib/authz";
 
-// 1. แยก Mock Functions อิสระสำหรับตัวตัดสินผล (Final Executors)
+// 1. แยก Mock Functions อิสระสำหรับตัวตัดสินผล
 const mockSingle = vi.fn();
-const mockUpdateExec = vi.fn(); // สำหรับ .update()...
-const mockDeleteExec = vi.fn(); // สำหรับ .delete()...
-const mockInsertExec = vi.fn(); // สำหรับ logAudit
+const mockUpdateExec = vi.fn();
+const mockDeleteExec = vi.fn();
 
 // 2. สร้าง Chained Proxy
 const mockSupabase = {
@@ -18,34 +18,23 @@ const mockSupabase = {
   select: vi.fn().mockReturnThis(),
   update: vi.fn().mockImplementation(() => ({
     eq: vi.fn().mockReturnThis(),
-    mockResolvedValueOnce: mockUpdateExec, // หลอกให้เรียกได้ใน test (ถ้าจำเป็น)
-    then: (resolve: any) => resolve(mockUpdateExec()), // รองรับ await ตรงๆ
+    mockResolvedValueOnce: mockUpdateExec,
+    then: (resolve: any) => resolve(mockUpdateExec()),
   })),
   delete: vi.fn().mockImplementation(() => ({
     eq: vi.fn().mockReturnThis(),
     then: (resolve: any) => resolve(mockDeleteExec()),
   })),
-  insert: vi.fn().mockImplementation(() => ({
-    then: (resolve: any) => resolve(mockInsertExec()),
-  })),
   eq: vi.fn().mockReturnThis(),
   single: mockSingle,
 };
 
+// 3. Mock Modules
 vi.mock("@/lib/authz", () => ({
   requireAuthContext: vi.fn(),
   assertStaff: vi.fn(),
-  AuthzError: class AuthzError extends Error {
-    code: string;
-    constructor(code: string, message?: string) {
-      super(message || code);
-      this.code = code;
-      this.name = 'AuthzError';
-    }
-  }
 }));
 
-// Mock logAudit เพื่อไม่ให้ไปกวนการทำงานของ Supabase Mock
 vi.mock("@/lib/audit", () => ({
   logAudit: vi.fn().mockResolvedValue(null),
 }));
@@ -53,7 +42,14 @@ vi.mock("@/lib/audit", () => ({
 vi.mock("next/cache", () => ({
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
-  unstable_cache: vi.fn((fn) => fn),
+}));
+
+vi.mock("@/lib/db-error", () => ({
+  mapDbError: vi.fn((e) => e.message || "DB Error"),
+}));
+
+vi.mock("../labels", () => ({
+  getStatusFromDb: vi.fn((val) => val), // ส่งค่ากลับไปตรงๆ
 }));
 
 describe("Property Actions - Trash & Revenue Protection", () => {
@@ -63,46 +59,45 @@ describe("Property Actions - Trash & Revenue Protection", () => {
     mockSupabase.select.mockReturnValue(mockSupabase);
     mockSupabase.eq.mockReturnValue(mockSupabase);
     
-    // Default success states
     mockUpdateExec.mockResolvedValue({ error: null });
     mockDeleteExec.mockResolvedValue({ error: null });
-    mockInsertExec.mockResolvedValue({ error: null });
   });
 
   describe("softDeleteProperty", () => {
     it("should block non-admin/non-manager from trashing SOLD properties", async () => {
-      (requireAuthContext as any).mockResolvedValue({
+      vi.mocked(requireAuthContext).mockResolvedValue({
         supabase: mockSupabase,
-        user: { id: "agent-1" },
+        user: { id: "agent-1" } as any, // 🛠️ หลบ TS error
         role: "AGENT",
         tenantId: "t1",
-      });
+      } as any);
 
+      // 🛠️ ให้ AGENT เป็นเจ้าของทรัพย์ เพื่อผ่านเงื่อนไข isOwner ไปเช็ค Revenue Protection
       mockSingle.mockResolvedValueOnce({
-        data: { status: "SOLD", tenant_id: "t1" },
+        data: { status: "SOLD", tenant_id: "t1", created_by: "agent-1" },
         error: null,
       });
 
       const result = await softDeleteProperty("p1");
 
       expect(result.success).toBe(false);
+      // 🛠️ ตรวจจับคำว่า 'สิทธิ์ไม่เพียงพอ' ตามที่โค้ดจริงส่งออกมา
       expect(result.error).toContain("สิทธิ์ไม่เพียงพอ");
     });
 
     it("should allow Admin to trash SOLD properties", async () => {
-      (requireAuthContext as any).mockResolvedValue({
+      vi.mocked(requireAuthContext).mockResolvedValue({
         supabase: mockSupabase,
-        user: { id: "admin-1" },
+        user: { id: "admin-1" } as any,
         role: "ADMIN",
         tenantId: "t1",
-      });
+      } as any);
 
       mockSingle.mockResolvedValueOnce({
-        data: { status: "SOLD", tenant_id: "t1" },
+        data: { status: "SOLD", tenant_id: "t1", created_by: "agent-1" },
         error: null,
       });
-      mockUpdateExec.mockResolvedValueOnce({ error: null });
-
+      
       const result = await softDeleteProperty("p1");
 
       expect(result.success).toBe(true);
@@ -110,61 +105,65 @@ describe("Property Actions - Trash & Revenue Protection", () => {
     });
 
     it("should allow Manager to trash SOLD properties", async () => {
-      (requireAuthContext as any).mockResolvedValue({
+      vi.mocked(requireAuthContext).mockResolvedValue({
         supabase: mockSupabase,
-        user: { id: "manager-1" },
+        user: { id: "manager-1" } as any,
         role: "MANAGER",
         tenantId: "t1",
-      });
+      } as any);
 
       mockSingle.mockResolvedValueOnce({
-        data: { status: "SOLD", tenant_id: "t1" },
+        data: { status: "SOLD", tenant_id: "t1", created_by: "agent-1" },
         error: null,
       });
-      mockUpdateExec.mockResolvedValueOnce({ error: null });
 
       const result = await softDeleteProperty("p1");
 
       expect(result.success).toBe(true);
+      expect(mockSupabase.update).toHaveBeenCalled();
     });
 
     it("should enforce tenant isolation for non-admins", async () => {
-      (requireAuthContext as any).mockResolvedValue({
+      vi.mocked(requireAuthContext).mockResolvedValue({
         supabase: mockSupabase,
-        user: { id: "agent-1" },
+        user: { id: "agent-1" } as any,
         role: "AGENT",
         tenantId: "t1",
-      });
+      } as any);
 
+      // 🛠️ จำลองให้เป็นทรัพย์สถานะปกติ และ AGENT เป็นเจ้าของ
       mockSingle.mockResolvedValueOnce({
-        data: { status: "ACTIVE", tenant_id: "t1" },
+        data: { status: "ACTIVE", tenant_id: "t1", created_by: "agent-1" },
         error: null,
       });
-      mockUpdateExec.mockResolvedValueOnce({ error: null });
 
       await softDeleteProperty("p1");
 
+      // 🛠️ โค้ดจริงของคุณมีการ check eq("tenant_id", tenantId) ทั้งหมด 2 ครั้ง 
+      // (รอบดึงข้อมูล และรอบอัปเดต)
       expect(mockSupabase.eq).toHaveBeenCalledWith("tenant_id", "t1");
     });
   });
 
   describe("permanentDeleteProperty", () => {
     it("should block non-admin from permanently deleting RENTED properties", async () => {
-      (requireAuthContext as any).mockResolvedValue({
+      vi.mocked(requireAuthContext).mockResolvedValue({
         supabase: mockSupabase,
-        user: { id: "agent-1" },
+        user: { id: "agent-1" } as any,
         role: "AGENT",
         tenantId: "t1",
-      });
+      } as any);
 
+      // 🛠️ ให้ AGENT เป็นเจ้าของทรัพย์ เพื่อผ่านเงื่อนไขแรก
       mockSingle.mockResolvedValueOnce({
-        data: { status: "RENTED", tenant_id: "t1" },
+        data: { status: "RENTED", tenant_id: "t1", created_by: "agent-1" },
         error: null,
       });
 
       const result = await permanentDeleteProperty("p1");
 
       expect(result.success).toBe(false);
+      // 🛠️ โค้ดจริงมีคำว่า "รายการขาย/เช่าสำเร็จ" อยู่ใน Error Message
       expect(result.error).toContain("รายการขาย/เช่าสำเร็จ");
     });
   });

@@ -37,8 +37,12 @@ vi.mock('@/lib/seo-utils', () => ({
 vi.mock('@/lib/inngest/client', () => ({ inngest: { send: vi.fn().mockResolvedValue({}) } }));
 vi.mock('@/lib/audit', () => ({ logAudit: vi.fn() }));
 
-// 3. Universal Supabase Mock (คงเดิม)
-const mockStorage = { copy: vi.fn().mockResolvedValue({ data: {}, error: null }) };
+// 3. Universal Supabase Mock
+const mockStorage = {
+  copy: vi.fn().mockResolvedValue({ data: {}, error: null }),
+  getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'http://example.com/img.jpg' } })
+};
+
 const mockSupabase: any = {
   from: vi.fn().mockReturnThis(),
   select: vi.fn().mockReturnThis(),

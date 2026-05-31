@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { globalMockSupabase as mockSupabase } from '@/tests/mocks/supabase';
 
+// 🛠️ ต้องดึง requireAuthContext มาเพื่อใช้ vi.mocked() ในเคสด้านล่าง
+import { requireAuthContext } from '@/lib/authz'; 
 import { createLeadAction, updateLeadStageAction } from './actions';
 
 // 🛡️ TOP-LEVEL MOCKS
@@ -29,7 +31,8 @@ vi.mock('@/lib/crypto', () => ({
 vi.mock("@/lib/authz", () => ({
   requireAuthContext: vi.fn().mockResolvedValue({
     supabase: mockSupabase,
-    user: { id: 'u1' },
+    // 🛠️ FIX: เติม as any เพื่อข้าม TypeScript Error ของ Supabase User
+    user: { id: 'u1' } as any, 
     tenantId: 'tenant-1',
     role: 'AGENT',
   }),
@@ -72,7 +75,26 @@ describe('Leads Module - Definitive Resolution', () => {
 
   it('should include tenant isolation in update', async () => {
     const validId = '550e8400-e29b-41d4-a716-446655440002';
-    mockSupabase.mockTableResult('leads', { id: validId });
+    
+    // 🛠️ Mock Data แบบ Full Option 
+    const mockLeadData = { 
+      id: validId,
+      created_by: 'u1',
+      assigned_to: 'u1',
+      tenant_id: 'tenant-1',
+      stage: 'NEW'
+    };
+
+    mockSupabase.mockTableResult('leads', mockLeadData);
+    mockSupabase.mockTableResult('leads_core', mockLeadData);
+
+    vi.mocked(requireAuthContext).mockResolvedValueOnce({
+      supabase: mockSupabase,
+      // 🛠️ FIX: เติม as any ตรงนี้เช่นกัน
+      user: { id: 'u1' } as any,
+      tenantId: 'tenant-1',
+      role: 'MANAGER',
+    });
 
     const result = await updateLeadStageAction({ id: validId, stage: 'FOLLOW_UP' });
 

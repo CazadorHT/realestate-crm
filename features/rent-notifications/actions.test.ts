@@ -18,6 +18,24 @@ describe("Rent Notifications Module - Actions & Queries (เทสโหดๆ �
 
     (globalThis as any).__MOCK_SUPABASE__ = mockSupabase;
 
+    vi.doMock("@/lib/authz", () => ({
+      requireAuthContext: vi.fn().mockResolvedValue({
+        supabase: mockSupabase,
+        user: { id: "u1" },
+        role: "ADMIN",
+        tenantId: "tenant-1",
+      }),
+      assertStaff: vi.fn(),
+      AuthzError: class AuthzError extends Error {
+        code: string;
+        constructor(code: string, message?: string) {
+          super(message || code);
+          this.code = code;
+          this.name = "AuthzError";
+        }
+      },
+    }));
+
     vi.doMock("@/lib/supabase/server", () => ({
       createClient: vi.fn().mockResolvedValue(mockSupabase),
     }));
@@ -107,14 +125,14 @@ describe("Rent Notifications Module - Actions & Queries (เทสโหดๆ �
     });
 
     it("should successfully bulk delete rules", async () => {
-      mockSupabase.mockTableResult("rent_notification_rules_v3", { success: true });
+      mockSupabase.mockTableResult("rent_notification_rules_v3", [{ property_id: "prop-1" }, { property_id: "prop-2" }]);
 
       const result = await deleteRentNotificationRules(["rule-1", "rule-2"], "tenant-1");
       expect(result.success).toBe(true);
     });
 
     it("should successfully bulk toggle rules", async () => {
-      mockSupabase.mockTableResult("rent_notification_rules_v3", { success: true });
+      mockSupabase.mockTableResult("rent_notification_rules_v3", [{ property_id: "prop-1" }, { property_id: "prop-2" }]);
 
       const result = await toggleRentNotificationRules(["rule-1", "rule-2"], true, "tenant-1");
       expect(result.success).toBe(true);
@@ -123,15 +141,18 @@ describe("Rent Notifications Module - Actions & Queries (เทสโหดๆ �
 
   describe("testSendRentNotification", () => {
     it("should successfully send test rent notification flex message", async () => {
+      const mockRule = {
+        id: "rule-1",
+        property_id: "prop-1",
+        channel_id: "group-1",
+        language: "th",
+        properties: { rent_price: 15000, currency: "THB", details: { title: { th: "Condo A" } }, property_images: [] },
+        channel: { id: "group-1" },
+      };
+
       mockSupabase
-        .mockTableResult("rent_notification_rules_v3", {
-          id: "rule-1",
-          property_id: "prop-1",
-          channel_id: "group-1",
-          language: "th",
-          properties: { rent_price: 15000, currency: "THB", details: { title: { th: "Condo A" } }, property_images: [] },
-          channel: { id: "group-1" },
-        })
+        .mockTableResult("rent_notification_rules_v3", mockRule) // 1st for checkRuleAccess
+        .mockTableResult("rent_notification_rules_v3", mockRule) // 2nd for select in action
         .mockTableResult("crm_deals_v3", {
           id: "contract-1",
           transaction_end_date: "2026-12-31",
@@ -147,15 +168,18 @@ describe("Rent Notifications Module - Actions & Queries (เทสโหดๆ �
     });
 
     it("should handle error when no active rental contract found", async () => {
+      const mockRule = {
+        id: "rule-1",
+        property_id: "prop-1",
+        channel_id: "group-1",
+        language: "th",
+        properties: { rent_price: 15000, currency: "THB", details: { title: { th: "Condo A" } }, property_images: [] },
+        channel: { id: "group-1" },
+      };
+
       mockSupabase
-        .mockTableResult("rent_notification_rules_v3", {
-          id: "rule-1",
-          property_id: "prop-1",
-          channel_id: "group-1",
-          language: "th",
-          properties: { rent_price: 15000, currency: "THB", details: { title: { th: "Condo A" } }, property_images: [] },
-          channel: { id: "group-1" },
-        })
+        .mockTableResult("rent_notification_rules_v3", mockRule) // 1st for checkRuleAccess
+        .mockTableResult("rent_notification_rules_v3", mockRule) // 2nd for select in action
         .mockTableResult("crm_deals_v3", null); // No active contract
 
       const result = await testSendRentNotification("rule-1", "tenant-1");
