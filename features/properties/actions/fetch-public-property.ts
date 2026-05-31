@@ -41,16 +41,11 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
       image_url, storage_path, is_cover, sort_order
     ),
     assigned_agent:identities_v3!properties_core_assigned_to_fkey (
+      id,
       display_name,
       phone,
       avatar_url,
-      line_id,
-      profile:profiles (
-        full_name,
-        display_name,
-        wechat_user_id,
-        whatsapp_user_id
-      )
+      line_id
     ),
     property_features (
       features (
@@ -174,22 +169,32 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     const { data: creatorAgent } = await supabase
       .from("identities_v3")
       .select(`
+        id,
         display_name,
         phone,
         avatar_url,
-        line_id,
-        profile:profiles (
-          full_name,
-          display_name,
-          wechat_user_id,
-          whatsapp_user_id
-        )
+        line_id
       `)
       .eq("id", (rawData as any).created_by)
       .maybeSingle();
 
     if (creatorAgent) {
       assignedAgent = creatorAgent as any;
+    }
+  }
+
+  let agentProfile: any = null;
+  if (assignedAgent) {
+    const agentId = (assignedAgent as any).id || (rawData as any).assigned_to || (rawData as any).created_by;
+    if (agentId) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, display_name, wechat_user_id, whatsapp_user_id")
+        .eq("id", agentId)
+        .maybeSingle();
+      if (prof) {
+        agentProfile = prof;
+      }
     }
   }
 
@@ -314,14 +319,12 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
 
     images: [], // Populated below
     assigned_agent: assignedAgent ? {
-      full_name: (assignedAgent as any).display_name || 
-                 (Array.isArray((assignedAgent as any).profile) ? (assignedAgent as any).profile[0] : (assignedAgent as any).profile)?.full_name ||
-                 (Array.isArray((assignedAgent as any).profile) ? (assignedAgent as any).profile[0] : (assignedAgent as any).profile)?.display_name,
+      full_name: (assignedAgent as any).display_name || agentProfile?.full_name || agentProfile?.display_name || "",
       phone: (assignedAgent as any).phone,
       avatar_url: (assignedAgent as any).avatar_url,
       line_id: (assignedAgent as any).line_id,
-      wechat_user_id: (Array.isArray((assignedAgent as any).profile) ? (assignedAgent as any).profile[0] : (assignedAgent as any).profile)?.wechat_user_id || null,
-      whatsapp_user_id: (Array.isArray((assignedAgent as any).profile) ? (assignedAgent as any).profile[0] : (assignedAgent as any).profile)?.whatsapp_user_id || null
+      wechat_user_id: agentProfile?.wechat_user_id || null,
+      whatsapp_user_id: agentProfile?.whatsapp_user_id || null
     } : null,
     property_features: (rawData.property_features as Array<{
       features: {

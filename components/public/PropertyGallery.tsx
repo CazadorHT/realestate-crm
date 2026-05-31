@@ -266,7 +266,7 @@ export function PropertyGallery({
     <>
       <div className="relative group/gallery">
         {/* Badge Overlay Container */}
-        <div className="absolute top-3 left-0 md:top-6 md:left-6 flex flex-col gap-2 z-40">
+        <div className="absolute top-3 left-0 md:top-6 md:left-6 flex flex-col gap-2 z-39">
           {/* Hot Deal Badge */}
           {isHot && (
             <div className={`flex items-center bg-linear-to-br from-red-500 to-orange-600 text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 pr-4 xl:pr-1.5  xl:group-hover/gallery:pr-4 cursor-default ${inlineActiveIndex !== 0 ? "pr-1.5!" : ""}`}>

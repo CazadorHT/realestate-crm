@@ -936,25 +936,33 @@ export function PropertiesTable({
 
                   {/* ACTIONS */}
                   <TableCell className="text-right px-2 pr-4">
-                    <div className="flex justify-end items-center gap-0.5">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-7 w-7 text-slate-400 hover:text-blue-700 hover:bg-blue-50"
-                        onClick={() => {
-                          setNavigatingId(`view-${property.id}`);
-                          router.push(`/protected/properties/${property.id}`);
-                        }}
-                        disabled={navigatingId === `view-${property.id}`}
-                      >
-                        {navigatingId === `view-${property.id}` ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <Eye className="h-3.5 w-3.5" />
-                        )}
-                      </Button>
-                      {cannotEdit ? (
-                        <TooltipProvider delayDuration={200}>
+                    <TooltipProvider delayDuration={200}>
+                      <div className="flex justify-end items-center gap-0.5">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-7 w-7 text-slate-400 hover:text-blue-700 hover:bg-blue-50"
+                              onClick={() => {
+                                setNavigatingId(`view-${property.id}`);
+                                router.push(`/protected/properties/${property.id}`);
+                              }}
+                              disabled={navigatingId === `view-${property.id}`}
+                            >
+                              {navigatingId === `view-${property.id}` ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Eye className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
+                            ดูรายละเอียดทรัพย์สิน
+                          </TooltipContent>
+                        </Tooltip>
+
+                        {cannotEdit ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <span>
@@ -972,28 +980,53 @@ export function PropertiesTable({
                               ไม่สามารถแก้ไขทรัพย์สินของผู้อื่นได้
                             </TooltipContent>
                           </Tooltip>
-                        </TooltipProvider>
-                      ) : (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-7 w-7 text-slate-400 hover:text-amber-700 hover:bg-amber-50"
-                          onClick={() => {
-                            setNavigatingId(`edit-${property.id}`);
-                            router.push(`/protected/properties/${property.id}/edit`);
-                          }}
-                          disabled={navigatingId === `edit-${property.id}`}
-                        >
-                          {navigatingId === `edit-${property.id}` ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Edit3 className="h-3.5 w-3.5" />
-                          )}
-                        </Button>
-                      )}
-                      <DuplicatePropertyButton id={property.id} className="h-7 w-7 text-slate-400 hover:text-purple-600 hover:bg-purple-50" />
-                      <PropertyRowActions id={property.id} title={property.title} status={property.status} tenantId={property.tenant_id} isAdmin={isAdmin} isMultiTenant={isMultiTenant} className="h-7 w-7" cannotEdit={cannotEdit} />
-                    </div>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-7 w-7 text-slate-400 hover:text-amber-700 hover:bg-amber-50"
+                                onClick={() => {
+                                  setNavigatingId(`edit-${property.id}`);
+                                  router.push(`/protected/properties/${property.id}/edit`);
+                                }}
+                                disabled={navigatingId === `edit-${property.id}`}
+                              >
+                                {navigatingId === `edit-${property.id}` ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Edit3 className="h-3.5 w-3.5" />
+                                )}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
+                              แก้ไขทรัพย์สิน
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                              <DuplicatePropertyButton id={property.id} title={property.title} className="h-7 w-7 text-slate-400 hover:text-purple-600 hover:bg-purple-50" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
+                            คัดลอก/สร้างทรัพย์สินที่คล้ายกัน
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span>
+                              <PropertyRowActions id={property.id} title={property.title} status={property.status} tenantId={property.tenant_id} isAdmin={isAdmin} isMultiTenant={isMultiTenant} className="h-7 w-7" cannotEdit={cannotEdit} />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
+                            การจัดการเพิ่มเติม
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TooltipProvider>
                   </TableCell>
                 </TableRow>
                 );

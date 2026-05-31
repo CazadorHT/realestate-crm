@@ -13,9 +13,11 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function DuplicatePropertyButton({
   id,
+  title,
   className,
 }: {
   id: string;
+  title?: string;
   className?: string;
 }) {
   const router = useRouter();
@@ -23,7 +25,7 @@ export function DuplicatePropertyButton({
 
   const onDuplicate = async () => {
     async function execute() {
-      const processId = startProcess("คัดลอกข้อมูลทรัพย์", { 
+      const processId = startProcess(`คัดลอกข้อมูลทรัพย์${title ? ` "${title}"` : ""}`, { 
         type: "DUPLICATE",
         onRetry: execute
       });
@@ -47,7 +49,17 @@ export function DuplicatePropertyButton({
   return (
     <ConfirmDialog
       title="ยืนยันการคัดลอกทรัพย์"
-      description="คุณต้องการสร้างสำเนาของทรัพย์นี้ใช่หรือไม่? ข้อมูลพื้นฐาน รูปภาพ เอเจนต์ และสิ่งอำนวยความสะดวกจะถูกคัดลอกไปยังบ้านหลังใหม่ในสถานะ Draft"
+      description={
+        <span>
+          คุณต้องการสร้างสำเนาของทรัพย์{" "}
+          {title ? (
+            <strong className="text-blue-600 font-bold">"{title}"</strong>
+          ) : (
+            "นี้"
+          )}{" "}
+          ใช่หรือไม่? ข้อมูลพื้นฐาน รูปภาพ เอเจนต์ และสิ่งอำนวยความสะดวกจะถูกคัดลอกไปยังบ้านหลังใหม่ในสถานะ Draft
+        </span>
+      }
       confirmText="คัดลอกทรัพย์"
       cancelText="ยกเลิก"
       onConfirm={onDuplicate}

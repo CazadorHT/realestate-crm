@@ -422,6 +422,7 @@ export function RecentPropertiesTable({
 
                       <DuplicatePropertyButton
                         id={property.id}
+                        title={property.title}
                         className="h-8 w-8 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-colors"
                       />
 
