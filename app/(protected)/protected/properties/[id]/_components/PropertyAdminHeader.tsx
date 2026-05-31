@@ -28,13 +28,30 @@ interface PropertyAdminHeaderProps {
   property: PropertyWithDetails;
   images: PropertyImageV3[];
   language?: Language;
+  currentUserId?: string;
+  isPlatformAdmin?: boolean;
 }
 
-export function PropertyAdminHeader({ property, images, language = "th" }: PropertyAdminHeaderProps) {
+export function PropertyAdminHeader({ 
+  property, 
+  images, 
+  language = "th",
+  currentUserId,
+  isPlatformAdmin = false
+}: PropertyAdminHeaderProps) {
   const router = useRouter();
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
 
   const coverImage = images.find((img) => img.is_cover)?.url || images[0]?.url;
+
+  // Check if current user is owner of the property OR assigned agent OR is an administrator
+  const isOwnerOrAssignee = 
+    isPlatformAdmin || 
+    (currentUserId && (
+      property.assigned_to === currentUserId || 
+      property.owner_id === currentUserId ||
+      (property.agents && property.agents.some((a: any) => a.identity?.id === currentUserId))
+    ));
 
   return (
     <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-xs">
@@ -66,7 +83,7 @@ export function PropertyAdminHeader({ property, images, language = "th" }: Prope
             </div>
           </div>
         </m.div>
-
+ 
         <div className="flex items-center gap-2 lg:gap-3">
           <Button
             variant="ghost"
@@ -87,16 +104,17 @@ export function PropertyAdminHeader({ property, images, language = "th" }: Prope
             <span className="hidden sm:inline">ดูหน้าเว็บ</span>
             <span className="sm:hidden">พรีวิว</span>
           </Button>
-
+ 
           <Button
             variant="default"
             size="sm"
-            className="flex-1 md:flex-none rounded-xl bg-slate-900 hover:bg-blue-600 text-white transition-all duration-300 shadow-lg shadow-slate-200/50 h-10 px-5 font-bold"
+            className="flex-1 md:flex-none rounded-xl bg-slate-900 hover:bg-blue-600 text-white transition-all duration-300 shadow-lg shadow-slate-200/50 h-10 px-5 font-bold disabled:opacity-50 disabled:hover:bg-slate-900"
             onClick={() => {
               setNavigatingId("edit");
               router.push(`/protected/properties/${property.id}/edit`);
             }}
-            disabled={navigatingId === "edit"}
+            disabled={navigatingId === "edit" || !isOwnerOrAssignee}
+            title={!isOwnerOrAssignee ? "สิทธิ์การแก้ไขเฉพาะเจ้าของทรัพย์หรือแอดมินเท่านั้น" : undefined}
           >
             {navigatingId === "edit" ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -105,32 +123,34 @@ export function PropertyAdminHeader({ property, images, language = "th" }: Prope
             )}
             แก้ไขทรัพย์สิน
           </Button>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-slate-100 transition-colors">
-                <MoreVertical className="h-5 w-5 text-slate-400" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-xl border-slate-100">
-              <DropdownMenuItem 
-                className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer"
-                onClick={() => {
-                  navigator.clipboard.writeText(window.location.href);
-                  toast.success("คัดลอกลิงก์เรียบร้อย");
-                }}
-              >
-                <Copy className="h-4 w-4 text-slate-400" /> คัดลอกลิงก์ภายใน
-              </DropdownMenuItem>
-              <DropdownMenuItem className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer">
-                <Layers className="h-4 w-4 text-slate-400" /> สร้างรายการที่คล้ายกัน
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-slate-50" />
-              <DropdownMenuItem className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50">
-                <Trash2 className="h-4 w-4" /> ลบทรัพย์สินนี้
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+ 
+          {isOwnerOrAssignee && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-slate-100 transition-colors">
+                  <MoreVertical className="h-5 w-5 text-slate-400" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-xl border-slate-100">
+                <DropdownMenuItem 
+                  className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer"
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    toast.success("คัดลอกลิงก์เรียบร้อย");
+                  }}
+                >
+                  <Copy className="h-4 w-4 text-slate-400" /> คัดลอกลิงก์ภายใน
+                </DropdownMenuItem>
+                <DropdownMenuItem className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer">
+                  <Layers className="h-4 w-4 text-slate-400" /> สร้างรายการที่คล้ายกัน
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-slate-50" />
+                <DropdownMenuItem className="rounded-xl gap-2 py-2.5 font-medium cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50">
+                  <Trash2 className="h-4 w-4" /> ลบทรัพย์สินนี้
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 

@@ -40,8 +40,10 @@ export async function updateSession(request: NextRequest) {
   );
 
   // 🛡️ [PERFORMANCE] Check for auth cookie presence before calling getUser()
-  const hasAuthCookie = request.cookies.getAll().some(c => c.name.includes("-auth-token"));
-  
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.includes("-auth-token"));
+
   let user = null;
   if (hasAuthCookie) {
     const { data } = await supabase.auth.getUser();
@@ -50,22 +52,25 @@ export async function updateSession(request: NextRequest) {
 
   // 1. Auth Protection (Basic Login)
   if (request.nextUrl.pathname.startsWith("/protected") && !user) {
-    console.log("[AUTH DEBUG] No user found for protected path, redirecting to login", {
-      path: request.nextUrl.pathname,
-      hasCookie: hasAuthCookie
-    });
-    return { 
-      response: NextResponse.redirect(new URL("/auth/login", request.url)), 
-      user: null 
+    console.log(
+      "[AUTH DEBUG] No user found for protected path, redirecting to login",
+      {
+        path: request.nextUrl.pathname,
+        hasCookie: hasAuthCookie,
+      },
+    );
+    return {
+      response: NextResponse.redirect(new URL("/auth/login", request.url)),
+      user: null,
     };
   }
 
   // 1.5 🛡️ Admin Route Access Control: Protect restricted admin paths from AGENT roles
   if (user && request.nextUrl.pathname.startsWith("/protected/admin")) {
-    const isAllowedPath = 
-      request.nextUrl.pathname.startsWith("/protected/admin/popular-areas") || 
+    const isAllowedPath =
+      request.nextUrl.pathname.startsWith("/protected/admin/popular-areas") ||
       request.nextUrl.pathname.startsWith("/protected/admin/master-data");
-    
+
     if (!isAllowedPath) {
       // Query the role from DB to be certain of the role
       const { data: identity } = await supabase
@@ -75,10 +80,13 @@ export async function updateSession(request: NextRequest) {
         .maybeSingle();
 
       if (identity?.role === "AGENT") {
-        console.log("[AUTH DEBUG] AGENT role blocked from accessing admin path:", request.nextUrl.pathname);
+        console.log(
+          "[AUTH DEBUG] AGENT role blocked from accessing admin path:",
+          request.nextUrl.pathname,
+        );
         return {
           response: NextResponse.redirect(new URL("/protected", request.url)),
-          user
+          user,
         };
       }
     }
@@ -88,21 +96,22 @@ export async function updateSession(request: NextRequest) {
   // Protect ADMIN and MANAGER roles with Mandatory MFA
   const role = user?.app_metadata?.role as string | undefined;
   if (user && (role === "ADMIN" || role === "MANAGER")) {
-    const { data: aal, error: aalError } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-    
+    const { data: aal, error: aalError } =
+      await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
     // Check if user is currently AAL1 but should be AAL2
     if (!aalError && aal.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
       const isMfaPage = request.nextUrl.pathname.startsWith("/auth/mfa");
-      
+
       if (!isMfaPage) {
         // 🛡️ [HARDENING] Check for existing factors to decide redirect
         const { data: factors } = await supabase.auth.mfa.listFactors();
         const hasFactors = (factors?.all?.length || 0) > 0;
-        
+
         const path = hasFactors ? "/auth/mfa/verify" : "/auth/mfa/enroll";
         return {
           response: NextResponse.redirect(new URL(path, request.url)),
-          user
+          user,
         };
       }
     }

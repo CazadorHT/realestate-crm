@@ -56,9 +56,10 @@ const getActiveLocations = unstable_cache(
     try {
       const supabase = await createClient();
       const { data } = await supabase
-        .from("properties_core")
+        .from("properties")
         .select("popular_area, popular_area_en, popular_area_cn, popular_area_ru, province")
-        .eq("status", 1); // 1 = Active / Available
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null);
       return (data || []) as ActiveLocation[];
     } catch (err) {
       console.error("Failed to fetch active property locations:", err);

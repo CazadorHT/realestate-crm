@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import type { Database } from "@/lib/database.types";
 /**
  * ✅ Recommended: Official Project-specific Supabase Server Client
- * 
+ *
  * Always use this wrapper instead of importing `createClient` from `@supabase/ssr` or `@supabase/supabase-js`.
  * It handles cookie headers, session validation, and environment variables automatically.
  */
@@ -66,4 +66,3 @@ export async function createClient() {
     );
   }
 }
-

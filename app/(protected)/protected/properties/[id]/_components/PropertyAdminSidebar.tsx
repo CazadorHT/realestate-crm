@@ -19,12 +19,19 @@ import type { PropertyWithDetails } from "@/features/properties/types/v3";
 
 interface PropertyAdminSidebarProps {
   property: PropertyWithDetails & {
-    embedding?: number[] | string | null; // Optional override if vectors are fetched separately
+    embedding?: number[] | string | null;
   };
   language?: Language;
+  currentUserId?: string;
+  isPlatformAdmin?: boolean;
 }
 
-export function PropertyAdminSidebar({ property, language = "th" }: PropertyAdminSidebarProps) {
+export function PropertyAdminSidebar({ 
+  property, 
+  language = "th",
+  currentUserId,
+  isPlatformAdmin = false
+}: PropertyAdminSidebarProps) {
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -33,6 +40,14 @@ export function PropertyAdminSidebar({ property, language = "th" }: PropertyAdmi
     const y = String(date.getFullYear()).slice(-4);
     return `${d}/${m}/${y}`;
   };
+
+  const isOwnerOrAssignee = 
+    isPlatformAdmin || 
+    (currentUserId && (
+      property.assigned_to === currentUserId || 
+      property.owner_id === currentUserId ||
+      (property.agents && property.agents.some((a: any) => a.identity?.id === currentUserId))
+    ));
 
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -64,17 +79,21 @@ export function PropertyAdminSidebar({ property, language = "th" }: PropertyAdmi
         </div>
       </div>
 
-      <div id="tour-property-ai-triggers">
-        <AdminAiTriggers
-          propertyId={property.id}
-          hasSummary={!!property.ai_summary_content}
-          hasEmbedding={!!property.embedding && property.embedding.length > 0}
-          requiresReview={!!property.requires_ai_review}
-          isFeatured={!!property.is_featured}
-        />
-      </div>
+      {isOwnerOrAssignee && (
+        <>
+          <div id="tour-property-ai-triggers">
+            <AdminAiTriggers
+              propertyId={property.id}
+              hasSummary={!!property.ai_summary_content}
+              hasEmbedding={!!property.embedding && property.embedding.length > 0}
+              requiresReview={!!property.requires_ai_review}
+              isFeatured={!!property.is_featured}
+            />
+          </div>
 
-      <PropertySocialGenerator propertyId={property.id} />
+          <PropertySocialGenerator propertyId={property.id} />
+        </>
+      )}
 
       <PropertySuitability
         listingType={property.listing_type || "SALE"}
@@ -84,8 +103,8 @@ export function PropertyAdminSidebar({ property, language = "th" }: PropertyAdmi
         language={language}
       />
 
-      {/* Owner Card (Protected) */}
-      {property.owner && (
+      {/* Owner Card (Protected - Hide completely for non-assigned agents to protect seller/landlord contact info) */}
+      {property.owner && isOwnerOrAssignee && (
         <div id="tour-property-owner-card" className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden animate-in fade-in slide-in-from-right-4 duration-700">
           <div className="px-5 py-3.5 bg-orange-500 flex items-center gap-3">
             <div className="p-1.5 bg-white/20 rounded-lg">

@@ -230,6 +230,20 @@ export interface PropertyWithDetails {
       name_ru?: string | null;
     } | null;
   }[];
+  // V3 database raw fields needed for internal logic / ACL checks
+  assigned_to?: string | null;
+  owner_id?: string | null;
+  agents?: {
+    identity?: {
+      id: string;
+      display_name: string | null;
+      phone: string | null;
+      email: string | null;
+      avatar_url: string | null;
+      line_id: string | null;
+      is_active: boolean;
+    } | null;
+  }[] | null;
 }
 
 export interface RelatedDealV3 {

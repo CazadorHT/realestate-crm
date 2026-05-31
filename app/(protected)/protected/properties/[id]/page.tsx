@@ -262,6 +262,11 @@ export default async function PropertyDetailsPage({
     transit_distance_meters: transitInfo[0]?.distance_meters || null,
     nearby_places: addressInfo?.nearby_places || [],
     nearby_transits: transitInfo,
+
+    // Keep raw fields for ACL check in Header/Sidebar
+    assigned_to: rawData.assigned_to,
+    owner_id: rawData.owner_id,
+    agents: rawData.agents as any,
   };
 
   // Process Images: PropertyGallery handles sorting internally (Cover first + SortOrder)
@@ -330,10 +335,19 @@ export default async function PropertyDetailsPage({
     .filter((f): f is { name: string; icon: string } => !!f)
     .slice(0, 6);
 
+  const currentUserId = authContext.user.id;
+  const isPlatformAdmin = authContext.role === "ADMIN";
+
   return (
     <div className="min-h-screen bg-white pb-24 lg:pb-32 font-sans ">
       <PropertyDetailTour />
-      <PropertyAdminHeader property={property} images={images} language={lang} />
+      <PropertyAdminHeader 
+        property={property} 
+        images={images} 
+        language={lang} 
+        currentUserId={currentUserId}
+        isPlatformAdmin={isPlatformAdmin}
+      />
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6">
         <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-200 overflow-hidden pb-8 sm:pb-12 transition-all duration-500 animate-in fade-in slide-in-from-bottom-4">
           <div className="mx-auto px-4 sm:px-6 lg:px-8 mt-4 sm:mt-8">
@@ -430,7 +444,12 @@ export default async function PropertyDetailsPage({
               </div>
 
               {/* Right Column (Sidebar) */}
-              <PropertyAdminSidebar property={property} language={lang} />
+              <PropertyAdminSidebar 
+                property={property} 
+                language={lang} 
+                currentUserId={currentUserId}
+                isPlatformAdmin={isPlatformAdmin}
+              />
             </div>
           </div>
         </div>
