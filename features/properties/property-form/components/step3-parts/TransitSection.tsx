@@ -337,9 +337,6 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                       style={{ backgroundColor: t.metadata?.color || "#cbd5e1" }}
                                     />
                                     <span className="flex-1">{t.label.th}</span>
-                                    <span className="text-[10px] text-slate-400 font-mono uppercase px-1.5 py-0.5 bg-slate-100 rounded">
-                                      {t.code}
-                                    </span>
                                   </div>
                                 </SelectItem>
                               ))
