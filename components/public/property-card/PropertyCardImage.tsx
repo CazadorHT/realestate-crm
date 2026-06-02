@@ -292,7 +292,7 @@ export function PropertyCardImage({
                 } - Image ${index + 1}`}
                 fill
                 sizes="(max-width: 640px) 95vw, (max-width: 1024px) 48vw, (max-width: 1280px) 31vw, 23vw"
-                className={`object-cover object-top transform-gpu will-change-transform transition-[filter] duration-500 ${
+                className={`object-cover object-center transform-gpu will-change-transform transition-[filter] duration-500 ${
                   loadedImages[index] ? "blur-0" : "blur-sm"
                 }`}
                 priority={priority && index === 0}
