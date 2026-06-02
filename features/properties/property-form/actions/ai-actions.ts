@@ -155,7 +155,7 @@ export async function translatePlaceNamesAction(texts: string[]) {
 
     const { logAiUsage } = await import("@/features/ai-monitor/actions");
     await logAiUsage({
-      model: "gemini-flash-latest",
+      model: "gemini-flash-lite-latest",
       feature: "property_translator",
       status: "success",
       promptTokens: response.usage?.promptTokens,
@@ -177,7 +177,7 @@ export async function translatePlaceNamesAction(texts: string[]) {
     console.error("AI Batch Translation Error:", error);
     const { logAiUsage } = await import("@/features/ai-monitor/actions");
     await logAiUsage({
-      model: "gemini-flash-latest",
+      model: "gemini-flash-lite-latest",
       feature: "property_translator",
       status: "error",
       errorMessage: (error as Error).message,

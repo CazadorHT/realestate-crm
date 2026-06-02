@@ -35,7 +35,7 @@ function getClient() {
 }
 
 // Default model for backwards compatibility
-const DEFAULT_MODEL = "gemini-flash-latest";
+const DEFAULT_MODEL = "gemini-flash-lite-latest";
 
 /**
  * Normalizes model names to handle common mistakes or project-specific fallbacks

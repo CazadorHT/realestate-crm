@@ -434,7 +434,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
     const checks = [
       { label: "ชื่อทรัพย์", ok: !!values.title?.trim(), weight: 15 },
       { label: "รูปภาพ ≥5 รูป", ok: (values.images?.length || 0) >= 5, weight: 20 },
-      { label: "ราคา", ok: !!(values.price || values.rental_price), weight: 15 },
+      { label: "ราคา", ok: !!(values.price || values.rental_price ||values.original_price ||values.original_rental_price), weight: 15 },
       { label: "รายละเอียด (TH)", ok: !!values.description?.trim(), weight: 10 },
       { label: "รายละเอียด (EN)", ok: !!values.description_en?.trim(), weight: 5 },
       { label: "รายละเอียด (CN)", ok: !!values.description_cn?.trim(), weight: 5 },

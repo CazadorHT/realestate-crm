@@ -18,7 +18,7 @@ export async function calculateAiCost(model: string, promptTokens: number, compl
     "gemini-1.5-flash": { input: 0.1, output: 0.4 },
     "gemini-1.5-pro": { input: 1.25, output: 5.0 },
     "gemini-flash-latest": { input: 0.1, output: 0.4 },
-    "gemini-pro-latest": { input: 1.25, output: 5.0 },
+    "gemini-flash-lite-latest": { input: 0.05, output: 0.15 },
     "gemini-2.0-flash-exp": { input: 0.1, output: 0.4 },
   };
 

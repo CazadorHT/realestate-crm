@@ -51,10 +51,10 @@ export default function AiConfigPage() {
     null,
   );
   const [config, setConfig] = useState<AiModelConfig>({
-    chatbot_model: "gemini-flash-latest",
-    blog_generator_model: "gemini-pro-latest",
+    chatbot_model: "gemini-flash-lite-latest",
+    blog_generator_model: "gemini-flash-latest",
     translation_model: "gemini-flash-lite-latest",
-    description_model: "gemini-flash-latest",
+    description_model: "gemini-flash-lite-latest",
     lead_model: "gemini-flash-lite-latest",
   });
 

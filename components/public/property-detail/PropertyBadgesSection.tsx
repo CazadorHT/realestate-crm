@@ -496,36 +496,97 @@ export function PropertyBadgesSection({
     const tLower = property.property_type?.toLowerCase() || "";
     if (tLower.includes("office")) {
       return [
-        { condition: true, label: t("property.badges.good_location"), icon: MapPin, color: "bg-blue-50 text-blue-800" },
-        { condition: true, label: t("property.badges.access_247"), icon: CheckCircle2, color: "bg-indigo-50 text-indigo-700" },
-        { condition: true, label: t("property.badges.fiber_optic"), icon: Wifi, color: "bg-sky-50 text-sky-700" },
+        {
+          condition: true,
+          label: t("property.badges.good_location"),
+          icon: MapPin,
+          color: "bg-blue-50 text-blue-800",
+        },
+        {
+          condition: true,
+          label: t("property.badges.access_247"),
+          icon: CheckCircle2,
+          color: "bg-indigo-50 text-indigo-700",
+        },
+        {
+          condition: true,
+          label: t("property.badges.fiber_optic"),
+          icon: Wifi,
+          color: "bg-sky-50 text-sky-700",
+        },
       ];
     }
     if (tLower.includes("condo")) {
       return [
-        { condition: true, label: t("property.badges.good_location"), icon: MapPin, color: "bg-blue-50 text-blue-800" },
-        { condition: true, label: t("property.badges.ready_to_move"), icon: CheckCircle2, color: "bg-emerald-50 text-emerald-800" },
-        { condition: true, label: t("property.badges.city_view"), icon: Building2, color: "bg-slate-100 text-slate-700" },
+        {
+          condition: true,
+          label: t("property.badges.good_location"),
+          icon: MapPin,
+          color: "bg-blue-50 text-blue-800",
+        },
+        {
+          condition: true,
+          label: t("property.badges.ready_to_move"),
+          icon: CheckCircle2,
+          color: "bg-emerald-50 text-emerald-800",
+        },
+        {
+          condition: true,
+          label: t("property.badges.city_view"),
+          icon: Building2,
+          color: "bg-slate-100 text-slate-700",
+        },
       ];
     }
     if (tLower.includes("townhome") || tLower.includes("commercial")) {
       return [
-        { condition: true, label: t("property.badges.good_location"), icon: MapPin, color: "bg-blue-50 text-blue-800" },
-        { condition: true, label: t("property.badges.ready_to_move"), icon: CheckCircle2, color: "bg-emerald-50 text-emerald-800" },
-        { condition: true, label: t("property.badges.multi_parking"), icon: CheckCircle2, color: "bg-blue-50 text-blue-700" },
+        {
+          condition: true,
+          label: t("property.badges.good_location"),
+          icon: MapPin,
+          color: "bg-blue-50 text-blue-800",
+        },
+        {
+          condition: true,
+          label: t("property.badges.ready_to_move"),
+          icon: CheckCircle2,
+          color: "bg-emerald-50 text-emerald-800",
+        },
+        {
+          condition: true,
+          label: t("property.badges.multi_parking"),
+          icon: CheckCircle2,
+          color: "bg-blue-50 text-blue-700",
+        },
       ];
     }
     return [
-      { condition: true, label: t("property.badges.good_location"), icon: MapPin, color: "bg-blue-50 text-blue-800" },
-      { condition: true, label: t("property.badges.ready_to_move"), icon: CheckCircle2, color: "bg-emerald-50 text-emerald-800" },
-      { condition: true, label: t("property.badges.family_friendly"), icon: Users, color: "bg-purple-50 text-purple-800" },
+      {
+        condition: true,
+        label: t("property.badges.good_location"),
+        icon: MapPin,
+        color: "bg-blue-50 text-blue-800",
+      },
+      {
+        condition: true,
+        label: t("property.badges.ready_to_move"),
+        icon: CheckCircle2,
+        color: "bg-emerald-50 text-emerald-800",
+      },
+      {
+        condition: true,
+        label: t("property.badges.family_friendly"),
+        icon: Users,
+        color: "bg-purple-50 text-purple-800",
+      },
     ];
   };
 
   const defaultBadges = getDefaultBadges();
 
   const filteredBadges = badgeItems.filter((item) => item.condition);
-  const displayBadges = filteredBadges.length > 0 ? filteredBadges : defaultBadges;
+  const displayBadges =
+    filteredBadges.length > 0 ? filteredBadges : defaultBadges;
 
   // Synchronize dragging with window-level events for maximum reliability
   useEffect(() => {
@@ -629,12 +690,17 @@ export function PropertyBadgesSection({
               className={`rounded-full px-5 py-2 font-semibold whitespace-nowrap shadow-sm ${
                 property.listing_type === "SALE"
                   ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                  : "bg-blue-600 hover:bg-blue-700 text-white"
+                  : property.listing_type === "RENT"
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : "bg-purple-600 hover:bg-purple-700 text-white" // สีสำหรับกรณีที่เป็นทั้งคู่ (เช่น สีม่วง)
               }`}
             >
               {property.listing_type === "SALE"
                 ? t("common.for_sale")
-                : t("common.for_rent")}
+                : property.listing_type === "RENT"
+                  ? t("common.for_rent")
+                  : t("common.for_sale_rent")}{" "}
+              {/* อย่าลืมเพิ่มคีย์แปลภาษา เช่น "ขาย/เช่า" */}
             </Badge>
           </div>
 

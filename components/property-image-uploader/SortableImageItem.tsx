@@ -102,7 +102,7 @@ export function SortableImageItem({
           {...attributes}
           {...listeners}
           className={cn(
-            "absolute top-1 left-1 z-30 p-1.5 sm:p-2 rounded-md cursor-grab active:cursor-grabbing",
+            "absolute top-1 left-1 z-29 p-1.5 sm:p-2 rounded-md cursor-grab active:cursor-grabbing",
             "bg-black/40 sm:bg-black/50 hover:bg-primary text-white transition-colors",
             "touch-none select-none",
           )}

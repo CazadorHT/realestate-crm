@@ -16,7 +16,7 @@ describe('AI Settings Constants', () => {
 
   it('should have a complete default configuration', () => {
     expect(DEFAULT_CONFIG.chatbot_model).toBe('gemini-flash-latest');
-    expect(DEFAULT_CONFIG.blog_generator_model).toBe('gemini-pro-latest');
+    expect(DEFAULT_CONFIG.blog_generator_model).toBe('gemini-flash-latest');
     expect(DEFAULT_CONFIG.lead_model).toBe('gemini-flash-lite-latest');
   });
 

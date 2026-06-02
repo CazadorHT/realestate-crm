@@ -57,9 +57,9 @@ export type AiModelConfig = {
 };
 
 export const DEFAULT_CONFIG: AiModelConfig = {
-  chatbot_model: "gemini-flash-latest",
-  blog_generator_model: "gemini-pro-latest",
+  chatbot_model: "gemini-flash-lite-latest",
+  blog_generator_model: "gemini-flash-lite-latest",
   translation_model: "gemini-flash-lite-latest",
-  description_model: "gemini-flash-latest",
+  description_model: "gemini-flash-lite-latest",
   lead_model: "gemini-flash-lite-latest",
 };
