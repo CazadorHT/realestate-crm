@@ -155,7 +155,7 @@ export function NearbyPlaces({
         {t("property.nearby_places")}
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Nearby Places Categories (Transport = ทางด่วน) */}
+        {/* Nearby Places Categories */}
         {categories.map((catKey) => {
           const items = grouped[catKey];
           const Icon = ICON_MAP[catKey] || Map;
@@ -174,28 +174,46 @@ export function NearbyPlaces({
                 </h4>
               </div>
               <ul className="space-y-2">
-                {items.map((item, i) => (
-                  <li
-                    key={i}
-                    className="flex justify-between items-start text-sm gap-2 p-1.5 -mx-1.5 rounded-lg transition-colors hover:bg-white/50 group/item"
-                  >
-                    <span className="text-slate-600 mr-auto wrap-break-word leading-tight group-hover/item:text-slate-800 transition-colors">
-                      {getLocaleValue(item, "name", language)}
-                    </span>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {item.distance && (
-                        <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100 group-hover/item:border-blue-200 group-hover/item:text-blue-600 transition-colors">
-                          {formatDistance(item.distance)}
-                        </span>
-                      )}
-                      {item.time && (
-                        <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100 group-hover/item:border-blue-200 group-hover/item:text-blue-600 transition-colors">
-                          {item.time} {t("common.minutes_short")}
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                {items.map((item, i) => {
+                  // --- ส่วนที่แก้ไข: แปลงค่าระยะทางก่อนแสดงผล ---
+                  // ลองรับทั้ง key: distance_meters (ถ้า DB เก็บชื่อนี้) หรือ distance
+                  const rawDistanceMeters = Number(
+                    (item as any).distance_meters !== undefined 
+                      ? (item as any).distance_meters 
+                      : item.distance
+                  );
+                  
+                  // แปลงเป็นกิโลเมตร (ถ้าใน DB คุณเก็บเป็นเมตร)
+                  // ถ้าระบบคุณเก็บค่า Nearby เป็น กิโลเมตรอยู่แล้ว ให้ลบ / 1000 ออก
+                  const distanceKm = !isNaN(rawDistanceMeters) && rawDistanceMeters > 0 
+                    ? rawDistanceMeters / 1000 
+                    : null;
+                  // ---------------------------------------------
+
+                  return (
+                    <li
+                      key={i}
+                      className="flex justify-between items-start text-sm gap-2 p-1.5 -mx-1.5 rounded-lg transition-colors hover:bg-white/50 group/item"
+                    >
+                      <span className="text-slate-600 mr-auto wrap-break-word leading-tight group-hover/item:text-slate-800 transition-colors">
+                        {getLocaleValue(item, "name", language)}
+                      </span>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {/* ใช้ distanceKm ที่คำนวณแล้ว */}
+                        {distanceKm !== null && (
+                          <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100 group-hover/item:border-blue-200 group-hover/item:text-blue-600 transition-colors">
+                            {formatDistance(distanceKm)}
+                          </span>
+                        )}
+                        {item.time && (
+                          <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100 group-hover/item:border-blue-200 group-hover/item:text-blue-600 transition-colors">
+                            {item.time} {t("common.minutes_short")}
+                          </span>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           );
@@ -217,8 +235,9 @@ export function NearbyPlaces({
                   TRANSIT_TYPE_STYLES[
                     transit.type as keyof typeof TRANSIT_TYPE_STYLES
                   ] || TRANSIT_TYPE_STYLES.OTHER;
-                const distanceKm = transit.distance_meters
-                  ? transit.distance_meters / 1000
+                const rawDistanceMeters = Number(transit.distance_meters);
+                const distanceKm = !isNaN(rawDistanceMeters) && rawDistanceMeters > 0
+                 ? rawDistanceMeters / 1000
                   : null;
                 return (
                   <li
@@ -244,6 +263,7 @@ export function NearbyPlaces({
                       {distanceKm && (
                         <span className="text-xs font-medium text-slate-400 whitespace-nowrap bg-white px-2 py-1 rounded-md border border-slate-100 group-hover/item:border-blue-200 group-hover/item:text-blue-600 transition-colors">
                           {formatDistance(distanceKm)}
+                          
                         </span>
                       )}
                       {transit.time && (

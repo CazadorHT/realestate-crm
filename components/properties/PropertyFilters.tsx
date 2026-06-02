@@ -18,6 +18,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { FaUser } from "react-icons/fa";
 
 type Filters = {
   q: string;
@@ -358,7 +359,7 @@ export function PropertyFilters({
                       : "bg-slate-300",
                   )}
                 />
-                👤 ทรัพย์ของฉัน
+                <FaUser className="w-3 h-3 mr-2"/> ทรัพย์ของฉัน
               </Button>
             </TooltipTrigger>
             <TooltipContent

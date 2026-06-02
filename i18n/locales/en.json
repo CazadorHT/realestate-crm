@@ -1071,14 +1071,19 @@
       "wine_cellar": "Wine Cellar"
     },
     "transit_types": {
-      "BTS": "BTS",
-      "MRT": "MRT",
+      "BTS": "BTS Skytrain",
+      "MRT": "MRT Blue Line",
       "ARL": "Airport Rail Link",
-      "SRT": "Red Line (SRT)",
-      "SRT2": "Orange Line (SRT)",
-      "SRT3": "Pink Line (SRT)",
-      "MRT2": "Purple Line (MRT)",
-      "OTHER": "Others"
+      "SRT_RED": "SRT Red Line",
+      "MRT_ORANGE": "MRT Orange Line",
+      "MRT_PINK": "MRT Pink Line",
+      "MRT_PURPLE": "MRT Purple Line",
+      "MRT_YELLOW": "MRT Yellow Line",
+      "GOLD": "Gold Line Monorail",
+      "BRT": "BRT Bus Rapid Transit",
+      "MAIN_ROAD": "Main Road",
+      "OTHER": "Other",
+      "EXPRESSWAY": "Expressway"
     },
     "favorite": {
       "added": "Added to favorites",

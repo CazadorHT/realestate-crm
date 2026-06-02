@@ -1078,11 +1078,16 @@
       "BTS": "曼谷轻轨 (BTS)",
       "MRT": "曼谷地铁 (MRT)",
       "ARL": "机场快线 (ARL)",
-      "SRT": "红线 (SRT)",
-      "SRT2": "橙线 (SRT)",
-      "SRT3": "粉红线 (SRT)",
-      "MRT2": "紫线 (MRT)",
-      "OTHER": "其他"
+      "SRT_RED": "红线地铁 (SRT)",
+      "MRT_ORANGE": "橙线地铁 (MRT)",
+      "MRT_PINK": "粉红线单轨 (MRT)",
+      "MRT_PURPLE": "紫线地铁 (MRT)",
+      "MRT_YELLOW": "黄线单轨 (MRT)",
+      "GOLD": "金线单轨",
+      "BRT": "BRT 快速公交系统",
+      "MAIN_ROAD": "紧邻主路",
+      "OTHER": "其他",
+      "EXPRESSWAY": "高速公路"
     },
     "favorite": {
       "added": "已加入收藏",
