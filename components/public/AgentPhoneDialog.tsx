@@ -12,7 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Phone, Copy, Check, ExternalLink } from "lucide-react";
 import { FaLine, FaWhatsapp, FaWeixin } from "react-icons/fa";
 import { toast } from "sonner";
-import { useLanguage, dictionaries, Language } from "../providers/LanguageProvider";
+import {
+  useLanguage,
+  dictionaries,
+  Language,
+} from "../providers/LanguageProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 interface AgentPhoneDialogProps {
@@ -44,8 +48,15 @@ export function AgentPhoneDialog({
   // Custom t function for language override
   const t = (key: string) => {
     if (!customLanguage) return globalT(key);
-    const dict = dictionaries[language as keyof typeof dictionaries] as Record<string, any>;
-    return (key.split(".").reduce((prev, curr) => prev?.[curr], dict) as unknown as string) || key;
+    const dict = dictionaries[language as keyof typeof dictionaries] as Record<
+      string,
+      any
+    >;
+    return (
+      (key
+        .split(".")
+        .reduce((prev, curr) => prev?.[curr], dict) as unknown as string) || key
+    );
   };
   const [copied, setCopied] = useState(false);
 
@@ -62,7 +73,7 @@ export function AgentPhoneDialog({
     navigator.clipboard.writeText(agentPhone);
     setCopied(true);
     toast.success(t("common.copy_success") || "คัดลอกเบอร์โทรศัพท์แล้ว");
-    
+
     try {
       pushToDataLayer(GTM_EVENTS.CLICK_PHONE, {
         action: "copy_phone",
@@ -91,19 +102,29 @@ export function AgentPhoneDialog({
 
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        {trigger}
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-sm! rounded-4xl p-0 overflow-hidden border-none shadow-2xl bg-white">
-        <DialogHeader className="p-8 bg-linear-to-br from-blue-600 via-blue-700 to-indigo-800 text-white relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl" />
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            <Phone className="w-5 h-5" />
-            {t("property.contact_agent") || "ติดต่อตัวแทน"}
-          </DialogTitle>
-          <p className="text-blue-100 text-sm mt-1 opacity-90">
-            {agentName || "Admin Team"}
-          </p>
+        <DialogHeader className="relative p-8 overflow-hidden text-white bg-linear-to-br from-blue-600 via-indigo-600 to-slate-900">
+          {/* แสงฟุ้งมุมขวาบน (ปรับให้ขนาดใหญ่ขึ้นและนุ่มขึ้น) */}
+          <div className="absolute top-0 right-0 -mt-20 -mr-20 rounded-full w-48 h-48 bg-white/10 blur-3xl" />
+
+          {/* แสงฟุ้งละมุนๆ ฝั่งซ้ายล่าง เพิ่มมิติความลึก (Depth) */}
+          <div className="absolute bottom-0 left-0 -mb-10 -ml-10 rounded-full w-36 h-36 bg-blue-400/10 blur-2xl" />
+
+          {/* Content Container มั่นใจว่าอยู่เหนือแสงฟุ้ง */}
+          <div className="relative z-10 space-y-1.5">
+            <DialogTitle className="flex items-center gap-2.5 text-xl font-semibold tracking-wide">
+              {/* ใส่ Background วงกลมจางๆ ให้กับไอคอน เพื่อให้ดูเหมือนปุ่มหรือสัญลักษณ์ที่จับต้องได้ */}
+              <div className="p-1.5 bg-white/10 rounded-lg backdrop-blur-xs">
+                <Phone className="w-4 h-4 text-blue-100" />
+              </div>
+              <span>{t("property.contact_agent") || "ติดต่อตัวแทน"}</span>
+            </DialogTitle>
+
+            <p className="text-sm font-medium text-blue-200/90 pl-9">
+              {agentName || "Admin Team"}
+            </p>
+          </div>
         </DialogHeader>
 
         <div className="p-6 space-y-6">
@@ -127,7 +148,9 @@ export function AgentPhoneDialog({
               ) : (
                 <Copy className="w-5 h-5 mr-3 text-slate-400" />
               )}
-              {copied ? t("common.copied") || "คัดลอกแล้ว" : t("common.copy_number") || "คัดลอกเบอร์โทร"}
+              {copied
+                ? t("common.copied") || "คัดลอกแล้ว"
+                : t("common.copy_number") || "คัดลอกเบอร์โทร"}
             </Button>
 
             <Button
@@ -192,10 +215,12 @@ export function AgentPhoneDialog({
             {wechatId && (
               <Button
                 variant="outline"
-                className="h-14 rounded-2xl border-[#09B83E]/30 bg-[#09B83E]/5 hover:bg-[#09B83E]/10 text-[#09B83E] font-bold text-lg transition-all"
+                className="h-14 rounded-2xl border-[#09B83E]/30 bg-[#09B83E]/5 hover:bg-[#09B83E]/10 text-[#09B83E]! font-bold text-lg transition-all"
                 onClick={() => {
                   navigator.clipboard.writeText(wechatId);
-                  toast.success(`${t("common.copy_success") || "คัดลอกแล้ว"} (WeChat ID: ${wechatId})`);
+                  toast.success(
+                    `${t("common.copy_success") || "คัดลอกแล้ว"} (WeChat ID: ${wechatId})`,
+                  );
                   try {
                     pushToDataLayer("click_wechat", {
                       agent_name: agentName,
@@ -213,7 +238,8 @@ export function AgentPhoneDialog({
 
         <div className="px-6 py-4 bg-slate-50 border-t border-slate-100">
           <p className="text-[11px] text-slate-400 text-center leading-relaxed">
-            {t("property.trust_message") || "ข้อมูลส่วนตัวของคุณจะถูกเก็บเป็นความลับและใช้เพื่อการติดต่อกลับเท่านั้น"}
+            {t("property.trust_message") ||
+              "ข้อมูลส่วนตัวของคุณจะถูกเก็บเป็นความลับและใช้เพื่อการติดต่อกลับเท่านั้น"}
           </p>
         </div>
       </DialogContent>

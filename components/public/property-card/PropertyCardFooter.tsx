@@ -38,7 +38,7 @@ export function PropertyCardFooter({
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
               {t("common.sale")}
             </span>
-            <div className="text-base sm:text-lg font-extrabold text-[#1B263B]">
+            <div className="text-base sm:text-xl font-extrabold text-[#1B263B]">
               {prices.salePrice > 0
                 ? formatPrice(prices.salePrice, language)
                 : t("common.contact_for_price")}
@@ -50,7 +50,7 @@ export function PropertyCardFooter({
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
               {t("common.rent")}
             </span>
-            <div className="text-base sm:text-lg font-extrabold text-[#1B263B]">
+            <div className="text-base sm:text-xl font-extrabold text-[#1B263B]">
               {prices.rentalPrice > 0 ? (
                 <>
                   {formatPrice(prices.rentalPrice, language)}
@@ -107,7 +107,7 @@ export function PropertyCardFooter({
               </span>
               {prices.hasSaleDiscount ? (
                 <div className="flex flex-col">
-                  <div className="text-base lg:text-md xl:text-lg font-bold text-rose-600">
+                  <div className="text-base lg:text-md xl:text-xl font-bold text-rose-600">
                     {formatPrice(prices.salePrice, language)}
                   </div>
                   <div className="flex items-center gap-1">
@@ -120,7 +120,7 @@ export function PropertyCardFooter({
                   </div>
                 </div>
               ) : (
-                <div className="text-base lg:text-md xl:text-lg font-bold text-slate-900">
+                <div className="text-base lg:text-md xl:text-xl font-bold text-slate-900">
                   {prices.salePrice > 0
                     ? formatPrice(prices.salePrice, language)
                     : t("common.contact_for_price")}
@@ -135,7 +135,7 @@ export function PropertyCardFooter({
               </span>
               {prices.hasRentalDiscount ? (
                 <div className="flex flex-col">
-                  <div className="text-base lg:text-md xl:text-lg font-bold text-rose-600">
+                  <div className="text-base lg:text-md xl:text-xl font-bold text-rose-600">
                     {formatPrice(prices.rentalPrice, language)}
                     <span className="text-[10px] text-slate-500 font-normal ml-0.5">
                       {t("common.per_month_short")}
@@ -152,7 +152,7 @@ export function PropertyCardFooter({
                 </div>
               ) : (
                 <div className="flex flex-wrap items-baseline">
-                  <div className="text-base lg:text-md xl:text-lg font-bold text-slate-900">
+                  <div className="text-base lg:text-md xl:text-xl font-bold text-slate-900">
                     {prices.rentalPrice > 0
                       ? formatPrice(prices.rentalPrice, language)
                       : t("common.contact_for_price")}
@@ -171,7 +171,7 @@ export function PropertyCardFooter({
                 ? t("common.rent_price")
                 : t("common.sale_price")}
             </div>
-            <div className="text-base lg:text-md xl:text-lg font-bold text-[#1B263B] flex flex-wrap items-baseline gap-1 md:gap-2">
+            <div className="text-base lg:text-md xl:text-xl font-bold text-[#1B263B] flex flex-wrap items-baseline gap-1 md:gap-2">
               {(property.listing_type === "SALE" && prices.hasSaleDiscount) || 
                (property.listing_type === "RENT" && prices.hasRentalDiscount) ? (
                 <div className="flex flex-col">
@@ -225,10 +225,11 @@ export function PropertyCardFooter({
           property.min_contract_months && (
             <div className="flex items-center gap-1 text-[9px] md:text-[11px] text-slate-400 font-bold italic">
               <div className="w-1 h-1 rounded-full bg-slate-300" />
-              {t("common.contract")} {property.min_contract_months}{" "}
+              {t("common.contract")} {property.min_contract_months || 12 }{" "}
               {t("common.months_short")}
             </div>
           )}
+          
 
         {/* Update Date (Right) */}
         <div className="text-[10px] md:text-[11px] text-stone-400 italic flex ml-auto">

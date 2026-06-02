@@ -901,7 +901,7 @@ export function ProfileInfoForm({
                               <Button
                                 type="button"
                                 variant="outline"
-                                className="w-full justify-between h-11 rounded-xl border-indigo-50 focus:ring-indigo-500/20 font-normal shadow-none transition-all px-3.5 text-slate-600!"
+                                className="w-full justify-between h-11 rounded-xl border-indigo-50 focus:ring-indigo-500/20 font-normal shadow-none transition-all px-3.5 "
                               >
                                 <div className="flex items-center gap-2">
                                   <Globe className="h-4 w-4 text-indigo-500" />

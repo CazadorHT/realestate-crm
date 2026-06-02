@@ -260,6 +260,7 @@ export async function createPropertyAction(
         pricing_details: {
           maintenance_fee: propertyData.maintenance_fee,
           parking_fee: propertyData.parking_fee_additional,
+          min_contract_months: propertyData.min_contract_months,
           electricity_charge: propertyData.electricity_charge,
           water_charge: propertyData.water_charge,
           commission_sale: propertyData.commission_sale_percentage,
@@ -514,7 +515,10 @@ export async function duplicatePropertyAction(
           slug: uniqueSlug,
         },
         amenities: details?.amenities || {},
-        pricing_details: details?.pricing_details || {},
+        pricing_details: {
+          ...((details?.pricing_details as Record<string, any>) || {}),
+          min_contract_months: (details?.pricing_details as Record<string, any>)?.min_contract_months ?? null,
+        },
         transit_info: details?.transit_info || [],
         meta_data: {
           ...((details?.meta_data as Record<string, any>) || {}),
