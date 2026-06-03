@@ -209,58 +209,87 @@ export function SocialAutomationSettings({
 
     startTransition(async () => {
       try {
-        const promises = [
-          updateSiteSetting(
-            "social_automation_keywords",
-            keywords.map((k) => k.keyword),
-          ),
-          updateSiteSetting("facebook_post_template", templates.facebook.th),
-          updateSiteSetting("facebook_post_template_en", templates.facebook.en),
-          updateSiteSetting("facebook_post_template_cn", templates.facebook.cn),
-          updateSiteSetting("facebook_post_template_ru", templates.facebook.ru),
-          updateSiteSetting("instagram_post_template", templates.instagram.th),
-          updateSiteSetting("instagram_post_template_en", templates.instagram.en),
-          updateSiteSetting("instagram_post_template_cn", templates.instagram.cn),
-          updateSiteSetting("instagram_post_template_ru", templates.instagram.ru),
-          updateSiteSetting("line_post_template", templates.line.th),
-          updateSiteSetting("line_post_template_en", templates.line.en),
-          updateSiteSetting("line_post_template_cn", templates.line.cn),
-          updateSiteSetting("line_post_template_ru", templates.line.ru),
-          updateSiteSetting("tiktok_post_template", templates.tiktok.th),
-          updateSiteSetting("tiktok_post_template_en", templates.tiktok.en),
-          updateSiteSetting("tiktok_post_template_cn", templates.tiktok.cn),
-          updateSiteSetting("tiktok_post_template_ru", templates.tiktok.ru),
+        if (!initialData) return;
+
+        const promises = [];
+
+        if (
+          JSON.stringify(keywords) !==
+          JSON.stringify(initialData.social_automation_keywords || [])
+        ) {
+          promises.push(
+            updateSiteSetting(
+              "social_automation_keywords",
+              keywords.map((k) => k.keyword),
+            ).then((r) => ({ key: "social_automation_keywords", ...r }))
+          );
+        }
+
+        const templateMappings: { key: SiteSettingKey; value: string; initial: string }[] = [
+          { key: "facebook_post_template", value: templates.facebook.th, initial: initialData.facebook_post_template || "" },
+          { key: "facebook_post_template_en", value: templates.facebook.en, initial: initialData.facebook_post_template_en || "" },
+          { key: "facebook_post_template_cn", value: templates.facebook.cn, initial: initialData.facebook_post_template_cn || "" },
+          { key: "facebook_post_template_ru", value: templates.facebook.ru, initial: initialData.facebook_post_template_ru || "" },
+          { key: "instagram_post_template", value: templates.instagram.th, initial: initialData.instagram_post_template || "" },
+          { key: "instagram_post_template_en", value: templates.instagram.en, initial: initialData.instagram_post_template_en || "" },
+          { key: "instagram_post_template_cn", value: templates.instagram.cn, initial: initialData.instagram_post_template_cn || "" },
+          { key: "instagram_post_template_ru", value: templates.instagram.ru, initial: initialData.instagram_post_template_ru || "" },
+          { key: "line_post_template", value: templates.line.th, initial: initialData.line_post_template || "" },
+          { key: "line_post_template_en", value: templates.line.en, initial: initialData.line_post_template_en || "" },
+          { key: "line_post_template_cn", value: templates.line.cn, initial: initialData.line_post_template_cn || "" },
+          { key: "line_post_template_ru", value: templates.line.ru, initial: initialData.line_post_template_ru || "" },
+          { key: "tiktok_post_template", value: templates.tiktok.th, initial: initialData.tiktok_post_template || "" },
+          { key: "tiktok_post_template_en", value: templates.tiktok.en, initial: initialData.tiktok_post_template_en || "" },
+          { key: "tiktok_post_template_cn", value: templates.tiktok.cn, initial: initialData.tiktok_post_template_cn || "" },
+          { key: "tiktok_post_template_ru", value: templates.tiktok.ru, initial: initialData.tiktok_post_template_ru || "" },
         ];
+
+        for (const mapping of templateMappings) {
+          if (mapping.value !== mapping.initial) {
+            promises.push(
+              updateSiteSetting(mapping.key, mapping.value).then((r) => ({
+                key: mapping.key,
+                ...r,
+              }))
+            );
+          }
+        }
+
+        if (promises.length === 0) {
+          return;
+        }
 
         const results = await Promise.all(promises);
         const allSuccess = results.every((r) => r.success);
 
         if (allSuccess) {
           if (!silent) toast.success("บันทึกการตั้งค่าเรียบร้อย");
-          if (initialData) {
-            setInitialData({
-              ...initialData,
-              social_automation_keywords: keywords,
-              facebook_post_template: templates.facebook.th,
-              facebook_post_template_en: templates.facebook.en,
-              facebook_post_template_cn: templates.facebook.cn,
-              facebook_post_template_ru: templates.facebook.ru,
-              instagram_post_template: templates.instagram.th,
-              instagram_post_template_en: templates.instagram.en,
-              instagram_post_template_cn: templates.instagram.cn,
-              instagram_post_template_ru: templates.instagram.ru,
-              line_post_template: templates.line.th,
-              line_post_template_en: templates.line.en,
-              line_post_template_cn: templates.line.cn,
-              line_post_template_ru: templates.line.ru,
-              tiktok_post_template: templates.tiktok.th,
-              tiktok_post_template_en: templates.tiktok.en,
-              tiktok_post_template_cn: templates.tiktok.cn,
-              tiktok_post_template_ru: templates.tiktok.ru,
-            });
-          }
+          setInitialData({
+            ...initialData,
+            social_automation_keywords: keywords,
+            facebook_post_template: templates.facebook.th,
+            facebook_post_template_en: templates.facebook.en,
+            facebook_post_template_cn: templates.facebook.cn,
+            facebook_post_template_ru: templates.facebook.ru,
+            instagram_post_template: templates.instagram.th,
+            instagram_post_template_en: templates.instagram.en,
+            instagram_post_template_cn: templates.instagram.cn,
+            instagram_post_template_ru: templates.instagram.ru,
+            line_post_template: templates.line.th,
+            line_post_template_en: templates.line.en,
+            line_post_template_cn: templates.line.cn,
+            line_post_template_ru: templates.line.ru,
+            tiktok_post_template: templates.tiktok.th,
+            tiktok_post_template_en: templates.tiktok.en,
+            tiktok_post_template_cn: templates.tiktok.cn,
+            tiktok_post_template_ru: templates.tiktok.ru,
+          });
         } else if (!silent) {
-          toast.error("เกิดข้อผิดพลาดในการบันทึกบางรายการ");
+          const failedKeys = results
+            .filter((r) => !r.success)
+            .map((r) => r.key)
+            .join(", ");
+          toast.error(`เกิดข้อผิดพลาดในการบันทึกบางรายการ: ${failedKeys}`);
         }
       } catch (error) {
         if (!silent) toast.error("เกิดข้อผิดพลาดในการบันทึก");

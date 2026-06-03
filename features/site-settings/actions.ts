@@ -230,24 +230,28 @@ async function getSiteSettingsInternal(): Promise<SiteSettings> {
 }
 
 /**
- * Internal cached getter for site settings
- */
-const getCachedSiteSettings = cache(async () => {
-  return unstable_cache(
-    async () => getSiteSettingsInternal(),
-    ["site-settings"],
-    {
-      revalidate: 3600, // Cache for 1 hour
-      tags: ["site-settings"],
-    }
-  )();
-});
-
-/**
- * Get all site settings (Cached with revalidation tag)
+ * Get all site settings (Cached with revalidation tag scoped by tenant)
  */
 export async function getSiteSettings() {
-  return getCachedSiteSettings();
+  let tenantId = "global";
+  try {
+    const supabase = await createClient();
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user?.app_metadata?.tenant_id) {
+      tenantId = session.user.app_metadata.tenant_id;
+    }
+  } catch (e) {
+    // Ignore error for public/anonymous access
+  }
+
+  return unstable_cache(
+    async () => getSiteSettingsInternal(),
+    ["site-settings", tenantId],
+    {
+      revalidate: 3600, // Cache for 1 hour
+      tags: [`site-settings-${tenantId}`, "site-settings"],
+    }
+  )();
 }
 
 /**
@@ -312,6 +316,7 @@ export async function updateSiteSetting(
 
     revalidatePath("/");
     revalidatePath("/protected/settings");
+    revalidateTag(`site-settings-${ctx.tenantId || "global"}`, "hours");
     revalidateTag("site-settings", "hours");
 
     return { success: true };
@@ -466,6 +471,7 @@ export async function updateSiteSettings(
 
     revalidatePath("/");
     revalidatePath("/protected/settings");
+    revalidateTag(`site-settings-${ctx.tenantId || "global"}`, "hours");
     revalidateTag("site-settings", "hours");
 
     return { success: true };

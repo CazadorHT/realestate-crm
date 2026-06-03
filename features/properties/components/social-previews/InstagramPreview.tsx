@@ -22,21 +22,37 @@ export function InstagramPreview({
   const isTooLong = content?.length > maxLength;
   const displayContent = isTooLong && !isExpanded ? content.slice(0, maxLength).trim() + "..." : content;
 
+  const displayName = previewData?.identity?.display_name || "Real Estate";
+  const avatarUrl = previewData?.identity?.avatar_url;
+
+  const initials = displayName
+    ? displayName
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "VC";
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden w-full transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 max-w-[300px] xs:max-w-[340px] sm:max-w-[380px] mx-auto">
       {/* Header */}
       <div className="p-2.5 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-linear-to-tr from-yellow-400 via-red-500 to-purple-600 p-[1.5px]">
+          <div className="w-8 h-8 rounded-full bg-linear-to-tr from-yellow-400 via-red-500 to-purple-600 p-[1.5px] shrink-0">
             <div className="w-full h-full rounded-full bg-white p-[1.5px]">
-              <div className="w-full h-full rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold">
-                VC
-              </div>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt={displayName} className="w-full h-full rounded-full object-cover" />
+              ) : (
+                <div className="w-full h-full rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-700">
+                  {initials}
+                </div>
+              )}
             </div>
           </div>
           <div className="flex flex-col -space-y-0.5">
             <span className="font-bold text-[13px] leading-none">
-              vcc.asset
+              {displayName}
             </span>
             <span className="text-[10px] text-slate-500">Sponsored</span>
           </div>
@@ -84,7 +100,7 @@ export function InstagramPreview({
       <div className="px-3 pb-3 space-y-1">
         <div className="text-[12px] font-bold leading-none mb-1">42 likes</div>
         <div className="text-[12px] leading-relaxed">
-          <span className="font-bold mr-1.5">vcc.asset</span>
+          <span className="font-bold mr-1.5">{displayName}</span>
           <span className="text-slate-900 whitespace-pre-wrap">{displayContent || "Loading content..."}</span>
           {isTooLong && (
             <button

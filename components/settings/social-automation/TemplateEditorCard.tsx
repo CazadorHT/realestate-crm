@@ -252,7 +252,7 @@ export function TemplateEditorCard({
                 )}
                 onClick={() => window.location.href = "/api/auth/facebook"}
               >
-                {metaConnected ? "Reconnect" : "Connect Facebook"}
+                {metaConnected ? "Update Tokens" : "Connect Facebook"}
               </Button>
             </div>
           )}
@@ -438,8 +438,8 @@ export function TemplateEditorCard({
                         </Badge>
                       </div>
                       <Textarea
-                        placeholder="🏠 {{title}}\n💰 {{price}}\n..."
-                        value={templates[activePlatform][lang as "th" | "en" | "cn" | "ru"]}
+                        placeholder={`🏠 {{title}}\n💰 {{price}}\n...`}
+                        value={templates[activePlatform][lang as "th" | "en" | "cn" | "ru"]|| ""}
                         onChange={(e) =>
                           updateTemplate(
                             activePlatform,

@@ -134,6 +134,26 @@ export async function renderPropertySocialTemplate(
     priceText = property.price ? `${formatPrice(property.price)} ${tBaht}` : "";
   }
 
+  let originalPriceText = "";
+  if (property.listing_type === "SALE_AND_RENT") {
+    const parts = [];
+    if (property.original_price)
+      parts.push(`${tSale} ${formatPrice(property.original_price)} ${tBaht}`);
+    if (property.original_rental_price)
+      parts.push(
+        `${tRent} ${formatPrice(property.original_rental_price)} ${tBaht}${tPerMonth}`,
+      );
+    originalPriceText = parts.join(" | ");
+  } else if (property.listing_type === "RENT") {
+    originalPriceText = property.original_rental_price
+      ? `${formatPrice(property.original_rental_price)} ${tBaht}${tPerMonth}`
+      : "";
+  } else {
+    originalPriceText = property.original_price
+      ? `${formatPrice(property.original_price)} ${tBaht}`
+      : "";
+  }
+
   const primaryAgent = property.property_agents?.[0]?.profiles || {};
   const tTitle =
     (lang === "th" ? property.title : (property[`title_${lang}`] as string)) ||
@@ -401,6 +421,26 @@ export async function renderPropertySocialTemplate(
             : "联系咨询售价";
   }
 
+  const tVerified = property.verified
+    ? lang === "th"
+      ? "✅ ตรวจสอบแล้ว"
+      : lang === "cn"
+        ? "✅ 已验证"
+        : lang === "ru"
+          ? "✅ Проверено"
+          : "✅ Verified"
+    : "";
+
+  const tExclusive = property.is_exclusive
+    ? lang === "th"
+      ? "🌟 Exclusive"
+      : lang === "cn"
+        ? "🌟 独家"
+        : lang === "ru"
+          ? "🌟 Эксклюзив"
+          : "🌟 Exclusive"
+    : "";
+
   return template
     .replace(/{{title}}/g, tTitle)
     .replace(/{{description}}/g, tDescription)
@@ -443,8 +483,8 @@ export async function renderPropertySocialTemplate(
     .replace(/{{bathrooms}}/g, property.bathrooms?.toString() || "0")
     .replace(/{{size_sqm}}/g, property.size_sqm?.toString() || "0")
     .replace(/{{floor}}/g, property.floor?.toString() || "-")
-    .replace(/{{verified}}/g, property.verified ? "Verified" : "")
-    .replace(/{{exclusive}}/g, property.is_exclusive ? "Exclusive" : "")
+    .replace(/{{verified}}/g, tVerified)
+    .replace(/{{exclusive}}/g, tExclusive)
     .replace(/{{link}}/g, publicUrl)
     .replace(/{{agent_name}}/g, primaryAgent.full_name || "")
     .replace(/{{agent_phone}}/g, primaryAgent.phone || "")

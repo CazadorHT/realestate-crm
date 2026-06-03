@@ -27,11 +27,13 @@ export function FacebookPreview({
   const isTooLong = content?.length > maxLength;
   const displayContent = isTooLong && !isExpanded ? content.slice(0, maxLength).trim() + "..." : content;
 
-  // Extract initials from site name
-  const initials = siteConfig.name
-    ? siteConfig.name
+  const displayName = previewData?.identity?.display_name || siteConfig.name || "Real Estate";
+  const avatarUrl = previewData?.identity?.avatar_url;
+
+  const initials = displayName
+    ? displayName
         .split(" ")
-        .map((n) => n[0])
+        .map((n: string) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2)
@@ -42,12 +44,16 @@ export function FacebookPreview({
       {/* Header */}
       <div className="p-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-[10px] shadow-inner shrink-0">
-            {initials}
-          </div>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={displayName} className="w-8 h-8 rounded-full object-cover shrink-0" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-[10px] shadow-inner shrink-0">
+              {initials}
+            </div>
+          )}
           <div>
             <div className="font-bold text-[14px] flex items-center gap-1.5 text-slate-900 leading-none">
-              {siteConfig.name}
+              {displayName}
               {previewData?.verified && (
                 <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center -mt-0.5 border border-white shadow-xs">
                   <div className="text-[7px] text-white font-bold">✓</div>

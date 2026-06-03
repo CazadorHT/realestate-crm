@@ -168,6 +168,10 @@ export default async function ProfilePage() {
 
           {/* Right Column - High Performance Forms (8 cols) */}
           <div className="lg:col-span-8 space-y-8">
+            {/* Section 4: Social Integrations */}
+            <SocialIntegrationsCard
+              metadata={profile.metadata}
+            />
             {/* Section 1: Profile Information */}
             <ProfileInfoForm
               fullName={profile.full_name}
@@ -197,10 +201,7 @@ export default async function ProfilePage() {
               initialSettings={profile.notification_preferences}
             />
 
-            {/* Section 4: Social Integrations */}
-            <SocialIntegrationsCard
-              metadata={profile.metadata}
-            />
+            
           </div>
         </div>
       </div>
