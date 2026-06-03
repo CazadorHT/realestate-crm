@@ -155,7 +155,8 @@ async function getSiteSettingsInternal(): Promise<SiteSettings> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("site_settings")
-      .select("key, value");
+      .select("key, value")
+      .order("updated_at", { ascending: true });
 
     if (error) {
       console.error("Error fetching site settings:", error);
