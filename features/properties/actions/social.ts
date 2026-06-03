@@ -830,27 +830,7 @@ export async function getPropertySocialContent(
       })
       .filter(Boolean) as string[]) || [];
 
-  let appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
-  if (appUrl && !appUrl.startsWith("http")) {
-    appUrl = `https://${appUrl}`;
-  }
-  appUrl = appUrl.replace(/\/$/, "");
-
-  const images = rawImages
-    .map((url) => {
-      const cleanUrl = url.split("?")[0].toLowerCase();
-      const isCompatible = [".jpg", ".jpeg", ".png"].some((ext) => cleanUrl.endsWith(ext));
-      const isWebp = cleanUrl.endsWith(".webp");
-
-      if (isCompatible) return url;
-
-      if (isWebp && appUrl) {
-        return `${appUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
-      }
-
-      return url;
-    })
-    .filter(Boolean) as string[];
+  const images = rawImages;
 
   return {
     content,
@@ -907,7 +887,29 @@ export async function postPropertyToMetaAction(
       lang,
       platform,
     );
-    const images = contentData.images;
+    const rawImages = contentData.images;
+
+    let appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+    if (appUrl && !appUrl.startsWith("http")) {
+      appUrl = `https://${appUrl}`;
+    }
+    appUrl = appUrl.replace(/\/$/, "");
+
+    const images = rawImages
+      .map((url) => {
+        const cleanUrl = url.split("?")[0].toLowerCase();
+        const isCompatible = [".jpg", ".jpeg", ".png"].some((ext) => cleanUrl.endsWith(ext));
+        const isWebp = cleanUrl.endsWith(".webp");
+
+        if (isCompatible) return url;
+
+        if (isWebp && appUrl) {
+          return `${appUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
+        }
+
+        return url;
+      })
+      .filter(Boolean) as string[];
 
     const finalContent = customContent
       ? await renderPropertySocialTemplate(
