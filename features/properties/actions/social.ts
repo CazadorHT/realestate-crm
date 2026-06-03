@@ -873,7 +873,7 @@ export async function postPropertyToMetaAction(
     const { data: p, error: propError } = await supabase
       .from("properties")
       .select(
-        `*, property_images(image_url), property_agents(profiles(*)), property_features(features(*))`,
+        `*, property_images(image_url), property_agents(profiles:identities_v3(*)), property_features(features(*))`,
       )
       .eq("id", propertyId)
       .single();

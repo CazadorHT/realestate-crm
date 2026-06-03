@@ -169,14 +169,14 @@ export function SocialIntegrationsTab({
                   </Badge>
                 </div>
                 <div className="flex gap-2">
-                  <Link
+                  <a
                     href="/api/auth/facebook/login"
                     className="flex-1"
                   >
                     <Button className="w-full h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-black rounded-xl shadow-lg shadow-indigo-200 border-none transition-all active:scale-95">
                       Update Tokens
                     </Button>
-                  </Link>
+                  </a>
                   <IntegrationDisconnectButton
                     provider="facebook"
                     variant="outline"
@@ -191,11 +191,11 @@ export function SocialIntegrationsTab({
                   ขยายตลาดไปยัง Facebook และ Instagram
                   พร้อมรับการแจ้งเตือนและการตลาดอัตโนมัติ
                 </p>
-                <Link href="/api/auth/facebook/login">
+                <a href="/api/auth/facebook/login" className="w-full">
                   <Button className="w-full h-12 rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 text-white font-black hover:opacity-90 shadow-md shadow-indigo-100">
                     Connect Meta
                   </Button>
-                </Link>
+                </a>
               </div>
             )}
           </CardContent>

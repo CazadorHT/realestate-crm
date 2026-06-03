@@ -147,11 +147,11 @@ export function SocialTabContent({
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Link href="/api/auth/tiktok/login" className="flex-1">
+                  <a href="/api/auth/tiktok/login" className="flex-1">
                     <Button className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-2xl shadow-lg shadow-slate-200 border-none transition-all active:scale-95">
                       Reconnect Content
                     </Button>
-                  </Link>
+                  </a>
                   <IntegrationDisconnectButton
                     provider="tiktok"
                     variant="outline"
@@ -165,11 +165,11 @@ export function SocialTabContent({
                 <p className="text-sm text-slate-500 leading-relaxed font-semibold">
                   นำเข้าวิดีโอจาก TikTok เพื่อทำการตลาดและขายทรัพย์ของคุณได้อย่างน่าสนใจมากขึ้น
                 </p>
-                <Link href="/api/auth/tiktok/login">
+                <a href="/api/auth/tiktok/login" className="w-full">
                   <Button variant="outline" className="w-full h-12 rounded-2xl border-dashed border-2 border-slate-300 text-slate-900 hover:bg-slate-50 font-semibold transition-all">
                     Connect TikTok
                   </Button>
-                </Link>
+                </a>
               </div>
             )}
           </CardContent>
@@ -219,11 +219,11 @@ export function SocialTabContent({
                   </Badge>
                 </div>
                 <div className="flex gap-2">
-                  <Link href="/api/auth/facebook/login" className="flex-1">
+                  <a href="/api/auth/facebook/login" className="flex-1">
                     <Button className="w-full h-12 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-2xl shadow-lg shadow-indigo-200 border-none transition-all active:scale-95">
                       อัปเดตโทเค็น (Sync Tokens)
                     </Button>
-                  </Link>
+                  </a>
                   <IntegrationDisconnectButton
                     provider="facebook"
                     variant="outline"
@@ -237,11 +237,11 @@ export function SocialTabContent({
                 <p className="text-sm text-slate-500 leading-relaxed font-semibold">
                   ขยายตลาดไปยัง Facebook และ Instagram พร้อมรับการแจ้งเตือนและการตลาดอัตโนมัติ
                 </p>
-                <Link href="/api/auth/facebook/login">
+                <a href="/api/auth/facebook/login" className="w-full">
                   <Button className="w-full h-12 rounded-2xl bg-linear-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:opacity-90 shadow-md shadow-indigo-100 transition-all active:scale-95">
                     Connect Meta
                   </Button>
-                </Link>
+                </a>
               </div>
             )}
           </CardContent>
