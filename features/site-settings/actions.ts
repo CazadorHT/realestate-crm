@@ -150,12 +150,20 @@ export async function skipOnboardingStepAction(
 /**
  * Internal function to get all site settings (Hits DB)
  */
-async function getSiteSettingsInternal(): Promise<SiteSettings> {
+async function getSiteSettingsInternal(tenantId: string): Promise<SiteSettings> {
   try {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from("site_settings")
-      .select("tenant_id, key, value")
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const supabase = await createAdminClient();
+    
+    let query = supabase.from("site_settings").select("tenant_id, key, value");
+    
+    if (tenantId && tenantId !== "global") {
+      query = query.or(`tenant_id.is.null,tenant_id.eq.${tenantId}`);
+    } else {
+      query = query.is("tenant_id", null);
+    }
+
+    const { data, error } = await query
       .order("tenant_id", { ascending: true, nullsFirst: true })
       .order("updated_at", { ascending: true });
 
@@ -247,7 +255,7 @@ export async function getSiteSettings() {
   }
 
   return unstable_cache(
-    async () => getSiteSettingsInternal(),
+    async () => getSiteSettingsInternal(tenantId),
     ["site-settings", tenantId],
     {
       revalidate: 3600, // Cache for 1 hour

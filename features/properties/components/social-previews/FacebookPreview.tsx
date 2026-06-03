@@ -24,8 +24,9 @@ export function FacebookPreview({
 }: FacebookPreviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const maxLength = 200;
-  const isTooLong = content?.length > maxLength;
-  const displayContent = isTooLong && !isExpanded ? content.slice(0, maxLength).trim() + "..." : content;
+  const safeContent = content || "";
+  const isTooLong = safeContent.length > maxLength;
+  const displayContent = isTooLong && !isExpanded ? safeContent.slice(0, maxLength).trim() + "..." : safeContent;
 
   const displayName = previewData?.identity?.display_name || siteConfig.name || "Real Estate";
   const avatarUrl = previewData?.identity?.avatar_url;

@@ -19,8 +19,9 @@ export function InstagramPreview({
 }: InstagramPreviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const maxLength = 500; // Increased for better multi-language preview
-  const isTooLong = content?.length > maxLength;
-  const displayContent = isTooLong && !isExpanded ? content.slice(0, maxLength).trim() + "..." : content;
+  const safeContent = content || "";
+  const isTooLong = safeContent.length > maxLength;
+  const displayContent = isTooLong && !isExpanded ? safeContent.slice(0, maxLength).trim() + "..." : safeContent;
 
   const displayName = previewData?.identity?.display_name || "Real Estate";
   const avatarUrl = previewData?.identity?.avatar_url;

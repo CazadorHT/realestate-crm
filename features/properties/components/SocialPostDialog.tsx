@@ -54,24 +54,28 @@ const PLATFORM_CONFIG = {
     title: "Post to Facebook",
     icon: FaFacebook,
     color: "text-blue-600",
+    bgColor: "bg-blue-50",
     btnColor: "bg-blue-600 hover:bg-blue-700",
   },
   INSTAGRAM: {
     title: "Post to Instagram",
     icon: FaInstagram,
     color: "text-pink-600",
+    bgColor: "bg-pink-50",
     btnColor: "bg-pink-600 hover:bg-pink-700",
   },
   LINE: {
     title: "Broadcast to Line",
     icon: FaLine,
     color: "text-emerald-600",
+    bgColor: "bg-emerald-50",
     btnColor: "bg-emerald-600 hover:bg-emerald-700",
   },
   TIKTOK: {
     title: "Post to TikTok",
     icon: FaTiktok,
     color: "text-slate-900",
+    bgColor: "bg-slate-100",
     btnColor: "bg-slate-900 hover:bg-slate-800",
   },
 };
@@ -237,7 +241,7 @@ export function SocialPostDialog({
             <DrawerHeader className="px-5 py-5 border-b border-slate-100 shrink-0">
               <div className="flex items-center justify-between w-full">
                 <div className="flex items-center gap-4">
-                  <div className={cn("p-2 rounded-2xl bg-slate-50!", config.color.replace("text-", "bg-").replace("500", "50"))}>
+                  <div className={cn("p-2 rounded-2xl", config.bgColor)}>
                     <Icon className={cn("h-10 w-10", config.color)} />
                   </div>
                   <div className="space-y-0.5">
@@ -447,7 +451,7 @@ export function SocialPostDialog({
       title={
         <div className="flex items-center justify-between w-full pr-2 xs:pr-6">
           <div className="flex items-center gap-2 xs:gap-3">
-            <div className={cn("p-1.5 xs:p-2 rounded-xl bg-slate-50", config.color.replace("text-", "bg-").replace("500", "50"))}>
+            <div className={cn("p-1.5 xs:p-2 rounded-xl", config.bgColor)}>
               <Icon className={cn("h-5 w-5 xs:h-6 xs:w-6", config.color)} />
             </div>
             <div>
