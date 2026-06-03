@@ -250,9 +250,9 @@ export function TemplateEditorCard({
                   "h-8 rounded-lg text-xs font-bold",
                   !metaConnected && "bg-blue-600 hover:bg-blue-500 text-white"
                 )}
-                onClick={() => window.location.href = "/api/auth/facebook"}
+                onClick={() => window.location.href = "/api/auth/facebook/login"}
               >
-                {metaConnected ? "Update Tokens" : "Connect Facebook"}
+                {metaConnected ? "Update Tokens" : "Connect Meta"}
               </Button>
             </div>
           )}

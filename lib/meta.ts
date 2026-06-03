@@ -2,13 +2,29 @@ import { metaConfig } from "./meta-config";
 import { MetaPlatform, MetaUserProfile, MetaApiResponse } from "@/types/meta";
 
 /**
+ * Dynamically load token from database settings, fallback to env variables
+ */
+async function getActiveToken(): Promise<string> {
+  try {
+    const { getSiteSettings } = await import("@/features/site-settings/actions");
+    const settings = await getSiteSettings();
+    if (settings?.meta_page_access_token) {
+      return settings.meta_page_access_token;
+    }
+  } catch (e) {
+    // Ignore and fallback
+  }
+  return metaConfig.pageAccessToken;
+}
+
+/**
  * Fetch Meta user profile (Messenger or Instagram)
  */
 export async function getMetaUserProfile(
   psid: string,
   platform: MetaPlatform,
 ): Promise<MetaUserProfile | null> {
-  const token = metaConfig.pageAccessToken;
+  const token = await getActiveToken();
   if (!token) return null;
 
   try {
@@ -31,7 +47,7 @@ export async function sendMetaMessage(
   content: string,
   platform: MetaPlatform,
 ): Promise<MetaApiResponse> {
-  const token = metaConfig.pageAccessToken;
+  const token = await getActiveToken();
   if (!token)
     return {
       success: false,
@@ -78,7 +94,7 @@ export async function sendMetaMedia(
   type: "image" | "video" | "file" = "image",
   platform: MetaPlatform,
 ): Promise<MetaApiResponse> {
-  const token = metaConfig.pageAccessToken;
+  const token = await getActiveToken();
   if (!token)
     return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
@@ -129,7 +145,7 @@ export async function sendMetaCarousel(
   }>,
   platform: MetaPlatform,
 ): Promise<MetaApiResponse> {
-  const token = metaConfig.pageAccessToken;
+  const token = await getActiveToken();
   if (!token)
     return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
@@ -182,7 +198,8 @@ export async function sendMetaCarousel(
  * Automatically discover the WhatsApp Phone Number ID associated with the token
  */
 export async function discoverWhatsAppPhoneNumberId(): Promise<string | null> {
-  const token = metaConfig.whatsappAccessToken || metaConfig.pageAccessToken;
+  const pageToken = await getActiveToken();
+  const token = metaConfig.whatsappAccessToken || pageToken;
   if (!token) return null;
 
   try {
@@ -215,7 +232,7 @@ export async function discoverInstagramBusinessId(): Promise<string | null> {
     return metaConfig.instagramBusinessId;
   }
 
-  const token = metaConfig.pageAccessToken;
+  const token = await getActiveToken();
   if (!token) return null;
 
   try {
@@ -244,7 +261,8 @@ export async function sendWhatsAppMessage(
   phoneNumber: string,
   content: string,
 ): Promise<MetaApiResponse> {
-  const token = metaConfig.whatsappAccessToken || metaConfig.pageAccessToken;
+  const pageToken = await getActiveToken();
+  const token = metaConfig.whatsappAccessToken || pageToken;
   let phoneNumberId = metaConfig.whatsappPhoneNumberId;
 
   // -- AUTO DISCOVERY --
@@ -298,7 +316,7 @@ export async function replyToMetaComment(
   commentId: string,
   content: string,
 ): Promise<MetaApiResponse<{ id: string }>> {
-  const token = metaConfig.pageAccessToken;
+  const token = await getActiveToken();
   if (!token)
     return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
@@ -333,7 +351,7 @@ export async function sendPrivateReply(
   content: string,
   platform: MetaPlatform,
 ): Promise<MetaApiResponse> {
-  const token = metaConfig.pageAccessToken;
+  const token = await getActiveToken();
   if (!token)
     return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
@@ -385,7 +403,7 @@ export async function sendPrivateReply(
 export async function fetchFacebookLeadDetails(
   leadgenId: string,
 ): Promise<any | null> {
-  const token = metaConfig.pageAccessToken;
+  const token = await getActiveToken();
   if (!token) return null;
 
   try {
@@ -407,7 +425,7 @@ export async function postToMetaPage(
   imageUrls?: string | string[],
   platform: MetaPlatform = "FACEBOOK",
 ): Promise<MetaApiResponse> {
-  const token = metaConfig.pageAccessToken;
+  const token = await getActiveToken();
   if (!token)
     return {
       success: false,
