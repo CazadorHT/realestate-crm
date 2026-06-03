@@ -66,6 +66,53 @@ const formatPrice = (p: number | string | null | undefined) => {
 };
 
 /**
+ * Convert HTML content to beautiful plain text suitable for social posts
+ */
+function htmlToPlainText(html: string): string {
+  if (!html) return "";
+  
+  let text = html;
+  
+  // Replace headings with newlines before/after
+  text = text.replace(/<h[1-6][^>]*>/gi, "\n");
+  text = text.replace(/<\/h[1-6]>/gi, "\n");
+  
+  // Replace br with newline
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  
+  // Replace list items with bullet points
+  text = text.replace(/<li[^>]*>/gi, "\n- ");
+  text = text.replace(/<\/li>/gi, "");
+  
+  // Replace paragraph tags with newlines
+  text = text.replace(/<p[^>]*>/gi, "");
+  text = text.replace(/<\/p>/gi, "\n");
+  
+  // Replace other common block tags with spaces/newlines
+  text = text.replace(/<div[^>]*>/gi, "");
+  text = text.replace(/<\/div>/gi, "\n");
+  
+  // Strip all other HTML tags
+  text = text.replace(/<[^>]*>/g, "");
+  
+  // Decode HTML entities
+  text = text.replace(/&amp;/g, "&")
+             .replace(/&lt;/g, "<")
+             .replace(/&gt;/g, ">")
+             .replace(/&quot;/g, '"')
+             .replace(/&#039;/g, "'")
+             .replace(/&nbsp;/g, " ");
+             
+  // Normalize consecutive newlines and spaces
+  text = text.split("\n")
+             .map(line => line.trim())
+             .filter((line, i, arr) => line !== "" || (i > 0 && arr[i - 1] !== ""))
+             .join("\n");
+             
+  return text.trim();
+}
+
+/**
  * Render social template with property data
  */
 export async function renderPropertySocialTemplate(
@@ -159,12 +206,13 @@ export async function renderPropertySocialTemplate(
     (lang === "th" ? property.title : (property[`title_${lang}`] as string)) ||
     property.title ||
     "";
-  const tDescription =
+  const tDescriptionRaw =
     (lang === "th"
       ? property.description
       : (property[`description_${lang}`] as string)) ||
     property.description ||
     "";
+  const tDescription = htmlToPlainText(tDescriptionRaw);
 
   // Use same logic as PropertyCard for consistent localization
   const tPopularArea = getLocaleValue(property, "popular_area", lang);
