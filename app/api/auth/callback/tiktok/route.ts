@@ -11,13 +11,13 @@ export async function GET(request: NextRequest) {
   if (error) {
     console.error("TikTok Auth Error:", error, errorDescription);
     return NextResponse.redirect(
-      new URL("/protected/settings?error=tiktok_auth_failed", request.url),
+      new URL("/protected/profile?error=tiktok_auth_failed", request.url),
     );
   }
 
   if (!code) {
     return NextResponse.redirect(
-      new URL("/protected/settings?error=no_code", request.url),
+      new URL("/protected/profile?error=no_code", request.url),
     );
   }
 
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
   const tokenData = await exchangeTikTokCode(code, redirectUri);
 
   if (tokenData) {
-    // 1. Fetch user info to display in settings
+    // 1. Fetch user info to display in profile
     const userInfo = await getTikTokUserInfo(tokenData.access_token);
     
     if (!userInfo) {
@@ -46,18 +46,18 @@ export async function GET(request: NextRequest) {
     console.log(`[TikTok Callback] Successfully connected: ${userInfo?.display_name || 'Unknown'}`);
 
     const { revalidatePath } = await import("next/cache");
-    revalidatePath("/(protected)/protected/settings", "page");
+    revalidatePath("/(protected)/protected/profile", "page");
 
     return NextResponse.redirect(
       new URL(
-        "/protected/settings?tab=social&success=tiktok_connected",
+        "/protected/profile?success=tiktok_connected",
         request.url,
       ),
     );
   } else {
     console.error("[TikTok Callback] Token exchange returned null/empty.");
     return NextResponse.redirect(
-      new URL("/protected/settings?error=token_exchange_failed", request.url),
+      new URL("/protected/profile?error=token_exchange_failed", request.url),
     );
   }
 }

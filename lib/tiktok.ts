@@ -279,73 +279,62 @@ export async function getTikTokUserInfo(
 }
 
 /**
- * Save TikTok token to site_settings (Simple singleton approach)
+ * Save TikTok token to profile's metadata (Per-user approach)
  */
 export async function saveTikTokToken(tokenData: TikTokTokenResponse) {
-  let tenantId: string | null = null;
   try {
-    const supabaseUser = await createServerClient();
-    const { data: { user } } = await supabaseUser.auth.getUser();
-    if (user) {
-      const { data: identity } = await supabaseUser
-        .from("identities_v3")
-        .select("tenant_id")
-        .eq("id", user.id)
-        .maybeSingle();
-      if (identity?.tenant_id) {
-        tenantId = identity.tenant_id;
-      }
-    }
-  } catch (err) {
-    console.warn("Could not retrieve user context for TikTok token, falling back to existing row or null", err);
-  }
+    const supabase = await createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("No authenticated user found");
 
-  const supabase = createAdminClient();
-  
-  // Try to find if there is an existing row for 'tiktok_auth_token'
-  const { data: existing } = await supabase
-    .from("site_settings")
-    .select("tenant_id, category")
-    .eq("key", "tiktok_auth_token")
-    .limit(1)
-    .maybeSingle();
+    // Fetch existing profile metadata
+    const { data: profile, error: getErr } = await supabase
+      .from("profiles")
+      .select("metadata")
+      .eq("id", user.id)
+      .single();
 
-  const tenant_id = existing?.tenant_id ?? tenantId ?? null;
-  const category = existing?.category || "general";
+    if (getErr) throw getErr;
 
-  const { error } = await supabase.from("system_settings_v3").upsert({
-    tenant_id,
-    category,
-    key: "tiktok_auth_token",
-    value: {
-      ...tokenData,
-      updated_at: new Date().toISOString(),
-    },
-  }, { onConflict: "tenant_id,category,key" });
+    const existingMetadata = (profile?.metadata as Record<string, any>) || {};
+    const updatedMetadata = {
+      ...existingMetadata,
+      tiktok_auth_token: {
+        ...tokenData,
+        updated_at: new Date().toISOString(),
+      },
+    };
 
-  if (error) {
-    console.error("Error saving TikTok token:", error);
+    const { error: updateErr } = await supabase
+      .from("profiles")
+      .update({ metadata: updatedMetadata })
+      .eq("id", user.id);
+
+    if (updateErr) throw updateErr;
+  } catch (error) {
+    console.error("Error saving TikTok token for user:", error);
   }
 }
 
 /**
- * Get active TikTok token from database
+ * Get active TikTok token from user profile database
  */
 export async function getTikTokToken(): Promise<TikTokTokenResponse | null> {
-  let supabase;
   try {
-    supabase = await createServerClient();
+    const supabase = await createServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("metadata")
+      .eq("id", user.id)
+      .single();
+
+    if (error || !profile) return null;
+    const metadata = profile.metadata as Record<string, any> | null;
+    return (metadata?.tiktok_auth_token as TikTokTokenResponse) || null;
   } catch {
-    supabase = createAdminClient();
+    return null;
   }
-
-  const { data, error } = await supabase
-    .from("site_settings")
-    .select("value")
-    .eq("key", "tiktok_auth_token")
-    .limit(1)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return data.value as unknown as TikTokTokenResponse;
 }

@@ -108,6 +108,8 @@ describe('Property Actions - Branch Isolation & Rollback', () => {
     requires_ai_review: true,
     has_nearby_places: false,
     has_large_kitchen: false,
+    has_western_kitchen: false,
+    has_separate_thai_kitchen: false,
     has_bar_counter: false,
     has_bathtub: false,
     has_walk_in_closet: false,

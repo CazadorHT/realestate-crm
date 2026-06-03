@@ -64,7 +64,13 @@ export function formatTimeAgo(dateString: string): string {
  */
 export function getBaseUrl(request: Request) {
   // Always prefer the canonical app URL to avoid Vercel deployment URL mismatches
-  if (process.env.NEXT_PUBLIC_APP_URL) return process.env.NEXT_PUBLIC_APP_URL;
+  if (process.env.NEXT_PUBLIC_APP_URL) {
+    const url = process.env.NEXT_PUBLIC_APP_URL;
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      return `https://${url}`;
+    }
+    return url;
+  }
 
   const host = request.headers.get("host");
   const protocol = host?.includes("localhost") ? "http" : "https";

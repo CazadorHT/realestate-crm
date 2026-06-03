@@ -173,7 +173,10 @@ export async function updatePropertyAction(
     };
 
     const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
-    if (createdBy && createdBy !== user.id && !canBypassOwnership) {
+    const isCreator = (createdBy && createdBy === user.id) || (data.created_by === user.id);
+    const isAssigned = data.assigned_to === user.id;
+
+    if (!isCreator && !isAssigned && !canBypassOwnership) {
       return { success: false, message: "Forbidden: You can only update your own properties" };
     }
 
@@ -289,6 +292,7 @@ export async function updatePropertyAction(
           parking_slots: safeValues.parking_slots,
           is_pet_friendly: safeValues.is_pet_friendly,
           is_fully_furnished: safeValues.is_fully_furnished,
+          is_foreigner_quota: safeValues.is_foreigner_quota,
           is_renovated: safeValues.is_renovated,
           has_private_pool: safeValues.has_private_pool,
           is_exclusive: safeValues.is_exclusive,
@@ -321,6 +325,8 @@ export async function updatePropertyAction(
           dining_rooms: safeValues.dining_rooms,
           // Luxury / Premium Features
           has_large_kitchen: safeValues.has_large_kitchen,
+          has_western_kitchen: safeValues.has_western_kitchen,
+          has_separate_thai_kitchen: safeValues.has_separate_thai_kitchen,
           has_bar_counter: safeValues.has_bar_counter,
           has_bathtub: safeValues.has_bathtub,
           has_walk_in_closet: safeValues.has_walk_in_closet,
@@ -334,6 +340,7 @@ export async function updatePropertyAction(
         pricing_details: {
           maintenance_fee: safeValues.maintenance_fee,
           parking_fee: safeValues.parking_fee_additional,
+          min_contract_months: safeValues.min_contract_months,
           electricity_charge: safeValues.electricity_charge,
           water_charge: safeValues.water_charge,
           commission_sale: safeValues.commission_sale_percentage,

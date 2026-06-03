@@ -340,7 +340,7 @@ export function QuickInfoSection({
                         >
                           -- ไม่ระบุ --
                         </SelectItem>
-                        {(popularAreas || []).map((a) => (
+                        {[...(popularAreas || [])].sort((a, b) => a.localeCompare(b, "th")).map((a) => (
                           <SelectItem key={a} value={a}>
                             {a}
                           </SelectItem>

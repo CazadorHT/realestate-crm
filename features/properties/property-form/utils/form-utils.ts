@@ -134,6 +134,8 @@ export const EMPTY_VALUES: PropertyFormValues = {
 
   // Luxury / Premium Features
   has_large_kitchen: false,
+  has_western_kitchen: false,
+  has_separate_thai_kitchen: false,
   has_bar_counter: false,
   has_bathtub: false,
   has_walk_in_closet: false,
@@ -264,6 +266,8 @@ export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
     "is_fully_fitted",
     // Luxury / Premium
     "has_large_kitchen",
+    "has_western_kitchen",
+    "has_separate_thai_kitchen",
     "has_bar_counter",
     "has_bathtub",
     "has_walk_in_closet",
@@ -383,6 +387,8 @@ export const FIELD_LABELS: Record<string, string> = {
   has_flexible_lease: "สัญญาเช่ายืดหยุ่น",
   is_fully_fitted: "กั้นห้องแล้ว (Fully Fitted)",
   has_large_kitchen: "ห้องครัวใหญ่",
+  has_western_kitchen: "ครัวฝรั่ง",
+  has_separate_thai_kitchen: "ครัวไทยแยกส่วน",
   has_bar_counter: "เคาท์เตอร์บาร์",
   has_bathtub: "อ่างแช่ตัว",
   has_walk_in_closet: "Walk-in Closet",
@@ -571,6 +577,8 @@ export function mapRowToFormValues(
     has_flexible_lease: Boolean(get("has_flexible_lease", false)),
     is_fully_fitted: Boolean(get("is_fully_fitted", false)),
     has_large_kitchen: Boolean(get("has_large_kitchen", false)),
+    has_western_kitchen: Boolean(get("has_western_kitchen", false)),
+    has_separate_thai_kitchen: Boolean(get("has_separate_thai_kitchen", false)),
     has_bar_counter: Boolean(get("has_bar_counter", false)),
     has_bathtub: Boolean(get("has_bathtub", false)),
     has_walk_in_closet: Boolean(get("has_walk_in_closet", false)),

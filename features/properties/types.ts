@@ -115,6 +115,7 @@ export type UpdatePropertyStatusResult = {
 
 export interface PropertyTableData {
   id: string;
+  slug?: string | null;
   title: string;
   description: string | null;
   image_url: string | null;

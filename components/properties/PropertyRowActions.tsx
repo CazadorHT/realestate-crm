@@ -51,6 +51,7 @@ interface SocialActionResult {
 
 export function PropertyRowActions({
   id,
+  slug,
   title,
   status,
   tenantId,
@@ -60,6 +61,7 @@ export function PropertyRowActions({
   cannotEdit,
 }: {
   id: string;
+  slug?: string | null;
   title?: string;
   status?: string;
   tenantId?: string | null;
@@ -122,7 +124,7 @@ export function PropertyRowActions({
   };
 
   const copyPublicLink = async () => {
-    const url = `${window.location.origin}/properties/${id}`;
+    const url = `${window.location.origin}/properties/${slug || id}`;
     await navigator.clipboard.writeText(url);
     toast.success("คัดลอกลิงก์หน้า Public แล้ว");
   };

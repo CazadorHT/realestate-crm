@@ -375,7 +375,7 @@ export function PropertyCardImage({
         )}
 
         {/* Pet Friendly Badge */}
-        {property.meta_keywords?.includes("Pet Friendly") && (
+        {property.is_pet_friendly && (
           <div className={`flex items-center bg-white/90 backdrop-blur-md text-orange-600 p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
             <MdOutlinePets className="w-5 h-5 rotate-25" />
             <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>

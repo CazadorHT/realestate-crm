@@ -189,7 +189,7 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     if (agentId) {
       const { data: prof } = await supabase
         .from("profiles")
-        .select("full_name, display_name, wechat_user_id, whatsapp_user_id")
+        .select("full_name, display_name, phone, wechat_user_id, whatsapp_user_id")
         .eq("id", agentId)
         .maybeSingle();
       if (prof) {
@@ -320,7 +320,7 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     images: [], // Populated below
     assigned_agent: assignedAgent ? {
       full_name: (assignedAgent as any).display_name || agentProfile?.full_name || agentProfile?.display_name || "",
-      phone: (assignedAgent as any).phone,
+      phone: (assignedAgent as any).phone || agentProfile?.phone || "",
       avatar_url: (assignedAgent as any).avatar_url,
       line_id: (assignedAgent as any).line_id,
       wechat_user_id: agentProfile?.wechat_user_id || null,

@@ -480,9 +480,9 @@ export function MobileFilters({
                     { key: "isForeigner", state: isForeigner, setState: setIsForeigner, icon: EarthIcon, label: "foreigner", color: "purple", size: "h-6 w-6" },
                     { key: "companyRegistered", state: companyRegistered, setState: setCompanyRegistered, icon: WorkIcon, label: "company_registered", color: "indigo", size: "h-6 w-6" },
                     { key: "isHotDeal", state: isHotDeal, setState: setIsHotDeal, icon: FireIcon, label: "hot_deal", color: "rose", size: "h-[22px] w-[22px]" },
-                  ].map((f) => {
+                   ].map((f) => {
                     const qCount = availableQuickFilters[f.key] || 0;
-                    const hasItems = qCount > 0;
+                    const isDisabled = !f.state && qCount === 0;
                     
                     return (
                       <div
@@ -491,13 +491,13 @@ export function MobileFilters({
                           "flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl border-2 transition-colors duration-200 cursor-pointer relative",
                           f.state
                             ? `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
-                            : hasItems 
-                              ? "bg-slate-50 border-transparent text-slate-600 hover:border-slate-200"
-                              : "bg-slate-50 border-transparent text-slate-300 opacity-50 cursor-not-allowed"
+                            : isDisabled
+                            ? "bg-slate-100 border-transparent text-slate-300 pointer-events-none"
+                            : "bg-slate-50 border-transparent text-slate-600 hover:border-slate-200"
                         )}
-                        onClick={() => hasItems && f.setState(!f.state)}
+                        onClick={() => !isDisabled && f.setState(!f.state)}
                       >
-                        {hasItems && qCount > 0 && (
+                        {qCount > 0 && (
                           <span className={cn(
                             "absolute -top-1 -right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm z-10",
                             f.state ? "bg-white text-blue-600" : "bg-emerald-500 text-white"
@@ -505,7 +505,7 @@ export function MobileFilters({
                             {qCount}
                           </span>
                         )}
-                        <f.icon className={cn(f.size, f.state ? "text-white" : `text-${f.color}-500`)} />
+                        <f.icon className={cn(f.size, f.state ? "text-white" : isDisabled ? "text-slate-200" : `text-${f.color}-500`)} />
                         <span className="text-[10px] font-medium text-center leading-tight">
                           {t(`search.${f.label}`)}
                         </span>

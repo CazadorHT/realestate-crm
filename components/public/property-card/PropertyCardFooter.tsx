@@ -34,47 +34,55 @@ export function PropertyCardFooter({
         {/* Price Section */}
         <div className="flex items-start justify-between">
           {/* Sale Column */}
-          <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
-              {t("common.sale")}
-            </span>
-            <div className="text-base sm:text-xl font-extrabold text-[#1B263B]">
-              {prices.salePrice > 0
-                ? formatPrice(prices.salePrice, language)
-                : t("common.contact_for_price")}
+          {property.listing_type !== "RENT" && (
+            <div className="flex flex-col">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
+                {t("common.sale")}
+              </span>
+              <div className="text-base sm:text-xl font-extrabold text-[#1B263B]">
+                {prices.salePrice > 0
+                  ? formatPrice(prices.salePrice, language)
+                  : t("common.contact_for_price")}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Rent Column */}
-          <div className="flex flex-col text-right">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
-              {t("common.rent")}
-            </span>
-            <div className="text-base sm:text-xl font-extrabold text-[#1B263B]">
-              {prices.rentalPrice > 0 ? (
-                <>
-                  {formatPrice(prices.rentalPrice, language)}
-                  <span className="text-[10px] text-slate-400 font-medium ml-0.5">
-                    {t("common.per_month_short")}
-                  </span>
-                </>
-              ) : (
-                t("common.contact_for_price")
-              )}
+          {property.listing_type !== "SALE" && (
+            <div className={`flex flex-col ${property.listing_type === "SALE_AND_RENT" ? "text-right" : "text-left"}`}>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
+                {t("common.rent")}
+              </span>
+              <div className="text-base sm:text-xl font-extrabold text-[#1B263B]">
+                {prices.rentalPrice > 0 ? (
+                  <>
+                    {formatPrice(prices.rentalPrice, language)}
+                    <span className="text-[10px] text-slate-400 font-medium ml-0.5">
+                      {t("common.per_month_short")}
+                    </span>
+                  </>
+                ) : (
+                  t("common.contact_for_price")
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Info Row */}
         <div className="flex items-center justify-between pt-2 border-t border-slate-50">
           {/* Contract */}
-          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
-            <div className="w-1 h-1 rounded-full bg-slate-300" />
-            <span>
-              {t("common.contract")} {property.min_contract_months || 12}{" "}
-              {t("common.months_short")}
-            </span>
-          </div>
+          {(property.listing_type === "RENT" ||
+            property.listing_type === "SALE_AND_RENT") &&
+            property.min_contract_months && (
+              <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+                <div className="w-1 h-1 rounded-full bg-slate-300" />
+                <span>
+                  {t("common.contract")} {property.min_contract_months}{" "}
+                  {t("common.months_short")}
+                </span>
+              </div>
+            )}
 
           {/* Date */}
           <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
@@ -223,8 +231,8 @@ export function PropertyCardFooter({
         {(property.listing_type === "RENT" ||
           property.listing_type === "SALE_AND_RENT") &&
           property.min_contract_months && (
-            <div className="flex items-center gap-1 text-[9px] md:text-[11px] text-slate-400 font-bold italic">
-              <div className="w-1 h-1 rounded-full bg-slate-300" />
+            <div className="flex items-center gap-1 text-[9px] md:text-[11px] text-slate-400 font-semibold italic">
+              <div className="w-1 h-1 rounded-full bg-emerald-300" />
               {t("common.contract")} {property.min_contract_months || 12 }{" "}
               {t("common.months_short")}
             </div>

@@ -527,6 +527,20 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
+              name="has_western_kitchen"
+              label="ครัวฝรั่ง"
+              icon={ChefHat}
+              color="orange"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="has_separate_thai_kitchen"
+              label="ครัวไทยแยกส่วน"
+              icon={ChefHat}
+              color="amber"
+              disabled={isReadOnly}
+            />
+            <FeatureChip
               name="has_bar_counter"
               label="เคาท์เตอร์บาร์"
               icon={GlassWater}

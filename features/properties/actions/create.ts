@@ -215,6 +215,7 @@ export async function createPropertyAction(
           parking_slots: safeValues.parking_slots,
           is_pet_friendly: safeValues.is_pet_friendly,
           is_fully_furnished: safeValues.is_fully_furnished,
+          is_foreigner_quota: safeValues.is_foreigner_quota,
           is_renovated: safeValues.is_renovated,
           has_private_pool: safeValues.has_private_pool,
           is_exclusive: safeValues.is_exclusive,
@@ -247,6 +248,8 @@ export async function createPropertyAction(
           dining_rooms: safeValues.dining_rooms,
           // Luxury / Premium Features
           has_large_kitchen: safeValues.has_large_kitchen,
+          has_western_kitchen: safeValues.has_western_kitchen,
+          has_separate_thai_kitchen: safeValues.has_separate_thai_kitchen,
           has_bar_counter: safeValues.has_bar_counter,
           has_bathtub: safeValues.has_bathtub,
           has_walk_in_closet: safeValues.has_walk_in_closet,

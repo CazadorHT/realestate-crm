@@ -125,6 +125,8 @@ describe("updatePropertyAction", () => {
     is_fully_fitted: false,
     is_never_lived_in: false,
     has_large_kitchen: false,
+    has_western_kitchen: false,
+    has_separate_thai_kitchen: false,
     has_bar_counter: false,
     has_bathtub: false,
     has_walk_in_closet: false,

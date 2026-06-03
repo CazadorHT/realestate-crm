@@ -409,4 +409,50 @@ export async function testLineNotificationAction(lineUserId: string): Promise<{ 
   }
 }
 
+/**
+ * Server action to disconnect a user integration (e.g. TikTok) by removing it from profiles.metadata
+ */
+export async function disconnectUserIntegrationAction(
+  provider: "tiktok"
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const ctx = await requireAuthContext();
+
+    // 1. Fetch current profile metadata
+    const { data: profile, error: getErr } = await ctx.supabase
+      .from("profiles")
+      .select("metadata")
+      .eq("id", ctx.user.id)
+      .single();
+
+    if (getErr || !profile) {
+      return { success: false, message: "ไม่พบข้อมูลโปรไฟล์ผู้ใช้งาน" };
+    }
+
+    const metadata = (profile.metadata as Record<string, any>) || {};
+    
+    // 2. Remove token
+    if (provider === "tiktok") {
+      delete metadata.tiktok_auth_token;
+    }
+
+    // 3. Save back
+    const { error: updateErr } = await ctx.supabase
+      .from("profiles")
+      .update({ metadata })
+      .eq("id", ctx.user.id);
+
+    if (updateErr) {
+      console.error(`Error disconnecting ${provider} for user:`, updateErr);
+      return { success: false, message: `ไม่สามารถยกเลิกการเชื่อมต่อ ${provider} ได้` };
+    }
+
+    revalidatePath("/protected/profile");
+    return { success: true, message: `ยกเลิกการเชื่อมต่อ ${provider} เรียบร้อยแล้ว` };
+  } catch (err: any) {
+    console.error(`Exception disconnecting user integration ${provider}:`, err);
+    return { success: false, message: err.message || "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์" };
+  }
+}
+
 

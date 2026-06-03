@@ -6,6 +6,7 @@ import { getPublicImageUrl } from "@/features/properties/image-utils";
 
 interface TableQueryResult {
   id: string;
+  slug: string | null;
   title: string;
   description: string | null;
   status: PropertyStatus;
@@ -104,7 +105,7 @@ export async function getPropertiesTableData(params: {
     .from("properties")
     .select(
       `
-      id, title, description, status, property_type, listing_type, 
+      id, slug, title, description, status, property_type, listing_type, 
       price, rental_price, original_price, original_rental_price, 
       updated_at, created_at, bedrooms, bathrooms, office_capacity, province, district, subdistrict, 
       popular_area, view_count, address_line1, images, total_units, 
@@ -428,6 +429,7 @@ export async function getPropertiesTableData(params: {
 
     return {
       id: p.id,
+      slug: p.slug,
       title: p.title,
       description: locationHint || p.description,
       image_url: imageUrl,

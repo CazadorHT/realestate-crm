@@ -13,6 +13,7 @@ import { ProfileAvatar } from "@/features/profile/ProfileAvatar";
 import { ProfileInfoForm } from "@/features/profile/ProfileInfoForm";
 import { AccountSecurityCard } from "@/features/profile/AccountSecurityCard";
 import { NotificationSettings } from "@/features/profile/NotificationSettings";
+import { SocialIntegrationsCard } from "@/features/profile/SocialIntegrationsCard";
 import { TenantMembershipCard } from "@/features/profile/TenantMembershipCard";
 import { RolePermissionsNote } from "@/features/profile/RolePermissionsNote";
 import { AdminTeamCard } from "@/features/profile/AdminTeamCard";
@@ -194,6 +195,11 @@ export default async function ProfilePage() {
             {/* Section 3: Notification Preferences */}
             <NotificationSettings
               initialSettings={profile.notification_preferences}
+            />
+
+            {/* Section 4: Social Integrations */}
+            <SocialIntegrationsCard
+              metadata={profile.metadata}
             />
           </div>
         </div>

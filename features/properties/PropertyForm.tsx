@@ -686,14 +686,6 @@ export function PropertyForm({
                   e.stopPropagation();
                 }}
               >
-                {form.watch("requires_ai_review") && (
-                  <AiReviewBanner
-                    type="property"
-                    onConfirm={userRole === "ADMIN" ? () => form.setValue("requires_ai_review", false, { shouldDirty: true }) : undefined}
-                    isVerifying={isActuallySubmitting}
-                  />
-                )}
-
                 <ErrorSummary
                   errors={form.formState.errors}
                   currentStep={currentStep}
@@ -701,6 +693,14 @@ export function PropertyForm({
 
                 {/* Step contents */}
                 {renderStepContent()}
+
+                {form.watch("requires_ai_review") && (
+                  <AiReviewBanner
+                    type="property"
+                    onConfirm={userRole === "ADMIN" ? () => form.setValue("requires_ai_review", false, { shouldDirty: true }) : undefined}
+                    isVerifying={isActuallySubmitting}
+                  />
+                )}
 
                 <PropertyFormNavigation
                   currentStep={currentStep}
@@ -752,6 +752,13 @@ export function PropertyForm({
                 e.stopPropagation();
               }}
             >
+              <ErrorSummary
+                errors={form.formState.errors}
+                currentStep={currentStep}
+              />
+
+              {renderStepContent()}
+
               {form.watch("requires_ai_review") && (
                 <AiReviewBanner
                   type="property"
@@ -759,13 +766,6 @@ export function PropertyForm({
                   isVerifying={isActuallySubmitting}
                 />
               )}
-
-              <ErrorSummary
-                errors={form.formState.errors}
-                currentStep={currentStep}
-              />
-
-              {renderStepContent()}
 
               <PropertyFormNavigation
                 currentStep={currentStep}

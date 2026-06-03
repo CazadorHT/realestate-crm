@@ -468,7 +468,7 @@ export async function getPropertySocialContent(
       `
       *,
       property_images ( image_url ),
-      property_agents ( profiles ( full_name, phone, line_id ) ),
+      property_agents ( profiles:identities_v3 ( full_name:display_name, phone, line_id ) ),
       property_features ( features ( name, name_en, name_cn, name_ru, icon_key ) )
     `,
     )
@@ -488,7 +488,9 @@ export async function getPropertySocialContent(
   const isFacebook = platform === "FACEBOOK";
   const isInstagram = platform === "INSTAGRAM";
 
-  const isTikTokConnected = !!settings.tiktok_auth_token;
+  const { getTikTokToken } = await import("@/lib/tiktok");
+  const tiktokToken = await getTikTokToken();
+  const isTikTokConnected = !!tiktokToken;
   const isFacebookConnected =
     !!process.env.META_PAGE_ACCESS_TOKEN || !!settings.meta_page_access_token;
   const isInstagramConnected =
@@ -510,10 +512,10 @@ export async function getPropertySocialContent(
   // 2. Fetch integration metadata
   let identity: { display_name?: string; avatar_url?: string } = {};
 
-  if (isTikTok && settings.tiktok_auth_token) {
+  if (isTikTok && tiktokToken) {
     identity = {
-      display_name: settings.tiktok_auth_token.display_name,
-      avatar_url: settings.tiktok_auth_token.avatar_url,
+      display_name: tiktokToken.display_name,
+      avatar_url: tiktokToken.avatar_url,
     };
   } else if (isLine && isLineConnected) {
     const { getLineBotInfo } = await import("@/lib/line");

@@ -1018,7 +1018,7 @@ export function PropertiesTable({
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <span>
-                              <PropertyRowActions id={property.id} title={property.title} status={property.status} tenantId={property.tenant_id} isAdmin={isAdmin} isMultiTenant={isMultiTenant} className="h-7 w-7" cannotEdit={cannotEdit} />
+                              <PropertyRowActions id={property.id} slug={property.slug} title={property.title} status={property.status} tenantId={property.tenant_id} isAdmin={isAdmin} isMultiTenant={isMultiTenant} className="h-7 w-7" cannotEdit={cannotEdit} />
                             </span>
                           </TooltipTrigger>
                           <TooltipContent side="top" className="bg-slate-900 text-white border-slate-800 p-2 text-xs">
@@ -1076,6 +1076,7 @@ export function PropertiesTable({
                   <div className="p-1 bg-white/80 backdrop-blur-sm rounded-xl border border-slate-200 shadow-sm">
                     <PropertyRowActions
                       id={property.id}
+                      slug={property.slug}
                       title={property.title}
                       status={property.status}
                       tenantId={property.tenant_id}

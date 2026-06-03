@@ -213,30 +213,49 @@ export const safeEnumLabel = (map: Record<string, string>, v: string | null | un
 /** === TRANSIT LABELS (NOW DYNAMIC IN V3) === 
  * These are kept for legacy styles, but the list is now fetched from `ref_master_data`
  */
-export const TRANSIT_TYPE_ENUM = ["BTS", "MRT", "MRT2", "ARL", "SRT", "SRT2", "SRT3", "MRT3", "OTHER"] as const;
+export const TRANSIT_TYPE_ENUM = [
+  "BTS",
+  "MRT",
+  "MRT_PURPLE",
+  "MRT_YELLOW",
+  "MRT_PINK",
+  "ARL",
+  "SRT_RED",
+  "GOLD",
+  "BRT",
+  "EXPRESSWAY",
+  "MAIN_ROAD",
+  "OTHER"
+] as const;
 export type TransitType = (typeof TRANSIT_TYPE_ENUM)[number];
 
 export const TRANSIT_TYPE_LABELS: Record<TransitType, MultiLangLabel> = {
-  BTS: { th: "รถไฟฟ้า BTS", en: "BTS Skytrain", cn: "曼谷大众运输系统 (BTS)", ru: "Надземное метро BTS" },
-  MRT: { th: "รถไฟฟ้า MRT (สายสีน้ำเงิน)", en: "MRT Blue Line", cn: "曼谷地铁 (MRT)", ru: "Метро MRT" },
-  MRT2: { th: "รถไฟฟ้า (สายสีม่วง)", en: "MRT Purple Line", cn: "地铁紫线", ru: "Фиолетовая линия MRT" },
+  BTS: { th: "รถไฟฟ้า BTS (สายสีเขียว)", en: "BTS Skytrain", cn: "曼谷大众运输系统 (BTS)", ru: "Надземное metro BTS" },
+  MRT: { th: "รถไฟฟ้า MRT (สายสีน้ำเงิน)", en: "MRT Blue Line", cn: "曼谷地铁蓝线", ru: "Метро MRT (Синяя линия)" },
+  MRT_PURPLE: { th: "รถไฟฟ้า MRT (สายสีม่วง)", en: "MRT Purple Line", cn: "曼谷地铁紫线", ru: "Метро MRT (Фиолетовая линия)" },
+  MRT_YELLOW: { th: "รถไฟฟ้า MRT (สายสีเหลือง)", en: "MRT Yellow Line", cn: "曼谷地铁黄线", ru: "Метро MRT (Желтая линия)" },
+  MRT_PINK: { th: "รถไฟฟ้า MRT (สายสีชมพู)", en: "MRT Pink Line", cn: "曼谷地铁粉红线", ru: "Метро MRT (Розовая линия)" },
   ARL: { th: "Airport Rail Link", en: "Airport Rail Link", cn: "机场快铁 (ARL)", ru: "Аэроэкспресс ARL" },
-  SRT: { th: "รถไฟฟ้า (สายสีแดง)", en: "SRT Red Line", cn: "曼谷通勤铁路红线", ru: "Красная линия SRT" },
-  SRT2: { th: "รถไฟฟ้า (สายสีส้ม)", en: "SRT Orange Line", cn: "地铁橙线", ru: "Оранжевая линия SRT" },
-  SRT3: { th: "รถไฟฟ้า (สายสีชมพู)", en: "SRT Pink Line", cn: "地铁粉线", ru: "Розовая линия SRT" },
-  MRT3: { th: "รถไฟฟ้า (สายสีเหลือง)", en: "MRT Yellow Line", cn: "地铁黄线", ru: "Желтая линия MRT" },
+  SRT_RED: { th: "รถไฟฟ้าสายสีแดง", en: "SRT Red Line", cn: "泰国国家铁路红线", ru: "Красная линия SRT" },
+  GOLD: { th: "รถไฟฟ้าสายสีทอง", en: "Gold Line", cn: "金线", ru: "Золотая линия" },
+  BRT: { th: "รถโดยสารด่วนพิเศษ BRT", en: "BRT Bus", cn: "快速公交系统 BRT", ru: "Автобус BRT" },
+  EXPRESSWAY: { th: "จุดขึ้นลงทางด่วน", en: "Expressway Connection", cn: "高速公路", ru: "Шоссе" },
+  MAIN_ROAD: { th: "ถนนหลัก", en: "Main Road", cn: "主干道", ru: "Главная дорога" },
   OTHER: { th: "อื่นๆ", en: "Other", cn: "其他", ru: "Другое" }
 };
 
 export const TRANSIT_TYPE_STYLES: Record<TransitType, { bg: string; text: string; icon: string }> = {
   BTS: { bg: "bg-green-50", text: "text-green-700", icon: "text-green-500" },
   MRT: { bg: "bg-blue-50", text: "text-blue-700", icon: "text-blue-500" },
-  MRT2: { bg: "bg-purple-50", text: "text-purple-700", icon: "text-purple-500" },
+  MRT_PURPLE: { bg: "bg-purple-50", text: "text-purple-700", icon: "text-purple-500" },
+  MRT_YELLOW: { bg: "bg-yellow-50", text: "text-yellow-700", icon: "text-yellow-500" },
+  MRT_PINK: { bg: "bg-pink-50", text: "text-pink-700", icon: "text-pink-500" },
   ARL: { bg: "bg-red-50", text: "text-red-700", icon: "text-red-500" },
-  SRT: { bg: "bg-rose-50", text: "text-rose-700", icon: "text-rose-500" },
-  SRT2: { bg: "bg-orange-50", text: "text-orange-700", icon: "text-orange-500" },
-  SRT3: { bg: "bg-pink-50", text: "text-pink-700", icon: "text-pink-500" },
-  MRT3: { bg: "bg-yellow-50", text: "text-yellow-700", icon: "text-yellow-500" },
+  SRT_RED: { bg: "bg-rose-50", text: "text-rose-700", icon: "text-rose-500" },
+  GOLD: { bg: "bg-amber-50", text: "text-amber-700", icon: "text-amber-500" },
+  BRT: { bg: "bg-cyan-50", text: "text-cyan-700", icon: "text-cyan-500" },
+  EXPRESSWAY: { bg: "bg-orange-50", text: "text-orange-700", icon: "text-orange-500" },
+  MAIN_ROAD: { bg: "bg-violet-50", text: "text-violet-700", icon: "text-violet-500" },
   OTHER: { bg: "bg-slate-50", text: "text-slate-700", icon: "text-slate-500" },
 };
 

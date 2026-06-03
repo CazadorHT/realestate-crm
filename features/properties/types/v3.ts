@@ -47,6 +47,9 @@ export interface PropertyAmenitiesV3 {
   is_green_building?: boolean;
   has_flexible_lease?: boolean;
   is_fully_fitted?: boolean;
+  has_large_kitchen?: boolean;
+  has_western_kitchen?: boolean;
+  has_separate_thai_kitchen?: boolean;
 }
 
 export interface PropertyAddressV3 {

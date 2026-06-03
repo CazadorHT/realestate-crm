@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { FaLine, FaTiktok, FaMeta } from "react-icons/fa6";
+import { FaLine, FaMeta } from "react-icons/fa6";
 import { IntegrationDisconnectButton } from "@/components/settings/IntegrationDisconnectButton";
 import { SocialAutomationSettings } from "@/components/settings/SocialAutomationSettings";
 import { cn } from "@/lib/utils";
@@ -27,7 +27,7 @@ export function SocialIntegrationsTab({
 }: SocialIntegrationsTabProps) {
   return (
     <div className="space-y-8">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* LINE Card */}
         <Card
           className={cn(
@@ -108,90 +108,6 @@ export function SocialIntegrationsTab({
                     className="w-full h-12 rounded-xl border-dashed border-2 border-emerald-200 text-emerald-600 hover:bg-emerald-50 font-bold"
                   >
                     Connect LINE
-                  </Button>
-                </Link>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* TikTok Card */}
-        <Card
-          className={cn(
-            "relative group transition-all duration-500 overflow-hidden border-slate-200/60 bg-white/40 backdrop-blur-xl hover:shadow-2xl hover:shadow-slate-900/10 hover:-translate-y-1 rounded-[24px]",
-            isTikTokConnected && "ring-2 ring-slate-900/50",
-          )}
-        >
-          <CardHeader className="pb-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div
-                  className={cn(
-                    "relative p-3 rounded-2xl transition-all duration-300 transform group-hover:-rotate-6",
-                    isTikTokConnected
-                      ? "bg-slate-900 text-white shadow-lg shadow-slate-300"
-                      : "bg-slate-100 text-slate-900",
-                  )}
-                >
-                  <div className="absolute inset-0 bg-slate-400/20 blur-2xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <FaTiktok className="h-7 w-7 relative z-10" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl font-bold text-slate-900">
-                    TikTok
-                  </CardTitle>
-                  <CardDescription className="text-slate-500 font-medium">
-                    Video Marketing
-                  </CardDescription>
-                </div>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {isTikTokConnected ? (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-[20px] bg-slate-100/50 border border-slate-200/50">
-                  <div className="flex items-center gap-3">
-                    <div className="h-3 w-3 rounded-full bg-emerald-500" />
-                    <span className="text-sm font-bold text-emerald-700">
-                      Active
-                    </span>
-                  </div>
-                  {allSettings.tiktok_auth_token?.display_name && (
-                    <Badge
-                      variant="outline"
-                      className="bg-white/80 border-slate-300 text-slate-700 font-bold px-3 py-1 text-[11px]"
-                    >
-                      {allSettings.tiktok_auth_token.display_name}
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Link href="/api/auth/tiktok/login" className="flex-1">
-                    <Button className="w-full h-12 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl shadow-lg shadow-slate-200 border-none transition-all active:scale-95">
-                      Reconnect
-                    </Button>
-                  </Link>
-                  <IntegrationDisconnectButton
-                    provider="tiktok"
-                    variant="outline"
-                    showLabel={false}
-                    className="h-12 w-12 p-0 flex items-center justify-center rounded-xl bg-slate-50 border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-95"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                  นำเข้าวิดีโอจาก TikTok
-                  เพื่อทำการตลาดและขายทรัพย์ของคุณได้อย่างน่าสนใจมากขึ้น
-                </p>
-                <Link href="/api/auth/tiktok/login">
-                  <Button
-                    variant="outline"
-                    className="w-full h-12 rounded-xl border-dashed border-2 border-slate-300 text-slate-900 hover:bg-slate-50 font-bold"
-                  >
-                    Connect TikTok
                   </Button>
                 </Link>
               </div>

@@ -21,11 +21,11 @@ export interface CompressionResult {
 }
 
 const DEFAULT_OPTIONS: CompressionOptions = {
-  maxSizeMB: 0.4, // 400KB target
-  maxWidthOrHeight: 1600,
+  maxSizeMB: 0.9, // 900KB target for much higher definition
+  maxWidthOrHeight: 2048, // Support up to 2K resolution for crystal clear details
   useWebWorker: true,
   fileType: "image/webp",
-  quality: 0.85,
+  quality: 0.92, // High web quality factor
 };
 
 /**

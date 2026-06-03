@@ -428,6 +428,7 @@ export function RecentPropertiesTable({
 
                       <PropertyRowActions
                         id={property.id}
+                        slug={property.slug}
                         title={property.title}
                         status={property.status}
                         className="h-8 w-8 text-slate-400 hover:bg-slate-100 hover:text-slate-900 rounded-xl transition-colors"
@@ -453,6 +454,7 @@ export function RecentPropertiesTable({
                   <div className="p-1 bg-white/90 backdrop-blur-md rounded-2xl border border-slate-200 shadow-sm">
                     <PropertyRowActions
                       id={property.id}
+                      slug={property.slug}
                       title={property.title}
                       status={property.status}
                     />

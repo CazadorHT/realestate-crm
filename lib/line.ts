@@ -1,17 +1,26 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { Database } from "@/lib/database.types";
 import { Json } from "@/lib/database.types.generated";
+import { getSiteSettings } from "@/features/site-settings/actions";
 
 const LINE_MESSAGING_API = "https://api.line.me/v2/bot/message/push";
 
 export async function sendLineNotification(
   message: string | Record<string, any>,
 ) {
-  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  let token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) {
+    try {
+      const settings = await getSiteSettings();
+      token = settings.line_channel_access_token || undefined;
+    } catch (e) {
+      console.warn("Failed to fetch site settings for line notifications:", e);
+    }
+  }
   let userId = process.env.LINE_ADMIN_USER_ID;
 
   if (!token) {
-    console.error("ไม่พบ LINE_CHANNEL_ACCESS_TOKEN ในการตั้งค่า");
+    console.error("ไม่พบ LINE_CHANNEL_ACCESS_TOKEN หรือ line_channel_access_token ในการตั้งค่า");
     return;
   }
 

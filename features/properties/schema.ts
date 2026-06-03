@@ -197,6 +197,8 @@ export const PropertySchema = z
 
     // 🏡 Luxury / Premium Features
     has_large_kitchen: z.boolean(),
+    has_western_kitchen: z.boolean(),
+    has_separate_thai_kitchen: z.boolean(),
     has_bar_counter: z.boolean(),
     has_bathtub: z.boolean(),
     has_walk_in_closet: z.boolean(),
