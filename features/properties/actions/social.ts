@@ -818,7 +818,7 @@ export async function getPropertySocialContent(
     lang,
   );
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const images =
+  const rawImages =
     ((property.property_images as { image_url: string }[])
       ?.map((img) => {
         const url = img.image_url;
@@ -829,6 +829,28 @@ export async function getPropertySocialContent(
         return `${baseUrl}/storage/v1/object/public/property-images/${url}`;
       })
       .filter(Boolean) as string[]) || [];
+
+  let appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+  if (appUrl && !appUrl.startsWith("http")) {
+    appUrl = `https://${appUrl}`;
+  }
+  appUrl = appUrl.replace(/\/$/, "");
+
+  const images = rawImages
+    .map((url) => {
+      const cleanUrl = url.split("?")[0].toLowerCase();
+      const isCompatible = [".jpg", ".jpeg", ".png"].some((ext) => cleanUrl.endsWith(ext));
+      const isWebp = cleanUrl.endsWith(".webp");
+
+      if (isCompatible) return url;
+
+      if (isWebp && appUrl) {
+        return `${appUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
+      }
+
+      return url;
+    })
+    .filter(Boolean) as string[];
 
   return {
     content,
