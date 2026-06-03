@@ -78,11 +78,9 @@ export async function postPropertyToTikTokAction(
     // Get the current app URL for the image proxy
     // We prefer NEXT_PUBLIC_SUPABASE_URL domain for verification, 
     // but the proxy is on the App domain.
-    let appUrl = process.env.NEXT_PUBLIC_APP_URL || "";
-    if (appUrl && !appUrl.startsWith("http")) {
-      appUrl = `https://${appUrl}`;
-    }
-    appUrl = appUrl.replace(/\/$/, "");
+    const { headers } = await import("next/headers");
+    const host = (await headers()).get("host") || "vccasset.com";
+    const appUrl = `https://${host}`;
 
     const imagesToPost = rawImages
       .map(url => {
