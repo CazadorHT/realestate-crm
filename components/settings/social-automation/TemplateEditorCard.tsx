@@ -38,7 +38,7 @@ interface TemplateEditorCardProps {
     value: string,
   ) => void;
   handleAiGenerate: (
-    type: "SOCIAL_POST" | "LINE_POST" | "TIKTOK_POST",
+    type: "SOCIAL_POST" | "INSTAGRAM_POST" | "LINE_POST" | "TIKTOK_POST",
   ) => void;
   isGenerating: string | null;
   isPending: boolean;
@@ -201,11 +201,13 @@ export function TemplateEditorCard({
               className="border-blue-200! bg-blue-50 text-blue-700 hover:text-blue-100! hover:bg-blue-500! gap-2 font-medium h-8 rounded-lg"
               onClick={() =>
                 handleAiGenerate(
-                  activePlatform === "facebook" || activePlatform === "instagram"
+                  activePlatform === "facebook"
                     ? "SOCIAL_POST"
-                    : activePlatform === "tiktok"
-                      ? "TIKTOK_POST"
-                      : "LINE_POST",
+                    : activePlatform === "instagram"
+                      ? "INSTAGRAM_POST"
+                      : activePlatform === "tiktok"
+                        ? "TIKTOK_POST"
+                        : "LINE_POST",
                 )
               }
               disabled={!!isGenerating}

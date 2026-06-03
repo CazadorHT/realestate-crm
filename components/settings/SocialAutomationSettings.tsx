@@ -313,7 +313,7 @@ export function SocialAutomationSettings({
   }, [keywords, templates, hasChanges]);
 
   const handleAiGenerate = async (
-    type: "SOCIAL_POST" | "KEYWORD_DM" | "LINE_POST" | "TIKTOK_POST",
+    type: "SOCIAL_POST" | "INSTAGRAM_POST" | "KEYWORD_DM" | "LINE_POST" | "TIKTOK_POST",
     index?: number,
   ) => {
     const keyword = index !== undefined ? keywords[index]?.keyword : undefined;
@@ -321,10 +321,12 @@ export function SocialAutomationSettings({
       index !== undefined
         ? `dm-${index}`
         : type === "SOCIAL_POST"
-          ? `${activePlatform}-post`
-          : type === "TIKTOK_POST"
-            ? "tiktok-post"
-            : "line-post";
+          ? "facebook-post"
+          : type === "INSTAGRAM_POST"
+            ? "instagram-post"
+            : type === "TIKTOK_POST"
+              ? "tiktok-post"
+              : "line-post";
 
     setIsGenerating(loadingId);
     try {
@@ -349,14 +351,15 @@ export function SocialAutomationSettings({
           languages.map((lang) =>
             generateSocialAutomationTemplatesAction(
               type,
-              type === "SOCIAL_POST" ? activePlatform : keyword,
+              type === "SOCIAL_POST" ? "facebook" : type === "INSTAGRAM_POST" ? "instagram" : keyword,
               lang,
             ),
           ),
         );
 
         const platformMap: Record<string, "facebook" | "instagram" | "line" | "tiktok"> = {
-          SOCIAL_POST: activePlatform === "instagram" ? "instagram" : "facebook",
+          SOCIAL_POST: "facebook",
+          INSTAGRAM_POST: "instagram",
           LINE_POST: "line",
           TIKTOK_POST: "tiktok",
         };

@@ -495,7 +495,7 @@ export async function updateSiteSettings(
  * AI Generate Social Post or DM templates
  */
 export async function generateSocialAutomationTemplatesAction(
-  type: "SOCIAL_POST" | "KEYWORD_DM" | "LINE_POST" | "TIKTOK_POST",
+  type: "SOCIAL_POST" | "INSTAGRAM_POST" | "KEYWORD_DM" | "LINE_POST" | "TIKTOK_POST",
   keyword?: string,
   lang: "th" | "en" | "cn" | "ru" = "th",
 ): Promise<{ success: boolean; data?: string; message?: string }> {
@@ -507,8 +507,8 @@ export async function generateSocialAutomationTemplatesAction(
     const modelName = aiConfig.description_model || "gemini-2.0-flash-exp";
 
     let prompt = "";
-    if (type === "SOCIAL_POST") {
-      const isInstagram = keyword === "instagram"; // We can reuse keyword field for platform hint
+    if (type === "SOCIAL_POST" || type === "INSTAGRAM_POST") {
+      const isInstagram = type === "INSTAGRAM_POST" || keyword === "instagram"; // We can reuse keyword field for platform hint
       const platformName = isInstagram ? "Instagram" : "Facebook";
       const langName =
         lang === "th"
