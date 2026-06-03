@@ -155,7 +155,8 @@ async function getSiteSettingsInternal(): Promise<SiteSettings> {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("site_settings")
-      .select("key, value")
+      .select("tenant_id, key, value")
+      .order("tenant_id", { ascending: true, nullsFirst: true })
       .order("updated_at", { ascending: true });
 
     if (error) {
