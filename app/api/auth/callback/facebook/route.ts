@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  let tenantId: string | null = null;
   try {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://vccasset.com";
     const redirectUri = `${baseUrl}/api/auth/callback/facebook`;
@@ -55,7 +56,6 @@ export async function GET(request: NextRequest) {
       console.log(`[Facebook Callback] Mapping page: ${pageName} (${pageId})`);
 
       // Fetch user info/session to get tenant_id
-      let tenantId: string | null = null;
       try {
         const { createClient } = await import("@/lib/supabase/server");
         const client = await createClient();
@@ -105,8 +105,12 @@ export async function GET(request: NextRequest) {
       console.warn("[Facebook Callback] No pages found for this user token.");
     }
 
-    const { revalidatePath } = await import("next/cache");
+    const { revalidatePath, revalidateTag } = await import("next/cache");
     revalidatePath("/(protected)/protected/settings", "page");
+    revalidateTag("site-settings", "hours");
+    if (tenantId) {
+      revalidateTag(`site-settings-${tenantId}`, "hours");
+    }
 
     return NextResponse.redirect(
       new URL(

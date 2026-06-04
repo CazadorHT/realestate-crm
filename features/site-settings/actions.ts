@@ -246,9 +246,9 @@ export async function getSiteSettings() {
   let tenantId = "global";
   try {
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user?.app_metadata?.tenant_id) {
-      tenantId = session.user.app_metadata.tenant_id;
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.app_metadata?.tenant_id) {
+      tenantId = user.app_metadata.tenant_id;
     }
   } catch (e) {
     // Ignore error for public/anonymous access
