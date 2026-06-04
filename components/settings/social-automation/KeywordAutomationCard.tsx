@@ -13,12 +13,15 @@ import {
   Plus,
   Loader2,
   Save,
+  Facebook,
+  Instagram,
 } from "lucide-react";
 import { SocialKeyword } from "@/features/site-settings/schema";
 import { MOCK_PROPERTY_DATA } from "./constants";
 import { SmartTagsCheatSheet } from "./components/SmartTagsCheatSheet";
 import { KeywordChip } from "./components/KeywordChip";
 import { KeywordEditorDialog } from "./components/KeywordEditorDialog";
+import { FaFacebook, FaInstagram } from "react-icons/fa";
 
 interface KeywordAutomationCardProps {
   keywords: SocialKeyword[];
@@ -169,15 +172,13 @@ export function KeywordAutomationCard({
         {keywords.length > 0 && (
           <div className="px-8 py-6 border-t border-slate-200 bg-linear-to-b from-white to-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="flex -space-x-2">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 overflow-hidden"
-                  >
-                    <div className="w-full h-full bg-linear-to-br from-blue-100 to-indigo-100" />
-                  </div>
-                ))}
+              <div className="flex -space-x-1.5 items-center">
+                <div className="w-6 h-6 rounded-full border border-white bg-blue-600 flex items-center justify-center shadow-xs">
+                  <FaFacebook className="h-3.5 w-3.5 text-white fill-white" />
+                </div>
+                <div className="w-6 h-6 rounded-full border border-white bg-linear-to-tr from-yellow-500 via-pink-500 to-purple-600 flex items-center justify-center shadow-xs">
+                  <FaInstagram className="h-3.5 w-3.5 text-white" />
+                </div>
               </div>
               <p className="text-slate-500 text-[13px] font-medium">
                 พบ{" "}
