@@ -220,7 +220,7 @@ export function SocialAutomationSettings({
           promises.push(
             updateSiteSetting(
               "social_automation_keywords",
-              keywords.map((k) => k.keyword),
+              keywords as any,
             ).then((r) => ({ key: "social_automation_keywords", ...r }))
           );
         }
