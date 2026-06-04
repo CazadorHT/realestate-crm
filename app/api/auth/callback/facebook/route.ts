@@ -102,7 +102,13 @@ export async function GET(request: NextRequest) {
         }, { onConflict: "tenant_id,category,key" });
       }
     } else {
-      console.warn("[Facebook Callback] No pages found for this user token.");
+      console.warn("[Facebook Callback] No pages found or pages request failed for this user token:", pagesData);
+      return NextResponse.redirect(
+        new URL(
+          "/protected/settings?tab=social&error=facebook_no_pages_found",
+          request.url,
+        ),
+      );
     }
 
     const { revalidatePath, revalidateTag } = await import("next/cache");
