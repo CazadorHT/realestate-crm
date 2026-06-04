@@ -10,6 +10,7 @@ async function check() {
       id,
       title,
       property_agents (
+        agent_id,
         profiles:identities_v3 (
           full_name:display_name,
           phone,
@@ -22,8 +23,34 @@ async function check() {
   if (error) {
     console.error("Error fetching properties with profiles relationship:", error);
   } else {
-    console.log("=== PROPERTIES WITH profiles RELATIONSHIP ===");
-    console.dir(properties, { depth: null });
+    const propertyList = properties as any[];
+    for (const property of propertyList) {
+      if (property && property.property_agents) {
+        for (const pa of property.property_agents) {
+          console.log(`Checking pa for property ${property.id}:`, pa);
+          if (pa.agent_id) {
+            const { data: staffProfile } = await supabase
+              .from("profiles")
+              .select("full_name, phone, line_id")
+              .eq("id", pa.agent_id)
+              .maybeSingle();
+
+            console.log(`Fetched staffProfile for agent_id ${pa.agent_id}:`, staffProfile);
+
+            if (staffProfile) {
+              pa.profiles = {
+                ...pa.profiles,
+                full_name: staffProfile.full_name || pa.profiles?.full_name || "",
+                phone: staffProfile.phone || pa.profiles?.phone || "",
+                line_id: staffProfile.line_id || pa.profiles?.line_id || "",
+              };
+            }
+          }
+        }
+      }
+    }
+    console.log("=== PROPERTIES AFTER FALLBACK AND DECRYPTION ===");
+    console.dir(propertyList, { depth: null });
   }
 
   // Query public.identities_v3 directly for the specific agent ID

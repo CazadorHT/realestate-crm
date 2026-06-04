@@ -768,6 +768,23 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
           : "🌟 Exclusive")
     : "";
 
+  const tDistrict = (lang === "th" ? propertyData.district : propertyData[`district_${lang}`]) || propertyData.district || "";
+  const tProvinceName = getProvinceName(propertyData.province || "", lang);
+
+  const cleanForHashtag = (str: string | null | undefined): string => {
+    if (!str || str === "-") return "";
+    return str.toString().replace(/[\s,()\-./]/g, "");
+  };
+
+  const tPropertyTypeClean = cleanForHashtag(tPropertyType);
+  const tListingTypeClean = cleanForHashtag(tListingType);
+  const tPopularAreaVal = (lang === "th" ? propertyData.popular_area : propertyData[`popular_area_${lang}`]) || propertyData.popular_area || "";
+  const tPopularAreaClean = cleanForHashtag(tPopularAreaVal);
+  const tDistrictClean = cleanForHashtag(tDistrict);
+  const tProvinceClean = cleanForHashtag(tProvinceName);
+  const tLocationClean = cleanForHashtag(tPopularAreaVal || tDistrict || tProvinceName);
+  const tTransitClean = cleanForHashtag(propertyData.transit_station_name);
+
   return rendered
     .replace(/{{title}}/g, (lang === "th" ? propertyData.title : propertyData[`title_${lang}`]) || propertyData.title || "")
     .replace(/{{description}}/g, tDescription)
@@ -783,9 +800,23 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     .replace(/{{bedrooms}}/g, propertyData.bedrooms?.toString() || "-")
     .replace(/{{bathrooms}}/g, propertyData.bathrooms?.toString() || "-")
     .replace(/{{size_sqm}}/g, propertyData.size_sqm?.toString() || "-")
+    .replace(/{{land_size}}/g, propertyData.land_size_sqwah?.toString() || "-")
+    .replace(/{{land_size_sqwah}}/g, propertyData.land_size_sqwah?.toString() || "-")
+    .replace(/{{parking}}/g, propertyData.parking_slots?.toString() || "-")
+    .replace(/{{parking_slots}}/g, propertyData.parking_slots?.toString() || "-")
+    .replace(/{{office_capacity}}/g, propertyData.office_capacity || "-")
+    .replace(/{{halls}}/g, propertyData.halls?.toString() || "-")
+    .replace(/{{maid_rooms}}/g, propertyData.maid_rooms?.toString() || "-")
     .replace(/{{floor}}/g, propertyData.floor?.toString() || "-")
     .replace(/{{property_type}}/g, tPropertyType)
     .replace(/{{listing_type}}/g, tListingType)
+    .replace(/{{property_type_clean}}/g, tPropertyTypeClean)
+    .replace(/{{listing_type_clean}}/g, tListingTypeClean)
+    .replace(/{{popular_area_clean}}/g, tPopularAreaClean)
+    .replace(/{{district_clean}}/g, tDistrictClean)
+    .replace(/{{province_clean}}/g, tProvinceClean)
+    .replace(/{{location_clean}}/g, tLocationClean)
+    .replace(/{{transit_clean}}/g, tTransitClean)
     .replace(
       /{{location}}/g,
       (() => {
@@ -794,7 +825,9 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
         return [tPopularArea, tProvince].filter(Boolean).join(lang === "th" ? " " : ", ");
       })()
     )
-    .replace(/{{popular_area}}/g, (lang === "th" ? propertyData.popular_area : propertyData[`popular_area_${lang}`]) || propertyData.popular_area || "-")
+    .replace(/{{popular_area}}/g, tPopularAreaVal || "-")
+    .replace(/{{district}}/g, tDistrict)
+    .replace(/{{province}}/g, tProvinceName)
     .replace(/{{amenities}}/g, amenities)
     .replace(/{{nearby_places}}/g, nearbyPlaces)
     .replace(/{{near_transit}}/g, nearbyTransits)
@@ -965,8 +998,55 @@ async function handleKeywordAutomation(
     const detailsSummary = [
       propertyData.bedrooms ? (lang === "th" ? `${propertyData.bedrooms} ห้องนอน` : lang === "en" ? `${propertyData.bedrooms} Bed` : lang === "ru" ? `${propertyData.bedrooms} Спальни` : `${propertyData.bedrooms} 卧室`) : null,
       propertyData.bathrooms ? (lang === "th" ? `${propertyData.bathrooms} ห้องน้ำ` : lang === "en" ? `${propertyData.bathrooms} Bath` : lang === "ru" ? `${propertyData.bathrooms} Ванные` : `${propertyData.bathrooms} 浴室`) : null,
-      propertyData.size_sqm ? `${propertyData.size_sqm} ${lang === "th" ? "ตร.ม." : lang === "ru" ? "кв.м." : "Sqm"}` : null,
+      propertyData.size_sqm ? `${propertyData.size_sqm} ${lang === "th" ? "ตร.ม." : lang === "en" ? "sq.m." : lang === "cn" ? "平米" : lang === "ru" ? "кв.м." : "Sq.m."}` : null,
+      propertyData.land_size_sqwah
+        ? lang === "th"
+          ? `${propertyData.land_size_sqwah} ตร.ว.`
+          : lang === "en"
+            ? `${propertyData.land_size_sqwah} sq.wah`
+            : lang === "cn"
+              ? `${propertyData.land_size_sqwah} 哇`
+              : lang === "ru"
+                ? `${propertyData.land_size_sqwah} кв.ва`
+                : `${propertyData.land_size_sqwah} Sq.wah`
+        : null,
       propertyData.floor ? (lang === "th" ? `ชั้น ${propertyData.floor}` : lang === "en" ? `Floor ${propertyData.floor}` : lang === "ru" ? `${propertyData.floor} этаж` : `${propertyData.floor} 层`) : null,
+      propertyData.parking_slots
+        ? lang === "th"
+          ? `${propertyData.parking_slots} ที่จอดรถ`
+          : lang === "en"
+            ? `${propertyData.parking_slots} Parking`
+            : lang === "ru"
+              ? `${propertyData.parking_slots} Парковка`
+              : `${propertyData.parking_slots} 车位`
+        : null,
+      propertyData.office_capacity
+        ? lang === "th"
+          ? `ความจุ ${propertyData.office_capacity} คน`
+          : lang === "en"
+            ? `Capacity ${propertyData.office_capacity} Pax`
+            : lang === "ru"
+              ? `Вместимость ${propertyData.office_capacity} чел.`
+              : `容量 ${propertyData.office_capacity} คน`
+        : null,
+      propertyData.halls
+        ? lang === "th"
+          ? `${propertyData.halls} ห้องโถง`
+          : lang === "en"
+            ? `${propertyData.halls} Hall`
+            : lang === "ru"
+              ? `${propertyData.halls} Холл`
+              : `${propertyData.halls} 大厅`
+        : null,
+      propertyData.maid_rooms
+        ? lang === "th"
+          ? `${propertyData.maid_rooms} ห้องแม่บ้าน`
+          : lang === "en"
+            ? `${propertyData.maid_rooms} Maid Room`
+            : lang === "ru"
+              ? `${propertyData.maid_rooms} Комната для прислуги`
+              : `${propertyData.maid_rooms} 保姆房`
+        : null,
     ].filter(Boolean).join(" | ") || "-";
 
     const dynamicValues = {
@@ -985,6 +1065,19 @@ async function handleKeywordAutomation(
     if (publicReply) {
       publicReply = publicReply.replace(/{{[a-z_]+}}/g, "");
     }
+  }
+
+  // Parse Spintax like {option1|option2} to prevent spam filter detection
+  const parseSpintax = (str: string): string => {
+    return str.replace(/{([^{}]+)}/g, (match, choicesStr) => {
+      const choices = choicesStr.split("|");
+      return choices[Math.floor(Math.random() * choices.length)];
+    });
+  };
+
+  dmContent = parseSpintax(dmContent);
+  if (publicReply) {
+    publicReply = parseSpintax(publicReply);
   }
 
   // 5. Send Private Reply (DM)

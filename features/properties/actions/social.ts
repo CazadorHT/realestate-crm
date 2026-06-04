@@ -10,6 +10,7 @@ import { getProvinceName } from "@/lib/utils/provinces";
 import { PropertyRow } from "@/lib/services/properties";
 import { generateText } from "@/lib/ai/gemini";
 import { createClient } from "@/lib/supabase/server";
+import { decrypt } from "@/lib/crypto";
 
 export interface SocialProperty {
   [key: string]: unknown;
@@ -38,6 +39,10 @@ export interface SocialProperty {
   bedrooms: number | null;
   bathrooms: number | null;
   floor: number | null;
+  parking_slots?: number | null;
+  office_capacity?: string | null;
+  halls?: number | null;
+  maid_rooms?: number | null;
   verified: boolean | null;
   is_exclusive: boolean | null;
   property_agents?: {
@@ -365,6 +370,42 @@ export async function renderPropertySocialTemplate(
               ? `${property.floor} этаж`
               : `${property.floor} 层`
         : null,
+      property.parking_slots
+        ? lang === "th"
+          ? `${property.parking_slots} ที่จอดรถ`
+          : lang === "en"
+            ? `${property.parking_slots} Parking`
+            : lang === "ru"
+              ? `${property.parking_slots} Парковка`
+              : `${property.parking_slots} 车位`
+        : null,
+      property.office_capacity
+        ? lang === "th"
+          ? `ความจุ ${property.office_capacity} คน`
+          : lang === "en"
+            ? `Capacity ${property.office_capacity} Pax`
+            : lang === "ru"
+              ? `Вместимость ${property.office_capacity} чел.`
+              : `容量 ${property.office_capacity} คน`
+        : null,
+      property.halls
+        ? lang === "th"
+          ? `${property.halls} ห้องโถง`
+          : lang === "en"
+            ? `${property.halls} Hall`
+            : lang === "ru"
+              ? `${property.halls} Холл`
+              : `${property.halls} 大厅`
+        : null,
+      property.maid_rooms
+        ? lang === "th"
+          ? `${property.maid_rooms} ห้องแม่บ้าน`
+          : lang === "en"
+            ? `${property.maid_rooms} Maid Room`
+            : lang === "ru"
+              ? `${property.maid_rooms} Комната для прислуги`
+              : `${property.maid_rooms} 保姆房`
+        : null,
     ];
     return parts.filter(Boolean).join(" | ") || "-";
   };
@@ -489,14 +530,42 @@ export async function renderPropertySocialTemplate(
           : "🌟 Exclusive"
     : "";
 
+  const tDistrict =
+    (lang === "th"
+      ? property.district
+      : (property[`district_${lang}`] as string)) ||
+    property.district ||
+    "";
+  const tProvinceName = getProvinceName(property.province || "", lang);
+
+  const cleanForHashtag = (str: string | null | undefined): string => {
+    if (!str || str === "-") return "";
+    return str.toString().replace(/[\s,()\-./]/g, "");
+  };
+
+  const tPropertyTypeClean = cleanForHashtag(tPropertyType);
+  const tListingTypeClean = cleanForHashtag(tListingType);
+  const tPopularAreaClean = cleanForHashtag(tPopularArea);
+  const tDistrictClean = cleanForHashtag(tDistrict);
+  const tProvinceClean = cleanForHashtag(tProvinceName);
+  const tLocationClean = cleanForHashtag(tPopularArea || tDistrict || tProvinceName);
+  const tTransitClean = cleanForHashtag(property.transit_station_name);
+
   return template
     .replace(/{{title}}/g, tTitle)
     .replace(/{{description}}/g, tDescription)
     .replace(/{{price}}/g, priceText)
-    .replace(/{{original_price}}/g, priceText)
+    .replace(/{{original}}/g, originalPriceText)
+    .replace(/{{original_price}}/g, originalPriceText)
     .replace(
       /{{sale_price}}/g,
       property.price ? `${formatPrice(property.price as number)} ${tBaht}` : "",
+    )
+    .replace(
+      /{{rent_price}}/g,
+      property.rental_price
+        ? `${formatPrice(property.rental_price as number)} ${tBaht}${tPerMonth}`
+        : "",
     )
     .replace(
       /{{rental_price}}/g,
@@ -511,6 +580,12 @@ export async function renderPropertySocialTemplate(
         : "",
     )
     .replace(
+      /{{original_rent_price}}/g,
+      property.original_rental_price
+        ? `${formatPrice(property.original_rental_price as number)} ${tBaht}${tPerMonth}`
+        : "",
+    )
+    .replace(
       /{{original_rental_price}}/g,
       property.original_rental_price
         ? `${formatPrice(property.original_rental_price as number)} ${tBaht}${tPerMonth}`
@@ -520,6 +595,15 @@ export async function renderPropertySocialTemplate(
     .replace(/{{details}}/g, formatDetails())
     .replace(/{{location}}/g, tLocation)
     .replace(/{{popular_area}}/g, tPopularArea)
+    .replace(/{{district}}/g, tDistrict)
+    .replace(/{{province}}/g, tProvinceName)
+    .replace(/{{property_type_clean}}/g, tPropertyTypeClean)
+    .replace(/{{listing_type_clean}}/g, tListingTypeClean)
+    .replace(/{{popular_area_clean}}/g, tPopularAreaClean)
+    .replace(/{{district_clean}}/g, tDistrictClean)
+    .replace(/{{province_clean}}/g, tProvinceClean)
+    .replace(/{{location_clean}}/g, tLocationClean)
+    .replace(/{{transit_clean}}/g, tTransitClean)
     .replace(/{{amenities}}/g, tAmenities)
     .replace(/{{nearby_places}}/g, nearbyPlaces)
     .replace(/{{near_transit}}/g, nearbyTransits)
@@ -527,9 +611,16 @@ export async function renderPropertySocialTemplate(
     .replace(/{{google_maps}}/g, property.google_maps_link || "")
     .replace(/{{property_type}}/g, tPropertyType)
     .replace(/{{listing_type}}/g, tListingType)
-    .replace(/{{bedrooms}}/g, property.bedrooms?.toString() || "0")
-    .replace(/{{bathrooms}}/g, property.bathrooms?.toString() || "0")
-    .replace(/{{size_sqm}}/g, property.size_sqm?.toString() || "0")
+    .replace(/{{bedrooms}}/g, property.bedrooms?.toString() || "-")
+    .replace(/{{bathrooms}}/g, property.bathrooms?.toString() || "-")
+    .replace(/{{size_sqm}}/g, property.size_sqm?.toString() || "-")
+    .replace(/{{land_size}}/g, property.land_size_sqwah?.toString() || "-")
+    .replace(/{{land_size_sqwah}}/g, property.land_size_sqwah?.toString() || "-")
+    .replace(/{{parking}}/g, property.parking_slots?.toString() || "-")
+    .replace(/{{parking_slots}}/g, property.parking_slots?.toString() || "-")
+    .replace(/{{office_capacity}}/g, property.office_capacity?.toString() || "-")
+    .replace(/{{halls}}/g, property.halls?.toString() || "-")
+    .replace(/{{maid_rooms}}/g, property.maid_rooms?.toString() || "-")
     .replace(/{{floor}}/g, property.floor?.toString() || "-")
     .replace(/{{verified}}/g, tVerified)
     .replace(/{{exclusive}}/g, tExclusive)
@@ -550,24 +641,52 @@ export async function getPropertySocialContent(
   const { supabase } = await requireAuthContext();
 
   // 1. Fetch property data
-  const { data, error: propError } = await supabase
+  const { data: propData, error: propError } = await supabase
     .from("properties")
     .select(
       `
       *,
       property_images ( image_url ),
-      property_agents ( profiles:identities_v3 ( full_name:display_name, phone, line_id ) ),
+      property_agents ( agent_id, profiles:identities_v3 ( full_name:display_name, phone, line_id ) ),
       property_features ( features ( name, name_en, name_cn, name_ru, icon_key ) )
     `,
     )
     .eq("id", propertyId)
     .single();
 
-  if (propError || !data) {
+  if (propError || !propData) {
     throw new Error("Property not found");
   }
 
-  const property = data as unknown as SocialProperty;
+  const property = propData as any;
+
+  if (property && property.property_agents) {
+    for (const pa of property.property_agents) {
+      if (pa.agent_id) {
+        const { data: staffProfile } = await supabase
+          .from("profiles")
+          .select("full_name, phone, line_id")
+          .eq("id", pa.agent_id)
+          .maybeSingle();
+
+        if (staffProfile) {
+          pa.profiles = {
+            ...pa.profiles,
+            full_name: decrypt(pa.profiles?.full_name) || staffProfile.full_name || pa.profiles?.full_name || "",
+            phone: decrypt(pa.profiles?.phone) || staffProfile.phone || pa.profiles?.phone || "",
+            line_id: decrypt(pa.profiles?.line_id) || staffProfile.line_id || pa.profiles?.line_id || "",
+          };
+        } else if (pa.profiles) {
+          pa.profiles = {
+            ...pa.profiles,
+            full_name: decrypt(pa.profiles.full_name) || "",
+            phone: decrypt(pa.profiles.phone) || "",
+            line_id: decrypt(pa.profiles.line_id) || "",
+          };
+        }
+      }
+    }
+  }
 
   const settings = await getSiteSettings();
 

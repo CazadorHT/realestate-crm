@@ -97,7 +97,7 @@ export function KeywordAutomationCard({
           </div>
           <div className="flex items-center gap-3">
             <Button
-              onClick={addRow}
+              onClick={handleAdd}
               size="sm"
               className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full px-6 h-10 shadow-md shadow-blue-200 transition-all hover:scale-105 active:scale-95"
             >
