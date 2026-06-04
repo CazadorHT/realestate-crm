@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { metaConfig } from "@/lib/meta-config";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { encrypt, generateBlindIndex } from "@/lib/crypto";
+import { encrypt, decrypt, generateBlindIndex } from "@/lib/crypto";
 import {
   getMetaUserProfile,
   fetchFacebookLeadDetails,
@@ -623,6 +623,31 @@ async function handleWhatsAppWebhook(message: any, contact: any) {
 /**
  * Helper function to replace all smart tags in a template
  */
+function htmlToPlainText(html: string): string {
+  if (!html) return "";
+  let text = html;
+  text = text.replace(/<h[1-6][^>]*>/gi, "\n");
+  text = text.replace(/<\/h[1-6]>/gi, "\n");
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  text = text.replace(/<li[^>]*>/gi, "\n- ");
+  text = text.replace(/<\/li>/gi, "");
+  text = text.replace(/<p[^>]*>/gi, "");
+  text = text.replace(/<\/p>/gi, "\n");
+  text = text.replace(/<div[^>]*>/gi, "");
+  text = text.replace(/<\/div>/gi, "\n");
+  text = text.replace(/<[^>]*>/g, "");
+  text = text.replace(/&amp;/g, "&")
+             .replace(/&lt;/g, "<")
+             .replace(/&gt;/g, ">")
+             .replace(/&quot;/g, '"')
+             .replace(/&#039;/g, "'")
+             .replace(/&nbsp;/g, " ");
+  return text.split("\n")
+             .map(line => line.trim())
+             .filter((line, i, arr) => line !== "" || (i > 0 && arr[i - 1] !== ""))
+             .join("\n").trim();
+}
+
 function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any, lang: "th" | "en" | "cn" | "ru" = "th") {
   if (!text) return "";
   let rendered = text;
@@ -642,9 +667,110 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     primaryAgent,
   } = dynamicValues;
 
+  const PROPERTY_TYPE_LABELS: Record<string, Record<string, string>> = {
+    th: {
+      CONDO: "คอนโด",
+      HOUSE: "บ้านเดี่ยว",
+      TOWNHOME: "ทาวน์โฮม",
+      TOWNHOUSE: "ทาวน์เฮ้าส์",
+      LAND: "ที่ดิน",
+      COMMERCIAL_BUILDING: "อาคารพาณิชย์",
+      COMMERCIAL: "อาคารพาณิชย์",
+      OFFICE_BUILDING: "ออฟฟิศ",
+      OFFICE: "ออฟฟิศ",
+      WAREHOUSE: "โกดัง",
+      VILLA: "วิลล่า",
+      POOL_VILLA: "พูลวิลล่า",
+      OTHER: "อื่นๆ"
+    },
+    en: {
+      CONDO: "Condo",
+      HOUSE: "House",
+      TOWNHOME: "Townhome",
+      TOWNHOUSE: "Townhouse",
+      LAND: "Land",
+      COMMERCIAL_BUILDING: "Commercial Building",
+      COMMERCIAL: "Commercial",
+      OFFICE_BUILDING: "Office Building",
+      OFFICE: "Office",
+      WAREHOUSE: "Warehouse",
+      VILLA: "Villa",
+      POOL_VILLA: "Pool Villa",
+      OTHER: "Other"
+    },
+    cn: {
+      CONDO: "公寓",
+      HOUSE: "独栋别墅",
+      TOWNHOME: "联排别墅",
+      TOWNHOUSE: "联排别墅",
+      LAND: "土地",
+      COMMERCIAL_BUILDING: "商铺",
+      COMMERCIAL: "商用楼",
+      OFFICE_BUILDING: "写字楼",
+      OFFICE: "办公室",
+      WAREHOUSE: "仓库",
+      VILLA: "别墅",
+      POOL_VILLA: "带泳池别墅",
+      OTHER: "其他"
+    },
+    ru: {
+      CONDO: "Кондо",
+      HOUSE: "Дом",
+      TOWNHOME: "Таунхаус",
+      TOWNHOUSE: "Таунхаус",
+      LAND: "Земля",
+      COMMERCIAL_BUILDING: "Коммерческая недвижимость",
+      COMMERCIAL: "Коммерция",
+      OFFICE_BUILDING: "Офисное здание",
+      OFFICE: "Офис",
+      WAREHOUSE: "Склад",
+      VILLA: "Вилла",
+      POOL_VILLA: "Вилла с бассейном",
+      OTHER: "Другое"
+    },
+  };
+
+  const LISTING_TYPE_LABELS: Record<string, Record<string, string>> = {
+    th: { SALE: "ขาย", RENT: "ให้เช่า", SALE_AND_RENT: "ขาย/เช่า" },
+    en: { SALE: "Sale", RENT: "Rent", SALE_AND_RENT: "Sale/Rent" },
+    cn: { SALE: "出售", RENT: "出租", SALE_AND_RENT: "出售/出租" },
+    ru: { SALE: "Продажа", RENT: "Аренда", SALE_AND_RENT: "Продажа/Аренда" },
+  };
+
+  const tDescriptionRaw = (lang === "th" ? propertyData.description : propertyData[`description_${lang}`]) || propertyData.description || "";
+  const tDescription = htmlToPlainText(tDescriptionRaw);
+
+  const tPropertyType = propertyData.property_type
+    ? PROPERTY_TYPE_LABELS[lang]?.[propertyData.property_type] || propertyData.property_type
+    : "";
+
+  const tListingType = propertyData.listing_type
+    ? LISTING_TYPE_LABELS[lang]?.[propertyData.listing_type] || propertyData.listing_type
+    : "";
+
+  const tVerified = propertyData.verified
+    ? (lang === "th"
+      ? "✅ ตรวจสอบแล้ว"
+      : lang === "cn"
+        ? "✅ 已验证"
+        : lang === "ru"
+          ? "✅ Проверено"
+          : "✅ Verified")
+    : "";
+
+  const tExclusive = propertyData.is_exclusive
+    ? (lang === "th"
+      ? "🌟 Exclusive"
+      : lang === "cn"
+        ? "🌟 独家"
+        : lang === "ru"
+          ? "🌟 Эксклюзив"
+          : "🌟 Exclusive")
+    : "";
+
   return rendered
     .replace(/{{title}}/g, (lang === "th" ? propertyData.title : propertyData[`title_${lang}`]) || propertyData.title || "")
-    .replace(/{{description}}/g, (lang === "th" ? propertyData.description : propertyData[`description_${lang}`]) || propertyData.description || "")
+    .replace(/{{description}}/g, tDescription)
     .replace(/{{price}}/g, priceText)
     .replace(/{{original}}/g, originalPriceText)
     .replace(/{{original_price}}/g, originalPriceText)
@@ -658,15 +784,8 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     .replace(/{{bathrooms}}/g, propertyData.bathrooms?.toString() || "-")
     .replace(/{{size_sqm}}/g, propertyData.size_sqm?.toString() || "-")
     .replace(/{{floor}}/g, propertyData.floor?.toString() || "-")
-    .replace(/{{property_type}}/g, propertyData.property_type || "")
-    .replace(
-      /{{listing_type}}/g,
-      propertyData.listing_type === "SALE"
-        ? (lang === "th" ? "ขาย" : lang === "en" ? "Sale" : lang === "ru" ? "Продажа" : "Sale")
-        : propertyData.listing_type === "RENT"
-          ? (lang === "th" ? "ให้เช่า" : lang === "en" ? "Rent" : lang === "ru" ? "Аренда" : "Rent")
-          : (lang === "th" ? "ขาย/เช่า" : lang === "en" ? "Sale/Rent" : lang === "ru" ? "Продажа/Аренда" : "Sale/Rent"),
-    )
+    .replace(/{{property_type}}/g, tPropertyType)
+    .replace(/{{listing_type}}/g, tListingType)
     .replace(
       /{{location}}/g,
       (() => {
@@ -685,11 +804,8 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
         ? `${propertyData.transit_station_name} (${propertyData.transit_distance_meters || 0} ม.)`
         : "-",
     )
-    .replace(/{{verified}}/g, propertyData.verified ? (lang === "th" ? "✅ ตรวจสอบแล้ว" : lang === "ru" ? "✅ Проверено" : "✅ Verified") : "")
-    .replace(
-      /{{exclusive}}/g,
-      propertyData.is_exclusive ? "💎 Exclusive" : "",
-    )
+    .replace(/{{verified}}/g, tVerified)
+    .replace(/{{exclusive}}/g, tExclusive)
     .replace(/{{google_maps}}/g, propertyData.google_maps_link || "")
     .replace(/{{link}}/g, link)
     .replace(/{{price_tag}}/g, priceTag)
@@ -920,14 +1036,15 @@ async function lookupPropertyByPostId(postId: string) {
   if (error || !data?.entity_id) return null;
 
   // Now fetch property details
-  const { data: property } = await supabase
+  const { data: propertyData } = await supabase
     .from("properties")
     .select(
       `
       *,
       property_agents (
-        profiles (
-          full_name,
+        agent_id,
+        profiles:identities_v3 (
+          full_name:display_name,
           phone,
           line_id
         )
@@ -942,6 +1059,36 @@ async function lookupPropertyByPostId(postId: string) {
     )
     .eq("id", data.entity_id)
     .single();
+
+  const property = propertyData as any;
+
+  if (property && property.property_agents) {
+    for (const pa of property.property_agents) {
+      if (pa.agent_id) {
+        const { data: staffProfile } = await supabase
+          .from("profiles")
+          .select("full_name, phone, line_id")
+          .eq("id", pa.agent_id)
+          .maybeSingle();
+
+        if (staffProfile) {
+          pa.profiles = {
+            ...pa.profiles,
+            full_name: decrypt(pa.profiles?.full_name) || staffProfile.full_name || pa.profiles?.full_name || "",
+            phone: decrypt(pa.profiles?.phone) || staffProfile.phone || pa.profiles?.phone || "",
+            line_id: decrypt(pa.profiles?.line_id) || staffProfile.line_id || pa.profiles?.line_id || "",
+          };
+        } else if (pa.profiles) {
+          pa.profiles = {
+            ...pa.profiles,
+            full_name: decrypt(pa.profiles.full_name) || "",
+            phone: decrypt(pa.profiles.phone) || "",
+            line_id: decrypt(pa.profiles.line_id) || "",
+          };
+        }
+      }
+    }
+  }
 
   return property;
 }

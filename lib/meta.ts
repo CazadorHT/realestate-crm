@@ -1,6 +1,8 @@
 import { metaConfig } from "./meta-config";
 import { MetaPlatform, MetaUserProfile, MetaApiResponse } from "@/types/meta";
 
+// Cache bust: Force reload to pick up new database tokens.
+
 /**
  * Dynamically load token from database settings, fallback to env variables
  */
@@ -547,9 +549,11 @@ export async function postToMetaPage(
         };
       }
 
+      const igCaption = content.length > 2200 ? content.slice(0, 2197) + "..." : content;
+
       if (images.length === 1) {
         // Single Image
-        const createUrl = `${metaConfig.graphApiUrl}/${igId}/media?image_url=${encodeURIComponent(images[0])}&caption=${encodeURIComponent(content)}&access_token=${token}`;
+        const createUrl = `${metaConfig.graphApiUrl}/${igId}/media?image_url=${encodeURIComponent(images[0])}&caption=${encodeURIComponent(igCaption)}&access_token=${token}`;
         const createRes = await fetch(createUrl, { method: "POST" });
         const createData = await createRes.json();
 
@@ -617,7 +621,7 @@ export async function postToMetaPage(
         console.log(
           "[meta.ts] Only one image succeeded for carousel, falling back to single image post",
         );
-        const singleUrl = `${metaConfig.graphApiUrl}/${igId}/media?image_url=${encodeURIComponent(images[0])}&caption=${encodeURIComponent(content)}&access_token=${token}`;
+        const singleUrl = `${metaConfig.graphApiUrl}/${igId}/media?image_url=${encodeURIComponent(images[0])}&caption=${encodeURIComponent(igCaption)}&access_token=${token}`;
         const singleRes = await fetch(singleUrl, { method: "POST" });
         const singleData = await singleRes.json();
 
@@ -640,7 +644,7 @@ export async function postToMetaPage(
       }
 
       // 2. Create Carousel Container
-      const carouselUrl = `${metaConfig.graphApiUrl}/${igId}/media?media_type=CAROUSEL&children=${childIds.join(",")}&caption=${encodeURIComponent(content)}&access_token=${token}`;
+      const carouselUrl = `${metaConfig.graphApiUrl}/${igId}/media?media_type=CAROUSEL&children=${childIds.join(",")}&caption=${encodeURIComponent(igCaption)}&access_token=${token}`;
       const carouselRes = await fetch(carouselUrl, { method: "POST" });
       const carouselData = await carouselRes.json();
 
