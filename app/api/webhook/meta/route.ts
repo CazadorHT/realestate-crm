@@ -839,7 +839,7 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     )
     .replace(/{{verified}}/g, tVerified)
     .replace(/{{exclusive}}/g, tExclusive)
-    .replace(/{{google_maps}}/g, propertyData.google_maps_link || "")
+    .replace(/{{google_maps}}/g, propertyData.google_maps_link || (propertyData.address_info as any)?.maps_link || "")
     .replace(/{{link}}/g, link)
     .replace(/{{price_tag}}/g, priceTag)
     .replace(/{{details}}/g, detailsSummary)

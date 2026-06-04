@@ -608,7 +608,7 @@ export async function renderPropertySocialTemplate(
     .replace(/{{nearby_places}}/g, nearbyPlaces)
     .replace(/{{near_transit}}/g, nearbyTransits)
     .replace(/{{transit}}/g, closestTransit)
-    .replace(/{{google_maps}}/g, property.google_maps_link || "")
+    .replace(/{{google_maps}}/g, property.google_maps_link || (property.address_info as any)?.maps_link || "")
     .replace(/{{property_type}}/g, tPropertyType)
     .replace(/{{listing_type}}/g, tListingType)
     .replace(/{{bedrooms}}/g, property.bedrooms?.toString() || "-")
