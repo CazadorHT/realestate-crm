@@ -510,7 +510,7 @@ export async function bulkTranslatePopularAreasAction(
     const { logAiUsage } = await import("@/features/ai-monitor/actions");
     const { logAudit } = await import("@/lib/audit");
     const aiConfig = await getAiModelConfig();
-    const modelName = aiConfig.blog_generator_model || "gemini-2.0-flash";
+    const modelName = aiConfig.blog_generator_model || "gemini-flash-lite-latest";
 
     const prompt = `
       Translate location names in Thailand from Thai to English, Chinese, and Russian.

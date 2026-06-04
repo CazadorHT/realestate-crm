@@ -489,6 +489,12 @@ export async function postToMetaPage(
             mediaIds.push(uploadData.id);
           } else {
             console.warn("[meta.ts] Failed to upload photo to FB:", uploadData);
+            if (uploadData.error?.code === 190 || uploadData.error?.type === "OAuthException" || uploadData.error?.message?.toLowerCase().includes("access token")) {
+              return {
+                success: false,
+                error: `Token การเชื่อมต่อหมดอายุหรือไม่มีสิทธิ์ใช้งาน (กรุณากดอัปเดต Token ในหน้าตั้งค่า) [รายละเอียด: ${uploadData.error.message || "Session has expired"}]`,
+              };
+            }
           }
         } catch (err) {
           console.error("[meta.ts] Error uploading photo to FB:", err);
@@ -590,6 +596,12 @@ export async function postToMetaPage(
             `[meta.ts] Failed to create carousel item for ${imgUrl}:`,
             itemData,
           );
+          if (itemData.error?.code === 190 || itemData.error?.type === "OAuthException" || itemData.error?.message?.toLowerCase().includes("access token")) {
+            return {
+              success: false,
+              error: `Token การเชื่อมต่อหมดอายุหรือไม่มีสิทธิ์ใช้งาน (กรุณากดอัปเดต Token ในหน้าตั้งค่า) [รายละเอียด: ${itemData.error.message || "Session has expired"}]`,
+            };
+          }
         }
       }
 

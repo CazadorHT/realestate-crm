@@ -504,7 +504,7 @@ export async function generateSocialAutomationTemplatesAction(
     const { getAiModelConfig } = await import("@/features/ai-settings/actions");
 
     const aiConfig = await getAiModelConfig();
-    const modelName = aiConfig.description_model || "gemini-2.0-flash-exp";
+    const modelName = aiConfig.description_model || "gemini-flash-lite-latest";
 
     let prompt = "";
     if (type === "SOCIAL_POST" || type === "INSTAGRAM_POST") {

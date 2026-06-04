@@ -997,7 +997,7 @@ export async function generateSocialCaptionsAction(propertyId: string, platform:
   `;
 
   try {
-    const result = await generateText(prompt, "gemini-2.0-flash");
+    const result = await generateText(prompt, "gemini-flash-lite-latest");
     
     // Attempt to parse JSON from AI response
     const jsonMatch = result.text.match(/\{[\s\S]*\}/);

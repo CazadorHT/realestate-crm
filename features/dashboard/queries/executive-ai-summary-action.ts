@@ -151,7 +151,7 @@ export async function getExecutiveWeeklyAISummaryAction({
     4. ไม่ต้องใส่หัวข้อใหญ่ เอาเฉพาะเนื้อหาที่สรุปมาเลย
   `;
 
-    const result = await generateText(prompt, "gemini-2.0-flash");
+    const result = await generateText(prompt, "gemini-flash-lite-latest");
 
     return {
       summary: result.text || "ไม่สามารถสรุปข้อมูลได้ในขณะนี้",
