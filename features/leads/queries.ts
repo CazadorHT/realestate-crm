@@ -27,6 +27,7 @@ export type PropertySummary = Pick<
 type ListArgs = {
   q?: string;
   stage?: string;
+  source?: string;
   page?: number;
   pageSize?: number;
 };
@@ -39,6 +40,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   const q = (args.q ?? "").trim();
   const stage = (args.stage ?? "").trim();
+  const source = (args.source ?? "").trim();
   const page = Math.max(1, args.page ?? 1);
   const pageSize = Math.min(200, Math.max(5, args.pageSize ?? 10));
 
@@ -60,6 +62,9 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   }
   if (stage && stage !== "ALL") {
     query = query.eq("stage", stage);
+  }
+  if (source && source !== "ALL") {
+    query = query.eq("source", source);
   }
 
   const from = (page - 1) * pageSize;
@@ -111,7 +116,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
  * Fetch ONLY IDs of all leads matching the filters (no pagination)
  * Used for "Select All across pages" feature.
  */
-export async function getAllLeadIdsQuery(args: { q?: string; stage?: string } = {}) {
+export async function getAllLeadIdsQuery(args: { q?: string; stage?: string; source?: string } = {}) {
   const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
   const config = await getSystemConfig();
@@ -119,6 +124,7 @@ export async function getAllLeadIdsQuery(args: { q?: string; stage?: string } = 
 
   const q = (args.q ?? "").trim();
   const stage = (args.stage ?? "").trim();
+  const source = (args.source ?? "").trim();
 
   let query = supabase.from("crm_leads_v3").select("id, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, phone, email)");
 
@@ -134,6 +140,9 @@ export async function getAllLeadIdsQuery(args: { q?: string; stage?: string } = 
   }
   if (stage && stage !== "ALL") {
     query = query.eq("stage", stage);
+  }
+  if (source && source !== "ALL") {
+    query = query.eq("source", source);
   }
 
   const { data, error } = await query;

@@ -31,6 +31,7 @@ export default async function LeadsPage({
   searchParams?: Promise<{
     q?: string;
     stage?: string;
+    source?: string;
     page?: string;
     view?: string;
     allBranches?: string;
@@ -53,6 +54,7 @@ export default async function LeadsPage({
     const params = new URLSearchParams();
     if (sp.q) params.set("q", sp.q);
     if (sp.stage) params.set("stage", sp.stage);
+    if (sp.source) params.set("source", sp.source);
     params.set("view", v);
     return `/protected/leads?${params.toString()}`;
   };
@@ -157,11 +159,12 @@ async function LeadsContentWrapper({
     const { data: listLeads, count } = await getLeadsQuery({
       q: sp.q,
       stage: sp.stage,
+      source: sp.source,
       page,
       pageSize: 20,
     });
 
-    const isEmptyState = listLeads.length === 0 && page === 1 && !sp.q && !sp.stage;
+    const isEmptyState = listLeads.length === 0 && page === 1 && !sp.q && !sp.stage && !sp.source;
 
     return (
       <div className="space-y-4">
@@ -192,7 +195,7 @@ async function LeadsContentWrapper({
               showBranch={sp.allBranches === "true"}
               currentTenantId={tenantId}
               isMultiTenant={isMultiTenant}
-              filters={{ q: sp.q, stage: sp.stage }}
+              filters={{ q: sp.q, stage: sp.stage, source: sp.source }}
             />
           </div>
         )}

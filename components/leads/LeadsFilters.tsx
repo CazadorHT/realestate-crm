@@ -11,7 +11,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { LEAD_STAGE_ORDER, LEAD_STAGE_LABELS } from "@/features/leads/labels";
+import { LEAD_STAGE_ORDER, LEAD_STAGE_LABELS, LEAD_SOURCE_ORDER, LEAD_SOURCE_LABELS } from "@/features/leads/labels";
 import { ResponsiveDialog, DialogClose } from "@/components/ui/responsive-dialog";
 import { SlidersHorizontal, Search, RotateCcw } from "lucide-react";
 
@@ -23,9 +23,11 @@ export function LeadsFilters() {
 
   const initialQ = sp.get("q") ?? "";
   const initialStage = sp.get("stage") ?? "ALL";
+  const initialSource = sp.get("source") ?? "ALL";
 
   const [q, setQ] = useState(initialQ);
   const [stage, setStage] = useState(initialStage);
+  const [source, setSource] = useState(initialSource);
 
   const queryString = useMemo(() => {
     const p = new URLSearchParams(sp.toString());
@@ -35,9 +37,12 @@ export function LeadsFilters() {
     if (stage && stage !== "ALL") p.set("stage", stage);
     else p.delete("stage");
 
+    if (source && source !== "ALL") p.set("source", source);
+    else p.delete("source");
+
     p.delete("page");
     return p.toString();
-  }, [q, stage, sp]);
+  }, [q, stage, source, sp]);
 
   const apply = () => {
     startTransition(() => {
@@ -49,13 +54,14 @@ export function LeadsFilters() {
   const clear = () => {
     setQ("");
     setStage("ALL");
+    setSource("ALL");
     startTransition(() => {
       router.push(`/protected/leads`);
     });
     setIsOpen(false);
   };
 
-  const activeFilterCount = stage !== "ALL" ? 1 : 0;
+  const activeFilterCount = (stage !== "ALL" ? 1 : 0) + (source !== "ALL" ? 1 : 0);
 
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center w-full">
@@ -110,7 +116,7 @@ export function LeadsFilters() {
               </div>
             }
           >
-            <div className="space-y-4 p-4">
+            <div className="space-y-4 p-4 max-h-[60vh] overflow-y-auto">
               <div className="space-y-2">
                 <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
                   สถานะของลีด
@@ -141,6 +147,37 @@ export function LeadsFilters() {
                   ))}
                 </div>
               </div>
+
+              <div className="space-y-2 pt-4 border-t border-slate-100">
+                <span className="text-xs font-bold text-slate-500 uppercase tracking-wider px-1">
+                  แหล่งที่มาของลีด
+                </span>
+                <div className="grid grid-cols-1 gap-2">
+                  <button
+                    onClick={() => setSource("ALL")}
+                    className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all text-sm font-bold ${
+                      source === "ALL"
+                        ? "bg-slate-900 border-slate-900 text-white"
+                        : "bg-white border-slate-100 text-slate-600"
+                    }`}
+                  >
+                    ทุกแหล่งที่มา
+                  </button>
+                  {LEAD_SOURCE_ORDER.map((src) => (
+                    <button
+                      key={src}
+                      onClick={() => setSource(src)}
+                      className={`flex items-center justify-between px-4 py-3 rounded-xl border-2 transition-all text-sm font-bold ${
+                        source === src
+                          ? "bg-blue-600 border-blue-600 text-white shadow-md"
+                          : "bg-white border-slate-100 text-slate-600"
+                      }`}
+                    >
+                      {LEAD_SOURCE_LABELS[src]}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           </ResponsiveDialog>
         </div>
@@ -156,6 +193,20 @@ export function LeadsFilters() {
               {LEAD_STAGE_ORDER.map((s) => (
                 <SelectItem key={s} value={s}>
                   {LEAD_STAGE_LABELS[s]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={source} onValueChange={setSource}>
+            <SelectTrigger className="w-[180px] bg-white">
+              <SelectValue placeholder="แหล่งที่มา" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">ทุกแหล่งที่มา</SelectItem>
+              {LEAD_SOURCE_ORDER.map((src) => (
+                <SelectItem key={src} value={src}>
+                  {LEAD_SOURCE_LABELS[src]}
                 </SelectItem>
               ))}
             </SelectContent>

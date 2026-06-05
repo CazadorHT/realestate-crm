@@ -32,6 +32,18 @@ const MetaWebhookSchema = z.object({
   ),
 });
 
+
+const PLACEHOLDER_NAMES = [
+  "Facebook User",
+  "FB User",
+  "FB Lead Ad User",
+  "Facebook Contact",
+  "IG User",
+  "IG Contact",
+  "Instagram Contact",
+  "Instagram User",
+];
+
 /**
  * GET handler for Meta Webhook Verification
  */
@@ -219,6 +231,36 @@ async function handleFacebookChange(change: any) {
   let lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;
 
   if (!lead) {
+    // Check for duplicate Facebook lead by name
+    if (senderName && !PLACEHOLDER_NAMES.includes(senderName)) {
+      const fullNameHash = generateBlindIndex(senderName);
+      const { data: existingIdentity } = await supabase
+        .from("identities_v3")
+        .select("id, social_links, crm_leads_v3(id)")
+        .eq("social_links->>full_name_hash", fullNameHash)
+        .eq("role", "LEAD")
+        .maybeSingle();
+
+      if (existingIdentity?.crm_leads_v3?.[0]) {
+        lead = existingIdentity.crm_leads_v3[0] as { id: string };
+
+        // Bind the new Facebook PSID/LEADGEN ID to the existing identity
+        const currentSocialLinks = (existingIdentity.social_links as Record<string, any>) || {};
+        const updatedSocialLinks = {
+          ...currentSocialLinks,
+          facebook_psid_hash: facebookPsidHash,
+          facebook_psid: encrypt(senderId),
+        };
+
+        await supabase
+          .from("identities_v3")
+          .update({ social_links: updatedSocialLinks })
+          .eq("id", existingIdentity.id);
+      }
+    }
+  }
+
+  if (!lead) {
     const { data: tenant } = await supabase
       .from("tenants_v3")
       .select("id")
@@ -314,78 +356,110 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
     .eq(`social_links->>${hashKey}`, senderIdHash)
     .maybeSingle();
 
-  let lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;
-
-  if (!lead) {
+  let lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;  if (!lead) {
     const profile = await getMetaUserProfile(senderId, source);
     const displayName = profile?.name || `${source} Contact`;
-    const encryptedDisplayName = encrypt(displayName);
-    const encryptedSenderId = encrypt(senderId);
 
-    const { data: tenant } = await supabase
-      .from("tenants_v3")
-      .select("id")
-      .limit(1)
-      .single();
-    const tenantId = tenant?.id || null;
+    // Check for duplicate lead by name
+    let existingLead = null;
+    if (displayName && !PLACEHOLDER_NAMES.includes(displayName)) {
+      const fullNameHash = generateBlindIndex(displayName);
+      const { data: existingIdentity } = await supabase
+        .from("identities_v3")
+        .select("id, social_links, crm_leads_v3(id)")
+        .eq("social_links->>full_name_hash", fullNameHash)
+        .eq("role", "LEAD")
+        .maybeSingle();
 
-    // Create Identity
-    const socialLinks: any = {
-      full_name_hash: generateBlindIndex(displayName),
-    };
-    socialLinks[hashKey] = senderIdHash;
-    socialLinks[idField] = encryptedSenderId;
+      if (existingIdentity?.crm_leads_v3?.[0]) {
+        existingLead = existingIdentity.crm_leads_v3[0] as { id: string };
 
-    const { data: newIdentity, error: identityErr } = await supabase
-      .from("identities_v3")
-      .insert({
-        tenant_id: tenantId,
-        category: 2, // External
-        role: "LEAD",
-        display_name: encryptedDisplayName,
-        social_links: socialLinks,
-        avatar_url: profile?.profile_pic || null,
-        is_active: true,
-      })
-      .select("id")
-      .single();
+        // Bind the new PSID/SID to the existing identity
+        const currentSocialLinks = (existingIdentity.social_links as Record<string, any>) || {};
+        const updatedSocialLinks = {
+          ...currentSocialLinks,
+          [hashKey]: senderIdHash,
+          [idField]: encrypt(senderId),
+        };
 
-    if (identityErr || !newIdentity) {
-      console.error(`[Meta Webhook] Error creating ${source} identity:`, identityErr);
-      return;
+        await supabase
+          .from("identities_v3")
+          .update({ social_links: updatedSocialLinks })
+          .eq("id", existingIdentity.id);
+      }
     }
 
-    await supabase.from("identity_secrets_v3").insert({
-      identity_id: newIdentity.id,
-      full_name_encrypted: encryptedDisplayName,
-      updated_at: new Date().toISOString()
-    });
+    if (existingLead) {
+      lead = existingLead;
+    } else {
+      const encryptedDisplayName = encrypt(displayName);
+      const encryptedSenderId = encrypt(senderId);
 
-    const { data: newLead, error: createError } = await supabase
-      .from("crm_leads_v3")
-      .insert({
-        tenant_id: tenantId,
+      const { data: tenant } = await supabase
+        .from("tenants_v3")
+        .select("id")
+        .limit(1)
+        .single();
+      const tenantId = tenant?.id || null;
+
+      // Create Identity
+      const socialLinks: any = {
+        full_name_hash: generateBlindIndex(displayName),
+      };
+      socialLinks[hashKey] = senderIdHash;
+      socialLinks[idField] = encryptedSenderId;
+
+      const { data: newIdentity, error: identityErr } = await supabase
+        .from("identities_v3")
+        .insert({
+          tenant_id: tenantId,
+          category: 2, // External
+          role: "LEAD",
+          display_name: encryptedDisplayName,
+          social_links: socialLinks,
+          avatar_url: profile?.profile_pic || null,
+          is_active: true,
+        })
+        .select("id")
+        .single();
+
+      if (identityErr || !newIdentity) {
+        console.error(`[Meta Webhook] Error creating ${source} identity:`, identityErr);
+        return;
+      }
+
+      await supabase.from("identity_secrets_v3").insert({
         identity_id: newIdentity.id,
-        status: "ACTIVE",
-        stage: "NEW",
-        source: source,
-        utm_data: {
-          preferences: {
-            note: `Auto-captured from ${source}. Profile: ${JSON.stringify(profile)}`
-          }
-        }
-      })
-      .select("id")
-      .single();
+        full_name_encrypted: encryptedDisplayName,
+        updated_at: new Date().toISOString()
+      });
 
-    if (createError) {
-      console.error(
-        `[route.ts] Error creating ${source} auto-lead:`,
-        createError,
-      );
-      return;
+      const { data: newLead, error: createError } = await supabase
+        .from("crm_leads_v3")
+        .insert({
+          tenant_id: tenantId,
+          identity_id: newIdentity.id,
+          status: "ACTIVE",
+          stage: "NEW",
+          source: source,
+          utm_data: {
+            preferences: {
+              note: `Auto-captured from ${source}. Profile: ${JSON.stringify(profile)}`
+            }
+          }
+        })
+        .select("id")
+        .single();
+
+      if (createError) {
+        console.error(
+          `[route.ts] Error creating ${source} auto-lead:`,
+          createError,
+        );
+        return;
+      }
+      lead = newLead as { id: string };
     }
-    lead = newLead as { id: string };
   }
 
   // 2. Log Message to Omni-channel

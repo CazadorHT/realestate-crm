@@ -65,7 +65,7 @@ interface LeadsTableProps {
   showBranch?: boolean;
   currentTenantId?: string | null;
   isMultiTenant?: boolean;
-  filters?: { q?: string; stage?: string };
+  filters?: { q?: string; stage?: string; source?: string };
 }
 
 export function LeadsTable({

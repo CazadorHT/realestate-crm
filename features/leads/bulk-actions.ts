@@ -82,6 +82,7 @@ export async function bulkDeleteLeadsAction(
 export async function getAllLeadIdsAction(args: {
   q?: string;
   stage?: string;
+  source?: string;
 }) {
   try {
     const { getAllLeadIdsQuery } = await import("./queries");
