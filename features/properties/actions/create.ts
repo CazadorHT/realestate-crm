@@ -37,6 +37,36 @@ import { encrypt, generateBlindIndex } from "@/lib/crypto";
 
 
 /**
+ * Resolve tenant ID from context, member profile, or system config.
+ * Throws an error if no tenant ID is found to prevent cross-tenant data leaks.
+ */
+async function resolveTenantId(
+  supabase: any,
+  userId: string,
+  contextTenantId?: string
+): Promise<string> {
+  if (contextTenantId) return contextTenantId;
+
+  const { data: member } = await supabase
+    .from("tenant_members_v3")
+    .select("tenant_id")
+    .eq("identity_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  if (member?.tenant_id) {
+    return member.tenant_id;
+  }
+
+  const { default_tenant_id } = await getSystemConfig();
+  if (default_tenant_id) {
+    return default_tenant_id;
+  }
+
+  throw new Error("Unauthorized: Tenant ID is required but missing");
+}
+
+/**
  * Create property with images
  */
 export async function createPropertyAction(
@@ -48,34 +78,7 @@ export async function createPropertyAction(
     const { supabase, user, role, tenantId: contextTenantId } = await requireAuthContext();
     assertStaff(role);
     
-    let tenantId = contextTenantId;
-    if (!tenantId) {
-      const { data: firstMember } = await supabase
-        .from("tenant_members_v3")
-        .select("tenant_id")
-        .eq("identity_id", user.id)
-        .limit(1)
-        .maybeSingle();
-      if (firstMember?.tenant_id) {
-        tenantId = firstMember.tenant_id;
-      } else {
-        const { default_tenant_id } = await getSystemConfig();
-        if (default_tenant_id) {
-          tenantId = default_tenant_id;
-        } else {
-          // Ultimate fallback: get the first tenant in the system
-          const { data: firstTenant } = await supabase
-            .from("tenants_v3")
-            .select("id")
-            .limit(1)
-            .maybeSingle();
-          if (firstTenant?.id) {
-            tenantId = firstTenant.id;
-          }
-        }
-      }
-    }
-    if (!tenantId) throw new Error("Tenant ID is required but missing");
+    const tenantId = await resolveTenantId(supabase, user.id, contextTenantId);
     if (!sessionId)
       return { success: false, message: "Missing upload session" };
 
@@ -399,34 +402,7 @@ export async function duplicatePropertyAction(
     const { supabase, user, role, tenantId: contextTenantId } = await requireAuthContext();
     assertStaff(role);
     
-    let tenantId = contextTenantId;
-    if (!tenantId) {
-      const { data: firstMember } = await supabase
-        .from("tenant_members_v3")
-        .select("tenant_id")
-        .eq("identity_id", user.id)
-        .limit(1)
-        .maybeSingle();
-      if (firstMember?.tenant_id) {
-        tenantId = firstMember.tenant_id;
-      } else {
-        const { default_tenant_id } = await getSystemConfig();
-        if (default_tenant_id) {
-          tenantId = default_tenant_id;
-        } else {
-          // Ultimate fallback: get the first tenant in the system
-          const { data: firstTenant } = await supabase
-            .from("tenants_v3")
-            .select("id")
-            .limit(1)
-            .maybeSingle();
-          if (firstTenant?.id) {
-            tenantId = firstTenant.id;
-          }
-        }
-      }
-    }
-    if (!tenantId) throw new Error("Tenant ID is required but missing");
+    const tenantId = await resolveTenantId(supabase, user.id, contextTenantId);
 
 
     const { data: core } = await supabase
@@ -489,7 +465,8 @@ export async function duplicatePropertyAction(
         land_area: core.land_area,
         price_per_sqm: core.price_per_sqm,
         owner_id: core.owner_id,
-        assigned_to: core.assigned_to,
+        assigned_to: user.id,
+        created_by: user.id,
         is_exclusive: core.is_exclusive,
         verified: core.verified,
         h3_index_res8: core.h3_index_res8,

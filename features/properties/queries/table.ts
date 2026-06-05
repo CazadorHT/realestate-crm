@@ -265,7 +265,7 @@ export async function getPropertiesTableData(params: {
     query = query.eq("requires_ai_review", true);
   }
   if (params.assignedToMe === "true" && user?.id) {
-    query = query.eq("assigned_to", user.id);
+    query = query.or(`assigned_to.eq.${user.id},and(assigned_to.is.null,created_by.eq.${user.id})`);
   }
 
   // Price Range with fallback

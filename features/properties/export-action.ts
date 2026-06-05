@@ -275,7 +275,7 @@ export async function exportPropertiesAction(
       query = query.eq("is_fully_furnished", true);
     }
     if (assignedToMe === "true" && user?.id) {
-      query = query.eq("assigned_to", user.id);
+      query = query.or(`assigned_to.eq.${user.id},and(assigned_to.is.null,created_by.eq.${user.id})`);
     }
 
     // Price Range
