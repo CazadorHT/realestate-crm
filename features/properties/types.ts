@@ -143,6 +143,7 @@ export interface PropertyTableData {
   office_capacity?: number | null;
   agent_name?: string | null;
   assigned_to?: string | null;
+  created_by?: string | null;
   popular_area?: string | null;
   original_price?: number | null;
   original_rental_price?: number | null;

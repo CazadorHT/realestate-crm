@@ -110,7 +110,7 @@ export async function getPropertiesTableData(params: {
       updated_at, created_at, bedrooms, bathrooms, office_capacity, province, district, subdistrict, 
       popular_area, view_count, address_line1, images, total_units, 
       sold_units, posted_to_facebook_at, posted_to_instagram_at, 
-      posted_to_line_at, posted_to_tiktok_at, assigned_to, 
+      posted_to_line_at, posted_to_tiktok_at, assigned_to, created_by,
       agent:profiles(full_name),
       tenant_id, tenants(name), requires_ai_review
       `,
@@ -459,6 +459,7 @@ export async function getPropertiesTableData(params: {
         ? (p.agent[0] as any)?.full_name || null
         : (p.agent as any)?.full_name || null,
       assigned_to: p.assigned_to,
+      created_by: (p as any).created_by || null,
       tenant_id: p.tenant_id,
       tenant_name: p.tenants?.name || null,
       province: p.province,

@@ -120,6 +120,7 @@ export default async function PropertiesPage({
             tenantId={tenantId}
             currentPage={currentPage}
             currentUserEmail={currentUserEmail}
+            currentUserId={user.id}
           />
         </Suspense>
       </div>
@@ -152,6 +153,7 @@ async function TableWrapper({
   tenantId,
   currentPage,
   currentUserEmail,
+  currentUserId,
 }: {
   params: any;
   isAdminUser: boolean;
@@ -160,6 +162,7 @@ async function TableWrapper({
   tenantId: string | undefined;
   currentPage: number;
   currentUserEmail: string;
+  currentUserId: string;
 }) {
   const supabase = await createClient();
   
@@ -222,6 +225,7 @@ async function TableWrapper({
           totalCount={count}
           filters={params}
           currentUserEmail={currentUserEmail}
+          currentUserId={currentUserId}
         />
       )}
     </>

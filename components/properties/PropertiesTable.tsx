@@ -98,6 +98,7 @@ interface PropertiesTableProps {
   totalCount: number;
   filters?: any;
   currentUserEmail?: string;
+  currentUserId?: string;
 }
 // ... (SortableHead code omitted for brevity as it is unchanged) ...
 
@@ -195,6 +196,7 @@ export function PropertiesTable({
   totalCount,
   filters = {},
   currentUserEmail,
+  currentUserId,
 }: PropertiesTableProps): React.ReactElement {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -596,7 +598,11 @@ export function PropertiesTable({
                 const ageBadge = getListingAgeBadge(property.status, property.created_at);
                 const salePriceChange = getPriceChangeInfo(property.price, property.original_price ?? null);
                 const rentPriceChange = getPriceChangeInfo(property.rental_price, property.original_rental_price ?? null);
-                const isSelf = !!(currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase());
+                const isSelf = !!(
+                  (currentUserId && property.assigned_to === currentUserId) ||
+                  (currentUserId && property.created_by === currentUserId) ||
+                  (currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase())
+                );
                 const cannotEdit = !isAdminOrManager && !isSelf;
                 return (
                 <TableRow
@@ -847,7 +853,11 @@ export function PropertiesTable({
 
                   {/* BUYER / TENANT / AGENT - Only for Admin/Manager */}
                   {isAdminOrManager && (() => {
-                    const isSelf = !!(currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase());
+                    const isSelf = !!(
+                      (currentUserId && property.assigned_to === currentUserId) ||
+                      (currentUserId && property.created_by === currentUserId) ||
+                      (currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase())
+                    );
                     return (
                       <TableCell className="px-2">
                         <TooltipProvider delayDuration={200}>
@@ -1039,7 +1049,11 @@ export function PropertiesTable({
         <div className="lg:hidden p-3 min-[400px]:p-4 min-[500px]:p-6">
           <div className="grid grid-cols-1 gap-3 min-[400px]:gap-4 min-[500px]:gap-6">
             {data.map((property) => {
-              const isSelf = !!(currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase());
+              const isSelf = !!(
+                (currentUserId && property.assigned_to === currentUserId) ||
+                (currentUserId && property.created_by === currentUserId) ||
+                (currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase())
+              );
               const cannotEdit = !isAdminOrManager && !isSelf;
               return (
               <div
@@ -1187,7 +1201,11 @@ export function PropertiesTable({
                     </div>
 
                     {isAdminOrManager && (() => {
-                      const isSelf = !!(currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase());
+                      const isSelf = !!(
+                        (currentUserId && property.assigned_to === currentUserId) ||
+                        (currentUserId && property.created_by === currentUserId) ||
+                        (currentUserEmail && property.agent_name && property.agent_name.toLowerCase() === currentUserEmail.toLowerCase())
+                      );
                       return (
                         <div className="flex items-center gap-1.5 w-full">
                           <Badge
