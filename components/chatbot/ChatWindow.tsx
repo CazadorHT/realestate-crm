@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, Send, Bot, User, Loader2 } from "lucide-react";
+import { X, Send, Bot, User, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { chatWithAI } from "@/features/chatbot/actions";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 
 interface Message {
@@ -35,10 +35,23 @@ interface ChatWindowProps {
 export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
   const { t } = useLanguage();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [mounted, setMounted] = useState(false);
 
-  // Initialize welcome message when language changes or component mounts
   useEffect(() => {
-    if (messages.length === 0) {
+    setMounted(true);
+  }, []);
+
+  // Load from localStorage on mount (once browser-only mounted state is true)
+  useEffect(() => {
+    if (!mounted) return;
+    const savedMessages = localStorage.getItem("chat_messages");
+    const savedHistory = localStorage.getItem("chat_history");
+    if (savedMessages) {
+      try {
+        const parsed = JSON.parse(savedMessages);
+        setMessages(parsed.map((m: any) => ({ ...m, timestamp: new Date(m.timestamp) })));
+      } catch (e) {}
+    } else {
       setMessages([
         {
           id: "1",
@@ -48,21 +61,47 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
         },
       ]);
     }
-  }, [t, messages.length]);
+
+    if (savedHistory) {
+      try {
+        historyRef.current = JSON.parse(savedHistory);
+      } catch (e) {}
+    }
+  }, [mounted, t]);
+
+  // Save messages to localStorage whenever they change
+  useEffect(() => {
+    if (mounted && messages.length > 0) {
+      localStorage.setItem("chat_messages", JSON.stringify(messages));
+    }
+  }, [messages, mounted]);
+
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Keep track of history for the server action
-  const historyRef = useRef<
-    { role: "user" | "model"; parts: { text: string }[] }[]
-  >([]);
+  const historyRef = useRef<any[]>([]);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isOpen]);
+
+  const handleClearChat = () => {
+    localStorage.removeItem("chat_messages");
+    localStorage.removeItem("chat_history");
+    historyRef.current = [];
+    setMessages([
+      {
+        id: Date.now().toString(),
+        role: "bot",
+        content: t("chat.welcome_message"),
+        timestamp: new Date(),
+      },
+    ]);
+  };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -80,25 +119,103 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
     setIsLoading(true);
 
     try {
-      // Call Server Action
-      const response = await chatWithAI(historyRef.current, userText);
-      console.log("Chatbot response:", response);
+      const response = await fetch("/api/chatbot", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          history: historyRef.current,
+          message: userText,
+        }),
+      });
 
-      const botMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: "bot",
-        content: response.text,
-        timestamp: new Date(),
-        properties: response.properties,
-      };
+      if (!response.ok) throw new Error("Failed to connect to AI server");
+      if (!response.body) throw new Error("Response body is empty");
 
-      setMessages((prev) => [...prev, botMsg]);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let botText = "";
+      const botMsgId = (Date.now() + 1).toString();
 
-      // Update history
-      historyRef.current.push(
-        { role: "user", parts: [{ text: userText }] },
-        { role: "model", parts: [{ text: response.text }] },
-      );
+      // Create a temporary bot message
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: botMsgId,
+          role: "bot",
+          content: "",
+          timestamp: new Date(),
+        },
+      ]);
+
+      let buffer = "";
+      while (true) {
+        const { value, done } = await reader.read();
+        
+        if (done) {
+          // Process any remaining lines in the buffer
+          if (buffer.trim()) {
+            const lines = buffer.split("\n");
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const rawJson = line.slice(6).trim();
+                if (rawJson) {
+                  try {
+                    const data = JSON.parse(rawJson);
+                    if (data.text) botText += data.text;
+                  } catch (e) {}
+                }
+              }
+            }
+          }
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        
+        // Save the last partial line back into the buffer
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const rawJson = line.slice(6).trim();
+            if (!rawJson) continue;
+            try {
+              const data = JSON.parse(rawJson);
+              if (data.error) {
+                throw new Error(data.error);
+              }
+              if (data.text) {
+                botText += data.text;
+                // Update text content chunk by chunk
+                setMessages((prev) =>
+                  prev.map((m) =>
+                    m.id === botMsgId ? { ...m, content: botText } : m
+                  )
+                );
+              }
+              if (data.done) {
+                // Done event: contains final properties and history
+                if (data.properties) {
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === botMsgId
+                        ? { ...m, properties: data.properties }
+                        : m
+                    )
+                  );
+                }
+                if (data.history) {
+                  historyRef.current = data.history;
+                  localStorage.setItem("chat_history", JSON.stringify(data.history));
+                }
+              }
+            } catch (e) {
+              // Ignore partial JSON parsing errors during stream chunking
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error("Chatbot Error in UI:", error);
       const errorMsg: Message = {
@@ -113,12 +230,12 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
     }
   };
 
-  if (!isOpen) return null;
+  if (!mounted) return null;
 
-  return (
+  return createPortal(
     <div
       className={cn(
-        "fixed z-200 flex flex-col overflow-hidden transition-all duration-300 animate-in slide-in-from-bottom-5 fade-in bg-white shadow-2xl chatbot-container",
+        "fixed z-[99] flex flex-col overflow-hidden transition-all duration-300 bg-white shadow-2xl chatbot-container",
         // Mobile styles: Floating widget
         "bottom-20 right-4 left-4 h-[600px] max-h-[70vh] rounded-2xl border border-slate-200 shadow-2xl w-auto",
         // Desktop styles: Fixed size widget
@@ -146,15 +263,27 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
             </span>
           </div>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-white/80 hover:text-white hover:bg-white/10 rounded-full"
-          onClick={onClose}
-          aria-label={t("common.close") || "Close chat"}
-        >
-          <X className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white/85 hover:text-red-300 hover:bg-white/10 rounded-full"
+            onClick={handleClearChat}
+            title="ล้างการสนทนา"
+            aria-label="Clear chat history"
+          >
+            <Trash2 className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white/80 hover:text-white hover:bg-white/10 rounded-full"
+            onClick={onClose}
+            aria-label={t("common.close") || "Close chat"}
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       {/* Messages */}
@@ -187,7 +316,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
                 "max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm",
                 msg.role === "user"
                   ? "bg-blue-600 text-white rounded-tr-none"
-                  : "bg-white text-slate-700 border border-slate-100 rounded-tl-none w-full",
+                  : "bg-white text-slate-700 border border-slate-100 rounded-tl-none",
               )}
             >
               <div className="whitespace-pre-wrap">{msg.content}</div>
@@ -314,6 +443,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
           </Button>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

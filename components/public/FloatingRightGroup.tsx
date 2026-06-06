@@ -16,10 +16,7 @@ export function FloatingRightGroup() {
     const checkModal = () => {
       const styles = window.getComputedStyle(document.body);
       const isLocked = styles.overflow === "hidden" || 
-                       styles.pointerEvents === "none" ||
-                       document.body.hasAttribute("data-radix-scroll-lock") ||
-                       document.body.getAttribute("data-state") === "open" ||
-                       document.querySelectorAll('[data-radix-portal], [role="dialog"]').length > 0;
+                       document.body.hasAttribute("data-radix-scroll-lock");
       setIsModalOpen(isLocked);
     };
 

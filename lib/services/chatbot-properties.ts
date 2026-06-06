@@ -162,6 +162,7 @@ export async function searchPropertiesForChatbot(
         "title",
         "subdistrict",
         "address_line1",
+        "transit_station_name",
       ];
       const orConditions: string[] = [];
       searchTerms.forEach((term) => {

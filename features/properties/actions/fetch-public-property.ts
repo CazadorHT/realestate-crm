@@ -13,6 +13,7 @@ import type {
   PropertyMetaDataV3,
   PropertyTransitV3
 } from "../types/v3";
+import { getSiteSettings } from "@/features/site-settings/actions";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
@@ -27,6 +28,16 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
   // when properties are created/updated and revalidated. Revalidation is handled
   // via Next.js path/tag revalidation during write operations.
   const supabase = await createClient();
+
+  let fallbackLineId = "@811slazm";
+  try {
+    const settings = await getSiteSettings();
+    if (settings?.line_id) {
+      fallbackLineId = settings.line_id;
+    }
+  } catch (err) {
+    console.error("Error loading site settings for fallback line ID:", err);
+  }
 
   // 🛡️ V3 Hardened Query: Join Core specs with Multi-language Details and Master Identity
   const publicColumns = `
@@ -189,7 +200,7 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     if (agentId) {
       const { data: prof } = await supabase
         .from("profiles")
-        .select("full_name, display_name, phone, wechat_user_id, whatsapp_user_id")
+        .select("full_name, display_name, phone, line_id, wechat_user_id, whatsapp_user_id")
         .eq("id", agentId)
         .maybeSingle();
       if (prof) {
@@ -322,7 +333,7 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
       full_name: (assignedAgent as any).display_name || agentProfile?.full_name || agentProfile?.display_name || "",
       phone: (assignedAgent as any).phone || agentProfile?.phone || "",
       avatar_url: (assignedAgent as any).avatar_url,
-      line_id: (assignedAgent as any).line_id,
+      line_id: (assignedAgent as any).line_id || agentProfile?.line_id || fallbackLineId,
       wechat_user_id: agentProfile?.wechat_user_id || null,
       whatsapp_user_id: agentProfile?.whatsapp_user_id || null
     } : null,

@@ -4,8 +4,8 @@ import { geminiModel } from "@/lib/ai/gemini";
 import { SchemaType } from "@google/generative-ai";
 
 export interface ChatMessage {
-  role: "user" | "model"; // Gemini uses 'model', UI uses 'bot'
-  parts: { text: string }[];
+  role: string;
+  parts: any[];
 }
 
 export type PropertyFilter = {
@@ -305,9 +305,13 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
           completionTokens: response2.usageMetadata?.candidatesTokenCount,
         });
 
+        const updatedHistory = await chat.getHistory();
+        const serializedHistory = JSON.parse(JSON.stringify(updatedHistory));
+
         return {
           text: finalText,
           searchCriteria: propertyQuery,
+          history: serializedHistory,
           properties: (results as unknown as ChatbotProperty[]).map((p) => ({
             id: p.id,
             title: p.title,
@@ -336,9 +340,13 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
       completionTokens: response.usageMetadata?.candidatesTokenCount,
     });
 
+    const updatedHistory = await chat.getHistory();
+    const serializedHistory = JSON.parse(JSON.stringify(updatedHistory));
+
     return {
       text: finalText,
       searchCriteria: propertyQuery, // To trigger UI updates if needed
+      history: serializedHistory,
     };
   } catch (error: unknown) {
     const err = error as Error;
@@ -359,6 +367,7 @@ export async function chatWithAI(history: ChatMessage[], newMessage: string) {
 
     return {
       text: "ขออภัยครับ เกิดข้อผิดพลาดในการประมวลผล (" + err.message + ")",
+      history: history,
       toolCalls: null,
     };
   }
