@@ -245,7 +245,7 @@ export function GuidedTour({
             onClick={restartTour}
             style={{ zIndex: 10001 }}
             className={cn(
-              "fixed right-6 sm:right-6 h-10 w-10 sm:h-10 sm:w-10 flex items-center justify-center rounded-full shadow-xl border border-slate-100 bg-white text-blue-600! hover:scale-110 hover:bg-blue-50 transition-all duration-300 pointer-events-auto",
+              "hidden lg:flex fixed right-6 sm:right-6 h-10 w-10 sm:h-10 sm:w-10 items-center justify-center rounded-full shadow-xl border border-slate-100 bg-white text-blue-600! hover:scale-110 hover:bg-blue-50 transition-all duration-300 pointer-events-auto",
               lifted ? "bottom-24" : "bottom-18",
             )}
           >

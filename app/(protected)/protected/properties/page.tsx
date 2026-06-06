@@ -85,7 +85,7 @@ export default async function PropertiesPage({
   const currentUserEmail = user.email || "";
 
   return (
-    <div className="space-y-4 md:space-y-6 animate-fade-in">
+    <div className="space-y-4 md:space-y-6 pb-24 lg:pb-0 animate-fade-in">
       <InventoryListTour />
       <SuccessAnimation />
       <PropertiesHeaderWrapper params={params} />

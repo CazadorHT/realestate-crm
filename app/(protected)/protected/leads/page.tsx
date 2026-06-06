@@ -60,7 +60,7 @@ export default async function LeadsPage({
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 pb-24 lg:pb-0 animate-fade-in">
       <LeadsListTour />
       <SuccessAnimation />
       

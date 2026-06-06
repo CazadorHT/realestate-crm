@@ -16,7 +16,7 @@ export function NoResultsView({ onClearFilters }: NoResultsViewProps) {
       <Button
         variant="outline"
         onClick={onClearFilters}
-        className="rounded-xl border-slate-200 hover:bg-slate-50"
+        className="rounded-xl border-slate-200 hover:bg-slate-50 text-blue-500!"
       >
         {t("search.clear_filters")}
       </Button>

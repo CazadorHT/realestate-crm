@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckSquare, Square } from "lucide-react";
+import { useSearchParams } from "next/navigation";
 import { 
   HiMapPin, 
   HiHome, 
@@ -20,6 +21,7 @@ import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { FaTrainSubway } from "react-icons/fa6";
 
 const PROPERTY_TYPE_ICONS: Record<string, any> = {
   house: HiHome,
@@ -53,6 +55,8 @@ export function PropertyCardInfo({
   handleCardClick,
 }: PropertyCardInfoProps) {
   const { language, t } = useLanguage();
+  const searchParams = useSearchParams();
+  const selectedStationFilter = searchParams ? (searchParams.get("transit_station") || "") : "";
   const typeColor = getTypeColor(property.property_type);
 
   // Property type localization
@@ -107,19 +111,155 @@ export function PropertyCardInfo({
       </Link>
 
       {/* Location block link below the title */}
-      <Link
-        href={`/properties/${property.slug || property.id}`}
-        className="flex items-center gap-1 text-stone-500 min-w-0"
-        onClick={handleCardClick}
-      >
-        <HiMapPin className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-        <span className="text-xs truncate whitespace-nowrap hover:text-blue-600 transition-colors">
-          {getSafeText(
-            areaProvince,
-            getProvinceName("กรุงเทพมหานคร", language),
-          )}
-        </span>
-      </Link>
+      <div className="flex flex-col gap-1">
+        <Link
+          href={`/properties/${property.slug || property.id}`}
+          className="flex items-center gap-1 text-stone-600 min-w-0"
+          onClick={handleCardClick}
+        >
+          <HiMapPin className="h-3.5 w-3.5 text-blue-500 shrink-0" />
+          <span className="text-xs truncate whitespace-nowrap hover:text-blue-600 transition-colors">
+            {getSafeText(
+              areaProvince,
+              getProvinceName("กรุงเทพมหานคร", language),
+            )}
+          </span>
+        </Link>
+
+        {(() => {
+          interface TransitCandidate {
+            name: string;
+            dbName: string;
+            type: string;
+            distance?: number | null;
+          }
+
+          const candidates: TransitCandidate[] = [];
+
+          // 1. Root level transit
+          const rootStationName = getLocaleValue(property, "transit_station_name", language);
+          if (rootStationName && property.transit_type && property.transit_type !== "EXPRESSWAY" && property.transit_type !== "MAIN_ROAD") {
+            candidates.push({
+              name: rootStationName,
+              dbName: property.transit_station_name || "",
+              type: property.transit_type,
+              distance: property.transit_distance_meters,
+            });
+          }
+
+          // 2. Nearby transits list
+          if (Array.isArray(property.nearby_transits)) {
+            property.nearby_transits.forEach((t: any) => {
+              if (t && t.type !== "EXPRESSWAY" && t.type !== "MAIN_ROAD") {
+                const name = getLocaleValue(t, "station_name", language);
+                if (name) {
+                  candidates.push({
+                    name,
+                    dbName: t.station_name || "",
+                    type: t.type,
+                    distance: t.distance_meters,
+                  });
+                }
+              }
+            });
+          }
+
+          if (candidates.length === 0) return null;
+
+          // Sort by distance ascending. Put null/undefined distance at the end.
+          candidates.sort((a, b) => {
+            const distA = a.distance ?? Infinity;
+            const distB = b.distance ?? Infinity;
+            return distA - distB;
+          });
+
+          // Prioritize selected station filter if matches any candidate
+          let chosen = candidates[0];
+          if (selectedStationFilter) {
+            const match = candidates.find(c => 
+              c.name.toLowerCase() === selectedStationFilter.toLowerCase() ||
+              c.dbName.toLowerCase() === selectedStationFilter.toLowerCase()
+            );
+            if (match) {
+              chosen = match;
+            }
+          }
+
+          const transitStation = chosen.name;
+          const rawTransitType = chosen.type;
+          const transitDistance = chosen.distance;
+
+          if (!transitStation) return null;
+
+          const getNormalizedType = (type?: string | null): string => {
+            if (!type) return "Transit";
+            const t = type.toUpperCase();
+            if (t === "BTS" || t === "GOLD") return "BTS";
+            if (t.startsWith("MRT")) return "MRT";
+            if (t === "ARL") return "ARL";
+            if (t === "SRT_RED" || t === "SRT") return "SRT";
+            if (t === "BRT") return "BRT";
+            return t;
+          };
+
+          const getTypeBadgeClass = (type?: string | null): string => {
+            const norm = getNormalizedType(type);
+            switch (norm) {
+              case "BTS":
+                return "bg-emerald-600";
+              case "MRT":
+                return "bg-blue-800";
+              case "ARL":
+                return "bg-rose-600";
+              case "SRT":
+                return "bg-red-700";
+              case "BRT":
+                return "bg-teal-600";
+              default:
+                return "bg-slate-500";
+            }
+          };
+
+          const transitType = getNormalizedType(rawTransitType);
+          const badgeClass = getTypeBadgeClass(rawTransitType);
+
+          const formatDistance = (meters: number): string => {
+            if (meters >= 1000) {
+              const km = (meters / 1000).toFixed(1).replace(/\.0$/, "");
+              const unit = language === "en" 
+                ? "km" 
+                : language === "cn" 
+                  ? "公里" 
+                  : language === "ru" 
+                    ? "км" 
+                    : "กม.";
+              return `${km} ${unit}`;
+            }
+            const unit = language === "en" 
+              ? "m" 
+              : language === "cn" 
+                ? "米" 
+                : language === "ru" 
+                  ? "м" 
+                  : "ม.";
+            return `${meters} ${unit}`;
+          };
+
+          return (
+            <div className="flex items-center gap-1 text-stone-500 min-w-0 mt-0.5 ml-0.5">
+              {/* <FaTrainSubway className="h-3 w-3 text-blue-500 shrink-0" /> */}
+              <span className="text-[11px] flex items-center gap-1 truncate">
+                <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0 ${badgeClass}`}>
+                  {transitType}
+                </span>
+                <span className="truncate font-medium text-stone-600 text-xs">
+                  {transitStation.replace("_", " ")}
+                </span>
+              </span>
+            </div>
+          );
+        })()}
+      </div>
     </div>
   );
 }

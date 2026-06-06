@@ -50,7 +50,7 @@ export function PropertyFormNavigation({
               variant="outline"
               onClick={onBack}
               aria-label="ย้อนกลับไปขั้นตอนก่อนหน้า"
-              className="h-11 sm:h-14 px-4 sm:px-10 rounded-xl border-slate-200 bg-white/50 hover:bg-slate-50 text-slate-600 font-bold transition-all active:scale-95 flex-1 sm:flex-none text-sm"
+              className="h-11 sm:h-14 px-4 sm:px-10 rounded-xl border-slate-200 bg-white/50 hover:bg-slate-50 text-slate-600! font-bold transition-all active:scale-95 flex-1 sm:flex-none text-sm"
             >
               ย้อนกลับ
             </Button>

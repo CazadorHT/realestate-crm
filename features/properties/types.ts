@@ -142,6 +142,8 @@ export interface PropertyTableData {
   bathrooms?: number | null;
   office_capacity?: number | null;
   agent_name?: string | null;
+  agent_role?: string | null;
+  agent_email?: string | null;
   assigned_to?: string | null;
   created_by?: string | null;
   popular_area?: string | null;

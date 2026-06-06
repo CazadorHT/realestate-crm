@@ -278,3 +278,47 @@ export function getOfficePrice(property: {
     isCalculated: false,
   };
 }
+
+/**
+ * Format transit station with operator and line label nicely
+ */
+export function formatStationLabel(type: string, stationName: string, lang: string): string {
+  const t = type.toUpperCase();
+  const cleanName = stationName.replace("_", " ");
+  
+  if (lang === "en") {
+    if (t === "BTS" || t === "GOLD") return `BTS: ${cleanName}`;
+    if (t.startsWith("MRT")) return `MRT: ${cleanName}`;
+    if (t === "SRT" || t === "SRT_RED") return `SRT: ${cleanName}`;
+    if (t === "ARL") return `ARL: ${cleanName}`;
+    if (t === "BRT") return `BRT: ${cleanName}`;
+    return `${type}: ${cleanName}`;
+  }
+  
+  if (lang === "cn") {
+    if (t === "BTS" || t === "GOLD") return `BTS: ${cleanName}`;
+    if (t.startsWith("MRT")) return `MRT: ${cleanName}`;
+    if (t === "SRT" || t === "SRT_RED") return `SRT: ${cleanName}`;
+    if (t === "ARL") return `ARL: ${cleanName}`;
+    if (t === "BRT") return `BRT: ${cleanName}`;
+    return `${type}: ${cleanName}`;
+  }
+  
+  if (lang === "ru") {
+    if (t === "BTS" || t === "GOLD") return `BTS: ${cleanName}`;
+    if (t.startsWith("MRT")) return `MRT: ${cleanName}`;
+    if (t === "SRT" || t === "SRT_RED") return `SRT: ${cleanName}`;
+    if (t === "ARL") return `ARL: ${cleanName}`;
+    if (t === "BRT") return `BRT: ${cleanName}`;
+    return `${type}: ${cleanName}`;
+  }
+  
+  // Default to TH
+  if (t === "BTS" || t === "GOLD") return `BTS : ${cleanName}`;
+  if (t.startsWith("MRT")) return `MRT : ${cleanName}`;
+  if (t === "SRT" || t === "SRT_RED") return `SRT : ${cleanName}`;
+  if (t === "ARL") return `ARL : ${cleanName}`;
+  if (t === "BRT") return `BRT : ${cleanName}`;
+  return `${type} : ${cleanName}`;
+}
+

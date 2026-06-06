@@ -73,6 +73,13 @@ interface SearchFilterBarProps {
     name_cn?: string | null;
     name_ru?: string | null;
   }[];
+  allStations?: {
+    name: string;
+    type: string;
+    name_en?: string | null;
+    name_cn?: string | null;
+    name_ru?: string | null;
+  }[];
   properties?: any[];
   matchesFilters?: (p: any, excludeFilters?: string[]) => boolean;
   setBulkFilters: (updates: any) => void;
@@ -126,6 +133,7 @@ export function SearchFilterBar({
   availableQuickFilters,
   availableBedrooms,
   availableStations,
+  allStations,
   properties,
   matchesFilters,
   setBulkFilters,
@@ -398,6 +406,7 @@ export function SearchFilterBar({
           availableQuickFilters={availableQuickFilters}
           availableBedrooms={availableBedrooms}
           availableStations={availableStations}
+          allStations={allStations}
           filteredLength={filteredLength}
           showAllProvincesMobile={showAllProvincesMobile}
           setShowAllProvincesMobile={setShowAllProvincesMobile}
@@ -461,6 +470,7 @@ export function SearchFilterBar({
           availableListingTypes={availableListingTypes}
           availableQuickFilters={availableQuickFilters}
           availableStations={availableStations}
+          allStations={allStations}
           availableAreas={availableAreas}
           area={area}
           setArea={setArea}

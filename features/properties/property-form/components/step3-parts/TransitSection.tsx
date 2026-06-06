@@ -37,7 +37,8 @@ import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "../../components/SectionHeader";
 import type { UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
-import { getTransitTypesAction, upsertMasterDataAction, type MasterDataTransitType } from "@/features/properties/actions/fetch-master-data";
+import { getTransitTypesAction, upsertMasterDataAction, type MasterDataTransitType, getTransitStationsAction, type MasterDataTransitStation } from "@/features/properties/actions/fetch-master-data";
+import { StationCombobox } from "./StationCombobox";
 import {
   Dialog,
   DialogContent,
@@ -138,6 +139,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const [transitTypes, setTransitTypes] = React.useState<MasterDataTransitType[]>([]);
+  const [transitStations, setTransitStations] = React.useState<MasterDataTransitStation[]>([]);
   const [isLoadingTypes, setIsLoadingTypes] = React.useState(true);
 
   // Inline Modal State
@@ -151,12 +153,19 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
     let isMounted = true;
     getTransitTypesAction().then((data) => {
       if (isMounted) {
-        setTransitTypes(data);
+        setTransitTypes(data.filter(t => t.code !== "EXPRESSWAY" && t.code !== "MAIN_ROAD"));
         setIsLoadingTypes(false);
       }
     }).catch(() => {
       if (isMounted) setIsLoadingTypes(false);
     });
+
+    getTransitStationsAction().then((data) => {
+      if (isMounted) {
+        setTransitStations(data);
+      }
+    });
+
     return () => { isMounted = false; };
   }, []);
 
@@ -341,9 +350,9 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                 </SelectItem>
                               ))
                             ) : (
-                              ["BTS", "MRT", "ARL", "EXPRESSWAY", "MAIN_ROAD"].map((code) => (
+                              ["BTS", "MRT", "ARL"].map((code) => (
                                 <SelectItem key={code} value={code} className="py-2.5">
-                                  {code === "EXPRESSWAY" ? "จุดขึ้นลงทางด่วน" : code === "MAIN_ROAD" ? "ถนนหลัก" : code}
+                                  {code}
                                 </SelectItem>
                               ))
                             )}
@@ -418,17 +427,32 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                     control={form.control}
                     name={`nearby_transits.${index}.station_name`}
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="flex flex-col">
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <MapPin className="h-3.5 w-3.5 text-blue-500" />
                           ชื่อสถานี (ภาษาไทย)
                         </FormLabel>
                         <FormControl>
-                          <Input
-                            {...field}
+                          <StationCombobox
                             value={field.value ?? ""}
-                            className="h-10 rounded-lg bg-white border-slate-200 shadow-sm font-medium px-4 text-xs focus:ring-0 focus:border-blue-400"
-                            placeholder="เช่น สถานีทองหล่อ"
+                            stations={transitStations}
+                            transitType={form.watch(`nearby_transits.${index}.type`)}
+                            onChange={(station) => {
+                              if (station) {
+                                field.onChange(station.label.th);
+                                form.setValue(`nearby_transits.${index}.station_name_en`, station.label.en || "");
+                                form.setValue(`nearby_transits.${index}.station_name_cn`, station.label.cn || "");
+                                form.setValue(`nearby_transits.${index}.station_name_ru`, station.label.ru || "");
+                                if (station.metadata?.transit_type) {
+                                  form.setValue(`nearby_transits.${index}.type`, station.metadata.transit_type);
+                                }
+                              } else {
+                                field.onChange("");
+                                form.setValue(`nearby_transits.${index}.station_name_en`, "");
+                                form.setValue(`nearby_transits.${index}.station_name_cn`, "");
+                                form.setValue(`nearby_transits.${index}.station_name_ru`, "");
+                              }
+                            }}
                           />
                         </FormControl>
                       </FormItem>

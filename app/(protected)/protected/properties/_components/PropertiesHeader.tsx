@@ -31,7 +31,7 @@ export function PropertiesHeader({ count }: PropertiesHeaderProps) {
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 md:gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end xl:justify-start gap-3 md:gap-4">
           {/* Mock Branch Toggle for Tour */}
           <div 
             id="tour-property-all-branches"

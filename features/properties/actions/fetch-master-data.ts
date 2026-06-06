@@ -176,3 +176,52 @@ export async function getAllMasterDataAction(typeFilter?: string) {
   }
   return data || [];
 }
+
+export interface MasterDataTransitStation {
+  code: string;
+  label: {
+    th: string;
+    en: string;
+    cn: string;
+    ru: string;
+  };
+  metadata?: {
+    transit_type?: string;
+    latitude?: number;
+    longitude?: number;
+    [key: string]: string | number | boolean | undefined;
+  };
+}
+
+/**
+ * Fetch all active transit stations from ref_master_data
+ */
+export async function getTransitStationsAction(): Promise<MasterDataTransitStation[]> {
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from("ref_master_data")
+    .select("code, label, metadata")
+    .eq("type", "TRANSIT_STATION")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching transit stations:", error);
+    return [];
+  }
+
+  type MasterDataRow = Database["public"]["Tables"]["ref_master_data"]["Row"];
+
+  return (data as MasterDataRow[] || []).map((item: MasterDataRow) => ({
+    code: item.code,
+    label: (item.label as MasterDataTransitStation["label"]) || { 
+      th: item.code, 
+      en: item.code, 
+      cn: item.code, 
+      ru: item.code 
+    },
+    metadata: item.metadata as MasterDataTransitStation["metadata"]
+  }));
+}
+

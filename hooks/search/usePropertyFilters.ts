@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export function usePropertyFilters() {
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Filters - Init from URL
   const [keyword, setKeyword] = useState(searchParams.get("keyword") || "");
@@ -60,6 +61,12 @@ export function usePropertyFilters() {
 
   // Update state when params change (for back/forward navigation)
   useEffect(() => {
+    console.log("usePropertyFilters [searchParams change]:", {
+      keyword: searchParams.get("keyword"),
+      property_type: searchParams.get("property_type"),
+      listing_type: searchParams.get("listing_type"),
+      transit_station: searchParams.get("transit_station"),
+    });
     setKeyword(searchParams.get("keyword") || "");
     setType(searchParams.get("property_type") || "ALL");
     setListingType(searchParams.get("listing_type") || "ALL");
@@ -82,7 +89,7 @@ export function usePropertyFilters() {
     // Clear AI insight on manual navigation change
     setAiInsight(null);
   }, [searchParams]);
-
+ 
   // Sync state to URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -104,10 +111,11 @@ export function usePropertyFilters() {
     if (minSize) params.set("min_size", minSize); else params.delete("min_size");
     if (maxSize) params.set("max_size", maxSize); else params.delete("max_size");
     if (priceType && (minPrice || maxPrice)) params.set("price_type", priceType); else params.delete("price_type");
-
+ 
     const query = params.toString();
     const url = `/properties${query ? `?${query}` : ""}`;
-    window.history.replaceState({ ...window.history.state, as: url, url }, "", url);
+    console.log("usePropertyFilters [Sync state to URL]:", url);
+    router.replace(url, { scroll: false });
   }, [
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,

@@ -35,6 +35,7 @@ export function usePropertyData(initialProperties?: ApiProperty[]) {
         setIsLoading(true);
         const query = searchParams.toString();
         const url = `/api/public/properties${query ? `?${query}` : ""}`;
+        console.log("usePropertyData [load] fetching:", url);
 
         const res = await fetch(url, {
           signal: controller.signal,
@@ -47,6 +48,10 @@ export function usePropertyData(initialProperties?: ApiProperty[]) {
         }
 
         const data = await res.json();
+        console.log("usePropertyData [load] success data:", {
+          hasProperties: data && typeof data === 'object' && 'properties' in data,
+          propertiesCount: data?.properties?.length,
+        });
         
         // Handle New S-Tier Structure
         if (data && typeof data === 'object' && 'properties' in data) {

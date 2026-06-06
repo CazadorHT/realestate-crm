@@ -351,6 +351,7 @@ export async function updatePropertyAction(
         transit_info: {
           places: safeValues.nearby_places || [],
           transits: safeValues.nearby_transits || [],
+          near_transit: (safeValues.nearby_transits || []).length > 0,
         },
         meta_data: {
           ...existingMeta,

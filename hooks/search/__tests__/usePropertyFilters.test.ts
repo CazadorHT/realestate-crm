@@ -4,8 +4,14 @@ import { usePropertyFilters } from '../usePropertyFilters';
 
 // Robust Mock for next/navigation
 const mockSearchParams = new URLSearchParams();
+const mockRouter = {
+  replace: vi.fn(),
+  push: vi.fn(),
+};
+
 vi.mock('next/navigation', () => ({
   useSearchParams: vi.fn(() => mockSearchParams),
+  useRouter: vi.fn(() => mockRouter),
 }));
 
 describe('usePropertyFilters Debouncing', () => {

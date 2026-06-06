@@ -30,7 +30,9 @@ import {
 import { PriceRangeSelect } from "./PriceRangeSelect";
 import { AreaSizeSelect } from "./AreaSizeSelect";
 import { QuickFeatureFilters } from "./QuickFeatureFilters";
+import { StationSearchSelect } from "./StationSearchSelect";
 import { cn } from "@/lib/utils";
+import { formatStationLabel } from "@/lib/property-utils";
 
 interface DesktopFiltersProps {
   keyword: string;
@@ -78,6 +80,13 @@ interface DesktopFiltersProps {
     name_cn?: string | null;
     name_ru?: string | null;
   }[];
+  allStations?: {
+    name: string;
+    type: string;
+    name_en?: string | null;
+    name_cn?: string | null;
+    name_ru?: string | null;
+  }[];
   availableProvinces: { name: string; count: number }[];
   availableTypes: Record<string, number>;
   availableListingTypes: Record<string, number>;
@@ -112,7 +121,7 @@ const Badge = ({
 }: {
   label: string;
   onClear: () => void;
-  variant?: "blue" | "slate" | "emerald" | "purple" | "rose";
+  variant?: "blue" | "slate" | "emerald" | "purple" | "rose" | "red" | "teal";
   icon?: React.ReactNode;
 }) => {
   const variants = {
@@ -121,6 +130,8 @@ const Badge = ({
     emerald: "bg-emerald-50 border-emerald-100 text-emerald-700",
     purple: "bg-purple-50 border-purple-100 text-purple-700",
     rose: "bg-rose-50 border-rose-100 text-rose-700",
+    red: "bg-red-50 border-red-100 text-red-700",
+    teal: "bg-teal-50 border-teal-100 text-teal-700",
   };
 
   return (
@@ -193,6 +204,7 @@ export function DesktopFilters({
   setIsHotDeal,
   availableBedrooms,
   availableStations,
+  allStations,
   availableProvinces,
   availableTypes,
   availableListingTypes,
@@ -218,17 +230,6 @@ export function DesktopFilters({
   maxSize,
   setBulkFilters,
 }: DesktopFiltersProps) {
-  const [trainTypeFilter, setTrainTypeFilter] = useState<string>("ALL");
-
-  const trainTypes = useMemo(() => {
-    const types = new Set(availableStations.map((s) => s.type));
-    return Array.from(types).filter(Boolean).sort();
-  }, [availableStations]);
-
-  const filteredStations = useMemo(() => {
-    if (trainTypeFilter === "ALL") return availableStations;
-    return availableStations.filter((s) => s.type === trainTypeFilter);
-  }, [availableStations, trainTypeFilter]);
 
   const hasActiveFilters = useMemo(() => {
     return (
@@ -532,6 +533,17 @@ export function DesktopFilters({
           })}
         </div>
 
+        <StationSearchSelect
+          transitStation={transitStation}
+          setTransitStation={setTransitStation}
+          availableStations={availableStations}
+          allStations={allStations}
+          t={t}
+          language={language}
+          getLocaleValue={getLocaleValue}
+          className="w-[180px]"
+        />
+
         <QuickFeatureFilters
           nearTrain={nearTrain}
           setNearTrain={setNearTrain}
@@ -607,11 +619,11 @@ export function DesktopFilters({
               {transitStation && (
                 <Badge
                   label={(() => {
-                    const found = availableStations.find(
+                    const found = (allStations || availableStations).find(
                       (s) => s.name === transitStation,
                     );
                     if (!found) return transitStation.replace("_", " ");
-                    return getLocaleValue(
+                    const localized = getLocaleValue(
                       {
                         name: found.name,
                         name_en: found.name_en,
@@ -621,10 +633,38 @@ export function DesktopFilters({
                       "name",
                       language,
                     ).replace("_", " ");
+                    return found.type ? formatStationLabel(found.type, localized, language) : localized;
                   })()}
                   onClear={() => setTransitStation("")}
-                  variant="blue"
-                  icon={<TrainIcon className="w-3 h-3" />}
+                  variant={(() => {
+                    const found = (allStations || availableStations).find(
+                      (s) => s.name === transitStation,
+                    );
+                    if (!found) return "blue";
+                    const t = found.type.toUpperCase();
+                    if (t === "BTS" || t === "GOLD") return "emerald";
+                    if (t.startsWith("MRT")) return "blue";
+                    if (t === "ARL") return "rose";
+                    if (t === "SRT" || t === "SRT_RED") return "red";
+                    if (t === "BRT") return "teal";
+                    return "blue";
+                  })()}
+                  icon={<TrainIcon className={cn(
+                    "w-3 h-3",
+                    (() => {
+                      const found = (allStations || availableStations).find(
+                        (s) => s.name === transitStation,
+                      );
+                      if (!found) return "text-blue-500";
+                      const t = found.type.toUpperCase();
+                      if (t === "BTS" || t === "GOLD") return "text-emerald-500";
+                      if (t.startsWith("MRT")) return "text-blue-500";
+                      if (t === "ARL") return "text-rose-500";
+                      if (t === "SRT" || t === "SRT_RED") return "text-red-500";
+                      if (t === "BRT") return "text-teal-500";
+                      return "text-blue-500";
+                    })()
+                  )} />}
                 />
               )}
               {bedrooms !== "ALL" && (
@@ -675,7 +715,7 @@ export function DesktopFilters({
               )}
               {petFriendly && (
                 <Badge
-                  label={t("search.pet_friendly")}
+                  label={t("search.pet_allowed")}
                   onClear={() => setPetFriendly(false)}
                   variant="purple"
                 />
@@ -816,119 +856,6 @@ export function DesktopFilters({
               )}
             </div>
           )}
-        </div>
-      )}
-      {/* Row 4: Transit Stations (When nearTrain is active) */}
-      {nearTrain && availableStations.length > 0 && (
-        <div className="flex items-center gap-x-6 gap-y-3 flex-wrap pt-4 border-t border-slate-100 animate-in fade-in slide-in-from-top-1">
-          {/* Label */}
-          <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider whitespace-nowrap">
-            <TrainIcon className="w-4 h-4 text-blue-600" />
-            {t("search.near_train")}
-          </div>
-
-          {/* Train Type Selector */}
-          <div className="flex items-center gap-1 p-0.5 bg-slate-100/50 rounded-xl border border-slate-200/60">
-            <button
-              onClick={() => setTrainTypeFilter("ALL")}
-              className={cn(
-                "px-1.5 py-0.5 rounded-lg text-xs font-bold transition-all",
-                trainTypeFilter === "ALL"
-                  ? "bg-white text-blue-600 shadow-sm border border-slate-200"
-                  : "text-slate-400 hover:text-slate-600",
-              )}
-            >
-              {t("search.all")}
-            </button>
-            {trainTypes.map((type: string) => (
-              <button
-                key={type}
-                onClick={() => setTrainTypeFilter(type)}
-                className={cn(
-                  "px-1.5 py-0.5 rounded-lg text-xs font-bold transition-all",
-                  trainTypeFilter === type
-                    ? "bg-white text-blue-600 shadow-sm border border-slate-200"
-                    : "text-slate-400 hover:text-slate-600",
-                )}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-
-          {/* Station List - Now flows on the same line */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-            <button
-              onClick={() => setTransitStation("")}
-              className={`text-xs transition-colors ${!transitStation ? "font-semibold text-blue-600" : "text-slate-400 hover:text-blue-600"}`}
-            >
-              {t("search.all_stations")}
-            </button>
-            {filteredStations.slice(0, 20).map((s: any) => (
-              <button
-                key={s.name}
-                onClick={() =>
-                  setTransitStation(transitStation === s.name ? "" : s.name)
-                }
-                className={`text-xs transition-colors flex items-center gap-1.5 ${
-                  transitStation === s.name
-                    ? "font-bold text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded-lg"
-                    : "text-slate-400 hover:text-blue-600"
-                }`}
-              >
-                {transitStation === s.name ? (
-                  <svg
-                    className="w-3.5 h-3.5 animate-in zoom-in-50"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={3}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                ) : (
-                  <span
-                    className={cn(
-                      "w-1.5 h-1.5 rounded-full",
-                      s.type === "BTS"
-                        ? "bg-green-500"
-                        : s.type === "MRT"
-                          ? "bg-blue-600"
-                          : "bg-slate-400",
-                    )}
-                  />
-                )}
-                {getLocaleValue(
-                  {
-                    name: s.name,
-                    name_en: s.name_en,
-                    name_cn: s.name_cn,
-                    name_ru: s.name_ru,
-                  },
-                  "name",
-                  language,
-                ).replace("_", " ")}
-                <span className="text-xs opacity-60 text-blue-600">
-                  ({s.count})
-                </span>
-              </button>
-            ))}
-            {filteredStations.length > 20 && (
-              <span className="text-xs text-slate-300 italic">
-                +{filteredStations.length - 20} {t("search.more")}
-              </span>
-            )}
-
-            {filteredStations.length === 0 && (
-              <span className="text-xs text-slate-400 italic py-1">
-                {t("search.no_stations_type")}
-              </span>
-            )}
-          </div>
         </div>
       )}
     </div>

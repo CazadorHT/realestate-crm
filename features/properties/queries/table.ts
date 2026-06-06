@@ -35,7 +35,7 @@ interface TableQueryResult {
   posted_to_line_at: string | null;
   posted_to_tiktok_at: string | null;
   assigned_to: string | null;
-  agent: { full_name: string }[] | { full_name: string } | null;
+  agent: { full_name: string | null; role: string | null; email: string | null }[] | { full_name: string | null; role: string | null; email: string | null } | null;
   tenant_id: string | null;
   tenants: { name: string } | null;
   requires_ai_review: boolean | null;
@@ -111,7 +111,7 @@ export async function getPropertiesTableData(params: {
       popular_area, view_count, address_line1, images, total_units, 
       sold_units, posted_to_facebook_at, posted_to_instagram_at, 
       posted_to_line_at, posted_to_tiktok_at, assigned_to, created_by,
-      agent:profiles(full_name),
+      agent:profiles(full_name, role, email),
       tenant_id, tenants(name), requires_ai_review
       `,
       {
@@ -458,6 +458,12 @@ export async function getPropertiesTableData(params: {
       agent_name: Array.isArray(p.agent)
         ? (p.agent[0] as any)?.full_name || null
         : (p.agent as any)?.full_name || null,
+      agent_role: Array.isArray(p.agent)
+        ? (p.agent[0] as any)?.role || null
+        : (p.agent as any)?.role || null,
+      agent_email: Array.isArray(p.agent)
+        ? (p.agent[0] as any)?.email || null
+        : (p.agent as any)?.email || null,
       assigned_to: p.assigned_to,
       created_by: (p as any).created_by || null,
       tenant_id: p.tenant_id,

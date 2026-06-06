@@ -124,7 +124,7 @@ export function usePropertyFiltering(
       }
     }
 
-    if (!excludeFilters.includes("nearTrain") && nearTrain && !p.near_transit) return false;
+    if (!excludeFilters.includes("nearTrain") && nearTrain && !p.near_transit && !(p.nearby_transits && p.nearby_transits.length > 0)) return false;
     if (!excludeFilters.includes("petFriendly") && petFriendly && !p.is_pet_friendly) return false;
     if (!excludeFilters.includes("fullyFurnished") && fullyFurnished && !p.is_fully_furnished) return false;
     if (!excludeFilters.includes("isForeigner") && isForeigner && !p.is_foreigner_quota) return false;
@@ -183,8 +183,21 @@ export function usePropertyFiltering(
     const quickCounts = { nearTrain: 0, petFriendly: 0, fullyFurnished: 0, isForeigner: 0, companyRegistered: 0, isHotDeal: 0 };
     const bedroomCounts: Record<string, number> = { ALL: 0, "1": 0, "2": 0, "3": 0, "4+": 0 };
     const stationMap = new Map<string, { count: number; type: string; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }>();
+    const allStationsMap = new Map<string, { type: string; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }>();
 
     properties.forEach((p) => {
+      // Collect all stations unfiltered for metadata resolution
+      (p.nearby_transits || []).forEach((t: any) => {
+        if (!allStationsMap.has(t.station_name)) {
+          allStationsMap.set(t.station_name, {
+            type: t.type,
+            name_en: t.station_name_en,
+            name_cn: t.station_name_cn,
+            name_ru: t.station_name_ru
+          });
+        }
+      });
+
       const fullMatch = checkMatch(p);
       if (fullMatch) {
         filteredList.push(p);
@@ -231,7 +244,7 @@ export function usePropertyFiltering(
         if (p.listing_type === "SALE_AND_RENT") listingTypeCounts.SALE_AND_RENT++;
       }
 
-      if (checkMatch(p, ["nearTrain"]) && p.near_transit) quickCounts.nearTrain++;
+      if (checkMatch(p, ["nearTrain"]) && (p.near_transit || (p.nearby_transits && p.nearby_transits.length > 0))) quickCounts.nearTrain++;
       if (checkMatch(p, ["petFriendly"]) && p.is_pet_friendly) quickCounts.petFriendly++;
       if (checkMatch(p, ["fullyFurnished"]) && p.is_fully_furnished) quickCounts.fullyFurnished++;
       if (checkMatch(p, ["isForeigner"]) && p.is_foreigner_quota) quickCounts.isForeigner++;
@@ -277,6 +290,13 @@ export function usePropertyFiltering(
         name_cn: val.name_cn,
         name_ru: val.name_ru
       })).sort((a, b) => b.count - a.count),
+      allStations: Array.from(allStationsMap.entries()).map(([name, val]) => ({
+        name,
+        type: val.type,
+        name_en: val.name_en,
+        name_cn: val.name_cn,
+        name_ru: val.name_ru
+      })),
     };
   }, [properties, checkMatch, sort, listingType, priceType]);
 

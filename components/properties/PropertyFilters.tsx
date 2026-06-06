@@ -153,19 +153,24 @@ export function PropertyFilters({
     const table = document.getElementById("table");
     if (table) {
       if (isPending) {
-        table.classList.add("opacity-50", "pointer-events-none", "transition-opacity", "duration-300");
+        table.classList.add(
+          "opacity-50",
+          "pointer-events-none",
+          "transition-opacity",
+          "duration-300",
+        );
       } else {
         table.classList.remove("opacity-50", "pointer-events-none");
-        
+
         // [AUTO-FOCUS RESULTS] Scroll to table smoothly when search finishes
         // Only trigger if we actually had a search value or filters changed
-        const hasQuery = searchParams.get('q');
+        const hasQuery = searchParams.get("q");
         if (hasQuery && !isInitialMount.current) {
-          table.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          table.scrollIntoView({ behavior: "smooth", block: "start" });
         }
       }
     }
-    
+
     if (isInitialMount.current) {
       isInitialMount.current = false;
     }
@@ -204,13 +209,38 @@ export function PropertyFilters({
   return (
     <div className="space-y-4 w-full">
       {/* 🌟 Premium Status Tab Filter (Phase 1 Quick Win) */}
+      <div className="flex flex-col xl:flex-row items-center gap-2 xl:gap-0 justify-between w-full">
       <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-2xl w-full max-w-fit border border-slate-200/60 shadow-inner overflow-x-auto">
         {[
-          { id: "ALL", label: "🌐 ทั้งหมด (All)", activeClass: "bg-white text-slate-800 shadow-sm font-bold" },
-          { id: "ACTIVE", label: "🟢 ใช้งาน (Active)", activeClass: "bg-emerald-500 text-white shadow-md shadow-emerald-100 font-bold" },
-          { id: "DRAFT", label: "⚠️ แบบร่าง (Draft)", activeClass: "bg-amber-500 text-white shadow-md shadow-amber-100 font-bold" },
-          { id: "ARCHIVED", label: "📦 เก็บถาวร (Archived)", activeClass: "bg-slate-700 text-white shadow-md shadow-slate-200 font-bold" },
-          { id: "SOLD", label: "🤝 ปิดการขาย (Sold)", activeClass: "bg-blue-600 text-white shadow-md shadow-blue-100 font-bold" },
+          {
+            id: "ALL",
+            label: "🌐 ทั้งหมด (All)",
+            activeClass: "bg-white text-slate-800 shadow-sm font-bold",
+          },
+          {
+            id: "ACTIVE",
+            label: "🟢 ใช้งาน (Active)",
+            activeClass:
+              "bg-emerald-500 text-white shadow-md shadow-emerald-100 font-bold",
+          },
+          {
+            id: "DRAFT",
+            label: "⚠️ แบบร่าง (Draft)",
+            activeClass:
+              "bg-amber-500 text-white shadow-md shadow-amber-100 font-bold",
+          },
+          {
+            id: "ARCHIVED",
+            label: "📦 เก็บถาวร (Archived)",
+            activeClass:
+              "bg-slate-700 text-white shadow-md shadow-slate-200 font-bold",
+          },
+          {
+            id: "SOLD",
+            label: "🤝 ปิดการขาย (Sold)",
+            activeClass:
+              "bg-blue-600 text-white shadow-md shadow-blue-100 font-bold",
+          },
         ].map((tab) => {
           const isActive = filters.status === tab.id;
           return (
@@ -224,7 +254,10 @@ export function PropertyFilters({
                 else params.set("status", tab.id);
                 params.delete("page");
                 startTransition(() => {
-                  router.push(`/protected/properties?${params.toString()}#table`, { scroll: false });
+                  router.push(
+                    `/protected/properties?${params.toString()}#table`,
+                    { scroll: false },
+                  );
                 });
               }}
               className={cn(
@@ -239,10 +272,108 @@ export function PropertyFilters({
           );
         })}
       </div>
+        <div className="flex flex-wrap justify-between  lg:justify-start items-center gap-2">
+            {/* ✨ Sentinel Quick Filter Chip */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  id="tour-property-ai-filter"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const nextVal =
+                      filters.needsAiReview === "true" ? "" : "true";
+                    setFilters({ ...filters, needsAiReview: nextVal });
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (nextVal === "true") params.set("needsAiReview", "true");
+                    else params.delete("needsAiReview");
+                    params.delete("page");
+                    startTransition(() => {
+                      router.push(
+                        `/protected/properties?${params.toString()}#table`,
+                        { scroll: false },
+                      );
+                    });
+                  }}
+                  className={cn(
+                    "h-9 rounded-full px-4 border-dashed transition-all duration-300",
+                    filters.needsAiReview === "true"
+                      ? "bg-indigo-50 border-indigo-400 text-indigo-700 shadow-sm ring-1 ring-indigo-200"
+                      : "bg-white text-slate-500 hover:border-indigo-300 hover:bg-slate-50 hover:text-indigo-600",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "mr-1.5 flex h-2 w-2 rounded-full transition-colors",
+                      filters.needsAiReview === "true"
+                        ? "bg-indigo-600 animate-pulse"
+                        : "bg-slate-300",
+                    )}
+                  />
+                  ✨ ตรวจร่าง AI
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="bottom"
+                className="bg-slate-900 border-slate-800 text-white font-medium"
+              >
+                แสดงเฉพาะรายการที่ AI ร่างข้อมูลให้ (รอคุณตรวจสอบ)
+              </TooltipContent>
+            </Tooltip>
 
-      <div className="relative flex flex-col lg:flex-row items-center gap-2 w-full">
-        <div className="flex items-center gap-2 w-full lg:w-auto flex-1">
-        <div id="tour-property-search" className="flex-1">
+            {/* 👤 Own Properties Chip */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  id="tour-property-my-filter"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const nextVal =
+                      filters.assignedToMe === "true" ? "" : "true";
+                    setFilters({ ...filters, assignedToMe: nextVal });
+                    const params = new URLSearchParams(searchParams.toString());
+                    if (nextVal === "true") params.set("assignedToMe", "true");
+                    else params.delete("assignedToMe");
+                    params.delete("page");
+                    startTransition(() => {
+                      router.push(
+                        `/protected/properties?${params.toString()}#table`,
+                        { scroll: false },
+                      );
+                    });
+                  }}
+                  className={cn(
+                    "h-9 rounded-full px-4 border-dashed transition-all duration-300",
+                    filters.assignedToMe === "true"
+                      ? "bg-blue-50 border-blue-400 text-blue-700 shadow-sm ring-1 ring-blue-200"
+                      : "bg-white text-slate-500 hover:border-blue-300 hover:bg-slate-50 hover:text-blue-600",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "mr-1.5 flex h-2 w-2 rounded-full transition-colors",
+                      filters.assignedToMe === "true"
+                        ? "bg-blue-600 animate-pulse"
+                        : "bg-slate-300",
+                    )}
+                  />
+                  <FaUser className="w-3 h-3 mr-1.5" /> ทรัพย์ของฉัน
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="bottom"
+                className="bg-slate-900 border-slate-800 text-white font-medium"
+              >
+                แสดงเฉพาะรายการทรัพย์สินที่คุณได้รับมอบหมาย
+              </TooltipContent>
+            </Tooltip>
+          </div>
+      </div>
+
+      <div className="relative flex flex-col sm:flex-row items-stretch lg:items-center gap-3 w-full">
+        {/* 1. ช่องค้นหา: กว้างเต็มพื้นที่บนมือถือ, ยืดตามพื้นที่เหลือบน Desktop */}
+        <div id="tour-property-search" className="w-full lg:flex-1">
           <QuickSearch
             value={filters.q}
             onChange={(q) => setFilters({ ...filters, q })}
@@ -251,129 +382,38 @@ export function PropertyFilters({
           />
         </div>
 
-        {/* [LOADING PROGRESS BAR] - High Visibility at Table Boundary */}
+        {/* [LOADING PROGRESS BAR] */}
         {isPending && (
           <div className="absolute top-full left-0 right-0 h-0.5 overflow-hidden rounded-full bg-indigo-50 z-10 mt-2">
             <div className="h-full w-1/3 animate-loading-bar bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(79,70,229,0.5)]" />
           </div>
         )}
 
-        {/* Mobile Filter Trigger */}
-        <div className="flex lg:hidden gap-2">
-          <AdvancedFilters
-            open={open}
-            setOpen={setOpen}
-            filters={filters}
-            setFilters={setFilters}
-            applyFilters={applyFilters}
-            clearFilters={clearFilters}
-            activeFilterCount={activeFilterCount}
-            totalCount={totalCount}
-            filterMetadata={filterMetadata}
-          />
-          <TrashButton />
+        {/* 2. คอนเทนเนอร์รวมปุ่ม Action และ Filter */}
+        {/* บนมือถือใช้ flex-col เพื่อแยกชั้นปุ่มหลักกับชิป, บน Desktop ใช้ flex-row ให้อยู่บรรทัดเดียวกัน */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+          {/* 2.1 กลุ่มปุ่มหลัก (ตัวกรอง & ล้างค่า) - แสดงเฉพาะบน Mobile/Tablet */}
+          <div className="flex lg:hidden items-center gap-2 w-full sm:w-auto">
+            {/* ให้ปุ่มตัวกรองขยายเต็มพื้นที่ (flex-1) คู่กับปุ่มถังขยะ จะทำให้ UI ดูแน่นและเป็นระเบียบขึ้น */}
+            <div className="flex-1 sm:flex-initial">
+              <AdvancedFilters
+                open={open}
+                setOpen={setOpen}
+                filters={filters}
+                setFilters={setFilters}
+                applyFilters={applyFilters}
+                clearFilters={clearFilters}
+                activeFilterCount={activeFilterCount}
+                totalCount={totalCount}
+                filterMetadata={filterMetadata}
+              />
+            </div>
+            <div className="shrink-0">
+              <TrashButton />
+            </div>
+          </div>
         </div>
-
-        {/* ✨ Sentinel Quick Filter Chip & Own Properties Chip */}
-        <div className="flex items-center gap-2 ml-auto lg:ml-0">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                id="tour-property-ai-filter"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const nextVal =
-                    filters.needsAiReview === "true" ? "" : "true";
-                  setFilters({ ...filters, needsAiReview: nextVal });
-                  const params = new URLSearchParams(searchParams.toString());
-                  if (nextVal === "true") params.set("needsAiReview", "true");
-                  else params.delete("needsAiReview");
-                  params.delete("page");
-                  startTransition(() => {
-                    router.push(
-                      `/protected/properties?${params.toString()}#table`,
-                      { scroll: false },
-                    );
-                  });
-                }}
-                className={cn(
-                  "h-9 rounded-full px-4 border-dashed transition-all duration-300",
-                  filters.needsAiReview === "true"
-                    ? "bg-indigo-50! border-indigo-400 text-indigo-700! shadow-sm ring-1 ring-indigo-200"
-                    : "bg-white! text-slate-500! hover:border-indigo-300 hover:bg-slate-50",
-                )}
-              >
-                <span
-                  className={cn(
-                    "mr-1.5 flex h-2 w-2 rounded-full",
-                    filters.needsAiReview === "true"
-                      ? "bg-indigo-600 animate-pulse"
-                      : "bg-slate-300",
-                  )}
-                />
-                ✨ ตรวจร่าง AI
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="bottom"
-              className="bg-slate-900 border-slate-800 text-white font-medium"
-            >
-              แสดงเฉพาะรายการที่ AI ร่างข้อมูลให้ (รอคุณตรวจสอบ)
-            </TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                id="tour-property-my-filter"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const nextVal =
-                    filters.assignedToMe === "true" ? "" : "true";
-                  setFilters({ ...filters, assignedToMe: nextVal });
-                  const params = new URLSearchParams(searchParams.toString());
-                  if (nextVal === "true") params.set("assignedToMe", "true");
-                  else params.delete("assignedToMe");
-                  params.delete("page");
-                  startTransition(() => {
-                    router.push(
-                      `/protected/properties?${params.toString()}#table`,
-                      { scroll: false },
-                    );
-                  });
-                }}
-                className={cn(
-                  "h-9 rounded-full px-4 border-dashed transition-all duration-300",
-                  filters.assignedToMe === "true"
-                    ? "bg-blue-50! border-blue-400 text-blue-700! shadow-sm ring-1 ring-blue-200"
-                    : "bg-white! text-slate-500! hover:border-blue-300 hover:bg-slate-50",
-                )}
-              >
-                <span
-                  className={cn(
-                    "mr-1.5 flex h-2 w-2 rounded-full",
-                    filters.assignedToMe === "true"
-                      ? "bg-blue-600 animate-pulse"
-                      : "bg-slate-300",
-                  )}
-                />
-                <FaUser className="w-3 h-3 mr-2"/> ทรัพย์ของฉัน
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent
-              side="bottom"
-              className="bg-slate-900 border-slate-800 text-white font-medium"
-            >
-              แสดงเฉพาะรายการทรัพย์สินที่คุณได้รับมอบหมาย
-            </TooltipContent>
-          </Tooltip>
-        </div>
-
-        
       </div>
-
       <div className="hidden lg:flex items-center gap-2">
         <QuickSort
           value={`${filters.sortBy}-${filters.sortOrder}`}
@@ -482,7 +522,6 @@ export function PropertyFilters({
         )}
         <TrashButton />
       </div>
-    </div>
     </div>
   );
 }

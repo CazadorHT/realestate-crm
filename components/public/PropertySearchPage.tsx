@@ -49,6 +49,7 @@ export function PropertySearchPage({
     availableQuickFilters,
     availableBedrooms,
     availableStations,
+    allStations,
     matchesFilters,
   } = usePropertyFiltering(properties, { ...filters, keyword: filters.debouncedKeyword }, serverFacets);
 
@@ -141,6 +142,7 @@ export function PropertySearchPage({
         availableQuickFilters={availableQuickFilters}
         availableBedrooms={availableBedrooms}
         availableStations={availableStations}
+        allStations={allStations}
         properties={properties}
         matchesFilters={matchesFilters}
         setBulkFilters={filters.setBulkFilters}

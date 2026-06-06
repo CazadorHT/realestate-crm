@@ -73,6 +73,12 @@ export type PropertyCardProps = {
   min_contract_months?: number | null;
   meta_keywords?: string[] | null;
   near_transit?: boolean | null;
+  transit_type?: string | null;
+  transit_station_name?: string | null;
+  transit_station_name_en?: string | null;
+  transit_station_name_cn?: string | null;
+  transit_station_name_ru?: string | null;
+  transit_distance_meters?: number | null;
   is_fully_furnished?: boolean | null;
   is_pet_friendly?: boolean | null;
   is_foreigner_quota?: boolean | null;
@@ -281,7 +287,7 @@ function PropertyCardComponent({
         />
       </div>
 
-      <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 mt-0 md:mt-1 gap-y-2 sm:gap-y-2 md:gap-y-3 grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col relative">
+      <div className="pt-2 pb-4 sm:pb-5 md:pb-6 px-4 mt-0 md:mt-1 gap-y-2 sm:gap-y-2  grow min-h-[140px] sm:min-h-[160px] md:min-h-[180px] flex flex-col relative">
         <PropertyCardInfo 
           property={property} 
           areaProvince={areaProvince} 

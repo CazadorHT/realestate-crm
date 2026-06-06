@@ -31,6 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 import { MobileFilterSheet } from "./MobileFilterSheet";
 import { MagicAiSearch } from "./MagicAiSearch";
+import { formatStationLabel } from "@/lib/property-utils";
 
 import { MdManageSearch, MdOutlinePets as PetIcon, MdWork as WorkIcon } from "react-icons/md";
 import { FaFire as FireIcon, FaTrainSubway as TrainIcon } from "react-icons/fa6";
@@ -121,6 +122,13 @@ interface MobileFiltersProps {
   setBulkFilters: (updates: any) => void;
   transitStation: string;
   setTransitStation: (v: string) => void;
+  allStations?: {
+    name: string;
+    type: string;
+    name_en?: string | null;
+    name_cn?: string | null;
+    name_ru?: string | null;
+  }[];
 }
 
 export function MobileFilters({
@@ -186,18 +194,86 @@ export function MobileFilters({
   setBulkFilters,
   transitStation,
   setTransitStation,
+  allStations,
 }: MobileFiltersProps) {
   const [trainTypeFilter, setTrainTypeFilter] = useState<string>("ALL");
 
+  const getNormalizedType = (type: string): string => {
+    const t = type.toUpperCase();
+    if (t === "BTS" || t === "GOLD") return "BTS";
+    if (t.startsWith("MRT")) return "MRT";
+    if (t === "ARL") return "ARL";
+    if (t === "SRT_RED" || t === "SRT") return "SRT";
+    if (t === "BRT") return "BRT";
+    return t;
+  };
+
+  const getTypeBadgeClass = (type: string): string => {
+    const norm = getNormalizedType(type);
+    switch (norm) {
+      case "BTS":
+        return "bg-emerald-600";
+      case "MRT":
+        return "bg-blue-800";
+      case "ARL":
+        return "bg-rose-600";
+      case "SRT":
+        return "bg-red-700";
+      case "BRT":
+        return "bg-teal-600";
+      default:
+        return "bg-slate-500";
+    }
+  };
+
+  const getTypeTabClass = (type: string, isActive: boolean): string => {
+    if (!isActive) return "bg-white text-slate-600 border-slate-200 hover:bg-slate-50";
+    const norm = getNormalizedType(type);
+    switch (norm) {
+      case "BTS":
+        return "bg-emerald-600 text-white border-emerald-600 shadow-xs";
+      case "MRT":
+        return "bg-blue-800 text-white border-blue-800 shadow-xs";
+      case "ARL":
+        return "bg-rose-600 text-white border-rose-600 shadow-xs";
+      case "SRT":
+        return "bg-red-700 text-white border-red-700 shadow-xs";
+      case "BRT":
+        return "bg-teal-600 text-white border-teal-600 shadow-xs";
+      default:
+        return "bg-slate-700 text-white border-slate-700 shadow-xs";
+    }
+  };
+
   const trainTypes = useMemo(() => {
-    const types = new Set(availableStations.map(s => s.type));
+    const list = allStations && allStations.length > 0 ? allStations : availableStations;
+    const types = new Set(
+      list
+        .filter((s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD")
+        .map((s) => getNormalizedType(s.type))
+    );
     return Array.from(types).filter(Boolean).sort();
-  }, [availableStations]);
+  }, [availableStations, allStations]);
+
+  const mergedStations = useMemo(() => {
+    const list = allStations && allStations.length > 0 ? allStations : availableStations;
+    const filteredList = list.filter((s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD");
+    const countsMap = new Map(availableStations.map((s) => [s.name, s.count]));
+
+    return filteredList.map((s) => ({
+      ...s,
+      count: countsMap.get(s.name) || 0,
+    })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  }, [availableStations, allStations]);
 
   const filteredStations = useMemo(() => {
-    if (trainTypeFilter === "ALL") return availableStations;
-    return availableStations.filter(s => s.type === trainTypeFilter);
-  }, [availableStations, trainTypeFilter]);
+    return mergedStations.filter((station) => {
+      if (trainTypeFilter !== "ALL" && getNormalizedType(station.type) !== trainTypeFilter) {
+        return false;
+      }
+      return true;
+    });
+  }, [mergedStations, trainTypeFilter]);
 
   const getPropertyIcon = (val: string, isActive: boolean) => {
     const iconClass = "w-4 h-4 transition-colors";
@@ -453,7 +529,13 @@ export function MobileFilters({
                   <div className="flex">
                     <div className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-100 rounded-2xl text-blue-700 text-xs font-bold shadow-xs">
                       <TrainIcon className="w-3.5 h-3.5 text-blue-500" />
-                      <span>{transitStation.replace("_", " ")}</span>
+                      <span>
+                        {(() => {
+                          const found = (allStations || availableStations).find((s) => s.name === transitStation);
+                          const cleanName = transitStation.replace("_", " ");
+                          return found ? formatStationLabel(found.type, cleanName, language) : cleanName;
+                        })()}
+                      </span>
                       <button 
                         onClick={() => setTransitStation("")}
                         className="ml-1 p-0.5 rounded-full bg-blue-200/50 text-blue-600"
@@ -540,8 +622,8 @@ export function MobileFilters({
                       className={cn(
                         "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border shrink-0",
                         trainTypeFilter === "ALL"
-                          ? "bg-white border-blue-200 text-blue-600 shadow-sm"
-                          : "bg-transparent border-transparent text-slate-400"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                       )}
                     >
                       {t("search.all")}
@@ -552,9 +634,7 @@ export function MobileFilters({
                         onClick={() => setTrainTypeFilter(type)}
                         className={cn(
                           "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border shrink-0",
-                          trainTypeFilter === type
-                            ? "bg-white border-blue-200 text-blue-600 shadow-sm"
-                            : "bg-transparent border-transparent text-slate-400"
+                          getTypeTabClass(type, trainTypeFilter === type)
                         )}
                       >
                         {type}
@@ -574,16 +654,17 @@ export function MobileFilters({
                             : "bg-white border-slate-100 text-slate-600"
                         )}
                       >
-                        {transitStation === s.name ? (
-                          <svg className="w-3.5 h-3.5 animate-in zoom-in-50 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        {transitStation === s.name && (
+                          <svg className="w-3.5 h-3.5 animate-in zoom-in-50 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
-                        ) : (
-                          <span className={cn(
-                            "w-1.5 h-1.5 rounded-full",
-                            s.type === "BTS" ? "bg-green-500" : s.type === "MRT" ? "bg-blue-600" : "bg-slate-400"
-                          )} />
                         )}
+                        <span className={cn(
+                          "text-[8px] font-extrabold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0",
+                          getTypeBadgeClass(s.type)
+                        )}>
+                          {getNormalizedType(s.type)}
+                        </span>
                         {getLocaleValue({ name: s.name, name_en: s.name_en, name_cn: s.name_cn, name_ru: s.name_ru }, "name", language).replace("_", " ")}
                         <span className={cn(
                           "text-[10px]",
