@@ -33,7 +33,7 @@ function AvatarImage({
       data-slot="avatar-image"
       src={src}
       alt={alt}
-      className={cn("aspect-square size-full object-contain p-2 bg-white", className)}
+      className={cn("aspect-square size-full object-cover", className)}
       {...props}
     />
   )
