@@ -694,26 +694,30 @@ export function PropertyForm({
                 {/* Step contents */}
                 {renderStepContent()}
 
-                {form.watch("requires_ai_review") && (
-                  <AiReviewBanner
-                    type="property"
-                    onConfirm={userRole === "ADMIN" ? () => form.setValue("requires_ai_review", false, { shouldDirty: true }) : undefined}
-                    isVerifying={isActuallySubmitting}
-                  />
-                )}
+                <div className="sticky bottom-0 sm:bottom-6 z-50 w-full mt-6 sm:mt-6 flex flex-col gap-2">
+                  {form.watch("requires_ai_review") && (
+                    <AiReviewBanner
+                      type="property"
+                      onConfirm={() => form.setValue("requires_ai_review", false, { shouldDirty: true })}
+                      isVerifying={isActuallySubmitting}
+                      className="mb-0 shadow-lg border border-amber-200/80 rounded-2xl overflow-hidden"
+                    />
+                  )}
 
-                <PropertyFormNavigation
-                  currentStep={currentStep}
-                  totalSteps={7}
-                  mode={mode}
-                  uploadSessionId={uploadSessionId}
-                  isDirty={form.formState.isDirty}
-                  isSubmitting={isActuallySubmitting}
-                  onBack={handleBack}
-                  onNext={handleNext}
-                  onSubmit={submitNow}
-                  form={form}
-                />
+                  <PropertyFormNavigation
+                    currentStep={currentStep}
+                    totalSteps={7}
+                    mode={mode}
+                    uploadSessionId={uploadSessionId}
+                    isDirty={form.formState.isDirty}
+                    isSubmitting={isActuallySubmitting}
+                    onBack={handleBack}
+                    onNext={handleNext}
+                    onSubmit={submitNow}
+                    form={form}
+                    className="sticky-none relative bottom-auto sm:bottom-auto z-auto mt-0"
+                  />
+                </div>
               </form>
             </Form>
           </TabsContent>
@@ -759,26 +763,30 @@ export function PropertyForm({
 
               {renderStepContent()}
 
-              {form.watch("requires_ai_review") && (
-                <AiReviewBanner
-                  type="property"
-                  onConfirm={userRole === "ADMIN" ? () => form.setValue("requires_ai_review", false, { shouldDirty: true }) : undefined}
-                  isVerifying={isActuallySubmitting}
-                />
-              )}
+              <div className="sticky bottom-0 sm:bottom-6 z-50 w-full mt-6 sm:mt-12 flex flex-col gap-2">
+                {form.watch("requires_ai_review") && (
+                  <AiReviewBanner
+                    type="property"
+                    onConfirm={() => form.setValue("requires_ai_review", false, { shouldDirty: true })}
+                    isVerifying={isActuallySubmitting}
+                    className="mb-0 shadow-lg border border-amber-200/80 rounded-2xl overflow-hidden"
+                  />
+                )}
 
-              <PropertyFormNavigation
-                currentStep={currentStep}
-                totalSteps={7}
-                mode={mode}
-                uploadSessionId={uploadSessionId}
-                isDirty={form.formState.isDirty}
-                isSubmitting={isActuallySubmitting}
-                onBack={handleBack}
-                onNext={handleNext}
-                onSubmit={submitNow}
-                form={form}
-              />
+                <PropertyFormNavigation
+                  currentStep={currentStep}
+                  totalSteps={7}
+                  mode={mode}
+                  uploadSessionId={uploadSessionId}
+                  isDirty={form.formState.isDirty}
+                  isSubmitting={isActuallySubmitting}
+                  onBack={handleBack}
+                  onNext={handleNext}
+                  onSubmit={submitNow}
+                  form={form}
+                  className="sticky-none relative bottom-auto sm:bottom-auto z-auto mt-0"
+                />
+              </div>
             </form>
           </Form>
         </>

@@ -8,6 +8,7 @@ interface AiReviewBannerProps {
   isVerifying?: boolean;
   className?: string;
   type?: "property" | "blog";
+  isSticky?: boolean;
 }
 
 export function AiReviewBanner({
@@ -15,11 +16,13 @@ export function AiReviewBanner({
   isVerifying,
   className,
   type = "property",
+  isSticky = false,
 }: AiReviewBannerProps) {
   return (
     <div
       className={cn(
-        "sticky top-0 z-50 mb-6 w-full animate-in slide-in-from-top duration-500",
+        isSticky ? "sticky top-0 z-50" : "relative",
+        "mb-6 w-full animate-in slide-in-from-top duration-500",
         className
       )}
     >
@@ -41,7 +44,7 @@ export function AiReviewBanner({
               </h4>
               <p className="text-[11px] sm:text-xs text-amber-800/70 font-medium leading-relaxed max-w-2xl">
                 {type === "property" 
-                  ? "ทรัพย์สินนี้มีการใช้ AI ช่วยสร้างรายละเอียดหรือแปลภาษา ระบบจะบังคับเป็นแบบร่าง (Draft) จนกว่าแอดมินจะกดยืนยัน"
+                  ? "ทรัพย์สินนี้มีการใช้ AI ช่วยสร้างรายละเอียดหรือแปลภาษา กรุณาตรวจสอบและปรับปรุงความถูกต้องของข้อมูลก่อนกดยืนยัน"
                   : "บทความนี้มีการใช้ AI สร้างเนื้อหาหรือแปลภาษา กรุณาตรวจสอบความถูกต้องและสำนวนก่อนเผยแพร่จริง"}
               </p>
             </div>

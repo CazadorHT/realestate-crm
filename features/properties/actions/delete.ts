@@ -21,20 +21,43 @@ export async function deletePropertyAction(formData: FormData) {
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
-    if (!tenantId) throw new Error("Tenant ID is required but missing");
 
     const id = formData.get("id") as string | null;
     if (!id) throw new Error("Missing property id");
 
-    // 0) โหลดเจ้าของทรัพย์เพื่อเช็คสิทธิ (owner/admin)
+    // 0) โหลดเจ้าของทรัพย์เพื่อเช็คสิทธิ (owner/admin) โดยดึงข้อมูลโดยตรงก่อน เพื่อเช็คข้ามสาขาแบบปลอดภัยได้
     const { data: property, error: propErr } = await supabase
       .from("properties_core")
       .select("id, created_by, tenant_id")
       .eq("id", id)
-      .eq("tenant_id", tenantId)
       .single();
 
     if (propErr || !property) throw new Error("Property not found");
+
+    const propertyTenantId = property.tenant_id;
+    if (!propertyTenantId) throw new Error("Property does not belong to any tenant/branch");
+
+    // ตรวจสอบสิทธิ์สำหรับคนที่ไม่ใช่ ADMIN
+    if (role !== "ADMIN") {
+      // ถ้าเลือกเจาะจงสาขา (tenantId) ต้องตรงกับสาขาของทรัพย์
+      if (tenantId && tenantId !== propertyTenantId) {
+        throw new Error("Forbidden: You do not have access to this tenant's property");
+      }
+      
+      // ถ้าเลือก "ALL" (tenantId เป็น undefined) ให้ตรวจความเป็นสมาชิกของสาขานี้
+      if (!tenantId) {
+        const { data: member, error: memberErr } = await supabase
+          .from("tenant_members_v3")
+          .select("role")
+          .eq("tenant_id", propertyTenantId)
+          .eq("identity_id", user.id)
+          .maybeSingle();
+
+        if (memberErr || !member) {
+          throw new Error("Forbidden: You are not a member of this property's tenant/branch");
+        }
+      }
+    }
 
     // 0.1) Authorization: Only Owner, Admin or Manager can delete
     const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
@@ -78,7 +101,7 @@ export async function deletePropertyAction(formData: FormData) {
       .from("properties_core")
       .delete()
       .eq("id", id)
-      .eq("tenant_id", tenantId);
+      .eq("tenant_id", propertyTenantId);
 
     if (error) {
       if (error.code === "23503") {

@@ -64,11 +64,6 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
 
-    // 🛡️ Elite Hardening: Admins can bypass tenantId filter, others cannot.
-    if (role !== "ADMIN" && !tenantId) {
-      throw new Error("Tenant ID is required but missing for staff roles");
-    }
-
     const { data: core, error: coreErr } = await supabase
       .from("properties_core")
       .select("id, tenant_id, branch_id, status, listing_type, property_type, sale_price, rent_price, currency, floor_area, land_area, is_exclusive, is_hot_deal, verified, created_at, updated_at, owner_id, assigned_to, bedrooms, bathrooms, price_per_sqm")
@@ -76,6 +71,35 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       .single();
 
     if (coreErr || !core) throw coreErr || new Error("Property not found");
+
+    // 🛡️ Elite Hardening: Verify tenant access for non-admins
+    if (role !== "ADMIN") {
+      const propertyTenantId = core.tenant_id;
+      
+      if (!propertyTenantId) {
+        throw new Error("Property does not belong to any tenant/branch");
+      }
+
+      // If user has a specific active tenant context, ensure it matches the property's tenant
+      if (tenantId && tenantId !== propertyTenantId) {
+        throw new Error("Forbidden: You do not have access to this tenant's property");
+      }
+
+      // If user has cross-branch context (tenantId is undefined due to "ALL" cookie),
+      // we must verify they are a member of the property's tenant
+      if (!tenantId) {
+        const { data: member, error: memberErr } = await supabase
+          .from("tenant_members_v3")
+          .select("role")
+          .eq("tenant_id", propertyTenantId)
+          .eq("identity_id", user.id)
+          .maybeSingle();
+
+        if (memberErr || !member) {
+          throw new Error("Forbidden: You are not a member of this property's tenant/branch");
+        }
+      }
+    }
 
     const { data: details, error: detailsErr } = await supabase
       .from("properties_details")
@@ -181,14 +205,10 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
 export async function getPropertyWithImages(
   id: string,
 ): Promise<PropertyWithImages> {
-  const { supabase, role, tenantId } = await requireAuthContext();
+  const { role } = await requireAuthContext();
   assertStaff(role);
 
-  // 🛡️ Elite Hardening: Admins can bypass tenantId filter
-  if (role !== "ADMIN" && !tenantId) {
-    throw new Error("Tenant ID is required but missing");
-  }
-
+  // Verification is handled inside getPropertyById
   return getPropertyById(id) as Promise<PropertyWithImages>;
 }
 
