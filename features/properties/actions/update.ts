@@ -527,8 +527,31 @@ export async function updatePropertyStatusAction(input: {
       .single();
 
     if (fetchErr || !existing) return { success: false, message: "ไม่พบข้อมูลทรัพย์" };
-    if (existing.tenant_id !== tenantId && role !== "ADMIN") {
-      return { success: false, message: "Unauthorized" };
+    
+    const propertyTenantId = existing.tenant_id;
+    if (!propertyTenantId) return { success: false, message: "ข้อมูลทรัพย์ไม่มีข้อมูลสาขาประกอบอยู่" };
+
+    // 🛡️ Elite Hardening: Verify tenant access for non-admins
+    if (role !== "ADMIN") {
+      // If user has a specific active tenant context, ensure it matches the property's tenant
+      if (tenantId && tenantId !== propertyTenantId) {
+        return { success: false, message: "Unauthorized: You do not have access to this branch" };
+      }
+
+      // If user has cross-branch context (tenantId is undefined due to "ALL" cookie),
+      // we must verify they are a member of the property's tenant
+      if (!tenantId) {
+        const { data: member } = await supabase
+          .from("tenant_members_v3")
+          .select("role")
+          .eq("tenant_id", propertyTenantId)
+          .eq("identity_id", user.id)
+          .maybeSingle();
+
+        if (!member) {
+          return { success: false, message: "Unauthorized: You are not a member of this branch" };
+        }
+      }
     }
 
     type MultiLang = { th?: string; en?: string; cn?: string; ru?: string };
@@ -552,7 +575,7 @@ export async function updatePropertyStatusAction(input: {
         p_property_id: input.id,
         p_adjustment: (input.status === "SOLD" || input.status === "RENTED") ? 1 : -1,
         p_deal_type: input.status === "RENTED" ? "RENT" : "SALE",
-        p_tenant_id: tenantId!
+        p_tenant_id: propertyTenantId
       });
 
     if (updateError) {

@@ -40,9 +40,8 @@ export async function updateSession(request: NextRequest) {
   );
 
   // 🛡️ [PERFORMANCE] Check for auth cookie presence before calling getUser()
-  const hasAuthCookie = request.cookies
-    .getAll()
-    .some((c) => c.name.includes("-auth-token"));
+  const allCookies = request.cookies.getAll();
+  const hasAuthCookie = allCookies.some((c) => c.name.includes("-auth-token"));
 
   let user = null;
   if (hasAuthCookie) {
