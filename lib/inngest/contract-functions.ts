@@ -39,12 +39,7 @@ export const dailyContractExpiryCheck = inngest.createFunction(
           ),
           leads (
             full_name,
-            assigned_to,
-            agent:identities_v3!assigned_to (
-              profiles (
-                telegram_id
-              )
-            )
+            assigned_to
           )
         `)
         .in("transaction_end_date", targetDates)
@@ -60,6 +55,28 @@ export const dailyContractExpiryCheck = inngest.createFunction(
       let sentCount = 0;
       const now = new Date();
 
+      // Fetch telegram IDs for agents
+      const agentIds = expiringContracts
+        .map((c: any) => c.leads?.assigned_to)
+        .filter(Boolean) as string[];
+
+      const telegramMap: Record<string, string> = {};
+      if (agentIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, telegram_id")
+          .in("id", agentIds)
+          .not("telegram_id", "is", null);
+        
+        if (profiles) {
+          for (const p of profiles) {
+            if (p.telegram_id) {
+              telegramMap[p.id] = p.telegram_id;
+            }
+          }
+        }
+      }
+
       for (const contract of expiringContracts) {
         if (!contract.transaction_end_date) continue;
         const endDate = new Date(contract.transaction_end_date);
@@ -70,16 +87,14 @@ export const dailyContractExpiryCheck = inngest.createFunction(
           properties: { title: string } | null;
           leads: { 
             full_name: string | null; 
-            agent: { 
-              profiles: { telegram_id: string | null } | null;
-            } | null;
+            assigned_to: string | null;
           } | null;
         };
 
         const deal = contract as unknown as JoinedDeal | null;
         const propertyName = deal?.properties?.title || "Unknown Property";
         const customerName = deal?.leads?.full_name || "Unknown Customer";
-        const agentTgId = deal?.leads?.agent?.profiles?.telegram_id;
+        const agentTgId = deal?.leads?.assigned_to ? telegramMap[deal.leads.assigned_to] : undefined;
 
         const message = formatContractExpiryNotification({
           contractId: contract.id,

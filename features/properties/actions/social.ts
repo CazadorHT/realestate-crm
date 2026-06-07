@@ -631,6 +631,78 @@ export async function renderPropertySocialTemplate(
 }
 
 /**
+ * Helper to decrypt and populate agent profile details, falling back to assigned_to/created_by if no property agents are explicitly linked.
+ */
+export async function populateAgentProfiles(supabase: any, property: any) {
+  if (!property) return;
+
+  const decryptOrRaw = (val: any) => {
+    if (!val) return "";
+    try {
+      return decrypt(val) || val;
+    } catch {
+      return val;
+    }
+  };
+
+  const hasAgents = property.property_agents && property.property_agents.length > 0;
+
+  if (!hasAgents) {
+    const fallbackId = property.assigned_to || property.created_by;
+    if (fallbackId) {
+      const { data: identityData } = await supabase
+        .from("identities_v3")
+        .select("display_name, phone, line_id")
+        .eq("id", fallbackId)
+        .maybeSingle();
+
+      const { data: staffProfile } = await supabase
+        .from("profiles")
+        .select("full_name, phone, line_id")
+        .eq("id", fallbackId)
+        .maybeSingle();
+
+      property.property_agents = [
+        {
+          agent_id: fallbackId,
+          profiles: {
+            full_name: decryptOrRaw(identityData?.display_name) || staffProfile?.full_name || identityData?.display_name || "",
+            phone: decryptOrRaw(identityData?.phone) || staffProfile?.phone || identityData?.phone || "",
+            line_id: decryptOrRaw(identityData?.line_id) || staffProfile?.line_id || identityData?.line_id || "",
+          },
+        },
+      ];
+    }
+  } else {
+    for (const pa of property.property_agents) {
+      if (pa.agent_id) {
+        const { data: staffProfile } = await supabase
+          .from("profiles")
+          .select("full_name, phone, line_id")
+          .eq("id", pa.agent_id)
+          .maybeSingle();
+
+        if (staffProfile) {
+          pa.profiles = {
+            ...pa.profiles,
+            full_name: decryptOrRaw(pa.profiles?.full_name) || staffProfile.full_name || pa.profiles?.full_name || "",
+            phone: decryptOrRaw(pa.profiles?.phone) || staffProfile.phone || pa.profiles?.phone || "",
+            line_id: decryptOrRaw(pa.profiles?.line_id) || staffProfile.line_id || pa.profiles?.line_id || "",
+          };
+        } else if (pa.profiles) {
+          pa.profiles = {
+            ...pa.profiles,
+            full_name: decryptOrRaw(pa.profiles.full_name) || "",
+            phone: decryptOrRaw(pa.profiles.phone) || "",
+            line_id: decryptOrRaw(pa.profiles.line_id) || "",
+          };
+        }
+      }
+    }
+  }
+}
+
+/**
  * Get social content data for posting
  */
 export async function getPropertySocialContent(
@@ -660,33 +732,7 @@ export async function getPropertySocialContent(
 
   const property = propData as any;
 
-  if (property && property.property_agents) {
-    for (const pa of property.property_agents) {
-      if (pa.agent_id) {
-        const { data: staffProfile } = await supabase
-          .from("profiles")
-          .select("full_name, phone, line_id")
-          .eq("id", pa.agent_id)
-          .maybeSingle();
-
-        if (staffProfile) {
-          pa.profiles = {
-            ...pa.profiles,
-            full_name: decrypt(pa.profiles?.full_name) || staffProfile.full_name || pa.profiles?.full_name || "",
-            phone: decrypt(pa.profiles?.phone) || staffProfile.phone || pa.profiles?.phone || "",
-            line_id: decrypt(pa.profiles?.line_id) || staffProfile.line_id || pa.profiles?.line_id || "",
-          };
-        } else if (pa.profiles) {
-          pa.profiles = {
-            ...pa.profiles,
-            full_name: decrypt(pa.profiles.full_name) || "",
-            phone: decrypt(pa.profiles.phone) || "",
-            line_id: decrypt(pa.profiles.line_id) || "",
-          };
-        }
-      }
-    }
-  }
+  await populateAgentProfiles(supabase, property);
 
   const settings = await getSiteSettings();
 
@@ -1000,6 +1046,8 @@ export async function postPropertyToMetaAction(
       .single();
 
     if (propError || !p) throw new Error("ไม่พบข้อมูลอสังหาริมทรัพย์");
+
+    await populateAgentProfiles(supabase, p);
 
     const contentData = await getPropertySocialContent(
       propertyId,
