@@ -12,13 +12,16 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Download } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { FaUser } from "react-icons/fa";
+import { exportPropertiesAction } from "@/features/properties/export-action";
+import { downloadBase64File, MIME_TYPES } from "@/lib/download-utils";
+import { startProcess, finishProcess } from "@/lib/process-monitor";
 
 type Filters = {
   q: string;
@@ -78,8 +81,36 @@ export function PropertyFilters({
   const router = useRouter();
   const searchParams = useSearchParams();
   const [open, setOpen] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [isPending, startTransition] = useTransition();
   const isInitialMount = useRef(true);
+
+  const handleExportAllWithFilters = async () => {
+    const processId = startProcess("กำลังส่งออกข้อมูล Excel", { type: "EXPORT" });
+    setIsExporting(true);
+    try {
+      const result = await exportPropertiesAction(undefined, filters);
+      if (result.success && result.data && result.filename) {
+        const downloaded = downloadBase64File(
+          result.data,
+          result.filename,
+          MIME_TYPES.EXCEL,
+        );
+        if (downloaded) {
+          finishProcess(processId, "SUCCESS", `Export ทั้งหมด ${result.count} รายการสำเร็จ`);
+        } else {
+          finishProcess(processId, "ERROR", "ดาวน์โหลดไฟล์ไม่สำเร็จ");
+        }
+      } else {
+        finishProcess(processId, "ERROR", result.message || "Export ไม่สำเร็จ");
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการ Export";
+      finishProcess(processId, "ERROR", msg);
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const [filters, setFilters] = useState<Filters>({
     q: searchParams.get("q") || "",
@@ -210,165 +241,180 @@ export function PropertyFilters({
     <div className="space-y-4 w-full">
       {/* 🌟 Premium Status Tab Filter (Phase 1 Quick Win) */}
       <div className="flex flex-col xl:flex-row items-center gap-2 xl:gap-0 justify-between w-full">
-      <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-2xl w-full max-w-fit border border-slate-200/60 shadow-inner overflow-x-auto">
-        {[
-          {
-            id: "ALL",
-            label: "🌐 ทั้งหมด (All)",
-            activeClass: "bg-white text-slate-800 shadow-sm font-bold",
-          },
-          {
-            id: "ACTIVE",
-            label: "🟢 ใช้งาน (Active)",
-            activeClass:
-              "bg-emerald-500 text-white shadow-md shadow-emerald-100 font-bold",
-          },
-          {
-            id: "DRAFT",
-            label: "⚠️ แบบร่าง (Draft)",
-            activeClass:
-              "bg-amber-500 text-white shadow-md shadow-amber-100 font-bold",
-          },
-          {
-            id: "ARCHIVED",
-            label: "📦 เก็บถาวร (Archived)",
-            activeClass:
-              "bg-slate-700 text-white shadow-md shadow-slate-200 font-bold",
-          },
-          {
-            id: "SOLD",
-            label: "🤝 ปิดการขาย (Sold)",
-            activeClass:
-              "bg-blue-600 text-white shadow-md shadow-blue-100 font-bold",
-          },
-        ].map((tab) => {
-          const isActive = filters.status === tab.id;
-          return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => {
-                setFilters({ ...filters, status: tab.id });
-                const params = new URLSearchParams(searchParams.toString());
-                if (tab.id === "ALL") params.delete("status");
-                else params.set("status", tab.id);
-                params.delete("page");
-                startTransition(() => {
-                  router.push(
-                    `/protected/properties?${params.toString()}#table`,
-                    { scroll: false },
-                  );
-                });
-              }}
-              className={cn(
-                "px-4 py-2 rounded-xl text-xs font-medium transition-all duration-300 shrink-0 flex items-center gap-2 cursor-pointer",
-                isActive
-                  ? tab.activeClass
-                  : "text-slate-600 hover:text-slate-900 hover:bg-white/50",
-              )}
-            >
-              {tab.label}
-            </button>
-          );
-        })}
-      </div>
+        <div className="flex items-center gap-1.5 p-1 bg-slate-100/80 rounded-2xl w-full max-w-fit border border-slate-200/60 shadow-inner overflow-x-auto">
+          {[
+            {
+              id: "ALL",
+              label: "🌐 ทั้งหมด (All)",
+              activeClass: "bg-white text-slate-800 shadow-sm font-bold",
+            },
+            {
+              id: "ACTIVE",
+              label: "🟢 ใช้งาน (Active)",
+              activeClass:
+                "bg-emerald-500 text-white shadow-md shadow-emerald-100 font-bold",
+            },
+            {
+              id: "DRAFT",
+              label: "⚠️ แบบร่าง (Draft)",
+              activeClass:
+                "bg-amber-500 text-white shadow-md shadow-amber-100 font-bold",
+            },
+            {
+              id: "ARCHIVED",
+              label: "📦 เก็บถาวร (Archived)",
+              activeClass:
+                "bg-slate-700 text-white shadow-md shadow-slate-200 font-bold",
+            },
+            {
+              id: "SOLD",
+              label: "🤝 ปิดการขาย (Sold)",
+              activeClass:
+                "bg-blue-600 text-white shadow-md shadow-blue-100 font-bold",
+            },
+          ].map((tab) => {
+            const isActive = filters.status === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  setFilters({ ...filters, status: tab.id });
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (tab.id === "ALL") params.delete("status");
+                  else params.set("status", tab.id);
+                  params.delete("page");
+                  startTransition(() => {
+                    router.push(
+                      `/protected/properties?${params.toString()}#table`,
+                      { scroll: false },
+                    );
+                  });
+                }}
+                className={cn(
+                  "px-4 py-2 rounded-xl text-xs font-medium transition-all duration-300 shrink-0 flex items-center gap-2 cursor-pointer",
+                  isActive
+                    ? tab.activeClass
+                    : "text-slate-600 hover:text-slate-900 hover:bg-white/50",
+                )}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
         <div className="flex flex-wrap justify-between  lg:justify-start items-center gap-2">
-            {/* ✨ Sentinel Quick Filter Chip */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  id="tour-property-ai-filter"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const nextVal =
-                      filters.needsAiReview === "true" ? "" : "true";
-                    setFilters({ ...filters, needsAiReview: nextVal });
-                    const params = new URLSearchParams(searchParams.toString());
-                    if (nextVal === "true") params.set("needsAiReview", "true");
-                    else params.delete("needsAiReview");
-                    params.delete("page");
-                    startTransition(() => {
-                      router.push(
-                        `/protected/properties?${params.toString()}#table`,
-                        { scroll: false },
-                      );
-                    });
-                  }}
+          {/* ✨ Sentinel Quick Filter Chip */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                id="tour-property-ai-filter"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const nextVal =
+                    filters.needsAiReview === "true" ? "" : "true";
+                  setFilters({ ...filters, needsAiReview: nextVal });
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (nextVal === "true") params.set("needsAiReview", "true");
+                  else params.delete("needsAiReview");
+                  params.delete("page");
+                  startTransition(() => {
+                    router.push(
+                      `/protected/properties?${params.toString()}#table`,
+                      { scroll: false },
+                    );
+                  });
+                }}
+                className={cn(
+                  "h-9 rounded-full px-4 border-dashed transition-all duration-300",
+                  filters.needsAiReview === "true"
+                    ? "bg-indigo-50 border-indigo-400 text-indigo-700 shadow-sm ring-1 ring-indigo-200"
+                    : "bg-white text-slate-500 hover:border-indigo-300 hover:bg-slate-50 hover:text-indigo-600",
+                )}
+              >
+                <span
                   className={cn(
-                    "h-9 rounded-full px-4 border-dashed transition-all duration-300",
+                    "mr-1.5 flex h-2 w-2 rounded-full transition-colors",
                     filters.needsAiReview === "true"
-                      ? "bg-indigo-50 border-indigo-400 text-indigo-700 shadow-sm ring-1 ring-indigo-200"
-                      : "bg-white text-slate-500 hover:border-indigo-300 hover:bg-slate-50 hover:text-indigo-600",
+                      ? "bg-indigo-600 animate-pulse"
+                      : "bg-slate-300",
                   )}
-                >
-                  <span
-                    className={cn(
-                      "mr-1.5 flex h-2 w-2 rounded-full transition-colors",
-                      filters.needsAiReview === "true"
-                        ? "bg-indigo-600 animate-pulse"
-                        : "bg-slate-300",
-                    )}
-                  />
-                  ✨ ตรวจร่าง AI
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="bottom"
-                className="bg-slate-900 border-slate-800 text-white font-medium"
-              >
-                แสดงเฉพาะรายการที่ AI ร่างข้อมูลให้ (รอคุณตรวจสอบ)
-              </TooltipContent>
-            </Tooltip>
+                />
+                ✨ ตรวจร่าง AI
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="bottom"
+              className="bg-slate-900 border-slate-800 text-white font-medium"
+            >
+              แสดงเฉพาะรายการที่ AI ร่างข้อมูลให้ (รอคุณตรวจสอบ)
+            </TooltipContent>
+          </Tooltip>
 
-            {/* 👤 Own Properties Chip */}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  id="tour-property-my-filter"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const nextVal =
-                      filters.assignedToMe === "true" ? "" : "true";
-                    setFilters({ ...filters, assignedToMe: nextVal });
-                    const params = new URLSearchParams(searchParams.toString());
-                    if (nextVal === "true") params.set("assignedToMe", "true");
-                    else params.delete("assignedToMe");
-                    params.delete("page");
-                    startTransition(() => {
-                      router.push(
-                        `/protected/properties?${params.toString()}#table`,
-                        { scroll: false },
-                      );
-                    });
-                  }}
-                  className={cn(
-                    "h-9 rounded-full px-4 border-dashed transition-all duration-300",
-                    filters.assignedToMe === "true"
-                      ? "bg-blue-50 border-blue-400 text-blue-700 shadow-sm ring-1 ring-blue-200"
-                      : "bg-white text-slate-500 hover:border-blue-300 hover:bg-slate-50 hover:text-blue-600",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "mr-1.5 flex h-2 w-2 rounded-full transition-colors",
-                      filters.assignedToMe === "true"
-                        ? "bg-blue-600 animate-pulse"
-                        : "bg-slate-300",
-                    )}
-                  />
-                  <FaUser className="w-3 h-3 mr-1.5" /> ทรัพย์ของฉัน
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                side="bottom"
-                className="bg-slate-900 border-slate-800 text-white font-medium"
+          {/* 👤 Own Properties Chip */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                id="tour-property-my-filter"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const nextVal = filters.assignedToMe === "true" ? "" : "true";
+                  setFilters({ ...filters, assignedToMe: nextVal });
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (nextVal === "true") params.set("assignedToMe", "true");
+                  else params.delete("assignedToMe");
+                  params.delete("page");
+                  startTransition(() => {
+                    router.push(
+                      `/protected/properties?${params.toString()}#table`,
+                      { scroll: false },
+                    );
+                  });
+                }}
+                className={cn(
+                  "h-9 rounded-full px-4 border-dashed transition-all duration-300",
+                  filters.assignedToMe === "true"
+                    ? "bg-blue-50/50 border-blue-400 text-blue-700 shadow-sm ring-1 ring-blue-200"
+                    : "bg-white text-slate-500 hover:border-blue-300 hover:bg-slate-50 hover:text-blue-600",
+                )}
               >
-                แสดงเฉพาะรายการทรัพย์สินที่คุณได้รับมอบหมาย
-              </TooltipContent>
-            </Tooltip>
-          </div>
+                <span
+                  className={cn(
+                    "mr-1.5 flex h-2 w-2 rounded-full transition-colors",
+                    filters.assignedToMe === "true"
+                      ? "bg-blue-600 animate-pulse"
+                      : "bg-slate-300",
+                  )}
+                />
+                <FaUser className="w-3 h-3 mr-1.5" /> ทรัพย์ของฉัน
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              side="bottom"
+              className="bg-slate-900 border-slate-800 text-white font-medium"
+            >
+              แสดงเฉพาะรายการทรัพย์สินที่คุณได้รับมอบหมาย
+            </TooltipContent>
+          </Tooltip>
+
+          {/* 📥 Export Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportAllWithFilters}
+            disabled={isExporting}
+            className="h-9 px-4 text-xs font-bold border-emerald-200 bg-emerald-50/50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 transition-all rounded-xl shadow-xs shrink-0 flex items-center gap-1.5"
+          >
+            {isExporting ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Download className="h-3.5 w-3.5" />
+            )}
+            Export รายการที่เลือกตามฟิลเตอร์ (Excel/CSV)
+          </Button>
+        </div>
       </div>
 
       <div className="relative flex flex-col sm:flex-row items-stretch lg:items-center gap-3 w-full">
@@ -413,114 +459,125 @@ export function PropertyFilters({
             </div>
           </div>
         </div>
-      </div>
-      <div className="hidden lg:flex items-center gap-2">
-        <QuickSort
-          value={`${filters.sortBy}-${filters.sortOrder}`}
-          onValueChange={(value) => {
-            const [sortBy, sortOrder] = value.split("-");
-            setFilters({ ...filters, sortBy, sortOrder });
 
-            const params = new URLSearchParams(searchParams.toString());
-            params.set("sortBy", sortBy);
-            params.set("sortOrder", sortOrder);
-            startTransition(() => {
-              router.push(`/protected/properties?${params.toString()}#table`, {
-                scroll: false,
+        {/* 3. กลุ่มตัวกรองบน Desktop - แสดงต่อท้ายช่องค้นหา */}
+        <div className="hidden lg:flex items-center gap-2 shrink-0">
+          <QuickSort
+            value={`${filters.sortBy}-${filters.sortOrder}`}
+            onValueChange={(value) => {
+              const [sortBy, sortOrder] = value.split("-");
+              setFilters({ ...filters, sortBy, sortOrder });
+
+              const params = new URLSearchParams(searchParams.toString());
+              params.set("sortBy", sortBy);
+              params.set("sortOrder", sortOrder);
+              startTransition(() => {
+                router.push(
+                  `/protected/properties?${params.toString()}#table`,
+                  {
+                    scroll: false,
+                  },
+                );
               });
-            });
-          }}
-        />
+            }}
+          />
 
-        <QuickStatus
-          value={filters.status}
-          onValueChange={(status) => {
-            setFilters({ ...filters, status });
-            const params = new URLSearchParams(searchParams.toString());
-            if (status === "ALL") params.delete("status");
-            else params.set("status", status);
-            params.delete("page");
-            startTransition(() => {
-              router.push(`/protected/properties?${params.toString()}#table`, {
-                scroll: false,
+          <QuickStatus
+            value={filters.status}
+            onValueChange={(status) => {
+              setFilters({ ...filters, status });
+              const params = new URLSearchParams(searchParams.toString());
+              if (status === "ALL") params.delete("status");
+              else params.set("status", status);
+              params.delete("page");
+              startTransition(() => {
+                router.push(
+                  `/protected/properties?${params.toString()}#table`,
+                  {
+                    scroll: false,
+                  },
+                );
               });
-            });
-          }}
-        />
+            }}
+          />
 
-        <QuickType
-          value={filters.type}
-          onValueChange={(type) => {
-            setFilters({ ...filters, type });
-            const params = new URLSearchParams(searchParams.toString());
-            if (type === "ALL") params.delete("type");
-            else params.set("type", type);
-            params.delete("page");
-            startTransition(() => {
-              router.push(`/protected/properties?${params.toString()}#table`, {
-                scroll: false,
+          <QuickType
+            value={filters.type}
+            onValueChange={(type) => {
+              setFilters({ ...filters, type });
+              const params = new URLSearchParams(searchParams.toString());
+              if (type === "ALL") params.delete("type");
+              else params.set("type", type);
+              params.delete("page");
+              startTransition(() => {
+                router.push(
+                  `/protected/properties?${params.toString()}#table`,
+                  {
+                    scroll: false,
+                  },
+                );
               });
-            });
-          }}
-        />
+            }}
+          />
 
-        <AdvancedFilters
-          id="tour-property-advanced-filters"
-          open={open}
-          setOpen={setOpen}
-          filters={filters}
-          setFilters={setFilters}
-          applyFilters={applyFilters}
-          clearFilters={clearFilters}
-          activeFilterCount={activeFilterCount}
-          totalCount={totalCount}
-          filterMetadata={filterMetadata}
-        />
-        {isMultiTenant && (
-          <div
-            id="tour-property-all-branches"
-            className={cn(
-              "flex items-center gap-2 px-3 h-9 py-1.5 bg-blue-50/50 border border-blue-200 rounded-lg transition-all duration-200 shadow-xs select-none",
-              isPending
-                ? "opacity-70 pointer-events-none"
-                : "hover:bg-blue-50 cursor-pointer",
-            )}
-          >
-            {isPending && (
-              <Loader2 className="h-3.5 w-3.5 text-blue-700 animate-spin" />
-            )}
-            <Switch
-              id="all-branches-switch"
-              checked={filters.allBranches === "true"}
-              disabled={isPending}
-              onCheckedChange={(checked) => {
-                const nextVal = checked ? "true" : "";
-                setFilters({ ...filters, allBranches: nextVal });
-
-                const params = new URLSearchParams(searchParams.toString());
-                if (nextVal === "true") params.set("allBranches", "true");
-                else params.delete("allBranches");
-                params.delete("page");
-
-                startTransition(() => {
-                  router.push(
-                    `/protected/properties?${params.toString()}#table`,
-                    {
-                      scroll: false,
-                    },
-                  );
-                });
-              }}
-            />
-            <Label
-              htmlFor="all-branches-switch"
-              className="text-xs font-semibold text-blue-700 cursor-pointer"
+          <AdvancedFilters
+            id="tour-property-advanced-filters"
+            open={open}
+            setOpen={setOpen}
+            filters={filters}
+            setFilters={setFilters}
+            applyFilters={applyFilters}
+            clearFilters={clearFilters}
+            activeFilterCount={activeFilterCount}
+            totalCount={totalCount}
+            filterMetadata={filterMetadata}
+          />
+          {isMultiTenant && (
+            <div
+              id="tour-property-all-branches"
+              className={cn(
+                "flex items-center gap-2 px-3 h-9 py-1.5 bg-blue-50/50 border border-blue-200 rounded-lg transition-all duration-200 shadow-xs select-none",
+                isPending
+                  ? "opacity-70 pointer-events-none"
+                  : "hover:bg-blue-50 cursor-pointer",
+              )}
             >
-              ค้นหาทุกสาขา
-            </Label>
-          </div>
-        )}
-        <TrashButton />
+              {isPending && (
+                <Loader2 className="h-3.5 w-3.5 text-blue-700 animate-spin" />
+              )}
+              <Switch
+                id="all-branches-switch"
+                checked={filters.allBranches === "true"}
+                disabled={isPending}
+                onCheckedChange={(checked) => {
+                  const nextVal = checked ? "true" : "";
+                  setFilters({ ...filters, allBranches: nextVal });
+
+                  const params = new URLSearchParams(searchParams.toString());
+                  if (nextVal === "true") params.set("allBranches", "true");
+                  else params.delete("allBranches");
+                  params.delete("page");
+
+                  startTransition(() => {
+                    router.push(
+                      `/protected/properties?${params.toString()}#table`,
+                      {
+                        scroll: false,
+                      },
+                    );
+                  });
+                }}
+              />
+              <Label
+                htmlFor="all-branches-switch"
+                className="text-xs font-semibold text-blue-700 cursor-pointer"
+              >
+                ค้นหาทุกสาขา
+              </Label>
+            </div>
+          )}
+          <TrashButton />
+        </div>
       </div>
     </div>
   );

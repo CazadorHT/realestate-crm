@@ -566,46 +566,6 @@ export function SocialPostDialog({
               })}
             </div>
           </div>
-
-          <div className="bg-linear-to-br from-amber-50 to-orange-50 p-4 rounded-2xl border border-amber-100 shadow-sm space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-white rounded-xl shadow-sm">
-                <Settings className="h-5 w-5 text-amber-600" />
-              </div>
-              <div className="flex-1">
-                <p className="text-[13px] xs:text-sm font-bold text-amber-900 leading-none mb-1">
-                  จัดการหน้าตาโพสต์
-                </p>
-                <p className="text-xs text-amber-600/80 leading-tight">
-                  แก้ไข Template อัตโนมัติ
-                </p>
-              </div>
-            </div>
-            <Link href="/protected/settings?tab=social#social-automation" className="block">
-              <Button
-                size="sm"
-                variant="ghost"
-                className="w-full bg-white/50 hover:bg-white text-amber-700 font-bold text-xs h-9 border border-amber-100 rounded-lg"
-              >
-                ไปที่การตั้งค่า
-              </Button>
-            </Link>
-          </div>
-            {!isConnected && (
-                  <div className="p-3 rounded-xl bg-red-50 border border-red-100 space-y-2">
-                    <p className="text-[11px] text-red-600 font-bold flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4" />
-                      {platform === "FACEBOOK" || platform === "INSTAGRAM" 
-                        ? `เชื่อมต่อ Meta แล้วแต่ยังไม่ได้เลือกเพจ` 
-                        : `ยังไม่ได้เชื่อมต่อ ${platform}`}
-                    </p>
-                    <Link href="/protected/settings?tab=social">
-                      <Button size="sm" className="w-full hover:bg-rose-600 text-[10px] h-8 border-red-200 text-red-700 hover:text-white bg-white font-bold">
-                        {(platform === "FACEBOOK" || platform === "INSTAGRAM") ? "ไปเลือกเพจ Facebook" : "ไปที่หน้าตั้งค่า"}
-                      </Button>
-                    </Link>
-                  </div>
-                )}
         </div>
 
         {/* Preview Area */}
