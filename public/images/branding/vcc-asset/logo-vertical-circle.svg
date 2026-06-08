@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="vccGradInstagram" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .side-v { fill: #0F172A; }
+    .side-c { fill: url(#vccGradInstagram); }
+    .side-top { fill: #3B82F6; opacity: 0.85; }
+    .brand-text { font-family: system-ui, -apple-system, sans-serif; font-size: 46px; font-weight: 800; fill: #0F172A; }
+    .brand-accent { fill: #2563EB; font-weight: 500; }
+  </style>
+  
+  <!-- Circular White Background -->
+  <circle cx="250" cy="250" r="242" fill="#FFFFFF" />
+  
+  <!-- Scaled and Centered Isometric Icon (Taller Proportion) -->
+  <g transform="translate(250, 195) scale(2.1) translate(-40, -57.5)">
+    <path class="side-v" d="M0 30l40-20v75l-40 20z"/>
+    <path class="side-c" d="M40 10l40 20v75l-40-20z"/>
+    <path class="side-top" d="M0 30l40-20 40 20-40 20z"/>
+  </g>
+  
+  <!-- Centered Brand Text -->
+  <text x="250" y="390" text-anchor="middle" class="brand-text">VCC <tspan class="brand-accent">ASSET</tspan></text>
+</svg>

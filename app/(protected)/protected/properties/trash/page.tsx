@@ -1,10 +1,10 @@
-import { createClient } from "@/lib/supabase/server";
 import { getDeletedProperties } from "@/lib/db/properties";
 import React from "react";
 import { TrashTable } from "./TrashTable";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, Trash2, AlertCircle } from "lucide-react";
+import { requireAuthContext } from "@/lib/authz";
 
 export default async function TrashPage({
   searchParams,
@@ -14,6 +14,9 @@ export default async function TrashPage({
   const { page } = await searchParams;
   const currentPage = Number(page) || 1;
   const PAGE_SIZE = 10;
+
+  const { role } = await requireAuthContext();
+  const showCreator = role !== "AGENT";
 
   const { data: deletedProperties, count } = await getDeletedProperties(
     currentPage,
@@ -75,6 +78,7 @@ export default async function TrashPage({
             totalCount={count}
             pageSize={PAGE_SIZE}
             currentPage={currentPage}
+            showCreator={showCreator}
           />
         </div>
       </div>

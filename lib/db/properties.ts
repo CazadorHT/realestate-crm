@@ -27,6 +27,8 @@ export async function getAllProperties(): Promise<Property[]> {
   }
 }
 
+import { requireAuthContext, assertStaff } from "@/lib/authz";
+
 /**
  * Fetch all deleted properties from the database (Trash).
  * Returns an empty array if an error occurs (and logs the error).
@@ -35,20 +37,31 @@ export async function getDeletedProperties(
   page: number = 1,
   pageSize: number = 10,
 ): Promise<{ data: Property[]; count: number }> {
-  const supabase = await createClient();
+  const { supabase, role, tenantId, user } = await requireAuthContext();
+  assertStaff(role);
 
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
   try {
+    let query = supabase
+      .from("properties")
+      .select("id, title, slug, property_type, listing_type, price, original_price, rental_price, original_rental_price, status, deleted_at, tenant_id, created_by, creator:profiles!created_by(full_name)", { count: "exact" })
+      .not("deleted_at", "is", null);
+
+    if (role === "AGENT") {
+      query = query.or(`assigned_to.eq.${user.id},created_by.eq.${user.id}`);
+    } else if (role === "MANAGER" || role === "OWNER" || role === "owner") {
+      if (tenantId) {
+        query = query.eq("tenant_id", tenantId);
+      }
+    }
+
     const {
       data,
       error,
       count: totalCount,
-    } = await supabase
-      .from("properties")
-      .select("id, title, slug, property_type, listing_type, price, original_price, rental_price, original_rental_price, status, deleted_at, tenant_id", { count: "exact" })
-      .not("deleted_at", "is", null)
+    } = await query
       .order("deleted_at", { ascending: false })
       .range(from, to);
 
@@ -74,9 +87,12 @@ export async function getDeletedProperties(
     }
 
     // Create a map for O(1) lookup
-    const coverMap = new Map<string, string>(
-      images?.map((img: { property_id: string; image_url: string }) => [img.property_id, img.image_url]) as Iterable<[string, string]>,
-    );
+    const coverMap = new Map<string, string>();
+    images?.forEach((img) => {
+      if (img.property_id && img.image_url) {
+        coverMap.set(img.property_id, img.image_url);
+      }
+    });
 
     const propertiesWithImages = properties.map((p: any) => {
       // Logic: Use cover image if available, else empty array (component handles fallback)
@@ -84,7 +100,16 @@ export async function getDeletedProperties(
       // to match the main table's primary visual.
       const coverUrl = coverMap.get(p.id);
       const pImages = coverUrl ? [coverUrl] : [];
-      return { ...p, images: pImages };
+      
+      const creatorName = Array.isArray(p.creator)
+        ? (p.creator[0] as any)?.full_name || null
+        : (p.creator as any)?.full_name || null;
+
+      return { 
+        ...p, 
+        images: pImages,
+        creator_name: creatorName
+      };
     });
 
     return { data: propertiesWithImages as unknown as Property[], count: totalCount || 0 };

@@ -22,6 +22,7 @@ import { PaginationControls } from "@/components/ui/pagination-controls";
 type ExtendedProperty = Property & {
   original_price?: number | null;
   original_rental_price?: number | null;
+  creator_name?: string | null;
 };
 
 interface TrashTableProps {
@@ -29,6 +30,7 @@ interface TrashTableProps {
   totalCount: number;
   pageSize: number;
   currentPage: number;
+  showCreator?: boolean;
 }
 
 export function TrashTable({
@@ -36,6 +38,7 @@ export function TrashTable({
   totalCount,
   pageSize,
   currentPage,
+  showCreator = true,
 }: TrashTableProps) {
   if (data.length === 0 && totalCount === 0) {
     return (
@@ -58,6 +61,7 @@ export function TrashTable({
             <TableHead>ราคา</TableHead>
             <TableHead>ทำเล</TableHead>
             <TableHead>ประเภท</TableHead>
+            {showCreator && <TableHead>ผู้สร้าง</TableHead>}
             <TableHead>วันที่ลบ</TableHead>
             <TableHead className="text-right">จัดการ</TableHead>
           </TableRow>
@@ -215,6 +219,16 @@ export function TrashTable({
                       : "-"}
                   </Badge>
                 </TableCell>
+                {showCreator && (
+                  <TableCell>
+                    <div
+                      className="text-sm font-medium text-slate-600 max-w-[150px] truncate"
+                      title={property.creator_name ?? undefined}
+                    >
+                      {property.creator_name || "-"}
+                    </div>
+                  </TableCell>
+                )}
                 <TableCell>
                   {property.deleted_at
                     ? format(

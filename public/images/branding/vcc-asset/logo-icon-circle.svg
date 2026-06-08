@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="vccGradIconOnly" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"/>
+      <stop offset="100%" stop-color="#4F46E5"/>
+    </linearGradient>
+  </defs>
+  <style>
+    .side-v { fill: #0F172A; }
+    .side-c { fill: url(#vccGradIconOnly); }
+    .side-top { fill: #3B82F6; opacity: 0.85; }
+  </style>
+  
+  <!-- White Circle Background -->
+  <circle cx="250" cy="250" r="242" fill="#FFFFFF" />
+  
+  <!-- Centered, Maximized, and Stretched Tall Isometric Icon -->
+  <g transform="translate(250, 250) scale(3.5) translate(-40, -57.5)">
+    <path class="side-v" d="M0 30l40-20v75l-40 20z"/>
+    <path class="side-c" d="M40 10l40 20v75l-40-20z"/>
+    <path class="side-top" d="M0 30l40-20 40 20-40 20z"/>
+  </g>
+</svg>
