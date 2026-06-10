@@ -19,8 +19,10 @@ export function usePropertyData(initialProperties?: ApiProperty[]) {
   const searchParams = useSearchParams();
   const [properties, setProperties] = useState<ApiProperty[]>(initialProperties || []);
   const [facets, setFacets] = useState<PropertyFacets | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(properties.length === 0);
+  const [isRefetching, setIsRefetching] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isFirstLoadRef = useRef(true);
 
   useEffect(() => {
     async function load() {
@@ -32,7 +34,11 @@ export function usePropertyData(initialProperties?: ApiProperty[]) {
       abortControllerRef.current = controller;
 
       try {
-        setIsLoading(true);
+        if (isFirstLoadRef.current && properties.length === 0) {
+          setIsLoading(true);
+        } else {
+          setIsRefetching(true);
+        }
         const query = searchParams.toString();
         const url = `/api/public/properties${query ? `?${query}` : ""}`;
         console.log("usePropertyData [load] fetching:", url);
@@ -92,6 +98,8 @@ export function usePropertyData(initialProperties?: ApiProperty[]) {
       } finally {
         if (!controller.signal.aborted) {
           setIsLoading(false);
+          setIsRefetching(false);
+          isFirstLoadRef.current = false;
         }
       }
     }
@@ -105,5 +113,5 @@ export function usePropertyData(initialProperties?: ApiProperty[]) {
     };
   }, [searchParams, t]);
 
-  return { properties, facets, isLoading };
+  return { properties, facets, isLoading, isRefetching };
 }

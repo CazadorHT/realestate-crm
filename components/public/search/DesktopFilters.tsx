@@ -567,7 +567,7 @@ export function DesktopFilters({
         <div className="flex items-start justify-between gap-4 mb-4 p-3 bg-slate-50/50 rounded-xl border border-slate-100 animate-in fade-in slide-in-from-left-2">
           <div className="flex items-start gap-3 flex-1 flex-wrap">
             <div className="h-[30px] flex items-center">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">
                 {t("search.active_filters")}:
               </span>
             </div>

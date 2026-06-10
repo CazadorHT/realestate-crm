@@ -405,6 +405,168 @@ export function MobileFilters({
               </div>
             </SheetHeader>
             <div className="p-4 flex-1 overflow-y-auto space-y-4">
+              {/* Quick Filters Zone */}
+              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+                <span className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                  <span className="w-1.5 h-6 bg-emerald-500 rounded-full" />
+                  {t("search.quick_filters")}
+                </span>
+                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                  {[
+                    { key: "nearTrain", state: nearTrain, setState: setNearTrain, icon: TrainIcon, label: "near_train", color: "blue", size: "h-5 w-5" },
+                    { key: "petFriendly", state: petFriendly, setState: setPetFriendly, icon: PetIcon, label: "pet_allowed", color: "orange", size: "h-6 w-6" },
+                    { key: "fullyFurnished", state: fullyFurnished, setState: setFullyFurnished, icon: ArmchairIcon, label: "fully_furnished", color: "emerald", size: "h-6 w-6" },
+                    { key: "isForeigner", state: isForeigner, setState: setIsForeigner, icon: EarthIcon, label: "foreigner", color: "purple", size: "h-6 w-6" },
+                    { key: "companyRegistered", state: companyRegistered, setState: setCompanyRegistered, icon: WorkIcon, label: "company_registered", color: "indigo", size: "h-6 w-6" },
+                    { key: "isHotDeal", state: isHotDeal, setState: setIsHotDeal, icon: FireIcon, label: "hot_deal", color: "rose", size: "h-[22px] w-[22px]" },
+                   ].map((f) => {
+                    const qCount = availableQuickFilters[f.key] || 0;
+                    const isDisabled = !f.state && qCount === 0;
+                    
+                    return (
+                      <div
+                        key={f.label}
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl border-2 transition-colors duration-200 cursor-pointer relative",
+                          f.state
+                            ? `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
+                            : isDisabled
+                            ? "bg-slate-100 border-transparent text-slate-300 pointer-events-none"
+                            : "bg-slate-50 border-transparent text-slate-600 hover:border-slate-200"
+                        )}
+                        onClick={() => !isDisabled && f.setState(!f.state)}
+                      >
+                        {qCount > 0 && (
+                          <span className={cn(
+                            "absolute -top-1 -right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm z-10",
+                            f.state ? "bg-white text-blue-600" : "bg-emerald-500 text-white"
+                          )}>
+                            {qCount}
+                          </span>
+                        )}
+                        <f.icon className={cn(f.size, f.state ? "text-white" : isDisabled ? "text-slate-200" : `text-${f.color}-500`)} />
+                        <span className="text-[10px] font-medium text-center leading-tight">
+                          {t(`search.${f.label}`)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Active Filters (Mobile) */}
+              {transitStation && (
+                <div className="flex flex-col gap-2 mb-4 animate-in fade-in slide-in-from-top-1 px-1">
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-tight">
+                    {t("search.active_filters")}:
+                  </span>
+                  <div className="flex">
+                    <div className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-100 rounded-2xl text-blue-700 text-xs font-bold shadow-xs">
+                      <TrainIcon className="w-3.5 h-3.5 text-blue-500" />
+                      <span>
+                        {(() => {
+                          const found = (allStations || availableStations).find((s) => s.name === transitStation);
+                          const cleanName = transitStation.replace("_", " ");
+                          return found ? formatStationLabel(found.type, cleanName, language) : cleanName;
+                        })()}
+                      </span>
+                      <button 
+                        onClick={() => setTransitStation("")}
+                        className="ml-1 p-0.5 rounded-full bg-blue-200/50 text-blue-600"
+                      >
+                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Transit Stations (Mobile) */}
+              {nearTrain && availableStations.length > 0 && (
+                <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50 space-y-3 animate-in fade-in slide-in-from-top-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-blue-700 uppercase tracking-tight flex items-center gap-2">
+                      <TrainIcon className="w-3.5 h-3.5" />
+                      {t("search.select_station")}
+                    </span>
+                    {transitStation && (
+                      <button 
+                        onClick={() => setTransitStation("")}
+                        className="text-[10px] font-medium text-blue-500 hover:text-blue-700 underline"
+                      >
+                        {t("search.clear")}
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Train Type Tabs */}
+                  <div className="flex flex-nowrap overflow-x-auto gap-1 pb-1 -mx-1 px-1 scrollbar-hide">
+                    <button
+                      onClick={() => setTrainTypeFilter("ALL")}
+                      className={cn(
+                        "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border shrink-0",
+                        trainTypeFilter === "ALL"
+                          ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                      )}
+                    >
+                      {t("search.all")}
+                    </button>
+                    {trainTypes.map((type: string) => (
+                      <button
+                        key={type}
+                        onClick={() => setTrainTypeFilter(type)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border shrink-0",
+                          getTypeTabClass(type, trainTypeFilter === type)
+                        )}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-nowrap overflow-x-auto gap-2 pb-1 -mx-1 px-1 scrollbar-hide">
+                    {filteredStations.map((s: any) => (
+                      <button
+                        key={s.name}
+                        onClick={() => setTransitStation(transitStation === s.name ? "" : s.name)}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all border shadow-xs",
+                          transitStation === s.name
+                            ? "bg-blue-600 border-blue-600 text-white shadow-blue-200"
+                            : "bg-white border-slate-100 text-slate-600"
+                        )}
+                      >
+                        {transitStation === s.name && (
+                          <svg className="w-3.5 h-3.5 animate-in zoom-in-50 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                        <span className={cn(
+                          "text-[8px] font-extrabold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0",
+                          getTypeBadgeClass(s.type)
+                        )}>
+                          {getNormalizedType(s.type)}
+                        </span>
+                        {getLocaleValue({ name: s.name, name_en: s.name_en, name_cn: s.name_cn, name_ru: s.name_ru }, "name", language).replace("_", " ")}
+                        <span className={cn(
+                          "text-[10px]",
+                          transitStation === s.name ? "text-blue-100" : "text-blue-600"
+                        )}>({s.count})</span>
+                      </button>
+                    ))}
+                    {filteredStations.length === 0 && (
+                      <span className="text-[10px] text-slate-400 italic py-2 px-2">
+                        {t("search.no_stations_type")}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Location Zone */}
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4">
                 <Accordion type="single" collapsible defaultValue="location" className="w-full">
@@ -519,167 +681,6 @@ export function MobileFilters({
                   </AccordionItem>
                 </Accordion>
               </div>
-
-              {/* Active Filters (Mobile) */}
-              {transitStation && (
-                <div className="flex flex-col gap-2 mb-4 animate-in fade-in slide-in-from-top-1 px-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
-                    {t("search.active_filters")}:
-                  </span>
-                  <div className="flex">
-                    <div className="flex items-center gap-1.5 px-3 py-2 bg-blue-50 border border-blue-100 rounded-2xl text-blue-700 text-xs font-bold shadow-xs">
-                      <TrainIcon className="w-3.5 h-3.5 text-blue-500" />
-                      <span>
-                        {(() => {
-                          const found = (allStations || availableStations).find((s) => s.name === transitStation);
-                          const cleanName = transitStation.replace("_", " ");
-                          return found ? formatStationLabel(found.type, cleanName, language) : cleanName;
-                        })()}
-                      </span>
-                      <button 
-                        onClick={() => setTransitStation("")}
-                        className="ml-1 p-0.5 rounded-full bg-blue-200/50 text-blue-600"
-                      >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {/* Quick Filters Zone */}
-              <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                <span className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                  <span className="w-1.5 h-6 bg-emerald-500 rounded-full" />
-                  {t("search.quick_filters")}
-                </span>
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
-                  {[
-                    { key: "nearTrain", state: nearTrain, setState: setNearTrain, icon: TrainIcon, label: "near_train", color: "blue", size: "h-5 w-5" },
-                    { key: "petFriendly", state: petFriendly, setState: setPetFriendly, icon: PetIcon, label: "pet_allowed", color: "orange", size: "h-6 w-6" },
-                    { key: "fullyFurnished", state: fullyFurnished, setState: setFullyFurnished, icon: ArmchairIcon, label: "fully_furnished", color: "emerald", size: "h-6 w-6" },
-                    { key: "isForeigner", state: isForeigner, setState: setIsForeigner, icon: EarthIcon, label: "foreigner", color: "purple", size: "h-6 w-6" },
-                    { key: "companyRegistered", state: companyRegistered, setState: setCompanyRegistered, icon: WorkIcon, label: "company_registered", color: "indigo", size: "h-6 w-6" },
-                    { key: "isHotDeal", state: isHotDeal, setState: setIsHotDeal, icon: FireIcon, label: "hot_deal", color: "rose", size: "h-[22px] w-[22px]" },
-                   ].map((f) => {
-                    const qCount = availableQuickFilters[f.key] || 0;
-                    const isDisabled = !f.state && qCount === 0;
-                    
-                    return (
-                      <div
-                        key={f.label}
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl border-2 transition-colors duration-200 cursor-pointer relative",
-                          f.state
-                            ? `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
-                            : isDisabled
-                            ? "bg-slate-100 border-transparent text-slate-300 pointer-events-none"
-                            : "bg-slate-50 border-transparent text-slate-600 hover:border-slate-200"
-                        )}
-                        onClick={() => !isDisabled && f.setState(!f.state)}
-                      >
-                        {qCount > 0 && (
-                          <span className={cn(
-                            "absolute -top-1 -right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm z-10",
-                            f.state ? "bg-white text-blue-600" : "bg-emerald-500 text-white"
-                          )}>
-                            {qCount}
-                          </span>
-                        )}
-                        <f.icon className={cn(f.size, f.state ? "text-white" : isDisabled ? "text-slate-200" : `text-${f.color}-500`)} />
-                        <span className="text-[10px] font-medium text-center leading-tight">
-                          {t(`search.${f.label}`)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Transit Stations (Mobile) */}
-              {nearTrain && availableStations.length > 0 && (
-                <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50 space-y-3 animate-in fade-in slide-in-from-top-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-blue-700 uppercase tracking-tight flex items-center gap-2">
-                      <TrainIcon className="w-3.5 h-3.5" />
-                      {t("search.select_station")}
-                    </span>
-                    {transitStation && (
-                      <button 
-                        onClick={() => setTransitStation("")}
-                        className="text-[10px] font-medium text-blue-500 hover:text-blue-700 underline"
-                      >
-                        {t("search.clear")}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Train Type Tabs */}
-                  <div className="flex flex-nowrap overflow-x-auto gap-1 pb-1 -mx-1 px-1 scrollbar-hide">
-                    <button
-                      onClick={() => setTrainTypeFilter("ALL")}
-                      className={cn(
-                        "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border shrink-0",
-                        trainTypeFilter === "ALL"
-                          ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
-                      )}
-                    >
-                      {t("search.all")}
-                    </button>
-                    {trainTypes.map((type: string) => (
-                      <button
-                        key={type}
-                        onClick={() => setTrainTypeFilter(type)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border shrink-0",
-                          getTypeTabClass(type, trainTypeFilter === type)
-                        )}
-                      >
-                        {type}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-nowrap overflow-x-auto gap-2 pb-1 -mx-1 px-1 scrollbar-hide">
-                    {filteredStations.map((s: any) => (
-                      <button
-                        key={s.name}
-                        onClick={() => setTransitStation(transitStation === s.name ? "" : s.name)}
-                        className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all border shadow-xs",
-                          transitStation === s.name
-                            ? "bg-blue-600 border-blue-600 text-white shadow-blue-200"
-                            : "bg-white border-slate-100 text-slate-600"
-                        )}
-                      >
-                        {transitStation === s.name && (
-                          <svg className="w-3.5 h-3.5 animate-in zoom-in-50 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
-                        <span className={cn(
-                          "text-[8px] font-extrabold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0",
-                          getTypeBadgeClass(s.type)
-                        )}>
-                          {getNormalizedType(s.type)}
-                        </span>
-                        {getLocaleValue({ name: s.name, name_en: s.name_en, name_cn: s.name_cn, name_ru: s.name_ru }, "name", language).replace("_", " ")}
-                        <span className={cn(
-                          "text-[10px]",
-                          transitStation === s.name ? "text-blue-100" : "text-blue-600"
-                        )}>({s.count})</span>
-                      </button>
-                    ))}
-                    {filteredStations.length === 0 && (
-                      <span className="text-[10px] text-slate-400 italic py-2 px-2">
-                        {t("search.no_stations_type")}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/* Property Detail Zone */}
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4">

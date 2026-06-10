@@ -9,6 +9,7 @@ import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { usePropertyFilters } from "@/hooks/search/usePropertyFilters";
 import { usePropertyData } from "@/hooks/search/usePropertyData";
 import { usePropertyFiltering } from "@/hooks/search/usePropertyFiltering";
+import { cn } from "@/lib/utils";
 
 // Components
 import { SearchResultsHeader } from "./search/SearchResultsHeader";
@@ -37,7 +38,7 @@ export function PropertySearchPage({
   const filters = usePropertyFilters();
   
   // 1. Data Access Layer (Fortress Tier)
-  const { properties, facets: serverFacets, isLoading } = usePropertyData(initialProperties);
+  const { properties, facets: serverFacets, isLoading, isRefetching } = usePropertyData(initialProperties);
 
   // 2. Optimized Analysis Logic
   const {
@@ -168,10 +169,12 @@ export function PropertySearchPage({
           <NoResultsView onClearFilters={filters.clearFilters} />
         ) : (
           <>
+          <div className={cn("transition-opacity duration-200", isRefetching && "opacity-60 pointer-events-none")}>
             <PropertyGrid
               properties={visibleProperties}
               currentPage={1}
             />
+          </div>
 
             {/* Sentinel for Infinite Scroll (Diamond Tier) */}
             {hasMore && (
