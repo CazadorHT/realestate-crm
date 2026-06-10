@@ -181,7 +181,7 @@ export function DescriptionSection({
               <FormField
                 control={form.control}
                 name="description"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <FormItem className="flex-1 flex flex-col">
                     <FormControl className="flex-1 flex flex-col">
                       <ErrorBoundary>
@@ -204,11 +204,14 @@ export function DescriptionSection({
                         />
                       </ErrorBoundary>
                     </FormControl>
-                    <FormDescription className="text-xs text-slate-500 mt-2">
-                      💡 เคล็ดลับ: ใช้ AI Writer
-                      เพื่อช่วยแต่งคำบรรยายให้สละสลวยยิ่งขึ้น
-                    </FormDescription>
-                    <FormMessage />
+                    {fieldState.error ? (
+                      <FormMessage className="text-xs text-red-500 mt-2" />
+                    ) : (
+                      <FormDescription className="text-xs text-slate-500 mt-2">
+                        💡 เคล็ดลับ: ใช้ AI Writer
+                        เพื่อช่วยแต่งคำบรรยายให้สละสลวยยิ่งขึ้น
+                      </FormDescription>
+                    )}
                   </FormItem>
                 )}
               />

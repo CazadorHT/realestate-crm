@@ -2,7 +2,7 @@
 
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { OwnerForm } from "@/features/owners/OwnerForm";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
@@ -18,13 +18,14 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { ShieldCheck, Activity, User, Minus, Plus, Info } from "lucide-react";
+import { ShieldCheck, Activity, User, Minus, Plus, Info, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFormContext, useWatch, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "../../../schema";
 import {
   PROPERTY_STATUS_LABELS,
   PROPERTY_STATUS_ORDER,
+  PropertyStatus,
 } from "@/features/properties/labels";
 import { AgentMultiSelect } from "../../sections/AgentMultiSelect";
 import { Button } from "@/components/ui/button";
@@ -60,6 +61,19 @@ export const ManagementSection = ({
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const [isAddingOwner, setIsAddingOwner] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
+  const [ownerOpen, setOwnerOpen] = useState(false);
+  const [channelOpen, setChannelOpen] = useState(false);
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
+
+  useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1535px)");
+    const onChange = () => setIsMobileOrTablet(mql.matches);
+    mql.addEventListener("change", onChange);
+    setIsMobileOrTablet(mql.matches);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
   const totalUnits = useWatch({ control: form.control, name: "total_units" });
   const soldUnits = useWatch({ control: form.control, name: "sold_units" });
   const isCoAgent = useWatch({ control: form.control, name: "is_co_agent" });
@@ -93,52 +107,124 @@ export const ManagementSection = ({
                   <Activity className="w-3.5 h-3.5 text-emerald-600" />
                   สถานะประกาศ (Status)
                 </FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl>
-                    <SelectTrigger
-                      className={cn(
-                        "h-11! rounded-xl border-2 px-4 text-sm font-bold transition-all shadow-sm",
-                        field.value === "ACTIVE" &&
-                          "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100",
-                        field.value === "DRAFT" &&
-                          "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100",
-                        field.value === "ARCHIVED" &&
-                          "bg-slate-800 text-white border-slate-900 hover:bg-slate-900 shadow-md",
-                        (field.value === "SOLD" || field.value === "RENTED") &&
-                          "bg-red-50 text-red-600 border-red-200 hover:bg-red-100",
-                        (field.value === "UNDER_OFFER" ||
-                          field.value === "RESERVED") &&
-                          "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100",
-                      )}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="bg-white rounded-2xl border-none shadow-xl ring-1 ring-black/5 p-1">
-                    {PROPERTY_STATUS_ORDER.map((s) => (
-                      <SelectItem
-                        key={s}
-                        value={s}
-                        className="py-3 rounded-lg text-sm font-medium focus:bg-slate-50 cursor-pointer transition-colors"
+                {isMobileOrTablet ? (
+                  <ResponsiveDialog
+                    open={statusOpen}
+                    onOpenChange={setStatusOpen}
+                    title="เลือกสถานะประกาศ"
+                    trigger={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className={cn(
+                          "w-full h-11! rounded-xl border-2 px-4 text-sm font-bold transition-all shadow-sm justify-between text-left",
+                          field.value === "ACTIVE" &&
+                            "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100",
+                          field.value === "DRAFT" &&
+                            "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100",
+                          field.value === "ARCHIVED" &&
+                            "bg-slate-800 text-white border-slate-900 hover:bg-slate-900 shadow-md",
+                          (field.value === "SOLD" || field.value === "RENTED") &&
+                            "bg-red-50 text-red-600 border-red-200 hover:bg-red-100",
+                          (field.value === "UNDER_OFFER" ||
+                            field.value === "RESERVED") &&
+                            "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100",
+                        )}
                       >
-                        <span className="flex items-center gap-3">
-                          <span
+                        <span>{PROPERTY_STATUS_LABELS[field.value as PropertyStatus]?.th || field.value}</span>
+                      </Button>
+                    }
+                  >
+                    <div className="p-4 max-h-[60vh] grid grid-cols-2 overflow-y-auto space-y-2 gap-2 bg-white">
+                      {PROPERTY_STATUS_ORDER.map((s) => {
+                        const isSelected = field.value === s;
+                        return (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => {
+                              field.onChange(s);
+                              setStatusOpen(false);
+                            }}
                             className={cn(
-                              "w-3 h-3 rounded-full shrink-0 shadow-inner",
-                              s === "ACTIVE" && "bg-emerald-500",
-                              s === "DRAFT" && "bg-slate-400",
-                              s === "ARCHIVED" && "bg-slate-800",
-                              (s === "SOLD" || s === "RENTED") && "bg-red-500",
-                              (s === "UNDER_OFFER" || s === "RESERVED") &&
-                                "bg-amber-500",
+                              "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                              isSelected
+                                ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
                             )}
-                          />
-                          {PROPERTY_STATUS_LABELS[s]?.th || s}
-                        </span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                          >
+                            <span className="flex items-center gap-3 text-xs font-bold">
+                              <span
+                                className={cn(
+                                  "w-3 h-3 rounded-full shrink-0 shadow-inner",
+                                  s === "ACTIVE" && "bg-emerald-500",
+                                  s === "DRAFT" && "bg-slate-400",
+                                  s === "ARCHIVED" && "bg-slate-800",
+                                  (s === "SOLD" || s === "RENTED") && "bg-red-500",
+                                  (s === "UNDER_OFFER" || s === "RESERVED") &&
+                                    "bg-amber-500",
+                                )}
+                              />
+                              {PROPERTY_STATUS_LABELS[s]?.th || s}
+                            </span>
+                            {isSelected && (
+                              <div className="bg-blue-600 rounded-full p-1 text-white shrink-0">
+                                <Check className="h-3 w-3" />
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </ResponsiveDialog>
+                ) : (
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger
+                        className={cn(
+                          "h-11! rounded-xl border-2 px-4 text-sm font-bold transition-all shadow-sm",
+                          field.value === "ACTIVE" &&
+                            "bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100",
+                          field.value === "DRAFT" &&
+                            "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100",
+                          field.value === "ARCHIVED" &&
+                            "bg-slate-800 text-white border-slate-900 hover:bg-slate-900 shadow-md",
+                          (field.value === "SOLD" || field.value === "RENTED") &&
+                            "bg-red-50 text-red-600 border-red-200 hover:bg-red-100",
+                          (field.value === "UNDER_OFFER" ||
+                            field.value === "RESERVED") &&
+                            "bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100",
+                        )}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="bg-white rounded-2xl border-none shadow-xl ring-1 ring-black/5 p-1">
+                      {PROPERTY_STATUS_ORDER.map((s) => (
+                        <SelectItem
+                          key={s}
+                          value={s}
+                          className="py-3 rounded-lg text-sm font-medium focus:bg-slate-50 cursor-pointer transition-colors"
+                        >
+                          <span className="flex items-center gap-3">
+                            <span
+                              className={cn(
+                                "w-3 h-3 rounded-full shrink-0 shadow-inner",
+                                s === "ACTIVE" && "bg-emerald-500",
+                                s === "DRAFT" && "bg-slate-400",
+                                s === "ARCHIVED" && "bg-slate-800",
+                                (s === "SOLD" || s === "RENTED") && "bg-red-500",
+                                (s === "UNDER_OFFER" || s === "RESERVED") &&
+                                  "bg-amber-500",
+                              )}
+                            />
+                            {PROPERTY_STATUS_LABELS[s]?.th || s}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </FormItem>
             )}
           />
@@ -186,43 +272,124 @@ export const ManagementSection = ({
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-stretch gap-3">
-                  <Select
-                    value={field.value ?? "NONE"}
-                    onValueChange={(v) =>
-                      field.onChange(v === "NONE" ? null : v)
-                    }
-                  >
-                    <FormControl>
-                      <SelectTrigger className="h-11! flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm">
-                        <SelectValue placeholder="ค้นหาหรือเลือกเจ้าของ" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white rounded-2xl shadow-xl border-none max-h-[300px] overflow-y-auto custom-scrollbar p-1">
-                      <SelectItem
-                        value="NONE"
-                        className="font-medium text-slate-400 text-sm italic py-3 rounded-lg"
-                      >
-                        -- ไม่ระบุเจ้าของ --
-                      </SelectItem>
-                      {owners.map((o) => (
-                        <SelectItem
-                          key={o.id}
-                          value={o.id}
-                          className="py-3 font-medium text-sm rounded-lg"
+                  {isMobileOrTablet ? (
+                    <ResponsiveDialog
+                      open={ownerOpen}
+                      onOpenChange={setOwnerOpen}
+                      title="เลือกเจ้าของทรัพย์"
+                      trigger={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-11! flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm justify-between text-left"
                         >
-                          <span className="text-slate-500 mr-1.5">K.</span>
-                          {o.full_name}{" "}
-                          {o.phone ? (
-                            <span className="text-[11px] text-slate-400 font-normal ml-2 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
-                              {o.phone}
-                            </span>
-                          ) : (
-                            ""
+                          <span className="truncate">
+                            {(() => {
+                              const selectedOwner = owners.find((o) => o.id === field.value);
+                              return selectedOwner
+                                ? `K. ${selectedOwner.full_name}${selectedOwner.phone ? ` (${selectedOwner.phone})` : ""}`
+                                : "ค้นหาหรือเลือกเจ้าของ";
+                            })()}
+                          </span>
+                        </Button>
+                      }
+                    >
+                      <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            field.onChange(null);
+                            setOwnerOpen(false);
+                          }}
+                          className={cn(
+                            "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                            !field.value
+                              ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                              : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
                           )}
+                        >
+                          <span className="text-xs font-bold italic text-slate-400">-- ไม่ระบุเจ้าของ --</span>
+                          {!field.value && (
+                            <div className="bg-blue-600 rounded-full p-1 text-white shrink-0">
+                              <Check className="h-3 w-3" />
+                            </div>
+                          )}
+                        </button>
+                        {owners.map((o) => {
+                          const isSelected = field.value === o.id;
+                          return (
+                            <button
+                              key={o.id}
+                              type="button"
+                              onClick={() => {
+                                field.onChange(o.id);
+                                setOwnerOpen(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                isSelected
+                                  ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                  : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                              )}
+                            >
+                              <span className="text-xs font-bold">
+                                <span className="text-slate-500 mr-1.5">K.</span>
+                                {o.full_name}{" "}
+                                {o.phone && (
+                                  <span className="text-[10px] text-slate-400 font-normal ml-2 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                                    {o.phone}
+                                  </span>
+                                )}
+                              </span>
+                              {isSelected && (
+                                <div className="bg-blue-600 rounded-full p-1 text-white shrink-0">
+                                  <Check className="h-3 w-3" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </ResponsiveDialog>
+                  ) : (
+                    <Select
+                      value={field.value ?? "NONE"}
+                      onValueChange={(v) =>
+                        field.onChange(v === "NONE" ? null : v)
+                      }
+                    >
+                      <FormControl>
+                        <SelectTrigger className="h-11! flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm">
+                          <SelectValue placeholder="ค้นหาหรือเลือกเจ้าของ" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white rounded-2xl shadow-xl border-none max-h-[300px] overflow-y-auto custom-scrollbar p-1">
+                        <SelectItem
+                          value="NONE"
+                          className="font-medium text-slate-400 text-sm italic py-3 rounded-lg"
+                        >
+                          -- ไม่ระบุเจ้าของ --
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        {owners.map((o) => (
+                          <SelectItem
+                            key={o.id}
+                            value={o.id}
+                            className="py-3 font-medium text-sm rounded-lg"
+                          >
+                            <span className="text-slate-500 mr-1.5">K.</span>
+                            {o.full_name}{" "}
+                            {o.phone ? (
+                              <span className="text-[11px] text-slate-400 font-normal ml-2 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                                {o.phone}
+                              </span>
+                            ) : (
+                              ""
+                            )}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
 
                   <ResponsiveDialog
                     open={isAddingOwner}
@@ -244,20 +411,17 @@ export const ManagementSection = ({
                       <OwnerForm
                         mode="create"
                         onCancel={() => setIsAddingOwner(false)}
-                        onSuccess={async () => {
+                        onSuccess={async (newOwnerId) => {
                           setIsAddingOwner(false);
                           if (refreshOwners) {
-                            const newOwners = await refreshOwners();
-                            if (newOwners && newOwners.length > 0) {
-                              const latest = [...newOwners].sort(
-                                (a, b) =>
-                                  new Date(b.created_at).getTime() -
-                                  new Date(a.created_at).getTime(),
-                              )[0];
-                              if (latest) {
-                                form.setValue("owner_id", latest.id);
-                              }
-                            }
+                            await refreshOwners();
+                          }
+                          if (newOwnerId) {
+                            form.setValue("owner_id", newOwnerId, {
+                              shouldValidate: true,
+                              shouldDirty: true,
+                              shouldTouch: true,
+                            });
                           }
                         }}
                       />
@@ -450,21 +614,74 @@ export const ManagementSection = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">ช่องทางที่โค (Channel)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value || ""}>
-                      <FormControl>
-                        <SelectTrigger className="h-11! rounded-xl bg-white border-slate-200">
-                          <SelectValue placeholder="เลือกช่องทางติดต่อ" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent className="bg-white rounded-xl">
-                        <SelectItem value="LINE">LINE</SelectItem>
-                        <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
-                        <SelectItem value="PHONE">โทรศัพท์</SelectItem>
-                        <SelectItem value="FACEBOOK">Facebook</SelectItem>
-                        <SelectItem value="WECHAT">WeChat</SelectItem>
-                        <SelectItem value="OTHER">อื่นๆ</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {isMobileOrTablet ? (
+                      <ResponsiveDialog
+                        open={channelOpen}
+                        onOpenChange={setChannelOpen}
+                        title="เลือกช่องทางติดต่อ"
+                        trigger={
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full h-11! rounded-xl bg-white border border-slate-200 justify-between text-left font-medium text-xs px-4"
+                          >
+                            <span>{field.value || "เลือกช่องทางติดต่อ"}</span>
+                          </Button>
+                        }
+                      >
+                        <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
+                          {[
+                            { label: "LINE", value: "LINE" },
+                            { label: "WhatsApp", value: "WHATSAPP" },
+                            { label: "โทรศัพท์", value: "PHONE" },
+                            { label: "Facebook", value: "FACEBOOK" },
+                            { label: "WeChat", value: "WECHAT" },
+                            { label: "อื่นๆ", value: "OTHER" },
+                          ].map((item) => {
+                            const isSelected = field.value === item.value;
+                            return (
+                              <button
+                                key={item.value}
+                                type="button"
+                                onClick={() => {
+                                  field.onChange(item.value);
+                                  setChannelOpen(false);
+                                }}
+                                className={cn(
+                                  "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                  isSelected
+                                    ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                    : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                )}
+                              >
+                                <span className="text-xs font-bold">{item.label}</span>
+                                {isSelected && (
+                                  <div className="bg-blue-600 rounded-full p-1 text-white shrink-0">
+                                    <Check className="h-3 w-3" />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </ResponsiveDialog>
+                    ) : (
+                      <Select onValueChange={field.onChange} value={field.value || ""}>
+                        <FormControl>
+                          <SelectTrigger className="h-11! rounded-xl bg-white border-slate-200">
+                            <SelectValue placeholder="เลือกช่องทางติดต่อ" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="bg-white rounded-xl">
+                          <SelectItem value="LINE">LINE</SelectItem>
+                          <SelectItem value="WHATSAPP">WhatsApp</SelectItem>
+                          <SelectItem value="PHONE">โทรศัพท์</SelectItem>
+                          <SelectItem value="FACEBOOK">Facebook</SelectItem>
+                          <SelectItem value="WECHAT">WeChat</SelectItem>
+                          <SelectItem value="OTHER">อื่นๆ</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
                   </FormItem>
                 )}
               />

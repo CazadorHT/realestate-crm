@@ -29,7 +29,7 @@ export function BranchSection({ branches }: BranchSectionProps) {
   }, [branches, form]);
 
   return (
-    <div className="space-y-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-full">
+    <div className="space-y-5 bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between h-full">
       <div className="flex items-center gap-3">
         <div className="p-2 bg-blue-600 rounded-lg text-white shadow-md shadow-blue-100">
           <Building2 className="h-5 w-5" />
@@ -74,8 +74,8 @@ export function BranchSection({ branches }: BranchSectionProps) {
                           <Building2 className="h-5 w-5" />
                         </div>
                         <div className="text-left truncate">
-                          <div className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">สาขาที่เลือก</div>
-                          <div className="text-base font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{selectedBranchLabel}</div>
+                          <div className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">สาขาที่เลือก</div>
+                          <div className="text-sm sm:text-base font-bold text-slate-800 truncate group-hover:text-blue-600 transition-colors">{selectedBranchLabel}</div>
                         </div>
                       </div>
                       <ChevronDown className="h-5 w-5 text-slate-400 shrink-0 group-hover:text-blue-500 transition-colors" />

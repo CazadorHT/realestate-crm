@@ -27,7 +27,7 @@ export function PropertyTypeSection({
 
   return (
     <div
-      className={`lg:col-span-2 space-y-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300 ${
+      className={`col-span-1 md:col-span-2 space-y-5 bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300 ${
         propertyTypeError ? "ring-2 ring-red-400 bg-red-50/30" : ""
       }`}
     >
@@ -66,7 +66,7 @@ export function PropertyTypeSection({
         name="property_type"
         render={({ field }) => (
           <FormItem>
-            <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-10 gap-4 ">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 xl:grid-cols-10 gap-3 sm:gap-4">
               {PROPERTY_TYPE_ORDER.map((type) => {
                 const Icon = PROPERTY_TYPE_ICONS[type];
                 const gradient = PROPERTY_TYPE_GRADIENTS[type];
@@ -82,22 +82,22 @@ export function PropertyTypeSection({
                     }}
                     className={`rounded-xl border transition-all duration-300 flex flex-col items-center  justify-center gap-3 p-2 group ${
                       isActive
-                        ? `bg-linear-to-br ${gradient} text-white shadow-xl scale-105 border-transparent`
+                        ? "bg-linear-to-br " + gradient + " text-white shadow-xl scale-105 border-transparent"
                         : propertyTypeError
                           ? "border-red-300 bg-red-50 text-red-500 shadow-md hover:border-red-400 hover:bg-white"
                           : "border-slate-100 bg-slate-50 text-slate-600 shadow-md hover:bg-white hover:text-blue-600 hover:shadow-lg hover:border-blue-200"
                     }`}
                   >
                     <div
-                      className={`p-3 rounded-full transition-all duration-300 ${
+                      className={`p-2.5 sm:p-3 rounded-full transition-all duration-300 ${
                         isActive
                           ? "bg-white/20 shadow-inner"
                           : "bg-white shadow-sm"
                       }`}
                     >
-                      <Icon className="w-6 h-6" />
+                      <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <span className="text-sm uppercase tracking-wider text-center w-full">
+                    <span className="text-[10px] sm:text-xs md:text-sm uppercase tracking-wider text-center w-full">
                       {PROPERTY_TYPE_LABELS[type]?.th || PROPERTY_TYPE_LABELS[type]?.en || type}
                     </span>
                   </button>

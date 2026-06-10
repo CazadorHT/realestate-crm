@@ -53,7 +53,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
   address_line1_en: "",
   address_line1_cn: "",
   address_line1_ru: "",
-  province: "",
+  province: "กรุงเทพมหานคร",
   district: "",
   subdistrict: "",
   postal_code: "",

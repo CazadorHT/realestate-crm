@@ -21,7 +21,7 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
 
   return (
     <div
-      className={`space-y-5 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300 ${
+      className={`space-y-5 bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-300 ${
         listingTypeError ? "ring-2 ring-red-400 bg-red-50/30" : ""
       }`}
     >
@@ -62,7 +62,7 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
         name="listing_type"
         render={({ field }) => (
           <FormItem>
-            <div className="grid grid-cols-3 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               {LISTING_TYPE_ORDER.map((type) => (
                 <button
                   key={type}
@@ -77,24 +77,24 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
                   }`}
                 >
                   <div
-                    className={`p-3 rounded-full transition-all duration-300 flex items-center justify-center shrink-0 ${
+                    className={`p-2 sm:p-3 rounded-full transition-all duration-300 flex items-center justify-center shrink-0 ${
                       field.value === type
                         ? "bg-white/20 text-white"
                         : "bg-white text-slate-400 group-hover:text-blue-500"
                     }`}
                   >
                     {type === "SALE" ? (
-                      <TrendingUp className="w-6 h-6" />
+                      <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
                     ) : type === "RENT" ? (
-                      <PlusCircle className="w-6 h-6" />
+                      <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                     ) : (
-                      <Home className="w-6 h-6" />
+                      <Home className="w-5 h-5 sm:w-6 sm:h-6" />
                     )}
                   </div>
 
                   <div>
                     <div
-                      className={`text-base font-medium transition-colors text-center ${
+                      className={`text-xs sm:text-sm md:text-base font-medium transition-colors text-center ${
                         field.value === type ? "text-white" : "text-slate-800 group-hover:text-blue-500"
                       }`}
                     >
@@ -103,7 +103,7 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
                   </div>
 
                   {field.value === type && (
-                    <div className="absolute top-3 right-2 text-white">
+                    <div className="absolute top-2 right-2 text-white">
                       <Check className="h-3.5 w-3.5" />
                     </div>
                   )}

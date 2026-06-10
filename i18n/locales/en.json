@@ -254,6 +254,8 @@
       "office": "Office",
       "office_building": "Office Space",
       "office_desc": "Ready-to-use office in CBD core",
+      "home_office": "Home Office",
+      "home_office_desc": "Perfect blend of residential comfort and functional workspaces",
       "warehouse": "Warehouse",
       "warehouse_desc": "Large warehouse space for all businesses",
       "villa": "Villa",

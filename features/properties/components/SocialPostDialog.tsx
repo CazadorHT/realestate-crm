@@ -444,7 +444,7 @@ export function SocialPostDialog({
       open={isOpen}
       onOpenChange={onOpenChange}
       className={cn(
-        "sm:max-w-[95vw] md:max-w-[850px] lg:max-w-[1000px] xl:max-w-[1150px] ",
+        "sm:max-w-[90vw] md:max-w-[700px] lg:max-w-[900px] xl:max-w-[950px] ",
         className
       )}
       snapPoints={["0.7", "0.95"]}
@@ -531,14 +531,14 @@ export function SocialPostDialog({
         </div>
       }
     >
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-4 md:gap-6 lg:gap-8 py-2">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-4 md:gap-6 lg:gap-8 py-2">
         {/* Left Column: Settings/Info */}
         <div className="space-y-4 xs:space-y-6">
           <div className="space-y-3">
             <Label className="text-xs font-bold text-slate-500 uppercase tracking-[2px] ml-1">
               Language Selection
             </Label>
-            <div className="grid grid-cols-3 md:grid-cols-1 lg:grid-cols-3 gap-1.5 xs:gap-2">
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 xs:gap-3">
               {[
                 { id: "th", label: "Thai", flag: "🇹🇭" },
                 { id: "en", label: "English", flag: "🇺🇸" },

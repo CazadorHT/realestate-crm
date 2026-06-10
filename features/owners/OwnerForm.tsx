@@ -67,7 +67,7 @@ type Props =
   | {
       mode: "create";
       initialValues?: Partial<OwnerFormValues>;
-      onSuccess?: () => void;
+      onSuccess?: (id?: string) => void;
       onCancel?: () => void;
       onDirtyChange?: (isDirty: boolean) => void;
       isInDialog?: boolean;
@@ -76,7 +76,7 @@ type Props =
       mode: "edit";
       id: string;
       initialValues: Owner | OwnerFormValues;
-      onSuccess?: () => void;
+      onSuccess?: (id?: string) => void;
       onCancel?: () => void;
       onDirtyChange?: (isDirty: boolean) => void;
       isInDialog?: boolean;
@@ -153,7 +153,7 @@ export function OwnerForm(props: Props) {
         router.refresh();
 
         if (props.onSuccess) {
-          props.onSuccess();
+          props.onSuccess(res && 'id' in res ? (res.id as string) : undefined);
         } else {
           router.push("/protected/owners?success=true");
         }

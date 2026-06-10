@@ -38,7 +38,7 @@ export function Step1BasicInfo({
       className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 origin-top"
       style={{ zoom: "0.80" }}
     >
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Branch Section */}
         <BranchSection branches={branches} />
 
@@ -64,7 +64,7 @@ export function Step1BasicInfo({
  
         {/* Quick Info Section */}
         {isQuickInfoOpen && (
-          <div id="quick-info-section" className="pt-2 col-span-1 md:col-span-2 lg:col-span-2 scroll-mt-6">
+          <div id="quick-info-section" className="pt-2 col-span-1 md:col-span-2 scroll-mt-6">
             <QuickInfoSection
               popularAreas={popularAreas}
               isAddingArea={isAddingArea}

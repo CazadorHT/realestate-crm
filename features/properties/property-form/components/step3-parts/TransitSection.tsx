@@ -31,7 +31,10 @@ import {
   Clock,
   MoreVertical,
   Landmark,
+  Check,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "../../components/SectionHeader";
@@ -148,6 +151,16 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
   const [newTransitLabelTh, setNewTransitLabelTh] = React.useState("");
   const [newTransitColor, setNewTransitColor] = React.useState("#3b82f6");
   const [isSavingTransit, setIsSavingTransit] = React.useState(false);
+  const [openIndex, setOpenIndex] = React.useState<number | null>(null);
+  const [isMobileOrTablet, setIsMobileOrTablet] = React.useState(false);
+
+  React.useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1535px)");
+    const onChange = () => setIsMobileOrTablet(mql.matches);
+    mql.addEventListener("change", onChange);
+    setIsMobileOrTablet(mql.matches);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -315,63 +328,180 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                           <TrainFront className="h-3.5 w-3.5 text-blue-500" />
                           ประเภท
                         </FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value ?? "BTS"}
-                          disabled={isLoadingTypes}
-                        >
-                          <FormControl>
-                            <SelectTrigger className="w-full! h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
-                              {isLoadingTypes ? (
-                                <div className="flex items-center gap-2">
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                  <span>กำลังโหลด...</span>
-                                </div>
-                              ) : (
-                                <SelectValue />
-                              )}
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-white rounded-xl shadow-lg border-slate-200">
-                            {transitTypes.length > 0 ? (
-                              transitTypes.map((t) => (
-                                <SelectItem
-                                  key={t.code}
-                                  value={t.code}
-                                  className="font-medium py-2.5 text-sm cursor-pointer hover:bg-slate-50"
-                                >
-                                  <div className="flex items-center gap-2.5">
-                                    <div 
-                                      className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50" 
-                                      style={{ backgroundColor: t.metadata?.color || "#cbd5e1" }}
-                                    />
-                                    <span className="flex-1">{t.label.th}</span>
-                                  </div>
-                                </SelectItem>
-                              ))
-                            ) : (
-                              ["BTS", "MRT", "ARL"].map((code) => (
-                                <SelectItem key={code} value={code} className="py-2.5">
-                                  {code}
-                                </SelectItem>
-                              ))
-                            )}
-                            <div className="p-1 border-t border-slate-100 mt-1">
+                        {isMobileOrTablet ? (
+                          <ResponsiveDialog
+                            open={openIndex === index}
+                            onOpenChange={(open) => setOpenIndex(open ? index : null)}
+                            title="เลือกประเภทการเดินทาง"
+                            trigger={
                               <Button
                                 type="button"
-                                variant="ghost"
-                                className="w-full justify-start text-xs text-blue-600 font-bold hover:bg-blue-50 py-1.5 h-auto cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setIsTransitModalOpen(true);
-                                }}
+                                variant="outline"
+                                disabled={isLoadingTypes}
+                                className="w-full h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs justify-start text-left text-slate-800"
                               >
-                                <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-                                เพิ่มสายรถไฟฟ้าใหม่ (Add New)
+                                {isLoadingTypes ? (
+                                  <div className="flex items-center gap-2">
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <span>กำลังโหลด...</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2.5">
+                                    {(() => {
+                                      const selectedType = transitTypes.find(t => t.code === field.value);
+                                      return (
+                                        <>
+                                          <div
+                                            className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50"
+                                            style={{ backgroundColor: selectedType?.metadata?.color || "#cbd5e1" }}
+                                          />
+                                          <span>{selectedType?.label.th || field.value || "BTS"}</span>
+                                        </>
+                                      );
+                                    })()}
+                                  </div>
+                                )}
                               </Button>
+                            }
+                          >
+                            <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
+                              {transitTypes.length > 0 ? (
+                                transitTypes.map((t) => {
+                                  const isSelected = field.value === t.code;
+                                  return (
+                                    <button
+                                      key={t.code}
+                                      type="button"
+                                      onClick={() => {
+                                        field.onChange(t.code);
+                                        setOpenIndex(null);
+                                      }}
+                                      className={cn(
+                                        "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                        isSelected
+                                          ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                          : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                      )}
+                                    >
+                                      <div className="flex items-center gap-2.5">
+                                        <div
+                                          className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50"
+                                          style={{ backgroundColor: t.metadata?.color || "#cbd5e1" }}
+                                        />
+                                        <span className="text-xs font-bold">{t.label.th}</span>
+                                      </div>
+                                      {isSelected && (
+                                        <div className="bg-blue-600 rounded-full p-1 text-white">
+                                          <Check className="h-3 w-3" />
+                                        </div>
+                                      )}
+                                    </button>
+                                  );
+                                })
+                              ) : (
+                                ["BTS", "MRT", "ARL"].map((code) => {
+                                  const isSelected = field.value === code;
+                                  return (
+                                    <button
+                                      key={code}
+                                      type="button"
+                                      onClick={() => {
+                                        field.onChange(code);
+                                        setOpenIndex(null);
+                                      }}
+                                      className={cn(
+                                        "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                        isSelected
+                                          ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                          : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                      )}
+                                    >
+                                      <span className="text-xs font-bold">{code}</span>
+                                      {isSelected && (
+                                        <div className="bg-blue-600 rounded-full p-1 text-white">
+                                          <Check className="h-3 w-3" />
+                                        </div>
+                                      )}
+                                    </button>
+                                  );
+                                })
+                              )}
+                              <div className="pt-2 border-t border-slate-100 mt-2">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  className="w-full justify-start text-xs text-blue-600 font-bold hover:bg-blue-50 py-2.5 h-auto cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenIndex(null);
+                                    setIsTransitModalOpen(true);
+                                  }}
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+                                  เพิ่มสายรถไฟฟ้าใหม่ (Add New)
+                                </Button>
+                              </div>
                             </div>
-                          </SelectContent>
-                        </Select>
+                          </ResponsiveDialog>
+                        ) : (
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value ?? "BTS"}
+                            disabled={isLoadingTypes}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="w-full! h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
+                                {isLoadingTypes ? (
+                                  <div className="flex items-center gap-2">
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <span>กำลังโหลด...</span>
+                                  </div>
+                                ) : (
+                                  <SelectValue />
+                                )}
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-white rounded-xl shadow-lg border-slate-200">
+                              {transitTypes.length > 0 ? (
+                                transitTypes.map((t) => (
+                                  <SelectItem
+                                    key={t.code}
+                                    value={t.code}
+                                    className="font-medium py-2.5 text-sm cursor-pointer hover:bg-slate-50"
+                                  >
+                                    <div className="flex items-center gap-2.5">
+                                      <div 
+                                        className="w-3.5 h-3.5 rounded-full shrink-0 border border-slate-200/50" 
+                                        style={{ backgroundColor: t.metadata?.color || "#cbd5e1" }}
+                                      />
+                                      <span className="flex-1">{t.label.th}</span>
+                                    </div>
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                ["BTS", "MRT", "ARL"].map((code) => (
+                                  <SelectItem key={code} value={code} className="py-2.5">
+                                    {code}
+                                  </SelectItem>
+                                ))
+                              )}
+                              <div className="p-1 border-t border-slate-100 mt-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  className="w-full justify-start text-xs text-blue-600 font-bold hover:bg-blue-50 py-1.5 h-auto cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsTransitModalOpen(true);
+                                  }}
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+                                  เพิ่มสายรถไฟฟ้าใหม่ (Add New)
+                                </Button>
+                              </div>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </FormItem>
                     )}
                   />

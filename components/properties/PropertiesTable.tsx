@@ -1049,7 +1049,7 @@ export function PropertiesTable({
                   <Checkbox
                     checked={isSelected(property.id)}
                     onCheckedChange={() => toggleSelect(property.id)}
-                    className="h-6 w-6 rounded-full bg-white/90 backdrop-blur-sm border-slate-300 shadow-sm data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 transition-all group-hover/check:scale-110 shrink-0 flex items-center justify-center"
+                    className="h-6 w-6 rounded-full bg-white/90 backdrop-blur-sm border-slate-300 shadow-sm data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 transition-all group-hover/check:scale-110 shrink-0 flex items-center justify-center pointer-events-none"
                   />
                 </div>
 

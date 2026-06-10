@@ -31,7 +31,10 @@ import {
   Sparkles,
   Loader2,
   MoreVertical,
+  Check,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SectionHeader } from "../../components/SectionHeader";
@@ -116,6 +119,16 @@ export function NearbyPlacesSection({
   const [newCatCode, setNewCatCode] = React.useState("");
   const [newCatLabelTh, setNewCatLabelTh] = React.useState("");
   const [isSavingCat, setIsSavingCat] = React.useState(false);
+  const [openIndex, setOpenIndex] = React.useState<number | null>(null);
+  const [isMobileOrTablet, setIsMobileOrTablet] = React.useState(false);
+
+  React.useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1535px)");
+    const onChange = () => setIsMobileOrTablet(mql.matches);
+    mql.addEventListener("change", onChange);
+    setIsMobileOrTablet(mql.matches);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -265,41 +278,112 @@ export function NearbyPlacesSection({
                           <Landmark className="h-3.5 w-3.5 text-blue-500" />
                           ประเภท
                         </FormLabel>
-                        <Select value={field.value} onValueChange={field.onChange} disabled={isLoadingCats}>
-                          <FormControl>
-                            <SelectTrigger className="w-full h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
-                              {isLoadingCats ? (
-                                <div className="flex items-center gap-2">
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                  <span>กำลังโหลด...</span>
-                                </div>
-                              ) : (
-                                <SelectValue placeholder="เลือก..." />
-                              )}
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-white rounded-xl">
-                            {categories.map((cat) => (
-                              <SelectItem key={cat.value} value={cat.value} className="font-medium py-2 text-sm">
-                                {cat.label}
-                              </SelectItem>
-                            ))}
-                            <div className="p-1 border-t border-slate-100 mt-1">
+                        {isMobileOrTablet ? (
+                          <ResponsiveDialog
+                            open={openIndex === index}
+                            onOpenChange={(open) => setOpenIndex(open ? index : null)}
+                            title="เลือกหมวดหมู่สถานที่"
+                            trigger={
                               <Button
                                 type="button"
-                                variant="ghost"
-                                className="w-full justify-start text-xs text-blue-600 font-bold hover:bg-blue-50 py-1.5 h-auto cursor-pointer"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setIsCatModalOpen(true);
-                                }}
+                                variant="outline"
+                                disabled={isLoadingCats}
+                                className="w-full h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs justify-start text-left text-slate-800"
                               >
-                                <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
-                                เพิ่มหมวดหมู่ใหม่ (Add New)
+                                {isLoadingCats ? (
+                                  <div className="flex items-center gap-2">
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <span>กำลังโหลด...</span>
+                                  </div>
+                                ) : (
+                                  <span>
+                                    {categories.find((cat) => cat.value === field.value)?.label || field.value || "เลือก..."}
+                                  </span>
+                                )}
                               </Button>
+                            }
+                          >
+                            <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
+                              {categories.map((cat) => {
+                                const isSelected = field.value === cat.value;
+                                return (
+                                  <button
+                                    key={cat.value}
+                                    type="button"
+                                    onClick={() => {
+                                      field.onChange(cat.value);
+                                      setOpenIndex(null);
+                                    }}
+                                    className={cn(
+                                      "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                      isSelected
+                                        ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                        : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                    )}
+                                  >
+                                    <span className="text-xs font-bold">{cat.label}</span>
+                                    {isSelected && (
+                                      <div className="bg-blue-600 rounded-full p-1 text-white">
+                                        <Check className="h-3 w-3" />
+                                      </div>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                              <div className="pt-2 border-t border-slate-100 mt-2">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  className="w-full justify-start text-xs text-blue-600 font-bold hover:bg-blue-50 py-2.5 h-auto cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenIndex(null);
+                                    setIsCatModalOpen(true);
+                                  }}
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+                                  เพิ่มหมวดหมู่ใหม่ (Add New)
+                                </Button>
+                              </div>
                             </div>
-                          </SelectContent>
-                        </Select>
+                          </ResponsiveDialog>
+                        ) : (
+                          <Select value={field.value} onValueChange={field.onChange} disabled={isLoadingCats}>
+                            <FormControl>
+                              <SelectTrigger className="w-full h-10 bg-white rounded-lg border-slate-200 shadow-sm font-medium text-xs">
+                                {isLoadingCats ? (
+                                  <div className="flex items-center gap-2">
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <span>กำลังโหลด...</span>
+                                  </div>
+                                ) : (
+                                  <SelectValue placeholder="เลือก..." />
+                                )}
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-white rounded-xl">
+                              {categories.map((cat) => (
+                                <SelectItem key={cat.value} value={cat.value} className="font-medium py-2 text-sm">
+                                  {cat.label}
+                                </SelectItem>
+                              ))}
+                              <div className="p-1 border-t border-slate-100 mt-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  className="w-full justify-start text-xs text-blue-600 font-bold hover:bg-blue-50 py-1.5 h-auto cursor-pointer"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsCatModalOpen(true);
+                                  }}
+                                >
+                                  <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+                                  เพิ่มหมวดหมู่ใหม่ (Add New)
+                                </Button>
+                              </div>
+                            </SelectContent>
+                          </Select>
+                        )}
                       </FormItem>
                     )}
                   />

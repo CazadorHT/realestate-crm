@@ -12,11 +12,14 @@ import {
   X,
   Languages,
   Sparkles,
+  Check,
 } from "lucide-react";
 import { useAITranslation } from "../hooks/use-ai-translation";
 
 import type { PropertyFormValues } from "@/features/properties/schema";
 import { useThaiAddress } from "@/hooks/useThaiAddress";
+import { cn } from "@/lib/utils";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
   FormField,
   FormItem,
@@ -69,6 +72,17 @@ export function QuickInfoSection({
   const [showAddArea, setShowAddArea] = React.useState(false);
   const { isTranslating, translateTitle } = useAITranslation(form);
   const [isTranslatingArea, setIsTranslatingArea] = React.useState(false);
+  const [provinceOpen, setProvinceOpen] = React.useState(false);
+  const [areaOpen, setAreaOpen] = React.useState(false);
+  const [isMobileOrTablet, setIsMobileOrTablet] = React.useState(false);
+
+  React.useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1535px)");
+    const onChange = () => setIsMobileOrTablet(mql.matches);
+    mql.addEventListener("change", onChange);
+    setIsMobileOrTablet(mql.matches);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
 
   // AI Translation for New Area
   const handleTranslateArea = async () => {
@@ -97,7 +111,7 @@ export function QuickInfoSection({
 
   return (
     <div
-      className={`animate-in fade-in slide-in-from-top-4 duration-500 bg-linear-to-br from-white via-blue-50/50 to-indigo-50/50 p-6 md:p-8 rounded-2xl border space-y-6 ${
+      className={`animate-in fade-in slide-in-from-top-4 duration-500 bg-linear-to-br from-white via-blue-50/50 to-indigo-50/50 p-4 sm:p-6 md:p-8 rounded-2xl border space-y-6 ${
         hasTitleError
           ? "border-red-200 bg-red-50/30"
           : "border-blue-100/50 shadow-sm"
@@ -182,7 +196,7 @@ export function QuickInfoSection({
         </div>
 
         {/* Multi-language Titles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:col-span-1 lg:col-span-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:col-span-2 lg:col-span-4">
           {/* Title (English) */}
           <FormField
             control={form.control}
@@ -248,7 +262,7 @@ export function QuickInfoSection({
         </div>
 
         {/* province */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-1 lg:col-span-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2 lg:col-span-4">
           <FormField
             control={form.control}
             name="province"
@@ -261,39 +275,101 @@ export function QuickInfoSection({
                   )}
                 </label>
                 <div className="mt-auto w-full">
-                  <Select
-                    value={field.value}
-                    onValueChange={(val) => {
-                      field.onChange(val);
-                      // Reset dependent fields when province changes in Step 1
-                      form.setValue("district", "");
-                      form.setValue("subdistrict", "");
-                      form.setValue("postal_code", "");
-                      form.setValue("popular_area", undefined);
-                    }}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                          <Flag className="h-5 w-5" />
-                        </div>
-                        <SelectValue placeholder="เลือกจังหวัด" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[350px] p-2">
-                      <SelectGroup>
-                        {provinces.map((p) => (
-                          <SelectItem
-                            key={p.id}
-                            value={p.name_th}
-                            className="rounded-lg"
-                          >
-                            {p.name_th}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                  {isMobileOrTablet ? (
+                    <ResponsiveDialog
+                      open={provinceOpen}
+                      onOpenChange={setProvinceOpen}
+                      title="เลือกจังหวัด"
+                      trigger={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200 justify-start h-14"
+                        >
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                            <Flag className="h-5 w-5" />
+                          </div>
+                          <span className={cn("font-medium", field.value ? "text-slate-800" : "text-slate-400")}>
+                            {field.value || "เลือกจังหวัด"}
+                          </span>
+                        </Button>
+                      }
+                    >
+                      <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
+                        {provinces.length === 0 ? (
+                          <div className="p-8 text-center text-slate-400 text-sm font-medium">
+                            ไม่มีข้อมูลจังหวัด
+                          </div>
+                        ) : (
+                          provinces.map((p) => {
+                            const isSelected = field.value === p.name_th;
+                            return (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => {
+                                  field.onChange(p.name_th);
+                                  // Reset dependent fields when province changes in Step 1
+                                  form.setValue("district", "");
+                                  form.setValue("subdistrict", "");
+                                  form.setValue("postal_code", "");
+                                  form.setValue("popular_area", undefined);
+                                  setProvinceOpen(false);
+                                }}
+                                className={cn(
+                                  "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                  isSelected
+                                    ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                    : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                )}
+                              >
+                                <span className="text-sm font-bold">{p.name_th}</span>
+                                {isSelected && (
+                                  <div className="bg-blue-600 rounded-full p-1 text-white">
+                                    <Check className="h-3 w-3" />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </ResponsiveDialog>
+                  ) : (
+                    <Select
+                      value={field.value}
+                      onValueChange={(val) => {
+                        field.onChange(val);
+                        // Reset dependent fields when province changes in Step 1
+                        form.setValue("district", "");
+                        form.setValue("subdistrict", "");
+                        form.setValue("postal_code", "");
+                        form.setValue("popular_area", undefined);
+                      }}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                            <Flag className="h-5 w-5" />
+                          </div>
+                          <SelectValue placeholder="เลือกจังหวัด" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[350px] p-2">
+                        <SelectGroup>
+                          {provinces.map((p) => (
+                            <SelectItem
+                              key={p.id}
+                              value={p.name_th}
+                              className="rounded-lg"
+                            >
+                              {p.name_th}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <FormMessage />
               </FormItem>
@@ -312,42 +388,115 @@ export function QuickInfoSection({
                   ระบุย่านทำเล
                 </label>
 
-                <div className="mt-auto w-full  ">
-                  <Select
-                    value={field.value ?? "none"}
-                    onValueChange={(v) =>
-                      field.onChange(v === "none" ? undefined : v)
-                    }
-                    name={field.name}
-                  >
-                    <FormControl>
-                      <SelectTrigger
-                        id={field.name}
-                        className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200"
-                      >
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                          <MapPin className="h-5 w-5" />
-                        </div>
-                        <SelectValue placeholder="เลือกย่าน / ทำเล" />
-                      </SelectTrigger>
-                    </FormControl>
-
-                    <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px] p-4 min-w-(--radix-select-trigger-width)">
-                      <SelectGroup>
-                        <SelectItem
-                          value="none"
-                          className="font-medium text-slate-400"
+                <div className="mt-auto w-full">
+                  {isMobileOrTablet ? (
+                    <ResponsiveDialog
+                      open={areaOpen}
+                      onOpenChange={setAreaOpen}
+                      title="เลือกย่าน / ทำเล"
+                      trigger={
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200 justify-start h-14"
                         >
-                          -- ไม่ระบุ --
-                        </SelectItem>
-                        {[...(popularAreas || [])].sort((a, b) => a.localeCompare(b, "th")).map((a) => (
-                          <SelectItem key={a} value={a}>
-                            {a}
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                            <MapPin className="h-5 w-5" />
+                          </div>
+                          <span className={cn("font-medium", field.value ? "text-slate-800" : "text-slate-400")}>
+                            {field.value || "เลือกย่าน / ทำเล"}
+                          </span>
+                        </Button>
+                      }
+                    >
+                      <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            field.onChange(undefined);
+                            setAreaOpen(false);
+                          }}
+                          className={cn(
+                            "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left text-sm font-bold text-slate-400",
+                            !field.value
+                              ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                              : "bg-white border-slate-100 hover:bg-slate-50",
+                          )}
+                        >
+                          <span>-- ไม่ระบุ --</span>
+                          {!field.value && (
+                            <div className="bg-blue-600 rounded-full p-1 text-white">
+                              <Check className="h-3 w-3" />
+                            </div>
+                          )}
+                        </button>
+                        {[...(popularAreas || [])]
+                          .sort((a, b) => a.localeCompare(b, "th"))
+                          .map((a) => {
+                            const isSelected = field.value === a;
+                            return (
+                              <button
+                                key={a}
+                                type="button"
+                                onClick={() => {
+                                  field.onChange(a);
+                                  setAreaOpen(false);
+                                }}
+                                className={cn(
+                                  "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                  isSelected
+                                    ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                    : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                )}
+                              >
+                                <span className="text-sm font-bold">{a}</span>
+                                {isSelected && (
+                                  <div className="bg-blue-600 rounded-full p-1 text-white">
+                                    <Check className="h-3 w-3" />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })}
+                      </div>
+                    </ResponsiveDialog>
+                  ) : (
+                    <Select
+                      value={field.value ?? "none"}
+                      onValueChange={(v) =>
+                        field.onChange(v === "none" ? undefined : v)
+                      }
+                      name={field.name}
+                    >
+                      <FormControl>
+                        <SelectTrigger
+                          id={field.name}
+                          className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200"
+                        >
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                            <MapPin className="h-5 w-5" />
+                          </div>
+                          <SelectValue placeholder="เลือกย่าน / ทำเล" />
+                        </SelectTrigger>
+                      </FormControl>
+
+                      <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px] p-4 min-w-(--radix-select-trigger-width)">
+                        <SelectGroup>
+                          <SelectItem
+                            value="none"
+                            className="font-medium text-slate-400"
+                          >
+                            -- ไม่ระบุ --
                           </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    </SelectContent>
-                  </Select>
+                          {[...(popularAreas || [])].sort((a, b) => a.localeCompare(b, "th")).map((a) => (
+                            <SelectItem key={a} value={a}>
+                              {a}
+                            </SelectItem>
+                          ))}
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <FormMessage />
               </FormItem>

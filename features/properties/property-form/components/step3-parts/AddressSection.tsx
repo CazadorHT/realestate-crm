@@ -10,6 +10,7 @@ import {
   MapPin,
   Languages,
   Sparkles,
+  Check,
 } from "lucide-react";
 import {
   FormField,
@@ -20,6 +21,8 @@ import {
   FormDescription,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
   Select,
   SelectTrigger,
@@ -52,6 +55,19 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     loading: addressLoading,
   } = useThaiAddress();
   const { isTranslating, translateAddress } = useAITranslation(form);
+
+  const [provinceOpen, setProvinceOpen] = React.useState(false);
+  const [districtOpen, setDistrictOpen] = React.useState(false);
+  const [subdistrictOpen, setSubdistrictOpen] = React.useState(false);
+  const [isMobileOrTablet, setIsMobileOrTablet] = React.useState(false);
+
+  React.useEffect(() => {
+    const mql = window.matchMedia("(max-width: 1535px)");
+    const onChange = () => setIsMobileOrTablet(mql.matches);
+    mql.addEventListener("change", onChange);
+    setIsMobileOrTablet(mql.matches);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
 
   // Preload all address data once on mount
   React.useEffect(() => {
@@ -119,7 +135,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           <FormField
             control={form.control}
             name="province"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <MapIcon className="h-3.5 w-3.5 text-blue-500" />
@@ -128,35 +144,90 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     <Loader2 className="inline h-3 w-3 animate-spin text-slate-400" />
                   )}
                 </FormLabel>
-                <Select
-                  value={field.value ?? ""}
-                  onValueChange={(val) => {
-                    field.onChange(val);
-                    // Reset dependent fields
-                    form.setValue("district", "");
-                    form.setValue("subdistrict", "");
-                    form.setValue("postal_code", "");
-                  }}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full h-11 rounded-lg bg-slate-50 border-slate-200 font-medium px-4 shadow-sm text-xs focus:ring-0">
-                      <SelectValue placeholder="เลือกจังหวัด" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-[300px]">
-                    {[...provinces]
-                      .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
-                      .map((p) => (
-                        <SelectItem key={p.id} value={p.name_th}>
-                          {p.name_th}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                  เลือกจังหวัดที่ตั้งของทรัพย์สิน
-                </FormDescription>
-                <FormMessage />
+                {isMobileOrTablet ? (
+                  <ResponsiveDialog
+                    open={provinceOpen}
+                    onOpenChange={setProvinceOpen}
+                    title="เลือกจังหวัด"
+                    trigger={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full h-11 rounded-lg bg-slate-50 border-slate-200 font-medium px-4 shadow-sm text-xs justify-start text-left text-slate-800"
+                      >
+                        <span>{field.value || "เลือกจังหวัด"}</span>
+                      </Button>
+                    }
+                  >
+                    <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
+                      {[...provinces]
+                        .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                        .map((p) => {
+                          const isSelected = field.value === p.name_th;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              onClick={() => {
+                                field.onChange(p.name_th);
+                                // Reset dependent fields
+                                form.setValue("district", "");
+                                form.setValue("subdistrict", "");
+                                form.setValue("postal_code", "");
+                                setProvinceOpen(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                isSelected
+                                  ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                  : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                              )}
+                            >
+                              <span className="text-xs font-bold">{p.name_th}</span>
+                              {isSelected && (
+                                <div className="bg-blue-600 rounded-full p-1 text-white">
+                                  <Check className="h-3 w-3" />
+                                </div>
+                              )}
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </ResponsiveDialog>
+                ) : (
+                  <Select
+                    value={field.value ?? ""}
+                    onValueChange={(val) => {
+                      field.onChange(val);
+                      // Reset dependent fields
+                      form.setValue("district", "");
+                      form.setValue("subdistrict", "");
+                      form.setValue("postal_code", "");
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full h-11 rounded-lg bg-slate-50 border-slate-200 font-medium px-4 shadow-sm text-xs focus:ring-0">
+                        <SelectValue placeholder="เลือกจังหวัด" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-[300px]">
+                      {[...provinces]
+                        .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                        .map((p) => (
+                          <SelectItem key={p.id} value={p.name_th}>
+                            {p.name_th}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {fieldState.error ? (
+                  <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1 min-h-[32px]" />
+                ) : (
+                  <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 min-h-[32px]">
+                    เลือกจังหวัดที่ตั้งของทรัพย์สิน
+                  </FormDescription>
+                )}
               </FormItem>
             )}
           />
@@ -165,41 +236,101 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           <FormField
             control={form.control}
             name="district"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <MapPinned className="h-3.5 w-3.5 text-blue-500" />
                   เขต / อำเภอ <span className="text-red-500">*</span>
                 </FormLabel>
-                <Select
-                  key={`district-${activeProvinceId || "none"}`}
-                  value={field.value ?? ""}
-                  disabled={!activeProvinceId}
-                  onValueChange={(val) => {
-                    field.onChange(val);
-                    form.setValue("subdistrict", "");
-                    form.setValue("postal_code", "");
-                  }}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full h-11 rounded-lg bg-slate-50 border-slate-200 font-medium px-4 shadow-sm text-xs focus:ring-0">
-                      <SelectValue placeholder="เลือกอำเภอ" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-[300px]">
-                    {[...districtOptions]
-                      .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
-                      .map((d) => (
-                        <SelectItem key={d.id} value={d.name_th}>
-                          {d.name_th.replace(/^เขต/, "")}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                  เลือกเขตหรืออำเภอ
-                </FormDescription>
-                <FormMessage />
+                {isMobileOrTablet ? (
+                  <ResponsiveDialog
+                    open={districtOpen}
+                    onOpenChange={setDistrictOpen}
+                    title="เลือกเขต / อำเภอ"
+                    trigger={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={!activeProvinceId}
+                        className="w-full h-11 rounded-lg bg-slate-50 border-slate-200 font-medium px-4 shadow-sm text-xs justify-start text-left text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span>{field.value || "เลือกอำเภอ"}</span>
+                      </Button>
+                    }
+                  >
+                    <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
+                      {districtOptions.length === 0 ? (
+                        <div className="p-8 text-center text-slate-400 text-xs font-medium">
+                          กรุณาเลือกจังหวัดก่อน
+                        </div>
+                      ) : (
+                        [...districtOptions]
+                          .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                          .map((d) => {
+                            const isSelected = field.value === d.name_th;
+                            return (
+                              <button
+                                key={d.id}
+                                type="button"
+                                onClick={() => {
+                                  field.onChange(d.name_th);
+                                  form.setValue("subdistrict", "");
+                                  form.setValue("postal_code", "");
+                                  setDistrictOpen(false);
+                                }}
+                                className={cn(
+                                  "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                  isSelected
+                                    ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                    : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                )}
+                              >
+                                <span className="text-xs font-bold">{d.name_th.replace(/^เขต/, "")}</span>
+                                {isSelected && (
+                                  <div className="bg-blue-600 rounded-full p-1 text-white">
+                                    <Check className="h-3 w-3" />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })
+                      )}
+                    </div>
+                  </ResponsiveDialog>
+                ) : (
+                  <Select
+                    key={`district-${activeProvinceId || "none"}`}
+                    value={field.value ?? ""}
+                    disabled={!activeProvinceId}
+                    onValueChange={(val) => {
+                      field.onChange(val);
+                      form.setValue("subdistrict", "");
+                      form.setValue("postal_code", "");
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full h-11 rounded-lg bg-slate-50 border-slate-200 font-medium px-4 shadow-sm text-xs focus:ring-0">
+                        <SelectValue placeholder="เลือกอำเภอ" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-[300px]">
+                      {[...districtOptions]
+                        .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                        .map((d) => (
+                          <SelectItem key={d.id} value={d.name_th}>
+                            {d.name_th.replace(/^เขต/, "")}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {fieldState.error ? (
+                  <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1 min-h-[32px]" />
+                ) : (
+                  <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 min-h-[32px]">
+                    เลือกเขตหรืออำเภอ
+                  </FormDescription>
+                )}
               </FormItem>
             )}
           />
@@ -208,46 +339,106 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           <FormField
             control={form.control}
             name="subdistrict"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <SignpostBig className="h-3.5 w-3.5 text-blue-500" />
                   แขวง / ตำบล <span className="text-red-500">*</span>
                 </FormLabel>
-                <Select
-                  key={`subdistrict-${activeDistrictId || "none"}`}
-                  value={field.value ?? ""}
-                  disabled={!activeDistrictId}
-                  onValueChange={(val) => {
-                    field.onChange(val);
-                    // Auto-fill postal code
-                    const sub = subDistrictOptions.find(
-                      (s) => s.name_th === val,
-                    );
-                    if (sub) {
-                      form.setValue("postal_code", String(sub.zip_code));
+                {isMobileOrTablet ? (
+                  <ResponsiveDialog
+                    open={subdistrictOpen}
+                    onOpenChange={setSubdistrictOpen}
+                    title="เลือกแขวง / ตำบล"
+                    trigger={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={!activeDistrictId}
+                        className="w-full h-11 rounded-lg bg-slate-50 border-slate-200 font-medium px-4 shadow-sm text-xs justify-start text-left text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <span>{field.value || "เลือกตำบล"}</span>
+                      </Button>
                     }
-                  }}
-                >
-                  <FormControl>
-                    <SelectTrigger className="w-full h-11 rounded-lg bg-slate-50 border-slate-200 font-medium px-4 shadow-sm text-xs focus:ring-0">
-                      <SelectValue placeholder="เลือกตำบล" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-[300px]">
-                    {[...subDistrictOptions]
-                      .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
-                      .map((s) => (
-                        <SelectItem key={s.id} value={s.name_th}>
-                          {s.name_th}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                  เลือกแขวงหรือตำบล ระบบจะเติมรหัสไปรษณีย์ให้อัตโนมัติ
-                </FormDescription>
-                <FormMessage />
+                  >
+                    <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
+                      {subDistrictOptions.length === 0 ? (
+                        <div className="p-8 text-center text-slate-400 text-xs font-medium">
+                          กรุณาเลือกอำเภอก่อน
+                        </div>
+                      ) : (
+                        [...subDistrictOptions]
+                          .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                          .map((s) => {
+                            const isSelected = field.value === s.name_th;
+                            return (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => {
+                                  field.onChange(s.name_th);
+                                  // Auto-fill postal code
+                                  form.setValue("postal_code", String(s.zip_code));
+                                  setSubdistrictOpen(false);
+                                }}
+                                className={cn(
+                                  "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                  isSelected
+                                    ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                    : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                )}
+                              >
+                                <span className="text-xs font-bold">{s.name_th}</span>
+                                {isSelected && (
+                                  <div className="bg-blue-600 rounded-full p-1 text-white">
+                                    <Check className="h-3 w-3" />
+                                  </div>
+                                )}
+                              </button>
+                            );
+                          })
+                      )}
+                    </div>
+                  </ResponsiveDialog>
+                ) : (
+                  <Select
+                    key={`subdistrict-${activeDistrictId || "none"}`}
+                    value={field.value ?? ""}
+                    disabled={!activeDistrictId}
+                    onValueChange={(val) => {
+                      field.onChange(val);
+                      // Auto-fill postal code
+                      const sub = subDistrictOptions.find(
+                        (s) => s.name_th === val,
+                      );
+                      if (sub) {
+                        form.setValue("postal_code", String(sub.zip_code));
+                      }
+                    }}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full h-11 rounded-lg bg-slate-50 border-slate-200 font-medium px-4 shadow-sm text-xs focus:ring-0">
+                        <SelectValue placeholder="เลือกตำบล" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent className="max-h-[300px]">
+                      {[...subDistrictOptions]
+                        .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                        .map((s) => (
+                          <SelectItem key={s.id} value={s.name_th}>
+                            {s.name_th}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {fieldState.error ? (
+                  <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1 min-h-[32px]" />
+                ) : (
+                  <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 min-h-[32px]">
+                    เลือกแขวงหรือตำบล ระบบจะเติมรหัสไปรษณีย์ให้อัตโนมัติ
+                  </FormDescription>
+                )}
               </FormItem>
             )}
           />
@@ -256,7 +447,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           <FormField
             control={form.control}
             name="postal_code"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <Mail className="h-3.5 w-3.5 text-blue-500" />
@@ -268,13 +459,16 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     value={field.value ?? ""}
                     readOnly
                     placeholder="-"
-                    className="rounded-lg bg-slate-100 border-slate-200 font-medium px-4 shadow-sm text-xs cursor-not-allowed text-left"
+                    className="h-11 rounded-lg bg-slate-100 border-slate-200 font-medium px-4 shadow-sm text-xs cursor-not-allowed text-left"
                   />
                 </FormControl>
-                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                  รหัสไปรษณีย์จะถูกเติมตามตำบลที่เลือก
-                </FormDescription>
-                <FormMessage />
+                {fieldState.error ? (
+                  <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1 min-h-[32px]" />
+                ) : (
+                  <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 min-h-[32px]">
+                    รหัสไปรษณีย์จะถูกเติมตามตำบลที่เลือก
+                  </FormDescription>
+                )}
               </FormItem>
             )}
           />
@@ -283,7 +477,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           <FormField
             control={form.control}
             name="address_line1"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <SignpostBig className="w-4 h-4 text-blue-500" />
@@ -297,10 +491,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
                   />
                 </FormControl>
-                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                  บ้านเลขที่, ชื่อหมู่บ้าน หรือชื่อโครงการ (ถ้ามี)
-                </FormDescription>
-                <FormMessage />
+                {fieldState.error ? (
+                  <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
+                ) : (
+                  <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                    บ้านเลขที่, ชื่อหมู่บ้าน หรือชื่อโครงการ (ถ้ามี)
+                  </FormDescription>
+                )}
               </FormItem>
             )}
           />
@@ -309,7 +506,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           <FormField
             control={form.control}
             name="address_line1_en"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-500 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <Languages className="w-3.5 h-3.5" />
@@ -323,10 +520,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     className="h-11 rounded-lg border-slate-200 bg-slate-50/50 px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
                   />
                 </FormControl>
-                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                  ชื่อโครงการในภาษาอังกฤษ
-                </FormDescription>
-                <FormMessage />
+                {fieldState.error ? (
+                  <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
+                ) : (
+                  <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                    ชื่อโครงการในภาษาอังกฤษ
+                  </FormDescription>
+                )}
               </FormItem>
             )}
           />
@@ -335,7 +535,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           <FormField
             control={form.control}
             name="address_line1_cn"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-500 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <Languages className="w-3.5 h-3.5" />
@@ -349,10 +549,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     className="h-11 rounded-lg border-slate-200 bg-slate-50/50 px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
                   />
                 </FormControl>
-                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                  ชื่อโครงการในภาษาจีน
-                </FormDescription>
-                <FormMessage />
+                {fieldState.error ? (
+                  <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
+                ) : (
+                  <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                    ชื่อโครงการในภาษาจีน
+                  </FormDescription>
+                )}
               </FormItem>
             )}
           />
@@ -361,7 +564,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           <FormField
             control={form.control}
             name="address_line1_ru"
-            render={({ field }) => (
+            render={({ field, fieldState }) => (
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-500 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <Languages className="w-3.5 h-3.5" />
@@ -375,10 +578,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     className="h-11 rounded-lg border-slate-200 bg-slate-50/50 px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all"
                   />
                 </FormControl>
-                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
-                  ชื่อโครงการในภาษารัสเซีย
-                </FormDescription>
-                <FormMessage />
+                {fieldState.error ? (
+                  <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
+                ) : (
+                  <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1">
+                    ชื่อโครงการในภาษารัสเซีย
+                  </FormDescription>
+                )}
               </FormItem>
             )}
           />
@@ -387,8 +593,8 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           <FormField
             control={form.control}
             name="google_maps_link"
-            render={({ field }) => (
-              <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
+            render={({ field, fieldState }) => (
+              <FormItem className="col-span-2 md:col-span-4 lg:col-span-2">
                 <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <MapIcon className="w-4 h-4 text-blue-500" />
                   Google Maps Link
@@ -401,10 +607,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
                   />
                 </FormControl>
-                <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 leading-relaxed">
-                   google map ตัวอย่าง "https://maps.app.goo.gl/....."
-                </FormDescription>
-                <FormMessage />
+                {fieldState.error ? (
+                  <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
+                ) : (
+                  <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 leading-relaxed">
+                     google map ตัวอย่าง "https://maps.app.goo.gl/....."
+                  </FormDescription>
+                )}
               </FormItem>
             )}
           />
