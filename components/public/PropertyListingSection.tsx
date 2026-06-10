@@ -592,7 +592,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
             </div>
           ) : (isLoading || isNavigating) ? (
             <div className="relative min-h-[400px]">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-4 opacity-50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 opacity-50">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <PropertyCardSkeleton key={index} />
                 ))}
@@ -614,7 +614,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
             </div>
           ) : (
             <div className="space-y-8 align-center ">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 gap-y-6 md:gap-y-8">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 gap-y-6 md:gap-y-8">
                 {visibleProperties.map((property, index) => {
                   const hasDiscount =
                     (property.original_price &&

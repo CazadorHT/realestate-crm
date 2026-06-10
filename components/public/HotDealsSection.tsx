@@ -208,11 +208,11 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
 
         {/* === CARDS SECTION === */}
         {isLoading ? (
-          <div className="flex md:grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-4 overflow-x-auto md:overflow-visible scrollbar-hide pb-4 md:pb-0">
+          <div className="flex md:grid gap-4 md:gap-6 md:grid-cols-2 lg:grid-cols-4 overflow-x-auto md:overflow-visible scrollbar-hide pb-4 md:pb-0 px-4 sm:px-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
-                className="min-w-[260px] sm:min-w-[280px] md:min-w-0 shrink-0"
+                className="w-[78vw] max-w-[310px] sm:max-w-[340px] md:w-auto shrink-0"
               >
                 <PropertyCardSkeleton />
               </div>
@@ -235,7 +235,7 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
                   delay: index * 0.15,
                   ease: [0.21, 1.02, 0.73, 1] // Custom premium elastic-out
                 }}
-                className="w-[85vw] max-w-[340px] sm:max-w-[360px] md:w-auto md:max-w-none snap-start shrink-0 relative group"
+                className="w-[78vw] max-w-[310px] sm:max-w-[340px] md:w-auto md:max-w-none snap-start shrink-0 relative group"
               >
                 {/* Card Wrapper with Premium Glow Effect */}
                 <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-0 lg:p-1 lg:bg-linear-to-b from-white/80 to-white/40 lg:shadow-xl lg:shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">
