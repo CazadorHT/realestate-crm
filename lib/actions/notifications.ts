@@ -2,6 +2,8 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { sendAdminNotification } from "@/lib/telegram";
+import { sendLineNotification } from "@/lib/line";
 
 export type NotificationType =
   | "LEAD_TRANSFER"
@@ -273,6 +275,25 @@ export async function notifyAdminsAction({
   if (insertError) {
     console.error("Error sending notifications to admins:", insertError);
     return { success: false };
+  }
+
+  // 4. Send External Notifications (Line & Telegram)
+  try {
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
+    const detailLink = link ? `${siteUrl}${link}` : "";
+    const htmlMessage = `🔔 <b>${title}</b>\n━━━━━━━━━━━━━━━━━━\n\n${message}${detailLink ? `\n\n🔗 <a href="${detailLink}">ดูรายละเอียดในระบบ CRM</a>` : ""}`;
+    const plainTextForLine = `🔔 ${title}\n\n${message}${detailLink ? `\n\nดูรายละเอียดในระบบ CRM: ${detailLink}` : ""}`;
+
+    // Fire-and-forget background notification tasks
+    // Using Promise.allSettled to ensure failure of one doesn't crash the other
+    Promise.allSettled([
+      sendAdminNotification(htmlMessage),
+      sendLineNotification(plainTextForLine)
+    ]).catch(err => {
+      console.error("Error triggering external admin notifications:", err);
+    });
+  } catch (externalErr) {
+    console.error("External notification payload error:", externalErr);
   }
 
   return { success: true };

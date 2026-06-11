@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { notifySignupAction } from "@/features/audit/actions";
+import { notifySignupAction, logActivityAction } from "@/features/audit/actions";
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,6 +55,16 @@ export async function POST(request: NextRequest) {
           avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture
         }
       );
+    } else {
+      // 🕵️ Existing OAuth User Logging In
+      try {
+        await logActivityAction("LOGIN", "user", user.id, {
+          email: user.email,
+          method: "oauth",
+        });
+      } catch (logErr) {
+        console.error("❌ [Auth Sync API] Failed to log login activity for OAuth user:", logErr);
+      }
     }
 
     return NextResponse.json({ success: true });
