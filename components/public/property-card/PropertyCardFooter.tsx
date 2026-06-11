@@ -28,6 +28,15 @@ export function PropertyCardFooter({
 
   const prices = getEffectivePrice(property);
 
+  const formatContractDuration = (months: number) => {
+    const monthsText = `${months} ${t("common.months_short")}`;
+    if (months >= 12 && months % 12 === 0) {
+      const years = months / 12;
+      return `${monthsText} (${years} ${t("common.year")})`;
+    }
+    return monthsText;
+  };
+
   if (variant === "minimal") {
     return (
       <div className="px-3 sm:px-4 py-3 border-t border-slate-100 bg-white flex flex-col gap-3 rounded-b-2xl sm:rounded-b-2xl md:rounded-b-3xl">
@@ -78,8 +87,7 @@ export function PropertyCardFooter({
               <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
                 <div className="w-1 h-1 rounded-full bg-slate-300" />
                 <span>
-                  {t("common.contract")} {property.min_contract_months}{" "}
-                  {t("common.months_short")}
+                  {t("common.contract")} {formatContractDuration(property.min_contract_months)}
                 </span>
               </div>
             )}
@@ -233,8 +241,7 @@ export function PropertyCardFooter({
           property.min_contract_months && (
             <div className="flex items-center gap-1 text-[9px] md:text-[11px] text-slate-400 font-semibold italic">
               <div className="w-1 h-1 rounded-full bg-emerald-300" />
-              {t("common.contract")} {property.min_contract_months || 12 }{" "}
-              {t("common.months_short")}
+              {t("common.contract")} {formatContractDuration(property.min_contract_months)}
             </div>
           )}
           

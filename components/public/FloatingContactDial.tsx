@@ -39,16 +39,18 @@ export function FloatingContactDial() {
         const supabase = createClient();
         const { data } = await supabase
           .from("profiles")
-          .select("id, full_name, phone")
+          .select("id, full_name, nickname, phone")
           .limit(5);
 
         if (data && data.length > 0) {
           const mappedAgents = data.map((d) => ({
             id: d.id,
             phone: d.phone || "08x-xxx-xxxx",
-            agentName:
-              d.full_name ||
-              t("common.floating.agent_fallback", { name: "Agent" }),
+            agentName: d.nickname
+              ? `Agent (${d.nickname})`
+              : d.full_name
+              ? `Agent ${d.full_name}`
+              : t("common.floating.agent_fallback", { name: "Agent" }),
           }));
           setAgents(mappedAgents);
         } else {
@@ -137,12 +139,15 @@ export function FloatingContactDial() {
         <div className="flex items-end gap-2">
           {/* Agent List Popover */}
           <div
-            className={`flex flex-col gap-2 bg-white p-2 rounded-xl shadow-xl max-h-[160px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent transition-all duration-300 origin-bottom-right ${
+            className={`flex flex-col gap-2 bg-white p-2 rounded-xl shadow-xl max-h-[220px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent transition-all duration-300 origin-bottom-right ${
               isPhoneListOpen
                 ? "opacity-100 translate-x-0 scale-100"
                 : "opacity-0 translate-x-4 scale-95 pointer-events-none absolute right-16" // adjust positioning to ensure it doesn't take up layout space when hidden or looks correct
             }`}
           >
+            <div className="text-[10px] font-bold text-slate-400 px-3 py-1.5 border-b border-slate-100 sticky top-0 bg-white z-10 whitespace-nowrap">
+              {t("common.floating.agent_list_title") || "เบอร์ติดต่อเจ้าหน้าที่"}
+            </div>
             {agents.map((agent) => (
               <div key={agent.id} className="shrink-0">
                 {agent.phone &&
@@ -197,7 +202,7 @@ export function FloatingContactDial() {
 
         {/* Messenger */}
         <a
-          href={settings.facebook_url ? `https://m.me/${settings.facebook_url.split("/").pop()}` : "https://m.me/vcconnectasset"}
+          href={settings.facebook_url || siteConfig.links.facebook}
           target="_blank"
           rel="noopener noreferrer"
           className="group flex items-center gap-2"

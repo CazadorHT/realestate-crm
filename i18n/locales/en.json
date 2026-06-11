@@ -128,7 +128,8 @@
     "premium_service_fallback": "Learn more about our premium service offerings tailored for your success.",
     "floating": {
       "messenger": "Messenger",
-      "line_chat": "Line Chat"
+      "line_chat": "Line Chat",
+      "agent_list_title": "Contact Agents"
     },
     "cookie_consent": {
       "title": "We use cookies",

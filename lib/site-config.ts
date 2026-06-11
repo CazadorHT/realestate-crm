@@ -58,8 +58,8 @@ export const siteConfig = {
     defaultPerPage: 12,
   },
   links: {
-    facebook: "https://facebook.com/vcconnectasset",
-    instagram: "https://instagram.com/vcconnectasset",
+    facebook: "https://facebook.com/vcc.asset",
+    instagram: "https://instagram.com/vcc.asset/",
     line: "https://line.me/ti/p/@811slazm",
     tiktok: "https://tiktok.com/@vcconnectasset",
   },

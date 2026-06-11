@@ -124,6 +124,11 @@
     "view_all_images": "ดูรูปภาพทั้งหมด",
     "certified_professionals": "ทีมงานมืออาชีพที่ได้รับรอง",
     "premium_service_fallback": "เรียนรู้เพิ่มเติมเกี่ยวกับบริการระดับพรีเมียมที่ออกแบบมาเพื่อความสำเร็จของคุณ",
+    "floating": {
+      "messenger": "แชทผ่าน Facebook",
+      "line_chat": "แชทผ่าน LINE",
+      "agent_list_title": "เบอร์ติดต่อเจ้าหน้าที่"
+    },
     "cookie_consent": {
       "title": "เราใช้คุกกี้ (Cookies)",
       "cancel": "ยกเลิก",

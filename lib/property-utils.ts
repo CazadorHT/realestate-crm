@@ -328,7 +328,7 @@ export function formatStationLabel(type: string, stationName: string, lang: stri
 export function formatLandSize(totalSqwah: number | null | undefined, language: string = "th"): string {
   if (totalSqwah == null || isNaN(totalSqwah) || totalSqwah === 0) return "-";
 
-  if (totalSqwah < 100) {
+  if (totalSqwah < 400) {
     if (language === "th") return `${totalSqwah} ตร.ว.`;
     if (language === "cn") return `${totalSqwah} 哇`;
     if (language === "ru") return `${totalSqwah} кв.ва`;
