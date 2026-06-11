@@ -7,6 +7,10 @@ import { PropertyFormValues } from "@/features/properties/schema";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 
+const isNonEmptyString = (val: any): boolean => {
+  return typeof val === "string" && val.trim() !== "" && val !== "<p></p>";
+};
+
 export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues>) {
   const formContext = useFormContext<PropertyFormValues>();
   const form = formOverride || formContext;
@@ -20,14 +24,14 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   // 1. Translate Title
   const translateTitle = async (silent = false) => {
     const title = form.getValues("title");
-    if (!title?.trim()) {
+    if (typeof title !== "string" || !title.trim()) {
       if (!silent) toast.error("กรุณากรอกชื่อภาษาไทยก่อนกดแปลครับ");
       return;
     }
 
-    const hasEn = !!form.getValues("title_en");
-    const hasCn = !!form.getValues("title_cn");
-    const hasRu = !!form.getValues("title_ru");
+    const hasEn = isNonEmptyString(form.getValues("title_en"));
+    const hasCn = isNonEmptyString(form.getValues("title_cn"));
+    const hasRu = isNonEmptyString(form.getValues("title_ru"));
     if (hasEn && hasCn && hasRu) {
       if (!silent) toast.success("ชื่อทรัพย์แปลครบถ้วนแล้ว ✨");
       return;
@@ -65,20 +69,14 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   // 2. Translate Description
   const translateDescription = async (silent = false) => {
     const desc = form.getValues("description");
-    if (!desc || desc.trim() === "" || desc === "<p></p>") {
+    if (typeof desc !== "string" || desc.trim() === "" || desc === "<p></p>") {
       if (!silent) toast.error("กรุณากรอกคำบรรยายภาษาไทยก่อนกดแปลครับ");
       return;
     }
 
-    const hasEn =
-      !!form.getValues("description_en") &&
-      form.getValues("description_en") !== "<p></p>";
-    const hasCn =
-      !!form.getValues("description_cn") &&
-      form.getValues("description_cn") !== "<p></p>";
-    const hasRu =
-      !!form.getValues("description_ru") &&
-      form.getValues("description_ru") !== "<p></p>";
+    const hasEn = isNonEmptyString(form.getValues("description_en"));
+    const hasCn = isNonEmptyString(form.getValues("description_cn"));
+    const hasRu = isNonEmptyString(form.getValues("description_ru"));
     if (hasEn && hasCn && hasRu) {
       if (!silent) toast.success("คำบรรยายแปลครบถ้วนแล้ว ✨");
       return;
@@ -253,14 +251,14 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   // 4b. Translate Address
   const translateAddress = async (silent = false) => {
     const address = form.getValues("address_line1");
-    if (!address?.trim()) {
+    if (typeof address !== "string" || !address.trim()) {
       if (!silent) toast.error("กรุณากรอกที่อยู่ภาษาไทยก่อนกดแปลครับ");
       return;
     }
 
-    const hasEn = !!form.getValues("address_line1_en");
-    const hasCn = !!form.getValues("address_line1_cn");
-    const hasRu = !!form.getValues("address_line1_ru");
+    const hasEn = isNonEmptyString(form.getValues("address_line1_en"));
+    const hasCn = isNonEmptyString(form.getValues("address_line1_cn"));
+    const hasRu = isNonEmptyString(form.getValues("address_line1_ru"));
     if (hasEn && hasCn && hasRu) {
       if (!silent) toast.success("ที่อยู่แปลครบถ้วนแล้ว ✨");
       return;
@@ -297,11 +295,11 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   // 4c. Translate Popular Area
   const translatePopularArea = async (silent = false) => {
     const area = form.getValues("popular_area");
-    if (!area?.trim()) return;
+    if (typeof area !== "string" || !area.trim()) return;
 
-    const hasEn = !!form.getValues("popular_area_en");
-    const hasCn = !!form.getValues("popular_area_cn");
-    const hasRu = !!form.getValues("popular_area_ru");
+    const hasEn = isNonEmptyString(form.getValues("popular_area_en"));
+    const hasCn = isNonEmptyString(form.getValues("popular_area_cn"));
+    const hasRu = isNonEmptyString(form.getValues("popular_area_ru"));
     if (hasEn && hasCn && hasRu) return;
 
     setIsTranslating(true);

@@ -162,6 +162,10 @@ type Profile = {
   whatsapp_user_id: string | null;
 };
 
+const isStringWithContent = (val: any): boolean => {
+  return typeof val === 'string' && val.trim() !== '';
+};
+
 export function Step6Review({ mode }: Step6ReviewProps) {
   const form = useFormContext<PropertyFormValues>();
   const [isEditingDesc, setIsEditingDesc] = useState(false);
@@ -432,17 +436,17 @@ export function Step6Review({ mode }: Step6ReviewProps) {
   // 📊 Listing Readiness Score
   const readinessChecks = useMemo(() => {
     const checks = [
-      { label: "ชื่อทรัพย์", ok: !!values.title?.trim(), weight: 15 },
+      { label: "ชื่อทรัพย์", ok: isStringWithContent(values.title), weight: 15 },
       { label: "รูปภาพ ≥5 รูป", ok: (values.images?.length || 0) >= 5, weight: 20 },
       { label: "ราคา", ok: !!(values.price || values.rental_price ||values.original_price ||values.original_rental_price), weight: 15 },
-      { label: "รายละเอียด (TH)", ok: !!values.description?.trim(), weight: 10 },
-      { label: "รายละเอียด (EN)", ok: !!values.description_en?.trim(), weight: 5 },
-      { label: "รายละเอียด (CN)", ok: !!values.description_cn?.trim(), weight: 5 },
+      { label: "รายละเอียด (TH)", ok: isStringWithContent(values.description), weight: 10 },
+      { label: "รายละเอียด (EN)", ok: isStringWithContent(values.description_en), weight: 5 },
+      { label: "รายละเอียด (CN)", ok: isStringWithContent(values.description_cn), weight: 5 },
       { label: "ทำเล", ok: !!values.popular_area || !!values.district, weight: 10 },
       { label: "ข้อมูลห้อง", ok: !!(values.bedrooms || values.size_sqm), weight: 5 },
       { label: "สิ่งอำนวยความสะดวก", ok: (values.feature_ids?.length || 0) >= 1, weight: 5 },
-      { label: "แผนที่ Google", ok: !!values.google_maps_link?.trim(), weight: 5 },
-      { label: "ชื่อ (EN)", ok: !!values.title_en?.trim(), weight: 5 },
+      { label: "แผนที่ Google", ok: isStringWithContent(values.google_maps_link), weight: 5 },
+      { label: "ชื่อ (EN)", ok: isStringWithContent(values.title_en), weight: 5 },
     ];
     const totalWeight = checks.reduce((s, c) => s + c.weight, 0);
     const earned = checks.filter(c => c.ok).reduce((s, c) => s + c.weight, 0);
@@ -612,15 +616,15 @@ export function Step6Review({ mode }: Step6ReviewProps) {
             <div className="flex items-center gap-2 mt-3 pt-3 border-t border-slate-100">
               <Globe className="h-3.5 w-3.5 text-slate-400 shrink-0" />
               <span className="text-[11px] text-slate-500 font-medium shrink-0">แปลภาษา:</span>
-              {(["th", "en", "cn", "ru"] as const).map((lang) => {
-                const hasDesc = lang === "th" ? !!values.description?.trim()
-                  : lang === "en" ? !!values.description_en?.trim()
-                    : lang === "cn" ? !!values.description_cn?.trim()
-                      : !!values.description_ru?.trim();
-                const hasTitle = lang === "th" ? !!values.title?.trim()
-                  : lang === "en" ? !!values.title_en?.trim()
-                    : lang === "cn" ? !!values.title_cn?.trim()
-                      : !!values.title_ru?.trim();
+             {(["th", "en", "cn", "ru"] as const).map((lang) => {
+                const hasDesc = lang === "th" ? isStringWithContent(values.description)
+                  : lang === "en" ? isStringWithContent(values.description_en)
+                    : lang === "cn" ? isStringWithContent(values.description_cn)
+                      : isStringWithContent(values.description_ru);
+                const hasTitle = lang === "th" ? isStringWithContent(values.title)
+                  : lang === "en" ? isStringWithContent(values.title_en)
+                    : lang === "cn" ? isStringWithContent(values.title_cn)
+                      : isStringWithContent(values.title_ru);
                 const status = hasDesc && hasTitle ? "full" : hasDesc || hasTitle ? "partial" : "none";
                 return (
                   <span

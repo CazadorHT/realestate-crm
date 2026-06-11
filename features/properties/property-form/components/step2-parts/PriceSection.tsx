@@ -176,11 +176,7 @@ export function PriceSection({
         <div className="grid grid-cols-12 gap-6 sm:gap-8 lg:gap-10 relative">
           {/* Vertical Separator for Dual Mode (Large Screens) */}
           {showSale && showRent && (
-            <>
-              <div className="hidden lg:block absolute left-1/3 top-0 bottom-0 w-px bg-slate-100 -ml-2" />
-              <div className="hidden lg:block absolute right-1/3 top-0 bottom-0 w-px bg-slate-100 -mr-2" />
-              <div className="hidden md:block lg:hidden absolute left-1/2 top-0 bottom-0 w-px bg-slate-100" />
-            </>
+            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-slate-100" />
           )}
 
           {/* ================= SALE ZONE ================= */}
@@ -188,8 +184,8 @@ export function PriceSection({
             <div
               className={`${
                 showSale && showRent
-                  ? "col-span-12 lg:col-span-4"
-                  : "col-span-12 max-w-2xl"
+                  ? "col-span-12 md:col-span-6"
+                  : "col-span-12"
               } space-y-6`}
             >
               {/* Header for Dual Mode */}
@@ -382,8 +378,8 @@ export function PriceSection({
             <div
               className={`${
                 showSale && showRent
-                  ? "col-span-12 lg:col-span-4"
-                  : "col-span-12 max-w-2xl"
+                  ? "col-span-12 md:col-span-6"
+                  : "col-span-12"
               } space-y-6`}
             >
               {/* Header for Dual Mode */}

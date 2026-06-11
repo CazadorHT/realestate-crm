@@ -170,7 +170,7 @@ export function SpecsSection({
                                 shouldDirty: true,
                               })
                             }
-                            className="text-[10px] text-blue-500 hover:text-blue-700 hover:underline normal-case transition-colors cursor-pointer select-none"
+                            className="text-[10px] text-blue-500 truncate hover:text-blue-700 hover:underline normal-case transition-colors cursor-pointer select-none"
                           >
                             {isTotalFloors
                               ? "สลับเป็น ชั้นที่"
