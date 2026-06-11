@@ -322,3 +322,36 @@ export function formatStationLabel(type: string, stationName: string, lang: stri
   return `${type} : ${cleanName}`;
 }
 
+/**
+ * Format land size from total square wah to a readable string with Rai, Ngan, Sq.wah.
+ */
+export function formatLandSize(totalSqwah: number | null | undefined, language: string = "th"): string {
+  if (totalSqwah == null || isNaN(totalSqwah) || totalSqwah === 0) return "-";
+
+  if (totalSqwah < 100) {
+    if (language === "th") return `${totalSqwah} ตร.ว.`;
+    if (language === "cn") return `${totalSqwah} 哇`;
+    if (language === "ru") return `${totalSqwah} кв.ва`;
+    return `${totalSqwah} Sq.w`;
+  }
+
+  const rai = Math.floor(totalSqwah / 400);
+  const remaining = totalSqwah % 400;
+  const ngan = Math.floor(remaining / 100);
+  const sqwah = Math.round((remaining % 100) * 100) / 100;
+
+  if (language === "th") {
+    const parts = [];
+    if (rai > 0) parts.push(`${rai} ไร่`);
+    if (ngan > 0) parts.push(`${ngan} งาน`);
+    if (sqwah > 0 || parts.length === 0) parts.push(`${sqwah} ตร.ว.`);
+    return parts.join(" ");
+  } else {
+    const parts = [];
+    if (rai > 0) parts.push(`${rai} Rai`);
+    if (ngan > 0) parts.push(`${ngan} Ngan`);
+    if (sqwah > 0 || parts.length === 0) parts.push(`${sqwah} Sq.w`);
+    return parts.join(" ");
+  }
+}
+

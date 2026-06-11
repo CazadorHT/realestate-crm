@@ -215,6 +215,7 @@ export async function createPropertyAction(
         },
         amenities: {
           floor: safeValues.floor,
+          is_total_floors: safeValues.is_total_floors,
           parking_slots: safeValues.parking_slots,
           is_pet_friendly: safeValues.is_pet_friendly,
           is_fully_furnished: safeValues.is_fully_furnished,

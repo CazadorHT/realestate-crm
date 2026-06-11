@@ -69,7 +69,7 @@ export function UnitNumberField({
               fieldState.error ? "text-red-600" : "text-slate-500",
             ].join(" ")}
           >
-            <span className="inline-flex items-center gap-2">
+            <span className="flex items-center gap-2 flex-1">
               {label}
               {required && <span className="text-red-500">*</span>}
               {labelHint}

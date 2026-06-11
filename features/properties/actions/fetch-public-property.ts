@@ -281,6 +281,7 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     has_flexible_lease: !!amenities.has_flexible_lease,
     is_fully_fitted: !!amenities.is_fully_fitted,
     floor: amenities.floor || null,
+    is_total_floors: amenities.is_total_floors || null,
     near_transit: !!(
       (details?.transit_info as any)?.near_transit ||
       (Array.isArray((details?.transit_info as any)?.transits) && (details?.transit_info as any).transits.length > 0) ||

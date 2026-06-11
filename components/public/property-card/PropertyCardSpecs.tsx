@@ -4,13 +4,14 @@ import { BedDouble, Bath, Car, Expand } from "lucide-react";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { PiResize, PiResizeBold } from "react-icons/pi";
+import { formatLandSize } from "@/lib/property-utils";
 
 export function PropertyCardSpecs({
   property,
 }: {
   property: PropertyCardProps;
 }) {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <div className="flex flex-wrap items-center text-xs text-slate-600 gap-x-3 gap-y-1.5 sm:gap-y-2 mt-auto">
@@ -82,10 +83,7 @@ export function PropertyCardSpecs({
             />
           </div>
           <span className="text-xs md:text-sm font-semibold text-slate-600">
-            {property.land_size_sqwah}
-            <small className="text-[10px] md:text-[12px] ml-0.5 font-medium">
-              {t("common.sqwa_short")}
-            </small>
+            {formatLandSize(property.land_size_sqwah, language)}
           </span>
         </div>
       ) : null}

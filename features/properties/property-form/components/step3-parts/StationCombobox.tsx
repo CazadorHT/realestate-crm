@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronsUpDown, Search, TrainFront } from "lucide-react";
+import { Check, ChevronsUpDown, Search, TrainFront, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,17 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import { upsertMasterDataAction } from "@/features/properties/actions/fetch-master-data";
 import type { MasterDataTransitStation } from "@/features/properties/actions/fetch-master-data";
 import { formatStationLabel } from "@/lib/property-utils";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
@@ -20,6 +31,7 @@ interface StationComboboxProps {
   stations: MasterDataTransitStation[];
   transitType?: string;
   placeholder?: string;
+  onRefreshStations?: () => void;
 }
 
 const getNormalizedType = (type: string): string => {
@@ -56,11 +68,89 @@ export function StationCombobox({
   stations,
   transitType,
   placeholder = "เลือกหรือค้นหาสถานี...",
+  onRefreshStations,
 }: StationComboboxProps) {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [isMobileOrTablet, React_useState] = React.useState(false);
   const [activeFilter, setActiveFilter] = React.useState("ALL");
+
+  // Add Station Dialog State
+  const [isAddStationOpen, setIsAddStationOpen] = React.useState(false);
+  const [newStationNameTh, setNewStationNameTh] = React.useState("");
+  const [newStationNameEn, setNewStationNameEn] = React.useState("");
+  const [newStationNameCn, setNewStationNameCn] = React.useState("");
+  const [newStationNameRu, setNewStationNameRu] = React.useState("");
+  const [isSavingStation, setIsSavingStation] = React.useState(false);
+
+  const handleSaveStation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newStationNameTh.trim()) {
+      toast.error("กรุณากรอกชื่อสถานีภาษาไทย");
+      return;
+    }
+    setIsSavingStation(true);
+    try {
+      const type = transitType || "OTHER";
+      const cleanType = type.toUpperCase();
+      const code = `STATION_${cleanType}_${Date.now()}`;
+      
+      const labelTh = newStationNameTh.trim();
+      const labelEn = newStationNameEn.trim() || labelTh;
+      const labelCn = newStationNameCn.trim() || labelTh;
+      const labelRu = newStationNameRu.trim() || labelTh;
+
+      const res = await upsertMasterDataAction({
+        type: "TRANSIT_STATION",
+        code,
+        label: {
+          th: labelTh,
+          en: labelEn,
+          cn: labelCn,
+          ru: labelRu,
+        },
+        metadata: {
+          transit_type: cleanType,
+        },
+        is_active: true,
+      });
+
+      if (res.success) {
+        toast.success("เพิ่มสถานีใหม่สำเร็จ!");
+        
+        // Notify parent to refresh list
+        if (onRefreshStations) {
+          onRefreshStations();
+        }
+
+        // Set value
+        onChange({
+          code,
+          label: {
+            th: labelTh,
+            en: labelEn,
+            cn: labelCn,
+            ru: labelRu,
+          },
+          metadata: {
+            transit_type: cleanType,
+          }
+        });
+        
+        setIsAddStationOpen(false);
+        setNewStationNameTh("");
+        setNewStationNameEn("");
+        setNewStationNameCn("");
+        setNewStationNameRu("");
+      } else {
+        toast.error(res.message || "เกิดข้อผิดพลาดในการบันทึก");
+      }
+    } catch (err) {
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    } finally {
+      setIsSavingStation(false);
+    }
+  };
 
   React.useEffect(() => {
     const mql = window.matchMedia("(max-width: 1535px)");
@@ -180,11 +270,28 @@ export function StationCombobox({
             })}
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-2 bg-slate-50/50">
-            {filteredStations.length === 0 ? (
+            {searchQuery.trim() && !filteredStations.some(s => s.label.th.toLowerCase() === searchQuery.trim().toLowerCase()) && (
+              <button
+                type="button"
+                onClick={() => {
+                  onChange({
+                    code: `CUSTOM_${Date.now()}`,
+                    label: { th: searchQuery.trim(), en: searchQuery.trim(), cn: searchQuery.trim(), ru: searchQuery.trim() },
+                    metadata: { transit_type: transitType || "OTHER" }
+                  } as any);
+                  setOpen(false);
+                  setSearchQuery("");
+                }}
+                className="flex w-full items-center justify-between p-3.5 rounded-xl border border-dashed border-blue-200 text-left bg-blue-50/50 text-blue-700 font-bold hover:bg-blue-50 transition-all active:scale-[0.98]"
+              >
+                <span>✨ ใช้ชื่อสถานีนี้: "{searchQuery.trim()}"</span>
+              </button>
+            )}
+            {filteredStations.length === 0 && !searchQuery.trim() ? (
               <div className="py-12 text-center text-sm text-slate-400 font-medium bg-white rounded-xl border border-slate-100">
                 ไม่พบสถานีที่คุณค้นหา
               </div>
-            ) : (
+            ) : filteredStations.length === 0 && searchQuery.trim() ? null : (
               filteredStations.map((station) => {
                 const isSelected = selectedStation?.code === station.code;
                 const type = station.metadata?.transit_type || "OTHER";
@@ -230,6 +337,19 @@ export function StationCombobox({
                 );
               })
             )}
+            <div className="pt-2 border-t border-slate-100 bg-white">
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  setIsAddStationOpen(true);
+                }}
+                className="flex w-full items-center justify-center p-3.5 rounded-xl border border-dashed border-blue-200 text-blue-700 font-bold hover:bg-blue-50 transition-all active:scale-[0.98]"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                <span>เพิ่มสถานีใหม่ (Add Station)</span>
+              </button>
+            </div>
           </div>
         </div>
       </ResponsiveDialog>
@@ -256,7 +376,7 @@ export function StationCombobox({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[300px] p-0 bg-white rounded-xl shadow-lg border-slate-200 z-50">
+      <PopoverContent className="w-[300px] p-0 bg-white rounded-xl shadow-lg border-slate-200 z-[150]">
         <div className="flex items-center border-b border-slate-100 px-3 py-2">
           <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
           <Input
@@ -288,11 +408,28 @@ export function StationCombobox({
           })}
         </div>
         <div className="max-h-[250px] overflow-y-auto p-1 custom-scrollbar">
-          {filteredStations.length === 0 ? (
+          {searchQuery.trim() && !filteredStations.some(s => s.label.th.toLowerCase() === searchQuery.trim().toLowerCase()) && (
+            <button
+              type="button"
+              onClick={() => {
+                onChange({
+                  code: `CUSTOM_${Date.now()}`,
+                  label: { th: searchQuery.trim(), en: searchQuery.trim(), cn: searchQuery.trim(), ru: searchQuery.trim() },
+                  metadata: { transit_type: transitType || "OTHER" }
+                } as any);
+                setOpen(false);
+                setSearchQuery("");
+              }}
+              className="flex w-full items-center rounded-lg py-2 px-2.5 text-xs text-blue-600 font-semibold hover:bg-blue-50 border border-dashed border-blue-200/50 mb-1"
+            >
+              <span>✨ ใช้ชื่อสถานีนี้: "{searchQuery.trim()}"</span>
+            </button>
+          )}
+          {filteredStations.length === 0 && !searchQuery.trim() ? (
             <div className="py-6 text-center text-xs text-slate-400">
               ไม่พบสถานีที่คุณค้นหา
             </div>
-          ) : (
+          ) : filteredStations.length === 0 && searchQuery.trim() ? null : (
             filteredStations.map((station) => {
               const isSelected = selectedStation?.code === station.code;
               const type = station.metadata?.transit_type || "OTHER";
@@ -337,7 +474,111 @@ export function StationCombobox({
             })
           )}
         </div>
+        <div className="p-1 border-t border-slate-100 mt-1">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              setOpen(false);
+              setIsAddStationOpen(true);
+            }}
+            className="w-full justify-start text-xs text-blue-600 font-bold hover:bg-blue-50 py-1.5 h-auto cursor-pointer"
+          >
+            <Plus className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+            เพิ่มสถานีใหม่ (Add Station)
+          </Button>
+        </div>
       </PopoverContent>
+      {/* Inline Add Station Dialog */}
+      <Dialog open={isAddStationOpen} onOpenChange={setIsAddStationOpen}>
+        <DialogContent className="sm:max-w-md bg-white rounded-3xl p-6 border-slate-100 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Plus className="h-5 w-5 text-blue-600" />
+              เพิ่มสถานีรถไฟฟ้าใหม่
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-500">
+              สถานีรถไฟฟ้าใหม่จะถูกบันทึกเข้าระบบ และพร้อมให้เลือกใช้งานทันที
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSaveStation} className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-700">ประเภทรถไฟฟ้า</Label>
+              <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl">
+                <span className={cn(
+                  "text-[8px] font-extrabold px-1.5 py-1 rounded-md leading-none text-white shrink-0",
+                  getTypeBadgeClass(transitType || "OTHER")
+                )}>
+                  {getNormalizedType(transitType || "OTHER")}
+                </span>
+                <span className="text-xs font-bold text-slate-700">
+                  {transitType || "OTHER"}
+                </span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-700">ชื่อสถานี (ภาษาไทย) <span className="text-red-500">*</span></Label>
+              <Input
+                value={newStationNameTh}
+                onChange={(e) => setNewStationNameTh(e.target.value)}
+                placeholder="เช่น สยาม / ห้าแยกลาดพร้าว"
+                className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-700">ชื่อสถานี (ภาษาอังกฤษ - EN)</Label>
+              <Input
+                value={newStationNameEn}
+                onChange={(e) => setNewStationNameEn(e.target.value)}
+                placeholder="เช่น Siam / Ha Yaek Lat Phrao"
+                className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-700">ชื่อสถานี (ภาษาจีน - CN)</Label>
+              <Input
+                value={newStationNameCn}
+                onChange={(e) => setNewStationNameCn(e.target.value)}
+                placeholder="เช่น 暹罗 / 叻抛"
+                className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-slate-700">ชื่อสถานี (ภาษารัสเซีย - RU)</Label>
+              <Input
+                value={newStationNameRu}
+                onChange={(e) => setNewStationNameRu(e.target.value)}
+                placeholder="เช่น Сиам / Лат Пхрао"
+                className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold"
+              />
+            </div>
+
+            <DialogFooter className="pt-4 border-t border-slate-100">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsAddStationOpen(false)}
+                className="h-10 rounded-xl font-bold text-slate-600"
+              >
+                ยกเลิก
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSavingStation}
+                className="h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-6"
+              >
+                {isSavingStation ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                บันทึกสถานี
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </Popover>
   );
 }

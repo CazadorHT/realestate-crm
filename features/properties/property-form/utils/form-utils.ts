@@ -26,6 +26,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
   size_sqm: undefined,
   land_size_sqwah: undefined,
   floor: undefined,
+  is_total_floors: false,
   min_contract_months: 12,
   verified: false,
   
@@ -178,6 +179,7 @@ export const STEP_FIELDS: Record<number, (keyof PropertyFormValues)[]> = {
     "size_sqm",
     "land_size_sqwah",
     "floor",
+    "is_total_floors",
     "min_contract_months",
     "maintenance_fee",
     "parking_slots",
@@ -463,6 +465,7 @@ export function mapRowToFormValues(
     size_sqm: Number(row.size_sqm || 0) || undefined,
     land_size_sqwah: Number(row.land_size_sqwah || 0) || undefined,
     floor: Number(get("floor", 0)) || undefined,
+    is_total_floors: Boolean(get("is_total_floors", false)),
     
     // 3. Details (Warm Blocks)
     min_contract_months: Number(get("min_contract_months", 12)),

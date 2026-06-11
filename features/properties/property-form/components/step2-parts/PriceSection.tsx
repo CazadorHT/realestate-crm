@@ -83,23 +83,61 @@ export function PriceSection({
   // State for price unit toggle
   const [priceUnit, setPriceUnit] = useState<"sqm" | "sqwah">("sqm");
 
-  // Auto-calculate rent price for Office and Land
+  // Auto-calculate rent price for Office and Land bidirectional
   useEffect(() => {
     if (propertyType === "OFFICE_BUILDING" || propertyType === "LAND") {
-      if (rentPricePerSqm) {
-        const size = priceUnit === "sqm" ? sizeSqm : landSizeSqwah;
-        if (size) {
-          const calculated = Math.round(rentPricePerSqm * size);
-          if (form.getValues("original_rental_price") !== calculated) {
-            form.setValue("original_rental_price", calculated, {
-              shouldValidate: true,
-              shouldDirty: true,
-            });
+      const activeElement = document.activeElement;
+      const activeName = activeElement?.getAttribute("name");
+      const size = priceUnit === "sqm" ? sizeSqm : landSizeSqwah;
+
+      if (size) {
+        if (activeName === "rent_price_per_sqm") {
+          if (rentPricePerSqm) {
+            const calculated = Math.round(rentPricePerSqm * size);
+            if (form.getValues("original_rental_price") !== calculated) {
+              form.setValue("original_rental_price", calculated, {
+                shouldValidate: true,
+                shouldDirty: true,
+              });
+            }
+          }
+        } else if (
+          activeName === "original_rental_price" ||
+          activeName === "size_sqm" ||
+          activeName === "land_size_sqwah"
+        ) {
+          if (rentOriginal) {
+            const calculated = Math.round((rentOriginal / size) * 100) / 100;
+            if (form.getValues("rent_price_per_sqm") !== calculated) {
+              form.setValue("rent_price_per_sqm", calculated, {
+                shouldValidate: true,
+                shouldDirty: true,
+              });
+            }
+          }
+        } else {
+          // Default fallback (e.g. on mount or when unit switches)
+          if (rentPricePerSqm) {
+            const calculated = Math.round(rentPricePerSqm * size);
+            if (form.getValues("original_rental_price") !== calculated) {
+              form.setValue("original_rental_price", calculated, {
+                shouldValidate: true,
+                shouldDirty: true,
+              });
+            }
+          } else if (rentOriginal) {
+            const calculated = Math.round((rentOriginal / size) * 100) / 100;
+            if (form.getValues("rent_price_per_sqm") !== calculated) {
+              form.setValue("rent_price_per_sqm", calculated, {
+                shouldValidate: true,
+                shouldDirty: true,
+              });
+            }
           }
         }
       }
     }
-  }, [propertyType, sizeSqm, landSizeSqwah, rentPricePerSqm, priceUnit, form]);
+  }, [propertyType, sizeSqm, landSizeSqwah, rentPricePerSqm, rentOriginal, priceUnit, form]);
 
   useEffect(() => {
     // เปิดเฉพาะเมื่อมี original_price และ มากกว่า price (มีส่วนลดจริง)

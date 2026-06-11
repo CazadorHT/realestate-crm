@@ -47,6 +47,7 @@ export const PropertySchema = z
 
     // New Fields
     floor: z.coerce.number().optional().nullable(),
+    is_total_floors: z.boolean().optional().nullable(),
     min_contract_months: z.coerce.number().optional().nullable(),
     maintenance_fee: z.coerce.number().optional().nullable(),
     parking_slots: z.coerce.number().optional().nullable(),

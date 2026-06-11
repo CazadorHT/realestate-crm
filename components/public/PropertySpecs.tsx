@@ -7,6 +7,7 @@ import {
 } from "@/components/providers/LanguageProvider";
 
 import { type Language } from "@/lib/i18n";
+import { formatLandSize } from "@/lib/property-utils";
 
 interface PropertySpecsProps {
   bedrooms?: number | null;
@@ -19,6 +20,7 @@ interface PropertySpecsProps {
   sizeSqm?: number | null;
   landSize?: number | null;
   floor?: number | null;
+  is_total_floors?: boolean | null;
   type: string;
   language?: Language;
 }
@@ -34,6 +36,7 @@ export function PropertySpecs({
   sizeSqm,
   landSize,
   floor,
+  is_total_floors,
   type: _type,
   language: customLanguage,
 }: PropertySpecsProps) {
@@ -73,8 +76,8 @@ export function PropertySpecs({
     },
     {
       label: t("property.specs.land_size"),
-      value: landSize,
-      suffix: t("common.sqwa_short"),
+      value: formatLandSize(landSize, language),
+      suffix: "",
       icon: <Home className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
       show: !!landSize,
     },
@@ -86,9 +89,15 @@ export function PropertySpecs({
       show: !!parking,
     },
     {
-      label: t("property.specs.floor"),
-      value: floor,
-      suffix: t("property.specs.unit_floor"),
+      label: is_total_floors
+        ? (language === "th" ? "จำนวนชั้น" : "Total Floors")
+        : t("property.specs.floor"),
+      value: is_total_floors
+        ? floor
+        : (language === "th" ? `ชั้นที่ ${floor}` : `Floor ${floor}`),
+      suffix: is_total_floors
+        ? (language === "th" ? "ชั้น" : "Floors")
+        : "",
       icon: <Building2 className="w-4 h-4 md:w-6 md:h-6 text-blue-500" />,
       show: !!floor,
     },

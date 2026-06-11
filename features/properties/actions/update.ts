@@ -170,6 +170,7 @@ export async function updatePropertyAction(
       maid_rooms: (details?.amenities as Record<string, any>)?.maid_rooms || undefined,
       halls: (details?.amenities as Record<string, any>)?.halls || undefined,
       dining_rooms: (details?.amenities as Record<string, any>)?.dining_rooms || undefined,
+      is_total_floors: !!(details?.amenities as Record<string, any>)?.is_total_floors,
     };
 
     const canBypassOwnership = role === "ADMIN" || role === "MANAGER";
@@ -289,6 +290,7 @@ export async function updatePropertyAction(
         },
         amenities: {
           floor: safeValues.floor,
+          is_total_floors: safeValues.is_total_floors,
           parking_slots: safeValues.parking_slots,
           is_pet_friendly: safeValues.is_pet_friendly,
           is_fully_furnished: safeValues.is_fully_furnished,

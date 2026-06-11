@@ -185,3 +185,173 @@ export async function translatePlaceNamesAction(texts: string[]) {
     return texts.map(() => ({ name_en: "", name_cn: "", name_ru: "" }));
   }
 }
+
+function normalizeTransitType(type: string): string {
+  const t = String(type || "").toUpperCase().replace(/\s+/g, "_");
+  if (t.includes("BTS")) return "BTS";
+  if (t.includes("MRT_PURPLE") || t.includes("PURPLE")) return "MRT_PURPLE";
+  if (t.includes("MRT_YELLOW") || t.includes("YELLOW")) return "MRT_YELLOW";
+  if (t.includes("MRT_PINK") || t.includes("PINK")) return "MRT_PINK";
+  if (t.includes("MRT")) return "MRT";
+  if (t.includes("ARL") || t.includes("AIRPORT")) return "ARL";
+  if (t.includes("SRT") || t.includes("RED")) return "SRT_RED";
+  if (t.includes("GOLD")) return "GOLD";
+  if (t.includes("BRT")) return "BRT";
+  if (t.includes("EXPRESSWAY")) return "EXPRESSWAY";
+  if (t.includes("MAIN_ROAD") || t.includes("ROAD")) return "MAIN_ROAD";
+  return "OTHER";
+}
+
+function normalizePlaceCategory(category: string): string {
+  const c = String(category || "").trim().toLowerCase();
+  if (c.includes("school") || c.includes("university") || c.includes("education")) return "School";
+  if (c.includes("mall") || c.includes("shopping") || c.includes("market") || c.includes("supermarket")) return "Mall";
+  if (c.includes("hospital") || c.includes("clinic") || c.includes("medical")) return "Hospital";
+  if (c.includes("transport") || c.includes("expressway") || c.includes("highway")) return "Transport";
+  if (c.includes("park") || c.includes("garden")) return "Park";
+  if (c.includes("office") || c.includes("workplace") || c.includes("building")) return "Office";
+  return "Other";
+}
+
+export async function suggestNearbyPlacesAndTransitAction(params: {
+  title?: string;
+  addressLine1?: string;
+  subdistrict?: string;
+  district?: string;
+  province?: string;
+  googleMapsLink?: string;
+}) {
+  const { title = "", addressLine1 = "", subdistrict = "", district = "", province = "", googleMapsLink = "" } = params;
+
+  if (!province && !district && !addressLine1 && !googleMapsLink) {
+    throw new Error("กรุณากรอกข้อมูลที่ตั้ง จังหวัด หรือลิงก์แผนที่ก่อนดำเนินการ");
+  }
+
+  const prompt = `
+You are a real estate search assistant. Find the nearest transit stations and nearby key places for the following property in Thailand:
+- Project/Address/Village Name: ${addressLine1}
+- Subdistrict: ${subdistrict}
+- District: ${district}
+- Province: ${province}
+- Property Title: ${title}
+- Google Maps Link: ${googleMapsLink || "Not provided"}
+
+Instructions:
+1. Identify the exact real-world location of this property. If a Google Maps Link is provided, prioritize parsing/identifying the location context or coordinates from this link.
+
+2. Find nearest transit stations (BTS, MRT, ARL, BRT, etc.). Limit to at most 3 stations. For each station, find:
+   - type (must be one of: "BTS", "MRT", "MRT_PURPLE", "MRT_YELLOW", "MRT_PINK", "ARL", "SRT_RED", "GOLD", "BRT", "OTHER")
+   - station_name in Thai (e.g., "อโศก", "ห้วยขวาง")
+   - distance_meters (estimated walking/driving distance in meters, e.g., 500)
+   - time (estimated time in minutes as string, e.g., "5")
+   - station_name_en (English station name, e.g. "Asok")
+   - station_name_cn (Chinese station name, e.g. "阿索克")
+   - station_name_ru (Russian station name, e.g. "Асок")
+
+3. Find nearby key landmark places (like Shopping Malls, Schools, Hospitals, Supermarkets, Parks, work offices, etc.). Limit to at most 5 places. For each place, find:
+   - category (must be one of: "School", "Mall", "Hospital", "Transport", "Park", "Office", "Other")
+   - name in Thai (e.g. "เอ็มควอเทียร์", "โรงพยาบาลสมิติเวช สุขุมวิท")
+   - distance_meters (estimated walking/driving distance in meters, e.g. 1200)
+   - time (estimated time in minutes as string, e.g. "10")
+   - name_en (English place name, e.g. "EmQuartier")
+   - name_cn (Chinese place name)
+   - name_ru (Russian place name)
+
+Return ONLY a valid JSON object matching this TypeScript structure:
+{
+  "transits": [
+    {
+      "type": string,
+      "station_name": string,
+      "distance_meters": number,
+      "time": string,
+      "station_name_en": string,
+      "station_name_cn": string,
+      "station_name_ru": string
+    }
+  ],
+  "places": [
+    {
+      "category": string,
+      "name": string,
+      "distance_meters": number,
+      "time": string,
+      "name_en": string,
+      "name_cn": string,
+      "name_ru": string
+    }
+  ]
+}
+
+Ensure the response contains no markdown code blocks, just raw JSON.
+`;
+
+  try {
+    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+    const aiConfig = await getAiModelConfig();
+    const modelName = aiConfig.description_model || "gemini-1.5-flash";
+
+    const response = await generateText(prompt, modelName, 0, {
+      useSearch: true,
+      responseMimeType: "application/json",
+    });
+
+    const cleaned = response.text
+      .trim()
+      .replace(/^```json/, "")
+      .replace(/^```/, "")
+      .replace(/```$/, "");
+    const result = JSON.parse(cleaned);
+
+    const transits = (result.transits || []).map((t: any) => ({
+      type: normalizeTransitType(t.type || "BTS"),
+      station_name: String(t.station_name || "").trim(),
+      distance_meters: t.distance_meters ? parseInt(String(t.distance_meters).replace(/[^0-9]/g, ""), 10) : undefined,
+      time: t.time ? String(t.time).replace(/[^0-9]/g, "") : "",
+      station_name_en: String(t.station_name_en || "").trim(),
+      station_name_cn: String(t.station_name_cn || "").trim(),
+      station_name_ru: String(t.station_name_ru || "").trim(),
+    }));
+
+    const places = (result.places || []).map((p: any) => ({
+      category: normalizePlaceCategory(p.category || "Other"),
+      name: String(p.name || "").trim(),
+      distance_meters: p.distance_meters ? parseInt(String(p.distance_meters).replace(/[^0-9]/g, ""), 10) : undefined,
+      time: p.time ? String(p.time).replace(/[^0-9]/g, "") : "",
+      name_en: String(p.name_en || "").trim(),
+      name_cn: String(p.name_cn || "").trim(),
+      name_ru: String(p.name_ru || "").trim(),
+    }));
+
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    await logAiUsage({
+      model: modelName,
+      feature: "nearby_search",
+      status: "success",
+      promptTokens: response.usage?.promptTokens,
+      completionTokens: response.usage?.completionTokens,
+    });
+
+    return { success: true, data: { transits, places } };
+  } catch (error: unknown) {
+    console.error("AI Search Nearby/Transit Error:", error);
+    
+    let modelName = "unknown";
+    try {
+      const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+      const aiConfig = await getAiModelConfig();
+      modelName = aiConfig.description_model || "gemini-1.5-flash";
+    } catch (_) {}
+
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    await logAiUsage({
+      model: modelName,
+      feature: "nearby_search",
+      status: "error",
+      errorMessage: (error as Error).message,
+    });
+    return { success: false, error: (error as Error).message || "ไม่สามารถดึงข้อมูลทำเลด้วย AI ได้" };
+  }
+}
+
+

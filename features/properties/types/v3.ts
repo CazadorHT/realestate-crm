@@ -2,6 +2,7 @@ import type { ListingType, PropertyType, PropertyStatus } from "../types";
 
 export interface PropertyAmenitiesV3 {
   floor?: number | null;
+  is_total_floors?: boolean;
   parking_slots?: number | null;
   office_capacity?: string | number | null;
   maid_rooms?: number | null;

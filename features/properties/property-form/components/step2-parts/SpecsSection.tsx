@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   FormField,
   FormItem,
@@ -47,10 +47,60 @@ interface SpecsSectionProps {
   isReadOnly: boolean;
 }
 
-export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) {
+export function SpecsSection({
+  form: formProp,
+  isReadOnly,
+}: SpecsSectionProps) {
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
   const bedrooms = form.watch("bedrooms");
+
+  const [useSplitLandSize, setUseSplitLandSize] = useState(false);
+  const landSizeSqwah = form.watch("land_size_sqwah");
+
+  const { rai, ngan, sqwah } = useMemo(() => {
+    if (!landSizeSqwah) return { rai: 0, ngan: 0, sqwah: 0 };
+    const r = Math.floor(landSizeSqwah / 400);
+    const rem = landSizeSqwah % 400;
+    const n = Math.floor(rem / 100);
+    const s = Math.round((rem % 100) * 100) / 100;
+    return { rai: r, ngan: n, sqwah: s };
+  }, [landSizeSqwah]);
+
+  useEffect(() => {
+    if (landSizeSqwah && landSizeSqwah >= 400) {
+      setUseSplitLandSize(true);
+    }
+  }, []);
+
+  const handleSplitChange = (
+    type: "rai" | "ngan" | "sqwah",
+    value: number | undefined,
+  ) => {
+    const currentRai = type === "rai" ? (value ?? 0) : rai;
+    const currentNgan = type === "ngan" ? (value ?? 0) : ngan;
+    const currentSqwah = type === "sqwah" ? (value ?? 0) : sqwah;
+
+    const total = currentRai * 400 + currentNgan * 100 + currentSqwah;
+    form.setValue("land_size_sqwah", total || undefined, {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const isTotalFloors = form.watch("is_total_floors");
+  const propertyType = form.watch("property_type");
+
+  useEffect(() => {
+    const isDirty = form.getFieldState("is_total_floors").isDirty;
+    if (!isDirty) {
+      if (propertyType === "CONDO") {
+        form.setValue("is_total_floors", false);
+      } else if (propertyType && propertyType !== "LAND") {
+        form.setValue("is_total_floors", true);
+      }
+    }
+  }, [propertyType]);
 
   return (
     <Card className="border-slate-200/70 bg-white">
@@ -88,7 +138,11 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
                 { name: "bathrooms", label: "ห้องน้ำ", icon: Bath },
                 { name: "parking_slots", label: "ที่จอดรถ", icon: CarFront },
                 { name: "floor", label: "ชั้นที่", icon: Building2 },
-                { name: "office_capacity", label: "รองรับจำนวนที่นั่ง", icon: Users },
+                {
+                  name: "office_capacity",
+                  label: "รองรับจำนวนที่นั่ง",
+                  icon: Users,
+                },
                 { name: "maid_rooms", label: "ห้องแม่บ้าน", icon: Sparkles },
                 { name: "halls", label: "ห้องโถงใหญ่", icon: Sofa },
                 { name: "dining_rooms", label: "ห้องอาหาร", icon: Utensils },
@@ -99,9 +153,30 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
                   name={item.name as any}
                   render={({ field, fieldState }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
-                        <item.icon className="h-4 w-4 text-purple-500" />
-                        {item.label}
+                      <FormLabel className="flex items-center justify-between gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider w-full">
+                        <span className="flex items-center gap-2">
+                          <item.icon className="h-4 w-4 text-purple-500" />
+                          {item.name === "floor"
+                            ? isTotalFloors
+                              ? "จำนวนชั้น"
+                              : "ชั้นที่"
+                            : item.label}
+                        </span>
+                        {item.name === "floor" && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              form.setValue("is_total_floors", !isTotalFloors, {
+                                shouldDirty: true,
+                              })
+                            }
+                            className="text-[10px] text-blue-500 hover:text-blue-700 hover:underline normal-case transition-colors cursor-pointer select-none"
+                          >
+                            {isTotalFloors
+                              ? "สลับเป็น ชั้นที่"
+                              : "สลับเป็น มีกี่ชั้น"}
+                          </button>
+                        )}
                       </FormLabel>
                       <FormControl>
                         {item.name === "office_capacity" ? (
@@ -118,12 +193,20 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
                             ].join(" ")}
                           />
                         ) : (
-                          <div className={`flex items-center justify-between gap-1 border rounded-lg p-1 bg-white focus-within:border-purple-500 focus-within:ring-purple-500/20 focus-within:ring-2 transition-all ${
-                            fieldState.error ? "border-rose-400" : "border-slate-200"
-                          }`}>
+                          <div
+                            className={`flex items-center justify-between gap-1 border rounded-lg p-1 bg-white focus-within:border-purple-500 focus-within:ring-purple-500/20 focus-within:ring-2 transition-all ${
+                              fieldState.error
+                                ? "border-rose-400"
+                                : "border-slate-200"
+                            }`}
+                          >
                             <button
                               type="button"
-                              disabled={isReadOnly || !field.value || Number(field.value) <= 0}
+                              disabled={
+                                isReadOnly ||
+                                !field.value ||
+                                Number(field.value) <= 0
+                              }
                               onClick={() => {
                                 const val = Number(field.value) || 0;
                                 if (val > 0) {
@@ -134,7 +217,7 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
                             >
                               <Minus className="h-3 w-3" />
                             </button>
-                            
+
                             <NumberInput
                               {...field}
                               placeholder="0"
@@ -160,12 +243,14 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
                           </div>
                         )}
                       </FormControl>
-                      {item.name === "bathrooms" && Number(bedrooms) > 0 && (Number(field.value) || 0) === 0 && (
-                        <div className="mt-1 text-[10px] font-semibold text-amber-600 flex items-center gap-1 animate-in fade-in duration-200">
-                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                          <span>กรุณาตรวจสอบจำนวนห้องน้ำ</span>
-                        </div>
-                      )}
+                      {item.name === "bathrooms" &&
+                        Number(bedrooms) > 0 &&
+                        (Number(field.value) || 0) === 0 && (
+                          <div className="mt-1 text-[10px] font-semibold text-amber-600 flex items-center gap-1 animate-in fade-in duration-200">
+                            <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                            <span>กรุณาตรวจสอบจำนวนห้องน้ำ</span>
+                          </div>
+                        )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -184,7 +269,9 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
               </h4>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4">
+              <div className="space-y-4">
+                
               <UnitNumberField
                 label={
                   <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
@@ -199,27 +286,120 @@ export function SpecsSection({ form: formProp, isReadOnly }: SpecsSectionProps) 
                 emphasize
                 size="sm"
                 decimals={2}
-                className="font-normal"
+                className="font-normal "
                 labelClassName=" "
               />
 
-              <UnitNumberField
-                label={
-                  <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
-                    <Map className="h-4 w-4 text-emerald-500" /> ขนาดที่ดิน
-                  </span>
-                }
-                name="land_size_sqwah"
-                control={form.control}
-                placeholder="ระบุตารางวา"
-                suffix="ตร.ว."
-                disabled={isReadOnly}
-                emphasize
-                size="sm"
-                decimals={2}
-                className="font-normal"
-                labelClassName=" "
-              />
+              {useSplitLandSize ? (
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
+                      <Map className="h-4 w-4 text-emerald-500" /> ขนาดที่ดิน
+                      (ไร่ - งาน - ตร.ว.)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setUseSplitLandSize(false)}
+                      className="text-[10px] font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors cursor-pointer"
+                    >
+                       สลับใช้ ตร.ว. เดี่ยว
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <div className="flex items-center">
+                        <NumberInput
+                          value={rai || undefined}
+                          onChange={(val) => handleSplitChange("rai", val)}
+                          disabled={isReadOnly}
+                          placeholder="0"
+                          className="h-9 w-full rounded-l-lg border border-slate-200 border-r-0 bg-white text-center text-sm font-medium focus:border-emerald-500 focus:ring-0 text-slate-900 focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0 focus-visible:border-emerald-500"
+                        />
+                        <span className="h-9 flex items-center bg-slate-50 border border-slate-200 rounded-r-lg px-2 text-[10px] text-slate-500 select-none whitespace-nowrap">
+                          ไร่
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center">
+                        <NumberInput
+                          value={ngan || undefined}
+                          onChange={(val) => handleSplitChange("ngan", val)}
+                          disabled={isReadOnly}
+                          placeholder="0"
+                          className="h-9 w-full rounded-l-lg border border-slate-200 border-r-0 bg-white text-center text-sm font-medium focus:border-emerald-500 focus:ring-0 text-slate-900 focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0 focus-visible:border-emerald-500"
+                        />
+                        <span className="h-9 flex items-center bg-slate-50 border border-slate-200 rounded-r-lg px-2 text-[10px] text-slate-500 select-none whitespace-nowrap">
+                          งาน
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex items-center">
+                        <NumberInput
+                          value={sqwah || undefined}
+                          onChange={(val) => handleSplitChange("sqwah", val)}
+                          disabled={isReadOnly}
+                          decimals={2}
+                          placeholder="0"
+                          className="h-9 w-full rounded-l-lg border border-slate-200 border-r-0 bg-white text-center text-sm font-medium focus:border-emerald-500 focus:ring-0 text-slate-900 focus-visible:ring-0 focus-visible:ring-offset-0 focus:ring-offset-0 focus-visible:border-emerald-500"
+                        />
+                        <span className="h-9 flex items-center bg-slate-50 border border-slate-200 rounded-r-lg px-1.5 text-[10px] text-slate-500 select-none whitespace-nowrap">
+                          ตร.ว.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <UnitNumberField
+                    label={
+                      <div className="flex items-center justify-between w-full">
+                        <span className="flex items-center gap-2">
+                          <Map className="h-4 w-4 text-emerald-500" />{" "}
+                          ขนาดที่ดิน
+                        </span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setUseSplitLandSize(true);
+                          }}
+                          className="text-[10px] font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors cursor-pointer"
+                        >
+                          สลับใช้ ไร่-งาน-ตร.ว.
+                        </button>
+                      </div>
+                    }
+                    name="land_size_sqwah"
+                    control={form.control}
+                    placeholder="ระบุตารางวา"
+                    suffix="ตร.ว."
+                    disabled={isReadOnly}
+                    emphasize
+                    size="sm"
+                    decimals={2}
+                    className="font-normal"
+                    labelClassName="w-full flex items-center justify-between text-xs font-medium text-slate-600 uppercase tracking-wider"
+                  />
+                  {landSizeSqwah && landSizeSqwah >= 400 && (
+                    <div
+                      onClick={() => setUseSplitLandSize(true)}
+                      className="text-[10px] text-emerald-700 bg-emerald-50/50 border border-emerald-100 px-2 py-1 rounded-md cursor-pointer hover:bg-emerald-100/50 transition-colors flex items-center justify-between animate-in fade-in slide-in-from-top-1"
+                    >
+                      <span>
+                        คิดเป็น: {rai} ไร่ {ngan} งาน {sqwah} ตร.ว.
+                      </span>
+                      <span className="text-[9px] font-semibold text-emerald-600 underline">
+                        สลับโหมด
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+              </div>
 
               <FormField
                 control={form.control}

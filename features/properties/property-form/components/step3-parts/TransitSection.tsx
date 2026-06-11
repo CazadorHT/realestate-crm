@@ -152,6 +152,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
   const [newTransitColor, setNewTransitColor] = React.useState("#3b82f6");
   const [isSavingTransit, setIsSavingTransit] = React.useState(false);
   const [openIndex, setOpenIndex] = React.useState<number | null>(null);
+  const [openSelectIndex, setOpenSelectIndex] = React.useState<number | null>(null);
   const [isMobileOrTablet, setIsMobileOrTablet] = React.useState(false);
 
   React.useEffect(() => {
@@ -160,6 +161,15 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
     mql.addEventListener("change", onChange);
     setIsMobileOrTablet(mql.matches);
     return () => mql.removeEventListener("change", onChange);
+  }, []);
+
+  const refreshStations = React.useCallback(async () => {
+    try {
+      const data = await getTransitStationsAction();
+      setTransitStations(data);
+    } catch (err) {
+      console.error("Error refreshing stations:", err);
+    }
   }, []);
 
   React.useEffect(() => {
@@ -445,6 +455,8 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                           </ResponsiveDialog>
                         ) : (
                           <Select
+                            open={openSelectIndex === index}
+                            onOpenChange={(open) => setOpenSelectIndex(open ? index : null)}
                             onValueChange={field.onChange}
                             value={field.value ?? "BTS"}
                             disabled={isLoadingTypes}
@@ -492,6 +504,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                   className="w-full justify-start text-xs text-blue-600 font-bold hover:bg-blue-50 py-1.5 h-auto cursor-pointer"
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    setOpenSelectIndex(null);
                                     setIsTransitModalOpen(true);
                                   }}
                                 >
@@ -567,6 +580,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                             value={field.value ?? ""}
                             stations={transitStations}
                             transitType={form.watch(`nearby_transits.${index}.type`)}
+                            onRefreshStations={refreshStations}
                             onChange={(station) => {
                               if (station) {
                                 field.onChange(station.label.th);

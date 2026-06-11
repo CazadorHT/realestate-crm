@@ -235,6 +235,7 @@ export interface PropertyDetail {
   near_transit?: boolean | null;
   meta_keywords?: string[] | null;
   floor?: number | null;
+  is_total_floors?: boolean | null;
   floor_plan_url: string | null;
   created_at: string | null;
   updated_at: string | null;
