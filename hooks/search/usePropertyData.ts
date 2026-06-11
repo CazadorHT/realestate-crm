@@ -27,7 +27,11 @@ export function usePropertyData(initialProperties?: ApiProperty[]) {
   useEffect(() => {
     async function load() {
       if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+        try {
+          abortControllerRef.current.abort();
+        } catch (e) {
+          console.warn("usePropertyData: failed to abort previous fetch", e);
+        }
       }
       
       const controller = new AbortController();
@@ -85,7 +89,7 @@ export function usePropertyData(initialProperties?: ApiProperty[]) {
           setProperties(props);
         }
       } catch (err: any) {
-        if (err.name === "AbortError") return;
+        if (err.name === "AbortError" || err.message?.includes("aborted")) return;
         console.error("usePropertyData fetch error:", err);
         
         // 📊 Analytics Seal: Track system error
@@ -108,7 +112,11 @@ export function usePropertyData(initialProperties?: ApiProperty[]) {
 
     return () => {
       if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
+        try {
+          abortControllerRef.current.abort();
+        } catch (e) {
+          console.warn("usePropertyData: failed to abort fetch on cleanup", e);
+        }
       }
     };
   }, [searchParams, t]);
