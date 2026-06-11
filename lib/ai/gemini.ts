@@ -75,7 +75,7 @@ export function getModel(modelName: string = DEFAULT_MODEL, options?: {
   const modelOptions: any = { model: normalizedModelName };
   
   if (options?.useSearch) {
-    modelOptions.tools = [{ googleSearchRetrieval: {} }];
+    modelOptions.tools = [{ googleSearch: {} }];
   }
 
   if (options?.systemInstruction) {
