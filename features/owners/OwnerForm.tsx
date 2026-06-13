@@ -150,11 +150,10 @@ export function OwnerForm(props: Props) {
               : "บันทึกข้อมูลสำเร็จ"),
         );
 
-        router.refresh();
-
         if (props.onSuccess) {
           props.onSuccess(res && 'id' in res ? (res.id as string) : undefined);
         } else {
+          router.refresh();
           router.push("/protected/owners?success=true");
         }
       } catch (e: unknown) {

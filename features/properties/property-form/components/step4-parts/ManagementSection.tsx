@@ -416,13 +416,16 @@ export const ManagementSection = ({
                           if (refreshOwners) {
                             await refreshOwners();
                           }
-                          if (newOwnerId) {
-                            form.setValue("owner_id", newOwnerId, {
-                              shouldValidate: true,
-                              shouldDirty: true,
-                              shouldTouch: true,
-                            });
-                          }
+                          // ดีเลย์เล็กน้อยเพื่อให้ React อัปเดต State รายการเจ้าของคนใหม่ใน Dropdown สำเร็จก่อนเลือกค่า
+                          setTimeout(() => {
+                            if (newOwnerId) {
+                              form.setValue("owner_id", newOwnerId, {
+                                shouldValidate: true,
+                                shouldDirty: true,
+                                shouldTouch: true,
+                              });
+                            }
+                          }, 150);
                         }}
                       />
                     </div>
