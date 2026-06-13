@@ -63,16 +63,17 @@ const aiBlogResponseSchema = z.object({
  * 🛠️ UTILITY: Robust JSON Extraction
  */
 function extractJson(text: string) {
+  const clean = text.trim();
+
   // Attempt 1: Direct parse
   try {
-    const clean = text.trim();
     if (clean.startsWith('{') && clean.endsWith('}')) {
       return JSON.parse(clean);
     }
   } catch (e) {}
 
-  // Attempt 2: Markdown block removal
-  const markdownMatch = text.match(/```json\s?([\s\S]*?)\s?```/);
+  // Attempt 2: Markdown block removal (case-insensitive and support missing language tag)
+  const markdownMatch = clean.match(/```(?:json)?\s?([\s\S]*?)\s?```/i);
   if (markdownMatch && markdownMatch[1]) {
     try {
       return JSON.parse(markdownMatch[1].trim());
@@ -80,10 +81,10 @@ function extractJson(text: string) {
   }
 
   // Attempt 3: Deep search
-  const start = text.indexOf('{');
-  const end = text.lastIndexOf('}');
+  const start = clean.indexOf('{');
+  const end = clean.lastIndexOf('}');
   if (start !== -1 && end !== -1 && end > start) {
-    let candidate = text.substring(start, end + 1);
+    let candidate = clean.substring(start, end + 1);
     try {
       return JSON.parse(candidate);
     } catch (e) {
@@ -94,10 +95,14 @@ function extractJson(text: string) {
       try {
         return JSON.parse(candidate + ']}');
       } catch (e3) {}
+      try {
+        return JSON.parse(candidate + ']}');
+      } catch (e4) {}
     }
   }
 
-  throw new Error("Could not extract valid JSON from AI response");
+  console.error("Failed to parse JSON. Raw AI Response content:", text);
+  throw new Error(`Could not extract valid JSON from AI response (Response starts with: ${clean.substring(0, 100)}...)`);
 }
 
 /**
