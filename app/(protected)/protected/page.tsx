@@ -122,7 +122,7 @@ export default async function DashboardPage(props: {
   const branchId = searchParams.branchId as string | undefined;
   const teamId = searchParams.teamId as string | undefined;
   const agentId = searchParams.agentId as string | undefined;
-  const view = (searchParams.view as "company" | "personal" | "staff") || "company";
+  const view = (searchParams.view as "company" | "personal" | "staff" | "branch" | "team") || "company";
 
   const supabase = await createClient();
 
@@ -403,7 +403,7 @@ export default async function DashboardPage(props: {
         <MotionStaggerItem className="mt-2 min-h-[300px]">
           <ErrorBoundary>
             <RecentPropertiesSectionSuspense 
-              tenantId={tenantId} 
+              tenantId={branchId || tenantId} 
               userId={view === "staff" ? agentId : (view === "personal" ? user?.id : undefined)} 
             />
           </ErrorBoundary>
