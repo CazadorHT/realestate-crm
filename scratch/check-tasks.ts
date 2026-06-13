@@ -15,18 +15,17 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function run() {
-  console.log("Fetching latest background tasks from system_task_queue...");
-  const { data, error } = await supabase
+  console.log("Fetching all background tasks from system_task_queue...");
+  const { data, error, count } = await supabase
     .from("system_task_queue")
-    .select("*")
-    .order("run_at", { ascending: false })
-    .limit(5);
+    .select("*", { count: "exact" });
 
   if (error) {
     console.error("Error fetching tasks:", error);
     return;
   }
 
+  console.log(`Total tasks found: ${count}`);
   console.log("Tasks:", JSON.stringify(data, null, 2));
 }
 
