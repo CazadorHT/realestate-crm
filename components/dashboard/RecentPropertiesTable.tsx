@@ -16,9 +16,10 @@ import {
   Loader2,
   Search,
   Home,
+  User,
 } from "lucide-react";
 import { DashboardEmptyState } from "./DashboardEmptyState";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useState } from "react";
 import { formatDistanceToNowThai } from "@/lib/utils";
 import {
@@ -63,12 +64,24 @@ export type PropertyWithRelations = PropertyTableData & {
 export function RecentPropertiesTable({
   properties,
   showBranch = false,
+  isAdminOrManager = false,
 }: {
   properties: PropertyWithRelations[];
   showBranch?: boolean;
+  isAdminOrManager?: boolean;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
+
+  const view = searchParams.get("view") || (isAdminOrManager ? "company" : "personal");
+
+  const handleViewChange = (newView: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("view", newView);
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   return (
     
@@ -90,21 +103,54 @@ export function RecentPropertiesTable({
             รายการทรัพย์ล่าสุดที่ถูกเพิ่มเข้ามาในระบบ
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-fit rounded-xl font-bold border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm h-10 px-5"
-          onClick={() => {
-            setNavigatingId("view-all");
-            router.push("/protected/properties");
-          }}
-          disabled={navigatingId === "view-all"}
-        >
-          {navigatingId === "view-all" ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2 text-slate-500" />
-          ) : null}
-          ดูทั้งหมด →
-        </Button>
+
+        <div className="flex flex-wrap items-center gap-3 self-end sm:self-center">
+          {/* Segmented Control for ADMIN/MANAGER */}
+          {isAdminOrManager && (
+            <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/40">
+              <button
+                onClick={() => handleViewChange("company")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                  view === "company"
+                    ? "bg-white text-blue-600 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
+                )}
+              >
+                <Building2 size={13} />
+                ทั้งหมด
+              </button>
+              <button
+                onClick={() => handleViewChange("personal")}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
+                  view === "personal"
+                    ? "bg-white text-blue-600 shadow-xs"
+                    : "text-slate-500 hover:text-slate-800"
+                )}
+              >
+                <User size={13} />
+                เฉพาะของฉัน
+              </button>
+            </div>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-fit rounded-xl font-bold border-slate-200 text-slate-700 bg-white hover:bg-slate-50 hover:text-slate-900 transition-all shadow-sm h-10 px-5"
+            onClick={() => {
+              setNavigatingId("view-all");
+              router.push("/protected/properties");
+            }}
+            disabled={navigatingId === "view-all"}
+          >
+            {navigatingId === "view-all" ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-2 text-slate-500" />
+            ) : null}
+            ดูทั้งหมด →
+          </Button>
+        </div>
       </div>
 
       {/* 2. Table Container - ปรับขอบโค้งมนและใส่สีพื้นหลังขาว */}

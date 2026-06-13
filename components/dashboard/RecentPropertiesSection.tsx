@@ -186,7 +186,15 @@ export async function RecentPropertiesSection({
     };
   }) as PropertyWithRelations[];
 
-  return <RecentPropertiesTable properties={properties} showBranch={showBranch} />;
+  const isAdminOrManager = profile?.role === "ADMIN" || profile?.role === "MANAGER";
+
+  return (
+    <RecentPropertiesTable
+      properties={properties}
+      showBranch={showBranch}
+      isAdminOrManager={isAdminOrManager}
+    />
+  );
 }
 
 export function RecentPropertiesSectionSuspense({ 
