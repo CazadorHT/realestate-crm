@@ -317,6 +317,42 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     };
   }, [handleAiGenerated]);
 
+  // 🔄 SELF-CONTAINED POLLING BACKUP: Poll every 3 seconds when generating
+  useEffect(() => {
+    if (!isAiGenerating || !generationTaskId) return;
+
+    let isMounted = true;
+    const interval = setInterval(async () => {
+      try {
+        const { getBackgroundTasksAction } = await import("@/lib/background-tasks/actions");
+        const res = await getBackgroundTasksAction();
+        if (res.success && Array.isArray(res.data) && isMounted) {
+          const task = res.data.find((t: any) => t.id === generationTaskId);
+          if (task) {
+            if (task.status === "SUCCESS") {
+              if (task.result) {
+                handleAiGenerated(task.result);
+              }
+              setIsAiGenerating(false);
+              setGenerationTaskId(null);
+            } else if (task.status === "ERROR" || task.status === "CANCELLED") {
+              setIsAiGenerating(false);
+              setGenerationTaskId(null);
+              toast.error(`สร้างบทความล้มเหลว: ${task.error_details || task.message || "ข้อผิดพลาดระบบ"}`);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("BlogForm self-polling error:", err);
+      }
+    }, 3000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [isAiGenerating, generationTaskId, handleAiGenerated]);
+
   const [isTranslating, setIsTranslating] = useState(false);
 
   const handleTranslateBlog = async () => {
