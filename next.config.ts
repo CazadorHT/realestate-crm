@@ -13,6 +13,7 @@ const nextConfig: NextConfig = {
   /* Add your Next.js config here */
 
   images: {
+    unoptimized: true,
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     deviceSizes: [640, 828, 1200, 1920],
