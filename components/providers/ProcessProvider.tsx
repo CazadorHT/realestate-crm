@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { BackgroundProcess, ProcessEvent } from "@/lib/process-monitor";
 import { useTenant } from "./TenantProvider";
 import { toast } from "sonner";
@@ -190,6 +190,12 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("app-process-event", handler);
   }, []);
 
+  // Keep processes in a ref so the polling interval doesn't reset on every update
+  const processesRef = useRef(processes);
+  useEffect(() => {
+    processesRef.current = processes;
+  }, [processes]);
+
   // 🔄 FALLBACK POLLING: If there are active tasks, poll every 5 seconds in case Realtime fails
   const activeCount = processes.filter(
     (p) => p.status === "PROCESSING" || p.status === "PENDING"
@@ -205,7 +211,7 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
         if (res.success && Array.isArray(res.data)) {
           // Find any tasks that were previously PENDING/PROCESSING but now SUCCESS/ERROR
           const prevActiveMap = new Map(
-            processes
+            processesRef.current
               .filter((p) => p.status === "PENDING" || p.status === "PROCESSING")
               .map((p) => [p.id, p])
           );
@@ -292,7 +298,7 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [activeCount, processes]);
+  }, [activeCount]);
 
 
   const clearFinished = useCallback(async () => {
