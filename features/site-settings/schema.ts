@@ -224,6 +224,9 @@ export const SENSITIVE_KEYS: SiteSettingKey[] = [
   "google_integration_tokens",
   "meta_page_access_token",
   "line_channel_access_token",
+  "meta_page_name",
+  "meta_page_id" as SiteSettingKey,
+  "meta_user_access_token" as SiteSettingKey,
   // Reserved for future use
   "line_channel_secret" as SiteSettingKey,
   "fb_pixel_id" as SiteSettingKey,
