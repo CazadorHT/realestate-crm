@@ -164,10 +164,11 @@ export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> 
     const filteredData = (data || []).filter((task: any) => {
       const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
       if (role === "ADMIN") return true;
-      if (tenantId) {
-        return payload.tenant_id === tenantId;
-      }
-      return payload.user_id === user.id;
+      
+      const isOwner = payload.user_id === user.id;
+      const isSameTenant = tenantId && payload.tenant_id === tenantId;
+      
+      return isOwner || isSameTenant;
     }).map((task: any) => {
       const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
       return {
