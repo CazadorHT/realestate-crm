@@ -2,7 +2,7 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getAiModelConfig } from "@/features/ai-settings/actions";
-import { generateText, getModel } from "@/lib/ai/gemini";
+import { generateText, getModel, generateImagenImage } from "@/lib/ai/gemini";
 import { logAiUsage } from "@/features/ai-monitor/actions";
 import { uploadBlogImage } from "./storage-service";
 import { z } from "zod";
@@ -377,7 +377,7 @@ export async function refineBlogContent(
 }
 
 /**
- * Helper to generate image via Pollinations and upload to Supabase.
+ * Helper to generate image via Google Imagen 4 (or Pollinations fallback) and upload to Supabase.
  */
 async function generateAndUploadAiImage(
   prompt: string,
@@ -387,18 +387,32 @@ async function generateAndUploadAiImage(
   const maxRetries = 3;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      const encodedPrompt = encodeURIComponent(prompt);
-      const seed = Math.floor(Math.random() * 1000000);
-      const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}`;
+      console.log(`[AI-BLOG-IMAGE] Generating cover image with Google Imagen, attempt ${attempt + 1}...`);
+      const buffer = await generateImagenImage(prompt);
+      
+      let imageBuffer: Buffer;
+      let mimeType = "image/jpeg";
+      
+      if (buffer) {
+        imageBuffer = buffer;
+      } else {
+        console.warn(`[AI-BLOG-IMAGE] Google Imagen failed, falling back to Pollinations AI...`);
+        const encodedPrompt = encodeURIComponent(prompt);
+        const seed = Math.floor(Math.random() * 1000000);
+        const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}`;
 
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`Pollinations API failed: ${response.status}`);
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Pollinations API failed: ${response.status}`);
 
-      const buffer = Buffer.from(await response.arrayBuffer());
+        imageBuffer = Buffer.from(await response.arrayBuffer());
+        mimeType = "image/png";
+      }
+
       const randomId = Math.random().toString(36).substring(2, 10);
-      const fileName = `ai-generated-${randomId}.png`;
+      const extension = mimeType === "image/jpeg" ? "jpg" : "png";
+      const fileName = `ai-generated-${randomId}.${extension}`;
 
-      const uploadResult = await uploadBlogImage(buffer, fileName, "image/png");
+      const uploadResult = await uploadBlogImage(imageBuffer, fileName, mimeType, true);
       return uploadResult.success ? uploadResult.data!.publicUrl : null;
     } catch (error) {
       console.error(`Image generation attempt ${attempt + 1} failed:`, error);

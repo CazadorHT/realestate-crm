@@ -244,3 +244,91 @@ export function constructLeadRequirementText(lead: {
   if (lead.note) parts.push(`Extra details: ${lead.note}`);
   return parts.join(" | ") || "Looking for property";
 }
+
+/**
+ * Generates an image using Google's Gemini Image Models REST API
+ * Primary: gemini-2.5-flash-image (Nano Banana)
+ * Fallback: gemini-3.1-flash-image (Nano Banana 2)
+ */
+export async function generateImagenImage(
+  prompt: string,
+  retryCount: number = 0,
+  useFallbackModel: boolean = false,
+): Promise<Buffer | null> {
+  const apiKey = API_KEYS[currentKeyIndex];
+  if (!apiKey) {
+    console.error("No API keys loaded for image generation");
+    return null;
+  }
+
+  const model = useFallbackModel ? "gemini-3.1-flash-image" : "gemini-2.5-flash-image";
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  const payload = {
+    contents: [
+      {
+        parts: [
+          {
+            text: prompt,
+          },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseModalities: ["IMAGE"],
+      imageConfig: {
+        aspectRatio: "16:9",
+      },
+    },
+  };
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Referer": "https://vccasset.com",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.status === 429) {
+      if (rotateApiKey() && retryCount < API_KEYS.length) {
+        console.log("🔄 Rotated API key and retrying image generation...");
+        return generateImagenImage(prompt, retryCount + 1, useFallbackModel);
+      }
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(`Model ${model} returned status ${response.status}: ${JSON.stringify(errorData)}`);
+    }
+
+    const data = await response.json();
+    const parts = data.candidates?.[0]?.content?.parts || [];
+    let base64Image = null;
+    
+    for (const part of parts) {
+      if (part.inlineData && part.inlineData.data) {
+        base64Image = part.inlineData.data;
+        break;
+      }
+    }
+
+    if (!base64Image) {
+      throw new Error("No inlineData found in response parts");
+    }
+
+    return Buffer.from(base64Image, "base64");
+  } catch (error: any) {
+    console.error(`Error generating image via model ${model}:`, error);
+    
+    // If we haven't tried the fallback model yet, try it now!
+    if (!useFallbackModel) {
+      console.log("🔄 Falling back to model: gemini-3.1-flash-image (Nano Banana 2)...");
+      return generateImagenImage(prompt, retryCount, true);
+    }
+    
+    return null;
+  }
+}

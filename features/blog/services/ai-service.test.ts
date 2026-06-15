@@ -32,6 +32,7 @@ vi.mock('@/lib/ai/gemini', () => ({
     }),
     usage: { promptTokens: 10, completionTokens: 20 }
   }),
+  generateImagenImage: vi.fn().mockResolvedValue(Buffer.from("mockImageBytes")),
 }));
 
 // Mock global fetch to avoid network calls in generateAndUploadAiImage

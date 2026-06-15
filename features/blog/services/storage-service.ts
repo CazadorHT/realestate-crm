@@ -16,8 +16,15 @@ export async function uploadBlogImage(
   file: File | Buffer,
   fileName: string,
   fileType: string = "image/png",
+  useAdmin: boolean = false,
 ): Promise<StorageResponse> {
-  const supabase = await createClient();
+  let supabase;
+  if (useAdmin) {
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    supabase = createAdminClient();
+  } else {
+    supabase = await createClient();
+  }
 
   try {
     let buffer: Buffer;
