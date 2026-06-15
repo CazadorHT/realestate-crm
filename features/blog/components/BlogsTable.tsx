@@ -187,17 +187,28 @@ function MobileActionDrawer({
           </>
         ) : (
           <>
-            <Button
-              variant="outline"
-              className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200"
-              asChild
-              onClick={() => setOpen(false)}
-            >
-              <Link href={`/blog/${post.slug}`} target="_blank">
-                <Eye className="h-5 w-5 text-blue-500" />
-                เปิดดูหน้าเว็บ
-              </Link>
-            </Button>
+            {!post.is_published ? (
+              <Button
+                variant="outline"
+                className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-slate-400 cursor-not-allowed opacity-50"
+                disabled
+              >
+                <Eye className="h-5 w-5 text-slate-300" />
+                เปิดดูหน้าเว็บ (แบบร่าง)
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200"
+                asChild
+                onClick={() => setOpen(false)}
+              >
+                <Link href={`/blog/${post.slug}`} target="_blank">
+                  <Eye className="h-5 w-5 text-blue-500" />
+                  เปิดดูหน้าเว็บ
+                </Link>
+              </Button>
+            )}
             <Button
               variant="outline"
               className="h-12 rounded-xl justify-start font-bold gap-3 border-slate-200 text-slate-600 relative overflow-hidden"
@@ -712,14 +723,14 @@ export function BlogsTable({
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg"
-                                title="Public Preview"
+                                className="h-8 w-8 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg disabled:opacity-30 disabled:pointer-events-none"
+                                title={post.is_published ? "Public Preview" : "ไม่สามารถดูบทความแบบร่างได้"}
                                 onClick={() => {
                                   setNavigatingId(`preview-${post.id}`);
                                   window.open(`/blog/${post.slug}`, "_blank");
                                   setNavigatingId(null);
                                 }}
-                                disabled={navigatingId === `preview-${post.id}`}
+                                disabled={navigatingId === `preview-${post.id}` || !post.is_published}
                               >
                                 {navigatingId === `preview-${post.id}` ? (
                                   <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
