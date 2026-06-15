@@ -314,16 +314,20 @@ export async function saveOmniMessage(data: {
   let identity_id: string | null = null;
   let tenant_id: string | null = data.tenant_id || null;
   if (data.lead_id) {
-    const { data: leadData } = await supabase
-      .from("crm_leads_v3")
-      .select("identity_id, tenant_id")
-      .eq("id", data.lead_id)
-      .single();
-    if (leadData?.identity_id) {
-      identity_id = leadData.identity_id;
-    }
-    if (leadData?.tenant_id && !tenant_id) {
-      tenant_id = leadData.tenant_id;
+    try {
+      const { data: leadData } = await supabase
+        .from("crm_leads_v3")
+        .select("identity_id, tenant_id")
+        .eq("id", data.lead_id)
+        .single();
+      if (leadData?.identity_id) {
+        identity_id = leadData.identity_id;
+      }
+      if (leadData?.tenant_id && !tenant_id) {
+        tenant_id = leadData.tenant_id;
+      }
+    } catch (err) {
+      console.warn("[saveOmniMessage] Failed to fetch lead data:", err);
     }
   }
 
