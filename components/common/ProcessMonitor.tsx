@@ -187,7 +187,7 @@ export function ProcessMonitor() {
           <div className="flex items-center justify-between w-full pr-8">
             <div className="flex items-center gap-2">
               <History className="h-5 w-5 text-slate-400" />
-              <span>ห้องควบคุมงานเบื้องหลัง</span>
+              <span className="text-lg!">ห้องควบคุมงานเบื้องหลัง</span>
             </div>
             <Button
               variant="ghost"

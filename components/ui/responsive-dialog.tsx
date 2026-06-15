@@ -323,7 +323,7 @@ export function ResponsiveDialog({
                 <DrawerTitle>{title}</DrawerTitle>
                 {description && (
                   <DrawerDescription
-                    className="mt-1 text-[13px] leading-relaxed"
+                    className="mt-1 text-xs sm:text-[13px] leading-relaxed"
                     asChild
                   >
                     <div>{description}</div>
