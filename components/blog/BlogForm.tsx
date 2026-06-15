@@ -24,7 +24,6 @@ import {
   List,
   Languages,
 } from "lucide-react";
-import { AiReviewBanner } from "@/components/shared/AiReviewBanner";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { toast } from "sonner";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
@@ -321,7 +320,6 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   useEffect(() => {
     if (!isAiGenerating || !generationTaskId) return;
 
-    console.log(`[AI-BLOG-POLLING] Started polling for task: ${generationTaskId}`);
     let isMounted = true;
     const interval = setInterval(async () => {
       try {
@@ -329,21 +327,16 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
         const { getBackgroundTaskByIdAction } = await import("@/lib/background-tasks/actions");
         const res = await getBackgroundTaskByIdAction(generationTaskId);
         
-        console.log("[AI-BLOG-POLLING] Task status:", res);
-        
         if (!isMounted) return;
 
         if (!res.success) {
           // Task not found in DB yet (still being created) — keep polling
-          console.log(`[AI-BLOG-POLLING] Task ${generationTaskId} not in DB yet, retrying...`);
           return;
         }
 
         const task = res.data;
-        console.log("[AI-BLOG-POLLING] Task data:", task);
 
         if (task.status === "SUCCESS") {
-          console.log("[AI-BLOG-POLLING] Task success! Processing result...");
           if (task.result) {
             handleAiGenerated(task.result);
           } else {
@@ -353,7 +346,6 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
           setIsAiGenerating(false);
           setGenerationTaskId(null);
         } else if (task.status === "ERROR" || task.status === "CANCELLED") {
-          console.log("[AI-BLOG-POLLING] Task failed or cancelled:", task);
           setIsAiGenerating(false);
           setGenerationTaskId(null);
           const isCancelled = task.status === "CANCELLED";
@@ -369,7 +361,6 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
     return () => {
       isMounted = false;
-      console.log(`[AI-BLOG-POLLING] Stopped polling for task: ${generationTaskId}`);
       clearInterval(interval);
     };
   }, [isAiGenerating, generationTaskId, handleAiGenerated]);
@@ -537,13 +528,6 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
           </div>
         )}
 
-        {form.watch("requires_ai_review") && (
-          <AiReviewBanner
-            type="blog"
-            onConfirm={() => form.setValue("requires_ai_review", false, { shouldDirty: true })}
-            isVerifying={isSubmitting}
-          />
-        )}
         <BlogHeader
           form={form}
           isNew={!initialData}

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { AiReviewBanner } from "@/components/shared/AiReviewBanner";
 
 interface BlogStickyBottomProps {
   form: UseFormReturn<BlogPostInput>;
@@ -24,9 +25,18 @@ export function BlogStickyBottom({
   const router = useRouter();
   const watchedIsPublished = form.watch("is_published");
   const watchedTitle = form.watch("title");
+  const requiresAiReview = form.watch("requires_ai_review");
 
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[95%] sm:w-max md:min-w-[600px] lg:min-w-6xl max-w-6xl px-4">
+    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-[95%] sm:w-max md:min-w-[600px] lg:min-w-6xl max-w-6xl px-4 flex flex-col gap-3">
+      {requiresAiReview && (
+        <AiReviewBanner
+          type="blog"
+          onConfirm={() => form.setValue("requires_ai_review", false, { shouldDirty: true })}
+          isVerifying={isSubmitting}
+          className="mb-0 rounded-2xl border border-amber-200/60 shadow-xl overflow-hidden"
+        />
+      )}
       <div className="bg-white/80 backdrop-blur-md border border-slate-200 shadow-2xl rounded-2xl py-3 md:py-4 px-6 md:px-10 flex items-center justify-center lg:justify-between gap-6">
         <div className="hidden lg:flex items-center gap-4 text-xs text-slate-500">
           <span className="hidden md:inline font-medium">
