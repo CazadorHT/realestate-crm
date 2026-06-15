@@ -23,12 +23,11 @@ export async function createBackgroundTaskAction(params: {
 }): Promise<BackgroundTaskResult> {
   try {
     const { tenantId, user } = await requireAuthContext();
-    let finalTenantId = tenantId;
+    let finalTenantId = tenantId || null;
     if (!finalTenantId) {
       const config = await getSystemConfig();
-      finalTenantId = config.default_tenant_id ?? undefined;
+      finalTenantId = config.default_tenant_id ?? null;
     }
-    if (!finalTenantId) throw new Error("Tenant ID is required");
 
     const adminSupabase = createAdminClient();
 
@@ -160,8 +159,16 @@ export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> 
 
     if (error) throw error;
 
-    // TEMPORARY: Return unfiltered data to inspect tasks in the browser console
-    const filteredData = (data || []).map((task: any) => {
+    // กรองระดับ Application ตาม Tenant หรือ User เพื่อความปลอดภัย (Tenant Isolation)
+    const filteredData = (data || []).filter((task: any) => {
+      const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
+      if (role === "ADMIN") return true;
+      
+      const isOwner = payload.user_id === user.id;
+      const isSameTenant = tenantId && payload.tenant_id === tenantId;
+      
+      return isOwner || isSameTenant;
+    }).map((task: any) => {
       const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
       return {
         id: task.id,
@@ -175,7 +182,6 @@ export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> 
         result_link: payload.result_link,
         error_details: task.error_log || payload.error_details,
         result: payload.result,
-        raw_payload: payload // Include raw payload for debugging
       };
     });
 
