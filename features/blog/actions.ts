@@ -44,6 +44,20 @@ export async function createBlogPostAction(
       return { success: false, message: "Unauthorized" };
     }
 
+    // Resolve tenant ID for the blog post
+    let resolvedTenantId = user.tenantId && user.tenantId !== "ALL" ? user.tenantId : null;
+    if (!resolvedTenantId && user.role !== "ADMIN") {
+      const { data: member } = await supabase
+        .from("tenant_members_v3")
+        .select("tenant_id")
+        .eq("identity_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      if (member?.tenant_id) {
+        resolvedTenantId = member.tenant_id;
+      }
+    }
+
     // 🏗️ RELATIONAL: Assign actual author_id
     const author_id = user.id;
 
@@ -99,7 +113,7 @@ export async function createBlogPostAction(
       status: isPublishedFinal ? "PUBLISHED" : "DRAFT",
       published_at: validated.published_at || (isPublishedFinal ? new Date().toISOString() : null),
       author_id, // 🏗️ RELATIONAL
-      tenant_id: user.tenantId && user.tenantId !== "ALL" ? user.tenantId : null,
+      tenant_id: resolvedTenantId,
       seo_score: validated.seo_score || null,
       meta_data: {
         excerpt: validated.excerpt || "",
