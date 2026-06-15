@@ -324,7 +324,7 @@ async function handleFollowEvent(event: LineEvent) {
         source: "LINE",
         utm_data: {
           preferences: {
-            note: "Captured from follow event."
+            note: "Captured from follow event. Subscribe via LINE OA."
           }
         }
       });

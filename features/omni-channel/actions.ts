@@ -27,7 +27,7 @@ export async function sendDirectReplyAction(
 
     // 1. Get Lead details directly from V3 Core crm_leads_v3 joined with identities_v3
     // Eliminate select(*) to save bandwidth and reduce payload size
-    const { data: leadData, error: leadError } = await userSupabase
+    let query = userSupabase
       .from("crm_leads_v3")
       .select(`
         source,
@@ -37,9 +37,13 @@ export async function sendDirectReplyAction(
           social_links
         )
       `)
-      .eq("id", leadId)
-      .eq("tenant_id", tenantId!)
-      .single();
+      .eq("id", leadId);
+
+    if (tenantId) {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data: leadData, error: leadError } = await query.single();
 
     const identity = leadData?.identity as {
       line_id?: string | null;
@@ -121,23 +125,32 @@ export async function replyToCommentAction(
     const { supabase: userSupabase, tenantId } = await requireAuthContext();
 
     // 1. Get original comment details from V3 communications hub
-    const { data: msg, error: msgError } = await userSupabase
+    let msgQuery = userSupabase
       .from("communications_hub_v3")
       .select("external_message_id, identity_id, platform, tenant_id")
-      .eq("id", messageId)
-      .eq("tenant_id", tenantId!)
-      .single();
+      .eq("id", messageId);
+
+    if (tenantId) {
+      msgQuery = msgQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: msg, error: msgError } = await msgQuery.single();
 
     if (msgError || !msg || !msg.external_message_id || !msg.identity_id) {
       throw new Error("ไม่พบข้อความต้นฉบับ หรือข้อมูลไม่ครบถ้วน");
     }
 
     // Find active lead_id for this identity
-    const { data: leadData } = await userSupabase
+    let leadQuery = userSupabase
       .from("crm_leads_v3")
       .select("id")
-      .eq("identity_id", msg.identity_id)
-      .eq("tenant_id", tenantId!)
+      .eq("identity_id", msg.identity_id);
+
+    if (tenantId) {
+      leadQuery = leadQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: leadData } = await leadQuery
       .order("created_at", { ascending: false })
       .limit(1)
       .single();
@@ -177,19 +190,23 @@ export async function getLeadMessagesAction(
     const { supabase, tenantId } = await requireAuthContext();
 
     // 1. Get lead info from V3 Core to filter messages by identity_id and source
-    const { data: lead } = await supabase
+    let leadQuery = supabase
       .from("crm_leads_v3")
       .select("created_at, source, identity_id")
-      .eq("id", leadId)
-      .eq("tenant_id", tenantId!)
-      .single();
+      .eq("id", leadId);
+
+    if (tenantId) {
+      leadQuery = leadQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: lead } = await leadQuery.single();
 
     if (!lead || !lead.identity_id) throw new Error("ไม่พบข้อมูลลูกค้า");
 
     // 2. Fetch messages from communications_hub_v3 ordered by newest first
     // Query both direct messages for this identity AND global/broadcast messages for this platform
     // Completely eliminates select(*) and only requests the exact 9 columns needed
-    const { data: rawMessages, error } = await supabase
+    let msgQuery = supabase
       .from("communications_hub_v3")
       .select(`
         id,
@@ -202,8 +219,9 @@ export async function getLeadMessagesAction(
         payload,
         created_at
       `)
-      .eq("tenant_id", tenantId!)
-      .or(`identity_id.eq.${lead.identity_id},and(identity_id.is.null,platform.eq.${lead.source || "OTHER"},created_at.gte.${lead.created_at || "1970-01-01"})`)
+      .or(`identity_id.eq.${lead.identity_id},and(identity_id.is.null,platform.eq.${lead.source || "OTHER"},created_at.gte.${lead.created_at || "1970-01-01"})`);
+
+    const { data: rawMessages, error } = await msgQuery
       .order("created_at", { ascending: false })
       .range(offset, offset + limit);
 
@@ -224,8 +242,17 @@ export async function getLeadMessagesAction(
     const hasMore = messagesData.length > limit;
     const slicedData = hasMore ? messagesData.slice(0, limit) : messagesData;
 
+    // Filter out comments (only want direct messages / DMs)
+    const filteredData = slicedData.filter((m) => {
+      const payload = (m.payload as Record<string, any>) || {};
+      if (payload.field === "comments" || payload.type === "comment") return false;
+      if (payload.field === "feed" && payload.value?.item === "comment") return false;
+      if (typeof m.content === "string" && (m.content.startsWith("[FB Comment]:") || m.content.startsWith("[IG Comment]:"))) return false;
+      return true;
+    });
+
     // Map to OmniMessage interface expected by UI components
-    const finalMessages: OmniMessage[] = slicedData.map((m) => ({
+    const finalMessages: OmniMessage[] = filteredData.map((m) => ({
       id: m.id,
       lead_id: leadId,
       tenant_id: m.tenant_id,
@@ -264,12 +291,16 @@ export async function updateLeadCategoryAction(
     const validatedCategory = CategorySchema.parse(category);
 
     // 2. Get current utm_data/preferences to merge from V3 Core crm_leads_v3
-    const { data: lead } = await supabase
+    let leadQuery = supabase
       .from("crm_leads_v3")
       .select("utm_data")
-      .eq("id", leadId)
-      .eq("tenant_id", tenantId!)
-      .single();
+      .eq("id", leadId);
+
+    if (tenantId) {
+      leadQuery = leadQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: lead } = await leadQuery.single();
 
     if (!lead) throw new Error("ไม่พบข้อมูลผู้ติดต่อ");
 
@@ -284,11 +315,16 @@ export async function updateLeadCategoryAction(
     };
 
     // 3. Update V3 Core crm_leads_v3
-    const { error } = await supabase
+    let updateQuery = supabase
       .from("crm_leads_v3")
       .update({ utm_data: newUtmData })
-      .eq("id", leadId)
-      .eq("tenant_id", tenantId!);
+      .eq("id", leadId);
+
+    if (tenantId) {
+      updateQuery = updateQuery.eq("tenant_id", tenantId);
+    }
+
+    const { error } = await updateQuery;
 
     if (error) throw error;
 
@@ -311,12 +347,16 @@ export async function markLeadMessagesAsReadAction(
     const { supabase, tenantId } = await requireAuthContext();
 
     // 1. Get identity_id from V3 Core crm_leads_v3
-    const { data: lead } = await supabase
+    let leadQuery = supabase
       .from("crm_leads_v3")
       .select("identity_id")
-      .eq("id", leadId)
-      .eq("tenant_id", tenantId!)
-      .single();
+      .eq("id", leadId);
+
+    if (tenantId) {
+      leadQuery = leadQuery.eq("tenant_id", tenantId);
+    }
+
+    const { data: lead } = await leadQuery.single();
 
     if (!lead || !lead.identity_id) {
       throw new Error("ไม่พบข้อมูลผู้ติดต่อ");
@@ -324,13 +364,18 @@ export async function markLeadMessagesAsReadAction(
 
     // 2. Update communications_hub_v3 for this identity_id
     // direction === 0 is INBOUND (incoming from customer)
-    const { error } = await supabase
+    let readQuery = supabase
       .from("communications_hub_v3")
       .update({ is_read: true })
       .eq("identity_id", lead.identity_id)
-      .eq("tenant_id", tenantId!)
       .eq("direction", 0)
       .eq("is_read", false);
+
+    if (tenantId) {
+      readQuery = readQuery.eq("tenant_id", tenantId);
+    }
+
+    const { error } = await readQuery;
 
     if (error) throw error;
 

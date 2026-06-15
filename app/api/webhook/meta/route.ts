@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
         // Handle Feed, Leadgen, Ratings, etc.
         if (entry.changes) {
           for (const change of entry.changes) {
-            await handleFacebookChange(change);
+            await handleFacebookChange(change, entry.id);
           }
         }
       }
@@ -146,9 +146,15 @@ export async function POST(req: NextRequest) {
   }
 }
 
-async function handleFacebookChange(change: any) {
+async function handleFacebookChange(change: any, pageId?: string) {
   const { field, value } = change;
   if (!value) return;
+
+  // Skip if the event sender is the Page itself (avoid self-lead generation when replying)
+  if (value.from?.id && pageId && value.from.id === pageId) {
+    console.log(`[Meta Webhook] Ignoring page's own action/reply. Page ID: ${pageId}`);
+    return;
+  }
 
   const supabase = createAdminClient() as any;
   let text = "";

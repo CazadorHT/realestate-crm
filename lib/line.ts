@@ -9,46 +9,74 @@ export async function sendLineNotification(
   message: string | Record<string, any>,
 ) {
   let token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
-  if (!token) {
+  let userId = process.env.LINE_ADMIN_USER_ID;
+
+  // Fetch settings if token or userId is missing
+  if (!token || !userId) {
     try {
       const settings = await getSiteSettings();
-      token = settings.line_channel_access_token || undefined;
+      if (!token) {
+        token = settings.line_channel_access_token || undefined;
+      }
+      if (!userId) {
+        userId = (settings as any).line_admin_user_id || undefined;
+      }
     } catch (e) {
       console.warn("Failed to fetch site settings for line notifications:", e);
     }
   }
-  let userId = process.env.LINE_ADMIN_USER_ID;
 
   if (!token) {
     console.error("ไม่พบ LINE_CHANNEL_ACCESS_TOKEN หรือ line_channel_access_token ในการตั้งค่า");
     return;
   }
 
-  // ถ้าไม่มี ID ใน ENV ให้ลองหาจากฐานข้อมูลแทน
+  // ถ้าไม่มี ID ใน ENV หรือ Site Settings ให้ลองหาจากโปรไฟล์แอดมินในฐานข้อมูลแทน
   if (!userId) {
     try {
       const supabase = createAdminClient();
-      // พยายามหาแอดมินคนแรกที่มี line_user_id หรือ line_id
-      const { data } = await supabase
+      
+      // 1. พยายามหาแอดมินที่มี line_user_id (ID จริงของ LINE)
+      const { data: adminUser } = await supabase
         .from("profiles")
         .select("line_user_id, line_id")
         .eq("role", "ADMIN")
-        .or("line_user_id.not.is.null,line_id.not.is.null")
+        .not("line_user_id", "is", null)
+        .neq("line_user_id", "")
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (data?.line_user_id || data?.line_id) {
-        userId = (data.line_user_id || data.line_id) ?? undefined;
+      if (adminUser?.line_user_id) {
+        userId = adminUser.line_user_id;
+      } else if (adminUser?.line_id && adminUser.line_id.startsWith("U") && adminUser.line_id.length === 33) {
+        userId = adminUser.line_id;
       } else {
-        // แผนสำรอง: ถ้าไม่มีแอดมิน ให้ลองหา User คนไหนก็ได้
+        // 2. แผนสำรอง: หา User คนไหนก็ได้ที่มี line_user_id (ID จริงของ LINE)
         const { data: anyUser } = await supabase
           .from("profiles")
           .select("line_user_id, line_id")
-          .or("line_user_id.not.is.null,line_id.not.is.null")
+          .not("line_user_id", "is", null)
+          .neq("line_user_id", "")
           .limit(1)
-          .single();
-        if (anyUser?.line_user_id || anyUser?.line_id) {
-          userId = (anyUser.line_user_id || anyUser.line_id) ?? undefined;
+          .maybeSingle();
+
+        if (anyUser?.line_user_id) {
+          userId = anyUser.line_user_id;
+        } else if (anyUser?.line_id && anyUser.line_id.startsWith("U") && anyUser.line_id.length === 33) {
+          userId = anyUser.line_id;
+        } else {
+          // 3. แผนสำรองสุดท้าย: ลองเช็ค line_id ของ ADMIN เผื่อใส่สลับกัน
+          const { data: adminIdOnly } = await supabase
+            .from("profiles")
+            .select("line_id")
+            .eq("role", "ADMIN")
+            .not("line_id", "is", null)
+            .neq("line_id", "")
+            .limit(1)
+            .maybeSingle();
+          if (adminIdOnly?.line_id && adminIdOnly.line_id.startsWith("U") && adminIdOnly.line_id.length === 33) {
+            userId = adminIdOnly.line_id;
+          }
         }
       }
     } catch (dbError) {
@@ -58,10 +86,10 @@ export async function sendLineNotification(
 
   if (!userId) {
     console.warn(
-      "⚠️ [LINE] ไม่สามารถส่งแจ้งเตือนได้: ไม่พบ LINE_ADMIN_USER_ID ใน .env และไม่มี Admin คนไหนผูก Line ไว้ในฐานข้อมูล",
+      "⚠️ [LINE] ไม่สามารถส่งแจ้งเตือนได้: ไม่พบ LINE_ADMIN_USER_ID ใน .env/ตั้งค่าระบบ และไม่มีโปรไฟล์ผู้ใดผูก LINE Bot User ID (เริ่มต้นด้วยตัว U)",
     );
     console.info(
-      "💡 วิธีแก้: กรุณาเพิ่ม LINE_ADMIN_USER_ID=ของคุณ ในไฟล์ .env หรือ พิมพ์คำสั่ง /id ในแชทบอทเพื่อดู ID ของคุณ",
+      "💡 วิธีแก้: กรุณากรอก LINE Bot User ID (พิมพ์ /id ในแชทบอทเพื่อรับค่านี้) ในหน้าแก้ไขโปรไฟล์ของคุณ หรือตั้งค่า LINE_ADMIN_USER_ID ใน .env",
     );
     return;
   }
@@ -98,7 +126,16 @@ export async function sendLineNotification(
 export async function broadcastLineMessage(
   message: string | Record<string, any>,
 ) {
-  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  let token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) {
+    try {
+      const settings = await getSiteSettings();
+      token = settings.line_channel_access_token || undefined;
+    } catch (e) {
+      console.warn("Failed to fetch site settings for line broadcast:", e);
+    }
+  }
+
   if (!token) {
     console.error("ไม่พบ LINE_CHANNEL_ACCESS_TOKEN");
     return { success: false, message: "Missing token" };
@@ -144,6 +181,78 @@ export async function broadcastLineMessage(
     return { success: true };
   } catch (error) {
     console.error("LINE Broadcast Exception:", error);
+    return { success: false, message: (error as Error).message };
+  }
+}
+
+/**
+ * ส่งข้อความแบบ Multicast ไปยังกลุ่มผู้ใช้ที่ระบุ (สูงสุด 500 คนต่อครั้ง)
+ */
+export async function multicastLineMessage(
+  userIds: string[],
+  message: string | Record<string, any>,
+) {
+  if (userIds.length === 0) return { success: true, count: 0 };
+
+  let token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  if (!token) {
+    try {
+      const settings = await getSiteSettings();
+      token = settings.line_channel_access_token || undefined;
+    } catch (e) {
+      console.warn("Failed to fetch site settings for line multicast:", e);
+    }
+  }
+
+  if (!token) {
+    console.error("ไม่พบ LINE_CHANNEL_ACCESS_TOKEN");
+    return { success: false, message: "Missing token" };
+  }
+
+  const messages =
+    typeof message === "string" ? [{ type: "text", text: message }] : [message];
+
+  try {
+    // LINE Multicast API accepts up to 500 userIds in 'to' field
+    const response = await fetch("https://api.line.me/v2/bot/message/multicast", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        to: userIds,
+        messages: messages,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("LINE Multicast Error:", errorData);
+      return { success: false, message: errorData.message || "Line API error" };
+    }
+
+    // Log messages to communications hub
+    try {
+      const supabase = createAdminClient();
+      const textContent = typeof message === "string" ? message : JSON.stringify(message);
+      
+      const insertRows = userIds.map(uid => ({
+        identity_id: null, // We can resolve this if we do a lookup, but null works as a fallback
+        platform: "LINE" as const,
+        content: textContent,
+        direction: 1,
+        payload: { is_multicast: true, target_line_user_id: uid }
+      }));
+
+      await supabase.from("communications_hub_v3").insert(insertRows);
+    } catch (logErr) {
+      console.error("Error logging multicast:", logErr);
+    }
+
+    return { success: true, count: userIds.length };
+  } catch (error) {
+    console.error("LINE Multicast Exception:", error);
     return { success: false, message: (error as Error).message };
   }
 }
@@ -203,14 +312,18 @@ export async function saveOmniMessage(data: {
 }) {
   const supabase = createAdminClient();
   let identity_id: string | null = null;
+  let tenant_id: string | null = data.tenant_id || null;
   if (data.lead_id) {
     const { data: leadData } = await supabase
       .from("crm_leads_v3")
-      .select("identity_id")
+      .select("identity_id, tenant_id")
       .eq("id", data.lead_id)
       .single();
     if (leadData?.identity_id) {
       identity_id = leadData.identity_id;
+    }
+    if (leadData?.tenant_id && !tenant_id) {
+      tenant_id = leadData.tenant_id;
     }
   }
 
@@ -221,7 +334,7 @@ export async function saveOmniMessage(data: {
     content: data.content,
     payload: data.payload || null,
     direction: data.direction === "INCOMING" ? 0 : 1,
-    tenant_id: data.tenant_id || null,
+    tenant_id: tenant_id,
   });
 
   if (error) {

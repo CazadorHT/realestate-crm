@@ -134,6 +134,23 @@ Details: ${data.details || "-"}`),
     }
   });
 
+  // 🚀 Bridge to Telegram for Website Deposit
+  try {
+    const { sendAdminNotification } = await import("@/lib/telegram");
+    const propTypeThai = PROPERTY_TYPE_MAP[data.propertyType] || data.propertyType;
+    const tgMessage = `🏠 <b>มีคนฝากทรัพย์สินใหม่ (จาก Website)</b>\n━━━━━━━━━━━━━━━━━━\n\n` +
+      `👤 <b>ผู้ฝาก:</b> ${data.fullName}\n` +
+      `📞 <b>เบอร์โทร:</b> ${data.phone}\n` +
+      `📱 <b>Line ID:</b> ${data.lineId || "-"}\n` +
+      `📧 <b>อีเมล:</b> ${data.email || "-"}\n` +
+      `🏠 <b>ประเภททรัพย์:</b> ${propTypeThai}\n` +
+      `📝 <b>รายละเอียด:</b> ${data.details || "-"}\n\n` +
+      `📂 <a href="${siteConfig.url}/protected/leads/${leadId}">คลิกจัดการข้อมูลลูกค้าใน CRM</a>`;
+    await sendAdminNotification(tgMessage, { parseMode: "HTML" });
+  } catch (tgErr) {
+    console.error("[BRIDGE] Telegram notification failed for website deposit:", tgErr);
+  }
+
   return { success: true, leadId };
 }
 
@@ -141,7 +158,12 @@ Details: ${data.details || "-"}`),
 // 💬 PUBLIC INQUIRY ACTION
 // ==========================================
 export async function submitInquiryAction(prevState: LeadState, formData: FormData): Promise<LeadState> {
-  const ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
+  let ip = "127.0.0.1";
+  try {
+    ip = (await headers()).get("x-forwarded-for") ?? "127.0.0.1";
+  } catch (e) {
+    // Safe fallback outside Next.js request scope
+  }
   try { await limiter.check(3, ip); } catch { return { error: "⏳ คุณส่งข้อความเร็วเกินไป" }; }
 
   const supabase = await createClient();
@@ -210,6 +232,26 @@ export async function submitInquiryAction(prevState: LeadState, formData: FormDa
         altText: `💬 ใหม่! ลูกค้าสนใจ: ${propertyData?.title || "ทรัพย์"}`,
         contents: flexContents,
       });
+    }
+
+    // 🚀 Bridge to Telegram for Website Inquiry
+    try {
+      const { sendAdminNotification } = await import("@/lib/telegram");
+      const propTitle = propertyData ? (propertyData.title?.th || propertyData.title?.en || "ทรัพย์สิน") : "ไม่ระบุทรัพย์สิน";
+      const propLink = data.propertyId ? `${siteConfig.url}/protected/properties/${data.propertyId}` : null;
+      
+      const tgMessage = `💬 <b>ลูกค้าสนใจทรัพย์สิน (จาก Website)</b>\n━━━━━━━━━━━━━━━━━━\n\n` +
+        `👤 <b>ผู้สนใจ:</b> ${data.fullName}\n` +
+        `📞 <b>เบอร์โทร:</b> ${data.phone}\n` +
+        `📱 <b>Line ID:</b> ${data.lineId || "-"}\n` +
+        `📧 <b>อีเมล:</b> ${data.email || "-"}\n` +
+        `📝 <b>ข้อความ:</b> ${data.message || "-"}\n\n` +
+        `🏠 <b>ทรัพย์สินที่สนใจ:</b> ${propTitle}\n` +
+        (propLink ? `🔗 <a href="${propLink}">คลิกดูรายละเอียดทรัพย์ในระบบ</a>\n` : "") +
+        `📂 <a href="${siteConfig.url}/protected/leads/${leadId}">คลิกจัดการข้อมูลลูกค้าใน CRM</a>`;
+      await sendAdminNotification(tgMessage, { parseMode: "HTML" });
+    } catch (tgErr) {
+      console.error("[BRIDGE] Telegram notification failed for website inquiry:", tgErr);
     }
 
     return { success: true, data: { id: leadId, aiScore: data.ai_lead_score || 0, isHotLead: (data.ai_lead_score || 0) >= 80, utmSource: data.marketing_attribution || "direct" } };

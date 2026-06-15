@@ -1,15 +1,16 @@
 export type LeadStage = "NEW" | "CONTACTED" | "VIEWED" | "NEGOTIATING" | "CLOSED";
-export type LeadSource = "PORTAL" | "FACEBOOK" | "INSTAGRAM" | "LINE" | "WEBSITE" | "REFERRAL" | "OTHER" | "WHATSAPP";
+export type LeadSource = "PORTAL" | "FACEBOOK" | "INSTAGRAM" | "LINE" | "WEBSITE" | "REFERRAL" | "OTHER" | "WHATSAPP" | "WECHAT";
 export type LeadActivityType = "CALL" | "LINE_CHAT" | "EMAIL" | "VIEWING" | "FOLLOW_UP" | "NOTE" | "SYSTEM";
 export const LEAD_SOURCE_LABELS = {
   PORTAL: "ติดต่อเข้ามาเอง",
-  FACEBOOK: "มาจากช่องทางเฟซบุ๊ก",
-  INSTAGRAM: "มาจากช่องทางอินสตาแกรม",
-  LINE: "มาจากช่องทางไลน์",
-  WEBSITE: "มาจากช่องทางเว็บไซต์",
+  FACEBOOK: "มาจากช่องทาง Facebook",
+  INSTAGRAM: "มาจากช่องทาง Instagram",
+  LINE: "มาจากช่องทาง LINE",
+  WEBSITE: "มาจากช่องทาง Website",
   REFERRAL: "ถูกแนะนำมา",
   OTHER: "อื่น ๆ",
-  WHATSAPP: "มาจากช่องทางวอตส์แอปป์",
+  WHATSAPP: "มาจากช่องทาง Whatsapp",
+  WECHAT: "มาจากช่องทาง WeChat",
 } satisfies Record<LeadSource, string>;
 
 export const LEAD_STAGE_LABELS = {

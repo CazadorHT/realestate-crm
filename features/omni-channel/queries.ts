@@ -93,7 +93,15 @@ export async function getInboxConversationsQuery(): Promise<Conversation[]> {
     const rawDisplayName = identity?.display_name || "Unknown";
     const rawNote = lead.ai_summary;
     const utmData = (lead.utm_data as Record<string, unknown>) || {};
-    const comms = identity?.communications_hub_v3 || [];
+    
+    // Filter out comments (only want direct messages / DMs)
+    const comms = (identity?.communications_hub_v3 || []).filter((m: any) => {
+      const payload = m.payload || {};
+      if (payload.field === "comments" || payload.type === "comment") return false;
+      if (payload.field === "feed" && payload.value?.item === "comment") return false;
+      if (typeof m.content === "string" && (m.content.startsWith("[FB Comment]:") || m.content.startsWith("[IG Comment]:"))) return false;
+      return true;
+    });
 
     // Sort messages newest first
     const sortedComms = [...comms].sort((a, b) => {
@@ -128,6 +136,6 @@ export async function getInboxConversationsQuery(): Promise<Conversation[]> {
       },
       tenants: lead.tenants,
     };
-  });
+  }).filter(conv => conv.communications_hub_v3.length > 0);
 }
     

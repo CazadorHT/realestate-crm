@@ -23,8 +23,10 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { LineTemplateCard } from "@/features/line/components/LineTemplateCard";
+import { BroadcastPanel } from "@/features/line/components/BroadcastPanel";
 
 export function LineManagerClient({
   initialTemplates,
@@ -86,31 +88,48 @@ export function LineManagerClient({
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-2">
         <h2 className="text-2xl font-bold tracking-tight bg-linear-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent font-sarabun">
-          LINE Notification Manager
+          LINE OA Manager
         </h2>
         <p className="text-muted-foreground font-sarabun">
-          ปรับแต่งเทมเพลตข้อความ LINE Flex และการแสดงผลของคุณได้ตามต้องการ
+          ปรับแต่งเทมเพลตแจ้งเตือน LINE Flex และระบบยิงบรอดแคสต์กลุ่มหาลูกค้าของคุณ
         </p>
       </div>
 
-      <div className="grid gap-6 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
-        {templates.map((template) => (
-          <LineTemplateCard
-            key={template.key}
-            template={template}
-            loading={loading === template.key}
-            onUpdate={handleUpdate}
-            onSave={(key) => saveChanges(key, templates)}
-          />
-        ))}
-      </div>
+      <Tabs defaultValue="templates" className="w-full">
+        <TabsList className="bg-slate-100 p-1 rounded-xl h-11 mb-6 border border-slate-200/50">
+          <TabsTrigger value="templates" className="rounded-lg px-6 font-bold text-xs h-9 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-xs">
+            🎨 จัดการเทมเพลตข้อความ
+          </TabsTrigger>
+          <TabsTrigger value="broadcast" className="rounded-lg px-6 font-bold text-xs h-9 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-xs">
+            📢 ส่งข้อความบรอดแคสต์
+          </TabsTrigger>
+        </TabsList>
 
-      {templates.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-12 text-center text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-          <Loader2 className="w-10 h-10 mb-4 animate-spin text-slate-300" />
-          <p className="font-medium font-sarabun">Loading templates...</p>
-        </div>
-      )}
+        <TabsContent value="templates" className="space-y-6">
+          <div className="grid gap-6 grid-cols-1 xl:grid-cols-2 2xl:grid-cols-3">
+            {templates.map((template) => (
+              <LineTemplateCard
+                key={template.key}
+                template={template}
+                loading={loading === template.key}
+                onUpdate={handleUpdate}
+                onSave={(key) => saveChanges(key, templates)}
+              />
+            ))}
+          </div>
+
+          {templates.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 text-center text-slate-500 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+              <Loader2 className="w-10 h-10 mb-4 animate-spin text-slate-300" />
+              <p className="font-medium font-sarabun">Loading templates...</p>
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="broadcast" className="space-y-6">
+          <BroadcastPanel />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

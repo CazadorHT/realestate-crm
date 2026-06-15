@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { differenceInHours } from "date-fns";
+import { differenceInHours, differenceInDays, differenceInMinutes } from "date-fns";
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
@@ -58,6 +58,89 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { TransferLeadsDialog } from "@/features/leads/components/TransferLeadsDialog";
 import { PaginationControls } from "@/components/ui/pagination-controls";
+
+function getLeadSubSource(lead: any): string | null {
+  const note = (lead.note || lead.ai_summary || "").toLowerCase();
+  const utmData = (lead.utm_data as Record<string, any>) || {};
+  const prefNote = (utmData.preferences?.note || "").toLowerCase();
+  const utmNote = (utmData.note || "").toLowerCase();
+  const combined = `${note} ${prefNote} ${utmNote}`;
+
+  if (combined.includes("footer newsletter") || combined.includes("subscribe") || combined.includes("ข่าวสาร")) {
+    return "สมัครรับข่าวสาร";
+  }
+  if (combined.includes("feed") || combined.includes("comment") || combined.includes("คอมเมนต์") || combined.includes("คอมเม้น")) {
+    return "คอมเมนต์";
+  }
+  if (
+    combined.includes("messenger") ||
+    combined.includes("chat") ||
+    combined.includes("ทักแชต") ||
+    combined.includes("line") ||
+    combined.includes("whatsapp") ||
+    combined.includes("telegram") ||
+    combined.includes("profile") ||
+    combined.includes("dm")
+  ) {
+    return "ช่องแชท";
+  }
+  if (combined.includes("wechat") || combined.includes("วีแชต") || combined.includes("วีแชท")) {
+    return "วีแชท (WeChat)";
+  }
+  if (combined.includes("leadgen") || combined.includes("lead ad")) {
+    return "โฆษณา Lead Ad";
+  }
+  if (lead.source === "WEBSITE") {
+    const hasPropertyType = !!utmData.property_type;
+    const hasPropertyId = !!utmData.property_id || !!lead.property_id;
+    if (hasPropertyType || combined.includes("ฝาก") || combined.includes("deposit")) {
+      return "ฝากทรัพย์";
+    }
+    if (hasPropertyId || combined.includes("สนใจ") || combined.includes("inquiry")) {
+      return "สนใจทรัพย์";
+    }
+    return "เว็บทั่วไป";
+  }
+  return null;
+}
+
+const SUB_SOURCE_STYLES: Record<string, string> = {
+  "คอมเมนต์": "text-purple-700 bg-purple-50 border-purple-200/60",
+  "ช่องแชท": "text-blue-700 bg-blue-50 border-blue-200/60",
+  "โฆษณา Lead Ad": "text-amber-700 bg-amber-50 border-amber-200/60",
+  "วีแชท (WeChat)": "text-emerald-700 bg-emerald-50 border-emerald-200/60",
+  "ฝากทรัพย์": "text-emerald-700 bg-emerald-50 border-emerald-200/60",
+  "สนใจทรัพย์": "text-blue-700 bg-blue-50 border-blue-200/60",
+  "เว็บทั่วไป": "text-slate-600 bg-slate-50 border-slate-200/60",
+  "สมัครรับข่าวสาร": "text-indigo-700 bg-indigo-50 border-indigo-200/60",
+};
+
+const SOURCE_STYLES: Record<string, string> = {
+  FACEBOOK: "text-blue-700 bg-blue-50 border-blue-200/80",
+  LINE: "text-green-700 bg-green-50 border-green-200/80",
+  INSTAGRAM: "text-pink-700 bg-pink-50 border-pink-200/80",
+  WECHAT: "text-emerald-700 bg-emerald-50 border-emerald-200/80",
+  WHATSAPP: "text-teal-700 bg-teal-50 border-teal-200/80",
+  WEBSITE: "text-sky-700 bg-sky-50 border-sky-200/80",
+  PORTAL: "text-violet-700 bg-violet-50 border-violet-200/80",
+  REFERRAL: "text-orange-700 bg-orange-50 border-orange-200/80",
+  OTHER: "text-slate-600 bg-slate-50 border-slate-200/80",
+};
+
+function getRelativeTimeString(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMinutes = differenceInMinutes(now, date);
+  
+  if (diffMinutes < 1) return "เมื่อสักครู่";
+  if (diffMinutes < 60) return `${diffMinutes} นาทีที่แล้ว`;
+  
+  const diffHours = differenceInHours(now, date);
+  if (diffHours < 24) return `${diffHours} ชม.ที่แล้ว`;
+  
+  const diffDays = differenceInDays(now, date);
+  return `${diffDays} วันที่แล้ว`;
+}
 
 interface LeadsTableProps {
   leads: LeadWithJoins[];
@@ -223,6 +306,7 @@ export function LeadsTable({
                 </TableHead>
                 <TableHead>ชื่อลูกค้า</TableHead>
                 <TableHead>ข้อมูลติดต่อ</TableHead>
+                <TableHead>วันที่เข้ามา</TableHead>
                 <TableHead>ทรัพย์ที่สนใจ</TableHead>
                 <TableHead>ข้อความ</TableHead>
                 <TableHead>สถานะ</TableHead>
@@ -287,6 +371,23 @@ export function LeadsTable({
                       </div>
                     )}
                   </TableCell>
+                  {/* วันที่เข้ามา */}
+                  <TableCell className="text-[11px] text-muted-foreground whitespace-nowrap">
+                    {l.created_at ? (
+                      <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-slate-700">
+                          {format(new Date(l.created_at), "d MMM yyyy HH:mm", {
+                            locale: th,
+                          })}
+                        </span>
+                        <span className="text-[10px] text-slate-400">
+                          ({getRelativeTimeString(l.created_at)})
+                        </span>
+                      </div>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
                   {/* Property */}
                   <TableCell>
                     {(l as any).property ? (
@@ -336,11 +437,22 @@ export function LeadsTable({
                   {/* Source / UTM */}
                   <TableCell>
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-medium text-[11px]">
+                      <span className={cn(
+                        "font-semibold text-[11px] px-1.5 py-0.5 rounded border w-fit shadow-2xs",
+                        SOURCE_STYLES[l.source || ""] || "text-slate-600 bg-slate-50 border-slate-200"
+                      )}>
                         {safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}
                       </span>
+                      {getLeadSubSource(l) && (
+                        <span className={cn(
+                          "text-[10px] rounded-md px-1.5 py-0.5 w-fit font-bold border mt-0.5",
+                          SUB_SOURCE_STYLES[getLeadSubSource(l) || ""] || "text-slate-500 bg-slate-100 border-slate-200"
+                        )}>
+                          {getLeadSubSource(l)}
+                        </span>
+                      )}
                       {l.utm_source && (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 mt-1">
                           <Badge
                             variant="outline"
                             className="text-[11px] h-5 px-1.5 border-emerald-100 bg-emerald-50 text-emerald-700"
@@ -470,11 +582,16 @@ export function LeadsTable({
                             </div>
                             <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
                               <FaCalendar className="h-2.5 w-2.5" />
-                              {l.created_at
-                                ? format(new Date(l.created_at), "d MMM yy", {
+                              {l.created_at ? (
+                                <span>
+                                  {format(new Date(l.created_at), "d MMM yy", {
                                     locale: th,
-                                  })
-                                : "-"}
+                                  })}{" "}
+                                  ({getRelativeTimeString(l.created_at)})
+                                </span>
+                              ) : (
+                                "-"
+                              )}
                             </div>
                           </div>
                         </div>
@@ -497,6 +614,26 @@ export function LeadsTable({
                         >
                           {safeEnumLabel(LEAD_STAGE_LABELS as any, l.stage)}
                         </Badge>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "h-5 text-[10px] px-2 font-semibold uppercase tracking-tighter border",
+                            SOURCE_STYLES[l.source || ""] || "border-slate-200 text-slate-600 bg-slate-50"
+                          )}
+                        >
+                          {safeEnumLabel(LEAD_SOURCE_LABELS as any, l.source)}
+                        </Badge>
+                        {getLeadSubSource(l) && (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "h-5 text-[10px] px-2 font-bold uppercase tracking-tighter border",
+                              SUB_SOURCE_STYLES[getLeadSubSource(l) || ""] || "border-slate-200 text-slate-600 bg-slate-50"
+                            )}
+                          >
+                            {getLeadSubSource(l)}
+                          </Badge>
+                        )}
                         <Badge
                           variant="outline"
                           className={cn(

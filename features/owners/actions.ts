@@ -51,6 +51,7 @@ export async function getOwnersAction(allBranches = false) {
       .from("identities_v3")
       .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
       .eq("category", 2)
+      .eq("role", "OWNER")
       .order("display_name");
 
     const config = await getSystemConfig();
@@ -107,7 +108,8 @@ export async function getOwnerByIdAction(id: string) {
     .from("identities_v3")
     .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
     .eq("id", id)
-    .eq("category", 2);
+    .eq("category", 2)
+    .eq("role", "OWNER");
 
   if (isMultiTenant && ctx.tenantId) {
     query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);
@@ -222,6 +224,7 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
       .select("id, tenant_id, social_links")
       .eq("id", id)
       .eq("category", 2)
+      .eq("role", "OWNER")
       .single();
 
     if (findError || !existing) {
@@ -319,6 +322,7 @@ export async function deleteOwnerAction(id: string) {
       .select("id, tenant_id, social_links")
       .eq("id", id)
       .eq("category", 2)
+      .eq("role", "OWNER")
       .single();
 
     if (findError || !existing) {
@@ -413,6 +417,7 @@ export async function getOwnersWithPropertyCountAction() {
     .from("identities_v3")
     .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
     .eq("category", 2)
+    .eq("role", "OWNER")
     .order("display_name");
     
   if (isMultiTenant && ctx.tenantId && ctx.tenantId !== "ALL") {

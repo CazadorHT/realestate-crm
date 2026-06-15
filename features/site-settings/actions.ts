@@ -31,14 +31,22 @@ export async function decryptValue(key: string, value: unknown): Promise<unknown
   if (!isEncrypted(value)) {
     // 🛡️ Lazy Encryption Strategy: Re-save in background to encrypt
     // Since this runs in a server action/route, we use after() for non-blocking update
-    after(async () => {
-      try {
-        console.log(`[LAZY-ENCRYPTION] Encrypting plaintext key on-the-fly: ${key}`);
-        await updateSiteSettingAdmin(key as SiteSettingKey, value);
-      } catch (err) {
+    try {
+      after(async () => {
+        try {
+          console.log(`[LAZY-ENCRYPTION] Encrypting plaintext key on-the-fly: ${key}`);
+          await updateSiteSettingAdmin(key as SiteSettingKey, value);
+        } catch (err) {
+          console.error(`[LAZY-ENCRYPTION-FAILED] Key: ${key}`, err);
+        }
+      });
+    } catch (afterError) {
+      // Fallback: update in background without after() if not in request scope
+      console.warn(`[LAZY-ENCRYPTION] outside request scope, running inline for key: ${key}`);
+      updateSiteSettingAdmin(key as SiteSettingKey, value).catch(err => {
         console.error(`[LAZY-ENCRYPTION-FAILED] Key: ${key}`, err);
-      }
-    });
+      });
+    }
     return value; // Return plaintext for immediate use
   }
 
@@ -254,14 +262,19 @@ export async function getSiteSettings() {
     // Ignore error for public/anonymous access
   }
 
-  return unstable_cache(
-    async () => getSiteSettingsInternal(tenantId),
-    ["site-settings", tenantId],
-    {
-      revalidate: process.env.NODE_ENV === "development" ? 1 : 3600, // 1 second in dev, 1 hour in prod
-      tags: [`site-settings-${tenantId}`, "site-settings"],
-    }
-  )();
+  try {
+    return await unstable_cache(
+      async () => getSiteSettingsInternal(tenantId),
+      ["site-settings", tenantId],
+      {
+        revalidate: process.env.NODE_ENV === "development" ? 1 : 3600, // 1 second in dev, 1 hour in prod
+        tags: [`site-settings-${tenantId}`, "site-settings"],
+      }
+    )();
+  } catch (cacheError) {
+    console.warn("[SITE-SETTINGS] unstable_cache failed, falling back to direct DB fetch:", cacheError);
+    return getSiteSettingsInternal(tenantId);
+  }
 }
 
 /**

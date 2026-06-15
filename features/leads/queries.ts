@@ -46,7 +46,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
 
   let query = supabase
     .from("crm_leads_v3")
-    .select("id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone)", { count: "exact" });
+    .select("id, stage, source, budget_min, budget_max, created_at, updated_at, tenant_id, assigned_to, ai_summary, utm_data, identity:identities_v3!crm_leads_v3_identity_id_fkey!inner(display_name, email, phone)", { count: "exact" });
 
   if (isMultiTenant && tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);

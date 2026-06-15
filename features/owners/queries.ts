@@ -14,7 +14,8 @@ export async function getOwnerById(id: string): Promise<Owner | null> {
     .from("identities_v3")
     .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
     .eq("id", id)
-    .eq("category", 2);
+    .eq("category", 2)
+    .eq("role", "OWNER");
 
   if (isMultiTenant && tenantId) {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
@@ -58,7 +59,8 @@ export async function getOwners(): Promise<Owner[]> {
       id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id,
       properties:properties_core!properties_core_owner_id_fkey(count)
     `)
-    .eq("category", 2);
+    .eq("category", 2)
+    .eq("role", "OWNER");
 
   if (isMultiTenant && tenantId) {
     query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
@@ -164,7 +166,8 @@ export async function getOwnersQuery({
     .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id, properties:properties_core!properties_core_owner_id_fkey(count), tenants:tenants_v3(name)", {
       count: "exact",
     })
-    .eq("category", 2);
+    .eq("category", 2)
+    .eq("role", "OWNER");
 
   if (!isMultiTenant) {
     // Single-tenant
@@ -255,7 +258,8 @@ export async function getOwnersDashboardStatsQuery(allBranches = false) {
   let ownersQuery = supabase
     .from("identities_v3")
     .select("id", { count: "exact", head: true })
-    .eq("category", 2);
+    .eq("category", 2)
+    .eq("role", "OWNER");
 
   if (!isMultiTenant) {
     // Single-tenant
@@ -280,6 +284,7 @@ export async function getOwnersDashboardStatsQuery(allBranches = false) {
     .from("identities_v3")
     .select("id", { count: "exact", head: true })
     .eq("category", 2)
+    .eq("role", "OWNER")
     .gte("created_at", startOfMonth);
 
   if (isMultiTenant) {
@@ -334,7 +339,8 @@ export async function getAllOwnerIdsQuery(args: { q?: string; allBranches?: bool
   let query = supabase
     .from("identities_v3")
     .select("id")
-    .eq("category", 2);
+    .eq("category", 2)
+    .eq("role", "OWNER");
 
   if (!isMultiTenant) {
     // Single-tenant
