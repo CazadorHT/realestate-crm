@@ -321,34 +321,47 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   useEffect(() => {
     if (!isAiGenerating || !generationTaskId) return;
 
+    console.log(`[AI-BLOG-POLLING] Started polling for task: ${generationTaskId}`);
     let isMounted = true;
     const interval = setInterval(async () => {
       try {
         const { getBackgroundTasksAction } = await import("@/lib/background-tasks/actions");
         const res = await getBackgroundTasksAction();
+        
+        console.log("[AI-BLOG-POLLING] API Response:", res);
+        
         if (res.success && Array.isArray(res.data) && isMounted) {
           const task = res.data.find((t: any) => t.id === generationTaskId);
+          console.log("[AI-BLOG-POLLING] Found task in list:", task);
+          
           if (task) {
             if (task.status === "SUCCESS") {
+              console.log("[AI-BLOG-POLLING] Task success! Processing result...");
               if (task.result) {
                 handleAiGenerated(task.result);
+              } else {
+                console.warn("[AI-BLOG-POLLING] Task was SUCCESS but result payload was missing!");
               }
               setIsAiGenerating(false);
               setGenerationTaskId(null);
             } else if (task.status === "ERROR" || task.status === "CANCELLED") {
+              console.log("[AI-BLOG-POLLING] Task failed or cancelled:", task);
               setIsAiGenerating(false);
               setGenerationTaskId(null);
               toast.error(`สร้างบทความล้มเหลว: ${task.error_details || task.message || "ข้อผิดพลาดระบบ"}`);
             }
+          } else {
+            console.log(`[AI-BLOG-POLLING] Task ${generationTaskId} not found in the returned tasks list.`);
           }
         }
       } catch (err) {
-        console.error("BlogForm self-polling error:", err);
+        console.error("[AI-BLOG-POLLING] Error during poll:", err);
       }
     }, 3000);
 
     return () => {
       isMounted = false;
+      console.log(`[AI-BLOG-POLLING] Stopped polling for task: ${generationTaskId}`);
       clearInterval(interval);
     };
   }, [isAiGenerating, generationTaskId, handleAiGenerated]);
