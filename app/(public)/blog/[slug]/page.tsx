@@ -48,6 +48,18 @@ export async function generateMetadata({
     };
   }
 
+  // Prevent draft leakage to non-admin/staff visitors
+  if (!post.is_published) {
+    const { getCurrentProfile } = await import("@/lib/supabase/getCurrentProfile");
+    const user = await getCurrentProfile();
+    const isStaff = user && ["ADMIN", "AGENT", "MANAGER"].includes(user.role);
+    if (!isStaff) {
+      return {
+        title: "Post Not Found",
+      };
+    }
+  }
+
   let COVER_IMAGE = post.cover_image || `${siteConfig.url}${siteConfig.ogImage}`;
   if (COVER_IMAGE.startsWith("/")) {
     COVER_IMAGE = `${siteConfig.url}${COVER_IMAGE}`;
@@ -105,6 +117,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
   if (!post) {
     notFound();
+  }
+
+  // Prevent draft leakage to non-admin/staff visitors
+  if (!post.is_published) {
+    const { getCurrentProfile } = await import("@/lib/supabase/getCurrentProfile");
+    const user = await getCurrentProfile();
+    const isStaff = user && ["ADMIN", "AGENT", "MANAGER"].includes(user.role);
+    if (!isStaff) {
+      notFound();
+    }
   }
 
   const { t, language } = await getServerTranslations();
