@@ -165,7 +165,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
 
       <CardContent className="pt-6 px-4 sm:px-6">
         {/* Address Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+        <div className="flex flex-col sm:grid sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
           {/* Province */}
           <FormField
             control={form.control}

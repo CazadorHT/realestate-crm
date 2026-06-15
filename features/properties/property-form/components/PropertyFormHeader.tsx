@@ -38,8 +38,8 @@ export function PropertyFormHeader({
         mode === "edit" && !isKeyboardOpen ? "sticky top-16 sm:top-16 z-50 shadow-sm" : "relative"
       } bg-white/95 backdrop-blur-md border-b border-slate-200 py-3 sm:py-4 mb-4 sm:mb-6 px-4 sm:px-6 transition-all duration-200 sm:rounded-xl max-w-screen`}
     >
-      <div className="flex flex-col md:flex-row justify-between items-center mx-auto gap-2">
-        <div className="min-w-0 flex-1">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mx-auto gap-2 w-full">
+        <div className="min-w-0 flex-1 w-full">
           <h1 className="text-lg sm:text-xl font-bold sm:font-medium text-slate-900 truncate">
             {mode === "edit" ? "แก้ไขข้อมูลทรัพย์สิน" : "สร้างประกาศใหม่"}
           </h1>
