@@ -501,11 +501,12 @@ async function generateAndUploadAiImage(
   width: number = 1280,
   height: number = 720,
 ): Promise<string | null> {
+  const cleanPrompt = `${prompt}, clean image without any text, no writing, no typography, no lettering, no words, no captions, no labels`;
   const maxRetries = 3;
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      console.log(`[AI-BLOG-IMAGE] Generating cover image with Google Imagen, attempt ${attempt + 1}...`);
-      const buffer = await generateImagenImage(prompt);
+      console.log(`[AI-BLOG-IMAGE] Generating image with Google Imagen, attempt ${attempt + 1}... Prompt: "${cleanPrompt}"`);
+      const buffer = await generateImagenImage(cleanPrompt);
       
       let imageBuffer: Buffer;
       let mimeType = "image/jpeg";
@@ -514,7 +515,7 @@ async function generateAndUploadAiImage(
         imageBuffer = buffer;
       } else {
         console.warn(`[AI-BLOG-IMAGE] Google Imagen failed, falling back to Pollinations AI...`);
-        const encodedPrompt = encodeURIComponent(prompt);
+        const encodedPrompt = encodeURIComponent(cleanPrompt);
         const seed = Math.floor(Math.random() * 1000000);
         const url = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&nologo=true&seed=${seed}`;
 
