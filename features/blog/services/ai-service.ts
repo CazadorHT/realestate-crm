@@ -80,7 +80,15 @@ function extractJson(text: string) {
     } catch (e) {}
   }
 
-  // Attempt 3: Deep search
+  // Attempt 3: Parse by matching brace counts (highly robust against trailing garbage/extra brackets)
+  const matchingJson = extractMatchingJsonObject(clean);
+  if (matchingJson) {
+    try {
+      return JSON.parse(matchingJson);
+    } catch (e) {}
+  }
+
+  // Attempt 4: Deep search
   const start = clean.indexOf('{');
   const end = clean.lastIndexOf('}');
   if (start !== -1 && end !== -1 && end > start) {
@@ -103,6 +111,50 @@ function extractJson(text: string) {
 
   console.error("Failed to parse JSON. Raw AI Response content:", text);
   throw new Error(`Could not extract valid JSON from AI response (Response starts with: ${clean.substring(0, 100)}...)`);
+}
+
+/**
+ * Extracts the first substring that forms a balanced JSON object by counting braces
+ */
+function extractMatchingJsonObject(text: string): string | null {
+  const start = text.indexOf('{');
+  if (start === -1) return null;
+
+  let braceCount = 0;
+  let inString = false;
+  let escape = false;
+
+  for (let i = start; i < text.length; i++) {
+    const char = text[i];
+
+    if (escape) {
+      escape = false;
+      continue;
+    }
+
+    if (char === '\\') {
+      escape = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+
+    if (!inString) {
+      if (char === '{') {
+        braceCount++;
+      } else if (char === '}') {
+        braceCount--;
+        if (braceCount === 0) {
+          return text.substring(start, i + 1);
+        }
+      }
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -279,6 +331,20 @@ export async function generateBlogPost(
       if (imageUrl) {
         finalBlogData.cover_image = imageUrl;
       }
+
+      // 🎨 Embed AI-Generated images inside the rich text content where [Infographic Ideas: ...] is suggested
+      if (finalBlogData.content) {
+        finalBlogData.content = await replaceInfographicPlaceholders(finalBlogData.content, imageStyle);
+      }
+      if (finalBlogData.content_en) {
+        finalBlogData.content_en = await replaceInfographicPlaceholders(finalBlogData.content_en, imageStyle);
+      }
+      if (finalBlogData.content_cn) {
+        finalBlogData.content_cn = await replaceInfographicPlaceholders(finalBlogData.content_cn, imageStyle);
+      }
+      if (finalBlogData.content_ru) {
+        finalBlogData.content_ru = await replaceInfographicPlaceholders(finalBlogData.content_ru, imageStyle);
+      }
     }
 
     // Skip server-side HTML sanitization (fully handled client-side on render via DOMPurify to avoid jsdom/ESM dependency errors)
@@ -374,6 +440,57 @@ export async function refineBlogContent(
     });
     throw error;
   }
+}
+
+/**
+ * Helper to parse content and automatically replace [Infographic Ideas: ...] with actual AI-generated images
+ */
+async function replaceInfographicPlaceholders(
+  content: string,
+  imageStyle: string,
+): Promise<string> {
+  if (!content || !imageStyle) return content;
+
+  // Match [Infographic Ideas: ...] or [Infographic Idea: ...]
+  const placeholderRegex = /\[Infographic\s+Ideas?:\s*([^\]]+)\]/gi;
+  let match;
+  const placeholders: { raw: string; prompt: string }[] = [];
+
+  while ((match = placeholderRegex.exec(content)) !== null) {
+    placeholders.push({
+      raw: match[0],
+      prompt: match[1].trim(),
+    });
+  }
+
+  if (placeholders.length === 0) return content;
+
+  console.log(`[AI-BLOG-IMAGE] Found ${placeholders.length} infographic suggestions to replace in content.`);
+  let updatedContent = content;
+
+  for (const item of placeholders) {
+    try {
+      const detailedPrompt = `${item.prompt}, ${imageStyle} style, high resolution, professional real estate photography`;
+      console.log(`[AI-BLOG-IMAGE] Generating inline image for: "${detailedPrompt}"`);
+      const imageUrl = await generateAndUploadAiImage(detailedPrompt);
+      
+      if (imageUrl) {
+        const imgHtml = `<div class="my-8 flex flex-col items-center gap-2">
+  <img src="${imageUrl}" alt="${item.prompt}" class="w-full max-w-3xl h-auto rounded-2xl shadow-lg border border-slate-100 object-cover" />
+  <span class="text-xs text-slate-500 italic font-medium">${item.prompt}</span>
+</div>`;
+        updatedContent = updatedContent.replace(item.raw, imgHtml);
+      } else {
+        // Remove placeholder if failed
+        updatedContent = updatedContent.replace(item.raw, "");
+      }
+    } catch (error) {
+      console.error(`Failed to generate inline image for prompt "${item.prompt}":`, error);
+      updatedContent = updatedContent.replace(item.raw, "");
+    }
+  }
+
+  return updatedContent;
 }
 
 /**

@@ -255,6 +255,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     if (data.content) setValue("content", data.content, options);
     if (data.category) setValue("category", data.category, options);
     if (data.tags) setValue("tags", data.tags, options);
+    if (data.cover_image) setValue("cover_image", data.cover_image, options);
 
     // Multilingual support
     if (data.title_en) setValue("title_en", data.title_en, options);
