@@ -160,16 +160,8 @@ export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> 
 
     if (error) throw error;
 
-    // กรองระดับ Application ตาม Tenant หรือ User เพื่อความปลอดภัย (Tenant Isolation)
-    const filteredData = (data || []).filter((task: any) => {
-      const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
-      if (role === "ADMIN") return true;
-      
-      const isOwner = payload.user_id === user.id;
-      const isSameTenant = tenantId && payload.tenant_id === tenantId;
-      
-      return isOwner || isSameTenant;
-    }).map((task: any) => {
+    // TEMPORARY: Return unfiltered data to inspect tasks in the browser console
+    const filteredData = (data || []).map((task: any) => {
       const payload = task.payload && typeof task.payload === "object" ? (task.payload as any) : {};
       return {
         id: task.id,
@@ -183,6 +175,7 @@ export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> 
         result_link: payload.result_link,
         error_details: task.error_log || payload.error_details,
         result: payload.result,
+        raw_payload: payload // Include raw payload for debugging
       };
     });
 
