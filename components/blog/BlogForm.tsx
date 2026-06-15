@@ -325,35 +325,43 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
     let isMounted = true;
     const interval = setInterval(async () => {
       try {
-        const { getBackgroundTasksAction } = await import("@/lib/background-tasks/actions");
-        const res = await getBackgroundTasksAction();
+        // ✅ Query task by ID directly instead of fetching all 50 tasks
+        const { getBackgroundTaskByIdAction } = await import("@/lib/background-tasks/actions");
+        const res = await getBackgroundTaskByIdAction(generationTaskId);
         
-        console.log("[AI-BLOG-POLLING] API Response:", res);
+        console.log("[AI-BLOG-POLLING] Task status:", res);
         
-        if (res.success && Array.isArray(res.data) && isMounted) {
-          const task = res.data.find((t: any) => t.id === generationTaskId);
-          console.log("[AI-BLOG-POLLING] Found task in list:", task);
-          
-          if (task) {
-            if (task.status === "SUCCESS") {
-              console.log("[AI-BLOG-POLLING] Task success! Processing result...");
-              if (task.result) {
-                handleAiGenerated(task.result);
-              } else {
-                console.warn("[AI-BLOG-POLLING] Task was SUCCESS but result payload was missing!");
-              }
-              setIsAiGenerating(false);
-              setGenerationTaskId(null);
-            } else if (task.status === "ERROR" || task.status === "CANCELLED") {
-              console.log("[AI-BLOG-POLLING] Task failed or cancelled:", task);
-              setIsAiGenerating(false);
-              setGenerationTaskId(null);
-              toast.error(`สร้างบทความล้มเหลว: ${task.error_details || task.message || "ข้อผิดพลาดระบบ"}`);
-            }
+        if (!isMounted) return;
+
+        if (!res.success) {
+          // Task not found in DB yet (still being created) — keep polling
+          console.log(`[AI-BLOG-POLLING] Task ${generationTaskId} not in DB yet, retrying...`);
+          return;
+        }
+
+        const task = res.data;
+        console.log("[AI-BLOG-POLLING] Task data:", task);
+
+        if (task.status === "SUCCESS") {
+          console.log("[AI-BLOG-POLLING] Task success! Processing result...");
+          if (task.result) {
+            handleAiGenerated(task.result);
           } else {
-            console.log(`[AI-BLOG-POLLING] Task ${generationTaskId} not found in the returned tasks list.`);
+            console.warn("[AI-BLOG-POLLING] Task was SUCCESS but result payload was missing!");
+            setIsAiGenerating(false);
+          }
+          setIsAiGenerating(false);
+          setGenerationTaskId(null);
+        } else if (task.status === "ERROR" || task.status === "CANCELLED") {
+          console.log("[AI-BLOG-POLLING] Task failed or cancelled:", task);
+          setIsAiGenerating(false);
+          setGenerationTaskId(null);
+          const isCancelled = task.status === "CANCELLED";
+          if (!isCancelled) {
+            toast.error(`สร้างบทความล้มเหลว: ${task.error_details || task.message || "ข้อผิดพลาดระบบ"}`);
           }
         }
+        // else: still PROCESSING/PENDING, keep polling
       } catch (err) {
         console.error("[AI-BLOG-POLLING] Error during poll:", err);
       }

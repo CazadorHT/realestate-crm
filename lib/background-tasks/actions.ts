@@ -193,6 +193,55 @@ export async function getBackgroundTasksAction(): Promise<BackgroundTaskResult> 
 }
 
 /**
+ * ดึงข้อมูลงานเดี่ยวด้วย ID (สำหรับ Polling)
+ */
+export async function getBackgroundTaskByIdAction(id: string): Promise<BackgroundTaskResult> {
+  try {
+    const { tenantId, user, role } = await requireAuthContext();
+    const adminSupabase = createAdminClient();
+
+    const { data, error } = await adminSupabase
+      .from("system_task_queue")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (error || !data) {
+      return { success: false, message: "Task not found" };
+    }
+
+    const payload = data.payload && typeof data.payload === "object" ? (data.payload as any) : {};
+
+    // Authorization: Admin, owner, or same tenant
+    const isOwner = payload.user_id === user.id;
+    const isSameTenant = tenantId && payload.tenant_id === tenantId;
+    if (role !== "ADMIN" && !isOwner && !isSameTenant) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    return {
+      success: true,
+      data: {
+        id: data.id,
+        name: data.task_name,
+        status: data.status,
+        message: payload.message || data.error_log || "",
+        created_at: data.run_at,
+        completed_at: data.completed_at,
+        type: payload.type,
+        payload: payload.client_payload,
+        result_link: payload.result_link,
+        error_details: data.error_log || payload.error_details,
+        result: payload.result,
+      },
+    };
+  } catch (error: any) {
+    console.error("getBackgroundTaskByIdAction error:", error);
+    return { success: false, message: error.message };
+  }
+}
+
+/**
  * ยกเลิกการทำงาน
  */
 export async function cancelBackgroundTaskAction(id: string): Promise<BackgroundTaskResult> {
