@@ -156,7 +156,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               ) : (
                 <Sparkles className="h-3.5 w-3.5" />
               )}
-              AI {isTranslating ? "กำลังแปล..." : "แปลที่อยู่"}
+              <span>AI {isTranslating ? "กำลังแปล..." : "แปลที่อยู่"}</span>
             </Button>
           }
         />
@@ -174,7 +174,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <MapIcon className="h-3.5 w-3.5 text-blue-500" />
-                  จังหวัด <span className="text-red-500">*</span>{" "}
+                  <span>จังหวัด <span className="text-red-500">*</span></span>
                   {addressLoading && (
                     <Loader2 className="inline h-3 w-3 animate-spin text-slate-400" />
                   )}
@@ -296,7 +296,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <MapPinned className="h-3.5 w-3.5 text-blue-500" />
-                  เขต / อำเภอ <span className="text-red-500">*</span>
+                  <span>เขต / อำเภอ <span className="text-red-500">*</span></span>
                 </FormLabel>
                 {isMobileOrTablet ? (
                   <ResponsiveDialog
@@ -420,7 +420,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <SignpostBig className="h-3.5 w-3.5 text-blue-500" />
-                  แขวง / ตำบล <span className="text-red-500">*</span>
+                  <span>แขวง / ตำบล <span className="text-red-500">*</span></span>
                 </FormLabel>
                 {isMobileOrTablet ? (
                   <ResponsiveDialog
@@ -549,7 +549,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <Mail className="h-3.5 w-3.5 text-blue-500" />
-                  รหัสไปรษณีย์
+                  <span>รหัสไปรษณีย์</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -579,7 +579,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <SignpostBig className="w-4 h-4 text-blue-500" />
-                  ที่อยู่ / โครงการ
+                  <span>ที่อยู่ / โครงการ</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -608,7 +608,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-500 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <Languages className="w-3.5 h-3.5" />
-                  Address (English)
+                  <span>Address (English)</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -637,7 +637,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-500 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <Languages className="w-3.5 h-3.5" />
-                  地址 (Chinese)
+                  <span>地址 (Chinese)</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -666,7 +666,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-1">
                 <FormLabel className="flex items-center gap-2 text-slate-500 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <Languages className="w-3.5 h-3.5" />
-                  Адрес (Russian)
+                  <span>Адрес (Russian)</span>
                 </FormLabel>
                 <FormControl>
                   <Input
@@ -695,7 +695,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-2 md:col-span-4 lg:col-span-2">
                 <FormLabel className="flex items-center gap-2 text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wider">
                   <MapIcon className="w-4 h-4 text-blue-500" />
-                  Google Maps Link
+                  <span>Google Maps Link</span>
                 </FormLabel>
                 <FormControl>
                   <Input

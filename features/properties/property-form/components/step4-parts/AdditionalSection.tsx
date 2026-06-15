@@ -151,7 +151,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
           <FormItem>
             <FormLabel className="text-slate-700 font-medium text-[10px] sm:text-xs uppercase tracking-wide flex items-center gap-2">
               <FileText className="w-3 h-3 text-indigo-600" />
-              ที่มาของทรัพย์ (Source) 🔒
+              <span>ที่มาของทรัพย์ (Source) 🔒</span>
             </FormLabel>
             <FormControl>
               <Textarea
@@ -175,7 +175,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
             <div className="space-y-0.5">
               <FormLabel className="text-blue-900 font-bold text-xs sm:text-sm flex items-center gap-2">
                 <Users className="w-4 h-4 text-blue-600" />
-                Co-Agent (เขามีทรัพย์ในมือ)
+                <span>Co-Agent (เขามีทรัพย์ในมือ)</span>
               </FormLabel>
               <p className="text-[10px] font-medium text-blue-600/70">
                 เลือกหากทรัพย์ชิ้นนี้มาจาก Co-broker (Listing Side)
@@ -210,7 +210,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                 <FormItem className="col-span-1">
                   <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <User className="w-3 h-3 text-slate-400" />
-                    ชื่อ Co-Agent
+                    <span>ชื่อ Co-Agent</span>
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -232,7 +232,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                 <FormItem className="col-span-1">
                   <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <Phone className="w-3 h-3 text-slate-400" />
-                    เบอร์โทร
+                    <span>เบอร์โทร</span>
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -253,7 +253,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                 <FormItem className="col-span-1">
                   <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <MessageCircle className="w-3 h-3 text-slate-400" />
-                    ช่องทางติดต่อ
+                    <span>ช่องทางติดต่อ</span>
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
@@ -282,7 +282,7 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
                 <FormItem className="col-span-1">
                   <FormLabel className="text-slate-700 text-[10px] font-semibold uppercase flex items-center gap-2">
                     <LinkIcon className="w-3 h-3 text-slate-400" />
-                    ID / Link
+                    <span>ID / Link</span>
                   </FormLabel>
                   <FormControl>
                     <Input
@@ -301,8 +301,8 @@ export const AdditionalSection = ({ form }: AdditionalSectionProps) => {
           {(showSaleCommission || showRentCommission) && (
             <div className="bg-orange-50/40 p-3 sm:p-4 rounded-xl border border-orange-100 shadow-sm space-y-3">
               <p className="text-[10px] sm:text-xs font-bold text-orange-700 uppercase flex items-center gap-1.5 active:scale-95 transition-transform cursor-default">
-                <AlertCircle className="w-3.5 h-3.5" />{" "}
-                ส่วนแบ่งค่าคอมมิชชั่นสำหรับ Co-Agent
+                <AlertCircle className="w-3.5 h-3.5" />
+                <span>ส่วนแบ่งค่าคอมมิชชั่นสำหรับ Co-Agent</span>
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 {showSaleCommission && (

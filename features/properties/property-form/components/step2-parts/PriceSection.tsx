@@ -246,7 +246,8 @@ export function PriceSection({
                     onClick={() => setIsAvmSaleOpen(true)}
                     className="flex w-fit items-center gap-2 px-3 py-1.5 mt-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 transition-colors shadow-sm cursor-pointer hover:shadow-md"
                   >
-                    <Sparkles className="h-3.5 w-3.5" />✨ ประเมินราคาด้วย AI
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>ประเมินราคาด้วย AI</span>
                   </button>
                 )}
 
@@ -303,7 +304,7 @@ export function PriceSection({
                               <path d="M18 6 6 18" />
                               <path d="m6 6 12 12" />
                             </svg>
-                            ยกเลิกส่วนลด
+                            <span>ยกเลิกส่วนลด</span>
                           </button>
                         }
                       />
@@ -362,7 +363,7 @@ export function PriceSection({
                               <path d="M18 6 6 18" />
                               <path d="m6 6 12 12" />
                             </svg>
-                            ยกเลิกค่าส่วนกลาง
+                            <span>ยกเลิกค่าส่วนกลาง</span>
                           </button>
                         }
                       />
@@ -494,8 +495,8 @@ export function PriceSection({
                       onClick={() => setIsAvmRentOpen(true)}
                       className="flex w-fit items-center gap-2 px-3 py-1.5 mt-2 text-xs font-medium text-indigo-700 bg-indigo-50 border border-indigo-200 rounded-full hover:bg-indigo-100 transition-colors shadow-sm cursor-pointer hover:shadow-md"
                     >
-                      <Sparkles className="h-3.5 w-3.5" />✨ ประเมินค่าเช่าด้วย
-                      AI
+                      <Sparkles className="h-3.5 w-3.5" />
+                      <span>ประเมินค่าเช่าด้วย AI</span>
                     </button>
                   )}
                 </div>
@@ -570,7 +571,7 @@ export function PriceSection({
                               <path d="M18 6 6 18" />
                               <path d="m6 6 12 12" />
                             </svg>
-                            ยกเลิกโปรโมชั่น
+                            <span>ยกเลิกโปรโมชั่น</span>
                           </button>
                         }
                       />
@@ -601,7 +602,7 @@ export function PriceSection({
                                 onClick={() => field.onChange(m)}
                                 disabled={isReadOnly}
                                 className={`
-                                flex-1 h-11 rounded-lg border text-sm font-medium transition-all
+                                flex-1 h-11 rounded-lg border text-sm font-medium transition-all gap-2
                                 ${
                                   field.value === m
                                     ? "border-orange-600 bg-orange-600 text-white shadow-sm"

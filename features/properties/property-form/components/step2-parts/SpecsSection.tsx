@@ -156,11 +156,13 @@ export function SpecsSection({
                       <FormLabel className="flex items-center justify-between gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider w-full">
                         <span className="flex items-center gap-2">
                           <item.icon className="h-4 w-4 text-purple-500" />
-                          {item.name === "floor"
-                            ? isTotalFloors
-                              ? "จำนวนชั้น"
-                              : "ชั้นที่"
-                            : item.label}
+                          <span>
+                            {item.name === "floor"
+                              ? isTotalFloors
+                                ? "จำนวนชั้น"
+                                : "ชั้นที่"
+                              : item.label}
+                          </span>
                         </span>
                         {item.name === "floor" && (
                           <button
@@ -275,7 +277,8 @@ export function SpecsSection({
               <UnitNumberField
                 label={
                   <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
-                    <Ruler className="h-4 w-4 text-emerald-500" /> พื้นที่ใช้สอย
+                    <Ruler className="h-4 w-4 text-emerald-500" />
+                    <span>พื้นที่ใช้สอย</span>
                   </span>
                 }
                 name="size_sqm"
@@ -294,8 +297,8 @@ export function SpecsSection({
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
-                      <Map className="h-4 w-4 text-emerald-500" /> ขนาดที่ดิน
-                      (ไร่ - งาน - ตร.ว.)
+                      <Map className="h-4 w-4 text-emerald-500" />
+                      <span>ขนาดที่ดิน (ไร่ - งาน - ตร.ว.)</span>
                     </span>
                     <button
                       type="button"
@@ -357,8 +360,8 @@ export function SpecsSection({
                     label={
                       <div className="flex items-center justify-between w-full">
                         <span className="flex items-center gap-2">
-                          <Map className="h-4 w-4 text-emerald-500" />{" "}
-                          ขนาดที่ดิน
+                          <Map className="h-4 w-4 text-emerald-500" />
+                          <span>ขนาดที่ดิน</span>
                         </span>
                         <button
                           type="button"
@@ -407,8 +410,8 @@ export function SpecsSection({
                 render={({ field }) => (
                   <FormItem className="col-span-1 sm:col-span-2">
                     <FormLabel className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
-                      <MapPinned className="h-4 w-4 text-emerald-500" /> ผังสี /
-                      Zoning
+                      <MapPinned className="h-4 w-4 text-emerald-500" />
+                      <span>ผังสี / Zoning</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -442,7 +445,8 @@ export function SpecsSection({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
-                      <Zap className="h-4 w-4 text-amber-500" /> ค่าไฟ
+                      <Zap className="h-4 w-4 text-amber-500" />
+                      <span>ค่าไฟ</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -465,7 +469,8 @@ export function SpecsSection({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
-                      <Droplets className="h-4 w-4 text-amber-500" /> ค่าน้ำ
+                      <Droplets className="h-4 w-4 text-amber-500" />
+                      <span>ค่าน้ำ</span>
                     </FormLabel>
                     <FormControl>
                       <Input
@@ -484,7 +489,8 @@ export function SpecsSection({
               <UnitNumberField
                 label={
                   <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
-                    <Clock className="h-4 w-4 text-amber-500" /> ปลอดค่าเช่า
+                    <Clock className="h-4 w-4 text-amber-500" />
+                    <span>ปลอดค่าเช่า</span>
                   </span>
                 }
                 name="rent_free_period_days"
@@ -501,7 +507,8 @@ export function SpecsSection({
               <UnitNumberField
                 label={
                   <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
-                    <Car className="h-4 w-4 text-amber-500" /> ค่าจอดรถเสริม
+                    <Car className="h-4 w-4 text-amber-500" />
+                    <span>ค่าจอดรถเสริม</span>
                   </span>
                 }
                 name="parking_fee_additional"
@@ -530,8 +537,8 @@ export function SpecsSection({
               <UnitNumberField
                 label={
                   <span className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
-                    <ArrowUpToLine className="h-4 w-4 text-blue-500" />{" "}
-                    ความสูงเพดาน
+                    <ArrowUpToLine className="h-4 w-4 text-blue-500" />
+                    <span>ความสูงเพดาน</span>
                   </span>
                 }
                 name="ceiling_height"
@@ -551,7 +558,7 @@ export function SpecsSection({
                   <FormItem>
                     <FormLabel className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                       <ParkingCircle className="h-4 w-4 text-blue-500" />
-                      ประเภทที่จอดรถ
+                      <span>ประเภทที่จอดรถ</span>
                     </FormLabel>
                     <FormControl>
                       <div className="flex gap-1 p-1 bg-slate-50 rounded-lg border border-slate-200">
@@ -588,7 +595,7 @@ export function SpecsSection({
                   <FormItem className="col-span-1 md:col-span-2">
                     <FormLabel className="flex items-center gap-2 text-xs font-medium text-slate-600 uppercase tracking-wider">
                       <Compass className="h-4 w-4 text-blue-500" />
-                      ทิศทางทรัพย์
+                      <span>ทิศทางทรัพย์</span>
                     </FormLabel>
                     <FormControl>
                       <div className="grid grid-cols-4 gap-1 p-1 bg-slate-50 rounded-lg border border-slate-200">

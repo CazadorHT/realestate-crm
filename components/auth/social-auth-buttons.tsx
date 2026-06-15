@@ -63,8 +63,7 @@ export function SocialAuthButtons({ isLogin }: SocialAuthButtonsProps) {
           onClick={() => handleOAuth("google")}
         >
           <FcGoogle className="h-6! w-6!" />
-         
-          Google
+          <span>Google</span>
         </Button>
       </div>
     </div>

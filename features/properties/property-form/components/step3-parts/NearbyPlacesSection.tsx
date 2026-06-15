@@ -211,7 +211,7 @@ export function NearbyPlacesSection({
                   ) : (
                     <Sparkles className="h-3.5 w-3.5" />
                   )}
-                  AI {isTranslating ? "กำลังแปล..." : "แปลชื่อทั้งหมด"}
+                  <span>AI {isTranslating ? "กำลังแปล..." : "แปลชื่อทั้งหมด"}</span>
                 </Button>
               ) : null}
               <DropdownMenu>
@@ -231,14 +231,14 @@ export function NearbyPlacesSection({
                     className="flex items-center gap-2 text-xs font-bold text-emerald-600 cursor-pointer py-2 rounded-lg hover:bg-emerald-50"
                   >
                     <Plus className="h-4 w-4" />
-                    เพิ่มหมวดหมู่ใหม่ (Add Category)
+                    <span>เพิ่มหมวดหมู่ใหม่ (Add Category)</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => window.open('/protected/admin/master-data', '_blank')}
                     className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer py-2 rounded-lg hover:bg-slate-50"
                   >
                     <Landmark className="h-4 w-4 text-slate-400" />
-                    จัดการข้อมูลระบบ (Master Data)
+                    <span>จัดการข้อมูลระบบ (Master Data)</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -276,7 +276,7 @@ export function NearbyPlacesSection({
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <Landmark className="h-3.5 w-3.5 text-blue-500" />
-                          ประเภท
+                          <span>ประเภท</span>
                         </FormLabel>
                         {isMobileOrTablet ? (
                           <ResponsiveDialog
@@ -395,7 +395,7 @@ export function NearbyPlacesSection({
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <Ruler className="h-3.5 w-3.5 text-blue-500" />
-                          ระยะทาง (กม.)
+                          <span>ระยะทาง (กม.)</span>
                         </FormLabel>
                         <FormControl>
                           <KilometerInput
@@ -416,7 +416,7 @@ export function NearbyPlacesSection({
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <Clock className="h-3.5 w-3.5 text-blue-500" />
-                          เวลา (นาที)
+                          <span>เวลา (นาที)</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -438,7 +438,7 @@ export function NearbyPlacesSection({
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <MapPin className="h-3.5 w-3.5 text-blue-500" />
-                          ชื่อสถานที่ (ภาษาไทย)
+                          <span>ชื่อสถานที่ (ภาษาไทย)</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -521,7 +521,7 @@ export function NearbyPlacesSection({
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <Plus className="h-5 w-5 text-emerald-600" />
-              เพิ่มหมวดหมู่สถานที่ใกล้เคียงใหม่
+              <span>เพิ่มหมวดหมู่สถานที่ใกล้เคียงใหม่</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
               หมวดหมู่ใหม่จะถูกบันทึกและพร้อมเลือกใช้งานในฟอร์มทันที
@@ -565,7 +565,7 @@ export function NearbyPlacesSection({
                 className="h-10 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6"
               >
                 {isSavingCat ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-                บันทึกหมวดหมู่
+                <span>บันทึกหมวดหมู่</span>
               </Button>
             </DialogFooter>
           </form>

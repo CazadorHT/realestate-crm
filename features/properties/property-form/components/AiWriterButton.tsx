@@ -61,7 +61,7 @@ export function AiWriterButton({
               ) : (
                 <Sparkles className="h-4 w-4 text-amber-500" />
               )}
-              AI แต่งคำบรรยาย ✨
+              <span>AI แต่งคำบรรยาย ✨</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent className="bg-slate-900 text-white z-102 border-none shadow-xl px-4 py-2 text-xs">

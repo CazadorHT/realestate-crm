@@ -268,7 +268,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                   ) : (
                     <Sparkles className="h-3.5 w-3.5" />
                   )}
-                  AI {isTranslating ? "กำลังแปล..." : "แปลชื่อทั้งหมด"}
+                  <span>AI {isTranslating ? "กำลังแปล..." : "แปลชื่อทั้งหมด"}</span>
                 </Button>
               )}
               <DropdownMenu>
@@ -288,14 +288,14 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                     className="flex items-center gap-2 text-xs font-bold text-blue-600 cursor-pointer py-2 rounded-lg hover:bg-blue-50"
                   >
                     <Plus className="h-4 w-4" />
-                    เพิ่มสายรถไฟฟ้าใหม่ (Add Line)
+                    <span>เพิ่มสายรถไฟฟ้าใหม่ (Add Line)</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => window.open('/protected/admin/master-data', '_blank')}
                     className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer py-2 rounded-lg hover:bg-slate-50"
                   >
                     <Landmark className="h-4 w-4 text-slate-400" />
-                    จัดการข้อมูลระบบ (Master Data)
+                    <span>จัดการข้อมูลระบบ (Master Data)</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -336,7 +336,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <TrainFront className="h-3.5 w-3.5 text-blue-500" />
-                          ประเภท
+                          <span>ประเภท</span>
                         </FormLabel>
                         {isMobileOrTablet ? (
                           <ResponsiveDialog
@@ -527,7 +527,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <Ruler className="h-3.5 w-3.5 text-blue-500" />
-                          ระยะทาง (กม.)
+                          <span>ระยะทาง (กม.)</span>
                         </FormLabel>
                         <FormControl>
                           <KilometerInput
@@ -549,7 +549,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                       <FormItem>
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <Clock className="h-3.5 w-3.5 text-blue-500" />
-                          เวลา (นาที)
+                          <span>เวลา (นาที)</span>
                         </FormLabel>
                         <FormControl>
                           <Input
@@ -573,7 +573,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                       <FormItem className="flex flex-col">
                         <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                           <MapPin className="h-3.5 w-3.5 text-blue-500" />
-                          ชื่อสถานี (ภาษาไทย)
+                          <span>ชื่อสถานี (ภาษาไทย)</span>
                         </FormLabel>
                         <FormControl>
                           <StationCombobox
@@ -675,7 +675,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
           <DialogHeader>
             <DialogTitle className="text-lg font-bold text-slate-900 flex items-center gap-2">
               <Plus className="h-5 w-5 text-blue-600" />
-              เพิ่มสายรถไฟฟ้า / การเดินทางใหม่
+              <span>เพิ่มสายรถไฟฟ้า / การเดินทางใหม่</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
               สายรถไฟฟ้าใหม่จะถูกบันทึกและพร้อมเลือกใช้งานในฟอร์มทันที
@@ -737,7 +737,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                 className="h-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold px-6"
               >
                 {isSavingTransit ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
-                บันทึกสายรถไฟฟ้า
+                <span>บันทึกสายรถไฟฟ้า</span>
               </Button>
             </DialogFooter>
           </form>

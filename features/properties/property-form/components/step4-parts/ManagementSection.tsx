@@ -105,7 +105,7 @@ export const ManagementSection = ({
               <FormItem className="space-y-2">
                 <FormLabel className="text-slate-900 font-bold text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-2">
                   <Activity className="w-3.5 h-3.5 text-emerald-600" />
-                  สถานะประกาศ (Status)
+                  <span>สถานะประกาศ (Status)</span>
                 </FormLabel>
                 {isMobileOrTablet ? (
                   <ResponsiveDialog
@@ -165,7 +165,7 @@ export const ManagementSection = ({
                                     "bg-amber-500",
                                 )}
                               />
-                              {PROPERTY_STATUS_LABELS[s]?.th || s}
+                              <span>{PROPERTY_STATUS_LABELS[s]?.th || s}</span>
                             </span>
                             {isSelected && (
                               <div className="bg-blue-600 rounded-full p-1 text-white shrink-0">
@@ -218,7 +218,7 @@ export const ManagementSection = ({
                                   "bg-amber-500",
                               )}
                             />
-                            {PROPERTY_STATUS_LABELS[s]?.th || s}
+                            <span>{PROPERTY_STATUS_LABELS[s]?.th || s}</span>
                           </span>
                         </SelectItem>
                       ))}
@@ -238,7 +238,7 @@ export const ManagementSection = ({
                 <div className="flex items-center justify-between pb-1">
                   <FormLabel className="text-slate-900 font-bold text-[10px] sm:text-xs uppercase tracking-wider flex items-center gap-2">
                     <User className="w-3.5 h-3.5 text-emerald-600" />
-                    เจ้าของทรัพย์ (Owner)
+                    <span>เจ้าของทรัพย์ (Owner)</span>
                   </FormLabel>
                   <div className="flex items-center gap-4">
                     {setAllBranches &&
@@ -262,7 +262,7 @@ export const ManagementSection = ({
                     {isCoAgent && (
                       <span className="text-[10px] text-blue-600 font-bold flex items-center gap-1.5 animate-in fade-in slide-in-from-right-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                        ℹ️ บันทึกคู่กับ Co-Agent ได้
+                        <span>ℹ️ บันทึกคู่กับ Co-Agent ได้</span>
                       </span>
                     )}
                     <span className="text-[10px] text-slate-400 font-medium bg-slate-100 px-2 py-0.5 rounded-md">
@@ -542,7 +542,7 @@ export const ManagementSection = ({
                   : "bg-red-500 text-white ring-red-600"
               }`}
             >
-              {(totalUnits ?? 1) - (soldUnits ?? 0)} ยูนิต
+              <span>{(totalUnits ?? 1) - (soldUnits ?? 0)} ยูนิต</span>
               {(totalUnits ?? 1) - (soldUnits ?? 0) > 0 && (
                 <ShieldCheck className="w-3.5 h-3.5" />
               )}
@@ -569,7 +569,7 @@ export const ManagementSection = ({
               <CoBrokerSelect />
               <p className="text-[10px] text-slate-400 mt-2 flex items-center gap-1.5">
                 <Info className="w-3 h-3" />
-                เคล็ดลับ: การเลือกจากฐานข้อมูลกลางจะช่วยบันทึกสถิติและลดเวลาการกรอกข้อมูล
+                <span>เคล็ดลับ: การเลือกจากฐานข้อมูลกลางจะช่วยบันทึกสถิติและลดเวลาการกรอกข้อมูล</span>
               </p>
             </div>
 
@@ -716,7 +716,7 @@ export const ManagementSection = ({
                 render={({ field }) => (
                   <FormItem className="bg-blue-100/30 p-3 rounded-xl border border-blue-100/50">
                     <FormLabel className="text-[10px] font-bold text-blue-700 uppercase tracking-tight flex items-center gap-1.5">
-                      ส่วนแบ่งขาย (%)
+                      <span>ส่วนแบ่งขาย (%)</span>
                     </FormLabel>
                     <FormControl>
                       <div className="flex items-center gap-2 mt-1">
@@ -740,7 +740,7 @@ export const ManagementSection = ({
                 render={({ field }) => (
                   <FormItem className="bg-blue-100/30 p-3 rounded-xl border border-blue-100/50">
                     <FormLabel className="text-[10px] font-bold text-blue-700 uppercase tracking-tight flex items-center gap-1.5">
-                      ส่วนแบ่งเช่า (เดือน)
+                      <span>ส่วนแบ่งเช่า (เดือน)</span>
                     </FormLabel>
                     <FormControl>
                       <div className="flex items-center gap-2 mt-1">

@@ -571,15 +571,17 @@ export function LoginForm({ defaultView = "login" }: LoginFormProps) {
                     {isLoading ? (
                       <span className="flex items-center gap-2">
                         <Loader2 className="h-5 w-5 animate-spin" />
-                        แป๊บน้า...
+                        <span>แป๊บน้า...</span>
                       </span>
                     ) : (
                       <span className="flex items-center gap-2">
-                        {isLogin
-                          ? "เข้าสู่ระบบ"
-                          : isSignUp
-                            ? "ลงทะเบียน"
-                            : "ส่งลิงก์กู้คืน"}
+                        <span>
+                          {isLogin
+                            ? "เข้าสู่ระบบ"
+                            : isSignUp
+                              ? "ลงทะเบียน"
+                              : "ส่งลิงก์กู้คืน"}
+                        </span>
                         <ArrowLeft className="h-4 w-4 rotate-180" />
                       </span>
                     )}

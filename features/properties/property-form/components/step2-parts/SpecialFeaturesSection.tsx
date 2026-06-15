@@ -152,7 +152,8 @@ export function SpecialFeaturesSection({
         {/* Group 1: Rules & Rights */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
-            <UserCheck className="h-4 w-4" /> กฎระเบียบและทางเลือก
+            <UserCheck className="h-4 w-4" />
+            <span>กฎระเบียบและทางเลือก</span>
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
@@ -202,7 +203,8 @@ export function SpecialFeaturesSection({
         {/* Group 1b: Location & Transit */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
-            <MapPin className="h-4 w-4" /> ทำเลและการเดินทาง
+            <MapPin className="h-4 w-4" />
+            <span>ทำเลและการเดินทาง</span>
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
@@ -226,7 +228,8 @@ export function SpecialFeaturesSection({
         {/* Group 2: Condition & Decor */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
-            <Armchair className="h-4 w-4" /> สภาพและเฟอร์นิเจอร์
+            <Armchair className="h-4 w-4" />
+            <span>สภาพและเฟอร์นิเจอร์</span>
           </h4>
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <FeatureChip
@@ -298,7 +301,8 @@ export function SpecialFeaturesSection({
         {/* Group 3: View & Direction */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
-            <CloudSun className="h-4 w-4" /> วิวและบรรยากาศ
+            <CloudSun className="h-4 w-4" />
+            <span>วิวและบรรยากาศ</span>
           </h4>
           <div className="flex flex-wrap gap-2 sm:gap-3">
             <FeatureChip
@@ -377,7 +381,8 @@ export function SpecialFeaturesSection({
         {/* Group 4: Office & Building Specs */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
-            <Building2 className="h-4 w-4" /> สำนักงานและอาคาร
+            <Building2 className="h-4 w-4" />
+            <span>สำนักงานและอาคาร</span>
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
@@ -486,7 +491,8 @@ export function SpecialFeaturesSection({
         {/* Group 5: Services */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
-            <Wifi className="h-4 w-4" /> อื่นๆ และบริการ
+            <Wifi className="h-4 w-4" />
+            <span>อื่นๆ และบริการ</span>
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip
@@ -516,7 +522,8 @@ export function SpecialFeaturesSection({
         {/* Group 6: Luxury / Premium (บ้านหรู / พูลวิลล่า / คอนโด) */}
         <div className="space-y-3">
           <h4 className="text-sm font-semibold text-slate-500 flex items-center gap-2">
-            <Gem className="h-4 w-4" /> บ้านหรู / พูลวิลล่า / คอนโด
+            <Gem className="h-4 w-4" />
+            <span>บ้านหรู / พูลวิลล่า / คอนโด</span>
           </h4>
           <div className="flex flex-wrap gap-3">
             <FeatureChip

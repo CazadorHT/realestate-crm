@@ -122,7 +122,7 @@ export function DescriptionSection({
                           ) : (
                             <Languages className="h-4 w-4 text-blue-500" />
                           )}
-                          AI แปลภาษาทั้งหมด 🌐
+                          <span>AI แปลภาษาทั้งหมด 🌐</span>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent className="bg-slate-900 text-white border-none shadow-xl px-4 py-2 text-xs">
@@ -148,28 +148,28 @@ export function DescriptionSection({
                   className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 gap-2"
                 >
                   <span className="fi fi-th rounded-sm shadow-xs" />
-                  ไทย
+                  <span>ไทย</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="en"
                   className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 gap-2"
                 >
                   <span className="fi fi-us rounded-sm shadow-xs" />
-                  EN
+                  <span>EN</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="cn"
                   className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 gap-2"
                 >
                   <span className="fi fi-cn rounded-sm shadow-xs" />
-                  CN
+                  <span>CN</span>
                 </TabsTrigger>
                 <TabsTrigger
                   value="ru"
                   className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-4 gap-2"
                 >
                   <span className="fi fi-ru rounded-sm shadow-xs" />
-                  RU
+                  <span>RU</span>
                 </TabsTrigger>
               </TabsList>
             </div>

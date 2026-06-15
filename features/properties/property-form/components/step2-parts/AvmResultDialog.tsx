@@ -200,7 +200,7 @@ export function AvmResultDialog({
               className="mt-6 gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full px-8 py-6 text-base shadow-lg transition-all"
             >
               <Sparkles className="h-5 w-5" />
-              เริ่มการประเมิน
+              <span>เริ่มการประเมิน</span>
             </Button>
           </div>
         )}
@@ -362,7 +362,7 @@ export function AvmResultDialog({
               className="w-full sm:hidden rounded-xl border-slate-200 h-12 font-bold"
             >
               <Printer className="h-4 w-4 mr-2" />
-              พิมพ์รายงานความคุ้มค่า (PDF)
+              <span>พิมพ์รายงานความคุ้มค่า (PDF)</span>
             </Button>
           </div>
         )}

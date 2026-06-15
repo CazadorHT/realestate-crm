@@ -191,10 +191,10 @@ export function SignUpForm({
                 {isLoading ? (
                   <span className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    {t("auth.signup.signing_up")}
+                    <span>{t("auth.signup.signing_up")}</span>
                   </span>
                 ) : (
-                  t("auth.signup.submit_btn")
+                  <span>{t("auth.signup.submit_btn")}</span>
                 )}
               </Button>
 

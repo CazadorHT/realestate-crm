@@ -135,7 +135,7 @@ export function CommissionSection({
               className="border-blue-200 bg-blue-50 text-blue-700 gap-1.5 px-3 py-1"
             >
               <Lock className="h-3 w-3" />
-              STAFF ONLY
+              <span>STAFF ONLY</span>
             </Badge>
           }
         />
@@ -234,11 +234,13 @@ export function CommissionSection({
                 {saleCommissionCalc !== null ? (
                   <span className="text-base font-bold text-emerald-600 flex items-center gap-2">
                     <Coins className="h-5 w-5 text-emerald-500" />
-                    {new Intl.NumberFormat("th-TH", {
-                      style: "currency",
-                      currency: "THB",
-                      maximumFractionDigits: 0,
-                    }).format(saleCommissionCalc)}
+                    <span>
+                      {new Intl.NumberFormat("th-TH", {
+                        style: "currency",
+                        currency: "THB",
+                        maximumFractionDigits: 0,
+                      }).format(saleCommissionCalc)}
+                    </span>
                   </span>
                 ) : (
                   <span className="text-xs text-slate-400">-</span>
@@ -324,11 +326,13 @@ export function CommissionSection({
                 {rentCommissionCalc !== null ? (
                   <span className="text-base font-bold text-indigo-600 flex items-center gap-2">
                     <Banknote className="h-5 w-5 text-indigo-500" />
-                    {new Intl.NumberFormat("th-TH", {
-                      style: "currency",
-                      currency: "THB",
-                      maximumFractionDigits: 0,
-                    }).format(rentCommissionCalc)}
+                    <span>
+                      {new Intl.NumberFormat("th-TH", {
+                        style: "currency",
+                        currency: "THB",
+                        maximumFractionDigits: 0,
+                      }).format(rentCommissionCalc)}
+                    </span>
                   </span>
                 ) : (
                   <span className="text-xs text-slate-400">-</span>
