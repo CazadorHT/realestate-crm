@@ -3,6 +3,8 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import CharacterCount from "@tiptap/extension-character-count";
+import { TextStyle } from "@tiptap/extension-text-style";
+import { Color } from "@tiptap/extension-color";
 import { toast } from "sonner";
 import { Toolbar } from "./smart-editor/Toolbar";
 
@@ -51,6 +53,8 @@ export function SmartEditor({
         defaultProtocol: "https",
       }),
       CharacterCount,
+      TextStyle,
+      Color,
     ],
     content: value,
     immediatelyRender: false,

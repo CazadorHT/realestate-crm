@@ -122,7 +122,7 @@ export function DescriptionSection({
                           ) : (
                             <Languages className="h-4 w-4 text-blue-500" />
                           )}
-                          <span>AI แปลภาษาทั้งหมด 🌐</span>
+                          <span>AI แปลภาษาทั้งหมด </span>
                         </Button>
                       </TooltipTrigger>
                       <TooltipContent className="bg-slate-900 text-white border-none shadow-xl px-4 py-2 text-xs">

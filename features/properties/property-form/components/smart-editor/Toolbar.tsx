@@ -11,8 +11,11 @@ import {
   Smile,
   LayoutTemplate,
   ChevronDown,
+  Heading1,
   Heading2,
   Heading3,
+  Heading4,
+  Palette,
   Link as LinkIcon,
   Undo,
   Redo,
@@ -46,7 +49,7 @@ import type { EmojiClickData } from "emoji-picker-react";
 const EmojiPicker = dynamic(() => import("emoji-picker-react"), {
   ssr: false,
   loading: () => (
-    <div className="h-[350px] w-[320px] bg-slate-50 animate-pulse rounded-lg" />
+    <div className="h-87.5 w-[320px] bg-slate-50 animate-pulse rounded-lg" />
   ),
 });
 
@@ -111,42 +114,87 @@ export function Toolbar({
 
         <Separator orientation="vertical" className="h-5 mx-0.5 bg-slate-200" />
 
-        <div className="flex bg-white rounded-lg border border-slate-200 p-0.5 shadow-sm">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 2 }).run()
-            }
-            className={`h-7 w-7 p-0 rounded-md ${
-              editor.isActive("heading", { level: 2 })
-                ? "bg-slate-100 text-slate-900"
-                : "text-slate-500"
-            }`}
-            disabled={disabled}
-            title="Heading 2"
-          >
-            <Heading2 className="h-4 w-4" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: 3 }).run()
-            }
-            className={`h-7 w-7 p-0 rounded-md ${
-              editor.isActive("heading", { level: 3 })
-                ? "bg-slate-100 text-slate-900"
-                : "text-slate-500"
-            }`}
-            disabled={disabled}
-            title="Heading 3"
-          >
-            <Heading3 className="h-4 w-4" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild disabled={disabled}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 text-xs font-semibold text-slate-600 bg-white px-2 border-slate-200 shadow-sm"
+            >
+              <span>
+                {editor.isActive("heading", { level: 1 }) ? "H1" :
+                 editor.isActive("heading", { level: 2 }) ? "H2" :
+                 editor.isActive("heading", { level: 3 }) ? "H3" :
+                 editor.isActive("heading", { level: 4 }) ? "H4" : "Paragraph"}
+              </span>
+              <ChevronDown className="h-3 w-3 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => editor.chain().focus().setParagraph().run()}>
+              ปกติ (Paragraph)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} className="font-extrabold text-lg">
+              <Heading1 className="h-4 w-4 mr-2" /> หัวข้อใหญ่ (H1)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} className="font-bold text-base">
+              <Heading2 className="h-4 w-4 mr-2" /> หัวข้อย่อยหลัก (H2)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} className="font-semibold text-sm">
+              <Heading3 className="h-4 w-4 mr-2" /> หัวข้อย่อยรอง (H3)
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()} className="font-normal text-xs">
+              <Heading4 className="h-4 w-4 mr-2" /> หัวข้อย่อยเล็ก (H4)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild disabled={disabled}>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5 text-xs font-semibold bg-white px-2 border-slate-200 shadow-sm "
+              title="Text Color"
+            >
+              <Palette className="h-3.5 w-3.5" />
+              <span>สีข้อความ</span>
+              <ChevronDown className="h-3 w-3 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="p-2 grid grid-cols-5 gap-1 w-44">
+            {[
+              { color: "#000000", label: "Default" },
+              { color: "#e11d48", label: "Rose" },
+              { color: "#ea580c", label: "Orange" },
+              { color: "#ca8a04", label: "Gold" },
+              { color: "#16a34a", label: "Green" },
+              { color: "#2563eb", label: "Blue" },
+              { color: "#4f46e5", label: "Indigo" },
+              { color: "#7c3aed", label: "Purple" },
+              { color: "#db2777", label: "Pink" },
+              { color: "#475569", label: "Slate" }
+            ].map((item) => (
+              <button
+                key={item.color}
+                type="button"
+                onClick={() => (editor.chain().focus() as any).setColor(item.color).run()}
+                className="w-6 h-6 rounded-md border border-slate-200 transition-transform active:scale-90 hover:scale-105"
+                style={{ backgroundColor: item.color }}
+                title={item.label}
+              />
+            ))}
+            <button
+              type="button"
+              onClick={() => (editor.chain().focus() as any).unsetColor().run()}
+              className="col-span-5 text-[10px] font-bold text-slate-400 hover:text-red-500 py-1 text-center border border-slate-100 rounded-md mt-1"
+            >
+              ล้างสี (Reset)
+            </button>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <div className="flex bg-white rounded-lg border border-slate-200 p-0.5 shadow-sm">
           <Button
