@@ -167,6 +167,7 @@ export function Toolbar({
           <DropdownMenuContent align="start" className="p-2 grid grid-cols-5 gap-1 w-44">
             {[
               { color: "#000000", label: "Default" },
+              { color: "#ef4444", label: "Red" },
               { color: "#e11d48", label: "Rose" },
               { color: "#ea580c", label: "Orange" },
               { color: "#ca8a04", label: "Gold" },

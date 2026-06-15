@@ -407,7 +407,8 @@
     @apply pl-1 text-slate-600!;
   }
   .prose strong, .prose b {
-    @apply font-black text-slate-900!;
+    @apply font-black!;
+    color: inherit !important;
   }
   .prose h1, .prose h2, .prose h3 {
     @apply tracking-tight mb-4 mt-8!;
