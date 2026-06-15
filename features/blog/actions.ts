@@ -809,6 +809,20 @@ export async function createCategoryAction(
       return { success: false, message: "Unauthorized" };
     }
 
+    // Resolve tenant ID for the blog category
+    let resolvedTenantId = user.tenantId && user.tenantId !== "ALL" ? user.tenantId : null;
+    if (!resolvedTenantId && user.role !== "ADMIN") {
+      const { data: member } = await supabase
+        .from("tenant_members_v3")
+        .select("tenant_id")
+        .eq("identity_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      if (member?.tenant_id) {
+        resolvedTenantId = member.tenant_id;
+      }
+    }
+
     const slug = validated.name
       .toLowerCase()
       .replace(/[^\w\s-]/g, "")
@@ -821,7 +835,7 @@ export async function createCategoryAction(
         title: { th: validated.name, en: validated.name_en || null, cn: validated.name_cn || null, ru: validated.name_ru || null },
         slug,
         status: "PUBLISHED",
-        tenant_id: user.tenantId && user.tenantId !== "ALL" ? user.tenantId : null
+        tenant_id: resolvedTenantId
       })
       .select("id, slug, title")
       .single();
