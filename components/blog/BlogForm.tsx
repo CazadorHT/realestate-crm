@@ -110,6 +110,7 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
   const [activeTab, setActiveTab] = useState("content");
   const [successData, setSuccessData] = useState<{
     slug: string;
+    isPublished: boolean;
   } | null>(null);
 
   // Convert JSONB structured_data to string for the form
@@ -463,9 +464,10 @@ export function BlogForm({ initialData, categories = [] }: BlogFormProps) {
 
       if (res.success) {
         toast.success(res.message);
-        // router.push("/protected/blogs"); // ลบออกเพื่อให้ Dialog แสดงค้างไว้
-        // router.refresh();
-        setSuccessData({ slug: data.slug });
+        setSuccessData({ 
+          slug: data.slug,
+          isPublished: !!data.is_published
+        });
       } else {
         toast.error(res.message);
       }

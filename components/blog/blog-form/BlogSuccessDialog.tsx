@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 interface BlogSuccessDialogProps {
-  successData: { slug: string } | null;
+  successData: { slug: string; isPublished: boolean } | null;
   onOpenChange: (open: boolean) => void;
 }
 
@@ -23,6 +23,7 @@ export function BlogSuccessDialog({
   onOpenChange,
 }: BlogSuccessDialogProps) {
   const router = useRouter();
+  const isPublished = !!successData?.isPublished;
 
   return (
     <Dialog
@@ -51,7 +52,8 @@ export function BlogSuccessDialog({
         <div className="flex flex-col gap-3 py-4">
           <Button
             variant="outline"
-            className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200 hover:bg-slate-50 hover:text-slate-900 rounded-xl"
+            disabled={!isPublished}
+            className="w-full justify-start gap-3 h-14 text-base font-medium border-slate-200 hover:bg-slate-50 hover:text-slate-900 rounded-xl disabled:opacity-50 disabled:pointer-events-none"
             onClick={() => {
               if (successData?.slug) {
                 window.open(`/blog/${successData.slug}`, "_blank");
@@ -66,7 +68,9 @@ export function BlogSuccessDialog({
             <div className="flex flex-col items-start">
               <span>ดูหน้าบทความ (Blog Page)</span>
               <span className="text-xs text-slate-400 font-normal">
-                เปิดแท็บใหม่เพื่อดูตัวอย่าง
+                {isPublished 
+                  ? "เปิดแท็บใหม่เพื่อดูตัวอย่างหน้าจริง" 
+                  : "บทความนี้เป็นแบบร่าง (เปิดเผยแพร่ก่อนเพื่อดูหน้าเว็บ)"}
               </span>
             </div>
           </Button>

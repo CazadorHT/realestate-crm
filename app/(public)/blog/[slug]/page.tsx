@@ -208,7 +208,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         t={t}
       />
 
-      <div className="container px-4 md:px-6 -mt-16 relative z-20 max-w-6xl mx-auto">
+      <div className="container px-4 md:px-6 -mt-16 relative z-20 max-w-screen-2xl mx-auto">
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-9">

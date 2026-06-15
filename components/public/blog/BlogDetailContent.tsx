@@ -128,7 +128,7 @@ export function BlogDetailContent({
     <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 shadow-xl border border-slate-200">
       {/* Excerpt */}
       {excerpt && (
-        <p className="text-lg md:text-2xl font-medium text-slate-600 mb-6 md:mb-8 leading-relaxed border-l-4 border-blue-600 pl-4 md:pl-6 py-2 bg-linear-to-r from-blue-50/50 to-transparent">
+        <p className="text-lg font-medium text-slate-600 mb-6 md:mb-8 leading-relaxed border-l-4 border-blue-600 pl-4 md:pl-6 py-2 bg-linear-to-r from-blue-50/50 to-transparent">
           {excerpt}
         </p>
       )}
