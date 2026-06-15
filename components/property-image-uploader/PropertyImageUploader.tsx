@@ -6,7 +6,8 @@ import {
   DndContext,
   closestCenter,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -441,9 +442,15 @@ export function PropertyImageUploader({
 
   // @dnd-kit sensors
   const sensors = useSensors(
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: {
         distance: 5, // Minimum 5px drag before activating
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250, // Require 250ms long press to start dragging on touch screens
+        tolerance: 5, // Max 5px movement allowed before long press triggers
       },
     }),
     useSensor(KeyboardSensor, {

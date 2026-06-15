@@ -16,6 +16,7 @@ interface PropertyFormHeaderProps {
   aiReviewedAt?: string | null;
   reviewerName?: string | null;
   form: UseFormReturn<PropertyFormValues>;
+  isKeyboardOpen?: boolean;
 }
 
 export function PropertyFormHeader({
@@ -28,12 +29,13 @@ export function PropertyFormHeader({
   aiReviewedAt,
   reviewerName,
   form,
+  isKeyboardOpen = false,
 }: PropertyFormHeaderProps) {
   return (
     <div
       id="tour-property-form-header"
       className={`${
-        mode === "edit" ? "sticky top-16 sm:top-16 z-50 shadow-sm" : "relative"
+        mode === "edit" && !isKeyboardOpen ? "sticky top-16 sm:top-16 z-50 shadow-sm" : "relative"
       } bg-white/95 backdrop-blur-md border-b border-slate-200 py-3 sm:py-4 mb-4 sm:mb-6 px-4 sm:px-6 transition-all duration-200 sm:rounded-xl max-w-screen`}
     >
       <div className="flex flex-col md:flex-row justify-between items-center mx-auto gap-2">

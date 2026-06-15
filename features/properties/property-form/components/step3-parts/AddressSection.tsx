@@ -11,6 +11,7 @@ import {
   Languages,
   Sparkles,
   Check,
+  Search,
 } from "lucide-react";
 import {
   FormField,
@@ -61,6 +62,10 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
   const [subdistrictOpen, setSubdistrictOpen] = React.useState(false);
   const [isMobileOrTablet, setIsMobileOrTablet] = React.useState(false);
 
+  const [provinceSearch, setProvinceSearch] = React.useState("");
+  const [districtSearch, setDistrictSearch] = React.useState("");
+  const [subdistrictSearch, setSubdistrictSearch] = React.useState("");
+
   React.useEffect(() => {
     const mql = window.matchMedia("(max-width: 1535px)");
     const onChange = () => setIsMobileOrTablet(mql.matches);
@@ -96,6 +101,36 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
   const subDistrictOptions = activeDistrictId
     ? getSubDistricts(activeDistrictId)
     : [];
+
+  const filteredProvinces = React.useMemo(() => {
+    const q = provinceSearch.trim().toLowerCase();
+    if (!q) return provinces;
+    return provinces.filter(
+      (p) =>
+        p.name_th.toLowerCase().includes(q) ||
+        p.name_en.toLowerCase().includes(q),
+    );
+  }, [provinces, provinceSearch]);
+
+  const filteredDistricts = React.useMemo(() => {
+    const q = districtSearch.trim().toLowerCase();
+    if (!q) return districtOptions;
+    return districtOptions.filter(
+      (d) =>
+        d.name_th.toLowerCase().includes(q) ||
+        d.name_en.toLowerCase().includes(q),
+    );
+  }, [districtOptions, districtSearch]);
+
+  const filteredSubdistricts = React.useMemo(() => {
+    const q = subdistrictSearch.trim().toLowerCase();
+    if (!q) return subDistrictOptions;
+    return subDistrictOptions.filter(
+      (s) =>
+        s.name_th.toLowerCase().includes(q) ||
+        s.name_en.toLowerCase().includes(q),
+    );
+  }, [subDistrictOptions, subdistrictSearch]);
 
   // Note: Postal code auto-fill is handled in subdistrict onValueChange
 
@@ -147,7 +182,10 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                 {isMobileOrTablet ? (
                   <ResponsiveDialog
                     open={provinceOpen}
-                    onOpenChange={setProvinceOpen}
+                    onOpenChange={(open) => {
+                      setProvinceOpen(open);
+                      if (!open) setProvinceSearch("");
+                    }}
                     title="เลือกจังหวัด"
                     trigger={
                       <Button
@@ -159,39 +197,57 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                       </Button>
                     }
                   >
-                    <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
-                      {[...provinces]
-                        .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
-                        .map((p) => {
-                          const isSelected = field.value === p.name_th;
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              onClick={() => {
-                                field.onChange(p.name_th);
-                                // Reset dependent fields
-                                form.setValue("district", "");
-                                form.setValue("subdistrict", "");
-                                form.setValue("postal_code", "");
-                                setProvinceOpen(false);
-                              }}
-                              className={cn(
-                                "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
-                                isSelected
-                                  ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                                  : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
-                              )}
-                            >
-                              <span className="text-xs font-bold">{p.name_th}</span>
-                              {isSelected && (
-                                <div className="bg-blue-600 rounded-full p-1 text-white">
-                                  <Check className="h-3 w-3" />
-                                </div>
-                              )}
-                            </button>
-                          );
-                        })}
+                    <div className="flex flex-col h-full max-h-[70vh] bg-white">
+                      <div className="flex items-center border-b border-slate-100 px-4 py-2 shrink-0 bg-white">
+                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-500" />
+                        <Input
+                          value={provinceSearch}
+                          onChange={(e) => setProvinceSearch(e.target.value)}
+                          placeholder="ค้นหาชื่อจังหวัด..."
+                          className="h-10 w-full border-0 bg-transparent pr-2 placeholder:text-sm text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                        />
+                      </div>
+                      <div className="p-4 overflow-y-auto space-y-2 flex-1 bg-slate-50/30">
+                        {filteredProvinces.length === 0 ? (
+                          <div className="py-8 text-center text-slate-400 text-xs font-medium bg-white border border-slate-100 rounded-xl">
+                            ไม่พบจังหวัดที่คุณค้นหา
+                          </div>
+                        ) : (
+                          [...filteredProvinces]
+                            .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                            .map((p) => {
+                              const isSelected = field.value === p.name_th;
+                              return (
+                                <button
+                                  key={p.id}
+                                  type="button"
+                                  onClick={() => {
+                                    field.onChange(p.name_th);
+                                    // Reset dependent fields
+                                    form.setValue("district", "");
+                                    form.setValue("subdistrict", "");
+                                    form.setValue("postal_code", "");
+                                    setProvinceOpen(false);
+                                    setProvinceSearch("");
+                                  }}
+                                  className={cn(
+                                    "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                    isSelected
+                                      ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                      : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                  )}
+                                >
+                                  <span className="text-xs font-bold">{p.name_th}</span>
+                                  {isSelected && (
+                                    <div className="bg-blue-600 rounded-full p-1 text-white">
+                                      <Check className="h-3 w-3" />
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })
+                        )}
+                      </div>
                     </div>
                   </ResponsiveDialog>
                 ) : (
@@ -245,7 +301,10 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                 {isMobileOrTablet ? (
                   <ResponsiveDialog
                     open={districtOpen}
-                    onOpenChange={setDistrictOpen}
+                    onOpenChange={(open) => {
+                      setDistrictOpen(open);
+                      if (!open) setDistrictSearch("");
+                    }}
                     title="เลือกเขต / อำเภอ"
                     trigger={
                       <Button
@@ -258,43 +317,61 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                       </Button>
                     }
                   >
-                    <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
-                      {districtOptions.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400 text-xs font-medium">
-                          กรุณาเลือกจังหวัดก่อน
+                    <div className="flex flex-col h-full max-h-[70vh] bg-white">
+                      {districtOptions.length > 0 && (
+                        <div className="flex items-center border-b border-slate-100 px-4 py-2 shrink-0 bg-white">
+                          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-500" />
+                          <Input
+                            value={districtSearch}
+                            onChange={(e) => setDistrictSearch(e.target.value)}
+                            placeholder="ค้นหาเขต/อำเภอ..."
+                            className="h-10 w-full border-0 bg-transparent pr-2 placeholder:text-sm text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                          />
                         </div>
-                      ) : (
-                        [...districtOptions]
-                          .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
-                          .map((d) => {
-                            const isSelected = field.value === d.name_th;
-                            return (
-                              <button
-                                key={d.id}
-                                type="button"
-                                onClick={() => {
-                                  field.onChange(d.name_th);
-                                  form.setValue("subdistrict", "");
-                                  form.setValue("postal_code", "");
-                                  setDistrictOpen(false);
-                                }}
-                                className={cn(
-                                  "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
-                                  isSelected
-                                    ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                                    : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
-                                )}
-                              >
-                                <span className="text-xs font-bold">{d.name_th.replace(/^เขต/, "")}</span>
-                                {isSelected && (
-                                  <div className="bg-blue-600 rounded-full p-1 text-white">
-                                    <Check className="h-3 w-3" />
-                                  </div>
-                                )}
-                              </button>
-                            );
-                          })
                       )}
+                      <div className="p-4 overflow-y-auto space-y-2 flex-1 bg-slate-50/30">
+                        {districtOptions.length === 0 ? (
+                          <div className="p-8 text-center text-slate-400 text-xs font-medium bg-white border border-slate-100 rounded-xl">
+                            กรุณาเลือกจังหวัดก่อน
+                          </div>
+                        ) : filteredDistricts.length === 0 ? (
+                          <div className="py-8 text-center text-slate-400 text-xs font-medium bg-white border border-slate-100 rounded-xl">
+                            ไม่พบเขต/อำเภอที่คุณค้นหา
+                          </div>
+                        ) : (
+                          [...filteredDistricts]
+                            .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                            .map((d) => {
+                              const isSelected = field.value === d.name_th;
+                              return (
+                                <button
+                                  key={d.id}
+                                  type="button"
+                                  onClick={() => {
+                                    field.onChange(d.name_th);
+                                    form.setValue("subdistrict", "");
+                                    form.setValue("postal_code", "");
+                                    setDistrictOpen(false);
+                                    setDistrictSearch("");
+                                  }}
+                                  className={cn(
+                                    "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                    isSelected
+                                      ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                      : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                  )}
+                                >
+                                  <span className="text-xs font-bold">{d.name_th.replace(/^เขต/, "")}</span>
+                                  {isSelected && (
+                                    <div className="bg-blue-600 rounded-full p-1 text-white">
+                                      <Check className="h-3 w-3" />
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })
+                        )}
+                      </div>
                     </div>
                   </ResponsiveDialog>
                 ) : (
@@ -348,7 +425,10 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                 {isMobileOrTablet ? (
                   <ResponsiveDialog
                     open={subdistrictOpen}
-                    onOpenChange={setSubdistrictOpen}
+                    onOpenChange={(open) => {
+                      setSubdistrictOpen(open);
+                      if (!open) setSubdistrictSearch("");
+                    }}
                     title="เลือกแขวง / ตำบล"
                     trigger={
                       <Button
@@ -361,43 +441,61 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                       </Button>
                     }
                   >
-                    <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
-                      {subDistrictOptions.length === 0 ? (
-                        <div className="p-8 text-center text-slate-400 text-xs font-medium">
-                          กรุณาเลือกอำเภอก่อน
+                    <div className="flex flex-col h-full max-h-[70vh] bg-white">
+                      {subDistrictOptions.length > 0 && (
+                        <div className="flex items-center border-b border-slate-100 px-4 py-2 shrink-0 bg-white">
+                          <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-500" />
+                          <Input
+                            value={subdistrictSearch}
+                            onChange={(e) => setSubdistrictSearch(e.target.value)}
+                            placeholder="ค้นหาแขวง/ตำบล..."
+                            className="h-10 w-full border-0 bg-transparent pr-2 placeholder:text-sm text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                          />
                         </div>
-                      ) : (
-                        [...subDistrictOptions]
-                          .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
-                          .map((s) => {
-                            const isSelected = field.value === s.name_th;
-                            return (
-                              <button
-                                key={s.id}
-                                type="button"
-                                onClick={() => {
-                                  field.onChange(s.name_th);
-                                  // Auto-fill postal code
-                                  form.setValue("postal_code", String(s.zip_code));
-                                  setSubdistrictOpen(false);
-                                }}
-                                className={cn(
-                                  "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
-                                  isSelected
-                                    ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                                    : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
-                                )}
-                              >
-                                <span className="text-xs font-bold">{s.name_th}</span>
-                                {isSelected && (
-                                  <div className="bg-blue-600 rounded-full p-1 text-white">
-                                    <Check className="h-3 w-3" />
-                                  </div>
-                                )}
-                              </button>
-                            );
-                          })
                       )}
+                      <div className="p-4 overflow-y-auto space-y-2 flex-1 bg-slate-50/30">
+                        {subDistrictOptions.length === 0 ? (
+                          <div className="p-8 text-center text-slate-400 text-xs font-medium bg-white border border-slate-100 rounded-xl">
+                            กรุณาเลือกอำเภอก่อน
+                          </div>
+                        ) : filteredSubdistricts.length === 0 ? (
+                          <div className="py-8 text-center text-slate-400 text-xs font-medium bg-white border border-slate-100 rounded-xl">
+                            ไม่พบแขวง/ตำบลที่คุณค้นหา
+                          </div>
+                        ) : (
+                          [...filteredSubdistricts]
+                            .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                            .map((s) => {
+                              const isSelected = field.value === s.name_th;
+                              return (
+                                <button
+                                  key={s.id}
+                                  type="button"
+                                  onClick={() => {
+                                    field.onChange(s.name_th);
+                                    // Auto-fill postal code
+                                    form.setValue("postal_code", String(s.zip_code));
+                                    setSubdistrictOpen(false);
+                                    setSubdistrictSearch("");
+                                  }}
+                                  className={cn(
+                                    "w-full flex items-center justify-between p-3.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                    isSelected
+                                      ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                      : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
+                                  )}
+                                >
+                                  <span className="text-xs font-bold">{s.name_th}</span>
+                                  {isSelected && (
+                                    <div className="bg-blue-600 rounded-full p-1 text-white">
+                                      <Check className="h-3 w-3" />
+                                    </div>
+                                  )}
+                                </button>
+                              );
+                            })
+                        )}
+                      </div>
                     </div>
                   </ResponsiveDialog>
                 ) : (

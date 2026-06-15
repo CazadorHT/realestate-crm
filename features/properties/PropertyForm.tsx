@@ -142,6 +142,48 @@ export function PropertyForm({
   // === STATE & ORCHESTRATION ===
   const [persistImages, setPersistImages] = React.useState(false);
 
+  // === KEYBOARD OVERLAY DETECTION ===
+  const [isKeyboardOpen, setIsKeyboardOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof window === "undefined" || !window.visualViewport) return;
+
+    const handleResize = () => {
+      const vv = window.visualViewport;
+      if (!vv) return;
+
+      const activeEl = document.activeElement;
+      const isInputActive = activeEl && (
+        activeEl.tagName === "INPUT" ||
+        activeEl.tagName === "TEXTAREA" ||
+        activeEl.hasAttribute("contenteditable") ||
+        activeEl.classList.contains("ProseMirror")
+      );
+
+      // When software keyboard is visible, visual viewport height is significantly less than window.innerHeight
+      // 150px gap is a safe indicator for any mobile/tablet virtual keyboard (typically 300px+)
+      const isViewportShrunk = vv.height < window.innerHeight - 150;
+      setIsKeyboardOpen(!!(isInputActive && isViewportShrunk));
+    };
+
+    const vv = window.visualViewport;
+    vv.addEventListener("resize", handleResize);
+    vv.addEventListener("scroll", handleResize);
+
+    const handleFocusIn = () => setTimeout(handleResize, 100);
+    const handleFocusOut = () => setTimeout(handleResize, 100);
+
+    window.addEventListener("focusin", handleFocusIn);
+    window.addEventListener("focusout", handleFocusOut);
+
+    return () => {
+      vv.removeEventListener("resize", handleResize);
+      vv.removeEventListener("scroll", handleResize);
+      window.removeEventListener("focusin", handleFocusIn);
+      window.removeEventListener("focusout", handleFocusOut);
+    };
+  }, []);
+
   // Success Dialog State
   const [showSuccessDialog, setShowSuccessDialog] = React.useState(false);
   const [successData, setSuccessData] = React.useState<{ id: string; title: string; slug?: string; status?: string } | null>(null);
@@ -640,12 +682,16 @@ export function PropertyForm({
         aiReviewedAt={(defaultValues as any)?.ai_reviewed_at}
         reviewerName={defaultValues?.reviewer?.full_name ?? undefined}
         form={form}
+        isKeyboardOpen={isKeyboardOpen}
       />
 
       {/* Step Rendering & History Tabs - Elite Segmented Control */}
       {mode === "edit" ? (
         <Tabs defaultValue="info" className="w-full">
-          <div className="sticky top-[108px] sm:top-[150px] z-40 py-4 bg-white/80 backdrop-blur-md -mx-4 px-4 sm:mx-0 sm:px-0">
+          <div className={cn(
+            isKeyboardOpen ? "relative mt-2" : "sticky top-[108px] sm:top-[150px]",
+            "z-40 py-4 bg-white/80 backdrop-blur-md -mx-4 px-4 sm:mx-0 sm:px-0"
+          )}>
             <TabsList className="grid w-full grid-cols-2 max-w-[440px] mx-auto h-12 rounded-full bg-slate-200/50 p-1 border border-slate-200/60 shadow-inner">
               <TabsTrigger 
                 value="info" 
@@ -694,7 +740,10 @@ export function PropertyForm({
                 {/* Step contents */}
                 {renderStepContent()}
 
-                <div className="sticky bottom-0 sm:bottom-6 z-50 w-full mt-6 sm:mt-6 flex flex-col gap-2">
+                <div className={cn(
+                  isKeyboardOpen ? "relative mt-6" : "sticky bottom-0 sm:bottom-6",
+                  "z-50 w-full flex flex-col gap-2"
+                )}>
                   {form.watch("requires_ai_review") && (
                     <AiReviewBanner
                       type="property"
@@ -763,7 +812,10 @@ export function PropertyForm({
 
               {renderStepContent()}
 
-              <div className="sticky bottom-0 sm:bottom-6 z-50 w-full mt-6 sm:mt-12 flex flex-col gap-2">
+              <div className={cn(
+                isKeyboardOpen ? "relative mt-6" : "sticky bottom-0 sm:bottom-6",
+                "z-50 w-full flex flex-col gap-2"
+              )}>
                 {form.watch("requires_ai_review") && (
                   <AiReviewBanner
                     type="property"
