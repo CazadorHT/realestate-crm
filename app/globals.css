@@ -316,9 +316,9 @@
     animation: fade-in 0.5s ease-out forwards;
   }
 
-  /* Mobile UX: larger tappable targets for buttons on small screens (excluding circular icon buttons) */
+  /* Mobile UX: larger tappable targets for buttons on small screens (excluding circular icon buttons, checkboxes, and switches) */
   @media (max-width: 640px) {
-    button:not([class*="rounded-full"]):not(.rounded-full) {
+    button:not([class*="rounded-full"]):not(.rounded-full):not([role="checkbox"]):not([role="switch"]) {
       min-height: 44px;
       padding-top: 0.5rem;
       padding-bottom: 0.5rem;
