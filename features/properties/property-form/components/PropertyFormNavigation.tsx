@@ -34,7 +34,12 @@ export function PropertyFormNavigation({
   className,
 }: PropertyFormNavigationProps) {
   return (
-    <div className={cn("sticky bottom-0 sm:bottom-6 z-50 w-full mt-6 sm:mt-2", className)}>
+    <div
+      className={cn(
+        "sticky bottom-0 sm:bottom-6 z-50 w-full mt-6 sm:mt-2",
+        className,
+      )}
+    >
       <div className="bg-white/90 backdrop-blur-2xl p-3 sm:p-6 md:p-8 sm:rounded-3xl shadow-[0_-12px_40px_-15px_rgba(0,0,0,0.08)] sm:shadow-lg border-t sm:border border-slate-200/50 flex flex-row justify-between items-center gap-3 sm:gap-6 px-4 sm:px-8 pb-safe-offset-4 sm:pb-6">
         {/* Left: Tertiary Action (Cancel) - Hidden on mobile to save space, or moved if needed */}
         <div className="hidden sm:block">

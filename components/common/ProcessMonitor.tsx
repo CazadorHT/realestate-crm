@@ -100,7 +100,7 @@ export function ProcessMonitor() {
             initial={{ scale: 0, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0, opacity: 0, y: 20 }}
-            className="fixed bottom-6 right-6 z-50 flex items-center gap-2"
+            className="fixed bottom-24 lg:bottom-6 right-6 z-50 flex items-center gap-2"
           >
             {/* Close / Dismiss Button (Only show when work is done successfully) */}
             {activeCount === 0 && processes.length > 0 && (

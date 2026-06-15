@@ -10,11 +10,24 @@ import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { DuplicateMatch } from "@/lib/duplicate-detection";
 
 import { Button } from "@/components/ui/button";
-import { ExternalLink, List, Facebook, Instagram, Loader2, CheckCircle2, Sparkles, Clock, History } from "lucide-react";
+import {
+  ExternalLink,
+  List,
+  Facebook,
+  Instagram,
+  Loader2,
+  CheckCircle2,
+  Sparkles,
+  Clock,
+  History,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FormSchema, type PropertyFormValues } from "./schema";
 import { DuplicateWarningDialog } from "@/components/properties/DuplicateWarningDialog";
-import type { PropertyRow, PropertyWithImages } from "@/features/properties/types";
+import type {
+  PropertyRow,
+  PropertyWithImages,
+} from "@/features/properties/types";
 import type { FieldErrors } from "react-hook-form";
 import {
   createPropertyAction,
@@ -46,17 +59,29 @@ import { AiReviewBanner } from "@/components/shared/AiReviewBanner";
 import { PropertyFormTour } from "./_components/PropertyFormTour";
 
 // Step components (Dynamically imported for chunk-splitting)
-const step1Import = () => import("./property-form/steps/Step1BasicInfo").then((m) => m.Step1BasicInfo);
+const step1Import = () =>
+  import("./property-form/steps/Step1BasicInfo").then((m) => m.Step1BasicInfo);
 import dynamic from "next/dynamic";
 
 // --- Skeleton Fallbacks (height-matched to prevent Layout Shift) ---
-const StepSkeleton = ({ lines = 3, cards = 2, minHeight }: { lines?: number; cards?: number; minHeight?: string }) => (
-  <div 
+const StepSkeleton = ({
+  lines = 3,
+  cards = 2,
+  minHeight,
+}: {
+  lines?: number;
+  cards?: number;
+  minHeight?: string;
+}) => (
+  <div
     className="space-y-6 animate-in fade-in duration-300"
     style={minHeight ? { minHeight } : undefined}
   >
     {Array.from({ length: cards }).map((_, i) => (
-      <div key={i} className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+      <div
+        key={i}
+        className="rounded-xl border border-slate-200 bg-white p-6 space-y-4"
+      >
         <div className="h-5 w-40 bg-slate-100 rounded-lg animate-pulse" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {Array.from({ length: lines }).map((_, j) => (
@@ -86,20 +111,40 @@ const ReviewSkeleton = () => (
 );
 
 // --- Dynamic Step Imports (with prefetch references) ---
-const step2Import = () => import("./property-form/steps/Step2Details").then((m) => m.Step2Details);
-const step3Import = () => import("./property-form/steps/Step3Location").then((m) => m.Step3Location);
-const step4Import = () => import("./property-form/steps/Step4Media").then((m) => m.Step4Media);
-const step5Import = () => import("./property-form/steps/Step5Features").then((m) => m.Step5Features);
-const step6Import = () => import("./property-form/steps/Step6Review").then((m) => m.Step6Review);
-const step7Import = () => import("./property-form/steps/Step7Syndication").then((m) => m.Step7Syndication);
+const step2Import = () =>
+  import("./property-form/steps/Step2Details").then((m) => m.Step2Details);
+const step3Import = () =>
+  import("./property-form/steps/Step3Location").then((m) => m.Step3Location);
+const step4Import = () =>
+  import("./property-form/steps/Step4Media").then((m) => m.Step4Media);
+const step5Import = () =>
+  import("./property-form/steps/Step5Features").then((m) => m.Step5Features);
+const step6Import = () =>
+  import("./property-form/steps/Step6Review").then((m) => m.Step6Review);
+const step7Import = () =>
+  import("./property-form/steps/Step7Syndication").then(
+    (m) => m.Step7Syndication,
+  );
 
-const Step1BasicInfo = dynamic(step1Import, { loading: () => <StepSkeleton lines={4} cards={3} minHeight="600px" /> });
-const Step2Details = dynamic(step2Import, { loading: () => <StepSkeleton lines={4} cards={3} /> });
-const Step3Location = dynamic(step3Import, { loading: () => <StepSkeleton lines={4} cards={2} /> });
-const Step4Media = dynamic(step4Import, { loading: () => <StepSkeleton lines={2} cards={2} /> });
-const Step5Features = dynamic(step5Import, { loading: () => <StepSkeleton lines={6} cards={1} /> });
+const Step1BasicInfo = dynamic(step1Import, {
+  loading: () => <StepSkeleton lines={4} cards={3} minHeight="600px" />,
+});
+const Step2Details = dynamic(step2Import, {
+  loading: () => <StepSkeleton lines={4} cards={3} />,
+});
+const Step3Location = dynamic(step3Import, {
+  loading: () => <StepSkeleton lines={4} cards={2} />,
+});
+const Step4Media = dynamic(step4Import, {
+  loading: () => <StepSkeleton lines={2} cards={2} />,
+});
+const Step5Features = dynamic(step5Import, {
+  loading: () => <StepSkeleton lines={6} cards={1} />,
+});
 const Step6Review = dynamic(step6Import, { loading: () => <ReviewSkeleton /> });
-const Step7Syndication = dynamic(step7Import, { loading: () => <StepSkeleton lines={2} cards={1} /> });
+const Step7Syndication = dynamic(step7Import, {
+  loading: () => <StepSkeleton lines={2} cards={1} />,
+});
 
 // Prefetch map: step N → loader for step N+1
 const PREFETCH_MAP: Record<number, (() => Promise<any>) | undefined> = {
@@ -153,12 +198,12 @@ export function PropertyForm({
       if (!vv) return;
 
       const activeEl = document.activeElement;
-      const isInputActive = activeEl && (
-        activeEl.tagName === "INPUT" ||
-        activeEl.tagName === "TEXTAREA" ||
-        activeEl.hasAttribute("contenteditable") ||
-        activeEl.classList.contains("ProseMirror")
-      );
+      const isInputActive =
+        activeEl &&
+        (activeEl.tagName === "INPUT" ||
+          activeEl.tagName === "TEXTAREA" ||
+          activeEl.hasAttribute("contenteditable") ||
+          activeEl.classList.contains("ProseMirror"));
 
       // When software keyboard is visible, visual viewport height is significantly less than window.innerHeight
       // 150px gap is a safe indicator for any mobile/tablet virtual keyboard (typically 300px+)
@@ -186,14 +231,23 @@ export function PropertyForm({
 
   // Success Dialog State
   const [showSuccessDialog, setShowSuccessDialog] = React.useState(false);
-  const [successData, setSuccessData] = React.useState<{ id: string; title: string; slug?: string; status?: string } | null>(null);
-  const [shareStatus, setShareStatus] = React.useState<Record<string, { loading: boolean; success: boolean; url?: string | null }>>({});
+  const [successData, setSuccessData] = React.useState<{
+    id: string;
+    title: string;
+    slug?: string;
+    status?: string;
+  } | null>(null);
+  const [shareStatus, setShareStatus] = React.useState<
+    Record<string, { loading: boolean; success: boolean; url?: string | null }>
+  >({});
 
   // Redirect if not staff
   const [currentStep, setCurrentStep] = React.useState(1);
 
   // Duplicate check state
-  const [duplicateMatches, setDuplicateMatches] = React.useState<DuplicateMatch[]>([]);
+  const [duplicateMatches, setDuplicateMatches] = React.useState<
+    DuplicateMatch[]
+  >([]);
   const [showDuplicateDialog, setShowDuplicateDialog] = React.useState(false);
   const [pendingSubmit, setPendingSubmit] =
     React.useState<PropertyFormValues | null>(null);
@@ -216,9 +270,7 @@ export function PropertyForm({
     mode: "onChange",
     defaultValues:
       mode === "edit" && defaultValues
-        ? mapRowToFormValues(
-            defaultValues,
-          )
+        ? mapRowToFormValues(defaultValues)
         : {
             ...EMPTY_VALUES,
             currency: "THB",
@@ -468,7 +520,7 @@ export function PropertyForm({
         clearDraft();
         setPersistImages(true);
 
-        // Only reset to empty for create mode. 
+        // Only reset to empty for create mode.
         // For edit mode, reset to current values to mark form as "clean" (not dirty)
         if (mode === "create") {
           form.reset(EMPTY_VALUES);
@@ -488,7 +540,8 @@ export function PropertyForm({
       }
     } catch (e: unknown) {
       console.error("Error submitting property form:", e);
-      const msg = e instanceof Error ? e.message : "เกิดข้อผิดพลาดไม่ทราบสาเหตุ";
+      const msg =
+        e instanceof Error ? e.message : "เกิดข้อผิดพลาดไม่ทราบสาเหตุ";
       toast.error(msg);
     } finally {
       setIsActuallySubmitting(false);
@@ -510,7 +563,7 @@ export function PropertyForm({
         toast.success("เพิ่มทรัพย์ใหม่สำเร็จ (ยืนยันข้อมูลซ้ำ)");
         clearDraft();
         setPersistImages(true);
-        
+
         // Match the same logic as onSubmit to prevent clearing in edit mode (though duplicate is mostly create-only)
         if (mode === "create") {
           form.reset(EMPTY_VALUES);
@@ -529,7 +582,8 @@ export function PropertyForm({
         console.error(result.message);
       }
     } catch (e: unknown) {
-      const msg = e instanceof Error ? e.message : "เกิดข้อผิดพลาดในการยืนยันข้อมูลซ้ำ";
+      const msg =
+        e instanceof Error ? e.message : "เกิดข้อผิดพลาดในการยืนยันข้อมูลซ้ำ";
       toast.error(msg);
     } finally {
       setIsActuallySubmitting(false);
@@ -688,13 +742,17 @@ export function PropertyForm({
       {/* Step Rendering & History Tabs - Elite Segmented Control */}
       {mode === "edit" ? (
         <Tabs defaultValue="info" className="w-full">
-          <div className={cn(
-            isKeyboardOpen ? "relative mt-2" : "sticky top-[108px] sm:top-[150px]",
-            "z-40 py-4 bg-white/80 backdrop-blur-md -mx-4 px-4 sm:mx-0 sm:px-0"
-          )}>
+          <div
+            className={cn(
+              isKeyboardOpen
+                ? "relative mt-2"
+                : "sticky top-[108px] sm:top-[150px]",
+              "z-40 py-4 bg-white/80 backdrop-blur-md -mx-4 px-4 sm:mx-0 sm:px-0",
+            )}
+          >
             <TabsList className="grid w-full grid-cols-2 max-w-[440px] mx-auto h-12 rounded-full bg-slate-200/50 p-1 border border-slate-200/60 shadow-inner">
-              <TabsTrigger 
-                value="info" 
+              <TabsTrigger
+                value="info"
                 className="rounded-full text-sm font-semibold text-slate-600 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <div className="p-1 rounded-md bg-slate-100 group-data-[state=active]:bg-blue-50 transition-colors">
@@ -702,8 +760,8 @@ export function PropertyForm({
                 </div>
                 ข้อมูลทรัพย์สิน
               </TabsTrigger>
-              <TabsTrigger 
-                value="history" 
+              <TabsTrigger
+                value="history"
                 className="rounded-full text-sm font-semibold text-slate-600 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-md transition-all duration-300 flex items-center justify-center gap-2"
               >
                 <div className="p-1 rounded-md bg-slate-100 group-data-[state=active]:bg-blue-50 transition-colors">
@@ -715,79 +773,93 @@ export function PropertyForm({
           </div>
 
           <div className="mt-2">
-            <TabsContent value="info" className="mt-0 focus-visible:ring-0 outline-none">
-            <PropertyFormStepper
-              currentStep={currentStep}
-              setCurrentStep={setCurrentStep}
-              mode={mode}
-              handleNext={handleNext}
-              form={form}
-            />
+            <TabsContent
+              value="info"
+              className="mt-0 focus-visible:ring-0 outline-none"
+            >
+              <PropertyFormStepper
+                currentStep={currentStep}
+                setCurrentStep={setCurrentStep}
+                mode={mode}
+                handleNext={handleNext}
+                form={form}
+              />
 
-            <Form {...form}>
-              <form
-                onKeyDown={handleFormKeyDown}
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-              >
-                <ErrorSummary
-                  errors={form.formState.errors}
-                  currentStep={currentStep}
-                />
-
-                {/* Step contents */}
-                {renderStepContent()}
-
-                <div className={cn(
-                  isKeyboardOpen ? "relative mt-6" : "sticky bottom-0 sm:bottom-6",
-                  "z-50 w-full flex flex-col gap-2"
-                )}>
-                  {form.watch("requires_ai_review") && (
-                    <AiReviewBanner
-                      type="property"
-                      onConfirm={() => form.setValue("requires_ai_review", false, { shouldDirty: true })}
-                      isVerifying={isActuallySubmitting}
-                      className="mb-0 shadow-lg border border-amber-200/80 rounded-2xl overflow-hidden"
-                    />
-                  )}
-
-                  <PropertyFormNavigation
+              <Form {...form}>
+                <form
+                  onKeyDown={handleFormKeyDown}
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                >
+                  <ErrorSummary
+                    errors={form.formState.errors}
                     currentStep={currentStep}
-                    totalSteps={7}
-                    mode={mode}
-                    uploadSessionId={uploadSessionId}
-                    isDirty={form.formState.isDirty}
-                    isSubmitting={isActuallySubmitting}
-                    onBack={handleBack}
-                    onNext={handleNext}
-                    onSubmit={submitNow}
-                    form={form}
-                    className="sticky-none relative bottom-auto sm:bottom-auto z-auto mt-0"
                   />
-                </div>
-              </form>
-            </Form>
-          </TabsContent>
 
-          <TabsContent value="history" className="mt-0 focus-visible:ring-0">
-            <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden">
-              <div className="bg-slate-50/50 border-b border-slate-100 p-4">
-                <h3 className="text-sm font-bold flex items-center gap-2 text-slate-700">
-                  <Clock className="w-4 h-4 text-blue-500" /> บันทึกประวัติการเปลี่ยนแปลงทั้งหมด
-                </h3>
-                <p className="text-xs text-slate-500 mt-1">
-                  ระบบบันทึกเฉพาะการเปลี่ยนแปลงสำคัญเพื่อความโปร่งใสในการจัดการทรัพย์สิน
-                </p>
-              </div>
-              <div className=" bg-white min-h-[400px]">
-                {defaultValues?.id && <AuditTimeline propertyId={defaultValues.id} />}
-              </div>
-            </Card>
-          </TabsContent>
-        </div>
-      </Tabs>
+                  {/* Step contents */}
+                  {renderStepContent()}
+
+                  <div
+                    className={cn(
+                      isKeyboardOpen
+                        ? "relative mt-6"
+                        : "sticky bottom-0 sm:bottom-6",
+                      "z-50 w-full flex flex-col gap-2",
+                    )}
+                  >
+                    {form.watch("requires_ai_review") && (
+                      <AiReviewBanner
+                        type="property"
+                        onConfirm={() =>
+                          form.setValue("requires_ai_review", false, {
+                            shouldDirty: true,
+                          })
+                        }
+                        isVerifying={isActuallySubmitting}
+                        className="mb-0 shadow-lg border border-amber-200/80 rounded-2xl overflow-hidden"
+                      />
+                    )}
+
+                    <PropertyFormNavigation
+                      currentStep={currentStep}
+                      totalSteps={7}
+                      mode={mode}
+                      uploadSessionId={uploadSessionId}
+                      isDirty={form.formState.isDirty}
+                      isSubmitting={isActuallySubmitting}
+                      onBack={handleBack}
+                      onNext={handleNext}
+                      onSubmit={submitNow}
+                      form={form}
+                      className="sticky-none relative bottom-auto sm:bottom-auto z-auto mt-0"
+                    />
+                  </div>
+                </form>
+              </Form>
+            </TabsContent>
+
+            <TabsContent value="history" className="mt-0 focus-visible:ring-0">
+              <Card className="border-slate-100 shadow-sm rounded-2xl overflow-hidden">
+                <div className="bg-slate-50/50 border-b border-slate-100 p-4">
+                  <h3 className="text-sm font-bold flex items-center gap-2 text-slate-700">
+                    <Clock className="w-4 h-4 text-blue-500" />{" "}
+                    บันทึกประวัติการเปลี่ยนแปลงทั้งหมด
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    ระบบบันทึกเฉพาะการเปลี่ยนแปลงสำคัญเพื่อความโปร่งใสในการจัดการทรัพย์สิน
+                  </p>
+                </div>
+                <div className=" bg-white min-h-[400px]">
+                  {defaultValues?.id && (
+                    <AuditTimeline propertyId={defaultValues.id} />
+                  )}
+                </div>
+              </Card>
+            </TabsContent>
+          </div>
+        </Tabs>
       ) : (
         <>
           <PropertyFormStepper
@@ -812,14 +884,22 @@ export function PropertyForm({
 
               {renderStepContent()}
 
-              <div className={cn(
-                isKeyboardOpen ? "relative mt-6" : "sticky bottom-0 sm:bottom-6",
-                "z-50 w-full flex flex-col gap-2"
-              )}>
+              <div
+                className={cn(
+                  isKeyboardOpen
+                    ? "relative mt-6"
+                    : "sticky bottom-0 sm:bottom-6",
+                  "z-50 w-full flex flex-col gap-2",
+                )}
+              >
                 {form.watch("requires_ai_review") && (
                   <AiReviewBanner
                     type="property"
-                    onConfirm={() => form.setValue("requires_ai_review", false, { shouldDirty: true })}
+                    onConfirm={() =>
+                      form.setValue("requires_ai_review", false, {
+                        shouldDirty: true,
+                      })
+                    }
                     isVerifying={isActuallySubmitting}
                     className="mb-0 shadow-lg border border-amber-200/80 rounded-2xl overflow-hidden"
                   />
@@ -844,117 +924,138 @@ export function PropertyForm({
         </>
       )}
 
-        {/* Duplicate Warning Dialog */}
-        <DuplicateWarningDialog
-          open={showDuplicateDialog}
-          onOpenChange={setShowDuplicateDialog}
-          matches={duplicateMatches}
-          onConfirm={handleConfirmDuplicateSubmit}
-          onCancel={() => {
-            setShowDuplicateDialog(false);
-            setPendingSubmit(null);
-          }}
-        />
+      {/* Duplicate Warning Dialog */}
+      <DuplicateWarningDialog
+        open={showDuplicateDialog}
+        onOpenChange={setShowDuplicateDialog}
+        matches={duplicateMatches}
+        onConfirm={handleConfirmDuplicateSubmit}
+        onCancel={() => {
+          setShowDuplicateDialog(false);
+          setPendingSubmit(null);
+        }}
+      />
 
-        {/* Success Navigation Dialog */}
-        <ResponsiveDialog
-          open={!!successData}
-          onOpenChange={(open) => {
-            if (!open) {
-              setSuccessData(null);
-              router.push("/protected/properties?success=true#table");
-            }
-          }}
-          title={
-            <div className="flex items-center gap-3 text-emerald-600 text-xl font-bold">
-              <div className="p-2 bg-emerald-100 rounded-full shrink-0">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              บันทึกข้อมูลสำเร็จ
-            </div>
+      {/* Success Navigation Dialog */}
+      <ResponsiveDialog
+        open={!!successData}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSuccessData(null);
+            router.push("/protected/properties?success=true#table");
           }
-          description="คุณต้องการทำรายการใดต่อ?"
-          className="sm:max-w-md"
-        >
-          <div className="flex flex-col gap-3 py-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start gap-4 h-16 text-base font-medium border-slate-200 rounded-2xl hover:border-emerald-200 hover:bg-emerald-50/50 transition-all group"
-              disabled={successData?.status !== "ACTIVE"}
-              onClick={() => {
-                if (successData?.slug) {
-                  window.open(`/properties/${successData.slug}`, "_blank");
-                  router.push("/protected/properties?success=true#table");
-                } else {
-                  toast.error("ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
-                }
-              }}
-            >
-              <div className="bg-slate-100 p-2 rounded-xl group-hover:bg-emerald-100 group-hover:text-emerald-600! transition-colors">
-                <ExternalLink className="w-5 h-5" />
-              </div>
-              <div className="flex flex-col items-start leading-tight group-hover:text-emerald-600!">
-                <span>ดูหน้าเว็บไซต์</span>
-                <span className="text-[11px] font-normal text-slate-500">
-                  {successData?.status !== "ACTIVE"
-                    ? "ปุ่มนี้เปิดได้เฉพาะทรัพย์ที่มีสถานะใช้งาน (Active) เท่านั้น"
-                    : "เปิดแท็บใหม่เพื่อดูตัวอย่าง"}
+        }}
+        title={
+          <div className="flex items-center gap-3 text-emerald-600 text-xl font-bold">
+            <div className="p-2 bg-emerald-100 rounded-full shrink-0">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            บันทึกข้อมูลสำเร็จ
+          </div>
+        }
+        description="คุณต้องการทำรายการใดต่อ?"
+        className="sm:max-w-md"
+      >
+        <div className="flex flex-col gap-3 py-2">
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-4 h-16 text-base font-medium border-slate-200 rounded-2xl hover:border-emerald-200 hover:bg-emerald-50/50 transition-all group"
+            disabled={successData?.status !== "ACTIVE"}
+            onClick={() => {
+              if (successData?.slug) {
+                window.open(`/properties/${successData.slug}`, "_blank");
+                router.push("/protected/properties?success=true#table");
+              } else {
+                toast.error("ไม่พบข้อมูล Slug สำหรับเปิดหน้าเว็บ");
+              }
+            }}
+          >
+            <div className="bg-slate-100 p-2 rounded-xl group-hover:bg-emerald-100 group-hover:text-emerald-600! transition-colors">
+              <ExternalLink className="w-5 h-5" />
+            </div>
+            <div className="flex flex-col items-start leading-tight group-hover:text-emerald-600!">
+              <span>ดูหน้าเว็บไซต์</span>
+              <span className="text-[11px] font-normal text-slate-500">
+                {successData?.status !== "ACTIVE"
+                  ? "ปุ่มนี้เปิดได้เฉพาะทรัพย์ที่มีสถานะใช้งาน (Active) เท่านั้น"
+                  : "เปิดแท็บใหม่เพื่อดูตัวอย่าง"}
+              </span>
+            </div>
+          </Button>
+
+          <Button
+            className="w-full justify-start gap-4 h-16 text-base font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-2xl shadow-lg shadow-slate-200"
+            onClick={() =>
+              router.push("/protected/properties?success=true#table")
+            }
+          >
+            <div className="bg-white/10 p-2 rounded-xl">
+              <List className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex flex-col items-start leading-tight">
+              <span>กลับหน้ารายการ</span>
+              <span className="text-[11px] font-normal text-slate-400">
+                จัดการทรัพย์อื่นต่อใน CRM
+              </span>
+            </div>
+          </Button>
+
+          <div className="pt-4 border-t border-slate-100 mt-2">
+            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-3">
+              แชร์ไปยังโซเชียลมีเดีย
+            </span>
+            <div className="grid grid-cols-4 gap-2">
+              {/* Facebook */}
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
+                  shareStatus["FACEBOOK"]?.success
+                    ? "text-emerald-700! border-emerald-100 bg-emerald-50/50"
+                    : "text-blue-600! border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/50",
+                )}
+                disabled={shareStatus["FACEBOOK"]?.loading}
+                onClick={async () => {
+                  if (!successData?.id) return;
+                  setShareStatus((prev) => ({
+                    ...prev,
+                    FACEBOOK: { loading: true, success: false },
+                  }));
+                  const res = await postPropertyToMetaAction(successData.id);
+                  if (res.success) {
+                    setShareStatus((prev) => ({
+                      ...prev,
+                      FACEBOOK: {
+                        loading: false,
+                        success: true,
+                        url: res.data?.id
+                          ? `https://facebook.com/${res.data.id}`
+                          : null,
+                      },
+                    }));
+                    toast.success("โพสต์ลง Facebook สำเร็จ!");
+                  } else {
+                    setShareStatus((prev) => ({
+                      ...prev,
+                      FACEBOOK: { loading: false, success: false },
+                    }));
+                    toast.error(res.message || "เกิดข้อผิดพลาด");
+                  }
+                }}
+              >
+                {shareStatus["FACEBOOK"]?.loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : shareStatus["FACEBOOK"]?.success ? (
+                  <CheckCircle2 className="w-6 h-6" />
+                ) : (
+                  <FaFacebook className="w-6 h-6" />
+                )}
+                <span className="leading-tight">
+                  {shareStatus["FACEBOOK"]?.success ? "แชร์แล้ว" : "Facebook"}
                 </span>
-              </div>
-            </Button>
-
-            <Button
-              className="w-full justify-start gap-4 h-16 text-base font-medium bg-slate-900 hover:bg-slate-800 text-white rounded-2xl shadow-lg shadow-slate-200"
-              onClick={() => router.push("/protected/properties?success=true#table")}
-            >
-              <div className="bg-white/10 p-2 rounded-xl">
-                <List className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex flex-col items-start leading-tight">
-                <span>กลับหน้ารายการ</span>
-                <span className="text-[11px] font-normal text-slate-400">จัดการทรัพย์อื่นต่อใน CRM</span>
-              </div>
-            </Button>
-
-            <div className="pt-4 border-t border-slate-100 mt-2">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-3">แชร์ไปยังโซเชียลมีเดีย</span>
-              <div className="grid grid-cols-4 gap-2">
-                {/* Facebook */}
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
-                    shareStatus["FACEBOOK"]?.success 
-                      ? "text-emerald-700! border-emerald-100 bg-emerald-50/50" 
-                      : "text-blue-600! border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/50"
-                  )}
-                  disabled={shareStatus["FACEBOOK"]?.loading}
-                  onClick={async () => {
-                    if (!successData?.id) return;
-                    setShareStatus(prev => ({ ...prev, FACEBOOK: { loading: true, success: false } }));
-                    const res = await postPropertyToMetaAction(successData.id);
-                    if (res.success) {
-                      setShareStatus(prev => ({ 
-                        ...prev, 
-                        FACEBOOK: { loading: false, success: true, url: res.data?.id ? `https://facebook.com/${res.data.id}` : null } 
-                      }));
-                      toast.success("โพสต์ลง Facebook สำเร็จ!");
-                    } else {
-                      setShareStatus(prev => ({ ...prev, FACEBOOK: { loading: false, success: false } }));
-                      toast.error(res.message || "เกิดข้อผิดพลาด");
-                    }
-                  }}
-                >
-                  {shareStatus["FACEBOOK"]?.loading ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                  ) : shareStatus["FACEBOOK"]?.success ? (
-                    <CheckCircle2 className="w-6 h-6" />
-                  ) : (
-                    <FaFacebook className="w-6 h-6" />
-                  )}
-                  <span className="leading-tight">{shareStatus["FACEBOOK"]?.success ? "แชร์แล้ว" : "Facebook"}</span>
-                  {shareStatus["FACEBOOK"]?.success && shareStatus["FACEBOOK"]?.url && (
-                    <div 
+                {shareStatus["FACEBOOK"]?.success &&
+                  shareStatus["FACEBOOK"]?.url && (
+                    <div
                       className="absolute -top-1 -right-1 p-1 bg-emerald-500 rounded-full text-white shadow-sm"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -964,34 +1065,47 @@ export function PropertyForm({
                       <ExternalLink className="w-2.5 h-2.5" />
                     </div>
                   )}
-                </Button>
+              </Button>
 
-                {/* TikTok */}
-                <TikTokPostButton 
-                  propertyId={successData?.id || ""}
-                  onLoading={(loading) => setShareStatus(prev => ({ ...prev, TIKTOK: { ...prev["TIKTOK"], loading } }))}
-                  onSuccess={(url) => setShareStatus(prev => ({ ...prev, TIKTOK: { loading: false, success: true, url } }))}
+              {/* TikTok */}
+              <TikTokPostButton
+                propertyId={successData?.id || ""}
+                onLoading={(loading) =>
+                  setShareStatus((prev) => ({
+                    ...prev,
+                    TIKTOK: { ...prev["TIKTOK"], loading },
+                  }))
+                }
+                onSuccess={(url) =>
+                  setShareStatus((prev) => ({
+                    ...prev,
+                    TIKTOK: { loading: false, success: true, url },
+                  }))
+                }
+              >
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
+                    shareStatus["TIKTOK"]?.success
+                      ? "text-emerald-700! border-emerald-100 bg-emerald-50/50"
+                      : "text-slate-900! border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
+                  )}
+                  disabled={shareStatus["TIKTOK"]?.loading}
                 >
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
-                      shareStatus["TIKTOK"]?.success 
-                        ? "text-emerald-700! border-emerald-100 bg-emerald-50/50" 
-                        : "text-slate-900! border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
-                    )}
-                    disabled={shareStatus["TIKTOK"]?.loading}
-                  >
-                    {shareStatus["TIKTOK"]?.loading ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
-                    ) : shareStatus["TIKTOK"]?.success ? (
-                      <CheckCircle2 className="w-6 h-6" />
-                    ) : (
-                      <FaTiktok className="w-6 h-6" />
-                    )}
-                    <span className="leading-tight">{shareStatus["TIKTOK"]?.success ? "แชร์แล้ว" : "TikTok"}</span>
-                    {shareStatus["TIKTOK"]?.success && shareStatus["TIKTOK"]?.url && (
-                      <div 
+                  {shareStatus["TIKTOK"]?.loading ? (
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  ) : shareStatus["TIKTOK"]?.success ? (
+                    <CheckCircle2 className="w-6 h-6" />
+                  ) : (
+                    <FaTiktok className="w-6 h-6" />
+                  )}
+                  <span className="leading-tight">
+                    {shareStatus["TIKTOK"]?.success ? "แชร์แล้ว" : "TikTok"}
+                  </span>
+                  {shareStatus["TIKTOK"]?.success &&
+                    shareStatus["TIKTOK"]?.url && (
+                      <div
                         className="absolute -top-1 -right-1 p-1 bg-emerald-500 rounded-full text-white shadow-sm"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1001,86 +1115,103 @@ export function PropertyForm({
                         <ExternalLink className="w-2.5 h-2.5" />
                       </div>
                     )}
-                  </Button>
-                </TikTokPostButton>
-
-                {/* Instagram */}
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
-                    shareStatus["INSTAGRAM"]?.success 
-                      ? "text-emerald-700! border-emerald-100 bg-emerald-50/50" 
-                      : "text-pink-600! border-slate-200 bg-white hover:border-pink-200 hover:bg-pink-50/50"
-                  )}
-                  disabled={shareStatus["INSTAGRAM"]?.loading}
-                  onClick={async () => {
-                    if (!successData?.id) return;
-                    setShareStatus(prev => ({ ...prev, INSTAGRAM: { loading: true, success: false } }));
-                    const res = await postPropertyToMetaAction(successData.id, "INSTAGRAM");
-                    if (res.success) {
-                      setShareStatus(prev => ({ 
-                        ...prev, 
-                        INSTAGRAM: { loading: false, success: true, url: null } 
-                      }));
-                      toast.success("โพสต์ลง Instagram สำเร็จ!");
-                    } else {
-                      setShareStatus(prev => ({ ...prev, INSTAGRAM: { loading: false, success: false } }));
-                      toast.error(res.message);
-                    }
-                  }}
-                >
-                  {shareStatus["INSTAGRAM"]?.loading ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                  ) : shareStatus["INSTAGRAM"]?.success ? (
-                    <CheckCircle2 className="w-6 h-6" />
-                  ) : (
-                    <Instagram className="w-6 h-6" />
-                  )}
-                  <span className="leading-tight">{shareStatus["INSTAGRAM"]?.success ? "แชร์แล้ว" : "Instagram"}</span>
                 </Button>
+              </TikTokPostButton>
 
-                {/* Line */}
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
-                    shareStatus["LINE"]?.success 
-                      ? "text-emerald-700! border-emerald-100 bg-emerald-50/50" 
-                      : "text-emerald-600! border-slate-200 bg-white hover:border-emerald-200 hover:bg-emerald-50/50"
-                  )}
-                  disabled={shareStatus["LINE"]?.loading}
-                  onClick={async () => {
-                    if (!successData?.id) return;
-                    setShareStatus(prev => ({ ...prev, LINE: { loading: true, success: false } }));
-                    const res = await postPropertyToLineAction(successData.id);
-                    if (res.success) {
-                      setShareStatus(prev => ({ 
-                        ...prev, 
-                        LINE: { loading: false, success: true, url: null } 
-                      }));
-                      toast.success("บรอดแคสต์ Line OA สำเร็จ!");
-                    } else {
-                      setShareStatus(prev => ({ ...prev, LINE: { loading: false, success: false } }));
-                      toast.error(res.message || "เกิดข้อผิดพลาด");
-                    }
-                  }}
-                >
-                  {shareStatus["LINE"]?.loading ? (
-                    <Loader2 className="w-6 h-6 animate-spin" />
-                  ) : shareStatus["LINE"]?.success ? (
-                    <CheckCircle2 className="w-6 h-6 text-emerald-600" />
-                  ) : (
-                    <FaLine className="w-6 h-6 text-[#06C755]" />
-                  )}
-                  <span className="leading-tight">{shareStatus["LINE"]?.success ? "ส่งแล้ว" : "Line"}</span>
-                </Button>
-              </div>
+              {/* Instagram */}
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
+                  shareStatus["INSTAGRAM"]?.success
+                    ? "text-emerald-700! border-emerald-100 bg-emerald-50/50"
+                    : "text-pink-600! border-slate-200 bg-white hover:border-pink-200 hover:bg-pink-50/50",
+                )}
+                disabled={shareStatus["INSTAGRAM"]?.loading}
+                onClick={async () => {
+                  if (!successData?.id) return;
+                  setShareStatus((prev) => ({
+                    ...prev,
+                    INSTAGRAM: { loading: true, success: false },
+                  }));
+                  const res = await postPropertyToMetaAction(
+                    successData.id,
+                    "INSTAGRAM",
+                  );
+                  if (res.success) {
+                    setShareStatus((prev) => ({
+                      ...prev,
+                      INSTAGRAM: { loading: false, success: true, url: null },
+                    }));
+                    toast.success("โพสต์ลง Instagram สำเร็จ!");
+                  } else {
+                    setShareStatus((prev) => ({
+                      ...prev,
+                      INSTAGRAM: { loading: false, success: false },
+                    }));
+                    toast.error(res.message);
+                  }
+                }}
+              >
+                {shareStatus["INSTAGRAM"]?.loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : shareStatus["INSTAGRAM"]?.success ? (
+                  <CheckCircle2 className="w-6 h-6" />
+                ) : (
+                  <Instagram className="w-6 h-6" />
+                )}
+                <span className="leading-tight">
+                  {shareStatus["INSTAGRAM"]?.success ? "แชร์แล้ว" : "Instagram"}
+                </span>
+              </Button>
+
+              {/* Line */}
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
+                  shareStatus["LINE"]?.success
+                    ? "text-emerald-700! border-emerald-100 bg-emerald-50/50"
+                    : "text-emerald-600! border-slate-200 bg-white hover:border-emerald-200 hover:bg-emerald-50/50",
+                )}
+                disabled={shareStatus["LINE"]?.loading}
+                onClick={async () => {
+                  if (!successData?.id) return;
+                  setShareStatus((prev) => ({
+                    ...prev,
+                    LINE: { loading: true, success: false },
+                  }));
+                  const res = await postPropertyToLineAction(successData.id);
+                  if (res.success) {
+                    setShareStatus((prev) => ({
+                      ...prev,
+                      LINE: { loading: false, success: true, url: null },
+                    }));
+                    toast.success("บรอดแคสต์ Line OA สำเร็จ!");
+                  } else {
+                    setShareStatus((prev) => ({
+                      ...prev,
+                      LINE: { loading: false, success: false },
+                    }));
+                    toast.error(res.message || "เกิดข้อผิดพลาด");
+                  }
+                }}
+              >
+                {shareStatus["LINE"]?.loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : shareStatus["LINE"]?.success ? (
+                  <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                ) : (
+                  <FaLine className="w-6 h-6 text-[#06C755]" />
+                )}
+                <span className="leading-tight">
+                  {shareStatus["LINE"]?.success ? "ส่งแล้ว" : "Line"}
+                </span>
+              </Button>
             </div>
           </div>
-        </ResponsiveDialog>
-
-
+        </div>
+      </ResponsiveDialog>
     </div>
   );
 }
