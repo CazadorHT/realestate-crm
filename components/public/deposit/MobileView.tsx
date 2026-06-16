@@ -90,7 +90,7 @@ export function DepositMobileView({
      
 
       {/* ── Mobile Form Content Area ── */}
-      <div className="sm:hidden flex-1 flex flex-col min-h-0 bg-white overflow-hidden max-h-full">
+      <div className="sm:hidden flex-1 flex flex-col min-h-0 bg-white/90 backdrop-blur-md overflow-hidden max-h-full">
         <form
           onSubmit={form.handleSubmit(onSubmitAction, onInvalidAction)}
           className="flex flex-col h-full overflow-hidden"
@@ -209,7 +209,7 @@ export function DepositMobileView({
             {/* ── Fixed Mobile Footer (Outside Scrollable Area) ── */}
             <m.div
               variants={itemVariants}
-              className="shrink-0 px-4 xs:px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,20px)+24px)] bg-white border-t border-slate-50 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] z-10"
+              className="shrink-0 px-4 xs:px-5 pt-3 pb-[calc(env(safe-area-inset-bottom,20px)+24px)] bg-white/90 backdrop-blur-md border-t border-slate-50 shadow-[0_-8px_30px_rgba(0,0,0,0.04)] z-10"
             >
               <div className="flex items-center justify-between mb-3 px-1">
                 <div className="flex gap-1">

@@ -73,7 +73,7 @@ const LOCALIZED_COPY: Record<
       "เน้นทำตลาดฝากปล่อยเช่าได้ผู้เช่าไว ช่วยลดความเสี่ยงจากการปล่อยห้องว่าง",
       "มีระบบคัดกรองประวัติผู้เช่าเบื้องต้นและช่วยจัดทำสัญญาเช่าที่รัดกุมเป็นธรรม",
       "มีฐานข้อมูลลูกค้าและเครือข่ายเอเจนท์พันธมิตรรอจับคู่ทรัพย์ (Matching) จำนวนมาก",
-      "ดูแลดูแลใกล้ชิดทุกขั้นตอน ตั้งแต่วันแรกจนถึงวันส่งมอบห้อง หรือวันโอนกรรมสิทธิ์ ณ กรมที่ดิน",
+      "ดูแลใกล้ชิดทุกขั้นตอน ตั้งแต่วันแรกจนถึงวันส่งมอบห้อง หรือวันโอนกรรมสิทธิ์ ณ กรมที่ดิน",
     ],
     seoArticlesTitle:
       "คู่มือและบทความเชิงลึกเกี่ยวกับการฝากปล่อยเช่าและการฝากขายอสังหาริมทรัพย์",
@@ -491,7 +491,7 @@ export default function DepositPageClient() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <Card className="relative shadow-2xl shadow-indigo-900/10 border-white/80 bg-white/95 backdrop-blur-xl overflow-hidden rounded-3xl p-1 md:p-2 border">
+                    <Card className="relative shadow-2xl shadow-indigo-900/10 border-white/80 bg-linear-to-r from-blue-50 via-indigo-50 to-purple-50 bg-transparent backdrop-blur-xl overflow-hidden rounded-3xl p-1 md:p-2 border">
                       <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80" />
                       <CardContent className="p-4 sm:p-6 md:p-8">
                         <div className="mb-6 space-y-2">
