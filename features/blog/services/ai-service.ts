@@ -265,6 +265,8 @@ export async function generateBlogPost(
       "slug": "url-friendly-english-slug",
       "excerpt": "150-160 chars summary for SEO",
       "excerpt_en": "...",
+      "excerpt_cn": "...",
+      "excerpt_ru": "...",
       "content": "Full HTML Content (TH) including Table, FAQ, Infographic Ideas, and CTAs",
       "category": "เลือกจากรายการนี้เท่านั้น: ${categoriesInstruction}",
       "tags": "tag1, tag2, tag3",

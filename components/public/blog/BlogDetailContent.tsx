@@ -88,15 +88,19 @@ export function BlogDetailContent({
       return;
     }
 
-    // Client-side only sanitization to avoid jsdom/SSR issues
     import("dompurify").then((module) => {
       const DOMPurify = module.default;
-      setSanitizedContent(
-        DOMPurify.sanitize(content || "", {
-          ADD_TAGS: ["iframe", "table", "thead", "tbody", "tr", "th", "td"],
-          ADD_ATTR: ["target", "class", "rel"],
-        }),
-      );
+      const cleanHtml = DOMPurify.sanitize(content || "", {
+        ADD_TAGS: ["iframe", "table", "thead", "tbody", "tr", "th", "td"],
+        ADD_ATTR: ["target", "class", "rel"],
+      });
+      
+      // Wrap table tags in a responsive scrollable div
+      const responsiveHtml = cleanHtml
+        .replace(/<table([^>]*)>/g, '<div class="overflow-x-auto w-full my-6"><table$1>')
+        .replace(/<\/table>/g, '</table></div>');
+        
+      setSanitizedContent(responsiveHtml);
     });
   }, [content]);
 
@@ -125,16 +129,16 @@ export function BlogDetailContent({
   }, []);
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 shadow-xl border border-slate-200">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 shadow-xl border border-slate-200 w-full max-w-full">
       {/* Excerpt */}
       {excerpt && (
-        <p className="text-lg font-medium text-slate-600 mb-6 md:mb-8 leading-relaxed border-l-4 border-blue-600 pl-4 md:pl-6 py-2 bg-linear-to-r from-blue-50/50 to-transparent">
+        <p className="text-xs sm:text-base font-medium text-slate-600 mb-6 md:mb-8 leading-relaxed border-l-4 border-blue-600 pl-4 md:pl-6 py-2 bg-linear-to-r from-blue-50/50 to-transparent">
           {excerpt}
         </p>
       )}
 
       {/* Main Content Render */}
-      <div className="relative">
+      <div className="relative w-full max-w-full">
         <m.div
           ref={contentRef}
           initial={false}
@@ -149,7 +153,13 @@ export function BlogDetailContent({
             restDelta: 0.5
           }}
           className={cn(
-            "prose prose-base md:prose-lg max-w-none prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline text-slate-600 overflow-hidden",
+            "prose prose-sm sm:prose-base md:prose-lg max-w-none w-full max-w-full break-words prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline text-slate-600 overflow-hidden",
+            "prose-p:text-xs sm:prose-p:text-sm md:prose-p:text-base prose-p:leading-relaxed",
+            "prose-th:text-xs sm:prose-th:text-sm prose-td:text-xs sm:prose-td:text-sm",
+            "prose-h1:text-xl sm:prose-h1:text-2xl md:prose-h1:text-3xl prose-h1:font-black prose-h1:tracking-tight prose-h1:leading-tight",
+            "prose-h2:text-lg sm:prose-h2:text-xl md:prose-h2:text-2xl prose-h2:font-bold prose-h2:tracking-tight prose-h2:leading-snug",
+            "prose-h3:text-base sm:prose-h3:text-lg md:prose-h3:text-xl prose-h3:font-bold prose-h3:leading-normal",
+            "prose-h4:text-sm sm:prose-h4:text-base md:prose-h4:text-lg prose-h4:font-semibold"
           )}
           dangerouslySetInnerHTML={{
             __html: sanitizedContent,
@@ -172,7 +182,7 @@ export function BlogDetailContent({
 
       {/* Read More / Show Less Button */}
       {isTooLong && (
-        <div className="relative z-20 flex justify-center -mt-6 mb-4">
+        <div className="relative z-20 flex justify-center  mb-4">
           <m.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

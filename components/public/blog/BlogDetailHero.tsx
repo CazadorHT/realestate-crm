@@ -62,7 +62,7 @@ export function BlogDetailHero({
                 : post.category}
             </Badge>
           )}
-          <h1 className="text-3xl md:text-5xl font-bold leading-tight max-w-4xl mx-auto drop-shadow-lg">
+          <h1 className="text-2xl md:text-5xl line-clamp-3 font-bold leading-tight max-w-4xl mx-auto drop-shadow-lg">
             {title}
           </h1>
           <div className="flex items-center justify-center gap-4 text-white/90 text-sm md:text-base">

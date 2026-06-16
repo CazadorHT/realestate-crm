@@ -205,7 +205,11 @@
       "Investment": "Investment",
       "Lifestyle": "Lifestyle",
       "Market Trends": "Market Trends",
-      "Tips & Tricks": "Tips & Tricks"
+      "Tips & Tricks": "Tips & Tricks",
+      "คู่มือซื้อขายบ้าน": "Home Guide",
+      "การทำธุรกิจ / สตาร์ทอัพ": "Business & Startups",
+      "การลงทุนอสังหาฯ": "Property Investment",
+      "คู่มืออสังหาฯ เพื่อการพาณิชย์": "Commercial Real Estate"
     },
     "action_success_create": "Blog post created successfully",
     "action_success_update": "Blog post updated successfully",

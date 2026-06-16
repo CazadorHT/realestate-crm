@@ -417,15 +417,28 @@
   /* Table Padding & Style Fixes */
   .prose table {
     @apply my-8 border-collapse w-full!;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .prose table th, 
   .prose table td,
   .ProseMirror table th,
   .ProseMirror table td {
-    @apply px-6! py-4! border border-slate-200 text-left!;
-    padding-left: 1.5rem !important;
-    padding-right: 1.5rem !important;
+    @apply px-3 py-2 border border-slate-200 text-left!;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
     min-width: 100px;
+  }
+  @media (min-width: 640px) {
+    .prose table th, 
+    .prose table td,
+    .ProseMirror table th,
+    .ProseMirror table td {
+      @apply px-6! py-4!;
+      padding-left: 1.5rem !important;
+      padding-right: 1.5rem !important;
+    }
   }
   .prose table th,
   .ProseMirror table th {
