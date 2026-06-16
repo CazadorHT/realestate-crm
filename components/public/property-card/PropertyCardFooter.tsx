@@ -301,6 +301,6 @@ function getRelativeDateString(dateStr: string, lang: string): string {
   if (diffMins < 1) return "Just now";
   if (diffMins < 60) return `${diffMins}m. ago`;
   if (diffHours < 24) return `${diffHours}h. ago`;
-  if (diffDays <= 3) return `${diffDays}d. ago`;
+  if (diffDays <= 2) return `${diffDays}d. ago`;
   return new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" }).format(date);
 }
