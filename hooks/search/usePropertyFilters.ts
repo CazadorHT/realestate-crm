@@ -48,6 +48,9 @@ export function usePropertyFilters() {
   const [isHotDeal, setIsHotDeal] = useState(
     searchParams.get("hot_deal") === "true",
   );
+  const [allowAirbnb, setAllowAirbnb] = useState(
+    searchParams.get("airbnb") === "true",
+  );
 
   // --- Agentic AI State ---
   const [aiInsight, setAiInsight] = useState<string | null>(null);
@@ -83,6 +86,7 @@ export function usePropertyFilters() {
     setIsForeigner(searchParams.get("foreigner") === "true");
     setCompanyRegistered(searchParams.get("company_registered") === "true");
     setIsHotDeal(searchParams.get("hot_deal") === "true");
+    setAllowAirbnb(searchParams.get("airbnb") === "true");
     setBedrooms(searchParams.get("bedrooms") || "ALL");
     setTransitStation(searchParams.get("transit_station") || "");
     
@@ -107,6 +111,7 @@ export function usePropertyFilters() {
     if (isForeigner) params.set("foreigner", "true"); else params.delete("foreigner");
     if (companyRegistered) params.set("company_registered", "true"); else params.delete("company_registered");
     if (isHotDeal) params.set("hot_deal", "true"); else params.delete("hot_deal");
+    if (allowAirbnb) params.set("airbnb", "true"); else params.delete("airbnb");
     if (transitStation) params.set("transit_station", transitStation); else params.delete("transit_station");
     if (minSize) params.set("min_size", minSize); else params.delete("min_size");
     if (maxSize) params.set("max_size", maxSize); else params.delete("max_size");
@@ -119,7 +124,7 @@ export function usePropertyFilters() {
   }, [
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
-    companyRegistered, isHotDeal, minSize, maxSize, transitStation,
+    companyRegistered, isHotDeal, allowAirbnb, minSize, maxSize, transitStation,
   ]);
 
   const clearFilters = useCallback(() => {
@@ -140,6 +145,7 @@ export function usePropertyFilters() {
     setIsForeigner(false);
     setCompanyRegistered(false);
     setIsHotDeal(false);
+    setAllowAirbnb(false);
     setTransitStation("");
     setAiInsight(null);
   }, []);
@@ -161,6 +167,7 @@ export function usePropertyFilters() {
     if (updates.fullyFurnished !== undefined) setFullyFurnished(updates.fullyFurnished);
     if (updates.bedrooms !== undefined) setBedrooms(updates.bedrooms);
     if (updates.isHotDeal !== undefined) setIsHotDeal(updates.isHotDeal);
+    if (updates.allowAirbnb !== undefined) setAllowAirbnb(updates.allowAirbnb);
     if (updates.transitStation !== undefined) setTransitStation(updates.transitStation);
     if (updates.aiInsight !== undefined) setAiInsight(updates.aiInsight);
   }, []);
@@ -185,6 +192,7 @@ export function usePropertyFilters() {
     isForeigner, setIsForeigner,
     companyRegistered, setCompanyRegistered,
     isHotDeal, setIsHotDeal,
+    allowAirbnb, setAllowAirbnb,
     transitStation, setTransitStation,
     aiInsight, setAiInsight,
     clearFilters,

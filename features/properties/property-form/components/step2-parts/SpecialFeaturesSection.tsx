@@ -63,6 +63,7 @@ import {
   TooltipTrigger,
   TooltipContent,
 } from "@/components/ui/tooltip";
+import { FaAirbnb } from "react-icons/fa6";
 
 interface SpecialFeaturesSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
@@ -182,6 +183,14 @@ export function SpecialFeaturesSection({
               icon={Cigarette}
               color="red"
               disabled={isReadOnly}
+            />
+            <FeatureChip
+              name="allow_airbnb"
+              label="รองรับ Airbnb"
+              icon={FaAirbnb}
+              color="airbnb"
+              disabled={isReadOnly}
+              title="ทรัพย์นี้อนุญาตให้นำไปปล่อยเช่าในรูปแบบ Airbnb หรือ Short-term Rental ได้"
             />
             <FeatureChip
               name="is_selling_with_tenant"
@@ -636,6 +645,7 @@ const COLOR_MAP: Record<string, string> = {
   teal: "border-teal-200 bg-teal-50 text-teal-700 hover:border-teal-300",
   fuchsia: "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700 hover:border-fuchsia-300",
   pink: "border-pink-200 bg-pink-50 text-pink-700 hover:border-pink-300",
+  airbnb: "border-rose-200 bg-rose-50 text-[#FF5A5F] hover:border-[#FF5A5F]/30 hover:bg-[#FF5A5F]/5 active:bg-[#FF5A5F]/10 ring-[#FF5A5F]/30",
 };
 
 const ICON_COLOR_MAP: Record<string, string> = {
@@ -653,6 +663,7 @@ const ICON_COLOR_MAP: Record<string, string> = {
   teal: "text-teal-500",
   fuchsia: "text-fuchsia-500",
   pink: "text-pink-500",
+  airbnb: "text-[#FF5A5F]",
 };
 
 interface FeatureChipProps {
@@ -674,7 +685,8 @@ interface FeatureChipProps {
     | "sky"
     | "teal"
     | "fuchsia"
-    | "pink";
+    | "pink"
+    | "airbnb";
   disabled?: boolean;
 }
 

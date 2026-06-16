@@ -92,6 +92,7 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
       phone: decrypt(leadRow.identity?.phone) || null,
       line_id: decrypt(leadRow.identity?.line_id) || null,
       note: prefs.note || leadRow.ai_summary || null,
+      allow_airbnb: !!prefs.allow_airbnb,
     };
 
     // 2. Resolve Lead Intent (Purpose)
@@ -144,12 +145,26 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
 
     if (matchErr) throw new Error(matchErr.message);
 
+    // Fetch candidate amenities for airbnb filtering
+    const candidateIds = (candidates as any[])?.map((c) => c.id) || [];
+    const amenitiesMap: Record<string, any> = {};
+    if (candidateIds.length > 0) {
+      const { data: detailsData } = await supabase
+        .from("properties_details")
+        .select("property_id, amenities")
+        .in("property_id", candidateIds);
+      
+      detailsData?.forEach((d) => {
+        amenitiesMap[d.property_id] = d.amenities || {};
+      });
+    }
+
     // 4. Hybrid Re-scoring (Zero-Cost Local Logic)
     // Score = (70% Semantic Similarity) + (30% Hard Criteria Match)
     const processedMatches = ((candidates as unknown as HardenedMatchResult[]) || [])
       .map((m) => {
         let filterScore = 0;
-        const totalFilterPoints = 3; // price, type, listing_type
+        let totalFilterPoints = 3; // price, type, listing_type
 
         // Filter 1: Price (Simple within 15% budget)
         const propPrice = m.listing_type === "RENT" ? m.rental_price : m.price;
@@ -169,15 +184,27 @@ export async function runSmartMatchAction(leadId: string, notifyAgent = false) {
         if (lead.preferred_property_types?.includes(m.property_type))
           filterScore += 1;
 
+        // Filter 4: Airbnb Match
+        const propAmenities = amenitiesMap[m.id] || {};
+        const propAllowAirbnb = !!propAmenities.allow_airbnb;
+        if (lead.allow_airbnb) {
+          totalFilterPoints += 1;
+          if (propAllowAirbnb) filterScore += 1;
+        }
+
         const filterWeight = (filterScore / totalFilterPoints) * 30;
         const vectorWeight = m.similarity * 70;
         const finalScore = Math.round(vectorWeight + filterWeight);
 
+        const matchReasons = m.similarity > 0.8 ? ["Semantic Strong Match"] : ["Filter Match"];
+        if (lead.allow_airbnb && propAllowAirbnb) {
+          matchReasons.push("Airbnb Friendly");
+        }
+
         return {
           ...m,
           match_score: finalScore,
-          match_reasons:
-            m.similarity > 0.8 ? ["Semantic Strong Match"] : ["Filter Match"],
+          match_reasons: matchReasons,
         };
       })
       .sort((a, b) => b.match_score - a.match_score)
@@ -256,7 +283,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   let query = (supabase as any)
     .from("properties")
     .select(
-      "id, slug, title, title_en, title_cn, title_ru, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(*)",
+      "id, slug, title, title_en, title_cn, title_ru, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(*), amenities",
     )
     .eq("status", "ACTIVE")
     .is("deleted_at", null);
@@ -382,6 +409,10 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
         transit_type: prop.transit_type,
         transit_distance_meters: prop.transit_distance_meters,
         property_type: prop.property_type,
+        allow_airbnb: !!(prop.allow_airbnb || (prop.amenities as any)?.allow_airbnb),
+        airbnb_daily_price: (prop.amenities as any)?.airbnb_daily_price ?? null,
+        airbnb_monthly_price: (prop.amenities as any)?.airbnb_monthly_price ?? null,
+        airbnb_min_contract: (prop.amenities as any)?.airbnb_min_contract ?? null,
       } as PropertyMatch;
     })
     .filter((m: PropertyMatch) => m.match_score > 30)

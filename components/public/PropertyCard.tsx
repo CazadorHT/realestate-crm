@@ -84,6 +84,9 @@ export type PropertyCardProps = {
   is_foreigner_quota?: boolean | null;
   is_tax_registered?: boolean | null;
   is_hot_deal?: boolean | null;
+  allow_airbnb?: boolean | null;
+  airbnb_daily_price?: number | null;
+  airbnb_monthly_price?: number | null;
   ai_summary_content?: string | null;
   features?:
     | {

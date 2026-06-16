@@ -712,6 +712,7 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                 isHot={false}
                 verified={values.verified}
                 petFriendly={values.is_pet_friendly}
+                allowAirbnb={values.allow_airbnb}
                 language={previewLanguage}
               />
             </section>

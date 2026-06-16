@@ -9,6 +9,7 @@ import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { MdOutlinePets } from "react-icons/md";
 import { PiFireFill } from "react-icons/pi";
+import { FaAirbnb } from "react-icons/fa6";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
@@ -380,6 +381,16 @@ export function PropertyCardImage({
             <MdOutlinePets className="w-5 h-5 rotate-25" />
             <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
               Pet Friendly
+            </span>
+          </div>
+        )}
+
+        {/* Airbnb Allowed Badge */}
+        {property.allow_airbnb && (
+          <div className={`flex items-center bg-[#FF5A5F]/90 backdrop-blur-md text-white p-1.5 rounded-full shadow-lg transition-all duration-300 cursor-default ${activeImageIndex === 0 ? "group-hover:pr-3" : ""}`}>
+            <FaAirbnb className="w-5 h-5 shrink-0" />
+            <span className={`max-w-0 opacity-0 overflow-hidden whitespace-nowrap text-[10px] font-bold transition-all duration-300 uppercase ${activeImageIndex === 0 ? "group-hover:max-w-[100px] group-hover:opacity-100 group-hover:ml-1.5" : ""}`}>
+              Airbnb
             </span>
           </div>
         )}

@@ -106,6 +106,7 @@
     "contract": "合同",
     "months_short": "月",
     "per_month_short": "/月",
+    "per_day_short": "/天",
     "baht_symbol": "฿",
     "rent_price": "租金",
     "sale_price": "售价",
@@ -542,6 +543,7 @@
     "foreigner": "外籍配额",
     "company_registered": "公司注册注册",
     "hot_deal": "特惠/特价房",
+    "allow_airbnb": "支持 Airbnb",
     "near_train": "靠近地铁",
     "select_station": "选择站点",
     "all_stations": "所有站点",
@@ -1008,7 +1010,13 @@
       "investment_title": "黄金投资机会",
       "yield_prefix": "租金 ",
       "yield_middle": "/月，年投资回报率约为 ",
-      "yield_suffix": "。"
+      "yield_suffix": "/年产量",
+      "projected": "预计",
+      "airbnb_investment_title": "Airbnb 投资回报估算",
+      "airbnb_daily_yield_label": "日租回报率 (按 70% 入住率)",
+      "airbnb_monthly_yield_label": "月租回报率",
+      "airbnb_rent_title": "支持短租 / Airbnb",
+      "airbnb_rent_desc": "此房源允许租客进行 Airbnb 或短期转租，并提供灵活的日租和月租价格支持。"
     },
     "categories": {
       "school": "学校",
@@ -1034,6 +1042,7 @@
       "garden_view": "园景",
       "unblocked_view": "视野无遮挡",
       "allow_smoking": "准许吸烟",
+      "allow_airbnb": "支持 Airbnb",
       "high_ceiling": "高挑顶",
       "column_free": "无柱空间",
       "bare_shell": "毛坯房",

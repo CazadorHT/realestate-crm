@@ -156,7 +156,7 @@ export function AgentSidebar({
       <div className="flex flex-col flex-1 min-h-0">
         {/* Contact Section (Hidden on Mobile) */}
         <div className="hidden md:flex flex-col mb-6 shrink-0 space-y-3.5">
-          <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mb-1">
+          <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-[0.15em] mb-2">
             {t("property.contact_agent")}
           </h4>
           <Button

@@ -21,7 +21,7 @@ export type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL
 export type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
 export type PropertyStatus = "DRAFT" | "ACTIVE" | "UNDER_OFFER" | "RESERVED" | "SOLD" | "RENTED" | "ARCHIVED";
 
-export type PropertyRow = Omit<Database["public"]["Views"]["properties"]["Row"], "id"> & { id: string };
+export type PropertyRow = Omit<Database["public"]["Views"]["properties"]["Row"], "id"> & { id: string; allow_airbnb?: boolean | null; amenities?: any | null };
 export type PropertyInsert =
   Database["public"]["Tables"]["properties_core"]["Insert"];
 export type PropertyUpdate =
@@ -213,6 +213,10 @@ export interface PropertyDetail {
   has_garden_view?: boolean | null;
   has_unblocked_view?: boolean | null;
   allow_smoking?: boolean | null;
+  allow_airbnb?: boolean | null;
+  airbnb_daily_price?: number | null;
+  airbnb_monthly_price?: number | null;
+  airbnb_min_contract?: string | null;
   is_column_free?: boolean | null;
   is_grade_a?: boolean | null;
   is_grade_b?: boolean | null;

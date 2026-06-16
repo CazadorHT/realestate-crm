@@ -56,9 +56,10 @@ const AREA_MAPPING: Record<string, string[]> = {
  */
 function resolvePropertyPrice(property: PropertyRow, purpose: string): number {
   let price = 0;
+  const amenities = (property.amenities as any) || {};
 
   if (purpose === "RENT") {
-    price = property.rental_price || property.original_rental_price || property.price || 0;
+    price = property.rental_price || property.original_rental_price || amenities.airbnb_monthly_price || property.price || 0;
   } else {
     // BUY or INVEST
     price = property.price || property.original_price || property.rental_price || 0;
@@ -209,6 +210,24 @@ export function calculateMatchScore(
       score += SCORE_WEIGHTS.TYPE_PENALTY;
       scoreBreakdown.push({ label: "type", points: SCORE_WEIGHTS.TYPE_PENALTY });
     }
+  }
+
+  // 6. Airbnb Compatibility Match (Bonus/Penalty)
+  let airbnbPoints = 0;
+  const propAllowAirbnb = !!(property.allow_airbnb || (property.amenities as any)?.allow_airbnb);
+
+  if (criteria.allowAirbnb || criteria.purpose === "INVEST") {
+    if (propAllowAirbnb) {
+      airbnbPoints = 15;
+      reasons.push("airbnb_friendly");
+    } else if (criteria.allowAirbnb) {
+      airbnbPoints = -15;
+    }
+  }
+
+  if (airbnbPoints !== 0) {
+    score += airbnbPoints;
+    scoreBreakdown.push({ label: "airbnb", points: airbnbPoints });
   }
 
   // Final Normalization: Always [0, 100]

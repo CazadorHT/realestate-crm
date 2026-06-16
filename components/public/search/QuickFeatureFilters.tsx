@@ -1,6 +1,6 @@
 "use client";
 
-import { FaTrainSubway } from "react-icons/fa6";
+import { FaTrainSubway, FaAirbnb } from "react-icons/fa6";
 import { MdOutlinePets, MdWork } from "react-icons/md";
 import { RiArmchairFill } from "react-icons/ri";
 import { GiEarthAmerica } from "react-icons/gi";
@@ -26,6 +26,8 @@ interface QuickFeatureFiltersProps {
   setCompanyRegistered: (v: boolean) => void;
   isHotDeal: boolean;
   setIsHotDeal: (v: boolean) => void;
+  allowAirbnb: boolean;
+  setAllowAirbnb: (v: boolean) => void;
   availableQuickFilters: Record<string, number>;
   t: (key: string) => string;
 }
@@ -43,6 +45,8 @@ export function QuickFeatureFilters({
   setCompanyRegistered,
   isHotDeal,
   setIsHotDeal,
+  allowAirbnb,
+  setAllowAirbnb,
   availableQuickFilters,
   t,
 }: QuickFeatureFiltersProps) {
@@ -53,6 +57,7 @@ export function QuickFeatureFilters({
     { key: "isForeigner", state: isForeigner, setState: setIsForeigner, icon: GiEarthAmerica, label: "foreigner", color: "purple" },
     { key: "companyRegistered", state: companyRegistered, setState: setCompanyRegistered, icon: MdWork, label: "company_registered", color: "indigo" },
     { key: "isHotDeal", state: isHotDeal, setState: setIsHotDeal, icon: FaFire, label: "hot_deal", color: "rose" },
+    { key: "allowAirbnb", state: allowAirbnb, setState: setAllowAirbnb, icon: FaAirbnb, label: "allow_airbnb", color: "pink" },
   ];
 
   const colorMap: Record<string, { activeBg: string; activeBorder: string; activeShadow: string; hoverBorder: string; hoverText: string; iconStateColor: string; tooltipActive: string; tooltipInactive: string }> = {
@@ -115,6 +120,16 @@ export function QuickFeatureFilters({
       iconStateColor: "text-rose-500",
       tooltipActive: "bg-rose-600 border-rose-600 text-white",
       tooltipInactive: "bg-rose-50 border-rose-200 text-rose-700",
+    },
+    pink: {
+      activeBg: "bg-[#FF5A5F]",
+      activeBorder: "border-[#FF5A5F]",
+      activeShadow: "shadow-pink-500/20",
+      hoverBorder: "hover:border-pink-200",
+      hoverText: "hover:text-[#FF5A5F]",
+      iconStateColor: "text-[#FF5A5F]",
+      tooltipActive: "bg-[#FF5A5F] border-[#FF5A5F] text-white",
+      tooltipInactive: "bg-pink-50 border-pink-200 text-pink-700",
     },
   };
 

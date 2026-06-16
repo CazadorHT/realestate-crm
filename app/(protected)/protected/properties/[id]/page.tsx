@@ -203,6 +203,7 @@ export default async function PropertyDetailsPage({
     is_tax_registered: !!amenities.is_tax_registered,
     is_foreigner_quota: !!amenities.is_foreigner_quota,
     allow_smoking: !!amenities.allow_smoking,
+    allow_airbnb: !!amenities.allow_airbnb,
     is_high_ceiling: !!amenities.is_high_ceiling,
     is_column_free: !!amenities.is_column_free,
     is_exclusive: !!amenities.is_exclusive,
@@ -376,6 +377,7 @@ export default async function PropertyDetailsPage({
                 isHot={property.is_hot_deal}
                 verified={!!property.verified}
                 petFriendly={property.is_pet_friendly}
+                allowAirbnb={!!property.allow_airbnb}
                 language={lang}
               />
             </section>

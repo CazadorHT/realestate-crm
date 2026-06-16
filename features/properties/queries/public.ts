@@ -31,7 +31,7 @@ export async function getPublicPropertyWithImagesBySlug(
       popular_area, popular_area_en, popular_area_cn, popular_area_ru,
       google_maps_link, nearby_transits, nearby_places, slug, 
       meta_title, meta_description, meta_keywords, structured_data, 
-      verified, status, created_at, images
+      verified, status, created_at, images, amenities
     `,
     )
     .eq("slug", slug)
@@ -48,7 +48,15 @@ export async function getPublicPropertyWithImagesBySlug(
     );
   }
 
-  return data as unknown as PublicPropertyWithImages;
+  const property = {
+    ...data,
+    allow_airbnb: !!(data.amenities as any)?.allow_airbnb,
+    airbnb_daily_price: (data.amenities as any)?.airbnb_daily_price ?? null,
+    airbnb_monthly_price: (data.amenities as any)?.airbnb_monthly_price ?? null,
+    airbnb_min_contract: (data.amenities as any)?.airbnb_min_contract ?? null,
+  };
+
+  return property as unknown as PublicPropertyWithImages;
 }
 
 /**

@@ -7,6 +7,7 @@ import { formatPrice, getOfficePrice } from "@/lib/property-utils";
 import type { PropertyCardProps } from "../PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getEffectivePrice } from "@/lib/property-hardened-utils";
+import { FaAirbnb } from "react-icons/fa6";
 
 export function PropertyCardFooter({
   property,
@@ -62,7 +63,7 @@ export function PropertyCardFooter({
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mb-0.5">
                 {t("common.rent")}
               </span>
-              <div className="text-base sm:text-xl font-extrabold text-[#1B263B]">
+              <div className="text-base sm:text-xl font-extrabold text-[#1B263B] flex items-baseline gap-1">
                 {prices.rentalPrice > 0 ? (
                   <>
                     {formatPrice(prices.rentalPrice, language)}
@@ -72,6 +73,15 @@ export function PropertyCardFooter({
                   </>
                 ) : (
                   t("common.contact_for_price")
+                )}
+                {property.listing_type !== "SALE_AND_RENT" && property.allow_airbnb && property.airbnb_daily_price && (
+                  <span className="flex items-center gap-1 text-[11px] text-[#FF5A5F] font-extrabold ml-1 sm:ml-2">
+                    <span className="text-slate-300 font-normal mr-1">•</span>
+                    <FaAirbnb className="w-3.5 h-3.5 shrink-0" />
+                    <span>
+                      {formatPrice(property.airbnb_daily_price, language)}{t("common.per_day_short")}
+                    </span>
+                  </span>
                 )}
               </div>
             </div>
@@ -91,6 +101,16 @@ export function PropertyCardFooter({
                 </span>
               </div>
             )}
+
+          {/* Airbnb Daily Price */}
+          {property.listing_type === "SALE_AND_RENT" && property.allow_airbnb && property.airbnb_daily_price && (
+            <div className="flex items-center gap-1 text-[10px] text-[#FF5A5F] font-bold">
+              <FaAirbnb className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                {formatPrice(property.airbnb_daily_price, language)}{t("common.per_day_short")}
+              </span>
+            </div>
+          )}
 
           {/* Date */}
           <div className="flex items-center gap-1 text-[10px] text-slate-400 font-medium">
@@ -176,56 +196,75 @@ export function PropertyCardFooter({
             </div>
           </div>
         ) : (
-          <>
-            <div className="text-[10px] md:text-xs text-slate-900 uppercase tracking-tight font-bold">
-              {property.listing_type === "RENT"
-                ? t("common.rent_price")
-                : t("common.sale_price")}
-            </div>
-            <div className="text-base lg:text-md xl:text-xl font-bold text-[#1B263B] flex flex-wrap items-baseline gap-1 md:gap-2">
-              {(property.listing_type === "SALE" && prices.hasSaleDiscount) || 
-               (property.listing_type === "RENT" && prices.hasRentalDiscount) ? (
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-500 font-extrabold line-through decoration-slate-500/80">
-                      {formatPrice(
-                        property.listing_type === "SALE" ? prices.originalPrice : prices.originalRentalPrice,
-                        language,
+          <div className="flex items-start justify-between w-full">
+            {/* Left Column: Rent / Sale Price */}
+            <div className="flex flex-col min-w-0">
+              <div className="text-[10px] md:text-xs text-slate-900 uppercase tracking-tight font-bold mb-0.5">
+                {property.listing_type === "RENT"
+                  ? t("common.rent_price")
+                  : t("common.sale_price")}
+              </div>
+              <div className="text-base lg:text-md xl:text-xl font-bold text-[#1B263B] flex flex-wrap items-baseline gap-1 md:gap-2">
+                {(property.listing_type === "SALE" && prices.hasSaleDiscount) || 
+                 (property.listing_type === "RENT" && prices.hasRentalDiscount) ? (
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-slate-500 font-extrabold line-through decoration-slate-500/80">
+                        {formatPrice(
+                          property.listing_type === "SALE" ? prices.originalPrice : prices.originalRentalPrice,
+                          language,
+                        )}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-base md:text-xl font-bold text-rose-600">
+                        {formatPrice(
+                          property.listing_type === "SALE" ? prices.salePrice : prices.rentalPrice,
+                          language,
+                        )}
+                      </span>
+                      {property.listing_type === "RENT" && (
+                        <span className="text-[10px] md:text-xs text-slate-500 font-normal">
+                          {t("common.per_month_short")}
+                        </span>
                       )}
-                    </span>
-                    <span className="text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md">
-                      -{property.listing_type === "SALE" ? prices.saleDiscountPercent : prices.rentalDiscountPercent}%
-                    </span>
+                      <span className="text-xs font-bold bg-rose-50 text-rose-600 border border-rose-100 px-1.5 py-0.5 rounded-md ml-1 align-middle self-center">
+                        -{property.listing_type === "SALE" ? prices.saleDiscountPercent : prices.rentalDiscountPercent}%
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-base md:text-xl font-bold text-rose-600">
-                      {formatPrice(
-                        property.listing_type === "SALE" ? prices.salePrice : prices.rentalPrice,
-                        language,
-                      )}
-                    </span>
+                ) : (
+                  <>
+                    {property.listing_type === "SALE" 
+                      ? (prices.salePrice > 0 ? formatPrice(prices.salePrice, language) : t("common.contact_for_price"))
+                      : (prices.rentalPrice > 0 ? formatPrice(prices.rentalPrice, language) : t("common.contact_for_price"))
+                    }
                     {property.listing_type === "RENT" && (
                       <span className="text-[10px] md:text-xs text-slate-500 font-normal">
                         {t("common.per_month_short")}
                       </span>
                     )}
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {property.listing_type === "SALE" 
-                    ? (prices.salePrice > 0 ? formatPrice(prices.salePrice, language) : t("common.contact_for_price"))
-                    : (prices.rentalPrice > 0 ? formatPrice(prices.rentalPrice, language) : t("common.contact_for_price"))
-                  }
-                  {property.listing_type === "RENT" && (
-                    <span className="text-[10px] md:text-xs text-slate-500 font-normal">
-                      {t("common.per_month_short")}
-                    </span>
-                  )}
-                </>
-              )}
+                  </>
+                )}
+              </div>
             </div>
-          </>
+
+            {/* Right Column: Airbnb Daily Price */}
+            {property.allow_airbnb && property.airbnb_daily_price && (
+              <div className="flex flex-col text-right shrink-0 pl-2">
+                <div className="text-[10px] md:text-xs text-[#FF5A5F] uppercase tracking-tight font-extrabold flex items-center justify-end gap-1 mb-0.5">
+                  <FaAirbnb className="w-4 h-4 shrink-0 text-[#FF5A5F]" />
+                  <span>Airbnb</span>
+                </div>
+                <div className="text-base lg:text-md xl:text-xl font-extrabold text-[#FF5A5F] flex items-baseline justify-end gap-0.5">
+                  {formatPrice(property.airbnb_daily_price, language)}
+                  <span className="text-[10px] md:text-xs text-slate-500 font-normal">
+                    {t("common.per_day_short")}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
@@ -239,6 +278,16 @@ export function PropertyCardFooter({
               {t("common.contract")} {formatContractDuration(property.min_contract_months)}
             </div>
           )}
+
+        {/* Airbnb Daily Price */}
+        {property.listing_type === "SALE_AND_RENT" && property.allow_airbnb && property.airbnb_daily_price && (
+          <div className="flex items-center gap-1 text-[9px] md:text-[11px] text-[#FF5A5F] font-bold">
+            <FaAirbnb className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              {formatPrice(property.airbnb_daily_price, language)}{t("common.per_day_short")}
+            </span>
+          </div>
+        )}
           
 
         {/* Update Date (Right) */}

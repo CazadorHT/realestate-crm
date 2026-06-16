@@ -108,6 +108,7 @@
     "contract": "Contract",
     "months_short": "mo.",
     "per_month_short": "/mo.",
+    "per_day_short": "/day",
     "baht_symbol": "฿",
     "rent_price": "Rent Price",
     "sale_price": "Sale Price",
@@ -543,6 +544,7 @@
     "foreigner": "Foreigner",
     "company_registered": "Company Registered",
     "hot_deal": "Hot Deal",
+    "allow_airbnb": "Airbnb Friendly",
     "near_train": "Near Train",
     "select_station": "Select Station",
     "all_stations": "All Stations",
@@ -1010,7 +1012,13 @@
       "investment_title": "Golden Investment Opportunity",
       "yield_prefix": "Rental price ",
       "yield_middle": "/mo, representing ",
-      "yield_suffix": " yield per year."
+      "yield_suffix": " yield per year.",
+      "projected": "projected",
+      "airbnb_investment_title": "Estimated Airbnb Yield",
+      "airbnb_daily_yield_label": "Daily Yield (70% Occupancy)",
+      "airbnb_monthly_yield_label": "Monthly Yield",
+      "airbnb_rent_title": "Airbnb & Short-term Friendly",
+      "airbnb_rent_desc": "This property is permitted for Airbnb / short-term subleasing, offering flexible daily and monthly rates."
     },
     "categories": {
       "school": "Schools",
@@ -1036,6 +1044,7 @@
       "garden_view": "Garden View",
       "unblocked_view": "Unblocked View",
       "allow_smoking": "Smoking Allowed",
+      "allow_airbnb": "Airbnb Friendly",
       "high_ceiling": "High Ceiling",
       "column_free": "Column Free",
       "bare_shell": "Bare Shell",

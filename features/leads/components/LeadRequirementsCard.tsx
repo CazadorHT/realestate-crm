@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type LeadPreferences } from "../types";
+import { FaAirbnb } from "react-icons/fa6";
 
 interface LeadRequirementsCardProps {
   lead: {
@@ -172,7 +173,7 @@ export function LeadRequirementsCard({ lead }: LeadRequirementsCardProps) {
                 {lead.allow_airbnb && (
                    <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-rose-50 flex items-center justify-center shrink-0 ring-1 ring-rose-100">
-                      <DoorOpen className="h-3.5 w-3.5 text-rose-600" />
+                      <FaAirbnb className="h-4 w-4 text-[#FF5A5F]" />
                     </div>
                     <div className="space-y-0.5">
                       <span className="text-[9px] font-semibold text-rose-400 uppercase tracking-widest block leading-none">ทำ Airbnb</span>

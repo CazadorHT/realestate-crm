@@ -15,6 +15,7 @@ export interface SearchCriteria {
   area?: string;
   nearTransit?: boolean;
   propertyType?: PropertyType;
+  allowAirbnb?: boolean;
   language?: "en" | "th" | "cn" | "ru"; // Add language support
 }
 
@@ -38,6 +39,10 @@ export interface PropertyMatch {
   transit_type?: string;
   transit_distance_meters?: number;
   property_type?: PropertyType;
+  allow_airbnb?: boolean;
+  airbnb_daily_price?: number | null;
+  airbnb_monthly_price?: number | null;
+  airbnb_min_contract?: string | null;
 }
 
 export interface SearchSession {

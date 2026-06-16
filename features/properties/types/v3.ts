@@ -23,6 +23,10 @@ export interface PropertyAmenitiesV3 {
   is_tax_registered?: boolean;
   is_foreigner_quota?: boolean;
   allow_smoking?: boolean;
+  allow_airbnb?: boolean;
+  airbnb_daily_price?: number;
+  airbnb_monthly_price?: number;
+  airbnb_min_contract?: string;
   is_high_ceiling?: boolean;
   is_column_free?: boolean;
   is_exclusive?: boolean;
@@ -165,6 +169,10 @@ export interface PropertyWithDetails {
   is_tax_registered: boolean;
   is_foreigner_quota: boolean;
   allow_smoking: boolean;
+  allow_airbnb: boolean;
+  airbnb_daily_price: number | null;
+  airbnb_monthly_price: number | null;
+  airbnb_min_contract: string | null;
   is_high_ceiling: boolean;
   is_column_free: boolean;
   is_exclusive: boolean;

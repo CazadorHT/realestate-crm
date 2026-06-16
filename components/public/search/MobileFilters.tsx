@@ -34,7 +34,7 @@ import { MagicAiSearch } from "./MagicAiSearch";
 import { formatStationLabel } from "@/lib/property-utils";
 
 import { MdManageSearch, MdOutlinePets as PetIcon, MdWork as WorkIcon } from "react-icons/md";
-import { FaFire as FireIcon, FaTrainSubway as TrainIcon } from "react-icons/fa6";
+import { FaFire as FireIcon, FaTrainSubway as TrainIcon, FaAirbnb } from "react-icons/fa6";
 import { GiEarthAmerica as EarthIcon } from "react-icons/gi";
 import { RiArmchairFill as ArmchairIcon } from "react-icons/ri";
 import { 
@@ -71,6 +71,8 @@ interface MobileFiltersProps {
   setCompanyRegistered: (v: boolean) => void;
   isHotDeal: boolean;
   setIsHotDeal: (v: boolean) => void;
+  allowAirbnb: boolean;
+  setAllowAirbnb: (v: boolean) => void;
   type: string;
   setType: (v: string) => void;
   listingType: string;
@@ -150,6 +152,8 @@ export function MobileFilters({
   setCompanyRegistered,
   isHotDeal,
   setIsHotDeal,
+  allowAirbnb,
+  setAllowAirbnb,
   type,
   setType,
   listingType,
@@ -419,6 +423,7 @@ export function MobileFilters({
                     { key: "isForeigner", state: isForeigner, setState: setIsForeigner, icon: EarthIcon, label: "foreigner", color: "purple", size: "h-6 w-6" },
                     { key: "companyRegistered", state: companyRegistered, setState: setCompanyRegistered, icon: WorkIcon, label: "company_registered", color: "indigo", size: "h-6 w-6" },
                     { key: "isHotDeal", state: isHotDeal, setState: setIsHotDeal, icon: FireIcon, label: "hot_deal", color: "rose", size: "h-[22px] w-[22px]" },
+                    { key: "allowAirbnb", state: allowAirbnb, setState: setAllowAirbnb, icon: FaAirbnb, label: "allow_airbnb", color: "pink", size: "h-[22px] w-[22px]" },
                    ].map((f) => {
                     const qCount = availableQuickFilters[f.key] || 0;
                     const isDisabled = !f.state && qCount === 0;
@@ -428,8 +433,10 @@ export function MobileFilters({
                         key={f.label}
                         className={cn(
                           "flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl border-2 transition-colors duration-200 cursor-pointer relative",
-                          f.state
-                            ? `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
+                           f.state
+                            ? f.color === "pink"
+                              ? "bg-[#FF5A5F] border-[#FF5A5F] text-white shadow-md shadow-pink-500/20"
+                              : `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
                             : isDisabled
                             ? "bg-slate-100 border-transparent text-slate-300 pointer-events-none"
                             : "bg-slate-50 border-transparent text-slate-600 hover:border-slate-200"
@@ -444,7 +451,7 @@ export function MobileFilters({
                             {qCount}
                           </span>
                         )}
-                        <f.icon className={cn(f.size, f.state ? "text-white" : isDisabled ? "text-slate-200" : `text-${f.color}-500`)} />
+                        <f.icon className={cn(f.size, f.state ? "text-white" : isDisabled ? "text-slate-200" : f.color === "pink" ? "text-[#FF5A5F]" : `text-${f.color}-500`)} />
                         <span className="text-[10px] font-medium text-center leading-tight">
                           {t(`search.${f.label}`)}
                         </span>

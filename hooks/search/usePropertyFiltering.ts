@@ -19,6 +19,7 @@ interface FilteringOptions {
   isForeigner: boolean;
   companyRegistered: boolean;
   isHotDeal: boolean;
+  allowAirbnb: boolean;
   minPrice: string;
   maxPrice: string;
   minSize: string;
@@ -39,7 +40,7 @@ export function usePropertyFiltering(
   const {
     keyword, province, type, listingType, priceType, area,
     nearTrain, petFriendly, fullyFurnished, bedrooms,
-    isForeigner, companyRegistered, isHotDeal,
+    isForeigner, companyRegistered, isHotDeal, allowAirbnb,
     minPrice, maxPrice, minSize, maxSize, sort, transitStation,
   } = options;
 
@@ -130,6 +131,7 @@ export function usePropertyFiltering(
     if (!excludeFilters.includes("isForeigner") && isForeigner && !p.is_foreigner_quota) return false;
     if (!excludeFilters.includes("companyRegistered") && companyRegistered && !p.is_tax_registered) return false;
     if (!excludeFilters.includes("isHotDeal") && isHotDeal && !p.is_hot_deal) return false;
+    if (!excludeFilters.includes("allowAirbnb") && allowAirbnb && !p.allow_airbnb) return false;
 
     if (!excludeFilters.includes("bedrooms") && bedrooms !== "ALL") {
       const beds = p.bedrooms || 0;
@@ -171,7 +173,7 @@ export function usePropertyFiltering(
     }
 
     return true;
-  }, [searchIntent, province, type, listingType, priceType, area, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, minPrice, maxPrice, minSize, maxSize, transitStation]);
+  }, [searchIntent, province, type, listingType, priceType, area, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, allowAirbnb, minPrice, maxPrice, minSize, maxSize, transitStation]);
 
   // Single-Pass Engine (O(N))
   const results = useMemo(() => {
@@ -180,7 +182,7 @@ export function usePropertyFiltering(
     const areaMap = new Map<string, { count: number; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }>();
     const typeCounts: Record<string, number> = {};
     const listingTypeCounts: Record<string, number> = { ALL: 0, SALE: 0, RENT: 0, SALE_AND_RENT: 0 };
-    const quickCounts = { nearTrain: 0, petFriendly: 0, fullyFurnished: 0, isForeigner: 0, companyRegistered: 0, isHotDeal: 0 };
+    const quickCounts = { nearTrain: 0, petFriendly: 0, fullyFurnished: 0, isForeigner: 0, companyRegistered: 0, isHotDeal: 0, allowAirbnb: 0 };
     const bedroomCounts: Record<string, number> = { ALL: 0, "1": 0, "2": 0, "3": 0, "4+": 0 };
     const stationMap = new Map<string, { count: number; type: string; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }>();
     const allStationsMap = new Map<string, { type: string; name_en?: string | null; name_cn?: string | null; name_ru?: string | null }>();
@@ -250,6 +252,7 @@ export function usePropertyFiltering(
       if (checkMatch(p, ["isForeigner"]) && p.is_foreigner_quota) quickCounts.isForeigner++;
       if (checkMatch(p, ["companyRegistered"]) && p.is_tax_registered) quickCounts.companyRegistered++;
       if (checkMatch(p, ["isHotDeal"]) && p.is_hot_deal) quickCounts.isHotDeal++;
+      if (checkMatch(p, ["allowAirbnb"]) && p.allow_airbnb) quickCounts.allowAirbnb++;
 
       if (checkMatch(p, ["bedrooms"])) {
         bedroomCounts.ALL++;

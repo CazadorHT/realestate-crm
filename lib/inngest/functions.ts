@@ -80,7 +80,7 @@ export const processPropertyCreated = inngest.createFunction(
             `
           id, title, property_type, listing_type, price, rental_price, 
           district, province, size_sqm, land_size_sqwah, bedrooms, 
-          bathrooms, is_pet_friendly, is_fully_furnished, popular_area, tenant_id
+          bathrooms, is_pet_friendly, is_fully_furnished, popular_area, tenant_id, amenities
         `,
           )
           .eq("id", propertyId)

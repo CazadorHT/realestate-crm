@@ -66,6 +66,8 @@ export type PropertyRow = {
   is_foreigner_quota: boolean | null;
   is_tax_registered: boolean | null;
   is_hot_deal: boolean | null;
+  allow_airbnb: boolean | null;
+  amenities: unknown | null;
   nearby_places: unknown | null;
   nearby_transits: unknown | null;
   ai_summary_content: string | null;
@@ -107,7 +109,7 @@ const PUBLIC_COLUMNS = `
   transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_distance_meters,
   google_maps_link, is_fully_furnished, is_bare_shell,
   is_pet_friendly, is_foreigner_quota, is_tax_registered,
-  ai_summary_content,
+  ai_summary_content, amenities,
   property_images (
     image_url, storage_path, is_cover, sort_order
   ),
@@ -149,6 +151,7 @@ export interface GetPropertiesOptions {
   fullyFurnished?: boolean;
   isForeigner?: boolean;
   companyRegistered?: boolean;
+  allowAirbnb?: boolean;
   transitStation?: string;
   includeFacets?: boolean;
 }
@@ -214,6 +217,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         if (options.fullyFurnished) query = query.eq("is_fully_furnished", true);
         if (options.isForeigner) query = query.eq("is_foreigner_quota", true);
         if (options.companyRegistered) query = query.eq("is_tax_registered", true);
+        if (options.allowAirbnb) query = query.eq("amenities->allow_airbnb", true);
 
         if (options.transitStation) {
           const station = options.transitStation;
@@ -348,6 +352,10 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             location: buildLocation(row),
             features: (row.property_features || []).map((pf: NonNullable<PropertyRow['property_features']>[number]) => pf.features).filter((f): f is NonNullable<typeof f> => !!f),
             verified: row.verified === true ? true : row.verified === false ? false : undefined,
+            allow_airbnb: !!(row.amenities as any)?.allow_airbnb,
+            airbnb_daily_price: (row.amenities as any)?.airbnb_daily_price ?? null,
+            airbnb_monthly_price: (row.amenities as any)?.airbnb_monthly_price ?? null,
+            airbnb_min_contract: (row.amenities as any)?.airbnb_min_contract ?? null,
             nearby_places: getSafeNearbyPlaces(row.nearby_places),
             nearby_transits: getSafeNearbyTransits(row.nearby_transits),
           };
@@ -396,6 +404,10 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
     images: finalImages,
     location: buildLocation(typedRow),
     features: (typedRow.property_features || []).map((pf: NonNullable<PropertyRow['property_features']>[number]) => pf.features).filter((f): f is NonNullable<typeof f> => !!f),
+    allow_airbnb: !!(typedRow.amenities as any)?.allow_airbnb,
+    airbnb_daily_price: (typedRow.amenities as any)?.airbnb_daily_price ?? null,
+    airbnb_monthly_price: (typedRow.amenities as any)?.airbnb_monthly_price ?? null,
+    airbnb_min_contract: (typedRow.amenities as any)?.airbnb_min_contract ?? null,
     nearby_places: getSafeNearbyPlaces(typedRow.nearby_places),
     nearby_transits: getSafeNearbyTransits(typedRow.nearby_transits),
   };

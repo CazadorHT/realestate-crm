@@ -30,6 +30,7 @@ import {
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { PropertyImage } from "@/features/properties/types";
 import { MdOutlinePets } from "react-icons/md";
+import { FaAirbnb } from "react-icons/fa6";
 
 import { type Language } from "@/lib/i18n";
 
@@ -48,6 +49,7 @@ interface PropertyGalleryProps {
   isHot?: boolean;
   verified?: boolean;
   petFriendly?: boolean;
+  allowAirbnb?: boolean;
   propertyId?: string;
   language?: Language;
   imageAlt?: string;
@@ -143,6 +145,7 @@ export function PropertyGallery({
   isHot,
   verified,
   petFriendly,
+  allowAirbnb,
   propertyId,
   language: customLanguage,
   imageAlt,
@@ -293,6 +296,16 @@ export function PropertyGallery({
               <MdOutlinePets className="w-4 h-4 md:w-5 md:h-5 rotate-25" />
               <span className={`opacity-100 max-w-[150px] ml-2 xl:max-w-0 xl:opacity-0  overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase ${inlineActiveIndex !== 0 ? "max-w-0! opacity-0! ml-0!" : ""}`}>
                 Pet Friendly
+              </span>
+            </div>
+          )}
+
+          {/* Airbnb Allowed Badge */}
+          {allowAirbnb && (
+            <div className={`flex items-center bg-[#FF5A5F]/90 backdrop-blur-md text-white p-1.5 md:p-2 rounded-full shadow-lg transition-all duration-300 pr-4 xl:pr-1.5 xl:group-hover/gallery:pr-4 cursor-default ${inlineActiveIndex !== 0 ? "pr-1.5!" : ""}`}>
+              <FaAirbnb className="w-4 h-4 md:w-5 md:h-5 shrink-0" />
+              <span className={`opacity-100 max-w-[150px] ml-2 xl:max-w-0 xl:opacity-0 overflow-hidden whitespace-nowrap text-[10px] md:text-[11px] font-bold transition-all duration-300 xl:group-hover/gallery:max-w-[100px] xl:group-hover/gallery:opacity-100 xl:group-hover/gallery:ml-2 uppercase ${inlineActiveIndex !== 0 ? "max-w-0! opacity-0! ml-0!" : ""}`}>
+                Airbnb
               </span>
             </div>
           )}

@@ -106,6 +106,7 @@
     "contract": "สัญญา",
     "months_short": "ด.",
     "per_month_short": "/ด.",
+    "per_day_short": "/วัน",
     "baht_symbol": "฿",
     "rent_price": "ค่าเช่า",
     "sale_price": "ราคาขาย",
@@ -546,6 +547,7 @@
     "foreigner": "รับชาวต่างชาติ",
     "company_registered": "จดทะเบียนบริษัท",
     "hot_deal": "ส่วนลดพิเศษ (Hot Deal)",
+    "allow_airbnb": "รองรับ Airbnb",
     "near_train": "ใกล้รถไฟฟ้า",
     "select_station": "เลือกสถานี",
     "all_stations": "รถไฟฟ้าทุกสาย",
@@ -1013,7 +1015,13 @@
       "investment_title": "โอกาสทองในการลงทุน",
       "yield_prefix": "ราคาเช่า ",
       "yield_middle": "/เดือน คิดเป็นผลตอบแทน ",
-      "yield_suffix": " ต่อปี จากราคาขาย"
+      "yield_suffix": " ต่อปี จากราคาขาย",
+      "projected": "ประมาณการ",
+      "airbnb_investment_title": "ประมาณการผลตอบแทน Airbnb",
+      "airbnb_daily_yield_label": "ผลตอบแทนรายวัน (เข้าพัก 70%)",
+      "airbnb_monthly_yield_label": "ผลตอบแทนรายเดือน",
+      "airbnb_rent_title": "รองรับการเช่าระยะสั้น / Airbnb",
+      "airbnb_rent_desc": "ทรัพย์นี้อนุญาตให้ผู้เช่าปล่อยเช่าต่อในรูปแบบ Airbnb หรือเช่าพักระยะสั้นได้ โดยมีอัตราค่าเช่าพิเศษรายวันและรายเดือนรองรับ"
     },
     "categories": {
       "school": "สถานศึกษา",
@@ -1039,6 +1047,7 @@
       "garden_view": "วิวสวน",
       "unblocked_view": "วิวไม่บล็อก",
       "allow_smoking": "สูบบุหรี่ได้",
+      "allow_airbnb": "รองรับ Airbnb",
       "high_ceiling": "ฝ้าเพดานสูง",
       "column_free": "ไม่มีเสากลาง",
       "bare_shell": "Bare Shell",

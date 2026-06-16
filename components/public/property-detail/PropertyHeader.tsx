@@ -13,6 +13,7 @@ import {
   PROPERTY_TYPE_TH,
   getOfficePrice,
   getTypeColor,
+  parseAirbnbMinContract,
 } from "@/lib/property-utils";
 import {
   useLanguage,
@@ -26,6 +27,7 @@ import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
 import { toast } from "sonner";
 import { Copy } from "lucide-react";
+import { FaAirbnb } from "react-icons/fa6";
 
 interface PropertyHeaderProps {
   property: {
@@ -75,6 +77,10 @@ interface PropertyHeaderProps {
     has_river_view?: boolean | null;
     has_unblocked_view?: boolean | null;
     allow_smoking?: boolean | null;
+    allow_airbnb?: boolean | null;
+    airbnb_daily_price?: number | null;
+    airbnb_monthly_price?: number | null;
+    airbnb_min_contract?: string | null;
     is_high_ceiling?: boolean | null;
     is_column_free?: boolean | null;
     is_exclusive?: boolean | null;
@@ -301,6 +307,10 @@ export function PropertyHeader({
       name: t("property.badges.allow_smoking"),
       icon: "cigarette",
     },
+    property.allow_airbnb && {
+      name: t("property.badges.allow_airbnb"),
+      icon: "airbnb",
+    },
     property.is_column_free && {
       name: t("property.badges.column_free"),
       icon: "maximize",
@@ -419,9 +429,9 @@ export function PropertyHeader({
       displayPrice === 0
     ) {
       return (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col items-end gap-1">
           {label && (
-            <span className="text-sm text-slate-500 font-medium">{label}</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-0.5">{label}</span>
           )}
           <span className="text-xl md:text-2xl font-semibold text-blue-600">
             {isRent ? t("property.inquiry_rent") : t("property.inquiry_price")}
@@ -440,6 +450,11 @@ export function PropertyHeader({
 
       return (
         <div className="flex flex-col items-end gap-1">
+          {label && (
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-0.5">
+              {label}
+            </span>
+          )}
           <div className="flex items-center gap-2">
             <span className="text-sm text-slate-400 line-through">
               {formatPrice(originalPrice)}
@@ -450,11 +465,6 @@ export function PropertyHeader({
           </div>
 
           <div className="flex items-center gap-2">
-            {label && (
-              <span className="text-sm text-slate-500 font-medium">
-                {label}
-              </span>
-            )}
             <span className="text-xl md:text-2xl font-bold text-rose-600">
               {formatPrice(price)}
               {isRent && (
@@ -469,11 +479,13 @@ export function PropertyHeader({
     }
 
     return (
-      <div className="flex flex-col md:items-end gap-0.5">
-        <div className="flex items-center gap-2">
-          {label && (
-            <span className="text-sm text-slate-500 font-medium">{label}</span>
-          )}
+      <div className="flex flex-col items-end gap-0.5">
+        {label && (
+          <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-0.5">
+            {label}
+          </span>
+        )}
+        <div className="flex items-baseline gap-2">
           <span className="text-xl md:text-2xl font-bold text-slate-900">
             {formatPrice(displayPrice)}
             {isRent && (
@@ -643,67 +655,151 @@ export function PropertyHeader({
                   />
                 </div>
                 {/* Price */}
-                <div className="bg-slate-50/50 border border-slate-200  rounded-xl px-4 py-6 lg:mt-4 items-end  lg:items-end lg:w-[350px] w-full">
+                <div className="bg-slate-50/50 border border-slate-200  rounded-xl px-4 py-4 lg:mt-4 items-end  lg:items-end lg:w-[350px] w-full">
                   <div className="flex flex-col items-end gap-2">
                     {(() => {
                       if (property.listing_type === "SALE_AND_RENT") {
                         return (
-                          <>
+                          <div className="flex flex-col gap-3 w-full items-end">
                             {renderPriceBlock(
                               property.price,
                               property.original_price,
-                              t("common.for_sale"),
+                              t("common.sale_price"),
                               false,
                             )}
-                            {renderPriceBlock(
-                              property.rental_price,
-                              property.original_rental_price,
-                              t("common.for_rent"),
-                              true,
-                            )}
-                          </>
+                            <div className="w-full border-t border-slate-200 my-1" />
+                            <div className="flex flex-col items-end w-full">
+                              {renderPriceBlock(
+                                property.rental_price,
+                                property.original_rental_price,
+                                t("common.rent_price"),
+                                true,
+                              )}
+                              {property.min_contract_months && (
+                                <div className="text-sm text-slate-500 mt-1 flex items-center gap-1.5 justify-end">
+                                  <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
+                                  <span>
+                                    {t("property.min_contract")}{" "}
+                                    <strong className="text-slate-900">
+                                      {property.min_contract_months} {t("common.month")}
+                                      {property.min_contract_months >= 12 &&
+                                        property.min_contract_months % 12 === 0 && (
+                                          <span className="text-slate-500 font-normal">
+                                            {" "}{t("common.or")}{" "}
+                                            {property.min_contract_months / 12}{" "}
+                                            {t("common.year")}
+                                          </span>
+                                        )}
+                                    </strong>
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         );
                       }
 
                       if (property.listing_type === "RENT") {
-                        return renderPriceBlock(
-                          property.rental_price,
-                          property.original_rental_price,
-                          t("common.for_rent"),
-                          true,
+                        return (
+                          <div className="flex flex-col items-end w-full">
+                            {renderPriceBlock(
+                              property.rental_price,
+                              property.original_rental_price,
+                              t("common.rent_price"),
+                              true,
+                            )}
+                            {property.min_contract_months && (
+                              <div className="text-sm text-slate-500 mt-1 flex items-center gap-1.5 justify-end">
+                                <CalendarDays className="w-3.5 h-3.5 text-blue-500" />
+                                <span>
+                                  {t("property.min_contract")}{" "}
+                                  <strong className="text-slate-900">
+                                    {property.min_contract_months} {t("common.month")}
+                                    {property.min_contract_months >= 12 &&
+                                      property.min_contract_months % 12 === 0 && (
+                                        <span className="text-slate-500 font-normal">
+                                          {" "}{t("common.or")}{" "}
+                                          {property.min_contract_months / 12}{" "}
+                                          {t("common.year")}
+                                        </span>
+                                      )}
+                                  </strong>
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         );
                       }
 
                       return renderPriceBlock(
                         property.price,
                         property.original_price,
-                        t("common.for_sale"),
+                        t("common.sale_price"),
                         false,
                       );
                     })()}
 
-                    {(property.listing_type === "RENT" ||
-                      property.listing_type === "SALE_AND_RENT") &&
-                      property.min_contract_months && (
-                        <div className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-200 ">
-                          <CalendarDays className="w-4 h-4 text-blue-500" />
-                          <span className="text-sm text-slate-600">
-                            {t("property.min_contract")}{" "}
-                            <strong className="text-slate-900">
-                              {property.min_contract_months} {t("common.month")}
-                              {property.min_contract_months >= 12 &&
-                                property.min_contract_months % 12 === 0 && (
-                                  <span className="text-slate-500 font-normal">
-                                    {" "}
-                                    {t("common.or")}{" "}
-                                    {property.min_contract_months / 12}{" "}
-                                    {t("common.year")}
-                                  </span>
-                                )}
-                            </strong>
-                          </span>
+                    {property.allow_airbnb && (property.airbnb_daily_price || property.airbnb_monthly_price) && (
+                      <div className="flex flex-col items-end gap-1 mt-2 pt-2 border-t border-slate-200 w-full animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-[#FF5A5F] uppercase tracking-wider">
+                          <FaAirbnb className="w-4 h-4 text-[#FF5A5F]" />
+                          <span>{t("property.badges.allow_airbnb") || "รองรับ Airbnb"}</span>
                         </div>
-                      )}
+                        {property.airbnb_daily_price && (
+                          <div className="text-2xl font-bold text-[#FF5A5F] flex items-baseline gap-1">
+                            {formatPrice(property.airbnb_daily_price)}
+                            <span className="text-xs font-normal text-slate-500">
+                              {t("common.per_day_short") || "/วัน"}
+                            </span>
+                          </div>
+                        )}
+                        {property.airbnb_monthly_price && property.airbnb_monthly_price !== property.rental_price && (
+                          <div className="text-sm text-slate-600 flex items-baseline gap-1 mt-0.5">
+                            <span className="text-slate-400">{t("common.rent") || "รายเดือน"}:</span>
+                            <span className="font-semibold text-slate-800">
+                              {formatPrice(property.airbnb_monthly_price)}
+                            </span>
+                            <span className="text-slate-500">
+                              {t("common.per_month_short") || "/ด."}
+                            </span>
+                          </div>
+                        )}
+                        {property.airbnb_min_contract && (() => {
+                          const parsed = parseAirbnbMinContract(property.airbnb_min_contract);
+                          if (!parsed.number) {
+                            return (
+                              <div className="text-sm text-slate-600 flex items-baseline gap-1 mt-1">
+                                <span className="text-slate-500">{t("property.min_contract") || "สัญญาขั้นต่ำ"}:</span>
+                                <span className="font-semibold text-[#FF5A5F]">
+                                  {property.airbnb_min_contract}
+                                </span>
+                              </div>
+                            );
+                          }
+                          
+                          let unitLabel = parsed.unit;
+                          if (language === "th") {
+                            unitLabel = parsed.unit === "day" ? "วัน" : parsed.unit === "week" ? "สัปดาห์" : "เดือน";
+                          } else if (language === "cn") {
+                            unitLabel = parsed.unit === "day" ? "天" : parsed.unit === "week" ? "周" : "个月";
+                          } else if (language === "ru") {
+                            unitLabel = parsed.unit === "day" ? "день" : parsed.unit === "week" ? "неделя" : "месяц";
+                          } else {
+                            unitLabel = parsed.number === "1" ? parsed.unit : `${parsed.unit}s`;
+                          }
+
+                          return (
+                            <div className="text-sm text-slate-600 flex items-baseline gap-1 mt-1">
+                              <span className="text-slate-500">{t("property.min_contract") || "สัญญาขั้นต่ำ"}:</span>
+                              <span className="font-semibold text-[#FF5A5F]">
+                                {parsed.number} {unitLabel}
+                              </span>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    )}
+
                   </div>
                 </div>
               </div>

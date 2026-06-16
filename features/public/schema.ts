@@ -44,6 +44,7 @@ export const publicPropertyFilterSchema = z.object({
   fullyFurnished: z.coerce.boolean().optional(),
   isForeigner: z.coerce.boolean().optional(),
   companyRegistered: z.coerce.boolean().optional(),
+  allowAirbnb: z.coerce.boolean().optional(),
   transitStation: z.string().optional(),
   includeFacets: z.coerce.boolean().default(true).optional(),
 });

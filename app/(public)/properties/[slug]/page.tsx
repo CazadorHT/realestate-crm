@@ -109,6 +109,7 @@ export default async function PublicPropertyDetailPage(props: {
             isHot={!!data.is_hot_deal}
             verified={!!data.verified}
             petFriendly={!!data.is_pet_friendly}
+            allowAirbnb={!!data.allow_airbnb}
           />
         </section>
 
@@ -162,6 +163,10 @@ export default async function PublicPropertyDetailPage(props: {
               price={data.price}
               rentalPrice={data.rental_price}
               propertyType={data.property_type}
+              allowAirbnb={data.allow_airbnb}
+              airbnbDailyPrice={data.airbnb_daily_price}
+              airbnbMonthlyPrice={data.airbnb_monthly_price}
+              airbnbMinContract={data.airbnb_min_contract}
             />
             <div className="flex-1 xl:flex-none min-w-0 w-full flex flex-col xl:sticky xl:top-24 self-start">
               <AgentSidebar

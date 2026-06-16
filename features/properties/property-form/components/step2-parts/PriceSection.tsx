@@ -27,6 +27,9 @@ import {
 import { useFormContext, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "@/features/properties/schema";
 import { AvmResultDialog } from "./AvmResultDialog";
+import { FaAirbnb } from "react-icons/fa6";
+import { Input } from "@/components/ui/input";
+import { parseAirbnbMinContract } from "@/lib/property-utils";
 
 // Helper for smooth height animations
 function CollapsibleSection({
@@ -79,6 +82,17 @@ export function PriceSection({
   const sizeSqm = form.watch("size_sqm");
   const landSizeSqwah = form.watch("land_size_sqwah");
   const rentPricePerSqm = form.watch("rent_price_per_sqm");
+  const allowAirbnb = form.watch("allow_airbnb");
+
+  const activeCount = (showSale ? 1 : 0) + (showRent ? 1 : 0) + (allowAirbnb ? 1 : 0);
+  const showHeaders = activeCount > 1;
+
+  let colSpanClass = "col-span-12";
+  if (activeCount === 2) {
+    colSpanClass = "col-span-12 md:col-span-6";
+  } else if (activeCount === 3) {
+    colSpanClass = "col-span-12 md:col-span-4";
+  }
 
   // State for price unit toggle
   const [priceUnit, setPriceUnit] = useState<"sqm" | "sqwah">("sqm");
@@ -174,23 +188,23 @@ export function PriceSection({
 
       <CardContent className="px-3 sm:px-6">
         <div className="grid grid-cols-12 gap-6 sm:gap-8 lg:gap-10 relative">
-          {/* Vertical Separator for Dual Mode (Large Screens) */}
-          {showSale && showRent && (
+          {/* Vertical Separators for Multi Mode (Large Screens) */}
+          {activeCount === 2 && (
             <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-slate-100" />
+          )}
+          {activeCount === 3 && (
+            <>
+              <div className="hidden md:block absolute left-1/3 top-0 bottom-0 w-px bg-slate-100" />
+              <div className="hidden md:block absolute left-2/3 top-0 bottom-0 w-px bg-slate-100" />
+            </>
           )}
 
           {/* ================= SALE ZONE ================= */}
           {showSale && (
-            <div
-              className={`${
-                showSale && showRent
-                  ? "col-span-12 md:col-span-6"
-                  : "col-span-12"
-              } space-y-6`}
-            >
-              {/* Header for Dual Mode */}
-              {showSale && showRent && (
-                <div className="flex items-center gap-3 border-b border-slate-50">
+            <div className={`${colSpanClass} space-y-6`}>
+              {/* Header for Multi Mode */}
+              {showHeaders && (
+                <div className="flex items-center gap-3 border-b border-slate-50 pb-2">
                   <div className="p-1.5 rounded-lg bg-rose-100 text-rose-600">
                     <TrendingDown className="h-4 w-4" />
                   </div>
@@ -376,16 +390,10 @@ export function PriceSection({
 
           {/* ================= RENT ZONE ================= */}
           {showRent && (
-            <div
-              className={`${
-                showSale && showRent
-                  ? "col-span-12 md:col-span-6"
-                  : "col-span-12"
-              } space-y-6`}
-            >
-              {/* Header for Dual Mode */}
-              {showSale && showRent && (
-                <div className="flex items-center gap-3 border-b border-slate-50">
+            <div className={`${colSpanClass} space-y-6`}>
+              {/* Header for Multi Mode */}
+              {showHeaders && (
+                <div className="flex items-center gap-3 border-b border-slate-50 pb-2">
                   <div className="p-1.5 rounded-lg bg-orange-100 text-orange-600">
                     <TrendingDown className="h-4 w-4" />
                   </div>
@@ -633,6 +641,133 @@ export function PriceSection({
                     />
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ================= AIRBNB PRICE ZONE ================= */}
+          {allowAirbnb && (
+            <div className={`${colSpanClass} space-y-6 animate-in fade-in slide-in-from-top-2 duration-300`}>
+              {showHeaders && (
+                <div className="flex items-center gap-3 border-b border-slate-50 pb-2">
+                  <div className="p-1.5 rounded-lg bg-[#FF5A5F]/10 text-[#FF5A5F]">
+                    <FaAirbnb className="h-4 w-4 text-[#FF5A5F]" />
+                  </div>
+                  <h4 className="text-sm font-medium text-slate-900">
+                    ข้อมูลราคา Airbnb (Airbnb Pricing)
+                  </h4>
+                </div>
+              )}
+
+              <div className="space-y-6">
+                <UnitNumberField
+                  label="ราคาปล่อยเช่ารายวัน (Airbnb Daily Rate)"
+                  name="airbnb_daily_price"
+                  control={form.control}
+                  placeholder="กรุณากรอกราคาปล่อยเช่ารายวัน"
+                  suffix="฿ / วัน"
+                  disabled={isReadOnly}
+                  size="default"
+                  className="text-sm font-medium text-slate-700"
+                />
+
+                <UnitNumberField
+                  label="ราคาปล่อยเช่ารายเดือน (Airbnb Monthly Rate)"
+                  name="airbnb_monthly_price"
+                  control={form.control}
+                  placeholder="กรุณากรอกราคาปล่อยเช่ารายเดือน"
+                  suffix="฿ / เดือน"
+                  disabled={isReadOnly}
+                  size="default"
+                  className="text-sm font-medium text-slate-700"
+                />
+
+                <FormField
+                  control={form.control}
+                  name="airbnb_min_contract"
+                  render={({ field }) => {
+                    const { number, unit } = parseAirbnbMinContract(field.value);
+
+                    const handleNumberChange = (num: string) => {
+                      const cleanNum = num.replace(/\D/g, ""); // digits only
+                      if (!cleanNum) {
+                        field.onChange("");
+                      } else {
+                        field.onChange(`${cleanNum} ${unit}`);
+                      }
+                    };
+
+                    const handleUnitChange = (newUnit: string) => {
+                      const finalNum = number || "1";
+                      field.onChange(`${finalNum} ${newUnit}`);
+                    };
+
+                    return (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-slate-700 flex items-center gap-1.5">
+                          สัญญาขั้นต่ำ (Airbnb Minimum Contract)
+                        </FormLabel>
+                        <div className="flex flex-col gap-2.5">
+                          {/* Quick Presets */}
+                          <div className="flex flex-wrap gap-2">
+                            {[
+                              { label: "1 วัน", value: "1 day" },
+                              { label: "1 สัปดาห์", value: "1 week" },
+                              { label: "1 เดือน", value: "1 month" },
+                              { label: "6 เดือน", value: "6 month" },
+                            ].map((preset) => (
+                              <button
+                                key={preset.value}
+                                type="button"
+                                onClick={() => field.onChange(preset.value)}
+                                disabled={isReadOnly}
+                                className={`
+                                  flex-1 px-3 h-11 rounded-lg border text-sm font-medium transition-all min-w-[75px]
+                                  ${
+                                    field.value === preset.value
+                                      ? "border-orange-600 bg-orange-600 text-white shadow-sm"
+                                      : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
+                                  }
+                                `}
+                              >
+                                {preset.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Custom input with dropdown selector */}
+                          <div className="flex gap-2 items-center">
+                            <div className="relative flex-1">
+                              <Input
+                                type="text"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
+                                value={number}
+                                onChange={(e) => handleNumberChange(e.target.value)}
+                                placeholder="หรือระบุตัวเลข เช่น 3, 5"
+                                disabled={isReadOnly}
+                                className="h-11 rounded-lg border-slate-200 text-sm font-medium text-slate-700 placeholder:text-slate-400 placeholder:font-normal focus-visible:ring-orange-500"
+                              />
+                            </div>
+                            <div className="w-32">
+                              <select
+                                value={unit}
+                                onChange={(e) => handleUnitChange(e.target.value)}
+                                disabled={isReadOnly}
+                                className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 focus-visible:ring-orange-500 outline-none"
+                              >
+                                <option value="day">วัน (Days)</option>
+                                <option value="week">สัปดาห์ (Weeks)</option>
+                                <option value="month">เดือน (Months)</option>
+                              </select>
+                            </div>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
               </div>
             </div>
           )}

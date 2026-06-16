@@ -87,6 +87,7 @@ describe("updatePropertyAction", () => {
     is_pet_friendly: false,
     is_foreigner_quota: false,
     allow_smoking: false,
+    allow_airbnb: false,
     is_renovated: false,
     is_fully_furnished: false,
     is_corner_unit: false,

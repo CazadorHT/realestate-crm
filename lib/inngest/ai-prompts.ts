@@ -22,8 +22,14 @@ export function craftPropertyDescriptionPrompt(property: any, hasImage: boolean 
     is_pet_friendly,
     is_fully_furnished,
     is_new,
-    popular_area
+    popular_area,
+    amenities = {}
   } = property;
+
+  const allow_airbnb = !!amenities.allow_airbnb;
+  const airbnb_daily_price = amenities.airbnb_daily_price;
+  const airbnb_monthly_price = amenities.airbnb_monthly_price;
+  const airbnb_min_contract = amenities.airbnb_min_contract;
 
   const context = `
     Property Type: ${property_type}
@@ -35,6 +41,7 @@ export function craftPropertyDescriptionPrompt(property: any, hasImage: boolean 
     Size: ${size_sqm ? `${size_sqm} sqm` : ""} ${land_size_sqwah ? `(Land: ${land_size_sqwah} sq.wah)` : ""}
     Layout: ${bedrooms || 0} Bedrooms, ${bathrooms || 0} Bathrooms
     Features: ${is_pet_friendly ? "Pet Friendly, " : ""}${is_fully_furnished ? "Fully Furnished, " : ""}${is_new ? "Brand New" : ""}
+    Airbnb Info: ${allow_airbnb ? `Allows Airbnb (Short-term rental allowed). ${airbnb_daily_price ? `Daily Rate: ${airbnb_daily_price.toLocaleString()} THB. ` : ""}${airbnb_monthly_price ? `Monthly Rate: ${airbnb_monthly_price.toLocaleString()} THB. ` : ""}${airbnb_min_contract ? `Min Contract: ${airbnb_min_contract}.` : ""}` : "Airbnb Not Allowed"}
   `;
 
   const visualInstruction = hasImage ? `

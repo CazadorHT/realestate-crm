@@ -153,6 +153,10 @@ export const PropertySchema = z
     is_pet_friendly: z.boolean(),
     is_foreigner_quota: z.boolean(),
     allow_smoking: z.boolean(),
+    allow_airbnb: z.boolean(),
+    airbnb_daily_price: z.coerce.number().optional().nullable(),
+    airbnb_monthly_price: z.coerce.number().optional().nullable(),
+    airbnb_min_contract: z.string().optional().nullable(),
     is_renovated: z.boolean(),
     // is_unfurnished: z.boolean().default(false), // Removed in favor of is_bare_shell
     is_fully_furnished: z.boolean(),

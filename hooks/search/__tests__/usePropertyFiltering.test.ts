@@ -91,6 +91,7 @@ const defaultFilters = {
   minSize: '',
   maxSize: '',
   transitStation: '',
+  allowAirbnb: false,
   sort: 'NEWEST'
 };
 

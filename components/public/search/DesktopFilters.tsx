@@ -71,6 +71,8 @@ interface DesktopFiltersProps {
   setCompanyRegistered: (v: boolean) => void;
   isHotDeal: boolean;
   setIsHotDeal: (v: boolean) => void;
+  allowAirbnb: boolean;
+  setAllowAirbnb: (v: boolean) => void;
   availableBedrooms: Record<string, number>;
   availableStations: {
     name: string;
@@ -202,6 +204,8 @@ export function DesktopFilters({
   setCompanyRegistered,
   isHotDeal,
   setIsHotDeal,
+  allowAirbnb,
+  setAllowAirbnb,
   availableBedrooms,
   availableStations,
   allStations,
@@ -248,7 +252,8 @@ export function DesktopFilters({
       fullyFurnished ||
       isForeigner ||
       companyRegistered ||
-      isHotDeal
+      isHotDeal ||
+      allowAirbnb
     );
   }, [
     keyword,
@@ -267,6 +272,7 @@ export function DesktopFilters({
     isForeigner,
     companyRegistered,
     isHotDeal,
+    allowAirbnb,
   ]);
 
   const hasBadges = useMemo(() => {
@@ -285,7 +291,8 @@ export function DesktopFilters({
       fullyFurnished ||
       isForeigner ||
       companyRegistered ||
-      isHotDeal
+      isHotDeal ||
+      allowAirbnb
     );
   }, [
     province,
@@ -303,6 +310,7 @@ export function DesktopFilters({
     isForeigner,
     companyRegistered,
     isHotDeal,
+    allowAirbnb,
   ]);
 
   const formatPrice = (val: string) => {
@@ -557,6 +565,8 @@ export function DesktopFilters({
           setCompanyRegistered={setCompanyRegistered}
           isHotDeal={isHotDeal}
           setIsHotDeal={setIsHotDeal}
+          allowAirbnb={allowAirbnb}
+          setAllowAirbnb={setAllowAirbnb}
           availableQuickFilters={availableQuickFilters}
           t={t}
         />
@@ -747,6 +757,13 @@ export function DesktopFilters({
                   onClear={() => setIsHotDeal(false)}
                   variant="rose"
                   icon={<FireIcon className="w-3 h-3" />}
+                />
+              )}
+              {allowAirbnb && (
+                <Badge
+                  label={t("search.allow_airbnb")}
+                  onClear={() => setAllowAirbnb(false)}
+                  variant="rose"
                 />
               )}
             </div>

@@ -50,6 +50,7 @@ import {
 import { cn } from "@/lib/utils";
 
 import { type Language } from "@/lib/i18n";
+import { FaAirbnb } from "react-icons/fa6";
 
 interface BadgeProperty {
   is_hot_deal?: boolean | null;
@@ -78,6 +79,7 @@ interface BadgeProperty {
   has_garden_view?: boolean | null;
   has_unblocked_view?: boolean | null;
   allow_smoking?: boolean | null;
+  allow_airbnb?: boolean | null;
   is_column_free?: boolean | null;
   is_grade_a?: boolean | null;
   is_grade_b?: boolean | null;
@@ -369,6 +371,12 @@ export function PropertyBadgesSection({
       label: t("property.badges.allow_smoking"),
       icon: Cigarette,
       color: "bg-slate-100 text-slate-600",
+    },
+    {
+      condition: property.allow_airbnb,
+      label: t("property.badges.allow_airbnb"),
+      icon: FaAirbnb,
+      color: "bg-rose-50 text-[#FF5A5F]",
     },
     {
       condition: property.is_column_free,

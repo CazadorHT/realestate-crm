@@ -355,3 +355,31 @@ export function formatLandSize(totalSqwah: number | null | undefined, language: 
   }
 }
 
+/**
+ * Parse a flexible Airbnb minimum contract string into its numeric amount and unit.
+ * Format is expected to be "{number} {day|week|month}" (e.g. "3 day", "1 week")
+ */
+export function parseAirbnbMinContract(value: string | null | undefined): { number: string; unit: string } {
+  if (!value) return { number: "", unit: "day" };
+  
+  const cleanVal = String(value).trim();
+  const match = cleanVal.match(/^(\d+)\s*(day|week|month)s?$/i);
+  if (match) {
+    return {
+      number: match[1],
+      unit: match[2].toLowerCase(),
+    };
+  }
+  
+  const numMatch = cleanVal.match(/^(\d+)/);
+  if (numMatch) {
+    const num = numMatch[1];
+    if (cleanVal.includes("วัน") || cleanVal.includes("day")) return { number: num, unit: "day" };
+    if (cleanVal.includes("สัปดาห์") || cleanVal.includes("week") || cleanVal.includes("วีก")) return { number: num, unit: "week" };
+    if (cleanVal.includes("เดือน") || cleanVal.includes("month")) return { number: num, unit: "month" };
+    return { number: num, unit: "day" };
+  }
+  
+  return { number: "", unit: "day" };
+}
+

@@ -34,7 +34,14 @@ import type { Database } from "@/lib/database.types.generated";
 /** === SHARED JSONB INTERFACES === */
 interface MultiLang { th?: string; en?: string; cn?: string; ru?: string }
 interface AddressInfo { th?: string; en?: string; province?: string; district?: string; subdistrict?: string; postal_code?: string; maps_link?: string; popular_area?: string; popular_area_en?: string; popular_area_cn?: string; popular_area_ru?: string }
-interface Amenities { is_pet_friendly?: boolean; is_foreigner_quota?: boolean }
+interface Amenities {
+  is_pet_friendly?: boolean;
+  is_foreigner_quota?: boolean;
+  allow_airbnb?: boolean;
+  airbnb_daily_price?: number;
+  airbnb_monthly_price?: number;
+  airbnb_min_contract?: string;
+}
 interface PricingDetails { 
   maintenance_fee?: number; 
   commission_sale?: number; 
@@ -168,6 +175,10 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       
       is_pet_friendly: !!amen?.is_pet_friendly,
       is_foreigner_quota: !!amen?.is_foreigner_quota,
+      allow_airbnb: !!amen?.allow_airbnb,
+      airbnb_daily_price: amen?.airbnb_daily_price ?? null,
+      airbnb_monthly_price: amen?.airbnb_monthly_price ?? null,
+      airbnb_min_contract: amen?.airbnb_min_contract ?? null,
       is_exclusive: !!core.is_exclusive,
       is_hot_deal: !!core.is_hot_deal,
       verified: !!core.verified,

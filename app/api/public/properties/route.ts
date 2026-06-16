@@ -25,6 +25,8 @@ export async function GET(request: Request) {
       rawParams["isForeigner"] = value === "true";
     } else if (key === "company_registered") {
       rawParams["companyRegistered"] = value === "true";
+    } else if (key === "airbnb" || key === "allow_airbnb") {
+      rawParams["allowAirbnb"] = value === "true";
     } else if (key === "hot_deal") {
       rawParams["filter"] = value === "true" ? "hot_deals" : "all";
     } else if (key === "min_price") {
