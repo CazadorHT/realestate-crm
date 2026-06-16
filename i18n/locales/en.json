@@ -43,6 +43,8 @@
     "newsletter_sub": "Promotions and special deals",
     "newsletter_placeholder": "Enter Line ID...",
     "newsletter_btn": "Subscribe",
+    "newsletter_thanks_title": "Thank you for subscribing!",
+    "newsletter_thanks_sub": "We have received your Line ID.",
     "privacy_policy": "Privacy Policy",
     "terms_of_use": "Terms of Use",
     "team": "Team",

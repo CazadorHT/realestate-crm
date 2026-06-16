@@ -39,6 +39,20 @@ export async function subscribeToLineAction(
         name: "lead.created",
         data: { leadId }
       }).catch(e => console.warn("Inngest lead.created skip:", e.message));
+
+      // 📢 Notify Admin via LINE & Telegram
+      try {
+        const { sendLineNotification } = await import("@/lib/line");
+        const { sendAdminNotification } = await import("@/lib/telegram");
+
+        const alertMsg = `🔔 ลูกค้าสมัครรับข่าวสารใหม่ทางเว็บไซต์!\n\nLINE ID: ${trimmedLineId}\nบันทึกข้อมูลเข้าระบบเรียบร้อยแล้ว`;
+        await sendLineNotification(alertMsg).catch(e => console.warn("[Notify] Line skip:", e.message));
+
+        const tgMsg = `🔔 <b>ลูกค้าสมัครรับข่าวสารใหม่ทางเว็บไซต์!</b>\n\n<b>LINE ID:</b> <code>${trimmedLineId}</code>`;
+        await sendAdminNotification(tgMsg, { parseMode: "HTML" }).catch(e => console.warn("[Notify] Telegram skip:", e.message));
+      } catch (notifyErr) {
+        console.warn("[Notify] Failed to notify admin:", notifyErr);
+      }
     }
 
     return { success: true, message: "บันทึกข้อมูลเรียบร้อยแล้ว" };

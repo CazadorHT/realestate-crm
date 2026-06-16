@@ -43,6 +43,8 @@
     "newsletter_sub": "Акции и специальные предложения",
     "newsletter_placeholder": "Введите Line ID...",
     "newsletter_btn": "Подписаться",
+    "newsletter_thanks_title": "Спасибо за подписку!",
+    "newsletter_thanks_sub": "Мы получили ваш Line ID.",
     "privacy_policy": "Политика конфиденциальности",
     "terms_of_use": "Условия использования",
     "team": "Команда",

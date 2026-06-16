@@ -279,7 +279,7 @@ function NewsletterSection() {
       if (result.success) {
         setStatus("success");
         setLineId("");
-        setTimeout(() => setStatus("idle"), 3000);
+        setTimeout(() => setStatus("idle"), 5000);
       } else {
         setStatus("error");
         setTimeout(() => setStatus("idle"), 3000);
@@ -288,61 +288,75 @@ function NewsletterSection() {
   };
 
   return (
-    <div className="p-1 rounded-2xl bg-linear-to-br from-slate-700/50 to-slate-800/50 border border-slate-700/50">
-      <div className="bg-[#0f1623] rounded-xl p-5">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="w-8 h-8 rounded-lg bg-[#06C755]/10 flex items-center justify-center shrink-0">
-            <FaLine className="w-5 h-5 text-[#06C755]" />
-          </div>
-          <div>
+    <div className="p-1 rounded-2xl bg-linear-to-br from-slate-700/50 to-slate-800/50 border border-slate-700/50 transition-all duration-300">
+      <div className="bg-[#0f1623] rounded-xl p-5 min-h-[120px] flex flex-col justify-center transition-all duration-300">
+        {status === "success" ? (
+          <div className="flex flex-col items-center justify-center text-center py-2 animate-in fade-in duration-500">
+            <div className="w-10 h-10 rounded-full bg-[#06C755]/20 flex items-center justify-center mb-2">
+              <span className="text-[#06C755] font-bold text-lg">✓</span>
+            </div>
             <span className="block text-white font-semibold text-sm">
-              {t("footer.newsletter_title")}
+              {t("footer.newsletter_thanks_title")}
             </span>
-            <span className="block text-xs text-slate-300">
-              {t("footer.newsletter_sub")}
+            <span className="block text-xs text-slate-400 mt-1">
+              {t("footer.newsletter_thanks_sub")}
             </span>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-[#06C755]/10 flex items-center justify-center shrink-0">
+                <FaLine className="w-5 h-5 text-[#06C755]" />
+              </div>
+              <div>
+                <span className="block text-white font-semibold text-sm">
+                  {t("footer.newsletter_title")}
+                </span>
+                <span className="block text-xs text-slate-300">
+                  {t("footer.newsletter_sub")}
+                </span>
+              </div>
+            </div>
 
-        <div className="relative group">
-          <label htmlFor="footer-line-id" className="sr-only">
-            {t("footer.newsletter_title")}
-          </label>
-          <input
-            id="footer-line-id"
-            name="lineId"
-            type="text"
-            value={lineId}
-            onChange={(e) => setLineId(e.target.value)}
-            disabled={isPending || status === "success"}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSubmit();
-            }}
-            placeholder={t("footer.newsletter_placeholder")}
-            className="w-full h-11 pl-10 pr-24 bg-slate-900/80 border border-slate-700/80 rounded-lg text-sm focus:outline-none focus:border-[#06C755]/50 focus:ring-1 focus:ring-[#06C755]/50 text-white placeholder-slate-600 transition-all"
-          />
-          <FaLine className="absolute left-3 top-3.5 h-4 w-4 text-slate-600 group-focus-within:text-[#06C755] transition-colors" />
+            <div className="relative group">
+              <label htmlFor="footer-line-id" className="sr-only">
+                {t("footer.newsletter_title")}
+              </label>
+              <input
+                id="footer-line-id"
+                name="lineId"
+                type="text"
+                value={lineId}
+                onChange={(e) => setLineId(e.target.value)}
+                disabled={isPending}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleSubmit();
+                }}
+                placeholder={t("footer.newsletter_placeholder")}
+                className="w-full h-11 pl-10 pr-24 bg-slate-900/80 border border-slate-700/80 rounded-lg text-sm focus:outline-none focus:border-[#06C755]/50 focus:ring-1 focus:ring-[#06C755]/50 text-white placeholder-slate-600 transition-all"
+              />
+              <FaLine className="absolute left-3 top-3.5 h-4 w-4 text-slate-600 group-focus-within:text-[#06C755] transition-colors" />
 
-          <button
-            onClick={handleSubmit}
-            disabled={isPending || status === "success" || !lineId.trim()}
-            className={`absolute right-1 top-1 h-9 px-4 rounded-md text-xs font-bold text-white transition-all
-                        ${
-                          status === "success"
-                            ? "bg-green-600"
-                            : status === "error"
-                              ? "bg-red-600"
-                              : "bg-[#06C755] hover:bg-[#05b34c]"
-                        }
-                    `}
-          >
-            {isPending
-              ? "..."
-              : status === "success"
-                ? "✓"
-                : t("footer.newsletter_btn")}
-          </button>
-        </div>
+              <button
+                onClick={handleSubmit}
+                disabled={isPending || !lineId.trim()}
+                className={`absolute right-1 top-1 h-9 px-4 rounded-md text-xs font-bold text-white transition-all
+                            ${
+                              status === "error"
+                                ? "bg-red-600"
+                                : "bg-[#06C755] hover:bg-[#05b34c]"
+                            }
+                        `}
+              >
+                {isPending
+                  ? "..."
+                  : status === "error"
+                    ? "✗"
+                    : t("footer.newsletter_btn")}
+              </button>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

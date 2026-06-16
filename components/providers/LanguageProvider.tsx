@@ -24,6 +24,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(
   undefined,
 );
 
+// Reload dictionaries to pick up new JSON keys
 export const dictionaries = { th, en, cn, ru };
 
 export function LanguageProvider({
