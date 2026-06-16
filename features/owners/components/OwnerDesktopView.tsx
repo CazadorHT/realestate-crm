@@ -35,10 +35,12 @@ export function OwnerDesktopView({
   onSubmit,
   isInDialog,
 }: OwnerDesktopViewProps) {
+  const FormContainer = isInDialog ? "div" : "form";
+
   return (
-    <form 
+    <FormContainer 
       className="space-y-8" 
-      onSubmit={onSubmit}
+      {...(!isInDialog ? { onSubmit } : {})}
       onKeyDown={(e) => {
         if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
           e.preventDefault();
@@ -111,7 +113,7 @@ export function OwnerDesktopView({
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="เช่น บริษัท วี-ลิงค์ แอสเซท จำกัด"
+                  placeholder="เช่น บริษัท วี-ลิงะ แอสเซท จำกัด"
                   className="pl-9 h-11 bg-white border-slate-200 focus:border-blue-500 focus:ring-blue-500/20 transition-all rounded-xl"
                   {...form.register("company_name")}
                 />
@@ -227,7 +229,8 @@ export function OwnerDesktopView({
         )}
 
         <Button
-          type="submit"
+          type={isInDialog ? "button" : "submit"}
+          onClick={isInDialog ? form.handleSubmit(onSubmit) : undefined}
           disabled={
             isPending || !form.formState.isValid || !form.formState.isDirty
           }
@@ -247,6 +250,6 @@ export function OwnerDesktopView({
           </span>
         </Button>
       </div>
-    </form>
+    </FormContainer>
   );
 }

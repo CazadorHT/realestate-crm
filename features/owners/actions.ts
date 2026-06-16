@@ -52,7 +52,7 @@ export async function getOwnersAction(allBranches = false) {
       .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
       .eq("category", 2)
       .eq("role", "OWNER")
-      .order("display_name");
+      .order("created_at", { ascending: false });
 
     const config = await getSystemConfig();
     const isMultiTenant = config.multi_tenant_enabled;
@@ -418,7 +418,7 @@ export async function getOwnersWithPropertyCountAction() {
     .select("id, display_name, phone, line_id, social_links, created_at, updated_at, tenant_id")
     .eq("category", 2)
     .eq("role", "OWNER")
-    .order("display_name");
+    .order("created_at", { ascending: false });
     
   if (isMultiTenant && ctx.tenantId && ctx.tenantId !== "ALL") {
     query = query.or(`tenant_id.eq.${ctx.tenantId},tenant_id.is.null`);
