@@ -102,12 +102,12 @@ export function BlogCard({ post, className, language, t, priority = false }: Blo
                   sizes="28px"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-600 text-[10px] font-bold">
+                <div className="w-full h-full flex items-center truncate justify-center bg-blue-50 text-blue-600 text-[10px] font-bold">
                   {author.name.charAt(0)}
                 </div>
               )}
             </div>
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+            <span className="text-xs font-normal text-slate-400 truncate max-w-[150px]" title={author.name}>
               {author.name}
             </span>
             <div className="ml-auto flex items-center gap-1.5 text-slate-400 text-[11px] font-medium">
