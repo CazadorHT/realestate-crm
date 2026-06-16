@@ -27,6 +27,8 @@ type FilterType =
   | "ALL"
   | "HOUSE"
   | "CONDO"
+  | "VILLA"
+  | "POOL_VILLA"
   | "TOWNHOME"
   | "LAND"
   | "OFFICE"
@@ -34,8 +36,8 @@ type FilterType =
   | "COMMERCIAL"
   | "OTHER";
 
-const OFFICE_TYPES = new Set(["OFFICE_BUILDING"]);
-const COMMERCIAL_TYPES = new Set(["COMMERCIAL_BUILDING"]);
+const OFFICE_TYPES = new Set(["OFFICE_BUILDING", "OFFICE"]);
+const COMMERCIAL_TYPES = new Set(["COMMERCIAL_BUILDING", "COMMERCIAL"]);
 const WAREHOUSE_TYPES = new Set(["WAREHOUSE"]);
 
 const MAX_VISIBLE = 8;
@@ -103,6 +105,8 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
     ALL: t("common.all"),
     HOUSE: t("home.property_types.house"),
     CONDO: t("home.property_types.condo"),
+    VILLA: t("home.property_types.villa"),
+    POOL_VILLA: t("home.property_types.pool_villa"),
     OFFICE: t("property_types.office_building"),
     TOWNHOME: t("home.property_types.townhome"),
     WAREHOUSE: t("home.property_types.warehouse"),
@@ -163,6 +167,20 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
 
   const setFilter = (newFilter: FilterType) => {
     setLocalFilter(newFilter);
+    const params = new URLSearchParams(searchParams.toString());
+    if (newFilter === "ALL") {
+      params.delete("type");
+    } else {
+      const urlVal =
+        newFilter === "OFFICE"
+          ? "OFFICE_BUILDING"
+          : newFilter === "COMMERCIAL"
+            ? "COMMERCIAL_BUILDING"
+            : newFilter;
+      params.set("type", urlVal);
+    }
+    const queryStr = params.toString() ? `?${params.toString()}` : "";
+    router.replace(`/${queryStr}#latest-properties`, { scroll: false });
   };
 
   // -- Drag to Scroll Logic --
@@ -244,7 +262,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
 
   const typeCounts = useMemo(() => {
     const counts: Record<FilterType, number> = {
-      ALL: 0, HOUSE: 0, CONDO: 0, TOWNHOME: 0, LAND: 0, OFFICE: 0, WAREHOUSE: 0, COMMERCIAL: 0, OTHER: 0
+      ALL: 0, HOUSE: 0, CONDO: 0, VILLA: 0, POOL_VILLA: 0, TOWNHOME: 0, LAND: 0, OFFICE: 0, WAREHOUSE: 0, COMMERCIAL: 0, OTHER: 0
     };
 
     // Filter properties ONLY by geography to determine which categories have ANY results
@@ -488,7 +506,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
                   ) : sortedFilterTypes.map((type) => {
                     const active = filter === type;
                     const count = typeCounts[type];
-                    const isDisabled = count === 0 && type !== "ALL";
+                    const isDisabled = count === 0 && type !== "ALL" && !active;
 
                     return (
                       <button
@@ -609,8 +627,16 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
               </div>
             </div>
           ) : filteredProperties.length === 0 ? (
-            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 text-slate-600">
-              {t("property_listing.empty_state")}
+            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-6 text-slate-600 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <span>{t("property_listing.empty_state")}</span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFilter("ALL")}
+                className="rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50"
+              >
+                {t("common.all") || "ดูทั้งหมด"}
+              </Button>
             </div>
           ) : (
             <div className="space-y-8 align-center ">
