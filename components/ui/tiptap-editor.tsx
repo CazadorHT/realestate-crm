@@ -6,6 +6,8 @@ import Link from "@tiptap/extension-link";
 import {
   Bold,
   Italic,
+  Strikethrough,
+  Eraser,
   List,
   ListOrdered,
   Link as LinkIcon,
@@ -35,7 +37,7 @@ export function TipTapEditor({
 }: TipTapEditorProps) {
   const sanitize = (html: string) => {
     return DOMPurify.sanitize(html, {
-      ALLOWED_TAGS: ["p", "br", "strong", "em", "ul", "ol", "li", "a"],
+      ALLOWED_TAGS: ["p", "br", "strong", "em", "ul", "ol", "li", "a", "s", "strike", "del"],
       ALLOWED_ATTR: ["href", "target", "rel"],
     });
   };
@@ -58,7 +60,7 @@ export function TipTapEditor({
     content: value,
     editable: !disabled,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      onChange(sanitize(editor.getHTML()));
     },
     editorProps: {
       attributes: {
@@ -127,6 +129,28 @@ export function TipTapEditor({
           title="ตัวเอียง"
         >
           <Italic className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className={cn("h-8 w-8", editor.isActive("strike") && "bg-slate-200")}
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+          disabled={disabled}
+          title="ขีดฆ่า"
+        >
+          <Strikethrough className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-slate-500 hover:text-red-500"
+          onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}
+          disabled={disabled}
+          title="ล้างการจัดรูปแบบ"
+        >
+          <Eraser className="h-4 w-4" />
         </Button>
         <div className="w-px h-4 bg-slate-300 mx-1" />
         <Button

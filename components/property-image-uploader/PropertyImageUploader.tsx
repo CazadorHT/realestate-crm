@@ -348,16 +348,34 @@ export function PropertyImageUploader({
           finishProcess(processId, "PROCESSING", `อัปโหลดสำเร็จแล้ว ${successCount}/${acceptedFiles.length} รูป`);
         } catch (error: unknown) {
           console.error(`Error processing ${file.name}:`, error);
-          const msg = error instanceof Error ? error.message : "ล้มเหลว";
-          uploadErrors.push(`${file.name}: ${msg}`);
-
-          // Remove item and revoke its blob
-          if (item.preview_url?.startsWith("blob:")) {
-            try {
-              URL.revokeObjectURL(item.preview_url);
-            } catch {}
+          const rawMsg = error instanceof Error ? error.message : "ล้มเหลว";
+          let friendlyMsg = rawMsg;
+          
+          if (
+            rawMsg.includes("unexpected response") || 
+            rawMsg.includes("403") || 
+            rawMsg.includes("Forbidden") ||
+            rawMsg.includes("Payload too large") ||
+            rawMsg.includes("413")
+          ) {
+            friendlyMsg = "ระบบความปลอดภัยของเซิร์ฟเวอร์ (WAF) ปฏิเสธการอัปโหลดไฟล์รูปนี้เนื่องจากโครงสร้างภาพมีความเสี่ยง หรือขนาดใหญ่เกินไป\n💡 วิธีแก้ไข: กรุณาลองแคปหน้าจอภาพนี้ (Screenshot) แล้วใช้อัพโหลดแทน";
           }
-          setImages((prev) => prev.filter((img) => img.id !== item.id));
+          
+          uploadErrors.push(`${friendlyMsg}`);
+
+          // Keep the item in state but mark as error to retain the preview
+          setImages((prev) =>
+            prev.map((img) =>
+              img.id === item.id
+                ? {
+                    ...img,
+                    is_uploading: false,
+                    is_error: true,
+                    error_message: friendlyMsg,
+                  }
+                : img,
+            ),
+          );
         }
       }
 

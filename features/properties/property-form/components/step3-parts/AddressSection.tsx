@@ -147,7 +147,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 gap-1.5 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 font-bold px-3 shadow-xs transition-all active:scale-95"
+              className="h-8 gap-1.5 text-blue-600! border-blue-200 bg-blue-50 hover:bg-blue-100 font-bold px-3 shadow-xs transition-all active:scale-95"
               disabled={isTranslating}
               onClick={() => translateAddress()}
             >

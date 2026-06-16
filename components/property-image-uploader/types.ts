@@ -7,6 +7,8 @@ export interface ImageItem {
   file?: File; // For new uploads
   origin?: "initial" | "temp";
   hasError?: boolean;
+  is_error?: boolean;
+  error_message?: string;
 }
 
 export interface PropertyImageUploaderProps {

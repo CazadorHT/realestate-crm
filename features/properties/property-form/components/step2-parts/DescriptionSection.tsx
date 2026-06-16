@@ -57,12 +57,13 @@ export function DescriptionSection({
   const { isTranslating, translateDescription } = useAITranslation(form);
 
   const handleGenerate = useCallback(
-    async (currentValue: string) => {
+    async (currentValue: string): Promise<string> => {
       const values = form.getValues() as PropertyFormValues;
-      const isImproving =
-        currentValue && currentValue !== "<p></p>" && currentValue.length > 50;
+      const cleanText = currentValue ? currentValue.replace(/<[^>]*>/g, "").trim() : "";
+      const isImproving = cleanText.length > 0;
+      
       const toastMessage = isImproving
-        ? "AI กำลังช่วยปรับปรุงคำบรรยายให้สละสลวยยิ่งขึ้น..."
+        ? "AI กำลังนำคำบรรยายเดิมมาเกลาเนื้อหาและปรับปรุงให้สละสลวยยิ่งขึ้น..."
         : "AI กำลังแต่งคำบรรยายที่น่าสนใจให้คุณ...";
 
       const toastId = toast.loading(toastMessage);
@@ -74,11 +75,11 @@ export function DescriptionSection({
         );
         toast.success(
           isImproving
-            ? "ปรับปรุงคำบรรยายเรียบร้อยแล้ว ✨"
+            ? "เกลาและปรับปรุงคำบรรยายเรียบร้อยแล้ว ✨"
             : "AI แต่งคำบรรยายเรียบร้อยแล้ว ✨",
           { id: toastId },
         );
-        return html;
+        return html ?? "";
       } catch (error) {
         console.error("AI Generation failed, falling back to template:", error);
         toast.error("AI ไม่พร้อมใช้งานในขณะนี้ กำลังใช้ระบบ Template แทน", {

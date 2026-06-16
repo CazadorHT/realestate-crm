@@ -11,6 +11,7 @@ import {
   X,
   Image as ImageIcon,
   MoreVertical,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -48,7 +49,7 @@ export function SortableImageItem({
     isDragging,
   } = useSortable({
     id: image.id,
-    disabled: disabled || image.is_uploading,
+    disabled: disabled || image.is_uploading || image.is_error,
   });
 
   const style = {
@@ -69,7 +70,9 @@ export function SortableImageItem({
           "border-primary ring-2 ring-primary/20",
         !isDragging &&
           !image.is_cover &&
-          "border-transparent hover:border-slate-300",
+          (image.is_error
+            ? "border-red-500 ring-2 ring-red-500/20"
+            : "border-transparent hover:border-slate-300"),
       )}
     >
       <div className="relative w-full h-full">
@@ -97,6 +100,23 @@ export function SortableImageItem({
         ) : null}
       </div>
 
+      {image.is_error && (
+        <div 
+          className="absolute inset-0 bg-red-950/40 flex flex-col items-center justify-center p-2 text-center select-none cursor-help z-10"
+          title={image.error_message}
+        >
+          <div className="bg-red-600 text-white rounded-full p-1.5 shadow-lg mb-1 animate-pulse">
+            <AlertTriangle className="h-4 w-4" />
+          </div>
+          <span className="text-[9px] sm:text-[10px] bg-red-600 text-white font-extrabold px-1.5 py-0.5 rounded shadow-md leading-tight">
+            อัปโหลดล้มเหลว
+          </span>
+          <p className="hidden sm:block text-[8px] text-white font-medium bg-black/60 rounded px-1 py-0.5 mt-1 leading-tight max-w-[95%] line-clamp-2">
+            ชี้ค้างไว้เพื่อดูวิธีแก้ไข
+          </p>
+        </div>
+      )}
+
       {image.is_uploading && (
         <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
           <Loader2 className="h-8 w-8 text-white animate-spin" />
@@ -104,7 +124,7 @@ export function SortableImageItem({
       )}
 
       {/* Drag Handle - Always visible at top-left, slightly more transparent on mobile */}
-      {!image.is_uploading && !disabled && (
+      {!image.is_uploading && !image.is_error && !disabled && (
         <div
           {...attributes}
           {...listeners}
@@ -143,7 +163,7 @@ export function SortableImageItem({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-32 bg-white rounded-xl shadow-lg border border-slate-100 p-1 z-50">
               <DropdownMenuItem
-                disabled={image.is_cover}
+                disabled={image.is_cover || image.is_error}
                 onClick={(e) => {
                   e.stopPropagation();
                   onSetCover(image.id);
@@ -192,8 +212,8 @@ export function SortableImageItem({
                 e.stopPropagation();
                 onSetCover(image.id);
               }}
-              disabled={image.is_cover}
-              title={image.is_cover ? "รูปปกปัจจุบัน" : "ตั้งเป็นรูปปก"}
+              disabled={image.is_cover || image.is_error}
+              title={image.is_error ? "ไม่สามารถตั้งรูปที่มีปัญหาเป็นรูปปกได้" : image.is_cover ? "รูปปกปัจจุบัน" : "ตั้งเป็นรูปปก"}
             >
               {image.is_cover ? (
                 <Star className="h-4 w-4 sm:h-5 sm:w-5 fill-emerald-500 text-emerald-500" />

@@ -440,7 +440,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                 <Button
                                   type="button"
                                   variant="ghost"
-                                  className="w-full justify-start text-xs text-blue-600 font-bold hover:bg-blue-50 py-2.5 h-auto cursor-pointer"
+                                  className="w-full justify-start text-xs text-blue-600 font-medium hover:bg-blue-50 py-2.5 h-auto cursor-pointer"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setOpenIndex(null);
@@ -501,7 +501,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                                 <Button
                                   type="button"
                                   variant="ghost"
-                                  className="w-full justify-start text-xs text-blue-600 font-bold hover:bg-blue-50 py-1.5 h-auto cursor-pointer"
+                                  className="w-full justify-start text-xs text-blue-600 font-medium hover:bg-blue-50 py-1.5 h-auto cursor-pointer"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setOpenSelectIndex(null);
@@ -689,7 +689,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                 value={newTransitCode}
                 onChange={(e) => setNewTransitCode(e.target.value.toUpperCase())}
                 placeholder="เช่น BTS_GOLD หรือ BRT"
-                className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold uppercase"
+                className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-medium placeholder:text-base placehover:font-medium uppercase"
               />
               <span className="text-[10px] text-slate-400">ภาษาอังกฤษตัวพิมพ์ใหญ่ ไม่มีเว้นวรรค</span>
             </div>
@@ -700,7 +700,7 @@ export function TransitSection({ form: formProp }: TransitSectionProps) {
                 value={newTransitLabelTh}
                 onChange={(e) => setNewTransitLabelTh(e.target.value)}
                 placeholder="เช่น รถไฟฟ้าสายสีทอง / BRT"
-                className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-bold"
+                className="h-11 rounded-xl bg-slate-50 border-slate-200 text-xs font-medium placeholder:text-base placehover:font-medium "
               />
             </div>
 

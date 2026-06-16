@@ -858,13 +858,35 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                                 })
                               }
                               height={600}
-                              onAiGenerate={async () => {
-                                const newDesc = generatePropertyDescription(
-                                  form.getValues(),
-                                  activeFeatures,
-                                );
-                                toast.success("อัปเดตรายละเอียดเรียบร้อย");
-                                return newDesc;
+                              onAiGenerate={async (currentValue) => {
+                                const formValues = form.getValues();
+                                const cleanText = currentValue ? currentValue.replace(/<[^>]*>/g, "").trim() : "";
+                                const isImproving = cleanText.length > 0;
+                                
+                                const toastMessage = isImproving
+                                  ? "AI กำลังนำคำบรรยายเดิมมาเกลาเนื้อหาและปรับปรุงให้สละสลวยยิ่งขึ้น..."
+                                  : "AI กำลังแต่งคำบรรยายที่น่าสนใจให้คุณ...";
+                                const toastId = toast.loading(toastMessage);
+
+                                try {
+                                  const { generateAIPropertyDescriptionAction } = await import("../actions/ai-actions");
+                                  const html = await generateAIPropertyDescriptionAction(
+                                    formValues,
+                                    isImproving ? currentValue : undefined
+                                  );
+                                  toast.success(
+                                    isImproving
+                                      ? "เกลาและปรับปรุงคำบรรยายเรียบร้อยแล้ว ✨"
+                                      : "AI แต่งคำบรรยายเรียบร้อยแล้ว ✨",
+                                    { id: toastId }
+                                  );
+                                  return html ?? "";
+                                } catch (error) {
+                                  console.error("AI Generation failed, falling back to template:", error);
+                                  toast.error("AI ไม่พร้อมใช้งานในขณะนี้ กำลังใช้ระบบ Template แทน", { id: toastId });
+                                  const html = generatePropertyDescription(formValues, activeFeatures);
+                                  return html;
+                                }
                               }}
                             />
                           </div>

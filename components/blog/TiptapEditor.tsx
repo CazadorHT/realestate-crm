@@ -11,6 +11,7 @@ import { Toggle } from "@/components/ui/toggle";
 import {
   Bold,
   Italic,
+  Strikethrough,
   List,
   ListOrdered,
   Heading2,
@@ -209,6 +210,14 @@ export function TiptapEditor({ value, onChange }: TiptapEditorProps) {
           className="data-[state=on]:bg-white data-[state=on]:text-blue-600"
         >
           <Italic className="h-4 w-4" />
+        </Toggle>
+        <Toggle
+          size="sm"
+          pressed={editor.isActive("strike")}
+          onPressedChange={() => editor.chain().focus().toggleStrike().run()}
+          className="data-[state=on]:bg-white data-[state=on]:text-blue-600"
+        >
+          <Strikethrough className="h-4 w-4" />
         </Toggle>
         <div className="w-px h-6 bg-border mx-1" />
         <Toggle

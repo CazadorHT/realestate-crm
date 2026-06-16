@@ -5,6 +5,7 @@ import { Editor } from "@tiptap/react";
 import {
   Bold,
   Italic,
+  Strikethrough,
   List,
   ListOrdered,
   Sparkles,
@@ -227,6 +228,21 @@ export function Toolbar({
             title="Italic"
           >
             <Italic className="h-3.5 w-3.5" />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            className={`h-7 w-7 p-0 rounded-md ${
+              editor.isActive("strike")
+                ? "bg-slate-100 text-slate-900"
+                : "text-slate-500"
+            }`}
+            disabled={disabled}
+            title="Strikethrough"
+          >
+            <Strikethrough className="h-3.5 w-3.5" />
           </Button>
           <Button
             type="button"
