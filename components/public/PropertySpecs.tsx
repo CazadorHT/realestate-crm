@@ -144,7 +144,7 @@ export function PropertySpecs({
             {spec.icon}
           </div>
           <div className="min-w-0">
-            <div className="text-sm md:text-lg font-bold text-slate-900 truncate">
+            <div className="text-sm md:text-lg font-semibold text-slate-900 truncate">
               {spec.value}{" "}
               <span className="text-[10px] md:text-sm font-medium text-slate-500 lowercase first-letter:uppercase">
                 {spec.suffix}
