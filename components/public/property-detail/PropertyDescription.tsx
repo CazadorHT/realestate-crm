@@ -12,6 +12,7 @@ import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { updateAIScore } from "@/lib/analytics-utils";
 import { type Language } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 
 interface PropertyDescriptionProps {
   property: {
@@ -122,7 +123,15 @@ export function PropertyDescription({
             mass: 1.5,
             restDelta: 0.5
           }}
-          className="prose prose-slate max-w-none text-slate-600 leading-normal text-sm md:text-base border-b border-slate-200/60 pb-10 overflow-hidden"
+          className={cn(
+            "prose prose-sm sm:prose-base md:prose-lg max-w-none w-full max-w-full break-words prose-headings:scroll-mt-24 prose-a:text-blue-600 prose-a:no-underline hover:prose-a:underline text-slate-600 border-b border-slate-200/60 pb-10 overflow-hidden",
+            "prose-p:text-xs sm:prose-p:text-sm md:prose-p:text-base prose-p:leading-relaxed",
+            "prose-th:text-xs sm:prose-th:text-sm prose-td:text-xs sm:prose-td:text-sm",
+            "prose-h1:text-xl sm:prose-h1:text-2xl md:prose-h1:text-3xl prose-h1:font-black prose-h1:tracking-tight prose-h1:leading-tight",
+            "prose-h2:text-lg sm:prose-h2:text-xl md:prose-h2:text-2xl prose-h2:font-bold prose-h2:tracking-tight prose-h2:leading-snug",
+            "prose-h3:text-base sm:prose-h3:text-lg md:prose-h3:text-xl prose-h3:font-bold prose-h3:leading-normal",
+            "prose-h4:text-sm sm:prose-h4:text-base md:prose-h4:text-lg prose-h4:font-semibold"
+          )}
           dangerouslySetInnerHTML={{
             __html: sanitizedDescription || t("property.no_description"),
           }}
