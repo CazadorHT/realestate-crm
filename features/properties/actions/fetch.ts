@@ -232,10 +232,7 @@ export async function addPopularAreaAction(data: {
     return { success: false, message: "กรุณาระบุชื่อย่าน" };
   }
 
-  const { createAdminClient } = await import("@/lib/supabase/admin");
-  const supabaseAdmin = createAdminClient();
-
-  const { error } = await supabaseAdmin.from("popular_areas_v3").insert({
+  const { error } = await supabase.from("popular_areas_v3").insert({
     name: {
       th: data.name.trim(),
       en: data.name_en?.trim() || null,
