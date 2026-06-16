@@ -34,17 +34,21 @@ export function PublicFooter() {
 
 
   const services = [
-    { name: t("property_types.house"), href: "/properties?category=house" },
-    { name: t("property_types.condo"), href: "/properties?category=condo" },
+    { name: t("property_types.house"), href: "/properties?property_type=house" },
+    { name: t("property_types.condo"), href: "/properties?property_type=condo" },
     {
       name: t("property_types.townhome"),
-      href: "/properties?category=townhome",
+      href: "/properties?property_type=townhome",
     },
     {
       name: t("property_types.pool_villa"),
-      href: "/properties?category=pool_villa",
+      href: "/properties?property_type=pool_villa",
     },
-    { name: t("property_types.villa"), href: "/properties?category=villa" },
+    { name: t("property_types.villa"), href: "/properties?property_type=villa" },
+    { name: t("property_types.office"), href: "/properties?property_type=office" },
+    { name: t("property_types.land"), href: "/properties?property_type=land" },
+    { name: t("property_types.commercial"), href: "/properties?property_type=commercial" },
+    { name: t("property_types.warehouse"), href: "/properties?property_type=warehouse" },
   ];
 
   const about = [
@@ -125,7 +129,7 @@ export function PublicFooter() {
               {/* Contact Info List */}
               <div className="space-y-4 pt-2">
                 <div className="flex items-center gap-3 group cursor-pointer transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-blue-600/20 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0 group-hover:bg-blue-600/20 transition-colors">
                     <Phone className="w-4 h-4 text-blue-400" />
                   </div>
                   <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
@@ -133,7 +137,7 @@ export function PublicFooter() {
                   </span>
                 </div>
                 <div className="flex items-center gap-3 group cursor-pointer transition-colors">
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center group-hover:bg-blue-600/20 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0 group-hover:bg-blue-600/20 transition-colors">
                     <Mail className="w-4 h-4 text-blue-400" />
                   </div>
                   <span className="text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
@@ -146,7 +150,7 @@ export function PublicFooter() {
                   rel="noopener noreferrer"
                   className="flex items-start gap-3 group cursor-pointer transition-colors"
                 >
-                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center mt-1 group-hover:bg-blue-600/20 transition-colors">
+                  <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center shrink-0 mt-1 group-hover:bg-blue-600/20 transition-colors">
                     <MapPin className="w-4 h-4 text-blue-400" />
                   </div>
                   <span className="text-sm text-slate-300 leading-snug group-hover:text-white transition-colors pt-2">
