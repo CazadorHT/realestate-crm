@@ -161,6 +161,7 @@ export const PropertySchema = z
     is_selling_with_tenant: z.boolean(),
     is_bare_shell: z.boolean(),
     is_exclusive: z.boolean(),
+    allow_airbnb: z.boolean(),
     
     // New Requested Features
     has_garden_view: z.boolean(),

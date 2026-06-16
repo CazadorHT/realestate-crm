@@ -155,16 +155,16 @@ export function QuickInfoSection({
                   </label>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="sm"
                     onClick={() => translateTitle()}
                     disabled={isTranslating}
-                    className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1.5 transition-all text-xs"
+                    className="h-8 text-blue-700 bg-blue-50/50 border-blue-200/80 hover:bg-gradient-to-r hover:from-blue-600 hover:to-indigo-600 hover:text-white hover:border-transparent hover:shadow-md hover:shadow-blue-500/20 hover:scale-[1.02] active:scale-[0.98] gap-1.5 transition-all duration-300 text-sm font-semibold rounded-lg px-3 group"
                   >
                     {isTranslating ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
-                      <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+                      <Sparkles className="h-3.5 w-3.5 text-amber-500 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
                     )}
                     AI แปลเป็น EN/CN/RU
                   </Button>
@@ -522,33 +522,35 @@ export function QuickInfoSection({
             ) : (
               <>
                 <div className="flex items-center justify-between ">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 ">
                     <label className="font-medium text-sm uppercase tracking-wider text-slate-700">
                       เพิ่มย่านใหม่ (Multi-language)
                     </label>
+                  </div>
+                  <div className="flex items-center gap-2 ">
                     <Button
                       type="button"
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={handleTranslateArea}
                       disabled={isTranslatingArea}
-                      className="h-7 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 gap-1 transition-all text-[10px]"
+                      className="h-8 text-indigo-700 bg-indigo-50/50 border-indigo-200/80 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white hover:border-transparent hover:shadow-md hover:shadow-indigo-500/20 hover:scale-[1.02] active:scale-[0.98] gap-1.5 transition-all duration-300 text-sm font-semibold rounded-lg px-3 group"
                     >
                       {isTranslatingArea ? (
                         <Loader2 className="h-3 w-3 animate-spin" />
                       ) : (
-                        <Sparkles className="h-3 w-3 text-amber-500" />
+                        <Sparkles className="h-3 w-3 text-amber-500 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
                       )}
                       AI ช่วยแปลชื่อย่าน
                     </Button>
-                  </div>
-                  <button
+                    <button
                     type="button"
                     onClick={() => setShowAddArea(false)}
-                    className="text-slate-400 hover:text-slate-600"
-                  >
+                    className="text-slate-400 p-2 hover:bg-red-100 hover:text-red-600 rounded-sm transition-all"
+                    >
                     <X className="h-4 w-4" />
-                  </button>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in fade-in slide-in-from-left-4 duration-300">
