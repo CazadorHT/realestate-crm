@@ -37,8 +37,12 @@ export async function logAiUsage(input: AiLogInput) {
   // 🕵️ Determine User ID: Priority to input, then session
   let finalUserId = input.userId;
   if (!finalUserId) {
-    const { data: { user } } = await supabase.auth.getUser();
-    finalUserId = user?.id;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      finalUserId = user?.id;
+    } catch (e) {
+      // Ignore if session read fails (e.g. non-request context)
+    }
   }
 
   let costThb = 0;
@@ -51,18 +55,26 @@ export async function logAiUsage(input: AiLogInput) {
   }
 
   try {
-    const { error } = await supabase.rpc("log_ai_usage", {
-      p_model: input.model,
-      p_feature: input.feature,
-      p_status: input.status,
-      p_error_message: input.errorMessage || null,
-      p_prompt_tokens: input.promptTokens || 0,
-      p_completion_tokens: input.completionTokens || 0,
-      p_cost_thb: costThb,
+    // Use admin client (service_role) to insert directly to avoid anonymous execution issues in background/Inngest tasks
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const supabaseAdmin = createAdminClient();
+
+    // Fetch tenant ID
+    const { data: tenant } = await supabaseAdmin.from("tenants_v3").select("id").limit(1).maybeSingle();
+    const tenantId = tenant?.id || null;
+
+    const { error } = await supabaseAdmin.from("ai_token_ledgers").insert({
+      tenant_id: tenantId,
+      user_id: finalUserId || null,
+      feature: input.feature,
+      model: input.model,
+      prompt_tokens: input.promptTokens || 0,
+      completion_tokens: input.completionTokens || 0,
+      cost_thb: costThb,
     });
 
     if (error) {
-      console.error("[logAiUsage] RPC Error:", error);
+      console.error("[logAiUsage] Direct Insert Error:", error);
     }
 
     if (Math.random() < 0.1) {
@@ -75,10 +87,15 @@ export async function logAiUsage(input: AiLogInput) {
 
 export async function pruneAiLogs(daysToKeep: number = 30) {
   try {
-    const supabase = await createClient();
-    const { error } = await supabase.rpc("prune_ai_logs", {
-      p_days_to_keep: daysToKeep
-    });
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const supabaseAdmin = createAdminClient();
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
+
+    const { error } = await supabaseAdmin
+      .from("ai_token_ledgers")
+      .delete()
+      .lt("created_at", cutoffDate.toISOString());
 
     if (error) {
       console.error("[pruneAiLogs] Error:", error);
@@ -125,7 +142,7 @@ export async function getAiUsageStats(): Promise<AiUsageStats> {
     if (rpdRes.error)
       console.error("[getAiUsageStats] RPD Error:", rpdRes.error);
 
-    const limit = 5;
+    const limit = 4000;
     const rpmCount = rpmRes.count || 0;
 
     console.log(
@@ -143,7 +160,7 @@ export async function getAiUsageStats(): Promise<AiUsageStats> {
     return {
       requestsLastMinute: 0,
       requestsLast24Hours: 0,
-      limitRPM: 5,
+      limitRPM: 4000,
       isRateLimited: false,
     };
   }
@@ -169,7 +186,15 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const role = user?.app_metadata?.role;
+    if (!user) return [];
+
+    // Fetch role from profiles table
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const role = profile?.role;
 
     let query = supabase.from("ai_token_ledgers").select(`
       id,
@@ -243,7 +268,23 @@ export async function getAiDashboardStats(): Promise<AiDashboardStats> {
   try {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    const role = user?.app_metadata?.role;
+    if (!user) {
+      return {
+        totalRequests: 0,
+        successRate: 0,
+        chatbotUsage: 0,
+        blogUsage: 0,
+        totalCostThb: 0,
+      };
+    }
+
+    // Fetch role from profiles table
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+    const role = profile?.role;
 
     let query = supabase
       .from("ai_token_ledgers")

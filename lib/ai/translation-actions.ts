@@ -2,6 +2,7 @@
 
 import { generateText } from "./gemini";
 import { logAiUsage } from "@/features/ai-monitor/actions";
+import { createClient } from "@/lib/supabase/server";
 
 export interface TranslationResult {
   [x: string]: unknown;
@@ -18,6 +19,7 @@ async function translateToLanguage(
   text: string,
   targetLang: "en" | "cn" | "ru",
   contentType: "plain" | "html" = "plain",
+  userId?: string,
 ): Promise<string> {
   if (!text || text.trim() === "") {
     return "";
@@ -95,6 +97,7 @@ async function translateToLanguage(
       status: "success",
       promptTokens: result.usage?.promptTokens,
       completionTokens: result.usage?.completionTokens,
+      userId,
     });
 
     return parsedResult.translation;
@@ -107,6 +110,7 @@ async function translateToLanguage(
       feature: `translation_${targetLang}`,
       status: "error",
       errorMessage: error.message,
+      userId,
     });
 
     throw error;
@@ -130,12 +134,16 @@ export async function translateTextAction(
     const aiConfig = await getAiModelConfig();
     const modelName = aiConfig.translation_model;
     
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const userId = user?.id;
+
     console.log(`🌐 [AI Translation] Translating ${text.length} chars in parallel using model: ${modelName || "default"}`);
 
     const [en, cn, ru] = await Promise.all([
-      translateToLanguage(text, "en", contentType),
-      translateToLanguage(text, "cn", contentType),
-      translateToLanguage(text, "ru", contentType),
+      translateToLanguage(text, "en", contentType, userId),
+      translateToLanguage(text, "cn", contentType, userId),
+      translateToLanguage(text, "ru", contentType, userId),
     ]);
 
     return { en, cn, ru };

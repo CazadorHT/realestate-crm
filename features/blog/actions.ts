@@ -972,7 +972,8 @@ export async function generateBlogPostAction(
           tone,
           length as any,
           [], 
-          imageStyle
+          imageStyle,
+          user.id
         );
 
         const dbResult = await createBlogPostAction({
