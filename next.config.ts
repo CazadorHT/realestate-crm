@@ -86,7 +86,7 @@ const nextConfig: NextConfig = {
       "recharts",
     ],
     serverActions: {
-      bodySizeLimit: "4mb",
+      bodySizeLimit: "10mb",
     },
   },
 };

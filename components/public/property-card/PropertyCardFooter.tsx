@@ -97,12 +97,7 @@ export function PropertyCardFooter({
             <Clock className="w-3 h-3" />
             <span className="min-w-[60px]">
               {mounted && property.updated_at
-                ? new Intl.DateTimeFormat(
-                    language === "th" ? "th-TH" : 
-                    language === "cn" ? "zh-CN" : 
-                    language === "ru" ? "ru-RU" : "en-US",
-                    { day: "numeric", month: "short", year: "numeric" }
-                  ).format(new Date(property.updated_at))
+                ? getRelativeDateString(property.updated_at, language)
                 : "-"}
             </span>
           </div>
@@ -252,13 +247,8 @@ export function PropertyCardFooter({
             <>
               <Clock className="h-3 w-3 mr-1" />
               <span className="text-slate-400 font-normal min-w-[70px]">
-                {mounted
-                  ? new Intl.DateTimeFormat(
-                      language === "th" ? "th-TH" : 
-                      language === "cn" ? "zh-CN" : 
-                      language === "ru" ? "ru-RU" : "en-US",
-                      { day: "numeric", month: "short", year: "numeric" }
-                    ).format(new Date(property.updated_at))
+                {mounted && property.updated_at
+                  ? getRelativeDateString(property.updated_at, language)
                   : ""}
               </span>
             </>
@@ -270,3 +260,47 @@ export function PropertyCardFooter({
 }
 
 // Helpers
+function getRelativeDateString(dateStr: string, lang: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  
+  if (isNaN(diffMs) || diffMs < 0) {
+    return "-";
+  }
+
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (lang === "th") {
+    if (diffMins < 1) return "เมื่อสักครู่";
+    if (diffMins < 60) return `${diffMins} นาทีที่แล้ว`;
+    if (diffHours < 24) return `${diffHours} ชม. ที่แล้ว`;
+    if (diffDays <= 3) return `${diffDays} วันที่แล้ว`;
+    return new Intl.DateTimeFormat("th-TH", { day: "numeric", month: "short" }).format(date);
+  }
+
+  if (lang === "cn") {
+    if (diffMins < 1) return "刚刚";
+    if (diffMins < 60) return `${diffMins} 分钟前`;
+    if (diffHours < 24) return `${diffHours} 小时前`;
+    if (diffDays <= 3) return `${diffDays} 天前`;
+    return new Intl.DateTimeFormat("zh-CN", { day: "numeric", month: "short" }).format(date);
+  }
+
+  if (lang === "ru") {
+    if (diffMins < 1) return "только что";
+    if (diffMins < 60) return `${diffMins} мин. назад`;
+    if (diffHours < 24) return `${diffHours} ч. назад`;
+    if (diffDays <= 3) return `${diffDays} дн. назад`;
+    return new Intl.DateTimeFormat("ru-RU", { day: "numeric", month: "short" }).format(date);
+  }
+
+  // English fallback
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m. ago`;
+  if (diffHours < 24) return `${diffHours}h. ago`;
+  if (diffDays <= 3) return `${diffDays}d. ago`;
+  return new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short" }).format(date);
+}
