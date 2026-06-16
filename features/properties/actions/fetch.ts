@@ -225,14 +225,17 @@ export async function addPopularAreaAction(data: {
 }) {
   const { supabase, role } = await requireAuthContext();
   
-  // 🛡️ Elite Hardening: Popular Areas are GLOBAL. Only SuperAdmins can add them.
-  if (role !== "ADMIN") throw new Error("Forbidden: SuperAdmin only");
+  // 🛡️ Staff Authorization: Popular Areas are GLOBAL. All staff members (Admins, Managers, Agents) can add them.
+  assertStaff(role);
 
   if (!data.name || data.name.trim() === "") {
     return { success: false, message: "กรุณาระบุชื่อย่าน" };
   }
 
-  const { error } = await supabase.from("popular_areas_v3").insert({
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const supabaseAdmin = createAdminClient();
+
+  const { error } = await supabaseAdmin.from("popular_areas_v3").insert({
     name: {
       th: data.name.trim(),
       en: data.name_en?.trim() || null,
