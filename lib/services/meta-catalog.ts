@@ -151,25 +151,26 @@ export async function generateMetaCatalogFeed() {
       }
     }
 
-    // Images — XML uses nested <image> blocks
+    // Images — XML uses flat image_url for cover and <image> for gallery
     const images = p.media || [];
-    images.slice(0, 20).forEach((img) => {
-      if (img.url) {
-        xml += `    <image>\n      <url>${img.url}</url>\n    </image>\n`;
-      }
-    });
+    if (images.length > 0) {
+      xml += `    <image_url><![CDATA[${images[0].url}]]></image_url>\n`;
+      images.slice(1, 20).forEach((img) => {
+        if (img.url) {
+          xml += `    <image><![CDATA[${img.url}]]></image>\n`;
+        }
+      });
+    }
 
     // --- ADDRESS (Meta uses flat fields, not nested) ---
     const addrLine1 = (addrObj.address_line1 as string) || "";
     const district = (addrObj.district as string) || "";
     const province = (addrObj.province as string) || "";
 
-    xml += `    <address>\n`;
-    xml += `      <component name="addr1"><![CDATA[${addrLine1}]]></component>\n`;
-    xml += `      <component name="city"><![CDATA[${district}]]></component>\n`;
-    xml += `      <component name="region"><![CDATA[${province}]]></component>\n`;
-    xml += `      <component name="country">TH</component>\n`;
-    xml += `    </address>\n`;
+    xml += `    <address><![CDATA[${addrLine1}]]></address>\n`;
+    xml += `    <city><![CDATA[${district}]]></city>\n`;
+    xml += `    <region><![CDATA[${province}]]></region>\n`;
+    xml += `    <country>TH</country>\n`;
 
     // --- PROPERTY DETAILS ---
     if (p.bedrooms != null) {
