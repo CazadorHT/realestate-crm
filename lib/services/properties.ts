@@ -220,7 +220,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         if (options.allowAirbnb) query = query.eq("amenities->allow_airbnb", true);
 
         if (options.transitStation) {
-          const station = options.transitStation;
+          const station = options.transitStation.replace(/"/g, "");
           query = query.or(
             `nearby_transits.cs.[{"station_name":"${station}"}],nearby_transits.cs.[{"station_name_en":"${station}"}],nearby_transits.cs.[{"station_name_cn":"${station}"}],nearby_transits.cs.[{"station_name_ru":"${station}"}]`
           );

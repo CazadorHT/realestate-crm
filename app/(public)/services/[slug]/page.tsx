@@ -20,18 +20,7 @@ import Image from "next/image";
 import { ServiceGalleryClient } from "./ServiceGalleryClient";
 import { ServiceViewCounter } from "@/components/services/ServiceViewCounter";
 
-export const revalidate = 60;
-
-// Generate static params for all services
-export async function generateStaticParams() {
-  const { getServices } = await import("@/features/services/actions");
-  const services = await getServices();
-  const data = services.data || [];
-
-  return data.map((service) => ({
-    slug: service.slug,
-  }));
-}
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
