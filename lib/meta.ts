@@ -656,16 +656,47 @@ export async function postToMetaPage(
         };
       }
 
-      // 3. Publish Carousel
+      // 3. Publish Carousel (With Retry Mechanism for "Media ID is not available" / Processing delays)
       const publishUrl = `${metaConfig.graphApiUrl}/${igId}/media_publish?creation_id=${carouselData.id}&access_token=${token}`;
-      const publishRes = await fetch(publishUrl, { method: "POST" });
-      const publishData = await publishRes.json();
+      let publishRes: Response | null = null;
+      let publishData: any = null;
+      const maxRetries = 5;
+      const retryDelayMs = 3000;
 
-      return publishRes.ok
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        // Wait a bit before publishing: 2 seconds on the first attempt, and 3 seconds on subsequent retries
+        const waitTime = attempt === 1 ? 2000 : retryDelayMs;
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+
+        console.log(`[meta.ts] Attempting to publish Instagram carousel (Attempt ${attempt}/${maxRetries})...`);
+        publishRes = await fetch(publishUrl, { method: "POST" });
+        publishData = await publishRes.json();
+
+        if (publishRes && publishRes.ok) {
+          break;
+        }
+
+        const errMsg = publishData?.error?.message || "";
+        const isTransientError =
+          errMsg.toLowerCase().includes("media id is not available") ||
+          errMsg.toLowerCase().includes("not ready") ||
+          publishData?.error?.code === 9007;
+
+        if (isTransientError && attempt < maxRetries) {
+          console.warn(
+            `[meta.ts] Instagram media not ready yet. Retrying in ${retryDelayMs / 1000}s... Error: ${errMsg}`,
+          );
+          continue;
+        } else {
+          break;
+        }
+      }
+
+      return publishRes && publishRes.ok
         ? { success: true, data: publishData }
         : {
             success: false,
-            error: `ไม่สามารถนำโพสต์แบบกลุ่ม (Carousel) ขึ้น IG ได้ (${publishData.error?.message})`,
+            error: `ไม่สามารถนำโพสต์แบบกลุ่ม (Carousel) ขึ้น IG ได้ (${publishData?.error?.message || "ระบบประมวลผลรูปภาพของ Instagram ยังไม่พร้อมใช้งาน"})`,
           };
     } else {
       return {
