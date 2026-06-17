@@ -106,10 +106,11 @@ export async function generateMetaCatalogFeed() {
       titleObj.en ||
       titleObj.default ||
       "Untitled") as string;
-    const description = (descObj.th ||
+    const rawDescription = (descObj.th ||
       descObj.en ||
       descObj.default ||
       title) as string;
+    const description = stripHtml(rawDescription);
     const slug = (metaObj.slug as string) || p.id;
     const propertyUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://your-crm.com"}/properties/${slug}`;
 
@@ -296,4 +297,36 @@ function mapMetaPropertyType(typeInt: number): string {
     default:
       return "other";
   }
+}
+
+/**
+ * Strips HTML tags and decodes basic HTML entities to produce clean plain text
+ */
+function stripHtml(html: string): string {
+  if (!html) return "";
+  
+  // 1. Replace block elements/breaks with newlines to preserve readability
+  let text = html
+    .replace(/<\/p>/g, "\n")
+    .replace(/<br\s*\/?>/g, "\n")
+    .replace(/<\/li>/g, "\n")
+    .replace(/<\/h[1-6]>/g, "\n")
+    .replace(/<\/div>/g, "\n");
+    
+  // 2. Strip all remaining HTML tags
+  text = text.replace(/<[^>]*>/g, "");
+  
+  // 3. Clean up HTML entities
+  text = text
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'");
+
+  // 4. Normalize multiple newlines and spaces
+  text = text.replace(/\n\s*\n+/g, "\n\n").trim();
+  
+  return text;
 }
