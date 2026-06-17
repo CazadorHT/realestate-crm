@@ -159,26 +159,28 @@ export async function generateMetaCatalogFeed() {
       }
     }
 
-    // Images — XML uses flat image_url for cover and <image> for gallery
+    // Images — Provide both flat <image_url> and nested <image><url> blocks for maximum compatibility
     const images = p.media || [];
     if (images.length > 0) {
       xml += `    <image_url><![CDATA[${images[0].url}]]></image_url>\n`;
-      images.slice(1, 20).forEach((img) => {
-        if (img.url) {
-          xml += `    <image><![CDATA[${img.url}]]></image>\n`;
-        }
-      });
     }
+    images.slice(0, 20).forEach((img) => {
+      if (img.url) {
+        xml += `    <image>\n      <url><![CDATA[${img.url}]]></url>\n    </image>\n`;
+      }
+    });
 
-    // --- ADDRESS (Meta uses flat fields, not nested) ---
-    const addrLine1 = (addrObj.address_line1 as string) || "";
-    const district = (addrObj.district as string) || "";
-    const province = (addrObj.province as string) || "";
+    // --- ADDRESS (Meta Home Listing format="simple" is REQUIRED) ---
+    const addrLine1 = (addrObj.address_line1 as string)?.trim() || "Bangkok";
+    const district = (addrObj.district as string)?.trim() || "Bangkok";
+    const province = (addrObj.province as string)?.trim() || "Bangkok";
 
-    xml += `    <address><![CDATA[${addrLine1}]]></address>\n`;
-    xml += `    <city><![CDATA[${district}]]></city>\n`;
-    xml += `    <region><![CDATA[${province}]]></region>\n`;
-    xml += `    <country>TH</country>\n`;
+    xml += `    <address format="simple">\n`;
+    xml += `      <component name="addr1"><![CDATA[${addrLine1}]]></component>\n`;
+    xml += `      <component name="city"><![CDATA[${district}]]></component>\n`;
+    xml += `      <component name="region"><![CDATA[${province}]]></component>\n`;
+    xml += `      <component name="country">TH</component>\n`;
+    xml += `    </address>\n`;
 
     // --- PROPERTY DETAILS ---
     if (p.bedrooms != null) {
@@ -188,7 +190,7 @@ export async function generateMetaCatalogFeed() {
       xml += `    <num_baths>${p.bathrooms}</num_baths>\n`;
     }
     if (p.floor_area) {
-      xml += `    <area_size>${p.floor_area}</area_size>\n`;
+      xml += `    <area_size>${Math.round(p.floor_area)}</area_size>\n`;
       xml += `    <area_unit>sq_m</area_unit>\n`;
     }
     const floor = metaObj.floor as string | undefined;
