@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { Database, Json } from "../database.types.generated";
 import { siteConfig } from "@/lib/site-config";
 import { decrypt } from "@/lib/crypto";
@@ -10,7 +10,7 @@ import { decrypt } from "@/lib/crypto";
  * Ref: https://developers.facebook.com/docs/marketing-api/catalog/reference/
  */
 export async function generateMetaCatalogFeed() {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // Fetch active properties directly from V3 Core tables
   // Completely eliminates select(*) to save bandwidth and reduce payload size
