@@ -97,17 +97,25 @@ export async function generateMetaCatalogFeed() {
     const descObj = (details?.description as Record<string, unknown>) || {};
     const addrObj = (details?.address_info as Record<string, unknown>) || {};
     const amenitiesObj = (details?.amenities as Record<string, unknown>) || {};
-    const pricingObj = (details?.pricing_details as Record<string, unknown>) || {};
+    const pricingObj =
+      (details?.pricing_details as Record<string, unknown>) || {};
     const metaObj = (details?.meta_data as Record<string, unknown>) || {};
     const transitObj = (details?.transit_info as Record<string, unknown>) || {};
 
-    const title = (titleObj.th || titleObj.en || titleObj.default || "Untitled") as string;
-    const description = (descObj.th || descObj.en || descObj.default || title) as string;
+    const title = (titleObj.th ||
+      titleObj.en ||
+      titleObj.default ||
+      "Untitled") as string;
+    const description = (descObj.th ||
+      descObj.en ||
+      descObj.default ||
+      title) as string;
     const slug = (metaObj.slug as string) || p.id;
     const propertyUrl = `${process.env.NEXT_PUBLIC_APP_URL || "https://your-crm.com"}/properties/${slug}`;
 
     const originalSalePrice = (pricingObj.original_price as number) || null;
-    const originalRentalPrice = (pricingObj.original_rental_price as number) || null;
+    const originalRentalPrice =
+      (pricingObj.original_rental_price as number) || null;
 
     xml += `  <listing>\n`;
 
@@ -189,7 +197,9 @@ export async function generateMetaCatalogFeed() {
     }
 
     // --- AMENITIES (Meta boolean fields) ---
-    const isFullyFurnished = amenitiesObj.is_fully_furnished as boolean | undefined;
+    const isFullyFurnished = amenitiesObj.is_fully_furnished as
+      | boolean
+      | undefined;
     if (isFullyFurnished != null) {
       xml += `    <furnish_type>${isFullyFurnished ? "furnished" : "unfurnished"}</furnish_type>\n`;
     }
