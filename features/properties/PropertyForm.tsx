@@ -1011,8 +1011,8 @@ export function PropertyForm({
                 className={cn(
                   "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
                   shareStatus["FACEBOOK"]?.success
-                    ? "text-emerald-700! border-emerald-100 bg-emerald-50/50"
-                    : "text-blue-600! border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/50",
+                    ? "text-emerald-700! border-emerald-100 bg-emerald-50/50!"
+                    : "text-blue-600! border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/50!",
                 )}
                 disabled={shareStatus["FACEBOOK"]?.loading}
                 onClick={async () => {
@@ -1088,8 +1088,8 @@ export function PropertyForm({
                   className={cn(
                     "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
                     shareStatus["TIKTOK"]?.success
-                      ? "text-emerald-700! border-emerald-100 bg-emerald-50/50"
-                      : "text-slate-900! border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50",
+                      ? "text-emerald-700! border-emerald-100 bg-emerald-50/50!"
+                      : "text-slate-900! border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50!",
                   )}
                   disabled={shareStatus["TIKTOK"]?.loading}
                 >
@@ -1124,8 +1124,8 @@ export function PropertyForm({
                 className={cn(
                   "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
                   shareStatus["INSTAGRAM"]?.success
-                    ? "text-emerald-700! border-emerald-100 bg-emerald-50/50"
-                    : "text-pink-600! border-slate-200 bg-white hover:border-pink-200 hover:bg-pink-50/50",
+                    ? "text-emerald-700! border-emerald-100 bg-emerald-50/50!"
+                    : "text-pink-600! border-slate-200 bg-white hover:border-pink-200 hover:bg-pink-50/50!",
                 )}
                 disabled={shareStatus["INSTAGRAM"]?.loading}
                 onClick={async () => {
@@ -1171,8 +1171,8 @@ export function PropertyForm({
                 className={cn(
                   "w-full flex-col justify-center items-center gap-2 h-24 text-xs font-semibold rounded-2xl transition-all relative",
                   shareStatus["LINE"]?.success
-                    ? "text-emerald-700! border-emerald-100 bg-emerald-50/50"
-                    : "text-emerald-600! border-slate-200 bg-white hover:border-emerald-200 hover:bg-emerald-50/50",
+                    ? "text-emerald-700! border-emerald-100 bg-emerald-50/50!"
+                    : "text-emerald-600! border-slate-200 bg-white hover:border-emerald-200 hover:bg-emerald-50/50!",
                 )}
                 disabled={shareStatus["LINE"]?.loading}
                 onClick={async () => {

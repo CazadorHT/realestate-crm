@@ -172,6 +172,7 @@ export async function createPropertyAction(
         verified: !!safeValues.verified,
         h3_index_res8: safeValues.h3_index_res8,
         price_per_sqm: safeValues.price_per_sqm,
+        slug: seoData.slug,
       })
       .select("id")
       .single();
@@ -476,6 +477,7 @@ export async function duplicatePropertyAction(
         is_exclusive: core.is_exclusive,
         verified: core.verified,
         h3_index_res8: core.h3_index_res8,
+        slug: uniqueSlug,
       })
       .select("id")
       .single();
