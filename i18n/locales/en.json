@@ -1004,7 +1004,11 @@
     "suitability": {
       "title": "Who is this for?",
       "rent_title": "Great for Rent",
+      "per_day_label": "/day",
+      "per_month_label": "/month",
       "sale_title": "Great for Sale",
+      "rent_highlight_title": "Ready to Move In & Highly Flexible",
+      "rent_highlight_desc": "Ideal for those seeking mobility and minimal long-term financial commitment. Easy to manage expenses and ready for immediate occupancy or business operations.",
       "rent_desc_residential": "Executives / Expat families who want flexibility and full service.",
       "sale_desc_residential": "Long-term living or investment for passive income.",
       "rent_desc_office": "Companies looking for workspace in prime locations with full facilities.",
@@ -1016,9 +1020,13 @@
       "projected": "projected",
       "airbnb_investment_title": "Estimated Airbnb Yield",
       "airbnb_daily_yield_label": "Daily Yield (70% Occupancy)",
+      "airbnb_monthly_label": "Mid-term / Monthly Rental (30+ days)",
+      "airbnb_monthly_sub": "Based on 80% average occupancy",
       "airbnb_monthly_yield_label": "Monthly Yield",
       "airbnb_rent_title": "Airbnb & Short-term Friendly",
-      "airbnb_rent_desc": "This property is permitted for Airbnb / short-term subleasing, offering flexible daily and monthly rates."
+      "airbnb_rent_desc": "This property is permitted for Airbnb / short-term subleasing, offering flexible daily and monthly rates.",
+      "airbnb_daily_label": "Short-term / Daily Rental",
+      "airbnb_daily_sub": "Based on 60% average occupancy"
     },
     "categories": {
       "school": "Schools",

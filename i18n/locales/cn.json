@@ -1003,6 +1003,10 @@
       "title": "这套房子适合谁？",
       "rent_title": "适合租赁",
       "sale_title": "适合购买",
+      "per_day_label": "/天",
+      "per_month_label": "/月",
+      "rent_highlight_title": "即包入住 & 高灵活性",
+      "rent_highlight_desc": "非常适合追求灵活性、希望减少长期财务负担的人群。不仅易于控制预算，还能随时拎包入住或立即开启商业运营。",
       "rent_desc_residential": "寻求灵活性和全方位服务的管理层/外派家庭。",
       "sale_desc_residential": "长期居住或出租投资以获得被动收入。",
       "rent_desc_office": "在黄金地段寻找设施齐全的办公空间的公司的理想选择。",
@@ -1016,7 +1020,11 @@
       "airbnb_daily_yield_label": "日租回报率 (按 70% 入住率)",
       "airbnb_monthly_yield_label": "月租回报率",
       "airbnb_rent_title": "支持短租 / Airbnb",
-      "airbnb_rent_desc": "此房源允许租客进行 Airbnb 或短期转租，并提供灵活的日租和月租价格支持。"
+      "airbnb_rent_desc": "此房源允许租客进行 Airbnb 或短期转租，并提供灵活的日租和月租价格支持。",
+      "airbnb_daily_label": "按天短租模式",
+      "airbnb_daily_sub": "基于平均 60% 的入住率计算",
+      "airbnb_monthly_label": "按月长租模式 (30天+)",
+      "airbnb_monthly_sub": "基于平均 80% 的入住率计算"
     },
     "categories": {
       "school": "学校",
