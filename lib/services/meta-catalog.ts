@@ -102,6 +102,10 @@ export async function generateMetaCatalogFeed() {
     const metaObj = (details?.meta_data as Record<string, unknown>) || {};
     const transitObj = (details?.transit_info as Record<string, unknown>) || {};
 
+    // --- LEAN GUARD: Skip properties without images (waste ad budget) ---
+    const coverImage = p.media?.find(m => m.is_cover)?.url || p.media?.[0]?.url;
+    if (!coverImage) continue;
+
     const title = (titleObj.th ||
       titleObj.en ||
       titleObj.default ||
@@ -118,6 +122,23 @@ export async function generateMetaCatalogFeed() {
     const originalRentalPrice =
       (pricingObj.original_rental_price as number) || null;
 
+    // --- PRICE LOGIC ---
+    const listingTypeInt = p.listing_type;
+    let listingType =
+      listingTypeInt === 1 ? "for_rent_by_agent" : "for_sale_by_agent";
+    let currentPrice = listingTypeInt === 1 ? p.rent_price : p.sale_price;
+    let originalPrice =
+      listingTypeInt === 1 ? originalRentalPrice : originalSalePrice;
+
+    if (listingTypeInt === 2 && !currentPrice && p.rent_price) {
+      listingType = "for_rent_by_agent";
+      currentPrice = p.rent_price;
+      originalPrice = originalRentalPrice;
+    }
+
+    // --- LEAN GUARD: Skip properties without price (Meta rejects them) ---
+    if (!currentPrice) continue;
+
     xml += `  <listing>\n`;
 
     // --- REQUIRED FIELDS ---
@@ -126,52 +147,29 @@ export async function generateMetaCatalogFeed() {
     xml += `    <description><![CDATA[${description}]]></description>\n`;
     xml += `    <url>${propertyUrl}</url>\n`;
 
-    // Listing Type (Meta accepted: for_sale_by_agent, for_rent_by_agent, for_sale_by_owner, for_rent_by_owner)
-    // V3 listing_type: 0=SALE, 1=RENT, 2=SALE_AND_RENT
-    const listingTypeInt = p.listing_type;
-    let listingType =
-      listingTypeInt === 1 ? "for_rent_by_agent" : "for_sale_by_agent";
-    let currentPrice = listingTypeInt === 1 ? p.rent_price : p.sale_price;
-    let originalPrice =
-      listingTypeInt === 1 ? originalRentalPrice : originalSalePrice;
-
-    // If SALE_AND_RENT (2) but sale price is missing, use rental price
-    if (listingTypeInt === 2 && !currentPrice && p.rent_price) {
-      listingType = "for_rent_by_agent";
-      currentPrice = p.rent_price;
-      originalPrice = originalRentalPrice;
-    }
-
     xml += `    <listing_type>${listingType}</listing_type>\n`;
-
-    // Availability (Meta accepted: for_sale, for_rent, recently_sold)
     xml += `    <availability>${listingTypeInt === 1 ? "for_rent" : "for_sale"}</availability>\n`;
-
-    // Property Type (Meta accepted: apartment, condo, house, land, manufactured, other, townhouse)
     xml += `    <property_type>${mapMetaPropertyType(p.property_type)}</property_type>\n`;
 
-    // Price (format: "AMOUNT CURRENCY", e.g. "5000000 THB")
-    if (currentPrice) {
-      if (originalPrice && originalPrice > currentPrice) {
-        xml += `    <price>${originalPrice} THB</price>\n`;
-        xml += `    <sale_price>${currentPrice} THB</sale_price>\n`;
-      } else {
-        xml += `    <price>${currentPrice} THB</price>\n`;
-      }
+    // Price
+    const hasDiscount = originalPrice && currentPrice && originalPrice > currentPrice;
+    if (hasDiscount) {
+      xml += `    <price>${originalPrice} THB</price>\n`;
+      xml += `    <sale_price>${currentPrice} THB</sale_price>\n`;
+    } else {
+      xml += `    <price>${currentPrice} THB</price>\n`;
     }
 
-    // Images — Provide both flat <image_url> and nested <image><url> blocks for maximum compatibility
+    // Images — Cover first via <image_url>, then all via nested <image><url>
     const images = p.media || [];
-    if (images.length > 0) {
-      xml += `    <image_url><![CDATA[${images[0].url}]]></image_url>\n`;
-    }
+    xml += `    <image_url><![CDATA[${coverImage}]]></image_url>\n`;
     images.slice(0, 20).forEach((img) => {
       if (img.url) {
         xml += `    <image>\n      <url><![CDATA[${img.url}]]></url>\n    </image>\n`;
       }
     });
 
-    // --- ADDRESS (Meta Home Listing format="simple" is REQUIRED) ---
+    // --- ADDRESS ---
     const addrLine1 = (addrObj.address_line1 as string)?.trim() || "Bangkok";
     const district = (addrObj.district as string)?.trim() || "Bangkok";
     const province = (addrObj.province as string)?.trim() || "Bangkok";
@@ -200,9 +198,7 @@ export async function generateMetaCatalogFeed() {
     }
 
     // --- AMENITIES (Meta boolean fields) ---
-    const isFullyFurnished = amenitiesObj.is_fully_furnished as
-      | boolean
-      | undefined;
+    const isFullyFurnished = amenitiesObj.is_fully_furnished as boolean | undefined;
     if (isFullyFurnished != null) {
       xml += `    <furnish_type>${isFullyFurnished ? "furnished" : "unfurnished"}</furnish_type>\n`;
     }
@@ -237,36 +233,64 @@ export async function generateMetaCatalogFeed() {
       xml += `    <agent_phone><![CDATA[${agentPhone}]]></agent_phone>\n`;
     }
 
-    // --- CUSTOM LABELS (for Product Set targeting in Ads) ---
-    let statusLabel = p.verified ? "Verified" : "";
-    if (p.is_exclusive)
-      statusLabel = statusLabel ? `${statusLabel} | Exclusive` : "Exclusive";
-    if (p.co_broker_id)
-      statusLabel = statusLabel ? `${statusLabel} | Co-Agent` : "Co-Agent";
-    if (statusLabel) {
-      xml += `    <custom_label_0><![CDATA[${statusLabel}]]></custom_label_0>\n`;
-    }
-
-    const hasDiscount =
-      originalPrice && currentPrice && originalPrice > currentPrice;
-    xml += `    <custom_label_1>${hasDiscount ? "Hot Deal" : "New Listing"}</custom_label_1>\n`;
+    // =====================================================================
+    // CUSTOM LABELS — Thai Dynamic Ad Copy Engine (Lean Budget Optimizer)
+    // Use in Ads Manager: {{product.custom_label_0}} etc.
+    // =====================================================================
 
     const nearTransit = transitObj.near_transit as boolean | undefined;
-    let highlightLabel = nearTransit ? "Near Transit" : "";
-    if (isPetFriendly)
-      highlightLabel = highlightLabel
-        ? `${highlightLabel} | Pet Friendly`
-        : "Pet Friendly";
-    if (highlightLabel) {
-      xml += `    <custom_label_2><![CDATA[${highlightLabel}]]></custom_label_2>\n`;
-    }
 
-    const cluster = `${mapMetaPropertyType(p.property_type)} ${listingTypeInt === 1 ? "Rent" : "Sale"}`;
-    xml += `    <custom_label_3><![CDATA[${cluster}]]></custom_label_3>\n`;
+    // label_0: ป้ายดึงดูด (Attention Hook) — ยัดขึ้นหัวข้อโฆษณาได้เลย
+    // ผลลัพธ์: "🔥 Hot Deal", "✅ Verified", "⭐ Exclusive", "🆕 New Listing"
+    let hookLabel = "";
+    if (hasDiscount) hookLabel = "🔥 Hot Deal";
+    else if (p.is_exclusive) hookLabel = "⭐ Exclusive";
+    else if (p.verified) hookLabel = "✅ Verified";
+    else hookLabel = "🆕 New Listing";
+    xml += `    <custom_label_0><![CDATA[${hookLabel}]]></custom_label_0>\n`;
 
-    if (agentName) {
-      xml += `    <custom_label_4><![CDATA[Agent: ${agentName}]]></custom_label_4>\n`;
+    // label_1: ไลฟ์สไตล์ (Lifestyle Tags) — ใช้ทำ Product Set + Dynamic Caption
+    // ผลลัพธ์: "ใกล้รถไฟฟ้า | เลี้ยงสัตว์ได้ | แต่งครบพร้อมอยู่"
+    const lifestyleParts: string[] = [];
+    if (nearTransit) lifestyleParts.push("ใกล้รถไฟฟ้า");
+    if (isPetFriendly) lifestyleParts.push("เลี้ยงสัตว์ได้");
+    if (isFullyFurnished) lifestyleParts.push("แต่งครบพร้อมอยู่");
+    const allowAirbnb = amenitiesObj.allow_airbnb as boolean | undefined;
+    if (allowAirbnb) lifestyleParts.push("ปล่อย Airbnb ได้");
+    xml += `    <custom_label_1><![CDATA[${lifestyleParts.join(" | ") || "คุณภาพจาก VCC"}]]></custom_label_1>\n`;
+
+    // label_2: โซน/ทำเลทอง (Location Tag) — ใช้แบ่ง Product Set ตามโซน
+    // ผลลัพธ์: "เอกมัย", "บางนา", "สุขุมวิท"
+    const locationTag = (popularArea || district || "Bangkok").replace(/^เขต/, "");
+    xml += `    <custom_label_2><![CDATA[${locationTag}]]></custom_label_2>\n`;
+
+    // label_3: ประเภท + โหมด (Cluster) — ใช้แยก Product Set ขาย vs เช่า
+    // ผลลัพธ์: "คอนโดให้เช่า", "บ้านเดี่ยวขาย"
+    const typeNameMap: Record<string, string> = {
+      condo: "คอนโด", house: "บ้านเดี่ยว", townhouse: "ทาวน์โฮม",
+      land: "ที่ดิน", other: "อสังหาฯ",
+    };
+    const typeTh = typeNameMap[mapMetaPropertyType(p.property_type)] || "อสังหาฯ";
+    const modeTh = listingTypeInt === 1 ? "ให้เช่า" : "ขาย";
+    xml += `    <custom_label_3><![CDATA[${typeTh}${modeTh}]]></custom_label_3>\n`;
+
+    // label_4: ช่วงราคา (Price Band) — ใช้ยิง Lookalike ตาม Budget Segment
+    // ผลลัพธ์: "ต่ำกว่า 15,000", "15,000-30,000", "30,000-80,000", "80,000+"
+    let priceBand = "";
+    if (listingTypeInt === 1) {
+      // Rent bands (ต่อเดือน)
+      if (currentPrice < 15000) priceBand = "เช่าต่ำกว่า 15,000";
+      else if (currentPrice < 30000) priceBand = "เช่า 15,000-30,000";
+      else if (currentPrice < 80000) priceBand = "เช่า 30,000-80,000";
+      else priceBand = "เช่า 80,000+";
+    } else {
+      // Sale bands
+      if (currentPrice < 3000000) priceBand = "ขายต่ำกว่า 3 ล้าน";
+      else if (currentPrice < 10000000) priceBand = "ขาย 3-10 ล้าน";
+      else if (currentPrice < 30000000) priceBand = "ขาย 10-30 ล้าน";
+      else priceBand = "ขาย 30 ล้าน+";
     }
+    xml += `    <custom_label_4><![CDATA[${priceBand}]]></custom_label_4>\n`;
 
     xml += `  </listing>\n`;
   }
