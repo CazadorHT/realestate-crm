@@ -1,0 +1,40 @@
+# ยกเลิกการอ่านโฟลเดอร์ Build และ Dependency (ตัวทำ Input บวมหลักแสน Tokens)
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# ยกเลิกการอ่านไฟล์ Asset และไฟล์ที่แปลงมาแล้ว (AI ไม่จำเป็นต้องดูโค้ดส่วนนี้)
+.css
+.minify.css
+.map
+public/
+# ถ้าโปรเจกต์มีการดึงรูปภาพเข้ามาเก็บในเครื่องเยอะๆ แนะนำให้ปลดล็อกบรรทัดด้านล่าง
+# public/assets/
+
+# ยกเลิกการอ่านไฟล์เก็บ Log และ Cache ต่างๆ
+.turbo/
+.cache/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ข้อมูลความลับและ Environment (ห้ามส่งออกไปเด็ดขาดเพื่อความปลอดภัย)
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env*.local
+.pnpm-store/
+
+# ยกเลิกการอ่านโฟลเดอร์ Config ของระบบ Git และ IDE
+.git/
+.github/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
