@@ -22,6 +22,8 @@ interface GTMPropertyPageViewProps {
 export function GTMPropertyPageView({ property }: GTMPropertyPageViewProps) {
   useEffect(() => {
     try {
+      const contentIds = [property.id];
+
       pushToDataLayer(GTM_EVENTS.VIEW_ITEM, {
         item_id: property.id,
         item_name: property.title,
@@ -35,13 +37,26 @@ export function GTMPropertyPageView({ property }: GTMPropertyPageViewProps) {
         location_id: property.province,
         popular_area: property.popular_area,
         // Meta Pixel (Facebook) - Standard params
-        content_ids: [property.id],
+        content_ids: contentIds,
         content_name: property.title,
-        content_type: "product",
+        content_type: "home_listing",
         content_category: property.property_type,
         value: property.listing_type === "RENT" ? property.rental_price : property.price,
         currency: "THB",
       });
+
+      if (typeof window !== "undefined") {
+        const fbq = (window as Window & {
+          fbq?: (...args: unknown[]) => void;
+        }).fbq;
+
+        if (fbq) {
+          fbq("track", "ViewContent", {
+            content_type: "home_listing",
+            content_ids: contentIds,
+          });
+        }
+      }
       
       // Viewing a property page gives a base engagement score
       updateAIScore(5);
