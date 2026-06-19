@@ -9,7 +9,6 @@ import { LanguageProvider } from "@/components/providers/LanguageProvider";
 import { TenantProvider } from "@/components/providers/TenantProvider";
 import { AnimationProvider } from "@/components/providers/AnimationProvider";
 import { SiteConfigProvider } from "@/components/providers/SiteConfigProvider";
-import { GTMInteractionLoader } from "@/components/providers/GTMInteractionLoader";
 import { NavigationProgressBar } from "@/components/common/NavigationProgressBar";
 import { DynamicClientProviders } from "@/components/providers/DynamicClientProviders";
 import { getServerTranslations } from "@/lib/i18n";
@@ -256,9 +255,17 @@ export default async function RootLayout({
             window.fbq.queue = [];
           `}
         </Script>
-        
-        {/* Google Tag Manager - Deferred until Interaction for S-Tier TBT Score */}
-        {gtmId && <GTMInteractionLoader gtmId={gtmId} />}
+      
+        {/* Google Tag Manager - load immediately in head so page-level events are available early */}
+        {gtmId && (
+          <Script id="gtm-script" strategy="beforeInteractive">
+            {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','${gtmId}');`}
+          </Script>
+        )}
         {/* End Google Tag Manager */}
       </head>
       <body
