@@ -54,6 +54,8 @@ export function GTMPropertyPageView({ property }: GTMPropertyPageViewProps) {
           fbq("track", "ViewContent", {
             content_type: "home_listing",
             content_ids: contentIds,
+            value: property.listing_type === "RENT" ? property.rental_price : property.price,
+            currency: "THB",
           });
         }
       }
