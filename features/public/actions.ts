@@ -205,7 +205,7 @@ export async function submitInquiryAction(prevState: LeadState, formData: FormDa
       p_source: "WEBSITE",
       p_note: data.message,
       p_utm_source: data.marketing_attribution,
-      p_ai_score: data.ai_lead_score || 0,
+      p_ai_score: Math.min(data.ai_lead_score || 0, 100),
     });
 
     if (rpcError) throw new Error(rpcError.message);

@@ -135,9 +135,10 @@ export async function submitContactFormAction(
         p_utm_content: validatedFields.data.utm_content,
         p_utm_term: validatedFields.data.utm_term,
         p_referral_url: validatedFields.data.referral_url,
-        p_ai_score: validatedFields.data.ai_score
-          ? parseInt(validatedFields.data.ai_score)
-          : 0,
+        p_ai_score: Math.min(
+          validatedFields.data.ai_score ? parseInt(validatedFields.data.ai_score) : 0,
+          100
+        ),
         p_ai_status_label: validatedFields.data.ai_status_label,
       },
     );

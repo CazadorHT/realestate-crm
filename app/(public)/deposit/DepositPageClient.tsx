@@ -349,14 +349,14 @@ export default function DepositPageClient() {
                 variant="outline"
                 size="lg"
                 onClick={() => setIsSuccess(false)}
-                className="border-slate-200 hover:bg-slate-50 rounded-2xl px-8"
+                className="border-slate-200 hover:bg-slate-50! text-blue-500! rounded-2xl px-8"
               >
                 {t("deposit.success.more_info_btn") || "ส่งข้อมูลเพิ่มเติม"}
               </Button>
               <Button
                 size="lg"
                 onClick={() => router.push("/")}
-                className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-8"
+                className="bg-blue-600 hover:bg-blue-700 text-white! rounded-2xl px-8"
               >
                 {t("breadcrumb.home") || "หน้าแรก"}
               </Button>

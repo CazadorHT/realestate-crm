@@ -92,7 +92,7 @@ export const updateAIScore = (points: number) => {
   if (typeof window === "undefined") return 0;
 
   const currentScoreStr = localStorage.getItem(STORAGE_KEY_SCORE) || "0";
-  const newScore = parseInt(currentScoreStr) + points;
+  const newScore = Math.min(parseInt(currentScoreStr) + points, 100);
   localStorage.setItem(STORAGE_KEY_SCORE, newScore.toString());
 
   // Push to GTM so it can be tracked in real-time
