@@ -126,7 +126,7 @@ function ServicesContent() {
                 : t("services.hero_title")}
             </span>
           </h1>
-          <p className="text-lg md:text-2xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed font-light animate-in fade-in-0 slide-in-from-bottom-8 duration-1000">
+          <p className="text-lg md:text-xl text-slate-400 max-w-3xl mx-auto mb-12 leading-relaxed font-light animate-in fade-in-0 slide-in-from-bottom-8 duration-1000">
             {t("services.hero_desc")}
           </p>
 
@@ -277,7 +277,7 @@ function ServicesContent() {
       <section className="py-24 relative overflow-hidden">
         <SectionBackground pattern="grid" intensity="low" />
         <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto bg-slate-900 rounded-[3rem] p-8 md:p-16 lg:p-20 relative overflow-hidden border border-white/5">
+          <div className="max-w-7xl mx-auto bg-slate-900 rounded-[3rem] p-8 md:p-16 lg:p-20 relative overflow-hidden border border-white/5">
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-20">
               <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-blue-600 rounded-full blur-[100px]" />
               <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-600 rounded-full blur-[80px]" />
