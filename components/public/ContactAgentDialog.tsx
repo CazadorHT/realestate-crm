@@ -428,11 +428,24 @@ export function ContactAgentDialog({
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder={t("property.contact_dialog.name_placeholder")}
-          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 text-left border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} ${
+          className={`${isMobile ? "h-14 pl-11 pr-10 bg-slate-50" : "h-10 pl-3 pr-10 bg-white"} text-slate-600 text-left border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} placeholder:text-sm placeholder:font-medium ${
             state.errors?.fullName ? "border-red-500 bg-red-50" : ""
           }`}
           required
         />
+        <AnimatePresence>
+          {fullName.trim().length >= 2 && (
+            <m.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="absolute right-3.5 inset-y-0 flex items-center pointer-events-none text-emerald-500"
+            >
+              <Check className="w-4 h-4" strokeWidth={3} />
+            </m.div>
+          )}
+        </AnimatePresence>
       </div>
       {state.errors?.fullName && (
         <p
@@ -474,11 +487,24 @@ export function ContactAgentDialog({
           value={phone}
           onChange={handlePhoneChange}
           maxLength={12}
-          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} ${
+          className={`${isMobile ? "h-14 pl-11 pr-10 bg-slate-50" : "h-10 pl-3 pr-10 bg-white"} text-slate-600 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} placeholder:text-sm placeholder:font-medium ${
             state.errors?.phone ? "border-red-500 bg-red-50" : ""
           }`}
           required
         />
+        <AnimatePresence>
+          {phone.replace(/\D/g, "").length >= 9 && (
+            <m.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="absolute right-3.5 inset-y-0 flex items-center pointer-events-none text-emerald-500"
+            >
+              <Check className="w-4 h-4" strokeWidth={3} />
+            </m.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -508,8 +534,21 @@ export function ContactAgentDialog({
           value={lineId}
           onChange={(e) => setLineId(e.target.value)}
           placeholder={t("property.contact_dialog.line_placeholder")}
-          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 border-slate-200 focus:border-[#00B900] focus:ring-2 focus:ring-[#00B900]/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"}`}
+          className={`${isMobile ? "h-14 pl-11 pr-10 bg-slate-50" : "h-10 pl-3 pr-10 bg-white"} text-slate-600 border-slate-200 focus:border-[#00B900] focus:ring-2 focus:ring-[#00B900]/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} placeholder:text-sm placeholder:font-medium`}
         />
+        <AnimatePresence>
+          {lineId.trim().length >= 2 && (
+            <m.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="absolute right-3.5 inset-y-0 flex items-center pointer-events-none text-emerald-500"
+            >
+              <Check className="w-4 h-4" strokeWidth={3} />
+            </m.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -539,8 +578,21 @@ export function ContactAgentDialog({
           value={wechatId}
           onChange={(e) => setWechatId(e.target.value)}
           placeholder={t("property.contact_dialog.wechat_placeholder")}
-          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 border-slate-200 focus:border-[#07C160] focus:ring-2 focus:ring-[#07C160]/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"}`}
+          className={`${isMobile ? "h-14 pl-11 pr-10 bg-slate-50" : "h-10 pl-3 pr-10 bg-white"} text-slate-600 border-slate-200 focus:border-[#07C160] focus:ring-2 focus:ring-[#07C160]/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} placeholder:text-sm placeholder:font-medium`}
         />
+        <AnimatePresence>
+          {wechatId.trim().length >= 2 && (
+            <m.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="absolute right-3.5 inset-y-0 flex items-center pointer-events-none text-emerald-500"
+            >
+              <Check className="w-4 h-4" strokeWidth={3} />
+            </m.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -570,8 +622,21 @@ export function ContactAgentDialog({
           value={whatsapp}
           onChange={(e) => setWhatsapp(e.target.value)}
           placeholder={t("property.contact_dialog.whatsapp_placeholder")}
-          className={`${isMobile ? "h-14 pl-11 bg-slate-50" : "h-10 pl-3 bg-white"} text-slate-600 border-slate-200 focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"}`}
+          className={`${isMobile ? "h-14 pl-11 pr-10 bg-slate-50" : "h-10 pl-3 pr-10 bg-white"} text-slate-600 border-slate-200 focus:border-[#25D366] focus:ring-2 focus:ring-[#25D366]/15 rounded-xl transition-all ${isMobile ? "text-base" : "text-sm"} placeholder:text-sm placeholder:font-medium`}
         />
+        <AnimatePresence>
+          {whatsapp.trim().length >= 5 && (
+            <m.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className="absolute right-3.5 inset-y-0 flex items-center pointer-events-none text-emerald-500"
+            >
+              <Check className="w-4 h-4" strokeWidth={3} />
+            </m.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -610,15 +675,30 @@ export function ContactAgentDialog({
         ))}
       </div>
 
-      <Textarea
-        id={isMobile ? "message-mobile" : "message"}
-        name="message"
-        placeholder={t("property.contact_dialog.message_placeholder")}
-        rows={isMobile ? 4 : 3}
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        className={`resize-none bg-slate-50 ${isMobile ? "" : "bg-white"} text-slate-600 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "min-h-[120px] p-4 text-base" : "min-h-[80px] p-3 text-sm"}`}
-      />
+      <div className="relative group w-full">
+        <Textarea
+          id={isMobile ? "message-mobile" : "message"}
+          name="message"
+          placeholder={t("property.contact_dialog.message_placeholder")}
+          rows={isMobile ? 4 : 3}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          className={`resize-none bg-slate-50 ${isMobile ? "" : "bg-white"} text-slate-600 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/15 rounded-xl transition-all ${isMobile ? "min-h-[120px] p-4 pr-10 text-base" : "min-h-[80px] p-3 pr-10 text-sm"} placeholder:text-sm placeholder:font-medium`}
+        />
+        <AnimatePresence>
+          {message.trim().length >= 3 && (
+            <m.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+              className={`absolute right-3 pointer-events-none text-emerald-500 ${isMobile ? "top-4" : "top-3"}`}
+            >
+              <Check className="w-4 h-4" strokeWidth={3} />
+            </m.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 

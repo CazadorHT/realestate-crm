@@ -51,6 +51,11 @@ export function ContactForm() {
   const [isSuccess, setIsSuccess] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [lineId, setLineId] = useState("");
+  const [wechatId, setWechatId] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [message, setMessage] = useState("");
   const [selectedSubject, setSelectedSubject] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   const [isOpen, setIsOpen] = useState(false);
@@ -177,6 +182,11 @@ export function ContactForm() {
         setSelectedSubject(""); 
         setName("");
         setPhone("");
+        setEmail("");
+        setLineId("");
+        setWechatId("");
+        setWhatsapp("");
+        setMessage("");
         setStep(1); // Reset step for next use
         sessionStorage.removeItem("form_started"); 
       } else {
@@ -356,8 +366,21 @@ export function ContactForm() {
                       onChange={(e) => setName(e.target.value)}
                       onFocus={handleFormStart}
                       placeholder={t("contact.name_placeholder")}
-                      className="h-11 pl-11 bg-white/[0.07] text-white border-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl text-sm placeholder:text-white/25"
+                      className="h-11 pl-11 pr-10 bg-white/[0.07] text-white border-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl text-sm placeholder:text-white/25 placeholder:text-sm placeholder:font-medium"
                     />
+                    <AnimatePresence>
+                      {name.trim().length >= 2 && (
+                        <m.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className="absolute right-3 inset-y-0 flex items-center pointer-events-none text-emerald-400"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </m.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 
@@ -378,8 +401,21 @@ export function ContactForm() {
                       onFocus={handleFormStart}
                       onChange={handlePhoneChange}
                       placeholder="0XX-XXX-XXXX"
-                      className="h-11 pl-11 bg-white/[0.07] text-white border-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl text-sm placeholder:text-white/25"
+                      className="h-11 pl-11 pr-10 bg-white/[0.07] text-white border-white/10 focus:border-blue-500/50 focus:ring-4 focus:ring-blue-500/10 transition-all rounded-xl text-sm placeholder:text-white/25 placeholder:text-sm placeholder:font-medium"
                     />
+                    <AnimatePresence>
+                      {phone.replace(/\D/g, "").length >= 9 && (
+                        <m.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className="absolute right-3 inset-y-0 flex items-center pointer-events-none text-emerald-400"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </m.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
@@ -435,10 +471,25 @@ export function ContactForm() {
                       id={`email-${idSuffix}`}
                       name="email"
                       type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       onFocus={handleFormStart}
                       placeholder={t("contact.email_placeholder")}
-                      className="h-11 pl-11 bg-white/[0.07] text-white border-white/10 focus:border-blue-500/50 transition-all rounded-xl text-sm placeholder:text-white/25"
+                      className="h-11 pl-11 pr-10 bg-white/[0.07] text-white border-white/10 focus:border-blue-500/50 transition-all rounded-xl text-sm placeholder:text-white/25 placeholder:text-sm placeholder:font-medium"
                     />
+                    <AnimatePresence>
+                      {email.trim().length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                        <m.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className="absolute right-3 inset-y-0 flex items-center pointer-events-none text-emerald-400"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </m.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 
@@ -453,10 +504,25 @@ export function ContactForm() {
                     <Input
                       id={`lineId-${idSuffix}`}
                       name="lineId"
+                      value={lineId}
+                      onChange={(e) => setLineId(e.target.value)}
                       onFocus={handleFormStart}
                       placeholder={t("contact.line_id_placeholder")}
-                      className="h-11 pl-11 bg-white/[0.07] text-white border-white/10 focus:border-[#00B900]/50 transition-all rounded-xl text-sm placeholder:text-white/25"
+                      className="h-11 pl-11 pr-10 bg-white/[0.07] text-white border-white/10 focus:border-[#00B900]/50 transition-all rounded-xl text-sm placeholder:text-white/25 placeholder:text-sm placeholder:font-medium"
                     />
+                    <AnimatePresence>
+                      {lineId.trim().length >= 2 && (
+                        <m.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className="absolute right-3 inset-y-0 flex items-center pointer-events-none text-emerald-400"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </m.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 
@@ -471,10 +537,25 @@ export function ContactForm() {
                     <Input
                       id={`wechatId-${idSuffix}`}
                       name="wechatId"
+                      value={wechatId}
+                      onChange={(e) => setWechatId(e.target.value)}
                       onFocus={handleFormStart}
                       placeholder={t("contact.wechat_placeholder") || "Your WeChat ID"}
-                      className="h-11 pl-11 bg-white/[0.07] text-white border-white/10 focus:border-[#07C160]/50 transition-all rounded-xl text-sm placeholder:text-white/25"
+                      className="h-11 pl-11 pr-10 bg-white/[0.07] text-white border-white/10 focus:border-[#07C160]/50 transition-all rounded-xl text-sm placeholder:text-white/25 placeholder:text-sm placeholder:font-medium"
                     />
+                    <AnimatePresence>
+                      {wechatId.trim().length >= 2 && (
+                        <m.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className="absolute right-3 inset-y-0 flex items-center pointer-events-none text-emerald-400"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </m.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
 
@@ -489,10 +570,25 @@ export function ContactForm() {
                     <Input
                       id={`whatsapp-${idSuffix}`}
                       name="whatsapp"
+                      value={whatsapp}
+                      onChange={(e) => setWhatsapp(e.target.value)}
                       onFocus={handleFormStart}
                       placeholder={t("contact.whatsapp_placeholder") || "Phone or ID"}
-                      className="h-11 pl-11 bg-white/[0.07] text-white border-white/10 focus:border-[#25D366]/50 transition-all rounded-xl text-sm placeholder:text-white/25"
+                      className="h-11 pl-11 pr-10 bg-white/[0.07] text-white border-white/10 focus:border-[#25D366]/50 transition-all rounded-xl text-sm placeholder:text-white/25 placeholder:text-sm placeholder:font-medium"
                     />
+                    <AnimatePresence>
+                      {whatsapp.trim().length >= 5 && (
+                        <m.div
+                          initial={{ scale: 0, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          exit={{ scale: 0, opacity: 0 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          className="absolute right-3 inset-y-0 flex items-center pointer-events-none text-emerald-400"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </m.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
@@ -508,11 +604,26 @@ export function ContactForm() {
                   <Textarea
                     id={`message-${idSuffix}`}
                     name="message"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
                     onFocus={handleFormStart}
                     placeholder={t("contact.more_details_placeholder")}
                     rows={4}
-                    className="resize-none pl-11 bg-white/[0.07]! text-white border-white/10 focus:border-blue-500/50 transition-all rounded-xl min-h-[90px] text-sm placeholder:text-white/25"
+                    className="resize-none pl-11 pr-10 bg-white/[0.07]! text-white border-white/10 focus:border-blue-500/50 transition-all rounded-xl min-h-[90px] text-sm placeholder:text-white/25 placeholder:text-sm placeholder:font-medium"
                   />
+                  <AnimatePresence>
+                    {message.trim().length >= 3 && (
+                      <m.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                        className="absolute right-3 top-3.5 pointer-events-none text-emerald-400"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                      </m.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </div>
 

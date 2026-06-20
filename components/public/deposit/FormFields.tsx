@@ -60,7 +60,7 @@ export function NameField({ isMobile, t, onFocus }: FieldProps) {
                 <Input
                   placeholder={t("deposit.form.name_placeholder")}
                   className={cn(
-                    "border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all",
+                    "border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
                     isMobile
                       ? "h-12 pl-12 pr-12 bg-slate-50/50 text-base autofill:shadow-[inset_0_0_0_1000px_#f8fafc]"
                       : "h-11 pl-11 pr-10 bg-white text-sm autofill:shadow-[inset_0_0_0_1000px_#ffffff]",
@@ -120,7 +120,7 @@ export function PhoneField({ isMobile, t, onFocus }: FieldProps) {
                   type="tel"
                   placeholder="0XX-XXX-XXXX"
                   className={cn(
-                    "border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all",
+                    "border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
                     isMobile
                       ? "h-12 pl-12 pr-12 bg-slate-50/50 text-base autofill:shadow-[inset_0_0_0_1000px_#f8fafc]"
                       : "h-11 pl-11 pr-10 bg-white text-sm autofill:shadow-[inset_0_0_0_1000px_#ffffff]",
@@ -183,7 +183,7 @@ export function EmailField({ isMobile, t, onFocus }: FieldProps) {
                   type="email"
                   placeholder={t("deposit.form.email_placeholder")}
                   className={cn(
-                    "border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all",
+                    "border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
                     isMobile
                       ? "h-12 pl-12 pr-12 bg-slate-50/50 text-base autofill:shadow-[inset_0_0_0_1000px_#f8fafc]"
                       : "h-11 pl-11 pr-10 bg-white text-sm autofill:shadow-[inset_0_0_0_1000px_#ffffff]",
@@ -242,7 +242,7 @@ export function LineField({ isMobile, t, onFocus }: FieldProps) {
                 <Input
                   placeholder={t("deposit.form.line_placeholder")}
                   className={cn(
-                    "border-slate-200 hover:border-slate-300 focus:border-[#00B900] focus:ring-4 focus:ring-[#00B900]/10 rounded-2xl transition-all",
+                    "border-slate-200 hover:border-slate-300 focus:border-[#00B900] focus:ring-4 focus:ring-[#00B900]/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
                     isMobile
                       ? "h-12 pl-12 pr-12 bg-slate-50/50 text-base autofill:shadow-[inset_0_0_0_1000px_#f8fafc]"
                       : "h-11 pl-11 pr-10 bg-white text-sm autofill:shadow-[inset_0_0_0_1000px_#ffffff]",
@@ -301,7 +301,7 @@ export function WeChatField({ isMobile, t, onFocus }: FieldProps) {
                 <Input
                   placeholder={t("deposit.form.wechat_placeholder")}
                   className={cn(
-                    "border-slate-200 hover:border-slate-300 focus:border-[#07C160] focus:ring-4 focus:ring-[#07C160]/10 rounded-2xl transition-all",
+                    "border-slate-200 hover:border-slate-300 focus:border-[#07C160] focus:ring-4 focus:ring-[#07C160]/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
                     isMobile
                       ? "h-12 pl-12 pr-12 bg-slate-50/50 text-base autofill:shadow-[inset_0_0_0_1000px_#f8fafc]"
                       : "h-11 pl-11 pr-10 bg-white text-sm autofill:shadow-[inset_0_0_0_1000px_#ffffff]",
@@ -389,7 +389,7 @@ export function WhatsAppField({ isMobile, t, onFocus }: FieldProps) {
                 <Input
                   placeholder={t("deposit.form.whatsapp_placeholder")}
                   className={cn(
-                    "border-slate-200 hover:border-slate-300 focus:border-[#25D366] focus:ring-4 focus:ring-[#25D366]/10 rounded-2xl transition-all",
+                    "border-slate-200 hover:border-slate-300 focus:border-[#25D366] focus:ring-4 focus:ring-[#25D366]/10 rounded-2xl transition-all placeholder:text-sm placeholder:font-medium",
                     isMobile
                       ? "h-12 pl-12 pr-12 bg-slate-50/50 text-base autofill:shadow-[inset_0_0_0_1000px_#f8fafc]"
                       : "h-11 pl-11 pr-10 bg-white text-sm autofill:shadow-[inset_0_0_0_1000px_#ffffff]",
@@ -585,7 +585,7 @@ export function MessageField({ isMobile, t }: Pick<FieldProps, "isMobile" | "t">
                 <Textarea
                   placeholder={t("deposit.form.details_more_placeholder")}
                   className={cn(
-                    "border-slate-100 rounded-2xl transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 pr-10",
+                    "border-slate-100 rounded-2xl transition-all focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 pr-10 placeholder:text-sm placeholder:font-medium",
                     isMobile
                       ? "min-h-[60px] p-3 text-base bg-slate-50/50 autofill:shadow-[inset_0_0_0_1000px_#f8fafc]"
                       : "min-h-[80px] p-3 text-sm bg-white autofill:shadow-[inset_0_0_0_1000px_#ffffff]",

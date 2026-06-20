@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Phone, Mail, ChevronLeft, Loader2 } from "lucide-react";
+import { Phone, Mail, ChevronLeft, Loader2, CheckCircle2 } from "lucide-react";
 import { FaLine, FaWhatsapp } from "react-icons/fa";
 import { IoLogoWechat } from "react-icons/io5";
 import { toast } from "sonner";
@@ -13,6 +13,7 @@ import { createLeadFromMatchAction } from "@/features/public/actions";
 import { PropertyMatch } from "@/features/smart-match/types";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 import { generateMetaEventId, sendMetaCAPIEvent } from "@/lib/meta-capi-utils";
+import { m, AnimatePresence } from "framer-motion";
 
 interface LeadFormProps {
   match: PropertyMatch;
@@ -24,8 +25,31 @@ interface LeadFormProps {
 export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
   const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [lineId, setLineId] = useState("");
+  const [wechatId, setWechatId] = useState("");
+  const [whatsapp, setWhatsapp] = useState("");
   const hasStartedRef = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
+
+  const formatPhoneNumber = (value: string) => {
+    const hasPlus = value.startsWith("+");
+    const digits = value.replace(/[^\d]/g, "");
+    if (hasPlus) {
+      return "+" + digits.slice(0, 12);
+    }
+    const cleanDigits = digits.slice(0, 10);
+    if (cleanDigits.length <= 3) return cleanDigits;
+    if (cleanDigits.length <= 6) return `${cleanDigits.slice(0, 3)}-${cleanDigits.slice(3)}`;
+    return `${cleanDigits.slice(0, 3)}-${cleanDigits.slice(3, 6)}-${cleanDigits.slice(6)}`;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(formatPhoneNumber(e.target.value));
+    handleFormStart();
+  };
  
   const handleFormStart = () => {
     if (!hasStartedRef.current) {
@@ -222,14 +246,31 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
               {t("smart_match.lead_name_label")}{" "}
               <span className="text-red-500">*</span>
             </label>
-            <Input
-              id="match-fullname"
-              name="fullName"
-              required
-              onFocus={handleFormStart}
-              placeholder={t("smart_match.lead_name_placeholder")}
-              className="rounded-xl border-slate-200"
-            />
+            <div className="relative">
+              <Input
+                id="match-fullname"
+                name="fullName"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                onFocus={handleFormStart}
+                placeholder={t("smart_match.lead_name_placeholder")}
+                className="pr-10 rounded-xl border-slate-200 placeholder:text-sm placeholder:font-medium"
+              />
+              <AnimatePresence>
+                {fullName.trim().length >= 2 && (
+                  <m.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                  </m.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-slate-700">
@@ -242,10 +283,25 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                 id="match-phone"
                 name="phone"
                 required
+                value={phone}
+                onChange={handlePhoneChange}
                 onFocus={handleFormStart}
                 placeholder={t("smart_match.lead_phone_placeholder")}
-                className="pl-9 rounded-xl border-slate-200"
+                className="pl-9 pr-10 rounded-xl border-slate-200 placeholder:text-sm placeholder:font-medium"
               />
+              <AnimatePresence>
+                {phone.replace(/\D/g, "").length >= 9 && (
+                  <m.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                  </m.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
           <div className="space-y-1.5">
@@ -258,9 +314,24 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                 id="match-email"
                 name="email"
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="email@example.com"
-                className="pl-9 rounded-xl border-slate-200"
+                className="pl-9 pr-10 rounded-xl border-slate-200 placeholder:text-sm placeholder:font-medium"
               />
+              <AnimatePresence>
+                {email.trim().length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && (
+                  <m.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                  </m.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
           <div className="space-y-1.5">
@@ -272,10 +343,25 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
               <Input
                 id="match-lineid"
                 name="lineId"
+                value={lineId}
+                onChange={(e) => setLineId(e.target.value)}
                 onFocus={handleFormStart}
                 placeholder="line_id"
-                className="pl-9 rounded-xl border-slate-200 focus:border-[#00B900]/50"
+                className="pl-9 pr-10 rounded-xl border-slate-200 focus:border-[#00B900]/50 placeholder:text-sm placeholder:font-medium"
               />
+              <AnimatePresence>
+                {lineId.trim().length >= 2 && (
+                  <m.div
+                    initial={{ scale: 0, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0, opacity: 0 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none"
+                  >
+                    <CheckCircle2 className="h-4 w-4" />
+                  </m.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
 
@@ -289,10 +375,25 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                 <Input
                   id="match-wechatid"
                   name="wechatId"
+                  value={wechatId}
+                  onChange={(e) => setWechatId(e.target.value)}
                   onFocus={handleFormStart}
                   placeholder="wechat_id"
-                  className="pl-9 rounded-xl border-slate-200 focus:border-[#07C160]/50"
+                  className="pl-9 pr-10 rounded-xl border-slate-200 focus:border-[#07C160]/50 placeholder:text-sm placeholder:font-medium"
                 />
+                <AnimatePresence>
+                  {wechatId.trim().length >= 2 && (
+                    <m.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                    </m.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
             <div className="space-y-1.5">
@@ -304,10 +405,25 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
                 <Input
                   id="match-whatsapp"
                   name="whatsapp"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
                   onFocus={handleFormStart}
                   placeholder="phone or id"
-                  className="pl-9 rounded-xl border-slate-200 focus:border-[#25D366]/50"
+                  className="pl-9 pr-10 rounded-xl border-slate-200 focus:border-[#25D366]/50 placeholder:text-sm placeholder:font-medium"
                 />
+                <AnimatePresence>
+                  {whatsapp.trim().length >= 5 && (
+                    <m.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-500 pointer-events-none"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                    </m.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
