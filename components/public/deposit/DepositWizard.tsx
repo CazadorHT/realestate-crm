@@ -169,7 +169,7 @@ export function DepositWizard({
               contentName: "Deposit Property",
               contentType: "lead_form",
               currency: "THB",
-              contentIds: [],
+              contentIds: res.leadId ? [String(res.leadId)] : [],
               fullName: values.fullName,
               phone: values.phone,
               email: values.email || undefined,
