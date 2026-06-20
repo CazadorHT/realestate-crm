@@ -324,46 +324,6 @@ export default function DepositPageClient() {
       <div className="absolute top-60 left-0 w-80 h-80 bg-purple-100/30 rounded-full blur-[100px] -z-10 -translate-x-1/3" />
       <div className="absolute bottom-40 right-1/4 w-64 h-64 bg-indigo-100/20 rounded-full blur-[80px] -z-10" />
 
-      {isSuccess ? (
-        /* Success Screen */
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <m.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-2xl mx-auto text-center py-20 px-6 bg-white rounded-3xl shadow-xl border border-slate-100"
-          >
-            <div className="w-24 h-24 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner mb-8">
-              <CheckCircle className="h-12 w-12" />
-            </div>
-            <div className="space-y-4 mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-slate-900 leading-tight">
-                {t("deposit.success.title")}
-              </h1>
-              <p className="text-slate-500 text-base md:text-lg max-w-sm mx-auto">
-                {t("deposit.success.message")}
-              </p>
-            </div>
-            <div className="flex justify-center gap-4">
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => setIsSuccess(false)}
-                className="border-slate-200 hover:bg-slate-50! text-blue-500! rounded-2xl px-8"
-              >
-                {t("deposit.success.more_info_btn") || "ส่งข้อมูลเพิ่มเติม"}
-              </Button>
-              <Button
-                size="lg"
-                onClick={() => router.push("/")}
-                className="bg-blue-600 hover:bg-blue-700 text-white! rounded-2xl px-8"
-              >
-                {t("breadcrumb.home") || "หน้าแรก"}
-              </Button>
-            </div>
-          </m.div>
-        </div>
-      ) : (
         <div className="space-y-16 lg:space-y-20">
           {/* ─── Section 1: Full-Width Hero Banner (w-full for bg) ─── */}
           <div className="w-full bg-linear-to-b from-[#0B1120] via-[#0f172a] to-slate-900 relative overflow-hidden py-16 lg:py-24">
@@ -494,20 +454,55 @@ export default function DepositPageClient() {
                     <Card className="relative shadow-2xl shadow-indigo-900/10 border-white/80 bg-linear-to-r from-blue-50 via-indigo-50 to-purple-50 bg-transparent backdrop-blur-xl overflow-hidden rounded-3xl p-1 md:p-2 border">
                       <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-blue-500 via-indigo-500 to-purple-500 opacity-80" />
                       <CardContent className="p-4 sm:p-6 md:p-8">
-                        <div className="mb-6 space-y-2">
-                          <h2 className="text-2xl font-bold text-slate-900 leading-tight">
-                            {t("deposit.dialog.title") || "ฝากข้อมูลทรัพย์สิน"}
-                          </h2>
-                          <p className="text-slate-500 text-xs md:text-sm font-light">
-                            {t("deposit.dialog.subtitle") ||
-                              "บริการฝากขาย-เช่า บ้าน คอนโด และออฟฟิศ"}
-                          </p>
-                        </div>
-                        <DepositWizard
-                          onSuccessAction={() => setIsSuccess(true)}
-                          onCancelAction={() => router.push("/")}
-                          location="Landing Page"
-                        />
+                        {isSuccess ? (
+                          <div className="text-center py-12 px-4 space-y-6">
+                            <div className="w-20 h-20 bg-linear-to-br from-green-50 to-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner mb-4">
+                              <CheckCircle className="h-10 w-10" />
+                            </div>
+                            <div className="space-y-2">
+                              <h3 className="text-2xl font-bold text-slate-900 leading-tight">
+                                {t("deposit.success.title") || "ส่งข้อมูลสำเร็จ!"}
+                              </h3>
+                              <p className="text-slate-500 text-sm max-w-sm mx-auto">
+                                {t("deposit.success.message") || "ข้อมูลทรัพย์สินของท่านถูกบันทึกเรียบร้อยแล้ว ทีมงานจะติดต่อกลับโดยเร็วที่สุด"}
+                              </p>
+                            </div>
+                            <div className="flex justify-center gap-3 pt-4">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setIsSuccess(false)}
+                                className="border-slate-200 hover:bg-slate-50! text-blue-500! rounded-xl px-6"
+                              >
+                                {t("deposit.success.more_info_btn") || "ส่งข้อมูลเพิ่มเติม"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => router.push("/")}
+                                className="bg-blue-600 hover:bg-blue-700 text-white! rounded-xl px-6"
+                              >
+                                {t("breadcrumb.home") || "หน้าแรก"}
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="mb-6 space-y-2">
+                              <h2 className="text-2xl font-bold text-slate-900 leading-tight">
+                                {t("deposit.dialog.title") || "ฝากข้อมูลทรัพย์สิน"}
+                              </h2>
+                              <p className="text-slate-500 text-xs md:text-sm font-light">
+                                {t("deposit.dialog.subtitle") ||
+                                  "บริการฝากขาย-เช่า บ้าน คอนโด และออฟฟิศ"}
+                              </p>
+                            </div>
+                            <DepositWizard
+                              onSuccessAction={() => setIsSuccess(true)}
+                              onCancelAction={() => router.push("/")}
+                              location="Landing Page"
+                            />
+                          </>
+                        )}
                       </CardContent>
                     </Card>
                   </m.div>
@@ -641,7 +636,6 @@ export default function DepositPageClient() {
             </div>
           </div>
         </div>
-      )}
-    </main>
+      </main>
   );
 }
