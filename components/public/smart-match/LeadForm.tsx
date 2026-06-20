@@ -12,6 +12,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { createLeadFromMatchAction } from "@/features/public/actions";
 import { PropertyMatch } from "@/features/smart-match/types";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { generateMetaEventId, sendMetaCAPIEvent } from "@/lib/meta-capi-utils";
 
 interface LeadFormProps {
   match: PropertyMatch;
@@ -92,7 +93,7 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
     }
 
     try {
-      await createLeadFromMatchAction(
+      const leadResult = await createLeadFromMatchAction(
         sessionId,
         match.id,
         {
@@ -104,6 +105,38 @@ export function LeadForm({ match, sessionId, isRent, onBack }: LeadFormProps) {
           whatsapp: formData.get("whatsapp") as string,
         }
       );
+      const eventId = generateMetaEventId("lead", leadResult.leadId || match.id || sessionId);
+
+      try {
+        pushToDataLayer(GTM_EVENTS.LEAD_FORM_SUCCESS, {
+          event_id: eventId,
+          lead_id: leadResult.leadId,
+          subject: "Smart Match",
+          item_name: match.title,
+          item_id: match.id,
+          content_ids: [match.id],
+          content_name: match.title,
+          content_type: "home_listing",
+          currency: "THB",
+        });
+
+        void sendMetaCAPIEvent({
+          eventName: "Lead",
+          eventId,
+          customData: {
+            contentIds: [match.id],
+            contentName: match.title,
+            contentType: "home_listing",
+            currency: "THB",
+            fullName: formData.get("fullName") as string,
+            phone: formData.get("phone") as string,
+            email: formData.get("email") as string || undefined,
+          },
+        });
+      } catch (e) {
+        console.error("GTM Error:", e);
+      }
+
       toast.success(t("smart_match.lead_success"));
       onBack();
     } catch (err) {

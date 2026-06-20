@@ -17,6 +17,7 @@ import { LeadState } from "@/features/public/types";
 import { toast } from "sonner";
 import { useEffect, useRef } from "react";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { generateMetaEventId, sendMetaCAPIEvent } from "@/lib/meta-capi-utils";
 import { 
   getStoredMarketingData, 
   getAIScore, 
@@ -333,13 +334,32 @@ export function ContactAgentDialog({
 
     const result = await submitInquiryAction({}, formData);
     if (result.success && result.data) {
+      const eventId = generateMetaEventId("lead", result.data.id || propertyId || "contact_agent");
+
       // GTM Tracking for successful submission
       try {
         pushToDataLayer(GTM_EVENTS.SUBMIT_CONTACT_FORM, {
+          event_id: eventId,
           lead_id: result.data.id,
           item_id: propertyId,
           item_name: displayTitle,
+          content_ids: propertyId ? [propertyId] : [],
+          content_name: displayTitle,
+          content_type: "home_listing",
           utm_source: result.data.utmSource,
+        });
+
+        void sendMetaCAPIEvent({
+          eventName: "Lead",
+          eventId,
+          customData: {
+            contentIds: propertyId ? [propertyId] : [],
+            contentName: displayTitle || propertyTitle || "Contact Agent",
+            contentType: "home_listing",
+            currency: "THB",
+            fullName: fullName,
+            phone: phone,
+          },
         });
 
         pushToDataLayer(GTM_EVENTS.AI_LEAD_SCORE, {

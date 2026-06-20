@@ -25,6 +25,7 @@ import { FaLine } from "react-icons/fa";
 import { submitContactFormAction } from "@/features/leads/contact-action";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { generateMetaEventId, sendMetaCAPIEvent } from "@/lib/meta-capi-utils";
 import { getStoredMarketingData, getAIScore, getAIStatusLabel } from "@/lib/analytics-utils";
 import {
   Sheet,
@@ -135,11 +136,29 @@ export function ContactForm() {
 
       if (result.success) {
         try {
+          const eventId = generateMetaEventId("lead", result.data?.id || selectedSubject || "contact_form");
+
           pushToDataLayer(GTM_EVENTS.SUBMIT_CONTACT_FORM, {
+            event_id: eventId,
+            lead_id: result.data?.id,
             subject: selectedSubject,
             content_category: "Contact inquiry",
             content_name: selectedSubject,
+            content_type: "lead_form",
             currency: "THB",
+          });
+
+          void sendMetaCAPIEvent({
+            eventName: "Lead",
+            eventId,
+            customData: {
+              contentName: selectedSubject || "Contact inquiry",
+              contentType: "lead_form",
+              currency: "THB",
+              fullName: name,
+              phone: phone,
+              email: formData.get("email") as string || undefined,
+            },
           });
 
           if (result.data) {

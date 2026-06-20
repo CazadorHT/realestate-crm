@@ -12,6 +12,7 @@ import { createDepositLeadAction } from "@/features/public/actions";
 import { DepositDesktopView } from "./DesktopView";
 import { DepositMobileView } from "./MobileView";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
+import { generateMetaEventId, sendMetaCAPIEvent } from "@/lib/meta-capi-utils";
 
 export function DepositWizard({
   onSuccessAction,
@@ -144,14 +145,35 @@ export function DepositWizard({
     try {
       const res = await createDepositLeadAction(values);
       if (res.success) {
+        const eventId = generateMetaEventId("lead", res.leadId || values.fullName || "deposit");
+
         toast.success(
           t("deposit.success.message"),
         );
         console.log("GTM Debug: lead_form_success (Deposit)");
         try {
           pushToDataLayer(GTM_EVENTS.LEAD_FORM_SUCCESS, {
+            event_id: eventId,
+            lead_id: res.leadId,
             subject: "Deposit Property",
+            content_type: "lead_form",
+            content_name: "Deposit Property",
+            currency: "THB",
             ...values,
+          });
+
+          void sendMetaCAPIEvent({
+            eventName: "Lead",
+            eventId,
+            customData: {
+              contentName: "Deposit Property",
+              contentType: "lead_form",
+              currency: "THB",
+              contentIds: [],
+              fullName: values.fullName,
+              phone: values.phone,
+              email: values.email || undefined,
+            },
           });
         } catch (e) {}
         form.reset();
