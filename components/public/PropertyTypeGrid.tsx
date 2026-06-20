@@ -64,56 +64,56 @@ export function PropertyTypeGrid({
   const { t, language } = useLanguage();
   const propertyTypes = [
     {
-      image: "/images/property-types/condo.png",
+      image: "/images/property-types/condo.webp",
       title: t("home.property_types.condo"),
       count: "2,847",
       href: "/?type=CONDO#latest-properties",
     },
     {
-      image: "/images/property-types/house.png",
+      image: "/images/property-types/house.webp",
       title: t("home.property_types.house"),
       count: "1,653",
       href: "/?type=HOUSE#latest-properties",
     },
     {
-      image: "/images/property-types/townhome.png",
+      image: "/images/property-types/townhome.webp",
       title: t("home.property_types.townhome"),
       count: "892",
       href: "/?type=TOWNHOME#latest-properties",
     },
     
     {
-      image: "/images/property-types/pool_villa.png",
+      image: "/images/property-types/pool_villa.webp",
       title: t("home.property_types.pool_villa"),
       count: "328",
       href: "/?type=POOL_VILLA#latest-properties",
     },
     {
-      image: "/images/property-types/office.png",
+      image: "/images/property-types/office.webp",
       title: t("home.property_types.office_building"),
       count: "264",
       href: "/?type=OFFICE_BUILDING#latest-properties",
     },
     {
-      image: "/images/property-types/home_office.png",
+      image: "/images/property-types/home_office.webp",
       title: t("home.property_types.home_office"),
       count: "135",
       href: "/?type=TOWNHOME#latest-properties", // TOWNHOME maps to Home Office in filter logic
     },
     {
-      image: "/images/property-types/commercial.png",
+      image: "/images/property-types/commercial.webp",
       title: t("home.property_types.commercial_building"),
       count: "98",
       href: "/?type=COMMERCIAL_BUILDING#latest-properties",
     },
     {
-      image: "/images/property-types/warehouse.png",
+      image: "/images/property-types/warehouse.webp",
       title: t("home.property_types.warehouse"),
       count: "187",
       href: "/?type=WAREHOUSE#latest-properties",
     },
     {
-      image: "/images/property-types/land.png",
+      image: "/images/property-types/land.webp",
       title: t("home.property_types.land"),
       count: "1,243",
       href: "/?type=LAND#latest-properties",

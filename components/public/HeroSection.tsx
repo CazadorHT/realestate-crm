@@ -61,7 +61,7 @@ export async function HeroSection({
   return (
     <div className="relative min-h-screen bg-slate-900 overflow-x-hidden">
       <Image
-        src="/images/hero-realestate.png"
+        src="/images/hero-realestate.webp"
         alt="Hero Background"
         fill
         priority
