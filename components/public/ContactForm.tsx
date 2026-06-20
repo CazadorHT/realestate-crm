@@ -46,7 +46,7 @@ const INTEREST_CONFIG = [
 ];
 
 export function ContactForm() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [isPending, startTransition] = useTransition();
   const [isSuccess, setIsSuccess] = useState(false);
   const [name, setName] = useState("");
@@ -521,7 +521,7 @@ export function ContactForm() {
                   type="button" 
                   variant="ghost" 
                   onClick={prevStep}
-                  className="h-11 rounded-xl text-white/50 hover:bg-white/10 font-medium text-sm"
+                  className="h-11 rounded-xl text-white/50! hover:bg-white/10 font-medium text-sm"
                 >
                   {t("common.back") || "Back"}
                 </Button>
@@ -548,6 +548,7 @@ export function ContactForm() {
   const renderFormContent = (idSuffix: string) => (
     <form ref={idSuffix === "desktop" ? formElementRef : undefined} id={`contact-form-${idSuffix}`} action={clientAction} className="relative min-h-[280px]">
       <input type="hidden" name="subject" value={selectedSubject} />
+      <input type="hidden" name="locale" value={language} />
       {(() => {
         const marketingData = getStoredMarketingData();
         const score = getAIScore();

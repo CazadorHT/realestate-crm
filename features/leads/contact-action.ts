@@ -68,30 +68,48 @@ export async function submitContactFormAction(
 
   const rawPhone = formData.get("phone")?.toString() || "";
   const cleanPhone = rawPhone.replace(/\D/g, "");
+  const locale = formData.get("locale")?.toString() || "th";
+
+  const getOptionalString = (val: any) => {
+    if (val === null || val === undefined) return undefined;
+    const str = val.toString().trim();
+    return str === "" ? undefined : str;
+  };
+
+  const getRequiredString = (val: any) => {
+    if (val === null || val === undefined) return "";
+    return val.toString().trim();
+  };
 
   const validatedFields = contactSchema.safeParse({
-    name: formData.get("name"),
+    name: getRequiredString(formData.get("name")),
     phone: cleanPhone,
-    email: formData.get("email"),
-    lineId: formData.get("lineId"),
-    wechatId: formData.get("wechatId"),
-    whatsapp: formData.get("whatsapp"),
-    subject: formData.get("subject"),
-    message: formData.get("message"),
-    utm_source: formData.get("utm_source"),
-    utm_medium: formData.get("utm_medium"),
-    utm_campaign: formData.get("utm_campaign"),
-    utm_content: formData.get("utm_content"),
-    utm_term: formData.get("utm_term"),
-    referral_url: formData.get("referral_url"),
-    ai_score: formData.get("ai_score"),
-    ai_status_label: formData.get("ai_status_label"),
+    email: getOptionalString(formData.get("email")),
+    lineId: getOptionalString(formData.get("lineId")),
+    wechatId: getOptionalString(formData.get("wechatId")),
+    whatsapp: getOptionalString(formData.get("whatsapp")),
+    subject: getRequiredString(formData.get("subject")),
+    message: getOptionalString(formData.get("message")),
+    utm_source: getOptionalString(formData.get("utm_source")),
+    utm_medium: getOptionalString(formData.get("utm_medium")),
+    utm_campaign: getOptionalString(formData.get("utm_campaign")),
+    utm_content: getOptionalString(formData.get("utm_content")),
+    utm_term: getOptionalString(formData.get("utm_term")),
+    referral_url: getOptionalString(formData.get("referral_url")),
+    ai_score: getOptionalString(formData.get("ai_score")),
+    ai_status_label: getOptionalString(formData.get("ai_status_label")),
   });
 
   if (!validatedFields.success) {
+    const errorMessages: Record<string, string> = {
+      th: "⚠️ กรุณากรอกหัวเรื่อง ชื่อ และเบอร์โทรศัพท์ให้ครบถ้วน",
+      en: "⚠️ Please fill in the subject, name, and phone number correctly.",
+      cn: "⚠️ 请正确填写主题、姓名和电话号码。",
+      ru: "⚠️ Пожалуйста, заполните тему, имя и номер телефона правильно.",
+    };
     return {
       success: false,
-      message: "⚠️ กรุณากรอกหัวเรื่อง ชื่อ และเบอร์โทรศัพท์ให้ครบถ้วน",
+      message: errorMessages[locale] || errorMessages.th,
       errors: validatedFields.error.flatten().fieldErrors,
       fields: {
         name: (formData.get("name") as string) || "",
