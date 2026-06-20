@@ -81,7 +81,7 @@ export function ContactForm() {
 
   const INTEREST_OPTIONS = INTEREST_CONFIG.map((item) => ({
     label: t(`contact.subjects.${item.key}`),
-    value: t(`contact.subjects.${item.key}`),
+    value: item.key,
     icon: item.icon,
     color: item.color,
   }));
@@ -354,7 +354,10 @@ export function ContactForm() {
                     {t("contact.name_label")}
                   </Label>
                   <div className="relative group">
-                    <div className="absolute left-4 inset-y-0 flex items-center text-white/30 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                    <div className={cn(
+                      "absolute left-4 inset-y-0 flex items-center transition-colors pointer-events-none",
+                      name.trim().length >= 2 ? "text-emerald-400" : "text-white/30 group-focus-within:text-blue-400"
+                    )}>
                       <User className="h-5 w-5" />
                     </div>
                     <Input
@@ -389,7 +392,10 @@ export function ContactForm() {
                     {t("contact.phone_label")}
                   </Label>
                   <div className="relative group">
-                    <div className="absolute left-4 inset-y-0 flex items-center text-white/30 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                    <div className={cn(
+                      "absolute left-4 inset-y-0 flex items-center transition-colors pointer-events-none",
+                      phone.replace(/\D/g, "").length >= 9 ? "text-emerald-400" : "text-white/30 group-focus-within:text-blue-400"
+                    )}>
                       <Phone className="h-5 w-5" />
                     </div>
                     <Input
@@ -425,7 +431,7 @@ export function ContactForm() {
                   type="button" 
                   variant="ghost" 
                   onClick={prevStep}
-                  className="h-11 rounded-xl text-white/50 hover:bg-white/10 font-medium text-sm"
+                  className="h-11 rounded-xl text-white/50! hover:bg-white/10! font-medium text-sm"
                 >
                   {t("common.back") || "Back"}
                 </Button>
@@ -464,7 +470,10 @@ export function ContactForm() {
                     {t("contact.email_label")}
                   </Label>
                   <div className="relative group">
-                    <div className="absolute left-4 inset-y-0 flex items-center text-white/30 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                    <div className={cn(
+                      "absolute left-4 inset-y-0 flex items-center transition-colors pointer-events-none",
+                      email.trim().length > 0 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? "text-emerald-400" : "text-white/30 group-focus-within:text-blue-400"
+                    )}>
                       <Mail className="h-5 w-5" />
                     </div>
                     <Input
@@ -498,7 +507,10 @@ export function ContactForm() {
                     {t("contact.line_id_label")}
                   </Label>
                   <div className="relative group">
-                    <div className="absolute left-4 inset-y-0 flex items-center text-white/30 group-focus-within:text-[#00B900] transition-colors pointer-events-none">
+                    <div className={cn(
+                      "absolute left-4 inset-y-0 flex items-center transition-colors pointer-events-none",
+                      lineId.trim().length >= 2 ? "text-emerald-400" : "text-white/30 group-focus-within:text-[#00B900]"
+                    )}>
                       <FaLine className="h-5 w-5" />
                     </div>
                     <Input
@@ -531,7 +543,10 @@ export function ContactForm() {
                     {t("contact.wechat_label") || "WeChat ID"}
                   </Label>
                   <div className="relative group">
-                    <div className="absolute left-4 inset-y-0 flex items-center text-white/30 group-focus-within:text-[#07C160] transition-colors pointer-events-none">
+                    <div className={cn(
+                      "absolute left-4 inset-y-0 flex items-center transition-colors pointer-events-none",
+                      wechatId.trim().length >= 2 ? "text-emerald-400" : "text-white/30 group-focus-within:text-[#07C160]"
+                    )}>
                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M8.05 4.31c.21 0 .42.01.62.02a7.33 7.33 0 0 1 7.21 6.55c0 .06.01.12.01.19a7.35 7.35 0 0 1-7.14 7.35 7.4 7.4 0 0 1-3.13-.69l-3.32.96.98-3.23a7.34 7.34 0 0 1 4.77-11.15m10.16 3.12a7.08 7.08 0 0 1 5.76 6.94c0 1.94-.8 3.69-2.09 4.95l.8 2.66-2.73-.79a7.07 7.07 0 0 1-8.52-1.34 7.6 7.6 0 0 0 1.25.1c3.15 0 5.72-2.52 5.82-5.67.4 0 .8.01 1.21.01.24 0 .48-.01.71-.02a7.58 7.58 0 0 0-2.21-6.84z"/></svg>
                     </div>
                     <Input
@@ -564,7 +579,10 @@ export function ContactForm() {
                     {t("contact.whatsapp_label") || "WhatsApp"}
                   </Label>
                   <div className="relative group">
-                    <div className="absolute left-4 inset-y-0 flex items-center text-white/30 group-focus-within:text-[#25D366] transition-colors pointer-events-none">
+                    <div className={cn(
+                      "absolute left-4 inset-y-0 flex items-center transition-colors pointer-events-none",
+                      whatsapp.trim().length >= 5 ? "text-emerald-400" : "text-white/30 group-focus-within:text-[#25D366]"
+                    )}>
                       <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm.01 1.67c2.2 0 4.26.86 5.82 2.42 1.56 1.56 2.41 3.63 2.41 5.83 0 4.54-3.7 8.23-8.24 8.23-1.48 0-2.93-.39-4.19-1.15l-.3-.17-3.12.82.83-3.04-.19-.3a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.24-8.24zm-4.53 3.19c-.24 0-.48.01-.7.12-.22.11-.42.27-.58.48-.32.41-.63 1.05-.63 1.93 0 .88.33 1.74 1.01 2.64 1.37 1.83 3.03 3.16 5.1 4.02.58.24 1.14.39 1.66.45.52.06 1.08.01 1.54-.15.46-.16.92-.48 1.13-.88.21-.4.21-.88.15-1.18-.06-.3-.21-.45-.48-.57l-1.63-.73c-.27-.12-.54-.18-.79-.18-.25 0-.48.06-.67.24l-.56.69c-.21.26-.45.33-.76.19-.31-.14-.73-.34-1.22-.67-.49-.33-.94-.74-1.35-1.22-.26-.31-.3-.59-.14-.85l.55-.71c.15-.19.2-.39.14-.58l-.66-1.58c-.11-.27-.27-.45-.54-.51-.13-.03-.28-.05-.44-.05z"/></svg>
                     </div>
                     <Input
@@ -598,7 +616,10 @@ export function ContactForm() {
                   {t("contact.more_details_label")}
                 </Label>
                 <div className="relative group">
-                  <div className="absolute left-4 top-3 text-white/30 group-focus-within:text-blue-400 transition-colors pointer-events-none">
+                  <div className={cn(
+                    "absolute left-4 top-3 transition-colors pointer-events-none",
+                    message.trim().length >= 3 ? "text-emerald-400" : "text-white/30 group-focus-within:text-blue-400"
+                  )}>
                     <MessageSquare className="h-5 w-5" />
                   </div>
                   <Textarea
