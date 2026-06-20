@@ -133,6 +133,18 @@ export function ContactForm() {
       return;
     }
 
+    // Since Step 1 and Step 2 inputs are unmounted when submitting on Step 3,
+    // we must manually append/set all state values in the formData object.
+    formData.set("name", name);
+    formData.set("phone", phone);
+    formData.set("subject", selectedSubject);
+    formData.set("email", email);
+    formData.set("lineId", lineId);
+    formData.set("wechatId", wechatId);
+    formData.set("whatsapp", whatsapp);
+    formData.set("message", message);
+    formData.set("locale", language);
+
     startTransition(async () => {
       const result = await submitContactFormAction(
         { success: false, message: "" },

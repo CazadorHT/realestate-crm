@@ -101,6 +101,12 @@ export async function submitContactFormAction(
   });
 
   if (!validatedFields.success) {
+    console.error("[Validation Failed]", validatedFields.error.flatten().fieldErrors, {
+      name: formData.get("name"),
+      phone: formData.get("phone"),
+      subject: formData.get("subject"),
+      locale
+    });
     const errorMessages: Record<string, string> = {
       th: "⚠️ กรุณากรอกหัวเรื่อง ชื่อ และเบอร์โทรศัพท์ให้ครบถ้วน",
       en: "⚠️ Please fill in the subject, name, and phone number correctly.",
