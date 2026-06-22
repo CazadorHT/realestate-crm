@@ -14,26 +14,43 @@ import type {
   PropertyTransitInfoConsolidated,
   PropertyTransitV3,
 } from "../types";
-import type { 
+import type {
   InventoryProperty,
-  InventoryFilterCounts 
+  InventoryFilterCounts,
 } from "@/app/(protected)/protected/admin/inventory/types";
 import { getCoverImage } from "@/lib/property-hardened-utils";
 import { getRecommendedProperties } from "../queries";
-import { 
+import {
   PROPERTY_STATUS_DB_VALUE,
   LISTING_TYPE_DB_VALUE,
   PROPERTY_TYPE_DB_VALUE,
   getStatusFromDb,
   getListingTypeFromDb,
-  getPropertyTypeFromDb
+  getPropertyTypeFromDb,
 } from "../labels";
 import { mapDbError } from "@/lib/db-error";
 import type { Database } from "@/lib/database.types.generated";
 
 /** === SHARED JSONB INTERFACES === */
-interface MultiLang { th?: string; en?: string; cn?: string; ru?: string }
-interface AddressInfo { th?: string; en?: string; province?: string; district?: string; subdistrict?: string; postal_code?: string; maps_link?: string; popular_area?: string; popular_area_en?: string; popular_area_cn?: string; popular_area_ru?: string }
+interface MultiLang {
+  th?: string;
+  en?: string;
+  cn?: string;
+  ru?: string;
+}
+interface AddressInfo {
+  th?: string;
+  en?: string;
+  province?: string;
+  district?: string;
+  subdistrict?: string;
+  postal_code?: string;
+  maps_link?: string;
+  popular_area?: string;
+  popular_area_en?: string;
+  popular_area_cn?: string;
+  popular_area_ru?: string;
+}
 interface Amenities {
   is_pet_friendly?: boolean;
   is_foreigner_quota?: boolean;
@@ -42,18 +59,18 @@ interface Amenities {
   airbnb_monthly_price?: number;
   airbnb_min_contract?: string;
 }
-interface PricingDetails { 
-  maintenance_fee?: number; 
-  commission_sale?: number; 
+interface PricingDetails {
+  maintenance_fee?: number;
+  commission_sale?: number;
   commission_rent?: number;
   original_price?: number;
   original_rental_price?: number;
 }
-interface MetaData { 
-  agent_ids?: string[]; 
-  created_by?: string; 
+interface MetaData {
+  agent_ids?: string[];
+  created_by?: string;
   requires_ai_review?: boolean;
-  co_agent?: { name?: string; phone?: string; contact_id?: string } 
+  co_agent?: { name?: string; phone?: string; contact_id?: string };
 }
 
 interface AggregationRow {
@@ -73,7 +90,9 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
 
     const { data: core, error: coreErr } = await supabase
       .from("properties_core")
-      .select("id, tenant_id, branch_id, status, listing_type, property_type, sale_price, rent_price, currency, floor_area, land_area, is_exclusive, is_hot_deal, verified, created_at, updated_at, owner_id, assigned_to, bedrooms, bathrooms, price_per_sqm")
+      .select(
+        "id, tenant_id, branch_id, status, listing_type, property_type, sale_price, rent_price, currency, floor_area, land_area, is_exclusive, is_hot_deal, verified, created_at, updated_at, owner_id, assigned_to, bedrooms, bathrooms, price_per_sqm",
+      )
       .eq("id", id)
       .single();
 
@@ -82,14 +101,16 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
     // 🛡️ Elite Hardening: Verify tenant access for non-admins
     if (role !== "ADMIN") {
       const propertyTenantId = core.tenant_id;
-      
+
       if (!propertyTenantId) {
         throw new Error("Property does not belong to any tenant/branch");
       }
 
       // If user has a specific active tenant context, ensure it matches the property's tenant
       if (tenantId && tenantId !== propertyTenantId) {
-        throw new Error("Forbidden: You do not have access to this tenant's property");
+        throw new Error(
+          "Forbidden: You do not have access to this tenant's property",
+        );
       }
 
       // If user has cross-branch context (tenantId is undefined due to "ALL" cookie),
@@ -103,18 +124,23 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
           .maybeSingle();
 
         if (memberErr || !member) {
-          throw new Error("Forbidden: You are not a member of this property's tenant/branch");
+          throw new Error(
+            "Forbidden: You are not a member of this property's tenant/branch",
+          );
         }
       }
     }
 
     const { data: details, error: detailsErr } = await supabase
       .from("properties_details")
-      .select("property_id, title, description, address_info, amenities, pricing_details, meta_data, transit_info")
+      .select(
+        "property_id, title, description, address_info, amenities, pricing_details, meta_data, transit_info",
+      )
       .eq("property_id", id)
       .single();
 
-    if (detailsErr || !details) throw detailsErr || new Error("Details not found");
+    if (detailsErr || !details)
+      throw detailsErr || new Error("Details not found");
 
     const { data: media } = await supabase
       .from("property_media_v3")
@@ -148,19 +174,20 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       description_en: description?.en || "",
       description_cn: description?.cn || "",
       description_ru: description?.ru || "",
-      
+
       status: getStatusFromDb(core.status),
       listing_type: getListingTypeFromDb(core.listing_type),
       property_type: getPropertyTypeFromDb(core.property_type),
-      
+
       price: core.sale_price,
       rental_price: core.rent_price,
       original_price: price?.original_price ?? core.sale_price ?? null,
-      original_rental_price: price?.original_rental_price ?? core.rent_price ?? null,
-      
+      original_rental_price:
+        price?.original_rental_price ?? core.rent_price ?? null,
+
       size_sqm: core.floor_area || 0,
       land_size_sqwah: core.land_area || 0,
-      
+
       address_line1: addr?.th || "",
       address_line1_en: addr?.en || "",
       province: addr?.province || "",
@@ -172,7 +199,7 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       popular_area_en: addr?.popular_area_en || "",
       popular_area_cn: addr?.popular_area_cn || "",
       popular_area_ru: addr?.popular_area_ru || "",
-      
+
       is_pet_friendly: !!amen?.is_pet_friendly,
       is_foreigner_quota: !!amen?.is_foreigner_quota,
       allow_airbnb: !!amen?.allow_airbnb,
@@ -182,20 +209,22 @@ export async function getPropertyById(id: string): Promise<PropertyRow> {
       is_exclusive: !!core.is_exclusive,
       is_hot_deal: !!core.is_hot_deal,
       verified: !!core.verified,
-      
+
       maintenance_fee: price?.maintenance_fee || 0,
       commission_sale_percentage: price?.commission_sale || 0,
       commission_rent_months: price?.commission_rent || 0,
-      
+
       images: media || [],
       property_features: features || [],
       nearby_transits: Array.isArray(details.transit_info)
         ? (details.transit_info as unknown as PropertyTransitV3[])
-        : ((details.transit_info as unknown as PropertyTransitInfoConsolidated)?.transits || []),
+        : (details.transit_info as unknown as PropertyTransitInfoConsolidated)
+            ?.transits || [],
       nearby_places: Array.isArray(details.transit_info)
         ? []
-        : ((details.transit_info as unknown as PropertyTransitInfoConsolidated)?.places || []),
-      
+        : (details.transit_info as unknown as PropertyTransitInfoConsolidated)
+            ?.places || [],
+
       agent_ids: meta?.agent_ids || [],
       created_by: meta?.created_by || "",
       co_agent_name: meta?.co_agent?.name || "",
@@ -223,7 +252,6 @@ export async function getPropertyWithImages(
   return getPropertyById(id) as Promise<PropertyWithImages>;
 }
 
-
 /**
  * Add a new popular area to the database
  */
@@ -235,7 +263,7 @@ export async function addPopularAreaAction(data: {
   province?: string;
 }) {
   const { supabase, role } = await requireAuthContext();
-  
+
   // 🛡️ Staff Authorization: Popular Areas are GLOBAL. All staff members (Admins, Managers, Agents) can add them.
   assertStaff(role);
 
@@ -302,7 +330,7 @@ export async function getGlobalPropertiesTableDataAction(params: {
 
   const { page, q, propertyType, listingType, status, targetTenantId } = params;
 
-    const PAGE_SIZE = 10;
+  const PAGE_SIZE = 10;
   const from = (page - 1) * PAGE_SIZE;
   const to = from + PAGE_SIZE - 1;
 
@@ -316,7 +344,7 @@ export async function getGlobalPropertiesTableDataAction(params: {
         name
       )
     `,
-      { count: "exact" }
+      { count: "exact" },
     )
     .range(from, to)
     .order("created_at", { ascending: false });
@@ -405,7 +433,7 @@ export async function getGlobalInventoryFilterCountsAction(): Promise<InventoryF
     propertyTypes: {},
     statuses: {},
     listingTypes: {},
-    branches: {}
+    branches: {},
   };
 
   typedData.forEach((p) => {

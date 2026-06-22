@@ -174,7 +174,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <MapIcon className="h-3.5 w-3.5 text-blue-500" />
-                  <span>จังหวัด <span className="text-red-500">*</span></span>
+                  <span>
+                    จังหวัด <span className="text-red-500">*</span>
+                  </span>
                   {addressLoading && (
                     <Loader2 className="inline h-3 w-3 animate-spin text-slate-400" />
                   )}
@@ -214,7 +216,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                           </div>
                         ) : (
                           [...filteredProvinces]
-                            .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                            .sort((a, b) =>
+                              a.name_th.localeCompare(b.name_th, "th"),
+                            )
                             .map((p) => {
                               const isSelected = field.value === p.name_th;
                               return (
@@ -237,7 +241,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                                       : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
                                   )}
                                 >
-                                  <span className="text-xs font-bold">{p.name_th}</span>
+                                  <span className="text-xs font-bold">
+                                    {p.name_th}
+                                  </span>
                                   {isSelected && (
                                     <div className="bg-blue-600 rounded-full p-1 text-white">
                                       <Check className="h-3 w-3" />
@@ -268,7 +274,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     </FormControl>
                     <SelectContent className="max-h-[300px]">
                       {[...provinces]
-                        .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                        .sort((a, b) =>
+                          a.name_th.localeCompare(b.name_th, "th"),
+                        )
                         .map((p) => (
                           <SelectItem key={p.id} value={p.name_th}>
                             {p.name_th}
@@ -296,7 +304,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <MapPinned className="h-3.5 w-3.5 text-blue-500" />
-                  <span>เขต / อำเภอ <span className="text-red-500">*</span></span>
+                  <span>
+                    เขต / อำเภอ <span className="text-red-500">*</span>
+                  </span>
                 </FormLabel>
                 {isMobileOrTablet ? (
                   <ResponsiveDialog
@@ -340,7 +350,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                           </div>
                         ) : (
                           [...filteredDistricts]
-                            .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                            .sort((a, b) =>
+                              a.name_th.localeCompare(b.name_th, "th"),
+                            )
                             .map((d) => {
                               const isSelected = field.value === d.name_th;
                               return (
@@ -361,7 +373,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                                       : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
                                   )}
                                 >
-                                  <span className="text-xs font-bold">{d.name_th.replace(/^เขต/, "")}</span>
+                                  <span className="text-xs font-bold">
+                                    {d.name_th.replace(/^เขต/, "")}
+                                  </span>
                                   {isSelected && (
                                     <div className="bg-blue-600 rounded-full p-1 text-white">
                                       <Check className="h-3 w-3" />
@@ -392,7 +406,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     </FormControl>
                     <SelectContent className="max-h-[300px]">
                       {[...districtOptions]
-                        .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                        .sort((a, b) =>
+                          a.name_th.localeCompare(b.name_th, "th"),
+                        )
                         .map((d) => (
                           <SelectItem key={d.id} value={d.name_th}>
                             {d.name_th.replace(/^เขต/, "")}
@@ -420,7 +436,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
               <FormItem className="col-span-1">
                 <FormLabel className="flex items-center gap-2 font-medium text-slate-700 text-[10px] sm:text-xs uppercase tracking-wide">
                   <SignpostBig className="h-3.5 w-3.5 text-blue-500" />
-                  <span>แขวง / ตำบล <span className="text-red-500">*</span></span>
+                  <span>
+                    แขวง / ตำบล <span className="text-red-500">*</span>
+                  </span>
                 </FormLabel>
                 {isMobileOrTablet ? (
                   <ResponsiveDialog
@@ -447,7 +465,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                           <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-slate-500" />
                           <Input
                             value={subdistrictSearch}
-                            onChange={(e) => setSubdistrictSearch(e.target.value)}
+                            onChange={(e) =>
+                              setSubdistrictSearch(e.target.value)
+                            }
                             placeholder="ค้นหาแขวง/ตำบล..."
                             className="h-10 w-full border-0 bg-transparent pr-2 placeholder:text-sm text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
                           />
@@ -464,7 +484,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                           </div>
                         ) : (
                           [...filteredSubdistricts]
-                            .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                            .sort((a, b) =>
+                              a.name_th.localeCompare(b.name_th, "th"),
+                            )
                             .map((s) => {
                               const isSelected = field.value === s.name_th;
                               return (
@@ -474,7 +496,10 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                                   onClick={() => {
                                     field.onChange(s.name_th);
                                     // Auto-fill postal code
-                                    form.setValue("postal_code", String(s.zip_code));
+                                    form.setValue(
+                                      "postal_code",
+                                      String(s.zip_code),
+                                    );
                                     setSubdistrictOpen(false);
                                     setSubdistrictSearch("");
                                   }}
@@ -485,7 +510,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                                       : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
                                   )}
                                 >
-                                  <span className="text-xs font-bold">{s.name_th}</span>
+                                  <span className="text-xs font-bold">
+                                    {s.name_th}
+                                  </span>
                                   {isSelected && (
                                     <div className="bg-blue-600 rounded-full p-1 text-white">
                                       <Check className="h-3 w-3" />
@@ -521,7 +548,9 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                     </FormControl>
                     <SelectContent className="max-h-[300px]">
                       {[...subDistrictOptions]
-                        .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
+                        .sort((a, b) =>
+                          a.name_th.localeCompare(b.name_th, "th"),
+                        )
                         .map((s) => (
                           <SelectItem key={s.id} value={s.name_th}>
                             {s.name_th}
@@ -709,7 +738,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                   <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />
                 ) : (
                   <FormDescription className="text-[9px] sm:text-[10px] text-slate-500 mt-1 leading-relaxed">
-                     google map ตัวอย่าง "https://maps.app.goo.gl/....."
+                    google map ตัวอย่าง "https://maps.app.goo.gl/....."
                   </FormDescription>
                 )}
               </FormItem>
