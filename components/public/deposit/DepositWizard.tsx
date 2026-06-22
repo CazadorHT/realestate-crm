@@ -47,7 +47,6 @@ export function DepositWizard({
 
   // Track Form View on Mount
   useEffect(() => {
-    console.log(`GTM Debug: lead_form_view (Deposit) from ${location}`);
     try {
       pushToDataLayer(GTM_EVENTS.LEAD_FORM_VIEW, {
         subject: "Deposit Property",
@@ -65,10 +64,6 @@ export function DepositWizard({
 
     const handleInvalid = (e: Event) => {
       const target = e.target as HTMLInputElement;
-      console.log("GTM Debug: lead_form_error (Deposit Browser)", {
-        field: target.name,
-        message: target.validationMessage,
-      });
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
           error_message: target.validationMessage,
@@ -86,10 +81,6 @@ export function DepositWizard({
   const onInvalid = (errors: any) => {
     const firstErrorField = Object.keys(errors)[0];
     const errorMessage = errors[firstErrorField]?.message || "Validation Error";
-    console.log("GTM Debug: lead_form_error (Deposit Zod)", {
-      field: firstErrorField,
-      message: errorMessage,
-    });
     try {
       pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
         error_message: `Zod Validation: ${errorMessage}`,
@@ -101,7 +92,6 @@ export function DepositWizard({
 
   const handleFormStart = () => {
     if (!hasStartedRef.current) {
-      console.log("GTM Debug: lead_form_start (Deposit) triggering");
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_START, {
           subject: "Deposit Property",
@@ -122,9 +112,6 @@ export function DepositWizard({
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
       const next = currentStep + 1;
-      console.log(
-        `GTM Debug: lead_form_step (Deposit) Step ${currentStep} -> ${next}`,
-      );
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_STEP, {
           step: currentStep,
@@ -150,7 +137,6 @@ export function DepositWizard({
         toast.success(
           t("deposit.success.message"),
         );
-        console.log("GTM Debug: lead_form_success (Deposit)");
         try {
           pushToDataLayer(GTM_EVENTS.LEAD_FORM_SUCCESS, {
             event_id: eventId,
@@ -179,9 +165,6 @@ export function DepositWizard({
         form.reset();
         onSuccessAction();
       } else {
-        console.log("GTM Debug: lead_form_error (Deposit Server Side)", {
-          message: res.message,
-        });
         toast.error(res.message);
         try {
           pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {

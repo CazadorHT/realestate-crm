@@ -2,7 +2,6 @@
 
 import { ICON_MAP, DEFAULT_ICON } from "@/features/amenities/icons";
 import { LuLayoutGrid } from "react-icons/lu";
-import { useEffect } from "react";
 import {
   useLanguage,
   dictionaries,
@@ -27,11 +26,6 @@ export function PropertyAmenities({
   features,
   language: customLanguage,
 }: PropertyAmenitiesProps) {
-  // CLIENT DEBUG: log features on mount (client-only)
-  useEffect(() => {
-    // eslint-disable-next-line no-console
-    console.log("[CLIENT] PropertyAmenities features:", features);
-  }, [features]);
   const { language: globalLanguage, t: globalT } = useLanguage();
   const language = customLanguage || globalLanguage;
 

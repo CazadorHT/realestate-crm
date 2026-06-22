@@ -65,7 +65,6 @@ export default function PendingApprovalPage() {
             },
             (payload) => {
               if (!isSubscribed) return;
-              console.log("[REALTIME] Profile updated:", payload);
               
               // Safely extract the new active status from the payload
               const isActive = (payload.new as { is_active?: boolean }).is_active;

@@ -172,7 +172,6 @@ export function ContactAgentDialog({
 
   const handleFormStart = () => {
     if (!hasStartedRef.current) {
-      console.log("GTM Debug: lead_form_start (Agent Dialog) triggering");
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_START, {
           subject: "Contact Agent",
@@ -195,10 +194,6 @@ export function ContactAgentDialog({
       if (!form) return;
       const handleInvalid = (e: Event) => {
         const target = e.target as HTMLInputElement;
-        console.log("GTM Debug: lead_form_error (Agent Dialog Browser)", {
-          field: target.name,
-          message: target.validationMessage,
-        });
         try {
           pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {
             error_message: target.validationMessage,
@@ -380,7 +375,6 @@ export function ContactAgentDialog({
       setPhone("");
       setMessage("");
     } else {
-      console.log("GTM Debug: lead_form_error (Agent Dialog Server Side)");
       toast.error(result.error || t("property.contact_dialog.error"));
       try {
         pushToDataLayer(GTM_EVENTS.LEAD_FORM_ERROR, {

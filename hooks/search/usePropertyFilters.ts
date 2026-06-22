@@ -64,12 +64,6 @@ export function usePropertyFilters() {
 
   // Update state when params change (for back/forward navigation)
   useEffect(() => {
-    console.log("usePropertyFilters [searchParams change]:", {
-      keyword: searchParams.get("keyword"),
-      property_type: searchParams.get("property_type"),
-      listing_type: searchParams.get("listing_type"),
-      transit_station: searchParams.get("transit_station"),
-    });
     setKeyword(searchParams.get("keyword") || "");
     setType(searchParams.get("property_type") || "ALL");
     setListingType(searchParams.get("listing_type") || "ALL");
@@ -119,7 +113,6 @@ export function usePropertyFilters() {
  
     const query = params.toString();
     const url = `/properties${query ? `?${query}` : ""}`;
-    console.log("usePropertyFilters [Sync state to URL]:", url);
     router.replace(url, { scroll: false });
   }, [
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,

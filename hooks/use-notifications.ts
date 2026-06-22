@@ -40,7 +40,6 @@ export function useNotifications() {
   const fetchNotifications = useCallback(async (force = false) => {
     const now = Date.now();
     if (!force && now - lastFetchRef.current < FETCH_THROTTLE) {
-      console.log("[useNotifications] Skipping fetch due to throttle");
       return;
     }
     
@@ -120,7 +119,6 @@ export function useNotifications() {
           }
         },
         onRefresh: () => {
-          console.log("[useNotifications] Re-fetching gaps due to reconnect...");
           fetchNotifications();
         }
       }
