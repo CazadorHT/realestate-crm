@@ -38,6 +38,7 @@ import type { Owner, OwnerFormValues } from "@/features/owners/types";
 import {
   createOwnerAction,
   updateOwnerAction,
+  checkOwnerDuplicateAction,
 } from "@/features/owners/actions";
 import { OwnerMobileView } from "./components/OwnerMobileView";
 import { OwnerDesktopView } from "./components/OwnerDesktopView";
@@ -95,6 +96,12 @@ export function OwnerForm(props: Props) {
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
 
+  const [duplicateOwner, setDuplicateOwner] = useState<{ id: string; name: string } | null>(null);
+  const [liveValidation, setLiveValidation] = useState<{
+    phone?: { isDuplicate: boolean; ownerName?: string; ownerId?: string };
+    line_id?: { isDuplicate: boolean; ownerName?: string; ownerId?: string };
+  }>({});
+
   const form = useForm<FormShape>({
     resolver: zodResolver(ownerSchema),
     mode: "onChange",
@@ -109,6 +116,30 @@ export function OwnerForm(props: Props) {
     },
   });
 
+  const checkLiveDuplicate = async (field: "phone" | "line_id", value: string | null | undefined) => {
+    if (!value || props.mode !== "create") return;
+    try {
+      const isPhone = field === "phone";
+      const res = await checkOwnerDuplicateAction(
+        isPhone ? value : undefined,
+        !isPhone ? value : undefined
+      );
+      if (res.success && res.isDuplicate) {
+        setLiveValidation((prev) => ({
+          ...prev,
+          [field]: { isDuplicate: true, ownerName: res.ownerName, ownerId: res.ownerId },
+        }));
+      } else {
+        setLiveValidation((prev) => ({
+          ...prev,
+          [field]: { isDuplicate: false },
+        }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   // Notify parent of dirty state changes
   const isDirty = form.formState.isDirty;
   const onDirtyChange = props.onDirtyChange;
@@ -118,6 +149,7 @@ export function OwnerForm(props: Props) {
 
   const onSubmit = (values: FormShape) => {
     setError(null);
+    setDuplicateOwner(null);
 
     const payload: OwnerFormValues = {
       full_name: values.full_name.trim(),
@@ -133,13 +165,22 @@ export function OwnerForm(props: Props) {
 
     startTransition(async () => {
       try {
-        const res =
+        const res = (
           props.mode === "create"
             ? await createOwnerAction(payload)
-            : await updateOwnerAction(props.id, payload);
+            : await updateOwnerAction(props.id, payload)
+        ) as any;
 
         if (res?.success === false) {
-          toast.error(res.message || "เกิดข้อผิดพลาด");
+          if (res.code === "DUPLICATE") {
+            setDuplicateOwner({
+              id: res.duplicateId as string,
+              name: res.duplicateName as string,
+            });
+            setError(res.message || "มีข้อมูลเจ้าของทรัพย์นี้ในระบบแล้ว");
+          } else {
+            toast.error(res.message || "เกิดข้อผิดพลาด");
+          }
           return;
         }
 
@@ -199,6 +240,14 @@ export function OwnerForm(props: Props) {
         handleCancel={handleCancel}
         onSubmit={form.handleSubmit(onSubmit)}
         isInDialog={props.isInDialog}
+        liveValidation={liveValidation}
+        checkLiveDuplicate={checkLiveDuplicate}
+        duplicateOwner={duplicateOwner}
+        onUseExisting={() => {
+          if (duplicateOwner && props.onSuccess) {
+            props.onSuccess(duplicateOwner.id);
+          }
+        }}
       />
     );
   }
@@ -212,6 +261,14 @@ export function OwnerForm(props: Props) {
       handleCancel={handleCancel}
       onSubmit={form.handleSubmit(onSubmit)}
       isInDialog={props.isInDialog}
+      liveValidation={liveValidation}
+      checkLiveDuplicate={checkLiveDuplicate}
+      duplicateOwner={duplicateOwner}
+      onUseExisting={() => {
+        if (duplicateOwner && props.onSuccess) {
+          props.onSuccess(duplicateOwner.id);
+        }
+      }}
     />
   );
 }

@@ -30,6 +30,13 @@ interface OwnerMobileViewProps {
   handleCancel: () => void;
   onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
   isInDialog?: boolean;
+  liveValidation?: {
+    phone?: { isDuplicate: boolean; ownerName?: string; ownerId?: string };
+    line_id?: { isDuplicate: boolean; ownerName?: string; ownerId?: string };
+  };
+  checkLiveDuplicate?: (field: "phone" | "line_id", value: string | null | undefined) => void;
+  duplicateOwner?: { id: string; name: string } | null;
+  onUseExisting?: () => void;
 }
 
 export function OwnerMobileView({
@@ -43,9 +50,31 @@ export function OwnerMobileView({
   handleCancel,
   onSubmit,
   isInDialog,
+  liveValidation,
+  checkLiveDuplicate,
+  duplicateOwner,
+  onUseExisting,
 }: OwnerMobileViewProps) {
   return (
     <div className="flex flex-col h-full bg-white">
+      {duplicateOwner && onUseExisting && (
+        <div className="mx-6 mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 space-y-3">
+          <div className="text-sm text-amber-800 font-bold flex items-center gap-2">
+            ⚠️ ตรวจพบข้อมูลซ้ำ
+          </div>
+          <p className="text-xs text-amber-700">
+            K. {duplicateOwner.name} มีในระบบแล้ว คุณต้องการใช้ข้อมูลเดิมหรือไม่?
+          </p>
+          <Button
+            type="button"
+            onClick={onUseExisting}
+            className="w-full h-9 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors"
+          >
+            ใช้เจ้าของเดิมทันที
+          </Button>
+        </div>
+      )}
+
       {/* Mobile Header / Progress */}
       <div className="px-6 pt-4 pb-2">
         <div className="flex items-center justify-between mb-4">
@@ -172,12 +201,22 @@ export function OwnerMobileView({
                         </label>
                         <Input
                           placeholder="08X-XXX-XXXX"
-                          className="h-13 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium"
-                          {...form.register("phone")}
+                          className={cn(
+                            "h-13 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all font-medium",
+                            liveValidation?.phone?.isDuplicate && "border-amber-500 focus:border-amber-600 focus:ring-amber-500/10"
+                          )}
+                          {...form.register("phone", {
+                            onBlur: (e) => checkLiveDuplicate?.("phone", e.target.value),
+                          })}
                         />
                         {form.formState.errors.phone && (
                           <p className="text-xs font-semibold text-red-500 mt-1 ml-1">
                             {(form.formState.errors.phone as any).message}
+                          </p>
+                        )}
+                        {liveValidation?.phone?.isDuplicate && (
+                          <p className="text-xs text-amber-600 font-semibold ml-1">
+                            ⚠️ เบอร์โทรศัพท์นี้ถูกใช้งานแล้วโดย K. {liveValidation.phone.ownerName}
                           </p>
                         )}
                       </div>
@@ -190,10 +229,20 @@ export function OwnerMobileView({
                           <FaLine className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#06C755]" />
                           <Input
                             placeholder="@lineid"
-                            className="h-13 pl-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:border-[#06C755] focus:ring-4 focus:ring-[#06C755]/10 transition-all font-medium"
-                            {...form.register("line_id")}
+                            className={cn(
+                              "h-13 pl-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white focus:border-[#06C755] focus:ring-4 focus:ring-[#06C755]/10 transition-all font-medium",
+                              liveValidation?.line_id?.isDuplicate && "border-amber-500 focus:border-amber-600 focus:ring-amber-500/10"
+                            )}
+                            {...form.register("line_id", {
+                              onBlur: (e) => checkLiveDuplicate?.("line_id", e.target.value),
+                            })}
                           />
                         </div>
+                        {liveValidation?.line_id?.isDuplicate && (
+                          <p className="text-xs text-amber-600 font-semibold ml-1">
+                            ⚠️ Line ID นี้ถูกใช้งานแล้วโดย K. {liveValidation.line_id.ownerName}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

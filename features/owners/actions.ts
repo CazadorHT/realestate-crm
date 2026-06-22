@@ -145,7 +145,14 @@ export async function getOwnerByIdAction(id: string) {
   };
 }
 
-export async function createOwnerAction(input: CreateOwnerInput) {
+export async function createOwnerAction(input: CreateOwnerInput): Promise<{
+  success: boolean;
+  message: string;
+  id?: string;
+  code?: string;
+  duplicateId?: string;
+  duplicateName?: string;
+}> {
   try {
     const validated = ownerSchema.parse(input);
     const ctx = await requireAuthContext();
@@ -160,7 +167,7 @@ export async function createOwnerAction(input: CreateOwnerInput) {
     // ตรวจสอบเบอร์โทรศัพท์และ Line ID ซ้ำในระบบ
     let duplicateQuery = ctx.supabase
       .from("identities_v3")
-      .select("display_name, phone, line_id")
+      .select("id, display_name, phone, line_id")
       .eq("category", 2)
       .eq("role", "OWNER");
 
@@ -186,7 +193,10 @@ export async function createOwnerAction(input: CreateOwnerInput) {
             const ownerName = decrypt(row.display_name) || "ไม่ทราบชื่อ";
             return {
               success: false,
+              code: "DUPLICATE",
               message: `เบอร์โทรศัพท์นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
+              duplicateId: row.id,
+              duplicateName: ownerName,
             };
           }
         }
@@ -197,7 +207,10 @@ export async function createOwnerAction(input: CreateOwnerInput) {
             const ownerName = decrypt(row.display_name) || "ไม่ทราบชื่อ";
             return {
               success: false,
+              code: "DUPLICATE",
               message: `Line ID นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
+              duplicateId: row.id,
+              duplicateName: ownerName,
             };
           }
         }
@@ -516,3 +529,78 @@ export async function getOwnersWithPropertyCountAction() {
 
   return calculatePropertyCounts(decryptedOwners, propertyCounts ?? []);
 }
+
+export async function checkOwnerDuplicateAction(phone?: string | null, lineId?: string | null) {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+
+    const inputPhoneNormalized = phone ? phone.trim().replace(/[- ]/g, "") : null;
+    const inputLineNormalized = lineId ? lineId.trim().toLowerCase() : null;
+
+    if (!inputPhoneNormalized && !inputLineNormalized) {
+      return { success: true, isDuplicate: false };
+    }
+
+    let targetTenantId = ctx.tenantId;
+    if (!targetTenantId) {
+      const config = await getSystemConfig();
+      targetTenantId = config.default_tenant_id ?? undefined;
+    }
+
+    let query = ctx.supabase
+      .from("identities_v3")
+      .select("id, display_name, phone, line_id")
+      .eq("category", 2)
+      .eq("role", "OWNER");
+
+    if (targetTenantId) {
+      query = query.or(`tenant_id.eq.${targetTenantId},tenant_id.is.null`);
+    } else {
+      query = query.is("tenant_id", null);
+    }
+
+    const { data: existingOwners } = await query;
+
+    if (existingOwners) {
+      for (const row of existingOwners) {
+        const decryptedPhone = decrypt(row.phone);
+        const decryptedLine = decrypt(row.line_id);
+
+        if (inputPhoneNormalized && decryptedPhone) {
+          const dbPhoneNormalized = decryptedPhone.trim().replace(/[- ]/g, "");
+          if (dbPhoneNormalized === inputPhoneNormalized) {
+            const ownerName = decrypt(row.display_name) || "ไม่ทราบชื่อ";
+            return {
+              success: true,
+              isDuplicate: true,
+              type: "phone",
+              ownerName,
+              ownerId: row.id,
+            };
+          }
+        }
+
+        if (inputLineNormalized && decryptedLine) {
+          const dbLineNormalized = decryptedLine.trim().toLowerCase();
+          if (dbLineNormalized === inputLineNormalized) {
+            const ownerName = decrypt(row.display_name) || "ไม่ทราบชื่อ";
+            return {
+              success: true,
+              isDuplicate: true,
+              type: "line",
+              ownerName,
+              ownerId: row.id,
+            };
+          }
+        }
+      }
+    }
+
+    return { success: true, isDuplicate: false };
+  } catch (err) {
+    console.error("checkOwnerDuplicateAction error:", err);
+    return { success: false, error: "เกิดข้อผิดพลาดในการตรวจสอบข้อมูลซ้ำ" };
+  }
+}
+

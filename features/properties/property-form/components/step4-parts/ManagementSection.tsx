@@ -18,8 +18,9 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { ShieldCheck, Activity, User, Minus, Plus, Info, Check, Search } from "lucide-react";
+import { ShieldCheck, Activity, User, Minus, Plus, Info, Check, Search, Phone, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { useFormContext, useWatch, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "../../../schema";
 import {
@@ -34,7 +35,7 @@ import { CoBrokerSelect } from "@/features/co-brokers/components/CoBrokerSelect"
 
 interface ManagementSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
-  owners: Array<{ id: string; full_name: string; phone: string | null; created_at?: string }>;
+  owners: Array<{ id: string; full_name: string; phone: string | null; created_at?: string; line_id?: string | null }>;
   agents: Array<{
     id: string;
     full_name: string | null;
@@ -67,6 +68,7 @@ export const ManagementSection = ({
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [newlyCreatedOwnerId, setNewlyCreatedOwnerId] = useState<string | null>(null);
+  const [prefilledOwnerName, setPrefilledOwnerName] = useState("");
 
   const isNewOwner = (createdAtStr?: string) => {
     if (!createdAtStr) return false;
@@ -295,28 +297,29 @@ export const ManagementSection = ({
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-stretch gap-3">
-                  {isMobileOrTablet ? (
-                    <ResponsiveDialog
-                      open={ownerOpen}
-                      onOpenChange={setOwnerOpen}
-                      title="เลือกเจ้าของทรัพย์"
-                      trigger={
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-11! flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm justify-between text-left"
-                        >
-                          <span className="truncate">
-                            {(() => {
-                              const selectedOwner = owners.find((o) => o.id === field.value);
-                              return selectedOwner
-                                ? `K. ${selectedOwner.full_name}${selectedOwner.phone ? ` (${selectedOwner.phone})` : ""}`
-                                : "ค้นหาหรือเลือกเจ้าของ";
-                            })()}
-                          </span>
-                        </Button>
-                      }
-                    >
+                  {(() => {
+                    const selectedOwner = owners.find((o) => o.id === field.value);
+                    return (
+                      <div className="flex-1 min-w-0 flex items-stretch gap-2">
+                        {isMobileOrTablet ? (
+                          <ResponsiveDialog
+                            open={ownerOpen}
+                            onOpenChange={setOwnerOpen}
+                            title="เลือกเจ้าของทรัพย์"
+                            trigger={
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="h-11! flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm justify-between text-left"
+                              >
+                                <span className="truncate">
+                                  {selectedOwner
+                                    ? `K. ${selectedOwner.full_name}${selectedOwner.phone ? ` (${selectedOwner.phone})` : ""}`
+                                    : "ค้นหาหรือเลือกเจ้าของ"}
+                                </span>
+                              </Button>
+                            }
+                          >
                       <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
                         <button
                           type="button"
@@ -419,6 +422,21 @@ export const ManagementSection = ({
                         >
                           -- ไม่ระบุเจ้าของ --
                         </SelectItem>
+                        {searchTerm && (
+                          <div className="p-2 border-b border-slate-100 bg-slate-50/20" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setPrefilledOwnerName(searchTerm);
+                                setIsAddingOwner(true);
+                              }}
+                              className="w-full flex items-center gap-2 p-2.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 rounded-xl border border-dashed border-emerald-200 transition-all text-left"
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              <span>เพิ่มเจ้าของใหม่ชื่อ "{searchTerm}"</span>
+                            </button>
+                          </div>
+                        )}
                         {filteredOwners.length === 0 && searchTerm ? (
                           <div className="py-6 text-center text-xs text-slate-400">
                             ไม่พบรายชื่อที่ค้นหา
@@ -454,6 +472,36 @@ export const ManagementSection = ({
                     </Select>
                   )}
 
+                  {selectedOwner && (selectedOwner.phone || selectedOwner.line_id) && (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {selectedOwner.phone && (
+                        <a
+                          href={`tel:${selectedOwner.phone}`}
+                          title={`โทรหา K. ${selectedOwner.full_name}`}
+                          className="h-11 w-11 flex items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white hover:border-emerald-600 transition-all shadow-sm"
+                        >
+                          <Phone className="w-4 h-4" />
+                        </a>
+                      )}
+                      {selectedOwner.line_id && (
+                        <button
+                          type="button"
+                          title={`คัดลอก Line ID ของ K. ${selectedOwner.full_name}`}
+                          onClick={() => {
+                            navigator.clipboard.writeText(selectedOwner.line_id || "");
+                            toast.success(`คัดลอก Line ID "${selectedOwner.line_id}" สำเร็จ`);
+                          }}
+                          className="h-11 w-11 flex items-center justify-center rounded-xl border border-green-100 bg-green-50 text-green-600 hover:bg-green-600 hover:text-white hover:border-green-600 transition-all shadow-sm"
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+
                   <ResponsiveDialog
                     open={isAddingOwner}
                     onOpenChange={setIsAddingOwner}
@@ -473,9 +521,14 @@ export const ManagementSection = ({
                     <div className="py-4">
                       <OwnerForm
                         mode="create"
-                        onCancel={() => setIsAddingOwner(false)}
+                        initialValues={prefilledOwnerName ? { full_name: prefilledOwnerName } : undefined}
+                        onCancel={() => {
+                          setIsAddingOwner(false);
+                          setPrefilledOwnerName("");
+                        }}
                         onSuccess={async (newOwnerId) => {
                           setIsAddingOwner(false);
+                          setPrefilledOwnerName("");
                           if (newOwnerId) {
                             setNewlyCreatedOwnerId(newOwnerId);
                           }
