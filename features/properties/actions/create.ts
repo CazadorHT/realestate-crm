@@ -43,10 +43,24 @@ import { encrypt, generateBlindIndex } from "@/lib/crypto";
 async function resolveTenantId(
   supabase: any,
   userId: string,
-  contextTenantId?: string
+  contextTenantId?: string,
+  branchId?: string
 ): Promise<string> {
   if (contextTenantId) return contextTenantId;
 
+  // 1. Resolve from branch selection if provided
+  if (branchId) {
+    const { data: branch } = await supabase
+      .from("branches_v3")
+      .select("tenant_id")
+      .eq("id", branchId)
+      .maybeSingle();
+    if (branch?.tenant_id) {
+      return branch.tenant_id;
+    }
+  }
+
+  // 2. Fallback to user membership
   const { data: member } = await supabase
     .from("tenant_members_v3")
     .select("tenant_id")
@@ -78,7 +92,7 @@ export async function createPropertyAction(
     const { supabase, user, role, tenantId: contextTenantId } = await requireAuthContext();
     assertStaff(role);
     
-    const tenantId = await resolveTenantId(supabase, user.id, contextTenantId);
+    const tenantId = await resolveTenantId(supabase, user.id, contextTenantId, values.branch_id);
     if (!sessionId)
       return { success: false, message: "Missing upload session" };
 
