@@ -127,11 +127,20 @@ export async function createPropertyAction(
       propertyData.status = "DRAFT";
     }
 
-    // ✅ image paths ต้องอยู่ภายใต้ properties/ หรือ tenant_id/properties/
+    // ✅ image paths ต้องอยู่ภายใต้ properties/ หรือ tenant_id/properties/ หรือ tenant_id อื่นๆ ที่ผู้ใช้สังกัดอยู่
     if (images?.length) {
-      const invalid = images.find(
-        (p) => !p.startsWith("properties/") && !p.startsWith(`${tenantId}/properties/`)
-      );
+      const { data: memberships } = await supabase
+        .from("tenant_members_v3")
+        .select("tenant_id")
+        .eq("identity_id", user.id);
+      const userTenantIds = memberships?.map((m: any) => m.tenant_id) || [];
+
+      const invalid = images.find((p) => {
+        if (p.startsWith("properties/")) return false;
+        if (p.startsWith(`${tenantId}/properties/`)) return false;
+        if (userTenantIds.some((utId: string) => utId && p.startsWith(`${utId}/properties/`))) return false;
+        return true;
+      });
       if (invalid) {
         return {
           success: false,
