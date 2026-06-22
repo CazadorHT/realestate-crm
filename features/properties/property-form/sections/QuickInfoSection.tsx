@@ -13,6 +13,7 @@ import {
   Languages,
   Sparkles,
   Check,
+  Search,
 } from "lucide-react";
 import { useAITranslation } from "../hooks/use-ai-translation";
 
@@ -36,6 +37,7 @@ import {
   SelectGroup,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { translateTextAction } from "@/lib/ai/translation-actions";
 import { toast } from "sonner";
 
@@ -75,6 +77,29 @@ export function QuickInfoSection({
   const [provinceOpen, setProvinceOpen] = React.useState(false);
   const [areaOpen, setAreaOpen] = React.useState(false);
   const [isMobileOrTablet, setIsMobileOrTablet] = React.useState(false);
+
+  const [areaSearchQuery, setAreaSearchQuery] = React.useState("");
+  const [desktopAreaOpen, setDesktopAreaOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!areaOpen) {
+      setAreaSearchQuery("");
+    }
+  }, [areaOpen]);
+
+  React.useEffect(() => {
+    if (!desktopAreaOpen) {
+      setAreaSearchQuery("");
+    }
+  }, [desktopAreaOpen]);
+
+  const filteredAreas = React.useMemo(() => {
+    const query = areaSearchQuery.trim().toLowerCase();
+    if (!query) return popularAreas || [];
+    return (popularAreas || []).filter((a) =>
+      a.toLowerCase().includes(query)
+    );
+  }, [popularAreas, areaSearchQuery]);
 
   React.useEffect(() => {
     const mql = window.matchMedia("(max-width: 1535px)");
@@ -284,12 +309,10 @@ export function QuickInfoSection({
                         <Button
                           type="button"
                           variant="outline"
-                          className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200 justify-start h-14"
+                          className="group rounded-2xl bg-white font-medium px-4 py-7 relative w-full border-slate-200 justify-start h-14 flex items-center gap-3 hover:border-slate-300 hover:bg-slate-50/50 transition-all"
                         >
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                            <Flag className="h-5 w-5" />
-                          </div>
-                          <span className={cn("font-medium", field.value ? "text-slate-800" : "text-slate-400")}>
+                          <Flag className="h-5 w-5 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
+                          <span className={cn("font-medium transition-colors", field.value ? "text-slate-800 group-hover:text-slate-900" : "text-slate-400 group-hover:text-slate-500")}>
                             {field.value || "เลือกจังหวัด"}
                           </span>
                         </Button>
@@ -348,10 +371,8 @@ export function QuickInfoSection({
                       }}
                     >
                       <FormControl>
-                        <SelectTrigger className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200">
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                            <Flag className="h-5 w-5" />
-                          </div>
+                        <SelectTrigger className="group rounded-2xl bg-white font-medium px-4 py-7 relative w-full border-slate-200 h-14 flex items-center gap-3 hover:border-slate-300 hover:bg-slate-50/50 transition-all">
+                          <Flag className="h-5 w-5 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
                           <SelectValue placeholder="เลือกจังหวัด" />
                         </SelectTrigger>
                       </FormControl>
@@ -398,104 +419,174 @@ export function QuickInfoSection({
                         <Button
                           type="button"
                           variant="outline"
-                          className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200 justify-start h-14"
+                          className="group rounded-2xl bg-white font-medium px-4 py-7 relative w-full border-slate-200 justify-start h-14 flex items-center gap-3 hover:border-slate-300 hover:bg-slate-50/50 transition-all"
                         >
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                            <MapPin className="h-5 w-5" />
-                          </div>
-                          <span className={cn("font-medium", field.value ? "text-slate-800" : "text-slate-400")}>
+                          <MapPin className="h-5 w-5 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
+                          <span className={cn("font-medium transition-colors", field.value ? "text-slate-800 group-hover:text-slate-900" : "text-slate-400 group-hover:text-slate-500")}>
                             {field.value || "เลือกย่าน / ทำเล"}
                           </span>
                         </Button>
                       }
                     >
-                      <div className="p-4 max-h-[60vh] overflow-y-auto space-y-2 bg-white">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            field.onChange(undefined);
-                            setAreaOpen(false);
-                          }}
-                          className={cn(
-                            "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left text-sm font-bold text-slate-400",
-                            !field.value
-                              ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                              : "bg-white border-slate-100 hover:bg-slate-50",
-                          )}
-                        >
-                          <span>-- ไม่ระบุ --</span>
-                          {!field.value && (
-                            <div className="bg-blue-600 rounded-full p-1 text-white">
-                              <Check className="h-3 w-3" />
+                      <div className="p-4 max-h-[60vh] overflow-y-auto bg-white flex flex-col gap-3">
+                        <div className="relative flex items-center">
+                          <Search className="absolute left-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder="ค้นหาย่าน / ทำเล..."
+                            value={areaSearchQuery}
+                            onChange={(e) => setAreaSearchQuery(e.target.value)}
+                            className="pl-10 pr-4 py-2 h-10 rounded-xl border-slate-200 focus-visible:ring-blue-500"
+                          />
+                        </div>
+
+                        <div className="space-y-2 overflow-y-auto pr-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              field.onChange(undefined);
+                              setAreaOpen(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left text-sm font-bold text-slate-400",
+                              !field.value
+                                ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                : "bg-white border-slate-100 hover:bg-slate-50 hover:text-slate-600",
+                            )}
+                          >
+                            <span>-- ไม่ระบุ --</span>
+                            {!field.value && (
+                              <div className="bg-blue-600 rounded-full p-1 text-white">
+                                <Check className="h-3 w-3" />
+                              </div>
+                            )}
+                          </button>
+                          
+                          {filteredAreas.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-slate-400">
+                              ไม่พบย่านทำเล
                             </div>
+                          ) : (
+                            [...filteredAreas]
+                              .sort((a, b) => a.localeCompare(b, "th"))
+                              .map((a) => {
+                                const isSelected = field.value === a;
+                                return (
+                                  <button
+                                    key={a}
+                                    type="button"
+                                    onClick={() => {
+                                      field.onChange(a);
+                                      setAreaOpen(false);
+                                    }}
+                                    className={cn(
+                                      "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                      isSelected
+                                        ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                        : "bg-white border-slate-100 hover:bg-slate-50 hover:border-slate-200 text-slate-700 hover:text-slate-900",
+                                    )}
+                                  >
+                                    <span className="text-sm font-bold">{a}</span>
+                                    {isSelected && (
+                                      <div className="bg-blue-600 rounded-full p-1 text-white">
+                                        <Check className="h-3 w-3" />
+                                      </div>
+                                    )}
+                                  </button>
+                                );
+                              })
                           )}
-                        </button>
-                        {[...(popularAreas || [])]
-                          .sort((a, b) => a.localeCompare(b, "th"))
-                          .map((a) => {
-                            const isSelected = field.value === a;
-                            return (
-                              <button
-                                key={a}
-                                type="button"
-                                onClick={() => {
-                                  field.onChange(a);
-                                  setAreaOpen(false);
-                                }}
-                                className={cn(
-                                  "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left",
-                                  isSelected
-                                    ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                                    : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
-                                )}
-                              >
-                                <span className="text-sm font-bold">{a}</span>
-                                {isSelected && (
-                                  <div className="bg-blue-600 rounded-full p-1 text-white">
-                                    <Check className="h-3 w-3" />
-                                  </div>
-                                )}
-                              </button>
-                            );
-                          })}
+                        </div>
                       </div>
                     </ResponsiveDialog>
                   ) : (
-                    <Select
-                      value={field.value ?? "none"}
-                      onValueChange={(v) =>
-                        field.onChange(v === "none" ? undefined : v)
-                      }
-                      name={field.name}
-                    >
-                      <FormControl>
-                        <SelectTrigger
+                    <Popover open={desktopAreaOpen} onOpenChange={setDesktopAreaOpen}>
+                      <PopoverTrigger asChild>
+                        <Button
                           id={field.name}
-                          className="rounded-2xl bg-white font-medium pl-12 pr-6 py-7 relative w-full border-slate-200"
+                          type="button"
+                          variant="outline"
+                          className="group rounded-2xl bg-white font-medium px-4 py-7 relative w-full border-slate-200 justify-start h-14 flex items-center gap-3 hover:border-slate-300 hover:bg-slate-50/50 transition-all focus:ring-2 focus:ring-blue-500"
                         >
-                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                            <MapPin className="h-5 w-5" />
-                          </div>
-                          <SelectValue placeholder="เลือกย่าน / ทำเล" />
-                        </SelectTrigger>
-                      </FormControl>
+                          <MapPin className="h-5 w-5 text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
+                          <span className={cn("font-medium transition-colors", field.value ? "text-slate-800 group-hover:text-slate-900" : "text-slate-400 group-hover:text-slate-500")}>
+                            {field.value || "เลือกย่าน / ทำเล"}
+                          </span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent
+                        className="bg-white rounded-2xl shadow-2xl border border-slate-100 max-h-[350px] p-4 flex flex-col gap-3 overflow-hidden"
+                        style={{ width: "var(--radix-popover-trigger-width)" }}
+                        align="start"
+                      >
+                        <div className="relative flex items-center">
+                          <Search className="absolute left-3.5 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder="ค้นหาย่าน / ทำเล..."
+                            value={areaSearchQuery}
+                            onChange={(e) => setAreaSearchQuery(e.target.value)}
+                            className="pl-10 pr-4 py-2 h-10 rounded-xl border-slate-200 focus-visible:ring-blue-500"
+                          />
+                        </div>
 
-                      <SelectContent className="bg-white rounded-2xl shadow-2xl border-none max-h-[300px] p-4 min-w-(--radix-select-trigger-width)">
-                        <SelectGroup>
-                          <SelectItem
-                            value="none"
-                            className="font-medium text-slate-400"
+                        <div className="flex-1 overflow-y-auto space-y-1 pr-1 min-h-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              field.onChange(undefined);
+                              setDesktopAreaOpen(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all active:scale-[0.98] border text-left text-sm font-bold text-slate-400",
+                              !field.value
+                                ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                : "bg-white border-transparent hover:bg-slate-50",
+                            )}
                           >
-                            -- ไม่ระบุ --
-                          </SelectItem>
-                          {[...(popularAreas || [])].sort((a, b) => a.localeCompare(b, "th")).map((a) => (
-                            <SelectItem key={a} value={a}>
-                              {a}
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+                            <span>-- ไม่ระบุ --</span>
+                            {!field.value && (
+                              <div className="bg-blue-600 rounded-full p-1 text-white">
+                                <Check className="h-3 w-3" />
+                              </div>
+                            )}
+                          </button>
+
+                          {filteredAreas.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-slate-400">
+                              ไม่พบย่านทำเล
+                            </div>
+                          ) : (
+                            [...filteredAreas]
+                              .sort((a, b) => a.localeCompare(b, "th"))
+                              .map((a) => {
+                                const isSelected = field.value === a;
+                                return (
+                                  <button
+                                    key={a}
+                                    type="button"
+                                    onClick={() => {
+                                      field.onChange(a);
+                                      setDesktopAreaOpen(false);
+                                    }}
+                                    className={cn(
+                                      "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all active:scale-[0.98] border text-left",
+                                      isSelected
+                                        ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
+                                        : "bg-white border-transparent hover:bg-slate-50 text-slate-700",
+                                    )}
+                                  >
+                                    <span className="text-sm font-semibold">{a}</span>
+                                    {isSelected && (
+                                      <div className="bg-blue-600 rounded-full p-0.5 text-white">
+                                        <Check className="h-3 w-3" />
+                                      </div>
+                                    )}
+                                  </button>
+                                );
+                              })
+                          )}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   )}
                 </div>
                 <FormMessage />

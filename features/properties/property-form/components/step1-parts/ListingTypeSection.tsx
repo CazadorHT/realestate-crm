@@ -62,40 +62,40 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
         name="listing_type"
         render={({ field }) => (
           <FormItem>
-            <div className="grid grid-cols-3 gap-2 sm:gap-4">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
               {LISTING_TYPE_ORDER.map((type) => (
                 <button
                   key={type}
                   type="button"
                   onClick={() => field.onChange(type)}
-                  className={`p-2 rounded-xl transition-all duration-300 text-left relative group flex flex-col items-center gap-2 ${
+                  className={`p-4 rounded-2xl transition-all duration-300 text-left relative group flex flex-col items-center gap-3 border ${
                     field.value === type
-                      ? "border-blue-500 bg-blue-500 text-white shadow-lg shadow-blue-100 scale-105"
+                      ? "border-transparent bg-gradient-to-br from-blue-500 via-indigo-500 to-indigo-600 text-white shadow-xl shadow-blue-500/25 scale-[1.03] ring-2 ring-blue-500/20"
                       : listingTypeError
-                        ? "border-red-300 bg-red-50 hover:border-red-400 hover:bg-white hover:shadow-md shadow-md"
-                        : "bg-slate-50 hover:bg-white hover:shadow-md shadow-md hover:border-blue-100 hover:ring-2 hover:ring-blue-100 "
+                        ? "border-red-200 bg-red-50/50 hover:border-red-400 hover:bg-white hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
+                        : "border-slate-100 bg-slate-50/50 hover:bg-white hover:border-blue-200 hover:shadow-lg hover:shadow-slate-100 hover:scale-[1.02] active:scale-[0.98]"
                   }`}
                 >
                   <div
-                    className={`p-2 sm:p-3 rounded-full transition-all duration-300 flex items-center justify-center shrink-0 ${
+                    className={`p-3 sm:p-4 rounded-2xl transition-all duration-300 flex items-center justify-center shrink-0 ${
                       field.value === type
-                        ? "bg-white/20 text-white"
-                        : "bg-white text-slate-400 group-hover:text-blue-500"
+                        ? "bg-white/20 text-white rotate-3"
+                        : "bg-white text-slate-400 group-hover:text-blue-500 group-hover:scale-110"
                     }`}
                   >
                     {type === "SALE" ? (
-                      <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <TrendingUp className="w-6 h-6" />
                     ) : type === "RENT" ? (
-                      <PlusCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <PlusCircle className="w-6 h-6" />
                     ) : (
-                      <Home className="w-5 h-5 sm:w-6 sm:h-6" />
+                      <Home className="w-6 h-6" />
                     )}
                   </div>
 
                   <div>
                     <div
-                      className={`text-xs sm:text-sm md:text-base font-medium transition-colors text-center ${
-                        field.value === type ? "text-white" : "text-slate-800 group-hover:text-blue-500"
+                      className={`text-xs sm:text-sm font-bold tracking-wide transition-colors text-center ${
+                        field.value === type ? "text-white" : "text-slate-800 group-hover:text-blue-600"
                       }`}
                     >
                       {LISTING_TYPE_LABELS[type]?.th || type}
@@ -103,8 +103,8 @@ export function ListingTypeSection({ form: formProp }: ListingTypeSectionProps) 
                   </div>
 
                   {field.value === type && (
-                    <div className="absolute top-2 right-2 text-white">
-                      <Check className="h-3.5 w-3.5" />
+                    <div className="absolute top-3 right-3 bg-white text-blue-600 rounded-full p-0.5 shadow-sm border border-blue-100 flex items-center justify-center animate-in zoom-in duration-200">
+                      <Check className="h-3 w-3" />
                     </div>
                   )}
                 </button>

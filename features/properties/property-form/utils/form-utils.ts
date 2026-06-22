@@ -12,7 +12,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
   description_en: "",
   description_cn: "",
   description_ru: "",
-  property_type: "HOUSE",
+  property_type: undefined as any,
   listing_type: "SALE",
   status: "DRAFT",
   branch_id: "", 

@@ -80,26 +80,36 @@ export function PropertyTypeSection({
                       field.onChange(type);
                       onPropertyTypeSelect?.();
                     }}
-                    className={`rounded-xl border transition-all duration-300 flex flex-col items-center  justify-center gap-3 p-2 group ${
+                    className={`rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center gap-3 p-3 group relative ${
                       isActive
-                        ? "bg-linear-to-br " + gradient + " text-white shadow-xl scale-105 border-transparent"
+                        ? "bg-linear-to-br " +
+                          gradient +
+                          " text-white shadow-xl scale-[1.04] border-transparent"
                         : propertyTypeError
-                          ? "border-red-300 bg-red-50 text-red-500 shadow-md hover:border-red-400 hover:bg-white"
-                          : "border-slate-100 bg-slate-50 text-slate-600 shadow-md hover:bg-white hover:text-blue-600 hover:shadow-lg hover:border-blue-200"
+                          ? "border-red-200 bg-red-50/50 text-red-500 hover:border-red-400 hover:bg-white hover:scale-[1.02] active:scale-[0.98]"
+                          : "border-slate-100 bg-slate-50/50 text-slate-600 hover:bg-white hover:text-blue-600 hover:shadow-lg hover:border-blue-200 hover:scale-[1.02] active:scale-[0.98]"
                     }`}
                   >
                     <div
-                      className={`p-2.5 sm:p-3 rounded-full transition-all duration-300 ${
+                      className={`p-3 rounded-2xl transition-all duration-300 ${
                         isActive
-                          ? "bg-white/20 shadow-inner"
-                          : "bg-white shadow-sm"
+                          ? "bg-white/20 shadow-inner rotate-3"
+                          : "bg-white shadow-sm group-hover:scale-110"
                       }`}
                     >
                       <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
                     </div>
-                    <span className="text-[10px] sm:text-xs md:text-sm uppercase tracking-wider text-center w-full">
-                      {PROPERTY_TYPE_LABELS[type]?.th || PROPERTY_TYPE_LABELS[type]?.en || type}
+                    <span className="text-[10px] sm:text-xs md:text-sm font-bold tracking-wide text-center w-full">
+                      {PROPERTY_TYPE_LABELS[type]?.th ||
+                        PROPERTY_TYPE_LABELS[type]?.en ||
+                        type}
                     </span>
+
+                    {isActive && (
+                      <div className="absolute top-2 right-2 bg-white text-emerald-600 rounded-full p-0.5 shadow-sm border border-emerald-100 flex items-center justify-center animate-in zoom-in duration-200">
+                        <Check className="h-2.5 w-2.5" />
+                      </div>
+                    )}
                   </button>
                 );
               })}

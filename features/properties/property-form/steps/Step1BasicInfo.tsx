@@ -38,12 +38,14 @@ export function Step1BasicInfo({
       className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 origin-top"
       style={{ zoom: "0.80" }}
     >
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:col-span-2 gap-6">
+
         {/* Branch Section */}
         <BranchSection branches={branches} />
-
         {/* Listing Type Section */}
         <ListingTypeSection />
+        </div>
  
         {/* Property Type Section */}
         <PropertyTypeSection

@@ -59,12 +59,26 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
     syncWithDB();
 
     // ⚡ REALTIME: Listen for background task updates (Optimized by Tenant)
+    let active = true;
+    let channel: any = null;
+
     const initRealtime = async () => {
       const { createClient } = await import("@/lib/supabase/client");
+      if (!active) return;
       const supabase = createClient();
       
-      const channel = supabase
-        .channel(tenantId ? `system_task_queue_${tenantId}` : "system_task_queue_global")
+      const channelName = tenantId ? `system_task_queue_${tenantId}` : "system_task_queue_global";
+      
+      // Clean up existing channel first if any to avoid "callbacks after subscribe" error
+      const existingChannel = supabase.getChannels().find((c: any) => c.topic === channelName || c.name === channelName);
+      if (existingChannel) {
+        await supabase.removeChannel(existingChannel);
+      }
+      
+      if (!active) return;
+
+      channel = supabase
+        .channel(channelName)
         .on(
           "postgres_changes",
           { 
@@ -145,15 +159,17 @@ export function ProcessProvider({ children }: { children: React.ReactNode }) {
           }
         )
         .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-      };
     };
 
-    const cleanup = initRealtime();
+    initRealtime();
+
     return () => {
-      cleanup.then(fn => fn && (fn as any)());
+      active = false;
+      if (channel) {
+        import("@/lib/supabase/client").then(({ createClient }) => {
+          createClient().removeChannel(channel);
+        });
+      }
     };
   }, [tenantId]);
 
