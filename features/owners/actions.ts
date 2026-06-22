@@ -157,6 +157,53 @@ export async function createOwnerAction(input: CreateOwnerInput) {
       targetTenantId = config.default_tenant_id ?? undefined;
     }
 
+    // ตรวจสอบเบอร์โทรศัพท์และ Line ID ซ้ำในระบบ
+    let duplicateQuery = ctx.supabase
+      .from("identities_v3")
+      .select("display_name, phone, line_id")
+      .eq("category", 2)
+      .eq("role", "OWNER");
+
+    if (targetTenantId) {
+      duplicateQuery = duplicateQuery.or(`tenant_id.eq.${targetTenantId},tenant_id.is.null`);
+    } else {
+      duplicateQuery = duplicateQuery.is("tenant_id", null);
+    }
+
+    const { data: existingOwners } = await duplicateQuery;
+
+    if (existingOwners) {
+      const inputPhoneNormalized = validated.phone ? validated.phone.trim().replace(/[- ]/g, "") : null;
+      const inputLineNormalized = validated.line_id ? validated.line_id.trim().toLowerCase() : null;
+
+      for (const row of existingOwners) {
+        const decryptedPhone = decrypt(row.phone);
+        const decryptedLine = decrypt(row.line_id);
+
+        if (inputPhoneNormalized && decryptedPhone) {
+          const dbPhoneNormalized = decryptedPhone.trim().replace(/[- ]/g, "");
+          if (dbPhoneNormalized === inputPhoneNormalized) {
+            const ownerName = decrypt(row.display_name) || "ไม่ทราบชื่อ";
+            return {
+              success: false,
+              message: `เบอร์โทรศัพท์นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
+            };
+          }
+        }
+
+        if (inputLineNormalized && decryptedLine) {
+          const dbLineNormalized = decryptedLine.trim().toLowerCase();
+          if (dbLineNormalized === inputLineNormalized) {
+            const ownerName = decrypt(row.display_name) || "ไม่ทราบชื่อ";
+            return {
+              success: false,
+              message: `Line ID นี้มีในระบบแล้ว (เจ้าของชื่อ: K. ${ownerName})`,
+            };
+          }
+        }
+      }
+    }
+
     const socialLinks = {
       facebook_url: encrypt(validated.facebook_url),
       other_contact: encrypt(validated.other_contact),

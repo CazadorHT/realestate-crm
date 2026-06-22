@@ -18,7 +18,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { ShieldCheck, Activity, User, Minus, Plus, Info, Check } from "lucide-react";
+import { ShieldCheck, Activity, User, Minus, Plus, Info, Check, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFormContext, useWatch, type UseFormReturn } from "react-hook-form";
 import { PropertyFormValues } from "../../../schema";
@@ -34,7 +34,7 @@ import { CoBrokerSelect } from "@/features/co-brokers/components/CoBrokerSelect"
 
 interface ManagementSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
-  owners: Array<{ id: string; full_name: string; phone: string | null }>;
+  owners: Array<{ id: string; full_name: string; phone: string | null; created_at?: string }>;
   agents: Array<{
     id: string;
     full_name: string | null;
@@ -65,6 +65,29 @@ export const ManagementSection = ({
   const [ownerOpen, setOwnerOpen] = useState(false);
   const [channelOpen, setChannelOpen] = useState(false);
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [newlyCreatedOwnerId, setNewlyCreatedOwnerId] = useState<string | null>(null);
+
+  const isNewOwner = (createdAtStr?: string) => {
+    if (!createdAtStr) return false;
+    try {
+      const createdAt = new Date(createdAtStr);
+      const now = new Date();
+      const diffMs = now.getTime() - createdAt.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      return diffHours <= 24;
+    } catch {
+      return false;
+    }
+  };
+
+  const filteredOwners = owners.filter((o) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    const nameMatch = o.full_name.toLowerCase().includes(term);
+    const phoneMatch = o.phone ? o.phone.includes(term) : false;
+    return nameMatch || phoneMatch;
+  });
 
   useEffect(() => {
     const mql = window.matchMedia("(max-width: 1535px)");
@@ -357,6 +380,9 @@ export const ManagementSection = ({
                       onValueChange={(v) =>
                         field.onChange(v === "NONE" ? null : v)
                       }
+                      onOpenChange={(open) => {
+                        if (!open) setSearchTerm("");
+                      }}
                     >
                       <FormControl>
                         <SelectTrigger className="h-11! flex-1 min-w-0 rounded-xl bg-white border-slate-200 hover:border-slate-300 transition-colors font-medium px-4 text-sm shadow-sm">
@@ -364,29 +390,66 @@ export const ManagementSection = ({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent className="bg-white rounded-2xl shadow-xl border-none max-h-[300px] overflow-y-auto custom-scrollbar p-1">
+                        <div 
+                          className="p-2 border-b border-slate-100 flex items-center gap-2 bg-slate-50/50 sticky top-0 z-10"
+                          onClick={(e) => e.stopPropagation()} 
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
+                          <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <input
+                            type="text"
+                            placeholder="พิมพ์ค้นหาชื่อ หรือเบอร์..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-transparent placeholder:text-sm placeholder:font-medium border-none text-xs outline-none placeholder:text-slate-400 text-slate-700"
+                          />
+                          {searchTerm && (
+                            <button
+                              type="button"
+                              onClick={() => setSearchTerm("")}
+                              className="text-[10px] text-slate-400 hover:text-slate-600 font-medium px-1"
+                            >
+                              ล้าง
+                            </button>
+                          )}
+                        </div>
                         <SelectItem
                           value="NONE"
                           className="font-medium text-slate-400 text-sm italic py-3 rounded-lg"
                         >
                           -- ไม่ระบุเจ้าของ --
                         </SelectItem>
-                        {owners.map((o) => (
-                          <SelectItem
-                            key={o.id}
-                            value={o.id}
-                            className="py-3 font-medium text-sm rounded-lg"
-                          >
-                            <span className="text-slate-500 mr-1.5">K.</span>
-                            {o.full_name}{" "}
-                            {o.phone ? (
-                              <span className="text-[11px] text-slate-400 font-normal ml-2 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
-                                {o.phone}
-                              </span>
-                            ) : (
-                              ""
-                            )}
-                          </SelectItem>
-                        ))}
+                        {filteredOwners.length === 0 && searchTerm ? (
+                          <div className="py-6 text-center text-xs text-slate-400">
+                            ไม่พบรายชื่อที่ค้นหา
+                          </div>
+                        ) : (
+                          filteredOwners.map((o) => {
+                            const isNew = isNewOwner(o.created_at) || o.id === newlyCreatedOwnerId;
+                            return (
+                              <SelectItem
+                                key={o.id}
+                                value={o.id}
+                                className="py-3 font-medium text-sm rounded-lg"
+                              >
+                                <span className="flex items-center gap-1.5">
+                                  <span className="text-slate-500">K.</span>
+                                  <span>{o.full_name}</span>
+                                  {isNew && (
+                                    <span className="px-1.5 py-0.5 text-[9px] font-extrabold tracking-wider text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200">
+                                      NEW
+                                    </span>
+                                  )}
+                                  {o.phone && (
+                                    <span className="text-[11px] text-slate-400 font-normal ml-2 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                                      {o.phone}
+                                    </span>
+                                  )}
+                                </span>
+                              </SelectItem>
+                            );
+                          })
+                        )}
                       </SelectContent>
                     </Select>
                   )}
@@ -413,6 +476,9 @@ export const ManagementSection = ({
                         onCancel={() => setIsAddingOwner(false)}
                         onSuccess={async (newOwnerId) => {
                           setIsAddingOwner(false);
+                          if (newOwnerId) {
+                            setNewlyCreatedOwnerId(newOwnerId);
+                          }
                           if (refreshOwners) {
                             await refreshOwners();
                           }
