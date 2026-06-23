@@ -407,7 +407,7 @@ Return ONLY the sorted index array of numbers. The output format MUST be a valid
       contentParts.push({
         inlineData: {
           data: base64Data,
-          mimeType: "image/webp"
+          mimeType: fileData.type || "image/jpeg"
         }
       });
     }
@@ -420,24 +420,89 @@ Return ONLY the sorted index array of numbers. The output format MUST be a valid
       responseMimeType: "application/json"
     });
 
-    const parsed = JSON.parse(response.text.trim());
-    if (Array.isArray(parsed) && parsed.length === storagePaths.length) {
-      const isValid = parsed.every(idx => typeof idx === "number" && idx >= 0 && idx < storagePaths.length)
-                      && new Set(parsed).size === storagePaths.length;
-      if (isValid) {
-        const sortedPaths = parsed.map(idx => storagePaths[idx]);
+    // Helper to extract sorting indices from various possible AI output formats
+    const parseSortingIndices = (text: string, length: number): number[] | null => {
+      const cleaned = text
+        .trim()
+        .replace(/^```json/, "")
+        .replace(/^```/, "")
+        .replace(/```$/, "")
+        .trim();
 
-        const { logAiUsage } = await import("@/features/ai-monitor/actions");
-        await logAiUsage({
-          model: modelName,
-          feature: "image_sorting",
-          status: "success",
-          promptTokens: response.usage?.promptTokens,
-          completionTokens: response.usage?.completionTokens,
-        });
-
-        return { success: true, sortedPaths };
+      let parsed: any;
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch (e) {
+        // Fallback: extract anything that looks like an array of numbers
+        const arrayMatch = cleaned.match(/\[\s*(\d+\s*,\s*)*\d+\s*\]/);
+        if (arrayMatch) {
+          try {
+            parsed = JSON.parse(arrayMatch[0]);
+          } catch (_) {
+            return null;
+          }
+        } else {
+          return null;
+        }
       }
+
+      // Handle double-encoded string
+      if (typeof parsed === "string") {
+        try {
+          parsed = JSON.parse(parsed);
+        } catch (_) {}
+      }
+
+      let candidates: any[] = [];
+      if (Array.isArray(parsed)) {
+        candidates = parsed;
+      } else if (parsed && typeof parsed === "object") {
+        // Look for common keys containing arrays
+        const possibleKeys = ["sorted_indices", "sortedIndices", "indices", "order", "sortedPaths", "paths", "result", "array"];
+        for (const key of possibleKeys) {
+          if (Array.isArray(parsed[key])) {
+            candidates = parsed[key];
+            break;
+          }
+        }
+        // Fallback: search for first array of correct length
+        if (candidates.length === 0) {
+          for (const key in parsed) {
+            if (Array.isArray(parsed[key]) && parsed[key].length === length) {
+              candidates = parsed[key];
+              break;
+            }
+          }
+        }
+      }
+
+      if (candidates.length === length) {
+        const indices = candidates.map(item => typeof item === "string" ? parseInt(item, 10) : item);
+        const isValid = indices.every(idx => typeof idx === "number" && !isNaN(idx) && idx >= 0 && idx < length)
+                        && new Set(indices).size === length;
+        if (isValid) {
+          return indices;
+        }
+      }
+
+      return null;
+    };
+
+    const parsedIndices = parseSortingIndices(response.text, storagePaths.length);
+
+    if (parsedIndices) {
+      const sortedPaths = parsedIndices.map(idx => storagePaths[idx]);
+
+      const { logAiUsage } = await import("@/features/ai-monitor/actions");
+      await logAiUsage({
+        model: modelName,
+        feature: "image_sorting",
+        status: "success",
+        promptTokens: response.usage?.promptTokens,
+        completionTokens: response.usage?.completionTokens,
+      });
+
+      return { success: true, sortedPaths };
     }
 
     throw new Error("Invalid sorting index structure returned by AI");
