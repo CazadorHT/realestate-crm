@@ -435,17 +435,13 @@ export function Step6Review({ mode }: Step6ReviewProps) {
   const [isGenerating, setIsGenerating] = useState(false);
 
   const isAiActive = isGenerating || isTranslating || isTranslatingAll;
+  const isAiActiveRef = React.useRef(isAiActive);
+  isAiActiveRef.current = isAiActive;
   useEffect(() => {
-    const current = form.getValues("is_ai_generating");
-    if (current !== isAiActive) {
-      form.setValue("is_ai_generating", isAiActive);
-    }
-    return () => {
-      if (form.getValues("is_ai_generating")) {
-        form.setValue("is_ai_generating", false);
-      }
-    };
-  }, [isAiActive, form]);
+    // Only set form value when isAiActive actually changes, no cleanup to avoid cascading updates
+    form.setValue("is_ai_generating", isAiActive, { shouldDirty: false, shouldTouch: false, shouldValidate: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAiActive]);
 
   const handleRegenerateDescription = useCallback(async () => {
     try {

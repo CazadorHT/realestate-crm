@@ -33,7 +33,6 @@ export function PropertyFormNavigation({
   form,
   className,
 }: PropertyFormNavigationProps) {
-  const isAiGenerating = form.watch("is_ai_generating");
 
   return (
     <div
@@ -77,8 +76,10 @@ export function PropertyFormNavigation({
           {currentStep < totalSteps ? (
             <Button
               type="button"
-              onClick={onNext}
-              disabled={!!isAiGenerating}
+              onClick={() => {
+                if (form.getValues("is_ai_generating")) return;
+                onNext();
+              }}
               aria-label="ไปขั้นตอนถัดไป"
               className="h-12 sm:h-14 px-8 sm:px-10 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-200 font-bold text-base sm:text-lg transition-all active:scale-95 flex-[1.5] sm:flex-none disabled:opacity-50 disabled:cursor-not-allowed"
             >
