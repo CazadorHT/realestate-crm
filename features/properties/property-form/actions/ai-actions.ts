@@ -354,4 +354,195 @@ Ensure the response contains no markdown code blocks, just raw JSON.
   }
 }
 
+export async function sortPropertyImagesAction(storagePaths: string[]): Promise<{
+  success: boolean;
+  sortedPaths?: string[];
+  message?: string;
+}> {
+  try {
+    if (storagePaths.length < 2) {
+      return { success: true, sortedPaths: storagePaths };
+    }
+
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const { PROPERTY_IMAGES_BUCKET } = await import("@/features/properties/logic/images");
+    
+    const adminSupabase = createAdminClient();
+    const contentParts: any[] = [];
+
+    const promptText = `You are a professional real estate agent assistant.
+Your task is to sort the provided real estate images in a professional presentation order:
+1. Cover/Hero Image: A beautiful main shot (stunning living room, main view, or building exterior).
+2. Living room / Lounge.
+3. Dining area & Kitchen.
+4. Bedrooms (from master bedroom to smaller bedrooms).
+5. Bathrooms.
+6. Facilities / Balcony / Building common areas (swimming pool, gym, lobby).
+7. Floor plans (should always be at the very end).
+
+I will provide you with several images, labeled sequentially.
+Please analyze the images and return a JSON array containing the sorted 0-based indices in the professional order.
+For example, if you receive 3 images and the best order is: Image 2 first, then Image 0, then Image 1, you must return: [2, 0, 1].
+
+Return ONLY the sorted index array of numbers. The output format MUST be a valid JSON array of numbers of the same length as the input, containing each index exactly once. Example: [2, 0, 1]`;
+
+    contentParts.push(promptText);
+
+    // Download each image and append it as multimodal base64 content
+    for (let i = 0; i < storagePaths.length; i++) {
+      const path = storagePaths[i];
+      const { data: fileData, error } = await adminSupabase.storage
+        .from(PROPERTY_IMAGES_BUCKET)
+        .download(path);
+
+      if (error || !fileData) {
+        throw new Error(`Failed to download image from storage: ${path}`);
+      }
+
+      const arrayBuffer = await fileData.arrayBuffer();
+      const base64Data = Buffer.from(arrayBuffer).toString("base64");
+
+      contentParts.push(`Image ${i}:`);
+      contentParts.push({
+        inlineData: {
+          data: base64Data,
+          mimeType: "image/webp"
+        }
+      });
+    }
+
+    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+    const aiConfig = await getAiModelConfig();
+    const modelName = aiConfig.description_model || "gemini-1.5-flash";
+
+    const response = await generateText(contentParts, modelName, 0, {
+      responseMimeType: "application/json"
+    });
+
+    const parsed = JSON.parse(response.text.trim());
+    if (Array.isArray(parsed) && parsed.length === storagePaths.length) {
+      const isValid = parsed.every(idx => typeof idx === "number" && idx >= 0 && idx < storagePaths.length)
+                      && new Set(parsed).size === storagePaths.length;
+      if (isValid) {
+        const sortedPaths = parsed.map(idx => storagePaths[idx]);
+
+        const { logAiUsage } = await import("@/features/ai-monitor/actions");
+        await logAiUsage({
+          model: modelName,
+          feature: "image_sorting",
+          status: "success",
+          promptTokens: response.usage?.promptTokens,
+          completionTokens: response.usage?.completionTokens,
+        });
+
+        return { success: true, sortedPaths };
+      }
+    }
+
+    throw new Error("Invalid sorting index structure returned by AI");
+  } catch (error: any) {
+    console.error("AI Image Sorting Error:", error);
+    
+    let modelName = "unknown";
+    try {
+      const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+      const aiConfig = await getAiModelConfig();
+      modelName = aiConfig.description_model || "gemini-1.5-flash";
+    } catch (_) {}
+
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    await logAiUsage({
+      model: modelName,
+      feature: "image_sorting",
+      status: "error",
+      errorMessage: error.message,
+    });
+
+    return { success: false, message: error.message || "ไม่สามารถจัดเรียงรูปภาพด้วย AI ได้" };
+  }
+}
+
+export async function detectPropertyFeaturesAction(
+  title: string,
+  description: string
+): Promise<{
+  success: boolean;
+  matchedFeatureIds?: string[];
+  message?: string;
+}> {
+  try {
+    const supabase = await createClient();
+    const { data: features, error } = await supabase
+      .from("features")
+      .select("id, name");
+
+    if (error) throw error;
+    if (!features || features.length === 0) {
+      return { success: true, matchedFeatureIds: [] };
+    }
+
+    const featureListStr = features.map((f: { id: string; name: string }) => `- ${f.name} (ID: ${f.id})`).join("\n");
+
+    const prompt = `You are a real estate agent helper.
+I have a property with the following title and description:
+Title: ${title}
+Description: ${description}
+
+Here is a list of features available in our database:
+${featureListStr}
+
+Please analyze the title and description and match the features that are explicitly mentioned or strongly implied to be present at this property.
+Return a JSON array of strings containing the IDs of the matched features.
+Example return: ["id-1", "id-2"]
+
+Return ONLY the JSON array of strings. Do not include markdown code block formatting (no \`\`\`json).`;
+
+    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+    const aiConfig = await getAiModelConfig();
+    const modelName = aiConfig.description_model || "gemini-1.5-flash";
+
+    const response = await generateText(prompt, modelName, 0, {
+      responseMimeType: "application/json"
+    });
+
+    const parsed = JSON.parse(response.text.trim());
+    if (Array.isArray(parsed)) {
+      const allIds = new Set(features.map((f: { id: string; name: string }) => f.id));
+      const validatedIds = parsed.filter(id => allIds.has(id));
+
+      const { logAiUsage } = await import("@/features/ai-monitor/actions");
+      await logAiUsage({
+        model: modelName,
+        feature: "features_detection",
+        status: "success",
+        promptTokens: response.usage?.promptTokens,
+        completionTokens: response.usage?.completionTokens,
+      });
+
+      return { success: true, matchedFeatureIds: validatedIds };
+    }
+
+    throw new Error("Invalid feature IDs array returned by AI");
+  } catch (error: any) {
+    console.error("AI Feature Detection Error:", error);
+
+    let modelName = "unknown";
+    try {
+      const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+      const aiConfig = await getAiModelConfig();
+      modelName = aiConfig.description_model || "gemini-1.5-flash";
+    } catch (_) {}
+
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    await logAiUsage({
+      model: modelName,
+      feature: "features_detection",
+      status: "error",
+      errorMessage: error.message,
+    });
+
+    return { success: false, message: error.message || "ไม่สามารถวิเคราะห์สิ่งอำนวยความสะดวกด้วย AI ได้" };
+  }
+}
+
 

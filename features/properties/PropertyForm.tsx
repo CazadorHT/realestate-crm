@@ -443,6 +443,10 @@ export function PropertyForm({
 
   // === NAVIGATION ===
   const handleNext = async () => {
+    if (form.getValues("is_ai_generating")) {
+      toast.error("AI กำลังทำงานอยู่ กรุณารอสักครู่ครับ");
+      return;
+    }
     const isStepValid = await validateStep(currentStep);
     if (isStepValid) {
       const nextStep = Math.min(currentStep + 1, 7);

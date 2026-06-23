@@ -72,6 +72,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
   agent_ids: [],
   feature_ids: [],
   images: [],
+  is_ai_generating: false,
   
   commission_sale_percentage: 3,
   commission_rent_months: 1,

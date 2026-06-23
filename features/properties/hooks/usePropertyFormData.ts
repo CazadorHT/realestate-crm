@@ -83,6 +83,18 @@ export function usePropertyFormData(
           setAgents(agentsData);
         }
 
+        // Default agent to logged in user on create mode
+        if (mode === "create") {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const currentAgentIds = form.getValues("agent_ids") || [];
+            if (currentAgentIds.length === 0) {
+              form.setValue("agent_ids", [user.id], { shouldDirty: true });
+              form.setValue("assigned_to", user.id, { shouldDirty: true });
+            }
+          }
+        }
+
         // Load popular areas for initial province
         await fetchPopularAreas(province);
 

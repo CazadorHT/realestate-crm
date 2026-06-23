@@ -58,6 +58,7 @@ vi.mock('@/lib/file-validation', () => ({
 vi.mock('sharp', () => ({
   default: vi.fn(() => ({
     resize: vi.fn().mockReturnThis(),
+    composite: vi.fn().mockReturnThis(),
     webp: vi.fn().mockReturnThis(),
     toBuffer: vi.fn().mockResolvedValue(Buffer.from('mock-webp-buffer')),
   })),

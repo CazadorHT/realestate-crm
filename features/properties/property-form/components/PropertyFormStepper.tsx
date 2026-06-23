@@ -1,6 +1,7 @@
 import * as React from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
+import { toast } from "sonner";
 
 interface PropertyFormStepperProps {
   currentStep: number;
@@ -138,10 +139,18 @@ export function PropertyFormStepper({
                       (e.key === "Enter" || e.key === " ")
                     ) {
                       e.preventDefault();
+                      if (form.getValues("is_ai_generating")) {
+                        toast.error("AI กำลังทำงานอยู่ กรุณารอสักครู่ครับ");
+                        return;
+                      }
                       setCurrentStep(item.step);
                     }
                   }}
                   onClick={async () => {
+                    if (form.getValues("is_ai_generating")) {
+                      toast.error("AI กำลังทำงานอยู่ กรุณารอสักครู่ครับ");
+                      return;
+                    }
                     if (mode === "edit") {
                       setCurrentStep(item.step);
                       return;

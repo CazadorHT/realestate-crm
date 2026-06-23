@@ -20,7 +20,7 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Upload, Image as ImageIcon } from "lucide-react";
+import { Upload, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   uploadPropertyImageAction,
@@ -54,6 +54,52 @@ export function PropertyImageUploader({
     description: string;
     errors?: string[];
   } | null>(null);
+
+  const [isWatermarkEnabled, setIsWatermarkEnabled] = useState(true);
+  const [isSorting, setIsSorting] = useState(false);
+
+  const handleAiSort = async () => {
+    const uploadedImages = images.filter((img) => !img.is_uploading && img.storage_path);
+    if (uploadedImages.length < 2) return;
+
+    setIsSorting(true);
+    const processId = startProcess("จัดเรียงรูปภาพด้วย AI", {
+      type: "AI_SORT",
+    });
+
+    try {
+      const { sortPropertyImagesAction } = await import("@/features/properties/property-form/actions/ai-actions");
+      const paths = uploadedImages.map((img) => img.storage_path as string);
+      
+      const res = await sortPropertyImagesAction(paths);
+      if (res.success && res.sortedPaths) {
+        const sortedMap = new Map(res.sortedPaths.map((path, idx) => [path, idx]));
+        
+        const sortedImages = [...images].sort((a, b) => {
+          const idxA = sortedMap.has(a.storage_path || "") ? sortedMap.get(a.storage_path || "")! : 999;
+          const idxB = sortedMap.has(b.storage_path || "") ? sortedMap.get(b.storage_path || "")! : 999;
+          return idxA - idxB;
+        });
+
+        const updatedImages = sortedImages.map((img, index) => ({
+          ...img,
+          is_cover: index === 0,
+        }));
+
+        setImages(updatedImages);
+        toast.success("จัดเรียงรูปภาพด้วย AI สำเร็จแล้ว! ✨");
+        finishProcess(processId, "SUCCESS", "จัดเรียงรูปภาพด้วย AI สำเร็จเรียบร้อย ✨");
+      } else {
+        throw new Error(res.message || "เกิดข้อผิดพลาดในการจัดเรียง");
+      }
+    } catch (err: any) {
+      console.error("AI Sort failed:", err);
+      toast.error(err.message || "จัดเรียงล้มเหลว");
+      finishProcess(processId, "ERROR", `จัดเรียงล้มเหลว: ${err.message || "ข้อผิดพลาดระบบ"}`);
+    } finally {
+      setIsSorting(false);
+    }
+  };
 
   const [images, setImages] = useState<ImageItem[]>(() => {
     const valuePaths = value ? value.filter(Boolean) : [];
@@ -319,6 +365,7 @@ export function PropertyImageUploader({
           const formData = new FormData();
           formData.append("file", fileToUpload);
           formData.append("sessionId", sessionId);
+          formData.append("watermark", isWatermarkEnabled ? "true" : "false");
 
           const result = await uploadPropertyImageAction(formData);
 
@@ -398,7 +445,7 @@ export function PropertyImageUploader({
       isUploadingRef.current = false;
       activeUploadProcessIdRef.current = null;
     },
-    [disabled, images.length, maxFiles, maxFileSizeMB, sessionId],
+    [disabled, images.length, maxFiles, maxFileSizeMB, sessionId, isWatermarkEnabled],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -506,6 +553,20 @@ export function PropertyImageUploader({
 
   return (
     <div className="space-y-4">
+      {/* Premium Watermark Toggle */}
+      <div className="flex items-center justify-between px-1 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+        <label className="flex items-center gap-2.5 cursor-pointer text-xs sm:text-sm font-semibold text-slate-700 select-none">
+          <input
+            type="checkbox"
+            checked={isWatermarkEnabled}
+            onChange={(e) => setIsWatermarkEnabled(e.target.checked)}
+            disabled={disabled}
+            className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer disabled:cursor-not-allowed"
+          />
+          <span>ใส่ลายน้ำ "VC CONNECT ASSET" ที่มุมขวาล่างอัตโนมัติ</span>
+        </label>
+      </div>
+
       {images.length < maxFiles && (
         <div
           {...getRootProps()}
@@ -534,11 +595,30 @@ export function PropertyImageUploader({
 
       {images.length > 0 && (
         <div className="pt-2">
-          <div className="flex items-center justify-between mb-3 px-1">
-            <p className="text-xs sm:text-sm font-semibold text-slate-800">
-              รูปภาพทั้งหมด ({images.length}/{maxFiles})
-            </p>
-            <p className="hidden sm:block text-[10px] sm:text-xs text-slate-500 italic">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 px-1">
+            <div className="flex items-center gap-3">
+              <p className="text-xs sm:text-sm font-semibold text-slate-800">
+                รูปภาพทั้งหมด ({images.length}/{maxFiles})
+              </p>
+              {images.filter(img => !img.is_uploading && img.storage_path).length >= 2 && (
+                <Button
+                  type="button"
+                  onClick={handleAiSort}
+                  disabled={isSorting || images.some(img => img.is_uploading) || disabled}
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-[11px] font-bold border-blue-200 text-blue-600 bg-blue-50/50 hover:bg-blue-50 hover:text-blue-700 rounded-lg flex items-center gap-1.5 shadow-sm transition-all animate-in fade-in"
+                >
+                  {isSorting ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-3 h-3" />
+                  )}
+                  {isSorting ? "กำลังจัดเรียงด้วย AI..." : "AI จัดเรียงรูปภาพ"}
+                </Button>
+              )}
+            </div>
+            <p className="text-[10px] sm:text-xs text-slate-500 italic">
               ลากเพื่อจัดเรียง • ⭐ = รูปปก
             </p>
           </div>

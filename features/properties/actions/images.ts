@@ -70,6 +70,8 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
     const file = formData.get("file") as File | null;
     if (!file) throw new Error("No file provided");
 
+    const watermark = formData.get("watermark") as string | null;
+
     // 1) Size limit
     if (file.size > IMAGE_UPLOAD_POLICY.maxBytes) {
       throw new Error("File too large (max 8MB)");
@@ -91,13 +93,34 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
       const arrayBuffer = await file.arrayBuffer();
       const inputBuffer = Buffer.from(arrayBuffer);
 
-      // Resize and convert to WebP
-      processedBuffer = await sharp(inputBuffer)
+      // Resize and optional watermark composite
+      let sharpImg = sharp(inputBuffer)
         .resize({
           width: 1920,
           withoutEnlargement: true,
           fit: "inside",
-        })
+        });
+
+      if (watermark === "true") {
+        const svgWatermark = Buffer.from(
+          `<svg width="350" height="60" xmlns="http://www.w3.org/2000/svg">
+            <style>
+              .text { font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; font-size: 20px; font-weight: 800; fill: #ffffff; fill-opacity: 0.35; letter-spacing: 1.5px; }
+              .text-shadow { font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; font-size: 20px; font-weight: 800; fill: #000000; fill-opacity: 0.15; letter-spacing: 1.5px; }
+            </style>
+            <text x="12" y="32" class="text-shadow">VC CONNECT ASSET</text>
+            <text x="10" y="30" class="text">VC CONNECT ASSET</text>
+          </svg>`
+        );
+        sharpImg = sharpImg.composite([
+          {
+            input: svgWatermark,
+            gravity: "southeast",
+          },
+        ]);
+      }
+
+      processedBuffer = await sharpImg
         .webp({ quality: 80 })
         .toBuffer();
 

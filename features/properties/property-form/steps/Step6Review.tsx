@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useState, useMemo } from "react";
+import React, { useCallback, useState, useMemo, useEffect } from "react";
 import { UseFormReturn, useFormContext } from "react-hook-form";
 import { type PropertyFormValues } from "@/features/properties/schema";
 import dynamic from "next/dynamic";
@@ -421,6 +421,14 @@ export function Step6Review({ mode }: Step6ReviewProps) {
     .slice(0, 6);
 
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const isAiActive = isGenerating || isTranslating || isTranslatingAll;
+  useEffect(() => {
+    form.setValue("is_ai_generating", isAiActive);
+    return () => {
+      form.setValue("is_ai_generating", false);
+    };
+  }, [isAiActive, form]);
 
   const handleRegenerateDescription = useCallback(async () => {
     try {

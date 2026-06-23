@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+
 import {
   FormField,
   FormItem,
@@ -31,6 +33,16 @@ export const MediaSection = ({
 }: MediaSectionProps) => {
   const formContext = useFormContext<PropertyFormValues>();
   const form = formProp || formContext;
+
+  const [floorplanSessionId] = React.useState(() => {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+    return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, (c: any) =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4))).toString(16)
+    );
+  });
+
   return (
     <section className="bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-slate-100/60 h-full">
       <div className="border-b border-slate-50 pb-3 sm:pb-4 mb-4 sm:mb-6">
@@ -88,7 +100,7 @@ export const MediaSection = ({
             <FormItem className="bg-slate-50/50 p-4 rounded-xl border-2 border-dashed border-slate-200">
               <FormControl>
                 <PropertyImageUploader
-                  sessionId={`${uploadSessionId}-floorplan`}
+                  sessionId={floorplanSessionId}
                   value={field.value ? [field.value] : []}
                   onChange={(imgs) => {
                     field.onChange(imgs.length > 0 ? imgs[0] : null);

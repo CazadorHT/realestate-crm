@@ -28,6 +28,8 @@ import { FeaturesManagementDialog } from "@/features/amenities/components/Featur
 import { PropertyFormValues } from "../../schema";
 import { DynamicIcon } from "@/components/dynamic-icon";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type Feature = {
   id: string;
@@ -82,6 +84,10 @@ function Step5FeaturesComponent() {
   const { watch, setValue } = useFormContext<PropertyFormValues>();
   const [features, setFeatures] = useState<Feature[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDetecting, setIsDetecting] = useState(false);
+
+  const formTitle = watch("title");
+  const formDescription = watch("description");
 
   // Load existing selections
   const selectedFeatureIds = watch("feature_ids") || [];
@@ -109,8 +115,6 @@ function Step5FeaturesComponent() {
   }, []); // Initial load
 
   const reloadFeatures = async () => {
-    // Manually reload features called by Dialog callback
-    // Don't set loading(true) here to avoid unmounting the Dialog
     try {
       const supabase = createClient();
       const { data, error } = await supabase
@@ -137,6 +141,66 @@ function Step5FeaturesComponent() {
       shouldDirty: true,
       shouldValidate: true,
     });
+  };
+
+  const applyPreset = (type: "condo" | "house" | "office") => {
+    const presetMatchers = {
+      condo: [
+        "สระว่ายน้ำ", "ฟิตเนส", "cctv", "รักษาความปลอดภัย", "ที่จอดรถ", 
+        "สวนหย่อม", "ลิฟต์", "lobby", "คีย์การ์ด", "pool", "gym", "elevator"
+      ],
+      house: [
+        "ที่จอดรถ", "สวนหย่อม", "สวน", "สนามเด็กเล่น", "สระว่ายน้ำ", 
+        "cctv", "รักษาความปลอดภัย", "ครัว", "กล้องวงจรปิด", "garden"
+      ],
+      office: [
+        "เครื่องปรับอากาศ", "แอร์", "ห้องประชุม", "คีย์การ์ด", "ที่จอดรถ", 
+        "อินเทอร์เน็ต", "wifi", "ลิฟต์", "รักษาความปลอดภัย"
+      ]
+    };
+
+    const matchers = presetMatchers[type];
+    const matchedIds = features
+      .filter((f) => {
+        const nameLower = f.name.toLowerCase();
+        return matchers.some((keyword) => nameLower.includes(keyword.toLowerCase()));
+      })
+      .map((f) => f.id);
+
+    setValue("feature_ids", matchedIds, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    toast.success(`เลือกสิ่งอำนวยความสะดวกสำหรับ${
+      type === "condo" ? "คอนโด" : type === "house" ? "บ้านเดี่ยว" : "สำนักงาน"
+    }สำเร็จแล้ว! (${matchedIds.length} รายการ)`);
+  };
+
+  const handleAiDetectFeatures = async () => {
+    if (!formTitle && !formDescription) {
+      toast.error("กรุณากรอกชื่อหัวข้อหรือคำอธิบายทรัพย์สินก่อนครับ");
+      return;
+    }
+
+    setIsDetecting(true);
+    try {
+      const { detectPropertyFeaturesAction } = await import("@/features/properties/property-form/actions/ai-actions");
+      const res = await detectPropertyFeaturesAction(formTitle || "", formDescription || "");
+      if (res.success && res.matchedFeatureIds) {
+        setValue("feature_ids", res.matchedFeatureIds, {
+          shouldDirty: true,
+          shouldValidate: true,
+        });
+        toast.success(`AI ตรวจพบสิ่งอำนวยความสะดวกที่เหมาะสม ${res.matchedFeatureIds.length} รายการ! ✨`);
+      } else {
+        throw new Error(res.message || "ไม่สามารถวิเคราะห์ได้");
+      }
+    } catch (err: any) {
+      console.error("AI Feature detection failed:", err);
+      toast.error(err.message || "วิเคราะห์สิ่งอำนวยความสะดวกด้วย AI ล้มเหลว");
+    } finally {
+      setIsDetecting(false);
+    }
   };
 
   // Group by category (Memoized for performance)
@@ -186,6 +250,63 @@ function Step5FeaturesComponent() {
           <div className="w-full sm:w-auto self-end sm:self-center">
             <FeaturesManagementDialog onUpdate={reloadFeatures} />
           </div>
+        </div>
+      </div>
+
+      {/* Quick Presets & AI Analyzer Panel */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/70 p-4 rounded-2xl border border-slate-100 shadow-xs">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <span className="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-widest mr-1.5">
+            เลือกด่วน (Presets):
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => applyPreset("condo")}
+            className="h-8 text-xs font-semibold bg-white border-slate-200 hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50/20 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            🏢 คอนโด (Condo)
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => applyPreset("house")}
+            className="h-8 text-xs font-semibold bg-white border-slate-200 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50/20 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            🏡 บ้าน / ทาวน์โฮม (House)
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => applyPreset("office")}
+            className="h-8 text-xs font-semibold bg-white border-slate-200 hover:border-amber-300 hover:text-amber-600 hover:bg-amber-50/20 rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer"
+          >
+            💼 สำนักงาน (Office)
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            onClick={handleAiDetectFeatures}
+            disabled={isDetecting || (!formTitle && !formDescription)}
+            className="h-9 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex items-center gap-1.5 shadow-sm transition-all self-start md:self-auto disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {isDetecting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5" />
+            )}
+            {isDetecting ? "กำลังวิเคราะห์..." : "AI วิเคราะห์สิ่งอำนวยความสะดวก"}
+          </Button>
+          {!formTitle && !formDescription && (
+            <span className="text-[10px] text-slate-400 italic hidden sm:inline">
+              💡 กรอกชื่อหรือรายละเอียดก่อนใช้ AI
+            </span>
+          )}
         </div>
       </div>
 
