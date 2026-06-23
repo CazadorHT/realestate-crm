@@ -54,11 +54,20 @@ export async function bulkDeleteLeadsAction(
     // 🔔 Notify Admins about bulk lead deletion
     if (count && count > 5) {
       try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, display_name, role")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        const userName = profile?.full_name || profile?.display_name || user.user_metadata?.full_name || user.user_metadata?.name || user.email || "ไม่ระบุชื่อ";
+        const userRole = profile?.role || role || "STAFF";
+
         const { notifyAdminsAction } = await import("@/lib/actions/notifications");
         await notifyAdminsAction({
           type: "WARNING",
           title: "มีการลบรายชื่อลูกค้าจำนวนมาก ⚠️",
-          message: `ผู้ใช้ ${user.id} ได้ลบรายชื่อลูกค้า (Leads) ออกจากระบบจำนวน ${count} รายการ`,
+          message: `ผู้ใช้ ${userName} (${userRole}) ได้ลบรายชื่อลูกค้า (Leads) ออกจากระบบจำนวน ${count} รายการ`,
           link: "/protected/leads",
         });
       } catch (notifyErr) {
