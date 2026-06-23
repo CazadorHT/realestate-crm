@@ -179,6 +179,8 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     if (!Array.isArray(transits)) {
       transits = [];
     }
+    // Filter to ensure only valid objects are kept
+    transits = transits.filter((t: any) => t && typeof t === "object");
     if (transits.length === 0) return;
 
     const needsTranslation = transits.filter(
@@ -198,6 +200,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
 
       // Update form values
       const updatedTransits = transits.map((t: any) => {
+        if (!t || typeof t !== "object") return t;
         const idx = needsTranslation.findIndex((nt: any) => nt === t);
         if (idx !== -1 && results[idx]) {
           return {
@@ -238,6 +241,8 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
     if (!Array.isArray(places)) {
       places = [];
     }
+    // Filter to ensure only valid objects are kept
+    places = places.filter((p: any) => p && typeof p === "object");
     if (places.length === 0) return;
 
     const needsTranslation = places.filter(
@@ -256,6 +261,7 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       const results = await translatePlaceNamesAction(namesToTranslate);
 
       const updatedPlaces = places.map((p: any) => {
+        if (!p || typeof p !== "object") return p;
         const idx = needsTranslation.findIndex((np: any) => np === p);
         if (idx !== -1 && results[idx]) {
           return {

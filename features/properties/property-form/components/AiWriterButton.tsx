@@ -45,24 +45,25 @@ export function AiWriterButton({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              type="button"
-              variant={variant}
-              size={size}
-              onClick={() => setIsOpen(true)}
-              disabled={disabled || isTranslatingAll}
-              className={cn(
-                "gap-2 border-amber-200 text-amber-600! bg-amber-50 hover:bg-amber-100 rounded-xl font-medium transition-all active:scale-95",
-                className,
-              )}
-            >
-              {isTranslatingAll ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="h-4 w-4 text-amber-500" />
-              )}
-              <span>AI แต่งคำบรรยาย</span>
-            </Button>
+            <div className={cn("w-full sm:w-auto", className)}>
+              <Button
+                type="button"
+                variant={variant}
+                size={size}
+                onClick={() => setIsOpen(true)}
+                disabled={disabled || isTranslatingAll}
+                className={cn(
+                  "gap-2 border-amber-200 text-amber-600! bg-amber-50 hover:bg-amber-100 rounded-xl font-medium transition-all active:scale-95 w-full",
+                )}
+              >
+                {isTranslatingAll ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4 text-amber-500" />
+                )}
+                <span>AI แต่งคำบรรยาย</span>
+              </Button>
+            </div>
           </TooltipTrigger>
           <TooltipContent className="bg-slate-900 text-white z-102 border-none shadow-xl px-4 py-2 text-xs">
             <div className="flex items-center gap-2">

@@ -110,21 +110,23 @@ export function DescriptionSection({
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => translateDescription()}
-                          disabled={isTranslating}
-                          className="border-blue-100 text-blue-600! hover:bg-blue-50 gap-2 h-10 sm:h-9 px-4 rounded-xl shadow-sm w-full sm:w-auto justify-center font-medium"
-                        >
-                          {isTranslating ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Languages className="h-4 w-4 text-blue-500" />
-                          )}
-                          <span>AI แปลภาษาทั้งหมด </span>
-                        </Button>
+                        <div className="w-full sm:w-auto">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => translateDescription()}
+                            disabled={isTranslating}
+                            className="border-blue-100 text-blue-600! hover:bg-blue-50 gap-2 h-10 sm:h-9 px-4 rounded-xl shadow-sm w-full justify-center font-medium"
+                          >
+                            {isTranslating ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Languages className="h-4 w-4 text-blue-500" />
+                            )}
+                            <span>AI แปลภาษาทั้งหมด </span>
+                          </Button>
+                        </div>
                       </TooltipTrigger>
                       <TooltipContent className="bg-slate-900 text-white border-none shadow-xl px-4 py-2 text-xs">
                         <div className="flex items-center gap-2">

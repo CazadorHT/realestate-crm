@@ -515,21 +515,23 @@ export function Step6Review({ mode }: Step6ReviewProps) {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={translateAll}
-                    disabled={isTranslatingAll}
-                    className="w-full sm:w-auto h-9 gap-2 border-blue-200 text-blue-600 bg-blue-50 hover:bg-white hover:text-blue-600 font-bold px-4 rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
-                  >
-                    {isTranslatingAll ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Languages className="h-3.5 w-3.5 text-blue-500" />
-                    )}
-                    AI Global Fix
-                  </Button>
+                  <div className="w-full sm:w-auto">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={translateAll}
+                      disabled={isTranslatingAll}
+                      className="w-full sm:w-auto h-9 gap-2 border-blue-200 text-blue-600 bg-blue-50 hover:bg-white hover:text-blue-600 font-bold px-4 rounded-xl shadow-xs transition-all active:scale-95 shrink-0"
+                    >
+                      {isTranslatingAll ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Languages className="h-3.5 w-3.5 text-blue-500" />
+                      )}
+                      AI แปลให้ครบทั้งหมด
+                    </Button>
+                  </div>
                 </TooltipTrigger>
                 <TooltipContent className="bg-slate-900 text-white border-none z-102 shadow-xl px-4 py-2 text-xs">
                   <div className="flex items-center gap-2">
@@ -716,12 +718,12 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                       ]
                     : []),
                   ...(Array.isArray(values.nearby_transits)
-                    ? values.nearby_transits
+                    ? values.nearby_transits.filter((t: any) => t && typeof t === "object")
                     : typeof values.nearby_transits === "string"
                       ? (() => {
                           try {
                             const parsed = JSON.parse(values.nearby_transits);
-                            return Array.isArray(parsed) ? parsed : [];
+                            return Array.isArray(parsed) ? parsed.filter((t: any) => t && typeof t === "object") : [];
                           } catch (e) {
                             return [];
                           }
@@ -729,12 +731,12 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                       : []),
                 ],
                 places: Array.isArray(values.nearby_places)
-                  ? values.nearby_places
+                  ? values.nearby_places.filter((p: any) => p && typeof p === "object")
                   : typeof values.nearby_places === "string"
                     ? (() => {
                         try {
                           const parsed = JSON.parse(values.nearby_places);
-                          return Array.isArray(parsed) ? parsed : [];
+                          return Array.isArray(parsed) ? parsed.filter((p: any) => p && typeof p === "object") : [];
                         } catch (e) {
                           return [];
                         }
@@ -1005,12 +1007,12 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                     undefined
                   }
                   data={(Array.isArray(values.nearby_places)
-                    ? values.nearby_places
+                    ? values.nearby_places.filter((p: any) => p && typeof p === "object")
                     : typeof values.nearby_places === "string"
                       ? (() => {
                           try {
                             const parsed = JSON.parse(values.nearby_places);
-                            return Array.isArray(parsed) ? parsed : [];
+                            return Array.isArray(parsed) ? parsed.filter((p: any) => p && typeof p === "object") : [];
                           } catch (e) {
                             return [];
                           }
@@ -1042,12 +1044,12 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                         ]
                       : []),
                     ...(Array.isArray(values.nearby_transits)
-                      ? values.nearby_transits
+                      ? values.nearby_transits.filter((t: any) => t && typeof t === "object")
                       : typeof values.nearby_transits === "string"
                         ? (() => {
                             try {
                               const parsed = JSON.parse(values.nearby_transits);
-                              return Array.isArray(parsed) ? parsed : [];
+                              return Array.isArray(parsed) ? parsed.filter((t: any) => t && typeof t === "object") : [];
                             } catch (e) {
                               return [];
                             }
