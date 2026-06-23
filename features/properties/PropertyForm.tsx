@@ -958,7 +958,7 @@ export function PropertyForm({
           </div>
         }
         description="คุณต้องการทำรายการใดต่อ?"
-        className="sm:max-w-md"
+        className="sm:max-w-md!"
       >
         <div className="flex flex-col gap-3 py-2">
           <Button
@@ -1008,7 +1008,7 @@ export function PropertyForm({
             <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-3">
               แชร์ไปยังโซเชียลมีเดีย
             </span>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               {/* Facebook */}
               <Button
                 variant="outline"
