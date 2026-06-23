@@ -103,13 +103,21 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
 
       if (watermark === "true") {
         const svgWatermark = Buffer.from(
-          `<svg width="350" height="60" xmlns="http://www.w3.org/2000/svg">
-            <style>
-              .text { font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; font-size: 20px; font-weight: 800; fill: #ffffff; fill-opacity: 0.35; letter-spacing: 1.5px; }
-              .text-shadow { font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif; font-size: 20px; font-weight: 800; fill: #000000; fill-opacity: 0.15; letter-spacing: 1.5px; }
-            </style>
-            <text x="12" y="32" class="text-shadow">VC CONNECT ASSET</text>
-            <text x="10" y="30" class="text">VC CONNECT ASSET</text>
+          `<svg width="180" height="60" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="vccGradFav" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.3"/>
+              </linearGradient>
+            </defs>
+            <g transform="translate(10, 5) scale(0.6)">
+              <!-- VCC Brand Isometric Icon Watermark (No font needed) -->
+              <path d="M0 30l40-20v60l-40 20z" fill="#ffffff" fill-opacity="0.4"/>
+              <path d="M40 10l40 20v60l-40-20z" fill="url(#vccGradFav)"/>
+              <path d="M0 30l40-20 40 20-40 20z" fill="#ffffff" fill-opacity="0.5"/>
+            </g>
+            <!-- Render clean vector typography outlines or a simpler fallback style -->
+            <text x="65" y="36" font-family="sans-serif" font-size="13" font-weight="900" fill="#ffffff" fill-opacity="0.45" letter-spacing="1">VCC ASSET</text>
           </svg>`
         );
         sharpImg = sharpImg.composite([
