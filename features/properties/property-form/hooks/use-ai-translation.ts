@@ -119,10 +119,16 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
   // 2b. Generate Description (New)
   const generateDescription = async (silent = false) => {
     const values = form.getValues();
+    const currentDesc = form.getValues("description");
     const processId = !silent
-      ? startProcess("AI กำลังแต่งคำบรรยายทรัพย์...", {
-          type: "PROPERTY_TRANSLATION",
-        })
+      ? startProcess(
+          currentDesc && currentDesc.trim() !== "" && currentDesc !== "<p></p>"
+            ? "AI กำลังนำคำบรรยายเดิมมาเกลาใหม่..."
+            : "AI กำลังแต่งคำบรรยายทรัพย์...",
+          {
+            type: "PROPERTY_TRANSLATION",
+          }
+        )
       : null;
 
     setIsTranslating(true);
@@ -130,7 +136,10 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       const { generateAIPropertyDescriptionAction } = await import(
         "../actions/ai-actions"
       );
-      const html = await generateAIPropertyDescriptionAction(values);
+      const html = await generateAIPropertyDescriptionAction(
+        values,
+        currentDesc && currentDesc.trim() !== "" && currentDesc !== "<p></p>" ? currentDesc : undefined
+      );
 
       form.setValue("description", html, {
         shouldDirty: true,
@@ -138,7 +147,13 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
       });
 
       if (processId)
-        finishProcess(processId, "SUCCESS", "แต่งคำบรรยายภาษาไทยเรียบร้อย ✨");
+        finishProcess(
+          processId,
+          "SUCCESS",
+          currentDesc && currentDesc.trim() !== "" && currentDesc !== "<p></p>"
+            ? "เกลาคำบรรยายภาษาไทยเรียบร้อย ✨"
+            : "แต่งคำบรรยายภาษาไทยเรียบร้อย ✨"
+        );
       form.setValue("requires_ai_review", true, { shouldDirty: true });
       return true;
     } catch (error: unknown) {
