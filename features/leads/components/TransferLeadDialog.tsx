@@ -95,6 +95,7 @@ export function TransferLeadDialog({
     <ResponsiveDialog
       open={isOpen}
       onOpenChange={onOpenChange}
+      className="sm:max-w-md!"
       title={
         <div className="flex items-center gap-2">
           <ArrowRightLeft className="h-5 w-5 text-blue-600" />

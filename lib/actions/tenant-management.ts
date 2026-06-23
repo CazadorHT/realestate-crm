@@ -247,15 +247,12 @@ export async function getTenantMembersAction(tenantId: string) {
       identity:identities_v3!identity_id (
         id,
         display_name,
-        full_name,
         nickname,
         email,
         phone,
         is_active,
         avatar_url,
-        line_id,
-        whatsapp_user_id,
-        wechat_user_id
+        line_id
       )
     `,
     )
@@ -366,7 +363,7 @@ export async function getAllProfilesAction() {
 
   const { data, error } = await ctx.supabase
     .from("identities_v3")
-    .select("id, display_name, full_name, email, avatar_url, role")
+    .select("id, display_name, email, avatar_url, role")
     .order("display_name", { ascending: true });
 
   if (error) {
@@ -651,23 +648,20 @@ export async function getBranchStatsAction(tenantId: string) {
 
     if (pError) throw pError;
 
-    // 4. Leads count (Elite V3 Stats)
     const { count: leadCount, error: lError } = await ctx.supabase
       .from("crm_leads_v3")
       .select("id", { count: "exact", head: true })
-      .eq("tenant_id", tenantId)
-      .is("deleted_at", null);
+      .eq("tenant_id", tenantId);
 
     if (lError) throw lError;
 
-    return {
-      data: {
-        memberCount: memberCount || 0,
-        inviteCount: inviteCount || 0,
-        propertyCount: propertyCount || 0,
-        leadCount: leadCount || 0,
-      },
+    const stats = {
+      memberCount: memberCount || 0,
+      inviteCount: inviteCount || 0,
+      propertyCount: propertyCount || 0,
+      leadCount: leadCount || 0,
     };
+    return { data: stats };
   } catch (err) {
     return { error: mapDbError(err) };
   }

@@ -312,6 +312,9 @@ export default function BranchDetailPage({
             <div className="lg:col-span-2 space-y-10">
               <BranchMemberList 
                 members={members} 
+                tenantId={id}
+                branches={branches}
+                onRefresh={fetchData}
                 onTransfer={(m) => {
                   setTransferMember({ 
                     profileId: m.identity_id, 

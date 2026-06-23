@@ -29,27 +29,116 @@ export interface BranchMemberV3 {
   } | null;
 }
 
+import { Checkbox } from "@/components/ui/checkbox";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  removeTenantMemberAction,
+  transferTenantMemberAction,
+} from "@/lib/actions/tenant-management";
+
 interface BranchMemberListProps {
   members: BranchMemberV3[];
   onTransfer: (member: BranchMemberV3) => void;
   onRemove: (member: BranchMemberV3) => void;
+  tenantId?: string;
+  branches?: { id: string; name: string }[];
+  onRefresh?: () => void;
 }
 
 export function BranchMemberList({
   members,
   onTransfer,
   onRemove,
+  tenantId,
+  branches = [],
+  onRefresh,
 }: BranchMemberListProps) {
   const [memberSearch, setMemberSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
+  const [targetBranchId, setTargetBranchId] = useState("");
+
 
   const filteredMembers = members.filter(
     (m) =>
+      !memberSearch ||
       m.identity?.display_name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
       m.identity?.full_name?.toLowerCase().includes(memberSearch.toLowerCase()) ||
       m.identity?.nickname?.toLowerCase().includes(memberSearch.toLowerCase()) ||
       m.identity?.email?.toLowerCase().includes(memberSearch.toLowerCase()) ||
       m.identity?.phone?.toLowerCase().includes(memberSearch.toLowerCase()),
   );
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredMembers.map((m) => m.identity_id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleSelectOne = (identityId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds((prev) => [...prev, identityId]);
+    } else {
+      setSelectedIds((prev) => prev.filter((id) => id !== identityId));
+    }
+  };
+
+  const handleBulkRemove = async () => {
+    if (!tenantId || selectedIds.length === 0) return;
+    if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการลบพนักงานทั้ง ${selectedIds.length} คนออกจากสาขานี้?`)) return;
+
+    setIsBulkLoading(true);
+    try {
+      let successCount = 0;
+      for (const profileId of selectedIds) {
+        const res = await removeTenantMemberAction(tenantId, profileId);
+        if (res.success) successCount++;
+      }
+      toast.success(`ลบพนักงาน ${successCount} คนออกจากสาขาเรียบร้อยแล้ว`);
+      setSelectedIds([]);
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      toast.error("เกิดข้อผิดพลาดในการดำเนินการ");
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
+
+  const handleBulkTransfer = async () => {
+    if (!tenantId || selectedIds.length === 0 || !targetBranchId) return;
+    const dest = branches.find((b) => b.id === targetBranchId);
+    if (!dest) return;
+
+    if (!confirm(`คุณแน่ใจหรือไม่ว่าต้องการย้ายพนักงานทั้ง ${selectedIds.length} คนไปยังสาขา "${dest.name}"?`)) return;
+
+    setIsBulkLoading(true);
+    try {
+      let successCount = 0;
+      for (const profileId of selectedIds) {
+        const member = members.find((m) => m.identity_id === profileId);
+        const role = (member?.role || "AGENT") as "OWNER" | "ADMIN" | "MANAGER" | "AGENT" | "VIEWER";
+
+        const res = await transferTenantMemberAction({
+          profileId,
+          fromTenantId: tenantId,
+          toTenantId: targetBranchId,
+          role,
+        });
+        if (res.success) successCount++;
+      }
+      toast.success(`ย้ายสาขาพนักงาน ${successCount} คนไปยัง "${dest.name}" สำเร็จ`);
+      setSelectedIds([]);
+      setTargetBranchId("");
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      toast.error("เกิดข้อผิดพลาดในการดำเนินการ");
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
 
   return (
     <div className="bg-white/50 backdrop-blur-md border border-slate-200/60 rounded-[32px] p-8 shadow-sm">
@@ -76,6 +165,78 @@ export function BranchMemberList({
         </div>
       </div>
 
+      {/* 🛠️ Bulk Action & Select All Bar */}
+      {filteredMembers.length > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 mb-6 rounded-2xl bg-slate-50/70 border border-slate-100/50 italic">
+          <div className="flex items-center gap-3">
+            <Checkbox
+              id="select-all-members"
+              checked={
+                filteredMembers.length > 0 &&
+                selectedIds.length === filteredMembers.length
+              }
+              onCheckedChange={(checked) => handleSelectAll(!!checked)}
+              disabled={isBulkLoading}
+            />
+            <label
+              htmlFor="select-all-members"
+              className="text-sm font-semibold text-slate-600 cursor-pointer select-none"
+            >
+              เลือกทั้งหมด ({selectedIds.length}/{filteredMembers.length} คน)
+            </label>
+          </div>
+
+          {selectedIds.length > 0 && (
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Target branch selection */}
+              {branches.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <select
+                    className="h-10 text-xs font-semibold rounded-xl bg-white border border-slate-200 px-3 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-500 shadow-sm"
+                    value={targetBranchId}
+                    onChange={(e) => setTargetBranchId(e.target.value)}
+                    disabled={isBulkLoading}
+                  >
+                    <option value="">เลือกสาขาปลายทาง...</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    onClick={handleBulkTransfer}
+                    disabled={isBulkLoading || !targetBranchId}
+                    className="h-10 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 shadow-sm font-semibold flex items-center gap-1.5"
+                  >
+                    {isBulkLoading ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <ArrowRightLeft size={14} />
+                    )}
+                    ย้ายสาขาแบบกลุ่ม
+                  </Button>
+                </div>
+              )}
+
+              <Button
+                variant="destructive"
+                onClick={handleBulkRemove}
+                disabled={isBulkLoading}
+                className="h-10 text-xs bg-rose-600 hover:bg-rose-700 text-white rounded-xl px-4 shadow-sm font-semibold flex items-center gap-1.5"
+              >
+                {isBulkLoading ? (
+                  <Loader2 size={14} className="animate-spin" />
+                ) : (
+                  <Trash2 size={14} />
+                )}
+                ลบพนักงานแบบกลุ่ม
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="space-y-4">
         <AnimatePresence mode="popLayout">
           {filteredMembers.map((member) => (
@@ -86,61 +247,71 @@ export function BranchMemberList({
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}
               className={cn(
-                "group flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 border rounded-[24px] transition-all duration-300 gap-4",
+                "group flex flex-col sm:flex-row items-start sm:items-center justify-between py-3.5 px-6 border rounded-[18px] transition-all duration-300 gap-4",
                 member.identity?.is_active === false 
                   ? "bg-slate-50/50 border-slate-100 opacity-60 grayscale" 
-                  : "bg-white/40 border-slate-100/50 hover:bg-white hover:shadow-xl hover:shadow-indigo-200/20"
+                  : "bg-white/40 border-slate-100/50 hover:bg-white hover:shadow-xl hover:shadow-indigo-200/20",
+                selectedIds.includes(member.identity_id) && "border-indigo-200 bg-indigo-50/20"
               )}
             >
-              <div className="flex items-center gap-5 italic">
+              <div className="flex items-center gap-4 italic w-full sm:w-auto">
+                <Checkbox
+                  checked={selectedIds.includes(member.identity_id)}
+                  onCheckedChange={(checked) =>
+                    handleSelectOne(member.identity_id, !!checked)
+                  }
+                  disabled={isBulkLoading}
+                  className="mr-1 border-slate-300 data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
+                />
+                
                 <div className="relative">
-                  <Avatar className="h-14 w-14 border-2 border-white shadow-sm ring-1 ring-slate-100 group-hover:ring-indigo-200 transition-all">
+                  <Avatar className="h-11 w-11 border-2 border-white shadow-sm ring-1 ring-slate-100 group-hover:ring-indigo-200 transition-all">
                     <AvatarImage
                       src={member.identity?.avatar_url || undefined}
                     />
-                    <AvatarFallback className="bg-slate-50 text-slate-400 font-semibold">
-                      {(member.identity?.display_name || member.identity?.full_name)?.[0]?.toUpperCase() || "?"}
+                    <AvatarFallback className="bg-slate-50 text-slate-400 font-semibold text-sm">
+                      {(member.identity?.display_name || member.identity?.full_name || member.identity?.email)?.[0]?.toUpperCase() || "?"}
                     </AvatarFallback>
                   </Avatar>
                   <div className={cn(
-                    "absolute -bottom-1 -right-1 h-5 w-5 border-2 border-white rounded-full flex items-center justify-center shadow-sm transition-colors",
+                    "absolute -bottom-0.5 -right-0.5 h-4.5 w-4.5 border-2 border-white rounded-full flex items-center justify-center shadow-sm transition-colors",
                     member.identity?.is_active !== false ? "bg-emerald-500" : "bg-slate-300"
                   )}>
                     {member.identity?.is_active !== false && (
-                      <span className="animate-ping absolute h-3 w-3 rounded-full bg-emerald-400 opacity-75"></span>
+                      <span className="animate-ping absolute h-2.5 w-2.5 rounded-full bg-emerald-400 opacity-75"></span>
                     )}
                   </div>
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors text-lg">
-                      {member.identity?.display_name || member.identity?.full_name}
+                    <p className="font-semibold text-slate-900 group-hover:text-indigo-600 transition-colors text-base">
+                      {member.identity?.display_name || member.identity?.full_name || member.identity?.email || "ไม่มีชื่อ (No Name)"}
                       {member.identity?.nickname && (
-                        <span className="ml-2 text-sm text-slate-400 font-normal">
+                        <span className="ml-1.5 text-xs text-slate-400 font-normal">
                           ({member.identity.nickname})
                         </span>
                       )}
                     </p>
-                    <div className="flex items-center gap-1 ml-2">
+                    <div className="flex items-center gap-1 ml-1.5">
                       {member.identity?.line_id && (
-                        <div className="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center" title="LINE Linked">
-                          <span className="text-[8px] text-white font-bold">L</span>
+                        <div className="w-3.5 h-3.5 bg-emerald-500 rounded-full flex items-center justify-center" title="LINE Linked">
+                          <span className="text-[7px] text-white font-bold">L</span>
                         </div>
                       )}
                       {member.identity?.whatsapp_user_id && (
-                        <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center" title="WhatsApp Linked">
-                          <span className="text-[8px] text-white font-bold">W</span>
+                        <div className="w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center" title="WhatsApp Linked">
+                          <span className="text-[7px] text-white font-bold">W</span>
                         </div>
                       )}
                       {member.identity?.wechat_user_id && (
-                        <div className="w-4 h-4 bg-emerald-600 rounded-full flex items-center justify-center" title="WeChat Linked">
-                          <span className="text-[8px] text-white font-bold">C</span>
+                        <div className="w-3.5 h-3.5 bg-emerald-600 rounded-full flex items-center justify-center" title="WeChat Linked">
+                          <span className="text-[7px] text-white font-bold">C</span>
                         </div>
                       )}
                     </div>
                   </div>
                   <p className="text-xs text-slate-400 font-mono tracking-tight font-semibold">
-                    {member.identity?.email} {member.identity?.phone && `• ${member.identity.phone}`}
+                    {member.identity?.email || ""} {member.identity?.email && member.identity?.phone ? `• ${member.identity.phone}` : (member.identity?.phone || "")}
                   </p>
                 </div>
               </div>

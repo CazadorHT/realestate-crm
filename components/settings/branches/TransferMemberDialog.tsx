@@ -154,6 +154,7 @@ export function TransferMemberDialog({
             open={isPickerOpen}
             onOpenChange={setIsPickerOpen}
             title="เลือกสาขาปลายทาง"
+            className="sm:max-w-sm!"
             trigger={
               <Button
                 variant="outline"
