@@ -56,9 +56,11 @@ export function ProcessMonitor() {
     
     // Find processes that just finished in the last 2 seconds
     const now = new Date().getTime();
-    const latestFinished = processes.find(p => 
-      p.completedAt && (now - p.completedAt.getTime() < 2000)
-    );
+    const latestFinished = processes.find(p => {
+      if (!p.completedAt) return false;
+      const compDate = p.completedAt instanceof Date ? p.completedAt : new Date(p.completedAt);
+      return !isNaN(compDate.getTime()) && (now - compDate.getTime() < 2000);
+    });
 
     if (latestFinished) {
       const audio = new Audio(latestFinished.status === "SUCCESS" ? SUCCESS_SOUND : ERROR_SOUND);
@@ -289,7 +291,12 @@ export function ProcessMonitor() {
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-sm font-bold text-slate-900 truncate">{p.name}</p>
                       <span className="text-[10px] font-medium text-slate-400 whitespace-nowrap bg-slate-50 px-2 py-0.5 rounded-full">
-                        {p.startedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {(() => {
+                          const startDate = p.startedAt instanceof Date ? p.startedAt : new Date(p.startedAt);
+                          return !isNaN(startDate.getTime())
+                            ? startDate.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                            : "";
+                        })()}
                       </span>
                     </div>
                     <p className={cn(
@@ -370,11 +377,14 @@ export function ProcessMonitor() {
 
                     </div>
 
-                    {p.completedAt && (
-                      <p className="text-[10px] text-slate-300 mt-3 italic">
-                        เสร็จสิ้นเมื่อ {p.completedAt.toLocaleTimeString()}
-                      </p>
-                    )}
+                    {p.completedAt && (() => {
+                      const compDate = p.completedAt instanceof Date ? p.completedAt : new Date(p.completedAt);
+                      return !isNaN(compDate.getTime()) ? (
+                        <p className="text-[10px] text-slate-300 mt-3 italic">
+                          เสร็จสิ้นเมื่อ {compDate.toLocaleTimeString()}
+                        </p>
+                      ) : null;
+                    })()}
                   </div>
 
                   {/* Success indicator glow */}
