@@ -370,14 +370,15 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
 
     try {
       finishProcess(processId, "PROCESSING", "กำลังเริ่มแปลข้อมูลทุกส่วน...");
-      await Promise.all([
-        translateTitle(true),
-        translateDescription(true),
-        translateTransits(true),
-        translatePlaces(true),
-        translateAddress(true),
-        translatePopularArea(true),
-      ]);
+
+      // Run sequentially to prevent cascading re-renders from concurrent form.setValue calls
+      await translateTitle(true);
+      await translateDescription(true);
+      await translateAddress(true);
+      await translatePopularArea(true);
+      await translateTransits(true);
+      await translatePlaces(true);
+
       finishProcess(processId, "SUCCESS", "แปลข้อมูลครบทุกส่วนเรียบร้อยแล้ว! ✨");
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : "การแปลขัดข้อง";

@@ -436,9 +436,14 @@ export function Step6Review({ mode }: Step6ReviewProps) {
 
   const isAiActive = isGenerating || isTranslating || isTranslatingAll;
   useEffect(() => {
-    form.setValue("is_ai_generating", isAiActive);
+    const current = form.getValues("is_ai_generating");
+    if (current !== isAiActive) {
+      form.setValue("is_ai_generating", isAiActive);
+    }
     return () => {
-      form.setValue("is_ai_generating", false);
+      if (form.getValues("is_ai_generating")) {
+        form.setValue("is_ai_generating", false);
+      }
     };
   }, [isAiActive, form]);
 
