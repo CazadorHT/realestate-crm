@@ -18,7 +18,7 @@ async function getOwnerProperties(ownerId: string) {
   const supabase = await createClient();
   const { data } = await supabase
     .from("properties")
-    .select("id, title, property_type, listing_type, status, price, original_price, rental_price, original_rental_price, bedrooms, bathrooms, size_sqm, district, subdistrict, province, created_at, tenant_id, main_image_url")
+    .select("id, title, property_type, listing_type, status, price, original_price, rental_price, original_rental_price, bedrooms, bathrooms, size_sqm, district, subdistrict, province, popular_area, created_at, tenant_id, main_image_url:main_image")
     .eq("owner_id", ownerId)
     .order("created_at", { ascending: false });
   return data || [];
