@@ -151,7 +151,8 @@ export async function translatePlaceNamesAction(texts: string[]) {
       .replace(/^```json/, "")
       .replace(/^```/, "")
       .replace(/```$/, "");
-    const json = JSON.parse(cleaned);
+    const parsedJson = JSON.parse(cleaned);
+    const json = Array.isArray(parsedJson) ? parsedJson : [];
 
     const { logAiUsage } = await import("@/features/ai-monitor/actions");
     await logAiUsage({

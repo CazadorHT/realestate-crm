@@ -168,7 +168,17 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
 
   // 3. Translate Transits (Batch)
   const translateTransits = async (silent = false) => {
-    const transits = form.getValues("nearby_transits") || [];
+    let transits = form.getValues("nearby_transits") || [];
+    if (typeof transits === "string") {
+      try {
+        transits = JSON.parse(transits);
+      } catch (e) {
+        transits = [];
+      }
+    }
+    if (!Array.isArray(transits)) {
+      transits = [];
+    }
     if (transits.length === 0) return;
 
     const needsTranslation = transits.filter(
@@ -217,7 +227,17 @@ export function useAITranslation(formOverride?: UseFormReturn<PropertyFormValues
 
   // 4. Translate Nearby Places (Batch)
   const translatePlaces = async (silent = false) => {
-    const places = form.getValues("nearby_places") || [];
+    let places = form.getValues("nearby_places") || [];
+    if (typeof places === "string") {
+      try {
+        places = JSON.parse(places);
+      } catch (e) {
+        places = [];
+      }
+    }
+    if (!Array.isArray(places)) {
+      places = [];
+    }
     if (places.length === 0) return;
 
     const needsTranslation = places.filter(

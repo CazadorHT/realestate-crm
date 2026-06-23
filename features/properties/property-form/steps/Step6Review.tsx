@@ -246,7 +246,19 @@ export function Step6Review({ mode }: Step6ReviewProps) {
 
   // Transform images for Gallery (using real URLs from form)
   const images = useMemo(() => {
-    return (values.images || []).map((url: string, index: number) => {
+    const rawImages = Array.isArray(values.images)
+      ? values.images
+      : typeof values.images === "string"
+        ? (() => {
+            try {
+              const parsed = JSON.parse(values.images);
+              return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+              return [];
+            }
+          })()
+        : [];
+    return rawImages.map((url: string, index: number) => {
       const publicUrl = url.startsWith("http") ? url : getPublicImageUrl(url);
 
       return {
@@ -703,9 +715,31 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                         },
                       ]
                     : []),
-                  ...(Array.isArray(values.nearby_transits) ? values.nearby_transits : []),
+                  ...(Array.isArray(values.nearby_transits)
+                    ? values.nearby_transits
+                    : typeof values.nearby_transits === "string"
+                      ? (() => {
+                          try {
+                            const parsed = JSON.parse(values.nearby_transits);
+                            return Array.isArray(parsed) ? parsed : [];
+                          } catch (e) {
+                            return [];
+                          }
+                        })()
+                      : []),
                 ],
-                places: values.nearby_places || [],
+                places: Array.isArray(values.nearby_places)
+                  ? values.nearby_places
+                  : typeof values.nearby_places === "string"
+                    ? (() => {
+                        try {
+                          const parsed = JSON.parse(values.nearby_places);
+                          return Array.isArray(parsed) ? parsed : [];
+                        } catch (e) {
+                          return [];
+                        }
+                      })()
+                    : [],
               }
             } as unknown as any // We use unknown as bridge to avoid direct any where possible, but header expects a very specific complex type
           }
@@ -970,7 +1004,19 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                     values.popular_area ||
                     undefined
                   }
-                  data={(values.nearby_places || []).map(p => ({
+                  data={(Array.isArray(values.nearby_places)
+                    ? values.nearby_places
+                    : typeof values.nearby_places === "string"
+                      ? (() => {
+                          try {
+                            const parsed = JSON.parse(values.nearby_places);
+                            return Array.isArray(parsed) ? parsed : [];
+                          } catch (e) {
+                            return [];
+                          }
+                        })()
+                      : []
+                  ).map(p => ({
                     category: p.category || "Other",
                     name: p.name || "",
                     name_en: p.name_en || undefined,
@@ -995,7 +1041,19 @@ export function Step6Review({ mode }: Step6ReviewProps) {
                           },
                         ]
                       : []),
-                    ...(Array.isArray(values.nearby_transits) ? values.nearby_transits : []).map(t => ({
+                    ...(Array.isArray(values.nearby_transits)
+                      ? values.nearby_transits
+                      : typeof values.nearby_transits === "string"
+                        ? (() => {
+                            try {
+                              const parsed = JSON.parse(values.nearby_transits);
+                              return Array.isArray(parsed) ? parsed : [];
+                            } catch (e) {
+                              return [];
+                            }
+                          })()
+                        : []
+                    ).map(t => ({
                       ...t,
                       station_name: t.station_name || "",
                       station_name_en: t.station_name_en || undefined,
