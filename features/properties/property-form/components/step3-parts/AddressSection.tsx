@@ -40,6 +40,8 @@ import { useAITranslation } from "../../hooks/use-ai-translation";
 import { useFormContext, type UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
 
+import { getProjectSuggestions } from "../../../actions/project-suggestions";
+
 interface AddressSectionProps {
   form?: UseFormReturn<PropertyFormValues>; // Optional: falls back to useFormContext
 }
@@ -65,6 +67,56 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
   const [provinceSearch, setProvinceSearch] = React.useState("");
   const [districtSearch, setDistrictSearch] = React.useState("");
   const [subdistrictSearch, setSubdistrictSearch] = React.useState("");
+
+  const [suggestions, setSuggestions] = React.useState<any[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = React.useState(false);
+  const [showDropdown, setShowDropdown] = React.useState(false);
+
+  const watchedAddressLine1 = form.watch("address_line1") || "";
+
+  const fetchSuggestions = React.useCallback(async (val: string) => {
+    setIsLoadingSuggestions(true);
+    try {
+      const res = await getProjectSuggestions(val);
+      setSuggestions(res);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (!showDropdown) return;
+    const timer = setTimeout(() => {
+      fetchSuggestions(watchedAddressLine1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [watchedAddressLine1, showDropdown, fetchSuggestions]);
+
+  const handleBlur = () => {
+    setTimeout(() => {
+      setShowDropdown(false);
+    }, 200);
+  };
+
+  const handleSelectProject = (proj: any) => {
+    form.setValue("address_line1", proj.address_line1, { shouldValidate: true });
+    form.setValue("province", proj.province, { shouldValidate: true });
+    form.setValue("district", proj.district, { shouldValidate: true });
+    form.setValue("subdistrict", proj.subdistrict, { shouldValidate: true });
+    form.setValue("postal_code", proj.postal_code, { shouldValidate: true });
+    form.setValue("google_maps_link", proj.google_maps_link, { shouldValidate: true });
+    
+    if (proj.transit_station_name) {
+      form.setValue("transit_station_name", proj.transit_station_name, { shouldValidate: true });
+      form.setValue("near_transit", true, { shouldValidate: true });
+      if (proj.transit_distance_meters) {
+        form.setValue("transit_distance_meters", proj.transit_distance_meters, { shouldValidate: true });
+      }
+    }
+    setShowDropdown(false);
+  };
 
   React.useEffect(() => {
     const mql = window.matchMedia("(max-width: 1535px)");
@@ -611,12 +663,48 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                   <span>ที่อยู่ / โครงการ</span>
                 </FormLabel>
                 <FormControl>
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    placeholder="เลขที่บ้าน / ชื่อโครงการ..."
-                    className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
-                  />
+                  <div className="relative">
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      onFocus={() => {
+                        setShowDropdown(true);
+                        fetchSuggestions(field.value || "");
+                      }}
+                      onBlur={(e) => {
+                        field.onBlur();
+                        handleBlur();
+                      }}
+                      placeholder="เลขที่บ้าน / ชื่อโครงการ..."
+                      className="h-11 rounded-lg border-slate-200 bg-white px-4 text-xs focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all font-medium"
+                      autoComplete="off"
+                    />
+
+                    {showDropdown && (suggestions.length > 0 || isLoadingSuggestions) && (
+                      <div className="absolute z-[999] w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto divide-y divide-slate-100">
+                        {isLoadingSuggestions && suggestions.length === 0 ? (
+                          <div className="px-4 py-3 text-xs text-slate-400 flex items-center gap-2">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
+                            <span>กำลังค้นหาโครงการ...</span>
+                          </div>
+                        ) : (
+                          suggestions.map((proj) => (
+                            <button
+                              key={proj.address_line1}
+                              type="button"
+                              onMouseDown={() => handleSelectProject(proj)}
+                              className="w-full px-4 py-2.5 text-left text-xs hover:bg-slate-50 transition-colors flex flex-col gap-0.5"
+                            >
+                              <span className="font-semibold text-slate-800">{proj.address_line1}</span>
+                              <span className="text-[10px] text-slate-400">
+                                {[proj.subdistrict, proj.district, proj.province].filter(Boolean).join(" » ")}
+                              </span>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </FormControl>
                 {fieldState.error ? (
                   <FormMessage className="text-[9px] sm:text-[10px] text-red-500 mt-1" />

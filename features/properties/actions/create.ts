@@ -127,8 +127,8 @@ export async function createPropertyAction(
       propertyData.status = "DRAFT";
     }
 
-    // ✅ image paths ต้องอยู่ภายใต้ properties/ หรือ tenant_id/properties/ หรือ tenant_id อื่นๆ ที่ผู้ใช้สังกัดอยู่
-    if (images?.length) {
+    // ✅ image paths ต้องอยู่ภายใต้ properties/ หรือ tenant_id/properties/ หรือ tenant_id อื่นๆ ที่ผู้ใช้สังกัดอยู่ (ADMIN สามารถข้ามได้)
+    if (images?.length && role !== "ADMIN") {
       const { data: memberships } = await supabase
         .from("tenant_members_v3")
         .select("tenant_id")

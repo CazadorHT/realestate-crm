@@ -10,8 +10,12 @@ export default function AuthCallbackClientPage() {
 
   useEffect(() => {
     const supabase = createClient();
+    let hasSynced = false;
+    let subscription: { unsubscribe: () => void } | null = null;
 
     const syncSessionAndRedirect = async () => {
+      if (hasSynced) return;
+      hasSynced = true;
       try {
         await fetch("/api/auth/sync", { method: "POST" });
       } catch (err) {
@@ -29,47 +33,48 @@ export default function AuthCallbackClientPage() {
       }
     };
 
-    const handleSession = async () => {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const timer = setTimeout(() => {
+      setErrorMsg("เข้าสู่ระบบใช้เวลานานเกินไป หรือไม่พบรหัสโทเค็น");
+    }, 10000);
 
-      if (session) {
-        await syncSessionAndRedirect();
-        return;
-      }
-
+    // Initial check
+    supabase.auth.getSession().then(({ data: { session }, error: sessionError }) => {
       if (sessionError) {
         setErrorMsg(sessionError.message);
-        return;
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const error = params.get("error");
-      const errorDescription = params.get("error_description");
-
-      if (error) {
-        setErrorMsg(errorDescription || error);
-        return;
-      }
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(
-        async (event, session) => {
-          if (event === "SIGNED_IN" && session) {
-            await syncSessionAndRedirect();
-          }
-        }
-      );
-
-      const timer = setTimeout(() => {
-        setErrorMsg("เข้าสู่ระบบใช้เวลานานเกินไป หรือไม่พบรหัสโทเค็น");
-      }, 10000);
-
-      return () => {
-        subscription.unsubscribe();
         clearTimeout(timer);
-      };
-    };
+        return;
+      }
+      if (session) {
+        clearTimeout(timer);
+        syncSessionAndRedirect();
+      }
+    });
 
-    handleSession();
+    // Listen to changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          clearTimeout(timer);
+          await syncSessionAndRedirect();
+        }
+      }
+    );
+    subscription = authListener.subscription;
+
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    const errorDescription = params.get("error_description");
+    if (error) {
+      setErrorMsg(errorDescription || error);
+      clearTimeout(timer);
+    }
+
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+      clearTimeout(timer);
+    };
   }, [router]);
 
   if (errorMsg) {

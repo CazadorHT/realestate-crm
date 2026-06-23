@@ -923,7 +923,7 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     .replace(/{{link}}/g, link)
     .replace(/{{price_tag}}/g, priceTag)
     .replace(/{{details}}/g, detailsSummary)
-    .replace(/{{agent_name}}/g, primaryAgent?.full_name || "")
+    .replace(/{{agent_name}}/g, primaryAgent?.nickname || primaryAgent?.full_name || "")
     .replace(/{{agent_phone}}/g, primaryAgent?.phone || "")
     .replace(/{{agent_line}}/g, primaryAgent?.line_id || "");
 }
@@ -1218,6 +1218,7 @@ async function lookupPropertyByPostId(postId: string) {
         agent_id,
         profiles:identities_v3 (
           full_name:display_name,
+          nickname,
           phone,
           line_id
         )
@@ -1240,23 +1241,27 @@ async function lookupPropertyByPostId(postId: string) {
       if (pa.agent_id) {
         const { data: staffProfile } = await supabase
           .from("profiles")
-          .select("full_name, phone, line_id")
+          .select("full_name, nickname, phone, line_id")
           .eq("id", pa.agent_id)
           .maybeSingle();
 
         if (staffProfile) {
+          const profiles = pa.profiles as any;
           pa.profiles = {
-            ...pa.profiles,
-            full_name: decrypt(pa.profiles?.full_name) || staffProfile.full_name || pa.profiles?.full_name || "",
-            phone: decrypt(pa.profiles?.phone) || staffProfile.phone || pa.profiles?.phone || "",
-            line_id: decrypt(pa.profiles?.line_id) || staffProfile.line_id || pa.profiles?.line_id || "",
+            ...profiles,
+            full_name: decrypt(profiles?.full_name) || staffProfile.full_name || profiles?.full_name || "",
+            nickname: decrypt(profiles?.nickname) || staffProfile.nickname || profiles?.nickname || "",
+            phone: decrypt(profiles?.phone) || staffProfile.phone || profiles?.phone || "",
+            line_id: decrypt(profiles?.line_id) || staffProfile.line_id || profiles?.line_id || "",
           };
         } else if (pa.profiles) {
+          const profiles = pa.profiles as any;
           pa.profiles = {
-            ...pa.profiles,
-            full_name: decrypt(pa.profiles.full_name) || "",
-            phone: decrypt(pa.profiles.phone) || "",
-            line_id: decrypt(pa.profiles.line_id) || "",
+            ...profiles,
+            full_name: decrypt(profiles.full_name) || "",
+            nickname: decrypt(profiles.nickname) || "",
+            phone: decrypt(profiles.phone) || "",
+            line_id: decrypt(profiles.line_id) || "",
           };
         }
       }

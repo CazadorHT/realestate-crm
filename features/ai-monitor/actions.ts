@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
 export type AiLogInput = {
@@ -56,7 +57,6 @@ export async function logAiUsage(input: AiLogInput) {
 
   try {
     // Use admin client (service_role) to insert directly to avoid anonymous execution issues in background/Inngest tasks
-    const { createAdminClient } = await import("@/lib/supabase/admin");
     const supabaseAdmin = createAdminClient();
 
     // Fetch tenant ID
@@ -87,7 +87,6 @@ export async function logAiUsage(input: AiLogInput) {
 
 export async function pruneAiLogs(daysToKeep: number = 30) {
   try {
-    const { createAdminClient } = await import("@/lib/supabase/admin");
     const supabaseAdmin = createAdminClient();
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysToKeep);
@@ -118,7 +117,7 @@ export type AiUsageStats = {
 
 export async function getAiUsageStats(): Promise<AiUsageStats> {
   try {
-    const supabase = await createClient();
+    const supabaseAdmin = createAdminClient();
 
     const now = new Date();
     const oneMinuteAgo = new Date(now.getTime() - 60 * 1000).toISOString();
@@ -127,11 +126,11 @@ export async function getAiUsageStats(): Promise<AiUsageStats> {
     ).toISOString();
 
     const [rpmRes, rpdRes] = await Promise.all([
-      supabase
+      supabaseAdmin
         .from("ai_token_ledgers")
         .select("id", { count: "exact", head: true })
         .gte("created_at", oneMinuteAgo),
-      supabase
+      supabaseAdmin
         .from("ai_token_ledgers")
         .select("id", { count: "exact", head: true })
         .gte("created_at", twentyFourHoursAgo),
@@ -196,7 +195,8 @@ export async function getAiLogs(limit: number = 20): Promise<AiLogRecord[]> {
       .single();
     const role = profile?.role;
 
-    let query = supabase.from("ai_token_ledgers").select(`
+    const supabaseAdmin = createAdminClient();
+    let query = supabaseAdmin.from("ai_token_ledgers").select(`
       id,
       created_at,
       model,
@@ -286,7 +286,8 @@ export async function getAiDashboardStats(): Promise<AiDashboardStats> {
       .single();
     const role = profile?.role;
 
-    let query = supabase
+    const supabaseAdmin = createAdminClient();
+    let query = supabaseAdmin
       .from("ai_token_ledgers")
       .select("feature, cost_thb");
 
