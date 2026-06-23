@@ -62,7 +62,7 @@ import { TopPropertiesTable } from "@/features/analytics/components/TopPropertie
 async function AnalyticsContent({
   searchParams,
 }: {
-  searchParams: Promise<{ range?: string; page?: string; listingType?: string; area?: string }>;
+  searchParams: Promise<{ range?: string; page?: string; listingType?: string; area?: string; sortBy?: string }>;
 }) {
   const params = await searchParams;
   const tenantId = await getActiveTenantCookie();
@@ -72,6 +72,7 @@ async function AnalyticsContent({
   const pageSize = 10;
   const listingType = params.listingType === "all" ? undefined : params.listingType;
   const area = params.area === "all" ? undefined : params.area;
+  const sortBy = params.sortBy;
 
   const { 
     topProperties, 
@@ -84,7 +85,7 @@ async function AnalyticsContent({
     agentPerformance,
     funnel,
     error
-  } = await getAnalyticsStats(tenantId, days, page, pageSize, listingType, undefined, area);
+  } = await getAnalyticsStats(tenantId, days, page, pageSize, listingType, undefined, area, sortBy);
 
   return (
     <>

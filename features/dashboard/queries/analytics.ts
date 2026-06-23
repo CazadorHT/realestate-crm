@@ -53,6 +53,7 @@ export async function getAnalyticsStats(
   listingType?: string | null,
   propertyType?: string | null,
   area?: string | null,
+  sortBy?: string,
 ): Promise<AnalyticsResult> {
   try {
     const rawSupabase = await createClient();
@@ -101,8 +102,9 @@ export async function getAnalyticsStats(
         )
     );
 
+    const isAscending = sortBy === "views_asc" || sortBy === "view_count_asc";
     const { data: topProps, count: topPropsCount } = await query
-      .order("view_count", { ascending: false })
+      .order("view_count", { ascending: isAscending, nullsFirst: false })
       .range(offset, offset + pageSize - 1);
 
 

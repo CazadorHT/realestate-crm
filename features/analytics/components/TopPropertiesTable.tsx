@@ -1,10 +1,14 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { 
   Card, CardHeader, CardTitle, CardDescription, CardContent 
 } from "@/components/ui/card";
-import { Building2, Eye, ArrowUpRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Building2, Eye, ArrowUpRight, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { listingTypeLabel } from "@/features/properties/labels";
 import { PaginationControls } from "@/components/ui/pagination-controls";
@@ -23,10 +27,24 @@ export function TopPropertiesTable({
   page,
   pageSize,
 }: TopPropertiesTableProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const currentSort = searchParams.get("sortBy") || "views_desc";
+
+  const handleSort = () => {
+    const params = new URLSearchParams(searchParams);
+    const nextSort = currentSort === "views_desc" ? "views_asc" : "views_desc";
+    params.set("sortBy", nextSort);
+    // Reset to page 1 when sorting to avoid pagination mismatch
+    params.delete("page");
+    router.replace(`${pathname}?${params.toString()}#table`, { scroll: false });
+  };
+
   return (
-    <Card className="border-none shadow-soft overflow-hidden flex flex-col bg-white">
+    <Card id="table" className="border-none shadow-soft overflow-hidden flex flex-col bg-white">
       <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4 md:p-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
           <div>
             <CardTitle className="text-lg font-bold text-slate-800">
               อันดับทรัพย์ที่มีการเข้าชมสูงสุด
@@ -35,6 +53,21 @@ export function TopPropertiesTable({
               วิเคราะห์ผลตอบรับรายทรัพย์สิน (Performance by Property)
             </CardDescription>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleSort}
+            className="flex items-center gap-2 self-start sm:self-auto h-9 bg-white border-slate-200 text-slate-700 hover:text-blue-600 hover:bg-slate-50 transition-all rounded-lg shadow-sm"
+          >
+            <span className="text-xs font-bold">
+              เรียงตามวิว: {currentSort === "views_desc" ? "มาก ➔ น้อย" : "น้อย ➔ มาก"}
+            </span>
+            {currentSort === "views_desc" ? (
+              <ArrowDown className="h-3.5 w-3.5 text-blue-500" />
+            ) : (
+              <ArrowUp className="h-3.5 w-3.5 text-blue-500" />
+            )}
+          </Button>
         </div>
       </CardHeader>
       <CardContent className="p-0 flex-1 overflow-hidden">
@@ -128,8 +161,20 @@ export function TopPropertiesTable({
                 <th className="hidden md:table-cell px-6 py-4 font-bold">
                   ประเภท
                 </th>
-                <th className="px-4 md:px-6 py-3 md:py-4 font-bold text-right">
-                  จำนวนวิว
+                <th 
+                  onClick={handleSort}
+                  className="px-4 md:px-6 py-3 md:py-4 font-bold text-right cursor-pointer select-none hover:text-blue-600 transition-colors group/th"
+                >
+                  <div className="flex items-center justify-end gap-1">
+                    <span>จำนวนวิว</span>
+                    {currentSort === "views_desc" ? (
+                      <ArrowDown className="h-4 w-4 text-blue-500 shrink-0" />
+                    ) : currentSort === "views_asc" ? (
+                      <ArrowUp className="h-4 w-4 text-blue-500 shrink-0" />
+                    ) : (
+                      <ArrowUpDown className="h-4 w-4 text-slate-300 opacity-0 group-hover/th:opacity-100 transition-opacity shrink-0" />
+                    )}
+                  </div>
                 </th>
                 <th className="px-4 md:px-6 py-3 md:py-4 font-bold text-right">
                   จัดการ
