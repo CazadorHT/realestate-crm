@@ -141,13 +141,20 @@ export async function generatePropertyValuation(
 
 
   const aiConfig = await getAiModelConfig();
-  const modelName = aiConfig.blog_generator_model || "gemini-1.5-flash"; // default fallback
+  let modelName = aiConfig.blog_generator_model || "gemini-flash-lite-latest"; // modern default fallback
+
+  const useSearch = closedDeals.length < 5;
+  // If using search grounding, force upgrade legacy models that crash in v1beta API when tools are used
+  if (useSearch && modelName === "gemini-1.5-flash") {
+    modelName = "gemini-flash-lite-latest";
+  }
 
   const prompt = `
     You are an expert, highly analytical real estate appraiser in Thailand.
     Your task is to accurately value a property based on internal CRM comparables and external market data.
 
     Subject Property Context:
+    - Project/Building Name: ${params.buildingName || "Not specified"}
     - Type: ${params.propertyType}
     - Listing Type: ${params.listingType}
     - Size: ${params.sizeSqm} sq.m
@@ -159,7 +166,8 @@ export async function generatePropertyValuation(
     - Closed Deals (Actual Market Value): ${JSON.stringify(closedDeals)}
 
     CRITICAL INSTRUCTION:
-    If internal CRM data is insufficient (especially if there are few or no closed deals), you MUST use Google Search to find real-time market data for ${params.propertyType} in ${params.subdistrict || params.district || params.province}. 
+    If internal CRM data is insufficient (especially if there are few or no closed deals), you MUST use Google Search to find real-time market data for the property "${params.buildingName || ''}" or "${params.propertyType}" in ${params.subdistrict || params.district || params.province}.
+    Prioritize searching for prices of the specific project/building name "${params.buildingName || ''}" to get the most accurate comparable values.
     Focus on finding:
     - Current "Asking Price" from major portals like DDProperty, Livinginsider, or DotProperty.
     - Calculate the average price per sq.m. from at least 3 recent web listings you found.
@@ -186,7 +194,7 @@ export async function generatePropertyValuation(
 
   try {
     const response = await generateText(prompt, modelName, 0, {
-      useSearch: closedDeals.length < 5,
+      useSearch,
     });
 
     // Extract JSON securely and handle control characters

@@ -89,6 +89,7 @@ export function AvmResultDialog({
         district: values.district,
         subdistrict: values.subdistrict,
         popularArea: values.popular_area,
+        buildingName: values.address_line1 || values.title || null,
       });
       setResult(res);
     } catch (err: any) {

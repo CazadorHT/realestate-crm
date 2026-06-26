@@ -113,4 +113,46 @@ describe('Property Actions - Hardened AVM Valuation', () => {
 
     expect(logAiUsage).toHaveBeenCalledWith(expect.objectContaining({ status: 'error' }));
   });
+
+  it('should fallback/upgrade model from gemini-1.5-flash to gemini-flash-lite-latest if useSearch is true', async () => {
+    (requireAuthContext as any).mockResolvedValue({
+      supabase: mockSupabase,
+      tenantId: 'tenant-1',
+    });
+
+    const { getAiModelConfig } = await import('@/features/ai-settings/actions');
+    (getAiModelConfig as any).mockResolvedValueOnce({
+      blog_generator_model: 'gemini-1.5-flash',
+    });
+
+    const mockValuation = {
+      maxProfitPrice: 5500000,
+      marketPrice: 5000000,
+      quickSalePrice: 4500000,
+      estimatedYieldPercent: 5.0,
+      confidenceScore: 'HIGH',
+      analysisSummary: 'ราคาเหมาะสม',
+    };
+    
+    (generateText as any).mockResolvedValueOnce({
+      text: JSON.stringify(mockValuation),
+      usage: { promptTokens: 100, completionTokens: 50 },
+    });
+
+    const paramsWithBuilding = {
+      ...validParams,
+      buildingName: 'Aspace Condo',
+    };
+
+    const result = await generatePropertyValuation(paramsWithBuilding);
+
+    expect(result.marketPrice).toBe(5000000);
+    // Verify that generateText was called with the upgraded model name
+    expect(generateText).toHaveBeenCalledWith(
+      expect.stringContaining('Aspace Condo'),
+      'gemini-flash-lite-latest',
+      0,
+      expect.objectContaining({ useSearch: true })
+    );
+  });
 });
