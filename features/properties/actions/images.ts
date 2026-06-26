@@ -103,21 +103,19 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
 
       if (watermark === "true") {
         const svgWatermark = Buffer.from(
-          `<svg width="180" height="60" xmlns="http://www.w3.org/2000/svg">
+          `<svg width="70" height="70" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="vccGradFav" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.6"/>
-                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.3"/>
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.2"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1"/>
               </linearGradient>
             </defs>
-            <g transform="translate(10, 5) scale(0.6)">
+            <g transform="translate(10, 10) scale(0.6)">
               <!-- VCC Brand Isometric Icon Watermark (No font needed) -->
-              <path d="M0 30l40-20v60l-40 20z" fill="#ffffff" fill-opacity="0.4"/>
+              <path d="M0 30l40-20v60l-40 20z" fill="#ffffff" fill-opacity="0.12"/>
               <path d="M40 10l40 20v60l-40-20z" fill="url(#vccGradFav)"/>
-              <path d="M0 30l40-20 40 20-40 20z" fill="#ffffff" fill-opacity="0.5"/>
+              <path d="M0 30l40-20 40 20-40 20z" fill="#ffffff" fill-opacity="0.15"/>
             </g>
-            <!-- Render clean vector typography outlines or a simpler fallback style -->
-            <text x="65" y="36" font-family="sans-serif" font-size="13" font-weight="900" fill="#ffffff" fill-opacity="0.45" letter-spacing="1">VCC ASSET</text>
           </svg>`
         );
         sharpImg = sharpImg.composite([
