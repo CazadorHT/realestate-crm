@@ -33,24 +33,45 @@ import { MobileFilterSheet } from "./MobileFilterSheet";
 import { MagicAiSearch } from "./MagicAiSearch";
 import { formatStationLabel } from "@/lib/property-utils";
 
-import { MdManageSearch, MdOutlinePets as PetIcon, MdWork as WorkIcon } from "react-icons/md";
-import { FaFire as FireIcon, FaTrainSubway as TrainIcon, FaAirbnb } from "react-icons/fa6";
+import {
+  MdManageSearch,
+  MdOutlinePets as PetIcon,
+  MdWork as WorkIcon,
+} from "react-icons/md";
+import {
+  FaFire as FireIcon,
+  FaTrainSubway as TrainIcon,
+  FaAirbnb,
+} from "react-icons/fa6";
 import { GiEarthAmerica as EarthIcon } from "react-icons/gi";
 import { RiArmchairFill as ArmchairIcon } from "react-icons/ri";
-import { 
-  MdOutlineApartment, 
-  MdOutlineHouse, 
-  MdOutlineWarehouse, 
-  MdOutlineStorefront, 
+import {
+  MdOutlineApartment,
+  MdOutlineHouse,
+  MdOutlineWarehouse,
+  MdOutlineStorefront,
   MdOutlinePool,
   MdOutlineLandscape,
-  MdOutlineHolidayVillage
+  MdOutlineHolidayVillage,
 } from "react-icons/md";
-import { 
-  HiOutlineBuildingOffice2, 
+import {
+  HiOutlineBuildingOffice2,
   HiOutlineHomeModern,
-  HiOutlineSquares2X2
+  HiOutlineSquares2X2,
 } from "react-icons/hi2";
+
+const LOGO_PATHS: Record<string, string> = {
+  BTS: "/images/transit/BTS-Logo.svg",
+  GOLD: "/images/transit/BTS-Logo.svg",
+  MRT: "/images/transit/MRT_(Bangkok)_logo.svg",
+  MRT_PURPLE: "/images/transit/MRT_(Bangkok)_Purple_logo.svg",
+  MRT_YELLOW: "/images/transit/MRT_(Bangkok)_Yellow_logo.svg",
+  MRT_PINK: "/images/transit/MRT_(Bangkok)_Pink_Logo.svg",
+  ARL: "/images/transit/ARLbangkok.svg",
+  SRT_RED: "/images/transit/SRT_Red_Lines_icon.svg",
+  SRT: "/images/transit/SRT_Red_Lines_icon.svg",
+  BRT: "/images/transit/Bangkok_BRT_logo.svg",
+};
 
 interface MobileFiltersProps {
   keyword: string;
@@ -231,7 +252,8 @@ export function MobileFilters({
   };
 
   const getTypeTabClass = (type: string, isActive: boolean): string => {
-    if (!isActive) return "bg-white text-slate-600 border-slate-200 hover:bg-slate-50";
+    if (!isActive)
+      return "bg-white text-slate-600 border-slate-200 hover:bg-slate-50";
     const norm = getNormalizedType(type);
     switch (norm) {
       case "BTS":
@@ -250,29 +272,38 @@ export function MobileFilters({
   };
 
   const trainTypes = useMemo(() => {
-    const list = allStations && allStations.length > 0 ? allStations : availableStations;
+    const list =
+      allStations && allStations.length > 0 ? allStations : availableStations;
     const types = new Set(
       list
         .filter((s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD")
-        .map((s) => getNormalizedType(s.type))
+        .map((s) => getNormalizedType(s.type)),
     );
     return Array.from(types).filter(Boolean).sort();
   }, [availableStations, allStations]);
 
   const mergedStations = useMemo(() => {
-    const list = allStations && allStations.length > 0 ? allStations : availableStations;
-    const filteredList = list.filter((s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD");
+    const list =
+      allStations && allStations.length > 0 ? allStations : availableStations;
+    const filteredList = list.filter(
+      (s) => s.type !== "EXPRESSWAY" && s.type !== "MAIN_ROAD",
+    );
     const countsMap = new Map(availableStations.map((s) => [s.name, s.count]));
 
-    return filteredList.map((s) => ({
-      ...s,
-      count: countsMap.get(s.name) || 0,
-    })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+    return filteredList
+      .map((s) => ({
+        ...s,
+        count: countsMap.get(s.name) || 0,
+      }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   }, [availableStations, allStations]);
 
   const filteredStations = useMemo(() => {
     return mergedStations.filter((station) => {
-      if (trainTypeFilter !== "ALL" && getNormalizedType(station.type) !== trainTypeFilter) {
+      if (
+        trainTypeFilter !== "ALL" &&
+        getNormalizedType(station.type) !== trainTypeFilter
+      ) {
         return false;
       }
       return true;
@@ -282,17 +313,89 @@ export function MobileFilters({
   const getPropertyIcon = (val: string, isActive: boolean) => {
     const iconClass = "w-4 h-4 transition-colors";
     switch (val) {
-      case "ALL": return <HiOutlineSquares2X2 className={cn(iconClass, isActive ? "text-white" : "text-slate-400")} />;
-      case "HOUSE": return <MdOutlineHouse className={cn(iconClass, isActive ? "text-white" : "text-orange-500")} />;
-      case "CONDO": return <MdOutlineApartment className={cn(iconClass, isActive ? "text-white" : "text-blue-500")} />;
-      case "OFFICE_BUILDING": return <HiOutlineBuildingOffice2 className={cn(iconClass, isActive ? "text-white" : "text-slate-600")} />;
-      case "VILLA": return <HiOutlineHomeModern className={cn(iconClass, isActive ? "text-white" : "text-amber-600")} />;
-      case "POOL_VILLA": return <MdOutlinePool className={cn(iconClass, isActive ? "text-white" : "text-cyan-500")} />;
-      case "TOWNHOME": return <MdOutlineHolidayVillage className={cn(iconClass, isActive ? "text-white" : "text-emerald-600")} />;
-      case "LAND": return <MdOutlineLandscape className={cn(iconClass, isActive ? "text-white" : "text-stone-500")} />;
-      case "COMMERCIAL_BUILDING": return <MdOutlineStorefront className={cn(iconClass, isActive ? "text-white" : "text-rose-500")} />;
-      case "WAREHOUSE": return <MdOutlineWarehouse className={cn(iconClass, isActive ? "text-white" : "text-indigo-600")} />;
-      default: return null;
+      case "ALL":
+        return (
+          <HiOutlineSquares2X2
+            className={cn(
+              iconClass,
+              isActive ? "text-white" : "text-slate-400",
+            )}
+          />
+        );
+      case "HOUSE":
+        return (
+          <MdOutlineHouse
+            className={cn(
+              iconClass,
+              isActive ? "text-white" : "text-orange-500",
+            )}
+          />
+        );
+      case "CONDO":
+        return (
+          <MdOutlineApartment
+            className={cn(iconClass, isActive ? "text-white" : "text-blue-500")}
+          />
+        );
+      case "OFFICE_BUILDING":
+        return (
+          <HiOutlineBuildingOffice2
+            className={cn(
+              iconClass,
+              isActive ? "text-white" : "text-slate-600",
+            )}
+          />
+        );
+      case "VILLA":
+        return (
+          <HiOutlineHomeModern
+            className={cn(
+              iconClass,
+              isActive ? "text-white" : "text-amber-600",
+            )}
+          />
+        );
+      case "POOL_VILLA":
+        return (
+          <MdOutlinePool
+            className={cn(iconClass, isActive ? "text-white" : "text-cyan-500")}
+          />
+        );
+      case "TOWNHOME":
+        return (
+          <MdOutlineHolidayVillage
+            className={cn(
+              iconClass,
+              isActive ? "text-white" : "text-emerald-600",
+            )}
+          />
+        );
+      case "LAND":
+        return (
+          <MdOutlineLandscape
+            className={cn(
+              iconClass,
+              isActive ? "text-white" : "text-stone-500",
+            )}
+          />
+        );
+      case "COMMERCIAL_BUILDING":
+        return (
+          <MdOutlineStorefront
+            className={cn(iconClass, isActive ? "text-white" : "text-rose-500")}
+          />
+        );
+      case "WAREHOUSE":
+        return (
+          <MdOutlineWarehouse
+            className={cn(
+              iconClass,
+              isActive ? "text-white" : "text-indigo-600",
+            )}
+          />
+        );
+      default:
+        return null;
     }
   };
 
@@ -300,10 +403,7 @@ export function MobileFilters({
     <>
       <div className="xl:hidden flex gap-3 my-4">
         <div className="flex-1">
-          <MagicAiSearch 
-            keyword={keyword} 
-            setKeyword={setKeyword} 
-          />
+          <MagicAiSearch keyword={keyword} setKeyword={setKeyword} />
         </div>
         {/* Sort by */}
         <Sheet>
@@ -362,14 +462,14 @@ export function MobileFilters({
                       "w-full flex items-center justify-between p-4 rounded-xl border transition-all",
                       sort === opt.value
                         ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                        : "bg-white text-slate-700 border-slate-200 hover:border-blue-300"
+                        : "bg-white text-slate-700 border-slate-200 hover:border-blue-300",
                     )}
                   >
                     <div className="flex items-center gap-3">
                       <opt.icon
                         className={cn(
                           "h-5 w-5",
-                          sort === opt.value ? "text-white" : opt.color
+                          sort === opt.value ? "text-white" : opt.color,
                         )}
                       />
                       <span className="font-medium text-sm">{opt.label}</span>
@@ -415,43 +515,114 @@ export function MobileFilters({
                   <span className="w-1.5 h-6 bg-emerald-500 rounded-full" />
                   {t("search.quick_filters")}
                 </span>
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-7 gap-3">
                   {[
-                    { key: "nearTrain", state: nearTrain, setState: setNearTrain, icon: TrainIcon, label: "near_train", color: "blue", size: "h-5 w-5" },
-                    { key: "petFriendly", state: petFriendly, setState: setPetFriendly, icon: PetIcon, label: "pet_allowed", color: "orange", size: "h-6 w-6" },
-                    { key: "fullyFurnished", state: fullyFurnished, setState: setFullyFurnished, icon: ArmchairIcon, label: "fully_furnished", color: "emerald", size: "h-6 w-6" },
-                    { key: "isForeigner", state: isForeigner, setState: setIsForeigner, icon: EarthIcon, label: "foreigner", color: "purple", size: "h-6 w-6" },
-                    { key: "companyRegistered", state: companyRegistered, setState: setCompanyRegistered, icon: WorkIcon, label: "company_registered", color: "indigo", size: "h-6 w-6" },
-                    { key: "isHotDeal", state: isHotDeal, setState: setIsHotDeal, icon: FireIcon, label: "hot_deal", color: "rose", size: "h-[22px] w-[22px]" },
-                    { key: "allowAirbnb", state: allowAirbnb, setState: setAllowAirbnb, icon: FaAirbnb, label: "allow_airbnb", color: "pink", size: "h-[22px] w-[22px]" },
-                   ].map((f) => {
+                    {
+                      key: "nearTrain",
+                      state: nearTrain,
+                      setState: setNearTrain,
+                      icon: TrainIcon,
+                      label: "near_train",
+                      color: "blue",
+                      size: "h-5 w-5",
+                    },
+                    {
+                      key: "petFriendly",
+                      state: petFriendly,
+                      setState: setPetFriendly,
+                      icon: PetIcon,
+                      label: "pet_allowed",
+                      color: "orange",
+                      size: "h-6 w-6",
+                    },
+                    {
+                      key: "fullyFurnished",
+                      state: fullyFurnished,
+                      setState: setFullyFurnished,
+                      icon: ArmchairIcon,
+                      label: "fully_furnished",
+                      color: "emerald",
+                      size: "h-6 w-6",
+                    },
+                    {
+                      key: "isForeigner",
+                      state: isForeigner,
+                      setState: setIsForeigner,
+                      icon: EarthIcon,
+                      label: "foreigner",
+                      color: "purple",
+                      size: "h-6 w-6",
+                    },
+                    {
+                      key: "companyRegistered",
+                      state: companyRegistered,
+                      setState: setCompanyRegistered,
+                      icon: WorkIcon,
+                      label: "company_registered",
+                      color: "indigo",
+                      size: "h-6 w-6",
+                    },
+                    {
+                      key: "isHotDeal",
+                      state: isHotDeal,
+                      setState: setIsHotDeal,
+                      icon: FireIcon,
+                      label: "hot_deal",
+                      color: "rose",
+                      size: "h-[22px] w-[22px]",
+                    },
+                    {
+                      key: "allowAirbnb",
+                      state: allowAirbnb,
+                      setState: setAllowAirbnb,
+                      icon: FaAirbnb,
+                      label: "allow_airbnb",
+                      color: "pink",
+                      size: "h-[22px] w-[22px]",
+                    },
+                  ].map((f) => {
                     const qCount = availableQuickFilters[f.key] || 0;
                     const isDisabled = !f.state && qCount === 0;
-                    
+
                     return (
                       <div
                         key={f.label}
                         className={cn(
                           "flex flex-col items-center justify-center gap-2 px-2 py-4 rounded-2xl border-2 transition-colors duration-200 cursor-pointer relative",
-                           f.state
+                          f.state
                             ? f.color === "pink"
                               ? "bg-[#FF5A5F] border-[#FF5A5F] text-white shadow-md shadow-pink-500/20"
                               : `bg-${f.color}-600 border-${f.color}-600 text-white shadow-md shadow-${f.color}-500/20`
                             : isDisabled
-                            ? "bg-slate-100 border-transparent text-slate-300 pointer-events-none"
-                            : "bg-slate-50 border-transparent text-slate-600 hover:border-slate-200"
+                              ? "bg-slate-100 border-transparent text-slate-300 pointer-events-none"
+                              : "bg-slate-50 border-transparent text-slate-600 hover:border-slate-200",
                         )}
                         onClick={() => !isDisabled && f.setState(!f.state)}
                       >
                         {qCount > 0 && (
-                          <span className={cn(
-                            "absolute -top-1 -right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm z-10",
-                            f.state ? "bg-white text-blue-600" : "bg-emerald-500 text-white"
-                          )}>
+                          <span
+                            className={cn(
+                              "absolute -top-1 -right-1 text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-sm z-10",
+                              f.state
+                                ? "bg-white text-blue-600"
+                                : "bg-emerald-500 text-white",
+                            )}
+                          >
                             {qCount}
                           </span>
                         )}
-                        <f.icon className={cn(f.size, f.state ? "text-white" : isDisabled ? "text-slate-200" : f.color === "pink" ? "text-[#FF5A5F]" : `text-${f.color}-500`)} />
+                        <f.icon
+                          className={cn(
+                            f.size,
+                            f.state
+                              ? "text-white"
+                              : isDisabled
+                                ? "text-slate-200"
+                                : f.color === "pink"
+                                  ? "text-[#FF5A5F]"
+                                  : `text-${f.color}-500`,
+                          )}
+                        />
                         <span className="text-[10px] font-medium text-center leading-tight">
                           {t(`search.${f.label}`)}
                         </span>
@@ -472,17 +643,35 @@ export function MobileFilters({
                       <TrainIcon className="w-3.5 h-3.5 text-blue-500" />
                       <span>
                         {(() => {
-                          const found = (allStations || availableStations).find((s) => s.name === transitStation);
+                          const found = (allStations || availableStations).find(
+                            (s) => s.name === transitStation,
+                          );
                           const cleanName = transitStation.replace("_", " ");
-                          return found ? formatStationLabel(found.type, cleanName, language) : cleanName;
+                          return found
+                            ? formatStationLabel(
+                                found.type,
+                                cleanName,
+                                language,
+                              )
+                            : cleanName;
                         })()}
                       </span>
-                      <button 
+                      <button
                         onClick={() => setTransitStation("")}
                         className="ml-1 p-0.5 rounded-full bg-blue-200/50 text-blue-600"
                       >
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -499,7 +688,7 @@ export function MobileFilters({
                       {t("search.select_station")}
                     </span>
                     {transitStation && (
-                      <button 
+                      <button
                         onClick={() => setTransitStation("")}
                         className="text-[10px] font-medium text-blue-500 hover:text-blue-700 underline"
                       >
@@ -516,53 +705,114 @@ export function MobileFilters({
                         "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border shrink-0",
                         trainTypeFilter === "ALL"
                           ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50",
                       )}
                     >
                       {t("search.all")}
                     </button>
-                    {trainTypes.map((type: string) => (
-                      <button
-                        key={type}
-                        onClick={() => setTrainTypeFilter(type)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border shrink-0",
-                          getTypeTabClass(type, trainTypeFilter === type)
-                        )}
-                      >
-                        {type}
-                      </button>
-                    ))}
+                    {trainTypes.map((type: string) => {
+                      const logoPath = LOGO_PATHS[type];
+                      return (
+                        <button
+                          key={type}
+                          onClick={() => setTrainTypeFilter(type)}
+                          className={cn(
+                            "px-3 py-2 rounded-lg text-[10px] font-bold transition-all border shrink-0 flex items-center gap-1.5",
+                            getTypeTabClass(type, trainTypeFilter === type),
+                          )}
+                        >
+                          {logoPath && (
+                            <div className="w-6 h-6 rounded-md bg-white border border-slate-200/50 flex items-center justify-center p-0.5 shrink-0 shadow-3xs">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={logoPath}
+                                alt={type}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          )}
+                          <span>{type}</span>
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  <div className="flex flex-nowrap overflow-x-auto gap-2 pb-1 -mx-1 px-1 scrollbar-hide">
+                  <div className="grid grid-rows-3 grid-flow-col overflow-x-auto gap-2 pb-1 -mx-1 px-1 scrollbar-hide">
                     {filteredStations.map((s: any) => (
                       <button
                         key={s.name}
-                        onClick={() => setTransitStation(transitStation === s.name ? "" : s.name)}
+                        onClick={() =>
+                          setTransitStation(
+                            transitStation === s.name ? "" : s.name,
+                          )
+                        }
                         className={cn(
                           "flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all border shadow-xs",
                           transitStation === s.name
                             ? "bg-blue-600 border-blue-600 text-white shadow-blue-200"
-                            : "bg-white border-slate-100 text-slate-600"
+                            : "bg-white border-slate-100 text-slate-600",
                         )}
                       >
                         {transitStation === s.name && (
-                          <svg className="w-3.5 h-3.5 animate-in zoom-in-50 text-white shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          <svg
+                            className="w-3.5 h-3.5 animate-in zoom-in-50 text-white shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={3}
+                              d="M5 13l4 4L19 7"
+                            />
                           </svg>
                         )}
-                        <span className={cn(
-                          "text-[8px] font-extrabold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0",
-                          getTypeBadgeClass(s.type)
-                        )}>
-                          {getNormalizedType(s.type)}
+                        {(() => {
+                          const logoPath = LOGO_PATHS[s.type.toUpperCase()];
+                          if (logoPath) {
+                            return (
+                              <div className="w-7 h-7 rounded-md bg-white border border-slate-200/50 flex items-center justify-center p-0.5 shrink-0 shadow-xs">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                  src={logoPath}
+                                  alt={s.type}
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+                            );
+                          }
+                          return (
+                            <span
+                              className={cn(
+                                "text-[8px] font-extrabold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0",
+                                getTypeBadgeClass(s.type),
+                              )}
+                            >
+                              {getNormalizedType(s.type)}
+                            </span>
+                          );
+                        })()}
+                        {getLocaleValue(
+                          {
+                            name: s.name,
+                            name_en: s.name_en,
+                            name_cn: s.name_cn,
+                            name_ru: s.name_ru,
+                          },
+                          "name",
+                          language,
+                        ).replace("_", " ")}
+                        <span
+                          className={cn(
+                            "text-[10px]",
+                            transitStation === s.name
+                              ? "text-blue-100"
+                              : "text-blue-600",
+                          )}
+                        >
+                          ({s.count})
                         </span>
-                        {getLocaleValue({ name: s.name, name_en: s.name_en, name_cn: s.name_cn, name_ru: s.name_ru }, "name", language).replace("_", " ")}
-                        <span className={cn(
-                          "text-[10px]",
-                          transitStation === s.name ? "text-blue-100" : "text-blue-600"
-                        )}>({s.count})</span>
                       </button>
                     ))}
                     {filteredStations.length === 0 && (
@@ -576,7 +826,12 @@ export function MobileFilters({
 
               {/* Location Zone */}
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                <Accordion type="single" collapsible defaultValue="location" className="w-full">
+                <Accordion
+                  type="single"
+                  collapsible
+                  defaultValue="location"
+                  className="w-full"
+                >
                   <AccordionItem value="location" className="border-0">
                     <AccordionTrigger className="hover:no-underline py-0">
                       <div className="flex items-center justify-between w-full pr-6">
@@ -606,13 +861,18 @@ export function MobileFilters({
                               "px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex items-center gap-2",
                               province === "ALL"
                                 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                                : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300"
+                                : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300",
                             )}
                           >
                             {t("search.all_provinces")}
                           </button>
                           {availableProvinces
-                            .slice(0, showAllProvincesMobile ? undefined : MOBILE_ITEMS_LIMIT)
+                            .slice(
+                              0,
+                              showAllProvincesMobile
+                                ? undefined
+                                : MOBILE_ITEMS_LIMIT,
+                            )
                             .map((p) => (
                               <button
                                 key={p.name}
@@ -624,18 +884,36 @@ export function MobileFilters({
                                   "px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex items-center gap-2",
                                   province === p.name
                                     ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                                    : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300"
+                                    : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300",
                                 )}
-                                >
+                              >
                                 <span>{getProvinceName(p.name, language)}</span>
-                                <span className={cn(
-                                  "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
-                                  province === p.name ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600"
-                                )}>
+                                <span
+                                  className={cn(
+                                    "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
+                                    province === p.name
+                                      ? "bg-white/20 text-white"
+                                      : "bg-emerald-50 text-emerald-600",
+                                  )}
+                                >
                                   {p.count}
                                 </span>
                               </button>
                             ))}
+                          {availableProvinces.length > MOBILE_ITEMS_LIMIT && (
+                            <button
+                              onClick={() =>
+                                setShowAllProvincesMobile(
+                                  !showAllProvincesMobile,
+                                )
+                              }
+                              className="px-4 py-2.5 rounded-xl text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100/80 transition-all border border-blue-100 flex items-center gap-1"
+                            >
+                              {showAllProvincesMobile
+                                ? t("search.show_less") || "แสดงน้อยลง"
+                                : `+${availableProvinces.length - MOBILE_ITEMS_LIMIT} ${t("search.show_more") || "แสดงเพิ่มเติม"}`}
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -650,38 +928,82 @@ export function MobileFilters({
                               "px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex items-center gap-2",
                               area === "ALL"
                                 ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                                : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300"
+                                : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300",
                             )}
                           >
                             {t("search.all_locations")}
                           </button>
                           {availableAreas
-                            .slice(0, showAllAreasMobile ? undefined : MOBILE_ITEMS_LIMIT)
+                            .slice(
+                              0,
+                              showAllAreasMobile
+                                ? undefined
+                                : MOBILE_ITEMS_LIMIT,
+                            )
                             .map((a) => (
                               <button
                                 key={a.name}
-                                onClick={() => setArea(area === a.name ? "ALL" : a.name)}
+                                onClick={() =>
+                                  setArea(area === a.name ? "ALL" : a.name)
+                                }
                                 className={cn(
                                   "px-4 py-2.5 rounded-xl text-sm font-medium border transition-all flex items-center gap-2",
                                   area === a.name
                                     ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                                    : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300"
+                                    : "bg-slate-50 text-slate-600 border-slate-100 hover:border-blue-300",
                                 )}
                               >
                                 {area === a.name && (
-                                  <svg className="w-3.5 h-3.5 animate-in zoom-in-50 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                  <svg
+                                    className="w-3.5 h-3.5 animate-in zoom-in-50 text-white"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={3}
+                                      d="M5 13l4 4L19 7"
+                                    />
                                   </svg>
                                 )}
-                                <span>{getLocaleValue({ name: a.name, name_en: a.name_en, name_cn: a.name_cn, name_ru: a.name_ru }, "name", language)}</span>
-                                <span className={cn(
-                                  "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
-                                  area === a.name ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600"
-                                )}>
+                                <span>
+                                  {getLocaleValue(
+                                    {
+                                      name: a.name,
+                                      name_en: a.name_en,
+                                      name_cn: a.name_cn,
+                                      name_ru: a.name_ru,
+                                    },
+                                    "name",
+                                    language,
+                                  )}
+                                </span>
+                                <span
+                                  className={cn(
+                                    "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
+                                    area === a.name
+                                      ? "bg-white/20 text-white"
+                                      : "bg-emerald-50 text-emerald-600",
+                                  )}
+                                >
                                   {a.count}
                                 </span>
                               </button>
                             ))}
+                          {availableAreas.length > MOBILE_ITEMS_LIMIT && (
+                            <button
+                              onClick={() =>
+                                setShowAllAreasMobile(!showAllAreasMobile)
+                              }
+                              className="px-4 py-2.5 rounded-xl text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100/80 transition-all border border-blue-100 flex items-center gap-1"
+                            >
+                              {showAllAreasMobile
+                                ? t("search.show_less") || "แสดงน้อยลง"
+                                : `+${availableAreas.length - MOBILE_ITEMS_LIMIT} ${t("search.show_more") || "แสดงเพิ่มเติม"}`}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </AccordionContent>
@@ -691,7 +1013,12 @@ export function MobileFilters({
 
               {/* Property Detail Zone */}
               <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-                <Accordion type="single" collapsible defaultValue="details" className="w-full">
+                <Accordion
+                  type="single"
+                  collapsible
+                  defaultValue="details"
+                  className="w-full"
+                >
                   <AccordionItem value="details" className="border-0">
                     <AccordionTrigger className="hover:no-underline py-0">
                       <div className="flex items-center justify-between w-full pr-6 uppercase tracking-wider">
@@ -702,7 +1029,7 @@ export function MobileFilters({
                         <span className="text-[11px] font-bold text-purple-600 bg-purple-50/50 px-2.5 py-1 rounded-xl border border-purple-100/50 truncate max-w-[140px]">
                           {type === "ALL" && listingType === "ALL"
                             ? t("common.all")
-                            : `${type !== "ALL" ? PROPERTY_TYPES.find(pt => pt.value === type)?.label : ""}${listingType !== "ALL" && type !== "ALL" ? ` • ${t(`common.${listingType.toLowerCase()}`)}` : listingType !== "ALL" ? t(`common.${listingType.toLowerCase()}`) : ""}`}
+                            : `${type !== "ALL" ? PROPERTY_TYPES.find((pt) => pt.value === type)?.label : ""}${listingType !== "ALL" && type !== "ALL" ? ` • ${t(`common.${listingType.toLowerCase()}`)}` : listingType !== "ALL" ? t(`common.${listingType.toLowerCase()}`) : ""}`}
                         </span>
                       </div>
                     </AccordionTrigger>
@@ -743,10 +1070,14 @@ export function MobileFilters({
                                 {getPropertyIcon(pt.value, isActive)}
                                 <span>{pt.label}</span>
                                 {count > 0 && pt.value !== "ALL" && (
-                                  <span className={cn(
-                                    "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
-                                    isActive ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600"
-                                  )}>
+                                  <span
+                                    className={cn(
+                                      "text-[11px] font-bold px-1.5 py-0.5 rounded-full",
+                                      isActive
+                                        ? "bg-white/20 text-white"
+                                        : "bg-emerald-50 text-emerald-600",
+                                    )}
+                                  >
                                     {count}
                                   </span>
                                 )}
@@ -758,13 +1089,18 @@ export function MobileFilters({
 
                       {/* Needs Zone */}
                       <div className="space-y-3">
-                        <label className="text-sm font-medium text-slate-900">{t("search.needs")}</label>
+                        <label className="text-sm font-medium text-slate-900">
+                          {t("search.needs")}
+                        </label>
                         <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
                           {[
                             { val: "ALL", label: t("common.all") },
                             { val: "SALE", label: t("search.buy") },
                             { val: "RENT", label: t("search.rent") },
-                            { val: "SALE_AND_RENT", label: t("search.rent_buy") },
+                            {
+                              val: "SALE_AND_RENT",
+                              label: t("search.rent_buy"),
+                            },
                           ].map((opt) => (
                             <button
                               key={opt.val}
@@ -776,23 +1112,29 @@ export function MobileFilters({
                                   province,
                                   popular_area: area,
                                   item_category: type,
-                                  listing_type: opt.val
+                                  listing_type: opt.val,
                                 });
                               }}
                               className={cn(
                                 "py-1 h-11 text-xs font-medium rounded-lg transition-all flex items-center justify-center gap-2",
-                                opt.val === "SALE_AND_RENT" ? "flex-[1.4]" : "flex-1",
+                                opt.val === "SALE_AND_RENT"
+                                  ? "flex-[1.4]"
+                                  : "flex-1",
                                 listingType === opt.val
                                   ? "bg-blue-600 text-white shadow-md shadow-blue-50/50"
-                                  : "text-slate-500 hover:text-slate-900"
+                                  : "text-slate-500 hover:text-slate-900",
                               )}
                             >
                               <span>{opt.label}</span>
                               {availableListingTypes[opt.val] > 0 && (
-                                <span className={cn(
-                                  "mtext-[11px] font-semibold px-1 py-0.5 rounded-full transition-all",
-                                  listingType === opt.val ? "bg-white/20 text-white" : "bg-emerald-50 text-emerald-600"
-                                )}>
+                                <span
+                                  className={cn(
+                                    "mtext-[11px] font-semibold px-1 py-0.5 rounded-full transition-all",
+                                    listingType === opt.val
+                                      ? "bg-white/20 text-white"
+                                      : "bg-emerald-50 text-emerald-600",
+                                  )}
+                                >
                                   {availableListingTypes[opt.val]}
                                 </span>
                               )}
@@ -802,14 +1144,16 @@ export function MobileFilters({
                       </div>
 
                       <div className="space-y-3">
-                        <label className="text-sm font-medium text-slate-900 ">{t("search.price_range")}</label>
+                        <label className="text-sm font-medium text-slate-900 ">
+                          {t("search.price_range")}
+                        </label>
                         <MobileFilterSheet
                           title={t("search.price_range")}
                           placeholder={t("search.price_range")}
                           icon={CircleDollarSign}
                           iconColor="text-emerald-500"
                           value={`${currentPriceOption.min}-${currentPriceOption.max}-${currentPriceOption.type || "ALL"}`}
-                          options={priceOptions.map(opt => {
+                          options={priceOptions.map((opt) => {
                             if (opt.isGroup) {
                               return {
                                 label: opt.label,
@@ -817,35 +1161,55 @@ export function MobileFilters({
                                 options: opt.options.map((subOpt: any) => ({
                                   id: `${subOpt.min}-${subOpt.max}-${subOpt.type || "ALL"}`,
                                   label: subOpt.label,
-                                  count: priceCounts.get(`${subOpt.min}-${subOpt.max}-${subOpt.type || "ALL"}`) || 0
-                                }))
+                                  count:
+                                    priceCounts.get(
+                                      `${subOpt.min}-${subOpt.max}-${subOpt.type || "ALL"}`,
+                                    ) || 0,
+                                })),
                               };
                             }
                             const id = `${opt.min}-${opt.max}-${opt.type || "ALL"}`;
-                            return { id, label: opt.label, count: (opt.min || opt.max) ? (priceCounts.get(id) || 0) : null };
+                            return {
+                              id,
+                              label: opt.label,
+                              count:
+                                opt.min || opt.max
+                                  ? priceCounts.get(id) || 0
+                                  : null,
+                            };
                           })}
                           selectedLabel={currentPriceOption.label}
                           onSelect={(val) => {
                             const [min, max, type] = val.split("-");
                             setMinPrice(min);
                             setMaxPrice(max);
-                            if (setPriceType) setPriceType(type && type !== "ALL" ? type : "");
+                            if (setPriceType)
+                              setPriceType(type && type !== "ALL" ? type : "");
                           }}
                           className="w-full"
                         />
                       </div>
 
                       <div className="space-y-3">
-                        <label className="text-sm font-medium text-slate-900">{t("search.area_size")}</label>
+                        <label className="text-sm font-medium text-slate-900">
+                          {t("search.area_size")}
+                        </label>
                         <MobileFilterSheet
                           title={t("search.area_size")}
                           placeholder={t("search.area_size") || "ขนาดพื้นที่"}
                           icon={Maximize2}
                           iconColor="text-blue-500"
                           value={`${currentSizeOption.min}-${currentSizeOption.max}`}
-                          options={sizeOptions.map(opt => {
+                          options={sizeOptions.map((opt) => {
                             const id = `${opt.min}-${opt.max}`;
-                            return { id, label: opt.label, count: (opt.min || opt.max) ? (sizeCounts.get(id) || 0) : null };
+                            return {
+                              id,
+                              label: opt.label,
+                              count:
+                                opt.min || opt.max
+                                  ? sizeCounts.get(id) || 0
+                                  : null,
+                            };
                           })}
                           selectedLabel={currentSizeOption.label}
                           onSelect={(val) => {
@@ -858,7 +1222,9 @@ export function MobileFilters({
                       </div>
 
                       <div className="space-y-3 ">
-                        <label className="text-sm font-medium text-slate-900 ">{t("search.bedrooms")}</label>
+                        <label className="text-sm font-medium text-slate-900 ">
+                          {t("search.bedrooms")}
+                        </label>
                         <div className="flex gap-2 overflow-x-auto pt-2 no-scrollbar ">
                           {["ALL", "1", "2", "3", "4+"].map((bed) => {
                             const count = availableBedrooms[bed] || 0;
@@ -876,17 +1242,21 @@ export function MobileFilters({
                                     ? "bg-indigo-600 text-white border-indigo-600 shadow-md shadow-indigo-100"
                                     : isDisabled
                                       ? "bg-slate-50 text-slate-300 border-slate-100 opacity-60 cursor-not-allowed"
-                                      : "bg-white text-slate-700 border-slate-200"
+                                      : "bg-white text-slate-700 border-slate-200",
                                 )}
                               >
-                                <span>{bed === "ALL" ? t("common.all") : bed}</span>
+                                <span>
+                                  {bed === "ALL" ? t("common.all") : bed}
+                                </span>
                                 {count > 0 && (
-                                  <span className={cn(
-                                    "absolute -top-1.5 -right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border",
-                                    isSelected 
-                                      ? "bg-white text-indigo-600 border-white" 
-                                      : "bg-emerald-50 text-emerald-600 border-emerald-100"
-                                  )}>
+                                  <span
+                                    className={cn(
+                                      "absolute -top-1.5 -right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm border",
+                                      isSelected
+                                        ? "bg-white text-indigo-600 border-white"
+                                        : "bg-emerald-50 text-emerald-600 border-emerald-100",
+                                    )}
+                                  >
                                     {count}
                                   </span>
                                 )}
@@ -904,7 +1274,8 @@ export function MobileFilters({
             <SheetFooter className="p-6 border-t border-slate-100 bg-white pb-10">
               <SheetClose asChild>
                 <Button className="w-full h-12 text-lg rounded-xl bg-linear-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-200/50">
-                  {t("search.view_results")} ({filteredLength} {t("search.items")})
+                  {t("search.view_results")} ({filteredLength}{" "}
+                  {t("search.items")})
                 </Button>
               </SheetClose>
             </SheetFooter>

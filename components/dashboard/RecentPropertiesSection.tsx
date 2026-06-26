@@ -146,8 +146,8 @@ export async function RecentPropertiesSection({
     const isNew = isWithinSevenDays || (!hasRecentProperties && index === 0);
     
     const propertyImages = p.property_images || [];
-    const firstImage = propertyImages.find((img) => img.is_cover) || propertyImages[0] || p.images?.[0];
-    const rawImageUrl = firstImage?.image_url || firstImage?.url || firstImage?.storage_path || null;
+    const firstImage = propertyImages.find((img) => img.is_cover) || propertyImages[0] || (Array.isArray(p.images) ? p.images[0] : null);
+    const rawImageUrl = firstImage?.image_url || firstImage?.url || firstImage?.storage_path || (typeof firstImage === 'string' ? firstImage : null);
     const imageUrl = rawImageUrl ? (rawImageUrl.startsWith("http") ? rawImageUrl : getPublicImageUrl(rawImageUrl)) : null;
 
     return {

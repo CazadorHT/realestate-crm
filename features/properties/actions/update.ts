@@ -355,11 +355,34 @@ export async function updatePropertyAction(
           original_price: safeValues.original_price,
           original_rental_price: safeValues.original_rental_price,
         },
-        transit_info: {
-          places: safeValues.nearby_places || [],
-          transits: safeValues.nearby_transits || [],
-          near_transit: (safeValues.nearby_transits || []).length > 0,
-        },
+        transit_info: (() => {
+          const transits = safeValues.nearby_transits || [];
+          const transitCandidates = transits.filter(
+            (t: any) => t && t.type !== "EXPRESSWAY" && t.type !== "MAIN_ROAD" && t.station_name
+          );
+
+          let primaryTransit: any = null;
+          if (transitCandidates.length > 0) {
+            const sorted = [...transitCandidates].sort((a: any, b: any) => {
+              const distA = a.distance_meters ?? Infinity;
+              const distB = b.distance_meters ?? Infinity;
+              return distA - distB;
+            });
+            primaryTransit = sorted[0];
+          }
+
+          return {
+            places: safeValues.nearby_places || [],
+            transits: transits,
+            near_transit: transits.length > 0,
+            transit_station_name: primaryTransit?.station_name || "",
+            transit_station_name_en: primaryTransit?.station_name_en || "",
+            transit_station_name_cn: primaryTransit?.station_name_cn || "",
+            transit_station_name_ru: primaryTransit?.station_name_ru || "",
+            transit_type: primaryTransit?.type || "BTS",
+            transit_distance_meters: primaryTransit?.distance_meters !== undefined && primaryTransit?.distance_meters !== null ? primaryTransit.distance_meters : null,
+          };
+        })(),
         meta_data: {
           ...existingMeta,
           slug: seoData.slug,

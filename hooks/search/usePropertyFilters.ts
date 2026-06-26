@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export function usePropertyFilters() {
+export function usePropertyFilters(defaultTransitStation: string = "", basePath?: string) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -21,7 +21,7 @@ export function usePropertyFilters() {
   const [minSize, setMinSize] = useState(searchParams.get("min_size") || "");
   const [maxSize, setMaxSize] = useState(searchParams.get("max_size") || "");
   const [sort, setSort] = useState("NEWEST");
-  const [transitStation, setTransitStation] = useState(searchParams.get("transit_station") || "");
+  const [transitStation, setTransitStation] = useState(searchParams.get("transit_station") || defaultTransitStation);
 
   const [area, setArea] = useState(searchParams.get("popular_area") || "ALL");
   const [province, setProvince] = useState(
@@ -82,11 +82,11 @@ export function usePropertyFilters() {
     setIsHotDeal(searchParams.get("hot_deal") === "true");
     setAllowAirbnb(searchParams.get("airbnb") === "true");
     setBedrooms(searchParams.get("bedrooms") || "ALL");
-    setTransitStation(searchParams.get("transit_station") || "");
+    setTransitStation(searchParams.get("transit_station") || defaultTransitStation);
     
     // Clear AI insight on manual navigation change
     setAiInsight(null);
-  }, [searchParams]);
+  }, [searchParams, defaultTransitStation]);
  
   // Sync state to URL
   useEffect(() => {
@@ -112,12 +112,14 @@ export function usePropertyFilters() {
     if (priceType && (minPrice || maxPrice)) params.set("price_type", priceType); else params.delete("price_type");
  
     const query = params.toString();
-    const url = `/properties${query ? `?${query}` : ""}`;
+    const currentPath = basePath || (typeof window !== "undefined" ? window.location.pathname : "/properties");
+    const url = `${currentPath}${query ? `?${query}` : ""}`;
     router.replace(url, { scroll: false });
   }, [
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
     companyRegistered, isHotDeal, allowAirbnb, minSize, maxSize, transitStation,
+    basePath, router
   ]);
 
   const clearFilters = useCallback(() => {

@@ -11,7 +11,7 @@ import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
 
 export function PublicFooter() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const settings = useSiteConfig();
   const [mounted, setMounted] = useState(false);
   const currentYear = mounted ? new Date().getFullYear() : 2026;
@@ -60,6 +60,17 @@ export function PublicFooter() {
     { name: t("nav.contact"), href: "/contact" },
   ];
 
+  const transitStations = [
+    { name: language === "th" ? "BTS อโศก" : "BTS Asok", href: "/near-station/bts-asok" },
+    { name: language === "th" ? "BTS ทองหล่อ" : "BTS Thong Lo", href: "/near-station/bts-thong-lo" },
+    { name: language === "th" ? "BTS อารีย์" : "BTS Ari", href: "/near-station/bts-ari" },
+    { name: language === "th" ? "BTS พญาไท" : "BTS Phaya Thai", href: "/near-station/bts-phaya-thai" },
+    { name: language === "th" ? "MRT พระราม 9" : "MRT Phra Ram 9", href: "/near-station/mrt-phra-ram-9" },
+    { name: language === "th" ? "MRT สุขุมวิท" : "MRT Sukhumvit", href: "/near-station/mrt-sukhumvit" },
+    { name: language === "th" ? "MRT ห้วยขวาง" : "MRT Huai Khwang", href: "/near-station/mrt-huai-khwang" },
+    { name: language === "th" ? "ARL มักกะสัน" : "ARL Makkasan", href: "/near-station/arl-makkasan" },
+  ];
+
   const socialMedia = [
     {
       name: "Facebook",
@@ -104,12 +115,12 @@ export function PublicFooter() {
         <div className="max-w-screen-2xl mx-auto px-4 md:px-6 lg:px-8 py-16 relative z-10">
           {/* Main Footer Content */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16 px-4">
-            {/* 1. Brand & Contact (4 cols) */}
-            <div className="lg:col-span-4 space-y-6">
+            {/* 1. Brand & Contact (3 cols) */}
+            <div className="lg:col-span-3 space-y-6">
               <div className="flex items-center gap-2">
                 <Link
                   href="/"
-                  className="block w-[280px] transition-opacity hover:opacity-90"
+                  className="block w-[240px] transition-opacity hover:opacity-90"
                   aria-label={`${siteName} - ${t("breadcrumb.home")}`}
                 >
                   <Image
@@ -117,7 +128,7 @@ export function PublicFooter() {
                     alt={`${siteName} Logo`}
                     width={300}
                     height={86}
-                    className="w-auto h-26 object-contain"
+                    className="w-auto h-20 object-contain"
                     priority
                   />
                 </Link>
@@ -200,8 +211,28 @@ export function PublicFooter() {
               </ul>
             </div>
 
-            {/* 4. Newsletter & Social (4 cols) */}
-            <div className="lg:col-span-4">
+            {/* 4. Transit Stations (2 cols) */}
+            <div className="lg:col-span-2">
+              <h3 className="font-bold text-white mb-6 text-lg tracking-tight">
+                {language === "th" ? "ใกล้รถไฟฟ้า" : "Near Station"}
+              </h3>
+              <ul className="space-y-3">
+                {transitStations.map((station) => (
+                  <li key={station.name}>
+                    <Link
+                      href={station.href}
+                      className="text-slate-400 hover:text-blue-400 text-sm transition-all duration-200 hover:translate-x-1 flex items-center gap-2"
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full bg-slate-700"></span>
+                      {station.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* 5. Newsletter & Social (3 cols) */}
+            <div className="lg:col-span-3">
               <h3 className="font-bold text-white mb-6 text-lg tracking-tight">
                 {t("footer.follow_us")}
               </h3>

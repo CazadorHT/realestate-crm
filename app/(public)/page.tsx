@@ -18,6 +18,8 @@ import { getBlogPosts } from "@/lib/services/blog";
 import { getPartners } from "@/features/admin/partners-actions";
 import { getServerFAQs, type FAQItem } from "@/lib/services/faqs";
 import { getLocalizedField } from "@/lib/i18n";
+import { getTransitLinesWithStations } from "@/features/public/stations";
+import { TransitStationsSection } from "@/components/public/TransitStationsSection";
 
 // Critical Above-the-Fold components (Stay static for visual stability)
 import { HeroSection } from "@/components/public/HeroSection";
@@ -133,14 +135,16 @@ export default async function LandingPage() {
     hotDealsData,
     initialPosts,
     partnersRes,
-    serverFaqs
+    serverFaqs,
+    transitLines
   ] = await Promise.all([
     getPublicProvincesAction(),
     getPublicProperties({ limit: 100 }),
     getPublicProperties({ filter: 'hot_deals', limit: 4 }),
     getBlogPosts(undefined, 4),
     getPartners({ activeOnly: true }),
-    getServerFAQs()
+    getServerFAQs(),
+    getTransitLinesWithStations()
   ]);
 
   const partners = partnersRes.success ? partnersRes.data : [];
@@ -290,6 +294,11 @@ export default async function LandingPage() {
         <div className="min-h-[450px] md:min-h-[500px]">
           <PopularAreasSection initialItems={popularAreas} initialProvinces={provinces} />
         </div>
+      )}
+      
+      {/* TRANSIT STATION LANDINGS */}
+      {transitLines && transitLines.length > 0 && (
+        <TransitStationsSection lines={transitLines} />
       )}
       
       {/* BELOW THE FOLD: Dynamic / Lazy with realistic height placeholders */}

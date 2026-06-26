@@ -124,6 +124,33 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
   const { data: rawData, error } = await query.maybeSingle();
   if (error || !rawData) return null;
 
+  // Fetch active stations to resolve slugs for nearby transits
+  const stationSlugMap = new Map<string, string>();
+  try {
+    const { data: stationsMaster } = await supabase
+      .from("ref_master_data")
+      .select("code, label, metadata")
+      .eq("type", "TRANSIT_STATION")
+      .eq("is_active", true);
+
+    if (stationsMaster) {
+      for (const item of stationsMaster) {
+        const labels = (item.label as Record<string, string>) || {};
+        const meta = (item.metadata as Record<string, any>) || {};
+        const slug = meta.slug || item.code.toLowerCase().replace(/_/g, "-");
+        
+        if (labels.th) stationSlugMap.set(labels.th.trim().toLowerCase(), slug);
+        if (labels.en) stationSlugMap.set(labels.en.trim().toLowerCase(), slug);
+        if (item.code) {
+          stationSlugMap.set(item.code.trim().toLowerCase(), slug);
+          stationSlugMap.set(item.code.replace(/_/g, " ").trim().toLowerCase(), slug);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("Error loading transit stations for slug resolution:", err);
+  }
+
   // 🧪 Hardened Data Extraction (Zero-Any Policy)
   const details = rawData.details as unknown as {
     title: { th?: string; en?: string; cn?: string; ru?: string };
@@ -329,9 +356,37 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     amenities: (details?.amenities || {}) as PropertyAmenitiesV3,
     transit_info: details?.transit_info || null,
     nearby_places: (details?.transit_info as any)?.places || [],
-    nearby_transits: Array.isArray((details?.transit_info as any)?.transits) 
-      ? (details?.transit_info as any)?.transits 
-      : (Array.isArray(details?.transit_info) ? details.transit_info : []),
+    nearby_transits: (() => {
+      const rawTransits = Array.isArray((details?.transit_info as any)?.transits) 
+        ? (details?.transit_info as any)?.transits 
+        : (Array.isArray(details?.transit_info) ? details.transit_info : []);
+
+      return rawTransits.map((t: any) => {
+        if (!t) return t;
+        const thName = (t.station_name || "").trim().toLowerCase();
+        const enName = (t.station_name_en || "").trim().toLowerCase();
+        
+        let resolvedSlug = t.slug;
+        if (!resolvedSlug) {
+          resolvedSlug = stationSlugMap.get(thName) || stationSlugMap.get(enName);
+        }
+        
+        if (!resolvedSlug && t.type && (thName || enName)) {
+          const typePrefix = String(t.type).toLowerCase().replace(/_/g, "-");
+          const namePart = (enName || thName)
+            .replace(/[\s_/]+/g, "-")
+            .replace(/[^a-z0-9-]/g, "");
+          if (namePart) {
+            resolvedSlug = `${typePrefix}-${namePart}`;
+          }
+        }
+
+        return {
+          ...t,
+          slug: resolvedSlug || undefined
+        };
+      });
+    })(),
 
     images: [], // Populated below
     assigned_agent: assignedAgent ? {

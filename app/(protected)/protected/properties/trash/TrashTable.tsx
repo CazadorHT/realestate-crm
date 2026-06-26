@@ -76,7 +76,7 @@ export function TrashTable({
                 <TableCell>
                   <div className="h-12 w-20 bg-muted rounded-md overflow-hidden relative border border-slate-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    {property.images && property.images.length > 0 ? (
+                    {Array.isArray(property.images) && property.images.length > 0 ? (
                       <img
                         src={property.images[0]}
                         alt={property.title ?? "รูปภาพทรัพย์"} // แก้ไข: จัดการ null

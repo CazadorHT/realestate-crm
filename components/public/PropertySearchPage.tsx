@@ -23,6 +23,8 @@ type ApiProperty = PropertyCardProps;
 
 interface PropertySearchPageProps {
   initialProperties?: ApiProperty[];
+  initialTransitStation?: string;
+  basePath?: string;
 }
 
 /**
@@ -33,9 +35,11 @@ interface PropertySearchPageProps {
  */
 export function PropertySearchPage({
   initialProperties,
+  initialTransitStation = "",
+  basePath,
 }: PropertySearchPageProps) {
   const { t } = useLanguage();
-  const filters = usePropertyFilters();
+  const filters = usePropertyFilters(initialTransitStation, basePath);
   
   // 1. Data Access Layer (Fortress Tier)
   const { properties, facets: serverFacets, isLoading, isRefetching } = usePropertyData(initialProperties);

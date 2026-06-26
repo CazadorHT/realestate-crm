@@ -90,16 +90,38 @@ export function PropertyCardImage({
 
   // Normalized images list from both possible formats (string array or object array with .url)
   const displayImages = (() => {
-    const rawImages: (string | { url: string } | null | undefined)[] = 
-      property.images && property.images.length > 0
-        ? property.images
-        : [property.image_url];
+    const rawImages = (() => {
+      const images: unknown = property.images;
+      if (Array.isArray(images) && images.length > 0) {
+        return images as (string | { url: string })[];
+      }
+      if (typeof images === "string" && images.trim() !== "") {
+        try {
+          const parsed = JSON.parse(images);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+        } catch {
+          return [images];
+        }
+        return [images];
+      }
+      return property.image_url ? [property.image_url] : [];
+    })();
     
-    return (rawImages || [])
+    return rawImages
       .filter((img): img is string | { url: string } => img !== null && img !== undefined)
       .map(img => {
         if (typeof img === 'string') return img;
-        return (img as { url: string }).url;
+        if (img && typeof img === 'object') {
+          if ('url' in img && typeof img.url === 'string') {
+            return img.url;
+          }
+          if ('image_url' in img && typeof (img as any).image_url === 'string') {
+            return (img as any).image_url;
+          }
+        }
+        return '';
       })
       .filter(url => typeof url === 'string' && url.trim() !== "");
   })();

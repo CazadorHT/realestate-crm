@@ -83,6 +83,19 @@ const getTypeTabClass = (type: string, isActive: boolean): string => {
   }
 };
 
+const LOGO_PATHS: Record<string, string> = {
+  BTS: "/images/transit/BTS-Logo.svg",
+  GOLD: "/images/transit/BTS-Logo.svg",
+  MRT: "/images/transit/MRT_(Bangkok)_logo.svg",
+  MRT_PURPLE: "/images/transit/MRT_(Bangkok)_Purple_logo.svg",
+  MRT_YELLOW: "/images/transit/MRT_(Bangkok)_Yellow_logo.svg",
+  MRT_PINK: "/images/transit/MRT_(Bangkok)_Pink_Logo.svg",
+  ARL: "/images/transit/ARLbangkok.svg",
+  SRT_RED: "/images/transit/SRT_Red_Lines_icon.svg",
+  SRT: "/images/transit/SRT_Red_Lines_icon.svg",
+  BRT: "/images/transit/Bangkok_BRT_logo.svg",
+};
+
 export function StationSearchSelect({
   transitStation,
   setTransitStation,
@@ -185,7 +198,21 @@ export function StationSearchSelect({
           )}
         >
           <div className="flex items-center gap-2 truncate">
-            <TrainFront className="h-3.5 w-3.5 shrink-0" />
+            {selectedStationObj ? (
+              (() => {
+                const logoPath = LOGO_PATHS[selectedStationObj.type.toUpperCase()];
+                return logoPath ? (
+                  <div className="w-4 h-4 shrink-0 flex items-center justify-center">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={logoPath} alt="Logo" className="w-full h-full object-contain" />
+                  </div>
+                ) : (
+                  <TrainFront className="h-3.5 w-3.5 shrink-0" />
+                );
+              })()
+            ) : (
+              <TrainFront className="h-3.5 w-3.5 shrink-0" />
+            )}
             <span className="truncate">{displayLabel}</span>
           </div>
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -217,18 +244,27 @@ export function StationSearchSelect({
             >
               {t("common.all") || "ทั้งหมด"}
             </button>
-            {trainTypes.map((type) => (
-              <button
-                key={type}
-                onClick={() => setTrainTypeFilter(type)}
-                className={cn(
-                  "px-2 py-1 rounded-lg text-[12px] font-bold transition-all border",
-                  getTypeTabClass(type, trainTypeFilter === type)
-                )}
-              >
-                {type}
-              </button>
-            ))}
+            {trainTypes.map((type) => {
+              const logoPath = LOGO_PATHS[type];
+              return (
+                <button
+                  key={type}
+                  onClick={() => setTrainTypeFilter(type)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-lg text-[12px] font-bold transition-all border flex items-center gap-1.5",
+                    getTypeTabClass(type, trainTypeFilter === type)
+                  )}
+                >
+                  {logoPath && (
+                    <div className="w-6 h-6 rounded-md bg-white border border-slate-200/50 flex items-center justify-center p-0.5 shrink-0 shadow-3xs">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={logoPath} alt={type} className="w-full h-full object-contain" />
+                    </div>
+                  )}
+                  <span>{type}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -291,14 +327,27 @@ export function StationSearchSelect({
                   )}
                 >
                   <div className="flex items-center gap-2.5 w-full">
-                    <span
-                      className={cn(
-                        "text-[8px] font-extrabold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0",
-                        getTypeBadgeClass(station.type)
-                      )}
-                    >
-                      {normType}
-                    </span>
+                    {(() => {
+                      const logoPath = LOGO_PATHS[station.type.toUpperCase()];
+                      if (logoPath) {
+                        return (
+                          <div className="w-7 h-7 rounded-md bg-white border border-slate-200/50 flex items-center justify-center p-0.5 shrink-0 shadow-xs">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={logoPath} alt={station.type} className="w-full h-full object-contain" />
+                          </div>
+                        );
+                      }
+                      return (
+                        <span
+                          className={cn(
+                            "text-[8px] font-extrabold px-1.5 py-0.5 rounded-md leading-none text-white shrink-0",
+                            getTypeBadgeClass(station.type)
+                          )}
+                        >
+                          {normType}
+                        </span>
+                      );
+                    })()}
                     <div className="flex-1 truncate">
                       <span className="block truncate">{localizedName}</span>
                       {station.name_en && station.name_en !== localizedName && (

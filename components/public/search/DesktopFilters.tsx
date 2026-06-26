@@ -1,8 +1,9 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MagicAiSearch } from "./MagicAiSearch";
+import { m, AnimatePresence } from "framer-motion";
 import {
   Select,
   SelectContent,
@@ -15,6 +16,8 @@ import {
   SlidersHorizontal,
   ChevronDown,
   ChevronUp,
+  ChevronLeft,
+  ChevronRight,
   Sparkles,
   ArrowUpNarrowWide,
   ArrowDownWideNarrow,
@@ -33,6 +36,21 @@ import { QuickFeatureFilters } from "./QuickFeatureFilters";
 import { StationSearchSelect } from "./StationSearchSelect";
 import { cn } from "@/lib/utils";
 import { formatStationLabel } from "@/lib/property-utils";
+
+const EXTRA_PANEL_STRINGS: Record<string, Record<string, string>> = {
+  hide_extras: {
+    th: "ยุบตัวกรอง/ทำเล",
+    en: "Hide Tags & Areas",
+    cn: "隐藏标签和区域",
+    ru: "Скрыть теги и области"
+  },
+  show_extras: {
+    th: "แสดงตัวกรอง/ทำเล",
+    en: "Show Tags & Areas",
+    cn: "显示标签和区域",
+    ru: "Показать теги и области"
+  }
+};
 
 interface DesktopFiltersProps {
   keyword: string;
@@ -234,6 +252,46 @@ export function DesktopFilters({
   maxSize,
   setBulkFilters,
 }: DesktopFiltersProps) {
+  const [showBottomPanel, setShowBottomPanel] = useState(false);
+
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+
+  const checkScroll = () => {
+    const el = scrollRef.current;
+    if (el) {
+      setShowLeftArrow(el.scrollLeft > 2);
+      setShowRightArrow(el.scrollLeft + el.clientWidth < el.scrollWidth - 2);
+    }
+  };
+
+  const handleScroll = (direction: "left" | "right") => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const scrollAmount = 250;
+    el.scrollBy({
+      left: direction === "left" ? -scrollAmount : scrollAmount,
+      behavior: "smooth",
+    });
+  };
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    checkScroll();
+    
+    el.addEventListener("scroll", checkScroll);
+    window.addEventListener("resize", checkScroll);
+
+    const timer = setTimeout(checkScroll, 150);
+
+    return () => {
+      el.removeEventListener("scroll", checkScroll);
+      window.removeEventListener("resize", checkScroll);
+      clearTimeout(timer);
+    };
+  }, [availableAreas, showAreaSection, showBottomPanel]);
 
   const hasActiveFilters = useMemo(() => {
     return (
@@ -570,311 +628,377 @@ export function DesktopFilters({
           availableQuickFilters={availableQuickFilters}
           t={t}
         />
+
+        {/* Toggle Button for Bottom Panel (Active Filters & Popular Areas) */}
+        <button
+          onClick={() => setShowBottomPanel(!showBottomPanel)}
+          className={cn(
+            "ml-auto h-10 px-3.5 flex items-center gap-1.5 text-xs font-bold rounded-xl border transition-all duration-250 shadow-xs",
+            showBottomPanel
+              ? "bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-800 border-slate-200"
+              : "bg-blue-50 hover:bg-blue-100/80 text-blue-600 border-blue-200"
+          )}
+          title={
+            showBottomPanel
+              ? EXTRA_PANEL_STRINGS.hide_extras[language] || EXTRA_PANEL_STRINGS.hide_extras.th
+              : EXTRA_PANEL_STRINGS.show_extras[language] || EXTRA_PANEL_STRINGS.show_extras.th
+          }
+        >
+          <SlidersHorizontal className="w-3.5 h-3.5" />
+          <span>
+            {showBottomPanel
+              ? EXTRA_PANEL_STRINGS.hide_extras[language] || EXTRA_PANEL_STRINGS.hide_extras.th
+              : EXTRA_PANEL_STRINGS.show_extras[language] || EXTRA_PANEL_STRINGS.show_extras.th}
+          </span>
+          {showBottomPanel ? (
+            <ChevronUp className="w-3.5 h-3.5" />
+          ) : (
+            <ChevronDown className="w-3.5 h-3.5" />
+          )}
+        </button>
       </div>
 
-      {/* Unified Active Filters Bar */}
-      {hasActiveFilters && (
-        <div className="flex items-start justify-between gap-4 mb-4 p-3 bg-slate-50/50 rounded-xl border border-slate-100 animate-in fade-in slide-in-from-left-2">
-          <div className="flex items-start gap-3 flex-1 flex-wrap">
-            <div className="h-[30px] flex items-center">
-              <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">
-                {t("search.active_filters")}:
-              </span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {listingType !== "ALL" && (
-                <Badge
-                  label={t(`search.listing_${listingType.toLowerCase()}`)}
-                  onClear={() => setListingType("ALL")}
-                  variant="blue"
-                />
-              )}
-              {type !== "ALL" && (
-                <Badge
-                  label={
-                    PROPERTY_TYPES.find((pt) => pt.value === type)?.label ||
-                    type
-                  }
-                  onClear={() => setType("ALL")}
-                  variant="blue"
-                />
-              )}
-              {province !== "ALL" && (
-                <Badge
-                  label={getProvinceName(province, language)}
-                  onClear={() => setProvince("ALL")}
-                  variant="slate"
-                />
-              )}
-              {area !== "ALL" && (
-                <Badge
-                  label={(() => {
-                    const found = availableAreas.find((a) => a.name === area);
-                    if (!found) return area.replace("_", " ");
-                    return getLocaleValue(
-                      {
-                        name: found.name,
-                        name_en: found.name_en,
-                        name_cn: found.name_cn,
-                        name_ru: found.name_ru,
-                      },
-                      "name",
-                      language,
-                    );
-                  })()}
-                  onClear={() => setArea("ALL")}
-                  variant="slate"
-                />
-              )}
-              {transitStation && (
-                <Badge
-                  label={(() => {
-                    const found = (allStations || availableStations).find(
-                      (s) => s.name === transitStation,
-                    );
-                    if (!found) return transitStation.replace("_", " ");
-                    const localized = getLocaleValue(
-                      {
-                        name: found.name,
-                        name_en: found.name_en,
-                        name_cn: found.name_cn,
-                        name_ru: found.name_ru,
-                      },
-                      "name",
-                      language,
-                    ).replace("_", " ");
-                    return found.type ? formatStationLabel(found.type, localized, language) : localized;
-                  })()}
-                  onClear={() => setTransitStation("")}
-                  variant={(() => {
-                    const found = (allStations || availableStations).find(
-                      (s) => s.name === transitStation,
-                    );
-                    if (!found) return "blue";
-                    const t = found.type.toUpperCase();
-                    if (t === "BTS" || t === "GOLD") return "emerald";
-                    if (t.startsWith("MRT")) return "blue";
-                    if (t === "ARL") return "rose";
-                    if (t === "SRT" || t === "SRT_RED") return "red";
-                    if (t === "BRT") return "teal";
-                    return "blue";
-                  })()}
-                  icon={<TrainIcon className={cn(
-                    "w-3 h-3",
-                    (() => {
-                      const found = (allStations || availableStations).find(
-                        (s) => s.name === transitStation,
-                      );
-                      if (!found) return "text-blue-500";
-                      const t = found.type.toUpperCase();
-                      if (t === "BTS" || t === "GOLD") return "text-emerald-500";
-                      if (t.startsWith("MRT")) return "text-blue-500";
-                      if (t === "ARL") return "text-rose-500";
-                      if (t === "SRT" || t === "SRT_RED") return "text-red-500";
-                      if (t === "BRT") return "text-teal-500";
-                      return "text-blue-500";
-                    })()
-                  )} />}
-                />
-              )}
-              {bedrooms !== "ALL" && (
-                <Badge
-                  label={`${bedrooms} ${t("search.bedrooms")}`}
-                  onClear={() => setBedrooms("ALL")}
-                  variant="slate"
-                />
-              )}
-              {/* Price Badge */}
-              {((minPrice && minPrice !== "0") ||
-                (maxPrice && maxPrice !== "0")) && (
-                <Badge
-                  label={
-                    minPrice && minPrice !== "0" && maxPrice && maxPrice !== "0"
-                      ? `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`
-                      : minPrice && minPrice !== "0"
-                        ? `> ${formatPrice(minPrice)}`
-                        : `< ${formatPrice(maxPrice)}`
-                  }
-                  onClear={() => {
-                    setMinPrice("0");
-                    setMaxPrice("0");
-                  }}
-                  variant="emerald"
-                  icon={<DollarSign className="w-3 h-3" />}
-                />
-              )}
-
-              {/* Size Badge */}
-              {((minSize && minSize !== "0") ||
-                (maxSize && maxSize !== "0")) && (
-                <Badge
-                  label={
-                    minSize && minSize !== "0" && maxSize && maxSize !== "0"
-                      ? `${minSize} - ${maxSize} sqm`
-                      : minSize && minSize !== "0"
-                        ? `> ${minSize} sqm`
-                        : `< ${maxSize} sqm`
-                  }
-                  onClear={() => {
-                    setMinSize("0");
-                    setMaxSize("0");
-                  }}
-                  variant="emerald"
-                  icon={<Maximize className="w-3 h-3" />}
-                />
-              )}
-              {petFriendly && (
-                <Badge
-                  label={t("search.pet_allowed")}
-                  onClear={() => setPetFriendly(false)}
-                  variant="purple"
-                />
-              )}
-              {fullyFurnished && (
-                <Badge
-                  label={t("search.fully_furnished")}
-                  onClear={() => setFullyFurnished(false)}
-                  variant="purple"
-                />
-              )}
-              {isForeigner && (
-                <Badge
-                  label={t("search.foreigner")}
-                  onClear={() => setIsForeigner(false)}
-                  variant="purple"
-                />
-              )}
-              {companyRegistered && (
-                <Badge
-                  label={t("search.company_registered")}
-                  onClear={() => setCompanyRegistered(false)}
-                  variant="purple"
-                />
-              )}
-              {isHotDeal && (
-                <Badge
-                  label={t("search.hot_deal")}
-                  onClear={() => setIsHotDeal(false)}
-                  variant="rose"
-                  icon={<FireIcon className="w-3 h-3" />}
-                />
-              )}
-              {allowAirbnb && (
-                <Badge
-                  label={t("search.allow_airbnb")}
-                  onClear={() => setAllowAirbnb(false)}
-                  variant="rose"
-                />
-              )}
-            </div>
-          </div>
-
-          <button
-            onClick={clearFilters}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+      {/* Animated Bottom Panel (Active Filters & Popular Areas) */}
+      <AnimatePresence initial={false}>
+        {showBottomPanel && (hasActiveFilters || availableAreas.length > 0) && (
+          <m.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.04, 0.62, 0.23, 0.98] }}
+            className="overflow-hidden"
           >
-            <svg
-              className="w-3.5 h-3.5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-              />
-            </svg>
-            {t("search.clear_all")}
-          </button>
-        </div>
-      )}
-
-      {/* Row 3: Popular Areas */}
-      {availableAreas.length > 0 && (
-        <div className="flex items-center gap-3 py-3 border-t border-slate-100">
-          <button
-            onClick={() => setShowAreaSection(!showAreaSection)}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 text-xs font-semibold hover:bg-slate-100 transition-all"
-          >
-            {t("search.popular_locations")}
-            {showAreaSection ? (
-              <ChevronUp className="w-3 h-3" />
-            ) : (
-              <ChevronDown className="w-3 h-3" />
-            )}
-          </button>
-
-          {showAreaSection && (
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 animate-in fade-in slide-in-from-top-1">
-              <button
-                onClick={() => setArea("ALL")}
-                className={`text-xs transition-colors ${area === "ALL" ? "font-semibold text-blue-600" : "text-slate-400 hover:text-blue-600"}`}
-              >
-                {t("search.all_locations")}
-              </button>
-              {availableAreas
-                .slice(0, isExpanded ? undefined : 12)
-                .map((a: any) => (
-                  <button
-                    key={a.name}
-                    disabled={a.count === 0}
-                    onClick={() => setArea(area === a.name ? "ALL" : a.name)}
-                    className={`text-xs transition-colors flex items-center gap-1.5 ${
-                      area === a.name
-                        ? "font-bold text-blue-600 bg-blue-50/50 px-2 py-0.5 rounded-lg"
-                        : a.count === 0
-                          ? "text-slate-300 cursor-not-allowed opacity-60"
-                          : "text-slate-400 hover:text-blue-600"
-                    }`}
-                  >
-                    {area === a.name && (
-                      <svg
-                        className="w-3.5 h-3.5 animate-in zoom-in-50"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={3}
-                          d="M5 13l4 4L19 7"
+            <div className="pt-3">
+              {/* Unified Active Filters Bar */}
+              {hasActiveFilters && (
+                <div className="flex items-start justify-between gap-4 mb-4 p-3 bg-slate-50/50 rounded-xl border border-slate-100 animate-in fade-in slide-in-from-left-2">
+                  <div className="flex items-start gap-3 flex-1 flex-wrap">
+                    <div className="h-[30px] flex items-center">
+                      <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap">
+                        {t("search.active_filters")}:
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {listingType !== "ALL" && (
+                        <Badge
+                          label={t(`search.listing_${listingType.toLowerCase()}`)}
+                          onClear={() => setListingType("ALL")}
+                          variant="blue"
                         />
-                      </svg>
-                    )}
-                    {getLocaleValue(
-                      {
-                        name: a.name,
-                        name_en: a.name_en,
-                        name_cn: a.name_cn,
-                        name_ru: a.name_ru,
-                      },
-                      "name",
-                      language,
-                    )}
-                    <span
-                      className={`text-xs ${a.count === 0 ? "opacity-30" : "opacity-60 text-blue-600"}`}
+                      )}
+                      {type !== "ALL" && (
+                        <Badge
+                          label={
+                            PROPERTY_TYPES.find((pt) => pt.value === type)?.label ||
+                            type
+                          }
+                          onClear={() => setType("ALL")}
+                          variant="blue"
+                        />
+                      )}
+                      {province !== "ALL" && (
+                        <Badge
+                          label={getProvinceName(province, language)}
+                          onClear={() => setProvince("ALL")}
+                          variant="slate"
+                        />
+                      )}
+                      {area !== "ALL" && (
+                        <Badge
+                          label={(() => {
+                            const found = availableAreas.find((a) => a.name === area);
+                            if (!found) return area.replace("_", " ");
+                            return getLocaleValue(
+                              {
+                                name: found.name,
+                                name_en: found.name_en,
+                                name_cn: found.name_cn,
+                                name_ru: found.name_ru,
+                              },
+                              "name",
+                              language,
+                            );
+                          })()}
+                          onClear={() => setArea("ALL")}
+                          variant="slate"
+                        />
+                      )}
+                      {transitStation && (
+                        <Badge
+                          label={(() => {
+                            const found = (allStations || availableStations).find(
+                              (s) => s.name === transitStation,
+                            );
+                            if (!found) return transitStation.replace("_", " ");
+                            const localized = getLocaleValue(
+                              {
+                                name: found.name,
+                                name_en: found.name_en,
+                                name_cn: found.name_cn,
+                                name_ru: found.name_ru,
+                              },
+                              "name",
+                              language,
+                            ).replace("_", " ");
+                            return found.type ? formatStationLabel(found.type, localized, language) : localized;
+                          })()}
+                          onClear={() => setTransitStation("")}
+                          variant={(() => {
+                            const found = (allStations || availableStations).find(
+                              (s) => s.name === transitStation,
+                            );
+                            if (!found) return "blue";
+                            const t = found.type.toUpperCase();
+                            if (t === "BTS" || t === "GOLD") return "emerald";
+                            if (t.startsWith("MRT")) return "blue";
+                            if (t === "ARL") return "rose";
+                            if (t === "SRT" || t === "SRT_RED") return "red";
+                            if (t === "BRT") return "teal";
+                            return "blue";
+                          })()}
+                          icon={<TrainIcon className={cn(
+                            "w-3 h-3",
+                            (() => {
+                              const found = (allStations || availableStations).find(
+                                (s) => s.name === transitStation,
+                              );
+                              if (!found) return "text-blue-500";
+                              const t = found.type.toUpperCase();
+                              if (t === "BTS" || t === "GOLD") return "text-emerald-500";
+                              if (t.startsWith("MRT")) return "text-blue-500";
+                              if (t === "ARL") return "text-rose-500";
+                              if (t === "SRT" || t === "SRT_RED") return "text-red-500";
+                              if (t === "BRT") return "text-teal-500";
+                              return "text-blue-500";
+                            })()
+                          )} />}
+                        />
+                      )}
+                      {bedrooms !== "ALL" && (
+                        <Badge
+                          label={`${bedrooms} ${t("search.bedrooms")}`}
+                          onClear={() => setBedrooms("ALL")}
+                          variant="slate"
+                        />
+                      )}
+                      {/* Price Badge */}
+                      {((minPrice && minPrice !== "0") ||
+                        (maxPrice && maxPrice !== "0")) && (
+                        <Badge
+                          label={
+                            minPrice && minPrice !== "0" && maxPrice && maxPrice !== "0"
+                              ? `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`
+                              : minPrice && minPrice !== "0"
+                                ? `> ${formatPrice(minPrice)}`
+                                : `< ${formatPrice(maxPrice)}`
+                          }
+                          onClear={() => {
+                            setMinPrice("0");
+                            setMaxPrice("0");
+                          }}
+                          variant="emerald"
+                          icon={<DollarSign className="w-3 h-3" />}
+                        />
+                      )}
+
+                      {/* Size Badge */}
+                      {((minSize && minSize !== "0") ||
+                        (maxSize && maxSize !== "0")) && (
+                        <Badge
+                          label={
+                            minSize && minSize !== "0" && maxSize && maxSize !== "0"
+                              ? `${minSize} - ${maxSize} sqm`
+                              : minSize && minSize !== "0"
+                                ? `> ${minSize} sqm`
+                                : `< ${maxSize} sqm`
+                          }
+                          onClear={() => {
+                            setMinSize("0");
+                            setMaxSize("0");
+                          }}
+                          variant="emerald"
+                          icon={<Maximize className="w-3 h-3" />}
+                        />
+                      )}
+                      {petFriendly && (
+                        <Badge
+                          label={t("search.pet_allowed")}
+                          onClear={() => setPetFriendly(false)}
+                          variant="purple"
+                        />
+                      )}
+                      {fullyFurnished && (
+                        <Badge
+                          label={t("search.fully_furnished")}
+                          onClear={() => setFullyFurnished(false)}
+                          variant="purple"
+                        />
+                      )}
+                      {isForeigner && (
+                        <Badge
+                          label={t("search.foreigner")}
+                          onClear={() => setIsForeigner(false)}
+                          variant="purple"
+                        />
+                      )}
+                      {companyRegistered && (
+                        <Badge
+                          label={t("search.company_registered")}
+                          onClear={() => setCompanyRegistered(false)}
+                          variant="purple"
+                        />
+                      )}
+                      {isHotDeal && (
+                        <Badge
+                          label={t("search.hot_deal")}
+                          onClear={() => setIsHotDeal(false)}
+                          variant="rose"
+                          icon={<FireIcon className="w-3 h-3" />}
+                        />
+                      )}
+                      {allowAirbnb && (
+                        <Badge
+                          label={t("search.allow_airbnb")}
+                          onClear={() => setAllowAirbnb(false)}
+                          variant="rose"
+                        />
+                      )}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={clearFilters}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                  >
+                    <svg
+                      className="w-3.5 h-3.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      ({a.count})
-                    </span>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                    {t("search.clear_all")}
                   </button>
-                ))}
-              {availableAreas.length > 12 && (
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="text-xs font-bold text-slate-300 hover:text-slate-500"
-                >
-                  {isExpanded
-                    ? t("search.show_less")
-                    : `+${availableAreas.length - 12} ${t("search.show_more")}`}
-                </button>
+                </div>
+              )}
+
+              {/* Row 3: Popular Areas */}
+              {availableAreas.length > 0 && (
+                <div className="flex items-center gap-3  border-t border-slate-100">
+                  <button
+                    onClick={() => setShowAreaSection(!showAreaSection)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 text-xs font-semibold hover:bg-slate-100 transition-all"
+                  >
+                    {t("search.popular_locations")}
+                    {showAreaSection ? (
+                      <ChevronUp className="w-3 h-3" />
+                    ) : (
+                      <ChevronDown className="w-3 h-3" />
+                    )}
+                  </button>
+
+                  {showAreaSection && (
+                    <div className="relative flex-1 overflow-hidden animate-in fade-in slide-in-from-top-1 px-8 py-4">
+                      <div
+                        ref={scrollRef}
+                        className="overflow-x-auto [&::-webkit-scrollbar]:hidden flex items-center gap-5 py-1 scroll-smooth whitespace-nowrap"
+                        style={{ scrollbarWidth: "none" }}
+                      >
+                        <button
+                          onClick={() => setArea("ALL")}
+                          className={`text-xs transition-colors shrink-0 ${area === "ALL" ? "font-semibold text-blue-600" : "text-slate-400 hover:text-blue-600"}`}
+                        >
+                          {t("search.all_locations")}
+                        </button>
+                        {availableAreas.map((a: any) => (
+                          <button
+                            key={a.name}
+                            disabled={a.count === 0}
+                            onClick={() => setArea(area === a.name ? "ALL" : a.name)}
+                            className={`text-xs transition-colors flex items-center gap-1.5 shrink-0 ${
+                              area === a.name
+                                ? "font-bold text-blue-600 bg-blue-50/50 px-2.5 py-1 rounded-lg"
+                                : a.count === 0
+                                  ? "text-slate-300 cursor-not-allowed opacity-60"
+                                  : "text-slate-400 hover:text-blue-600"
+                            }`}
+                          >
+                            {area === a.name && (
+                              <svg
+                                className="w-3.5 h-3.5 animate-in zoom-in-50"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={3}
+                                  d="M5 13l4 4L19 7"
+                                />
+                              </svg>
+                            )}
+                            {getLocaleValue(
+                              {
+                                name: a.name,
+                                name_en: a.name_en,
+                                name_cn: a.name_cn,
+                                name_ru: a.name_ru,
+                              },
+                              "name",
+                              language,
+                            )}
+                            <span
+                              className={`text-xs ${a.count === 0 ? "opacity-30" : "opacity-60 text-blue-600"}`}
+                            >
+                              ({a.count})
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Left Fade Gradient Overlay */}
+                      {showLeftArrow && (
+                        <div className="absolute left-8 top-0 bottom-0 w-12 bg-linear-to-l from-transparent to-white pointer-events-none z-10 animate-in fade-in duration-200" />
+                      )}
+                      
+                      {/* Right Fade Gradient Overlay */}
+                      {showRightArrow && (
+                        <div className="absolute right-8 top-0 bottom-0 w-12 bg-linear-to-r from-transparent to-white pointer-events-none z-10 animate-in fade-in duration-200" />
+                      )}
+
+                      {/* Navigation Arrows */}
+                      {showLeftArrow && (
+                        <button
+                          onClick={() => handleScroll("left")}
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-all z-20 hover:scale-105 active:scale-95 duration-150"
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                      )}
+
+                      {showRightArrow && (
+                        <button
+                          onClick={() => handleScroll("right")}
+                          className="absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-all z-20 hover:scale-105 active:scale-95 duration-150"
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
-      )}
+          </m.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

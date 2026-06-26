@@ -41,6 +41,7 @@ import {
   BadgeDollarSign,
   Loader2,
   Database,
+  Train,
 } from "lucide-react";
 import { FaLine } from "react-icons/fa";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
@@ -254,6 +255,14 @@ export function SidebarNav({
       active: pathname?.startsWith("/protected/admin/master-data") ?? false,
       roles: ["ADMIN", "MANAGER", "AGENT"],
       description: "จัดการสายรถไฟฟ้าและหมวดหมู่สถานที่ใกล้เคียงแบบเรียลไทม์",
+    },
+    {
+      title: "SEO สถานีรถไฟฟ้า",
+      href: "/protected/admin/transit-stations",
+      icon: Train,
+      active: pathname?.startsWith("/protected/admin/transit-stations") ?? false,
+      roles: ["ADMIN", "MANAGER"],
+      description: "จัดการ URL Slug และข้อมูล SEO ของแต่ละสถานีรถไฟฟ้า",
     },
   ];
 

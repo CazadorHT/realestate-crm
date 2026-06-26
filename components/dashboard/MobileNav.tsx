@@ -35,6 +35,7 @@ import {
   Wallet,
   BadgeDollarSign,
   Database,
+  Train,
 } from "lucide-react";
 import { isStaff, isAdmin, type UserRole } from "@/lib/auth-shared";
 import { cn } from "@/lib/utils";
@@ -238,6 +239,13 @@ export function MobileNav({
       icon: Database,
       active: pathname?.startsWith("/protected/admin/master-data") ?? false,
       roles: ["ADMIN", "MANAGER", "AGENT"],
+    },
+    {
+      title: "SEO สถานีรถไฟฟ้า",
+      href: "/protected/admin/transit-stations",
+      icon: Train,
+      active: pathname?.startsWith("/protected/admin/transit-stations") ?? false,
+      roles: ["ADMIN", "MANAGER"],
     },
   ];
 

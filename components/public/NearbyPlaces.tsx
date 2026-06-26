@@ -33,6 +33,7 @@ export interface TransitItem {
   station_name: { th?: string; en?: string; cn?: string; ru?: string } | string;
   distance_meters?: number;
   time?: string;
+  slug?: string;
 }
 
 interface NearbyPlacesProps {
@@ -239,6 +240,28 @@ export function NearbyPlaces({
                 const distanceKm = !isNaN(rawDistanceMeters) && rawDistanceMeters > 0
                  ? rawDistanceMeters / 1000
                   : null;
+
+                const type = (transit.type || "").toUpperCase();
+                const stationNameEn = getLocaleValue(transit, "station_name", "en");
+                const cleanName = stationNameEn
+                  ? stationNameEn
+                      .toLowerCase()
+                      .trim()
+                      .replace(/[\s_/]+/g, "-")
+                      .replace(/[^a-z0-9-]/g, "")
+                  : "";
+
+                const isValidSlug = type && cleanName && cleanName.replace(/-/g, "").length > 0;
+                const slugPrefix = type.toLowerCase().replace(/_/g, "-");
+
+                const targetHref = transit.slug
+                  ? `/near-station/${transit.slug}`
+                  : isValidSlug
+                    ? `/near-station/${slugPrefix}-${cleanName}`
+                    : `/properties?transit_station=${encodeURIComponent(
+                        getLocaleValue(transit, "station_name", language)
+                      )}`;
+
                 return (
                   <li
                     key={i}
@@ -251,9 +274,7 @@ export function NearbyPlaces({
                         {typeLabel}
                       </span>
                       <Link
-                        href={`/properties?transit_station=${encodeURIComponent(
-                          getLocaleValue(transit, "station_name", language)
-                        )}`}
+                        href={targetHref}
                         className="text-slate-600 leading-tight hover:text-blue-600 hover:underline transition-colors decoration-blue-300 underline-offset-4"
                       >
                         {getLocaleValue(transit, "station_name", language)}

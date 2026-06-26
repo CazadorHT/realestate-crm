@@ -394,7 +394,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
               </span>
               <br />
             </h2>
-            <p className="text-base md:text-lg text-slate-600 max-w-2xl leading-relaxed">
+            <p className="text-base md:text-md text-slate-600 max-w-2xl leading-relaxed">
               {t("property_listing.description")}
             </p>
             <div className="flex flex-wrap items-center gap-3">

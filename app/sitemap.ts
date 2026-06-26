@@ -38,6 +38,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       alternates: getAlternates("/properties"),
     },
     {
+      url: `${baseUrl}/near-station`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+      alternates: getAlternates("/near-station"),
+    },
+    {
       url: `${baseUrl}/services`,
       lastModified: new Date(),
       changeFrequency: "weekly",
@@ -126,5 +133,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
-  return [...staticRoutes, ...propertyRoutes, ...blogRoutes, ...serviceRoutes];
+  // 5. Fetch Active Transit Stations
+  const { data: stations } = await supabase
+    .from("ref_master_data")
+    .select("metadata, updated_at")
+    .eq("type", "TRANSIT_STATION")
+    .eq("is_active", true);
+
+  const stationRoutes: MetadataRoute.Sitemap = (stations || [])
+    .filter((s: any) => s.metadata?.slug)
+    .map((s: any) => ({
+      url: `${baseUrl}/near-station/${s.metadata.slug}`,
+      lastModified: s.updated_at ? new Date(s.updated_at) : new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+      alternates: getAlternates(`/near-station/${s.metadata.slug}`),
+    }));
+
+  return [
+    ...staticRoutes,
+    ...propertyRoutes,
+    ...blogRoutes,
+    ...serviceRoutes,
+    ...stationRoutes,
+  ];
 }

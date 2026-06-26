@@ -222,9 +222,9 @@ export function RecentPropertiesTable({
                         {(() => {
                           const imageUrl =
                             property.image_url ||
-                            (property.images &&
+                            (Array.isArray(property.images) &&
                               (property.images as any[])[0]?.url) ||
-                            (property.images &&
+                            (Array.isArray(property.images) &&
                               (property.images as any[])[0]?.image_url);
 
                           return imageUrl ? (
@@ -529,8 +529,8 @@ export function RecentPropertiesTable({
                   {(() => {
                     const imageUrl =
                       property.image_url ||
-                      (property.images && (property.images as any[])[0]?.url) ||
-                      (property.images &&
+                      (Array.isArray(property.images) && (property.images as any[])[0]?.url) ||
+                      (Array.isArray(property.images) &&
                         (property.images as any[])[0]?.image_url);
 
                     return imageUrl ? (
