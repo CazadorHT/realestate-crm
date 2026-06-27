@@ -90,6 +90,7 @@ const LOGO_PATHS: Record<string, string> = {
   MRT_PURPLE: "/images/transit/MRT_(Bangkok)_Purple_logo.svg",
   MRT_YELLOW: "/images/transit/MRT_(Bangkok)_Yellow_logo.svg",
   MRT_PINK: "/images/transit/MRT_(Bangkok)_Pink_Logo.svg",
+  MRT_ORANGE: "/images/transit/MRT_(Bangkok)_Orange_logo.svg",
   ARL: "/images/transit/ARLbangkok.svg",
   SRT_RED: "/images/transit/SRT_Red_Lines_icon.svg",
   SRT: "/images/transit/SRT_Red_Lines_icon.svg",
@@ -109,6 +110,12 @@ export function StationSearchSelect({
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [trainTypeFilter, setTrainTypeFilter] = React.useState("ALL");
+  const [subLineFilter, setSubLineFilter] = React.useState("ALL");
+
+  const handleTrainTypeFilterChange = (newType: string) => {
+    setTrainTypeFilter(newType);
+    setSubLineFilter("ALL");
+  };
 
   // Get unique train types from all stations to build type filter tabs (Normalized)
   const trainTypes = React.useMemo(() => {
@@ -137,16 +144,22 @@ export function StationSearchSelect({
   const filteredStations = React.useMemo(() => {
     return mergedStations.filter((station) => {
       // 1. Filter by train type tab (using normalized type)
-      if (trainTypeFilter !== "ALL" && getNormalizedType(station.type) !== trainTypeFilter) {
-        return false;
+      if (trainTypeFilter !== "ALL") {
+        if (getNormalizedType(station.type) !== trainTypeFilter) {
+          return false;
+        }
+        // 2. Filter by sub-line if selected
+        if (subLineFilter !== "ALL" && station.type !== subLineFilter) {
+          return false;
+        }
       }
 
-      // 2. Filter by search query
+      // 3. Filter by search query
       if (!searchQuery) return true;
       const q = searchQuery.toLowerCase();
       const localizedName = getLocaleValue(
         {
-          name: station.name,
+          name: station.name.split("|")[0],
           name_en: station.name_en,
           name_cn: station.name_cn,
           name_ru: station.name_ru,
@@ -159,7 +172,7 @@ export function StationSearchSelect({
         (station.name_en && station.name_en.toLowerCase().includes(q))
       );
     });
-  }, [mergedStations, trainTypeFilter, searchQuery, language, getLocaleValue]);
+  }, [mergedStations, trainTypeFilter, subLineFilter, searchQuery, language, getLocaleValue]);
 
   const selectedStationObj = React.useMemo(() => {
     return (allStations.length > 0 ? allStations : availableStations).find(
@@ -169,11 +182,11 @@ export function StationSearchSelect({
 
   const displayLabel = React.useMemo(() => {
     if (!transitStation) return t("search.all_stations") || "รถไฟฟ้าทุกสาย";
-    if (!selectedStationObj) return transitStation.replace("_", " ");
+    if (!selectedStationObj) return transitStation.split("|")[0].replace("_", " ");
 
     const localized = getLocaleValue(
       {
-        name: selectedStationObj.name,
+        name: selectedStationObj.name.split("|")[0],
         name_en: selectedStationObj.name_en,
         name_cn: selectedStationObj.name_cn,
         name_ru: selectedStationObj.name_ru,
@@ -234,7 +247,7 @@ export function StationSearchSelect({
         {trainTypes.length > 0 && (
           <div className="flex flex-wrap gap-1 p-2 bg-slate-50/50 border-b border-slate-100">
             <button
-              onClick={() => setTrainTypeFilter("ALL")}
+              onClick={() => handleTrainTypeFilterChange("ALL")}
               className={cn(
                 "px-2 py-1 rounded-lg text-[12px] font-bold transition-all border",
                 trainTypeFilter === "ALL"
@@ -249,7 +262,7 @@ export function StationSearchSelect({
               return (
                 <button
                   key={type}
-                  onClick={() => setTrainTypeFilter(type)}
+                  onClick={() => handleTrainTypeFilterChange(type)}
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-[12px] font-bold transition-all border flex items-center gap-1.5",
                     getTypeTabClass(type, trainTypeFilter === type)
@@ -265,6 +278,65 @@ export function StationSearchSelect({
                 </button>
               );
             })}
+          </div>
+        )}
+
+        {/* Sub-line Tabs (specific colors) */}
+        {(trainTypeFilter === "MRT" || trainTypeFilter === "BTS") && (
+          <div className="flex flex-wrap gap-1 p-2 bg-slate-50/20 border-b border-slate-100/80 animate-in fade-in slide-in-from-top-1 duration-200">
+            {/* "All" option for sub-line */}
+            <button
+              onClick={() => setSubLineFilter("ALL")}
+              className={cn(
+                "px-2 py-0.5 rounded-md text-[10px] font-bold transition-all border",
+                subLineFilter === "ALL"
+                  ? "bg-slate-500 text-white border-slate-500 shadow-3xs"
+                  : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
+              )}
+            >
+              {language === "th" ? "ทุกสาย" : language === "cn" ? "所有线路" : language === "ru" ? "Все линии" : "All Lines"}
+            </button>
+
+            {/* MRT Sub-lines */}
+            {trainTypeFilter === "MRT" && [
+              { type: "MRT", label: { th: "สายสีน้ำเงิน", en: "Blue Line", cn: "蓝线", ru: "Синяя" }, colorClass: "bg-blue-800 text-white border-blue-900" },
+              { type: "MRT_PURPLE", label: { th: "สายสีม่วง", en: "Purple Line", cn: "紫线", ru: "Фиолетовая" }, colorClass: "bg-purple-600 text-white border-purple-700" },
+              { type: "MRT_YELLOW", label: { th: "สายสีเหลือง", en: "Yellow Line", cn: "黄线", ru: "Жёлтая" }, colorClass: "bg-amber-400 text-slate-900 border-amber-500" },
+              { type: "MRT_PINK", label: { th: "สายสีชมพู", en: "Pink Line", cn: "粉线", ru: "Розовая" }, colorClass: "bg-pink-500 text-white border-pink-600" },
+              { type: "MRT_ORANGE", label: { th: "สายสีส้ม", en: "Orange Line", cn: "橙线", ru: "Оранжевая" }, colorClass: "bg-orange-500 text-white border-orange-600" },
+            ].map((sub) => (
+              <button
+                key={sub.type}
+                onClick={() => setSubLineFilter(sub.type)}
+                className={cn(
+                  "px-2 py-0.5 rounded-md text-[10px] font-bold transition-all border",
+                  subLineFilter === sub.type
+                    ? `${sub.colorClass} shadow-3xs`
+                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                )}
+              >
+                {sub.label[language as "th" | "en" | "cn" | "ru"] || sub.label.th}
+              </button>
+            ))}
+
+            {/* BTS Sub-lines */}
+            {trainTypeFilter === "BTS" && [
+              { type: "BTS", label: { th: "BTS สกายเทรน", en: "BTS Skytrain", cn: "BTS 轻轨", ru: "BTS" }, colorClass: "bg-emerald-600 text-white border-emerald-700" },
+              { type: "GOLD", label: { th: "สายสีทอง", en: "Gold Line", cn: "金线", ru: "Золотая" }, colorClass: "bg-amber-600 text-white border-amber-700" },
+            ].map((sub) => (
+              <button
+                key={sub.type}
+                onClick={() => setSubLineFilter(sub.type)}
+                className={cn(
+                  "px-2 py-0.5 rounded-md text-[10px] font-bold transition-all border",
+                  subLineFilter === sub.type
+                    ? `${sub.colorClass} shadow-3xs`
+                    : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                )}
+              >
+                {sub.label[language as "th" | "en" | "cn" | "ru"] || sub.label.th}
+              </button>
+            ))}
           </div>
         )}
 
@@ -299,7 +371,7 @@ export function StationSearchSelect({
               const isSelected = transitStation === station.name;
               const localizedName = getLocaleValue(
                 {
-                  name: station.name,
+                  name: station.name.split("|")[0],
                   name_en: station.name_en,
                   name_cn: station.name_cn,
                   name_ru: station.name_ru,

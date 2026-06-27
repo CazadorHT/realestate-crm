@@ -173,24 +173,6 @@ export function PropertyCardInfo({
             return distA - distB;
           });
 
-          // Prioritize selected station filter if matches any candidate
-          let chosen = candidates[0];
-          if (selectedStationFilter) {
-            const match = candidates.find(c => 
-              c.name.toLowerCase() === selectedStationFilter.toLowerCase() ||
-              c.dbName.toLowerCase() === selectedStationFilter.toLowerCase()
-            );
-            if (match) {
-              chosen = match;
-            }
-          }
-
-          const transitStation = chosen.name;
-          const rawTransitType = chosen.type;
-          const transitDistance = chosen.distance;
-
-          if (!transitStation) return null;
-
           const getNormalizedType = (type?: string | null): string => {
             if (!type) return "Transit";
             const t = type.toUpperCase();
@@ -219,6 +201,30 @@ export function PropertyCardInfo({
                 return "bg-slate-500";
             }
           };
+
+          // Prioritize selected station filter if matches any candidate
+          let chosen = candidates[0];
+          if (selectedStationFilter) {
+            const [filterName, filterType] = selectedStationFilter.toLowerCase().split("|");
+            const match = candidates.find(c => {
+              const matchesName = c.name.toLowerCase() === filterName ||
+                c.dbName.toLowerCase() === filterName;
+              if (!matchesName) return false;
+              if (filterType) {
+                return c.type.toLowerCase() === filterType || getNormalizedType(c.type).toLowerCase() === filterType;
+              }
+              return true;
+            });
+            if (match) {
+              chosen = match;
+            }
+          }
+
+          const transitStation = chosen.name;
+          const rawTransitType = chosen.type;
+          const transitDistance = chosen.distance;
+
+          if (!transitStation) return null;
 
           const transitType = getNormalizedType(rawTransitType);
           const badgeClass = getTypeBadgeClass(rawTransitType);

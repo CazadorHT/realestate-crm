@@ -220,10 +220,32 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         if (options.allowAirbnb) query = query.eq("amenities->allow_airbnb", true);
 
         if (options.transitStation) {
-          const station = options.transitStation.replace(/"/g, "");
-          query = query.or(
-            `nearby_transits.cs.[{"station_name":"${station}"}],nearby_transits.cs.[{"station_name_en":"${station}"}],nearby_transits.cs.[{"station_name_cn":"${station}"}],nearby_transits.cs.[{"station_name_ru":"${station}"}]`
-          );
+          const [stationName, stationType] = options.transitStation.replace(/"/g, "").split("|");
+          if (stationType) {
+            const csTh = `[{"station_name":"${stationName}","type":"${stationType}"}]`;
+            const csEn = `[{"station_name_en":"${stationName}","type":"${stationType}"}]`;
+            const csCn = `[{"station_name_cn":"${stationName}","type":"${stationType}"}]`;
+            const csRu = `[{"station_name_ru":"${stationName}","type":"${stationType}"}]`;
+
+            query = query.or(
+              `nearby_transits.cs."${csTh.replace(/"/g, '\\"')}",` +
+              `nearby_transits.cs."${csEn.replace(/"/g, '\\"')}",` +
+              `nearby_transits.cs."${csCn.replace(/"/g, '\\"')}",` +
+              `nearby_transits.cs."${csRu.replace(/"/g, '\\"')}"`
+            );
+          } else {
+            const csTh = `[{"station_name":"${stationName}"}]`;
+            const csEn = `[{"station_name_en":"${stationName}"}]`;
+            const csCn = `[{"station_name_cn":"${stationName}"}]`;
+            const csRu = `[{"station_name_ru":"${stationName}"}]`;
+
+            query = query.or(
+              `nearby_transits.cs."${csTh.replace(/"/g, '\\"')}",` +
+              `nearby_transits.cs."${csEn.replace(/"/g, '\\"')}",` +
+              `nearby_transits.cs."${csCn.replace(/"/g, '\\"')}",` +
+              `nearby_transits.cs."${csRu.replace(/"/g, '\\"')}"`
+            );
+          }
         }
 
         if (options.q) {

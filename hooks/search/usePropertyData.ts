@@ -14,17 +14,22 @@ type ApiProperty = PropertyCardProps;
  * 🛡️ Fortress-Ready Data Hook
  * Performs server-side searching, filtering, and pagination.
  */
-export function usePropertyData(initialProperties?: ApiProperty[]) {
+export function usePropertyData(initialProperties?: ApiProperty[], initialFacets?: PropertyFacets | null) {
   const { t } = useLanguage();
   const searchParams = useSearchParams();
   const [properties, setProperties] = useState<ApiProperty[]>(initialProperties || []);
-  const [facets, setFacets] = useState<PropertyFacets | null>(null);
+  const [facets, setFacets] = useState<PropertyFacets | null>(initialFacets || null);
   const [isLoading, setIsLoading] = useState(properties.length === 0);
   const [isRefetching, setIsRefetching] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const isFirstLoadRef = useRef(true);
 
   useEffect(() => {
+    if (isFirstLoadRef.current && initialProperties && initialProperties.length > 0) {
+      isFirstLoadRef.current = false;
+      return;
+    }
+
     async function load() {
       if (abortControllerRef.current) {
         try {

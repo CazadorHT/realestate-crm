@@ -282,6 +282,7 @@ function TransitLineSection({ line, language }: { line: TransitLine; language: s
               MRT_PURPLE: "/images/transit/MRT_(Bangkok)_Purple_logo.svg",
               MRT_YELLOW: "/images/transit/MRT_(Bangkok)_Yellow_logo.svg",
               MRT_PINK: "/images/transit/MRT_(Bangkok)_Pink_Logo.svg",
+              MRT_ORANGE: "/images/transit/MRT_(Bangkok)_Orange_logo.svg",
               ARL: "/images/transit/ARLbangkok.svg",
               SRT_RED: "/images/transit/SRT_Red_Lines_icon.svg",
               BRT: "/images/transit/Bangkok_BRT_logo.svg",

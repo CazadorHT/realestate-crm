@@ -21,7 +21,17 @@ export function usePropertyFilters(defaultTransitStation: string = "", basePath?
   const [minSize, setMinSize] = useState(searchParams.get("min_size") || "");
   const [maxSize, setMaxSize] = useState(searchParams.get("max_size") || "");
   const [sort, setSort] = useState("NEWEST");
-  const [transitStation, setTransitStation] = useState(searchParams.get("transit_station") || defaultTransitStation);
+  const [transitStation, setTransitStation] = useState(() => {
+    const fromUrl = searchParams.get("transit_station") || "";
+    if (!fromUrl) return defaultTransitStation;
+    if (defaultTransitStation && defaultTransitStation.includes("|")) {
+      const [defaultName] = defaultTransitStation.split("|");
+      if (fromUrl.toLowerCase() === defaultName.toLowerCase()) {
+        return defaultTransitStation;
+      }
+    }
+    return fromUrl;
+  });
 
   const [area, setArea] = useState(searchParams.get("popular_area") || "ALL");
   const [province, setProvince] = useState(
@@ -82,7 +92,21 @@ export function usePropertyFilters(defaultTransitStation: string = "", basePath?
     setIsHotDeal(searchParams.get("hot_deal") === "true");
     setAllowAirbnb(searchParams.get("airbnb") === "true");
     setBedrooms(searchParams.get("bedrooms") || "ALL");
-    setTransitStation(searchParams.get("transit_station") || defaultTransitStation);
+    const fromUrl = searchParams.get("transit_station") || "";
+    if (fromUrl) {
+      if (defaultTransitStation && defaultTransitStation.includes("|")) {
+        const [defaultName] = defaultTransitStation.split("|");
+        if (fromUrl.toLowerCase() === defaultName.toLowerCase()) {
+          setTransitStation(defaultTransitStation);
+        } else {
+          setTransitStation(fromUrl);
+        }
+      } else {
+        setTransitStation(fromUrl);
+      }
+    } else {
+      setTransitStation(defaultTransitStation);
+    }
     
     // Clear AI insight on manual navigation change
     setAiInsight(null);

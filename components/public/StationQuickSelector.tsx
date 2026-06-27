@@ -15,6 +15,7 @@ const LOGO_PATHS: Record<string, string> = {
   MRT: "/images/transit/MRT_(Bangkok)_logo.svg",
   MRT_PURPLE: "/images/transit/MRT_(Bangkok)_Purple_logo.svg",
   MRT_YELLOW: "/images/transit/MRT_(Bangkok)_Yellow_logo.svg",
+  MRT_ORANGE: "/images/transit/MRT_(Bangkok)_Orange_logo.svg",
   MRT_PINK: "/images/transit/MRT_(Bangkok)_Pink_Logo.svg",
   ARL: "/images/transit/ARLbangkok.svg",
   SRT_RED: "/images/transit/SRT_Red_Lines_icon.svg",
@@ -286,7 +287,7 @@ export function StationQuickSelector({
           <div className="min-w-0">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-1.5 flex-wrap">
               <span>{getString("viewing_near", language)}</span>
-              <span className="text-blue-650">
+              <span style={{ color: currentStation?.line.color || "#2563eb" }}>
                 {currentStation?.station 
                   ? formatStationName((currentStation.station.label as Record<string, string>)[language] || currentStation.station.label.th, language)
                   : getString("current", language)
@@ -303,7 +304,14 @@ export function StationQuickSelector({
         </div>
         
         <div className="flex items-center gap-2.5 shrink-0 ml-4">
-          <span className="hidden sm:inline-block text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100/85 px-3 py-1.5 rounded-xl border border-blue-100 transition-colors">
+          <span 
+            className="hidden sm:inline-block text-xs font-bold px-3 py-1.5 rounded-xl border transition-colors cursor-pointer"
+            style={{
+              color: currentStation?.line.color || "#2563eb",
+              borderColor: `${currentStation?.line.color || "#2563eb"}30`,
+              backgroundColor: `${currentStation?.line.color || "#2563eb"}09`
+            }}
+          >
             {isExpanded ? getString("hide_options", language) : getString("search_change", language)}
           </span>
           <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} />
@@ -340,7 +348,18 @@ export function StationQuickSelector({
                     placeholder={getString("search_placeholder", language)}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 focus:border-blue-500 rounded-xl focus:outline-hidden transition-all duration-200"
+                    className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 rounded-xl focus:outline-hidden transition-all duration-200"
+                    style={{
+                      // @ts-ignore
+                      "--tw-border-opacity": "1",
+                      borderColor: "rgba(226, 232, 240, 1)"
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.borderColor = currentStation?.line.color || "#3b82f6";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.borderColor = "";
+                    }}
                   />
                 </div>
               </div>
@@ -358,9 +377,10 @@ export function StationQuickSelector({
                           key={station.code}
                           href={`/near-station/${station.slug}`}
                           onClick={() => setSearchQuery("")}
-                          className={`flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all text-xs font-medium text-slate-800 ${
-                            station.slug === currentStationSlug ? "ring-2 ring-blue-500/80" : ""
-                          }`}
+                          className="flex items-center gap-2 p-2.5 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/50 hover:bg-slate-50 transition-all text-xs font-medium text-slate-800"
+                          style={{
+                            boxShadow: station.slug === currentStationSlug ? `0 0 0 2px ${lineColor}cc` : undefined
+                          }}
                         >
                           <div
                             className="w-2 h-2 rounded-full shrink-0"
@@ -456,11 +476,18 @@ export function StationQuickSelector({
                           <Link
                             key={station.code}
                             href={`/near-station/${station.slug}`}
-                            className={`group/item flex items-center justify-between gap-2 p-2.5 rounded-xl border transition-all text-xs font-medium w-[150px] xs:w-[170px] lg:w-auto shrink-0 lg:shrink snap-start ${
-                              isCurrent
-                                ? "bg-blue-50 border-blue-200 text-blue-700 shadow-xs font-semibold"
-                                : "bg-slate-50/50 hover:bg-slate-50 border-slate-100 hover:border-slate-200 text-slate-800"
-                            }`}
+                            className="group/item flex items-center justify-between gap-2 p-2.5 rounded-xl border transition-all text-xs font-medium w-[150px] xs:w-[170px] lg:w-auto shrink-0 lg:shrink snap-start"
+                            style={isCurrent ? {
+                              backgroundColor: `${activeLine.color}08`,
+                              borderColor: `${activeLine.color}35`,
+                              color: activeLine.color,
+                              fontWeight: "600",
+                              boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)"
+                            } : {
+                              backgroundColor: "rgba(248, 250, 252, 0.5)",
+                              borderColor: "rgba(241, 245, 249, 1)",
+                              color: "rgba(30, 41, 59, 1)"
+                            }}
                           >
                             <div className="flex items-center gap-2 min-w-0">
                               <div
@@ -470,11 +497,18 @@ export function StationQuickSelector({
                               <span className="truncate">{(station.label as Record<string, string>)[language] || station.label.th}</span>
                             </div>
                             {station.propertyCount !== undefined && station.propertyCount > 0 && (
-                              <span className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded-sm ${
-                                isCurrent
-                                  ? "bg-blue-100 text-blue-800 font-bold"
-                                  : "bg-slate-200/50 group-hover/item:bg-slate-200/80 text-slate-500 font-semibold"
-                              }`}>
+                              <span 
+                                className="shrink-0 text-[9px] px-1.5 py-0.5 rounded-sm"
+                                style={isCurrent ? {
+                                  backgroundColor: `${activeLine.color}15`,
+                                  color: activeLine.color,
+                                  fontWeight: "700"
+                                } : {
+                                  backgroundColor: "rgba(226, 232, 240, 0.5)",
+                                  color: "rgba(100, 116, 139, 1)",
+                                  fontWeight: "600"
+                                }}
+                              >
                                 {station.propertyCount}
                               </span>
                             )}
@@ -496,11 +530,11 @@ export function StationQuickSelector({
                                 });
                               }
                             }}
-                            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                              scrollActiveIndex === i 
-                                ? "bg-blue-600 w-3" 
-                                : "bg-slate-300 hover:bg-slate-400"
-                            }`}
+                            className="w-1.5 h-1.5 rounded-full transition-all duration-300"
+                            style={{
+                              backgroundColor: scrollActiveIndex === i ? activeLine.color : "rgba(203, 213, 225, 1)",
+                              width: scrollActiveIndex === i ? "12px" : "6px"
+                            }}
                             aria-label={`Go to slide ${i + 1}`}
                           />
                         ))}

@@ -52,6 +52,20 @@ const EXTRA_PANEL_STRINGS: Record<string, Record<string, string>> = {
   }
 };
 
+const LOGO_PATHS: Record<string, string> = {
+  BTS: "/images/transit/BTS-Logo.svg",
+  GOLD: "/images/transit/BTS-Logo.svg",
+  MRT: "/images/transit/MRT_(Bangkok)_logo.svg",
+  MRT_PURPLE: "/images/transit/MRT_(Bangkok)_Purple_logo.svg",
+  MRT_YELLOW: "/images/transit/MRT_(Bangkok)_Yellow_logo.svg",
+  MRT_PINK: "/images/transit/MRT_(Bangkok)_Pink_Logo.svg",
+  MRT_ORANGE: "/images/transit/MRT_(Bangkok)_Orange_logo.svg",
+  ARL: "/images/transit/ARLbangkok.svg",
+  SRT_RED: "/images/transit/SRT_Red_Lines_icon.svg",
+  SRT: "/images/transit/SRT_Red_Lines_icon.svg",
+  BRT: "/images/transit/Bangkok_BRT_logo.svg",
+};
+
 interface DesktopFiltersProps {
   keyword: string;
   setKeyword: (v: string) => void;
@@ -729,10 +743,10 @@ export function DesktopFilters({
                             const found = (allStations || availableStations).find(
                               (s) => s.name === transitStation,
                             );
-                            if (!found) return transitStation.replace("_", " ");
+                            if (!found) return transitStation.split("|")[0].replace("_", " ");
                             const localized = getLocaleValue(
                               {
-                                name: found.name,
+                                name: found.name.split("|")[0],
                                 name_en: found.name_en,
                                 name_cn: found.name_cn,
                                 name_ru: found.name_ru,
@@ -749,29 +763,30 @@ export function DesktopFilters({
                             );
                             if (!found) return "blue";
                             const t = found.type.toUpperCase();
-                            if (t === "BTS" || t === "GOLD") return "emerald";
-                            if (t.startsWith("MRT")) return "blue";
-                            if (t === "ARL") return "rose";
+                            if (t === "BTS") return "emerald";
+                            if (t === "GOLD") return "slate";
+                            if (t === "MRT_PURPLE") return "purple";
+                            if (t === "MRT_YELLOW") return "slate";
+                            if (t === "MRT_PINK" || t === "ARL") return "rose";
                             if (t === "SRT" || t === "SRT_RED") return "red";
                             if (t === "BRT") return "teal";
                             return "blue";
                           })()}
-                          icon={<TrainIcon className={cn(
-                            "w-3 h-3",
-                            (() => {
-                              const found = (allStations || availableStations).find(
-                                (s) => s.name === transitStation,
-                              );
-                              if (!found) return "text-blue-500";
-                              const t = found.type.toUpperCase();
-                              if (t === "BTS" || t === "GOLD") return "text-emerald-500";
-                              if (t.startsWith("MRT")) return "text-blue-500";
-                              if (t === "ARL") return "text-rose-500";
-                              if (t === "SRT" || t === "SRT_RED") return "text-red-500";
-                              if (t === "BRT") return "text-teal-500";
-                              return "text-blue-500";
-                            })()
-                          )} />}
+                          icon={(() => {
+                            const found = (allStations || availableStations).find(
+                              (s) => s.name === transitStation,
+                            );
+                            if (!found) return <TrainIcon className="w-3 h-3 text-blue-500" />;
+                            const logoPath = LOGO_PATHS[found.type.toUpperCase()];
+                            return logoPath ? (
+                              <div className="w-4.5 h-4.5 shrink-0 flex items-center justify-center bg-white rounded-md p-0.5 border border-slate-200/50 mr-0.5">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={logoPath} alt="Logo" className="w-full h-full object-contain" />
+                              </div>
+                            ) : (
+                              <TrainIcon className="w-3 h-3 text-blue-500" />
+                            );
+                          })()}
                         />
                       )}
                       {bedrooms !== "ALL" && (

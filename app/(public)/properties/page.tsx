@@ -85,7 +85,7 @@ export default async function PublicPropertiesPage(props: { searchParams: Promis
   const options = parseSearchParamsToOptions(searchParams);
   
   // ⚡ Prefetch initial data on the server
-  const initialData = await getPublicProperties({ ...options, limit: 12, includeFacets: true });
+  const initialData = await getPublicProperties({ ...options, limit: 60, includeFacets: true });
 
   return (
     <>
@@ -93,7 +93,7 @@ export default async function PublicPropertiesPage(props: { searchParams: Promis
         <div className="max-w-screen-2xl mx-auto px-5 md:px-6 lg:px-8 py-4">
           <AppBreadcrumbs />
         </div>
-        <PropertySearchPage initialProperties={initialData.properties} />
+        <PropertySearchPage initialProperties={initialData.properties} initialFacets={initialData.facets} />
       </div>
     </>
   );

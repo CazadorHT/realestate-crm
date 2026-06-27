@@ -196,7 +196,7 @@ export default async function StationDetailPage(
   const { properties, total } = await getPropertiesNearStation(
     station.label.th,
     station.label.en,
-    { limit: 12 }
+    { limit: 60 }
   );
 
   const lines = await getTransitLinesWithStations();
@@ -250,16 +250,24 @@ export default async function StationDetailPage(
       />
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-16 pb-12 md:pt-24 md:pb-16 text-white min-h-[340px] flex items-center bg-slate-950">
+      <section 
+        className="relative overflow-hidden pt-16 pb-12 md:pt-24 md:pb-16 text-white min-h-[340px] flex items-center transition-colors duration-500"
+        style={{ backgroundColor: station.lineColor ? `${station.lineColor}22` : "#020617" }}
+      >
         {/* Background Image Layer */}
         <div 
-          className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-102 opacity-40 blur-xs brightness-75"
+          className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-102 opacity-25 blur-xs brightness-50"
           style={{ 
             backgroundImage: `url(${station.bgImage || getStationFallbackBg(station.transitType)})`,
           }}
         />
         {/* Darkened Gradient Overlay */}
-        <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/70 to-slate-950/40" />
+        <div 
+          className="absolute inset-0 bg-linear-to-t" 
+          style={{
+            backgroundImage: `linear-gradient(to left, #020617 0%, rgba(2, 6, 23, 0.85) 50%, ${station.lineColor ? `${station.lineColor}40` : "rgba(2, 6, 23, 0.4)"} 100%)`
+          }}
+        />
 
         <div className="relative w-full max-w-screen-2xl mx-auto px-5 md:px-8 z-10">
           {/* Breadcrumbs */}
@@ -286,6 +294,7 @@ export default async function StationDetailPage(
                   MRT_PURPLE: "/images/transit/MRT_(Bangkok)_Purple_logo.svg",
                   MRT_YELLOW: "/images/transit/MRT_(Bangkok)_Yellow_logo.svg",
                   MRT_PINK: "/images/transit/MRT_(Bangkok)_Pink_Logo.svg",
+                  MRT_ORANGE: "/images/transit/MRT_(Bangkok)_Orange_logo.svg",
                   ARL: "/images/transit/ARLbangkok.svg",
                   SRT_RED: "/images/transit/SRT_Red_Lines_icon.svg",
                   BRT: "/images/transit/Bangkok_BRT_logo.svg",
@@ -328,38 +337,6 @@ export default async function StationDetailPage(
               </p>
             </div>
           </div>
-
-          {/* Prev / Next Station Navigation */}
-          <div className="flex items-center justify-between mt-6 pt-6 border-t border-white/10">
-            {station.prevStation ? (
-              <Link
-                href={`/near-station/${station.prevStation.slug}`}
-                className="group flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <div>
-                  <span className="text-xs text-slate-400 block">{getString("prev_station")}</span>
-                  <span className="font-medium">
-                    {(station.prevStation.label as Record<string, string>)[language] || station.prevStation.label.th}
-                  </span>
-                </div>
-              </Link>
-            ) : <div />}
-            {station.nextStation ? (
-              <Link
-                href={`/near-station/${station.nextStation.slug}`}
-                className="group flex items-center gap-2 text-sm text-slate-300 hover:text-white transition-colors text-right"
-              >
-                <div>
-                  <span className="text-xs text-slate-400 block">{getString("next_station")}</span>
-                  <span className="font-medium">
-                    {(station.nextStation.label as Record<string, string>)[language] || station.nextStation.label.th}
-                  </span>
-                </div>
-                <ChevronRight className="w-4 h-4" />
-              </Link>
-            ) : <div />}
-          </div>
         </div>
       </section>
 
@@ -375,7 +352,7 @@ export default async function StationDetailPage(
       {/* Properties Section */}
       <PropertySearchPage
         initialProperties={properties as any}
-        initialTransitStation={station.label.th}
+        initialTransitStation={`${station.label.th}|${station.transitType}`}
         basePath={`/near-station/${station.slug}`}
       />
 

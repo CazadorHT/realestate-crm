@@ -21,8 +21,11 @@ import { AiInsightRibbon } from "./search/AiInsightRibbon";
 import { PropertyCardProps } from "./PropertyCard";
 type ApiProperty = PropertyCardProps;
 
+import { PropertyFacets } from "@/features/properties/types/search";
+
 interface PropertySearchPageProps {
   initialProperties?: ApiProperty[];
+  initialFacets?: PropertyFacets | null;
   initialTransitStation?: string;
   basePath?: string;
 }
@@ -35,6 +38,7 @@ interface PropertySearchPageProps {
  */
 export function PropertySearchPage({
   initialProperties,
+  initialFacets,
   initialTransitStation = "",
   basePath,
 }: PropertySearchPageProps) {
@@ -42,7 +46,7 @@ export function PropertySearchPage({
   const filters = usePropertyFilters(initialTransitStation, basePath);
   
   // 1. Data Access Layer (Fortress Tier)
-  const { properties, facets: serverFacets, isLoading, isRefetching } = usePropertyData(initialProperties);
+  const { properties, facets: serverFacets, isLoading, isRefetching } = usePropertyData(initialProperties, initialFacets);
 
   // 2. Optimized Analysis Logic
   const {

@@ -162,13 +162,19 @@ export function usePropertyFiltering(
     }
 
     if (!excludeFilters.includes("transitStation") && transitStation) {
-      const station = transitStation.toLowerCase().replace(/_/g, " ");
-      const hasStation = (p.nearby_transits || []).some(t => 
-        t.station_name.toLowerCase() === station ||
-        (t.station_name_en || "").toLowerCase() === station ||
-        (t.station_name_cn || "").toLowerCase() === station ||
-        (t.station_name_ru || "").toLowerCase() === station
-      );
+      const [stationName, stationType] = transitStation.toLowerCase().split("|");
+      const station = stationName.replace(/_/g, " ");
+      const hasStation = (p.nearby_transits || []).some(t => {
+        const matchesName = t.station_name.toLowerCase() === station ||
+          (t.station_name_en || "").toLowerCase() === station ||
+          (t.station_name_cn || "").toLowerCase() === station ||
+          (t.station_name_ru || "").toLowerCase() === station;
+        if (!matchesName) return false;
+        if (stationType) {
+          return t.type.toLowerCase() === stationType;
+        }
+        return true;
+      });
       if (!hasStation) return false;
     }
 
@@ -190,8 +196,9 @@ export function usePropertyFiltering(
     properties.forEach((p) => {
       // Collect all stations unfiltered for metadata resolution
       (p.nearby_transits || []).forEach((t: any) => {
-        if (!allStationsMap.has(t.station_name)) {
-          allStationsMap.set(t.station_name, {
+        const key = `${t.station_name}|${t.type}`;
+        if (!allStationsMap.has(key)) {
+          allStationsMap.set(key, {
             type: t.type,
             name_en: t.station_name_en,
             name_cn: t.station_name_cn,
@@ -206,11 +213,12 @@ export function usePropertyFiltering(
         
         // Extract available stations from MATCHED properties
         (p.nearby_transits || []).forEach((t: any) => {
-          const existing = stationMap.get(t.station_name);
+          const key = `${t.station_name}|${t.type}`;
+          const existing = stationMap.get(key);
           if (existing) {
             existing.count++;
           } else {
-            stationMap.set(t.station_name, {
+            stationMap.set(key, {
               count: 1,
               type: t.type,
               name_en: t.station_name_en,

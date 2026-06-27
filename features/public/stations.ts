@@ -85,6 +85,7 @@ const LINE_LABELS: Record<string, { th: string; en: string; cn?: string; ru?: st
   MRT_PURPLE: { th: "MRT สายสีม่วง", en: "MRT Purple Line", cn: "MRT 紫线", ru: "MRT Фиолетовая линия" },
   MRT_YELLOW: { th: "MRT สายสีเหลือง", en: "MRT Yellow Line", cn: "MRT 黄线", ru: "MRT Жёлтая линия" },
   MRT_PINK: { th: "MRT สายสีชมพู", en: "MRT Pink Line", cn: "MRT 粉线", ru: "MRT Розовая линия" },
+  MRT_ORANGE: { th: "MRT สายสีส้ม", en: "MRT Orange Line", cn: "MRT 橙线", ru: "MRT Оранжевая линия" },
   ARL: { th: "แอร์พอร์ต เรลลิงก์", en: "Airport Rail Link", cn: "机场快线", ru: "Аэропорт Рейл Линк" },
   SRT_RED: { th: "รถไฟฟ้าสายสีแดง", en: "SRT Red Line", cn: "SRT 红线", ru: "SRT Красная линия" },
   GOLD: { th: "รถไฟฟ้าสายสีทอง", en: "Gold Line", cn: "金线", ru: "Золотая линия" },
@@ -97,6 +98,7 @@ const LINE_COLORS: Record<string, string> = {
   MRT_PURPLE: "#7C3AED",
   MRT_YELLOW: "#F59E0B",
   MRT_PINK: "#EC4899",
+  MRT_ORANGE: "#F97316",
   ARL: "#DC2626",
   SRT_RED: "#EF4444",
   GOLD: "#D97706",
@@ -104,7 +106,7 @@ const LINE_COLORS: Record<string, string> = {
 };
 
 // Order for display
-const LINE_ORDER = ["BTS", "MRT", "MRT_PURPLE", "MRT_YELLOW", "MRT_PINK", "ARL", "SRT_RED", "GOLD", "BRT"];
+const LINE_ORDER = ["BTS", "MRT", "MRT_PURPLE", "MRT_YELLOW", "MRT_PINK", "MRT_ORANGE", "ARL", "SRT_RED", "GOLD", "BRT"];
 
 function generateSlug(code: string): string {
   return code.toLowerCase().replace(/_/g, "-");

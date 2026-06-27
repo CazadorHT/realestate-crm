@@ -58,6 +58,7 @@ const getLineLogo = (type: string, color: string) => {
     MRT: "/images/transit/MRT_(Bangkok)_logo.svg",
     MRT_PURPLE: "/images/transit/MRT_(Bangkok)_Purple_logo.svg",
     MRT_YELLOW: "/images/transit/MRT_(Bangkok)_Yellow_logo.svg",
+    MRT_ORANGE: "/images/transit/MRT_(Bangkok)_Orange_logo.svg",
     MRT_PINK: "/images/transit/MRT_(Bangkok)_Pink_Logo.svg",
     ARL: "/images/transit/ARLbangkok.svg",
     SRT_RED: "/images/transit/SRT_Red_Lines_icon.svg",
