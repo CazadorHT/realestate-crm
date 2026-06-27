@@ -44,7 +44,10 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     id, listing_type, property_type, sale_price, rent_price,
     bedrooms, bathrooms, floor_area, land_area,
     is_hot_deal, is_exclusive, verified, created_at, updated_at,
-    created_by,
+    created_by, project_id,
+    project:projects!properties_core_project_id_fkey (
+      id, slug, name
+    ),
     details:properties_details!property_id (
       title, description, address_info, amenities, transit_info, pricing_details, meta_data
     ),
@@ -111,6 +114,23 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
         .maybeSingle();
       if (coreBySlug?.id) {
         resolvedId = coreBySlug.id;
+      }
+    }
+
+    // Robust fallback: search by prefix/partial slug if exact matches fail
+    if (!resolvedId) {
+      const parts = slugOrId.split("-").filter(Boolean);
+      if (parts.length >= 4) {
+        // Use the first 6 parts of the slug representing a highly specific title/description prefix
+        const searchPrefix = parts.slice(0, Math.min(parts.length, 6)).join("-");
+        const { data: partialMatches } = await supabase
+          .from("properties_details")
+          .select("property_id")
+          .filter("address_info->>slug", "like", `%${searchPrefix}%`);
+          
+        if (partialMatches && partialMatches.length > 0) {
+          resolvedId = partialMatches[0].property_id;
+        }
       }
     }
 
@@ -239,6 +259,12 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
   const data: PropertyDetail = {
     id: rawData.id,
     slug: address.slug || slugOrId,
+    project_id: rawData.project_id,
+    project: rawData.project ? {
+      id: (rawData.project as any).id,
+      slug: (rawData.project as any).slug,
+      name: (rawData.project as any).name,
+    } : null,
     status: rawData.status,
     listing_type: mappedListingType as ListingType,
     property_type: mappedPropertyType as PropertyType,

@@ -75,7 +75,7 @@ describe('Property Actions - Hardened Deletion & Atomic Integrity', () => {
     });
     (isAdmin as any).mockReturnValue(true);
 
-    mockSupabase.single.mockResolvedValueOnce({ data: { id: 'p1', created_by: 'admin-1' }, error: null });
+    mockSupabase.single.mockResolvedValueOnce({ data: { id: 'p1', created_by: 'admin-1', tenant_id: 'tenant-1' }, error: null });
 
     mockSupabase.then
       .mockImplementationOnce((resolve: any) => resolve({ count: 0, error: null })) // 2. deal check
@@ -105,7 +105,7 @@ describe('Property Actions - Hardened Deletion & Atomic Integrity', () => {
     });
     (isAdmin as any).mockReturnValue(true);
 
-    mockSupabase.single.mockResolvedValueOnce({ data: { id: 'p1', created_by: 'admin-1' }, error: null });
+    mockSupabase.single.mockResolvedValueOnce({ data: { id: 'p1', created_by: 'admin-1', tenant_id: 't1' }, error: null });
     
     // All success sequence
     mockSupabase.then

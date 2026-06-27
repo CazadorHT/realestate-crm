@@ -99,6 +99,7 @@ export const PropertySchema = z
     // 🏢 V3 Hierarchy & Operations
     tenant_id: z.string().uuid().optional(),
     branch_id: z.string().uuid({ message: "กรุณาเลือกสาขาที่ดูแลทรัพย์นี้" }),
+    project_id: z.string().uuid().optional().nullable(),
     
     owner_id: z.string().uuid().nullable().optional(),
     assigned_to: z.string().uuid().nullable().optional(), // For primary agent

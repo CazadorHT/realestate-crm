@@ -197,7 +197,7 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                 {/* Name Label */}
                 <span
                   className={cn(
-                    "block text-2xs sm:text-xs md:text-sm font-bold text-center mt-2.5 transition-colors duration-200 line-clamp-1 w-full px-1",
+                    "block text-xs sm:text-xs md:text-sm font-bold text-center mt-2.5 transition-colors duration-200 line-clamp-1 w-full px-1",
                     isActive 
                       ? "text-slate-900 font-extrabold" 
                       : "text-slate-500 group-hover:text-slate-800"

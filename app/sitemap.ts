@@ -45,6 +45,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       alternates: getAlternates("/near-station"),
     },
     {
+      url: `${baseUrl}/projects`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.9,
+      alternates: getAlternates("/projects"),
+    },
+    {
       url: `${baseUrl}/services`,
       lastModified: new Date(),
       changeFrequency: "weekly",
@@ -150,11 +157,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       alternates: getAlternates(`/near-station/${s.metadata.slug}`),
     }));
 
+  // 6. Fetch Active Projects
+  const { data: projects } = await supabase
+    .from("projects")
+    .select("slug, updated_at")
+    .eq("is_active", true);
+
+  const projectRoutes: MetadataRoute.Sitemap = (projects || []).map(
+    (proj: any) => ({
+      url: `${baseUrl}/projects/${proj.slug}`,
+      lastModified: proj.updated_at ? new Date(proj.updated_at) : new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+      alternates: getAlternates(`/projects/${proj.slug}`),
+    }),
+  );
+
   return [
     ...staticRoutes,
     ...propertyRoutes,
     ...blogRoutes,
     ...serviceRoutes,
     ...stationRoutes,
+    ...projectRoutes,
   ];
 }

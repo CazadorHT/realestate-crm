@@ -177,6 +177,7 @@ export async function createPropertyAction(
       .insert({
         tenant_id: tenantId,
         branch_id: safeValues.branch_id,
+        project_id: safeValues.project_id || null,
         status: PROPERTY_STATUS_DB_VALUE[propertyData.status || "DRAFT"],
         listing_type: LISTING_TYPE_DB_VALUE[propertyData.listing_type || "SALE"],
         property_type: PROPERTY_TYPE_DB_VALUE[propertyData.property_type || "CONDO"],
@@ -460,7 +461,7 @@ export async function duplicatePropertyAction(
 
     const { data: core } = await supabase
       .from("properties_core")
-      .select("branch_id, listing_type, property_type, sale_price, rent_price, currency, bedrooms, bathrooms, floor_area, land_area, price_per_sqm, owner_id, assigned_to, is_exclusive, verified, h3_index_res8")
+      .select("branch_id, project_id, listing_type, property_type, sale_price, rent_price, currency, bedrooms, bathrooms, floor_area, land_area, price_per_sqm, owner_id, assigned_to, is_exclusive, verified, h3_index_res8")
       .eq("id", id)
       .single();
     const { data: details } = await supabase
@@ -506,6 +507,7 @@ export async function duplicatePropertyAction(
       .insert({
         tenant_id: tenantId,
         branch_id: core.branch_id,
+        project_id: core.project_id,
         status: PROPERTY_STATUS_DB_VALUE["DRAFT"],
         listing_type: core.listing_type,
         property_type: core.property_type,

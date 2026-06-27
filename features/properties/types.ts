@@ -279,6 +279,17 @@ export interface PropertyDetail {
   nearby_transits: PropertyTransitV3[];
 
   // Relations
+  project_id?: string | null;
+  project?: {
+    id: string;
+    slug: string;
+    name: {
+      th?: string | null;
+      en?: string | null;
+      cn?: string | null;
+      ru?: string | null;
+    } | any;
+  } | null;
   images: PropertyImageV3[];
   assigned_agent: {
     full_name: string | null;

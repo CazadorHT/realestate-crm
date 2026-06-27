@@ -25,6 +25,7 @@ describe("Chatbot Module - Actions (เทสโหดๆ แบบไม่อ�
           usageMetadata: { promptTokenCount: 10, candidatesTokenCount: 20 },
         },
       }),
+      getHistory: vi.fn().mockResolvedValue([]),
     };
 
     mockGetModel = vi.fn().mockReturnValue({

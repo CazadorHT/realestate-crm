@@ -236,6 +236,7 @@ export async function updatePropertyAction(
       .from("properties_core")
       .update({
         branch_id: safeValues.branch_id,
+        project_id: safeValues.project_id || null,
         status: PROPERTY_STATUS_DB_VALUE[safeValues.status || "DRAFT"],
         listing_type: LISTING_TYPE_DB_VALUE[safeValues.listing_type || "SALE"],
         property_type: PROPERTY_TYPE_DB_VALUE[safeValues.property_type || "CONDO"],

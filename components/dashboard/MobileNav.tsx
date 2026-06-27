@@ -247,6 +247,13 @@ export function MobileNav({
       active: pathname?.startsWith("/protected/admin/transit-stations") ?? false,
       roles: ["ADMIN", "MANAGER"],
     },
+    {
+      title: "จัดการโครงการ",
+      href: "/protected/admin/projects",
+      icon: Building2,
+      active: pathname?.startsWith("/protected/admin/projects") ?? false,
+      roles: ["ADMIN", "MANAGER", "AGENT"],
+    },
   ];
 
   // Settings Group

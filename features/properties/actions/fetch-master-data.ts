@@ -225,3 +225,61 @@ export async function getTransitStationsAction(): Promise<MasterDataTransitStati
   }));
 }
 
+/**
+ * Generate station SEO and description details using Gemini AI
+ */
+export async function generateAIStationDataAction(stationNameTh: string, stationNameEn: string, transitType: string) {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+
+    const { generateText } = await import("@/lib/ai/gemini");
+
+    const prompt = `
+You are an expert real estate data analyst and copywriter specializing in Thailand transit-oriented development.
+Your task is to generate high-quality SEO meta tags and descriptive local content for a transit station named: "${stationNameTh}" (English: "${stationNameEn}") of transit line type: "${transitType}" (e.g. BTS, MRT, ARL, SRT).
+
+Provide all details in a strictly valid JSON format. Follow this JSON schema exactly:
+{
+  "seoTitle": "SEO title for this station page (in Thai, under 60 chars, e.g., คอนโดใกล้ BTS อโศก ทำเลทองใจกลางเมือง)",
+  "seoDescription": "SEO meta description (in Thai, under 160 chars, e.g., ค้นหาคอนโด บ้านเดี่ยว ขายและให้เช่า ใกล้สถานี BTS อโศก แหล่งธุรกิจศูนย์กลางความเจริญใจกลางสุขุมวิท...",
+  "descriptionTh": "คำอธิบายรายละเอียดทำเลรอบสถานีภาษาไทย (HTML support, e.g., <p>, <ul>, <li>, <strong>). Describe the vibe, amenities, shopping mall, nearby offices, lifestyle of this station area.",
+  "descriptionEn": "Description of the station area in English (HTML support).",
+  "descriptionCn": "Description of the station area in Chinese (HTML support).",
+  "descriptionRu": "Description of the station area in Russian (HTML support)."
+}
+
+Return ONLY the raw JSON string. Do not include markdown code block syntax (like \`\`\`json).
+`;
+
+    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+    const aiConfig = await getAiModelConfig();
+    const modelName = aiConfig?.description_model || "gemini-1.5-flash";
+
+    const response = await generateText(prompt, modelName);
+    
+    // Log AI Usage
+    try {
+      const { logAiUsage } = await import("@/features/ai-monitor/actions");
+      await logAiUsage({
+        model: modelName,
+        feature: "station_seo_generator",
+        status: "success",
+        promptTokens: response.usage?.promptTokens,
+        completionTokens: response.usage?.completionTokens,
+      });
+    } catch (e) {
+      console.error("Failed to log AI usage:", e);
+    }
+
+    const cleanJson = response.text.replace(/```json/g, "").replace(/```/g, "").trim();
+    const parsed = JSON.parse(cleanJson);
+
+    return { success: true, data: parsed };
+  } catch (err: any) {
+    console.error("generateAIStationDataAction error:", err);
+    return { success: false, message: err.message || "ล้มเหลวในการสร้างข้อมูลสถานีด้วย AI" };
+  }
+}
+
+

@@ -2,15 +2,12 @@
 
 import * as React from "react";
 import { 
-  Train, Search, Edit2, Loader2, CheckCircle2, AlertCircle, X, ExternalLink
+  Train, Search, Edit2, Loader2, AlertCircle, ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import {
   Select,
   SelectContent,
@@ -18,16 +15,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
 import { 
   getAllMasterDataAction, 
-  upsertMasterDataAction 
 } from "@/features/properties/actions/fetch-master-data";
+import { StationEditDialog } from "./components/StationEditDialog";
 
 interface StationItem {
   id?: string;
@@ -77,7 +68,6 @@ const LINE_COLORS: Record<string, string> = {
 };
 
 export default function TransitStationsAdminPage() {
-  const [isFormDirty, setIsFormDirty] = React.useState(false);
   const [stations, setStations] = React.useState<StationItem[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -85,19 +75,7 @@ export default function TransitStationsAdminPage() {
 
   // Modal / Edit state
   const [isEditOpen, setIsEditOpen] = React.useState(false);
-  const [isSaving, setIsSaving] = React.useState(false);
   const [currentStation, setCurrentStation] = React.useState<StationItem | null>(null);
-
-  // Form fields
-  const [formSlug, setFormSlug] = React.useState("");
-  const [formSeoTitle, setFormSeoTitle] = React.useState("");
-  const [formSeoDesc, setFormSeoDesc] = React.useState("");
-  const [formDescTh, setFormDescTh] = React.useState("");
-  const [formDescEn, setFormDescEn] = React.useState("");
-  const [formDescCn, setFormDescCn] = React.useState("");
-  const [formDescRu, setFormDescRu] = React.useState("");
-  const [formLat, setFormLat] = React.useState("");
-  const [formLng, setFormLng] = React.useState("");
 
   const loadStations = React.useCallback(async () => {
     setIsLoading(true);
@@ -117,78 +95,7 @@ export default function TransitStationsAdminPage() {
 
   const handleOpenEdit = (station: StationItem) => {
     setCurrentStation(station);
-    const meta = station.metadata || {};
-    
-    setFormSlug(meta.slug || station.code.toLowerCase().replace(/_/g, "-"));
-    setFormSeoTitle(meta.seo_title || "");
-    setFormSeoDesc(meta.seo_description || "");
-    setFormDescTh(meta.description?.th || "");
-    setFormDescEn(meta.description?.en || "");
-    setFormDescCn(meta.description?.cn || "");
-    setFormDescRu(meta.description?.ru || "");
-    setFormLat(meta.latitude?.toString() || "");
-    setFormLng(meta.longitude?.toString() || "");
-    
-    setIsFormDirty(false);
     setIsEditOpen(true);
-  };
-
-  const handleOpenChange = (open: boolean) => {
-    setIsEditOpen(open);
-    if (!open) {
-      setIsFormDirty(false);
-    }
-  };
-
-  const handleSave = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!currentStation) return;
-
-    if (!formSlug.trim()) {
-      toast.error("กรุณาระบุ URL Slug");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      const existingMeta = currentStation.metadata || {};
-      const updatedMetadata = {
-        ...existingMeta,
-        slug: formSlug.trim().toLowerCase(),
-        seo_title: formSeoTitle.trim(),
-        seo_description: formSeoDesc.trim(),
-        description: {
-          th: formDescTh.trim() || undefined,
-          en: formDescEn.trim() || undefined,
-          cn: formDescCn.trim() || undefined,
-          ru: formDescRu.trim() || undefined,
-        },
-        latitude: formLat.trim() ? Number(formLat) : undefined,
-        longitude: formLng.trim() ? Number(formLng) : undefined,
-      };
-
-      const res = await upsertMasterDataAction({
-        type: "TRANSIT_STATION",
-        code: currentStation.code,
-        label: currentStation.label as any,
-        metadata: updatedMetadata,
-        sort_order: currentStation.sort_order,
-        is_active: currentStation.is_active,
-      });
-
-      if (res.success) {
-        toast.success("บันทึกข้อมูล SEO สถานีสำเร็จ ✨");
-        setIsFormDirty(false);
-        setIsEditOpen(false);
-        loadStations();
-      } else {
-        toast.error(res.message);
-      }
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
-    } finally {
-      setIsSaving(false);
-    }
   };
 
   const filteredStations = stations.filter((station) => {
@@ -203,130 +110,6 @@ export default function TransitStationsAdminPage() {
 
     return matchesSearch && matchesLine;
   });
-
-  const renderFormContent = () => (
-    <div className="space-y-5 py-3">
-      {/* Slug input */}
-      <div className="space-y-2">
-        <Label htmlFor="slug" className="text-sm font-bold text-slate-700">URL Slug (ต่อจาก /near-station/)</Label>
-        <Input
-          id="slug"
-          value={formSlug}
-          onChange={(e) => { setFormSlug(e.target.value); setIsFormDirty(true); }}
-          placeholder="เช่น bts-asok"
-          className="h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500"
-        />
-        <p className="text-xs text-slate-400 font-medium">เฉพาะภาษาอังกฤษ ตัวเลข และเครื่องหมายลบ (-) เท่านั้น</p>
-      </div>
-
-      {/* Latitude / Longitude */}
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="latitude" className="text-sm font-bold text-slate-700">พิกัด Latitude</Label>
-          <Input
-            id="latitude"
-            value={formLat}
-            onChange={(e) => { setFormLat(e.target.value); setIsFormDirty(true); }}
-            placeholder="เช่น 13.7367"
-            type="number"
-            step="any"
-            className="h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500"
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="longitude" className="text-sm font-bold text-slate-700">พิกัด Longitude</Label>
-          <Input
-            id="longitude"
-            value={formLng}
-            onChange={(e) => { setFormLng(e.target.value); setIsFormDirty(true); }}
-            placeholder="เช่น 100.5600"
-            type="number"
-            step="any"
-            className="h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500"
-          />
-        </div>
-      </div>
-
-      {/* Meta tags config */}
-      <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 space-y-4">
-        <h3 className="text-sm font-bold text-slate-800">Meta Tags (สำหรับ Search Engine)</h3>
-        
-        <div className="space-y-2">
-          <Label htmlFor="seoTitle" className="text-sm font-bold text-slate-700">SEO Title (หัวข้อเว็บ)</Label>
-          <Input
-            id="seoTitle"
-            value={formSeoTitle}
-            onChange={(e) => { setFormSeoTitle(e.target.value); setIsFormDirty(true); }}
-            placeholder="เช่น คอนโดใกล้ BTS อโศก | ชื่อแบรนด์"
-            className="h-10.5 bg-white rounded-xl border-slate-200 focus-visible:ring-indigo-500"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="seoDesc" className="text-sm font-bold text-slate-700">SEO Meta Description (คำอธิบายเว็บใน Google)</Label>
-          <Textarea
-            id="seoDesc"
-            value={formSeoDesc}
-            onChange={(e) => { setFormSeoDesc(e.target.value); setIsFormDirty(true); }}
-            placeholder="เช่น ค้นหาคอนโด บ้านเดี่ยว ทาวน์โฮม ขายและให้เช่า ใกล้สถานี BTS อโศก..."
-            rows={3}
-            className="bg-white rounded-xl border-slate-200 focus-visible:ring-indigo-500"
-          />
-        </div>
-      </div>
-
-      {/* Page content descriptions */}
-      <div className="space-y-2">
-        <Label className="text-sm font-bold text-slate-700">คำอธิบายทำเลบนหน้าเว็บ (Description Content)</Label>
-        <Tabs defaultValue="th" className="w-full">
-          <TabsList className="grid grid-cols-4 rounded-xl h-10.5 p-1 bg-slate-100 border border-slate-200/50">
-            <TabsTrigger value="th" className="rounded-lg font-semibold text-xs">ไทย</TabsTrigger>
-            <TabsTrigger value="en" className="rounded-lg font-semibold text-xs">อังกฤษ</TabsTrigger>
-            <TabsTrigger value="cn" className="rounded-lg font-semibold text-xs">จีน</TabsTrigger>
-            <TabsTrigger value="ru" className="rounded-lg font-semibold text-xs">รัสเซีย</TabsTrigger>
-          </TabsList>
-          <div className="mt-3">
-            <TabsContent value="th">
-              <Textarea
-                value={formDescTh}
-                onChange={(e) => { setFormDescTh(e.target.value); setIsFormDirty(true); }}
-                placeholder="ใส่รายละเอียดคำบรรยายทำเลรอบสถานีภาษาไทย (รองรับ HTML แท็ก)..."
-                rows={5}
-                className="rounded-xl border-slate-200 focus-visible:ring-indigo-500"
-              />
-            </TabsContent>
-            <TabsContent value="en">
-              <Textarea
-                value={formDescEn}
-                onChange={(e) => { setFormDescEn(e.target.value); setIsFormDirty(true); }}
-                placeholder="ใส่รายละเอียดคำบรรยายทำเลรอบสถานีภาษาอังกฤษ..."
-                rows={5}
-                className="rounded-xl border-slate-200 focus-visible:ring-indigo-500"
-              />
-            </TabsContent>
-            <TabsContent value="cn">
-              <Textarea
-                value={formDescCn}
-                onChange={(e) => { setFormDescCn(e.target.value); setIsFormDirty(true); }}
-                placeholder="ใส่รายละเอียดคำบรรยายทำเลรอบสถานีภาษาจีน..."
-                rows={5}
-                className="rounded-xl border-slate-200 focus-visible:ring-indigo-500"
-              />
-            </TabsContent>
-            <TabsContent value="ru">
-              <Textarea
-                value={formDescRu}
-                onChange={(e) => { setFormDescRu(e.target.value); setIsFormDirty(true); }}
-                placeholder="ใส่รายละเอียดคำบรรยายทำเลรอบสถานีภาษารัสเซีย..."
-                rows={5}
-                className="rounded-xl border-slate-200 focus-visible:ring-indigo-500"
-              />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto pb-16">
@@ -469,7 +252,7 @@ export default function TransitStationsAdminPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => handleOpenEdit(station)}
-                            className="h-8.5 rounded-lg border-slate-200 text-slate-700 hover:text-indigo-600 hover:border-indigo-200"
+                            className="h-8.5 rounded-lg border-slate-200 text-slate-700  hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200"
                           >
                             <Edit2 className="h-3.5 w-3.5 mr-1.5" />
                             แก้ไข SEO
@@ -496,57 +279,12 @@ export default function TransitStationsAdminPage() {
         )}
       </div>
 
-      {/* Responsive Edit Drawer/Dialog */}
-      <ResponsiveDialog
-        open={isEditOpen}
-        onOpenChange={handleOpenChange}
-        confirmOnClose={isFormDirty}
-        isLoading={isSaving}
-        loadingText="กำลังบันทึกข้อมูล SEO..."
-        title={
-          <span className="flex items-center gap-2 text-slate-900">
-            <Train className="h-5.5 w-5.5 text-indigo-600" />
-            แก้ไข SEO สถานี: {currentStation?.label.th} {currentStation?.label.en ? `(${currentStation.label.en})` : ""}
-          </span>
-        }
-        description="แก้ไข URL Slug, meta tags และเนื้อหาคำบรรยายทำเลรอบสถานีเพื่อใช้ในการดันอันดับบน Google"
-        className="sm:max-w-2xl"
-        footer={
-          <div className="flex flex-col sm:flex-row justify-end gap-3 w-full px-6 sm:px-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setIsEditOpen(false)}
-              disabled={isSaving}
-              className="w-full sm:w-auto h-11 sm:h-10.5 rounded-xl font-bold border-slate-200 text-slate-600"
-            >
-              ยกเลิก
-            </Button>
-            <Button
-              type="button"
-              onClick={() => handleSave()}
-              disabled={isSaving}
-              className="w-full sm:w-auto h-11 sm:h-10.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md shadow-indigo-500/20"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  กำลังบันทึก...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="h-4 w-4 mr-2" />
-                  บันทึกข้อมูล
-                </>
-              )}
-            </Button>
-          </div>
-        }
-      >
-        <form onSubmit={handleSave} className="space-y-6 p-6">
-          {renderFormContent()}
-        </form>
-      </ResponsiveDialog>
+      <StationEditDialog
+        isOpen={isEditOpen}
+        onClose={setIsEditOpen}
+        station={currentStation}
+        onSaveSuccess={loadStations}
+      />
     </div>
   );
 }
