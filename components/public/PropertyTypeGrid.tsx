@@ -154,6 +154,10 @@ export function PropertyTypeGrid({
 
         {/* PropertyTypeCard Wrapper - Swiper/Slider container */}
         <div className="relative group/slider px-4 ">
+          {/* Edge Fade Indicators to signal horizontal scrolling */}
+          <div className="absolute -left-4 sm:left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10" />
+          <div className="absolute -right-4 sm:right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
+
           {/* Scroll Area */}
           <div
             id="property-type-slider"
