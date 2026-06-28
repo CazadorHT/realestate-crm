@@ -44,7 +44,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
 
   const handleScroll = () => {
     if (scrollContainerRef.current) {
-      setShowLeftFade(scrollContainerRef.current.scrollLeft > 5);
+      setShowLeftFade(scrollContainerRef.current.scrollLeft > 20);
     }
   };
 

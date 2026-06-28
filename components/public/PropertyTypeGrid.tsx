@@ -184,10 +184,10 @@ export function PropertyTypeGrid({
               : propertyTypes.map((type, idx) => (
                   <m.div
                     key={idx}
-                    initial={isIOS ? undefined : { opacity: 0, y: 15 }}
-                    whileInView={isIOS ? undefined : { opacity: 1, y: 0 }}
+                    initial={isIOS ? { opacity: 1, y: 0 } : { opacity: 0, y: 15 }}
+                    whileInView={isIOS ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                     viewport={isIOS ? undefined : { once: true }}
-                    transition={isIOS ? undefined : { duration: 0.4, delay: idx * 0.05 }}
+                    transition={isIOS ? { duration: 0 } : { duration: 0.4, delay: idx * 0.05 }}
                     className="shrink-0 w-24 md:w-32 snap-center"
                   >
                     <PropertyTypeCard {...type} />

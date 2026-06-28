@@ -233,10 +233,10 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
             {displayProperties.slice(0, 4).map((property, index) => (
               <m.div
                 key={property.id}
-                initial={isIOS ? undefined : { opacity: 0, y: 30 }}
-                whileInView={isIOS ? undefined : { opacity: 1, y: 0 }}
+                initial={isIOS ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+                whileInView={isIOS ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                 viewport={isIOS ? undefined : { once: true, margin: "-50px" }}
-                transition={isIOS ? undefined : { 
+                transition={isIOS ? { duration: 0 } : { 
                   duration: 0.6, 
                   delay: index * 0.15,
                   ease: [0.21, 1.02, 0.73, 1] // Custom premium elastic-out
