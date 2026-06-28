@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChevronRight, MapPin } from "lucide-react";
+import { getProvinceName, getDistrictName, getSubdistrictName } from "@/lib/utils/provinces";
 
 interface ProjectHeroProps {
   project: any;
@@ -47,10 +48,7 @@ export function ProjectHero({
             <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight leading-tight">
               {nameText}
             </h1>
-            <p className="text-slate-300 text-sm md:text-base font-medium flex items-center gap-1.5 flex-wrap">
-              <MapPin className="w-4 h-4 text-blue-400 shrink-0" />
-              <span>{project.subdistrict ? `${project.subdistrict}, ` : ""}{project.district}, {project.province}</span>
-            </p>
+            
           </div>
 
           {/* Quick Summary Specs */}

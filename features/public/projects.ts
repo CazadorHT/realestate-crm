@@ -247,3 +247,36 @@ export async function getAllProjectSlugs(): Promise<string[]> {
 
   return data.map((p: { slug: string }) => p.slug);
 }
+
+/**
+ * Fetch projects near/related to this project (e.g. in the same district/province)
+ */
+export async function getRelatedProjects(
+  projectId: string,
+  district: string | null,
+  province: string | null,
+  limit = 4
+): Promise<PublicProject[]> {
+  const allProjects = await getPublicProjects();
+  
+  // 1. Filter out the current project
+  let pool = allProjects.filter(p => p.id !== projectId);
+  
+  // 2. Try to find projects in the same district
+  let related = pool.filter(p => p.district === district);
+  
+  // 3. If not enough, fill with other projects in the same province
+  if (related.length < limit && province) {
+    const extraInProvince = pool.filter(p => p.district !== district && p.province === province);
+    related = [...related, ...extraInProvince];
+  }
+  
+  // 4. If still not enough, fill with any other active projects
+  if (related.length < limit) {
+    const ids = new Set(related.map(r => r.id));
+    const extra = pool.filter(p => !ids.has(p.id));
+    related = [...related, ...extra];
+  }
+  
+  return related.slice(0, limit);
+}

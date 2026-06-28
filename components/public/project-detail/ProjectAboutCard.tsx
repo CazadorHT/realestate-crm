@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { Building2 } from "lucide-react";
+import { getDistrictName } from "@/lib/utils/provinces";
 
 interface ProjectAboutCardProps {
   project: any;
@@ -93,7 +94,7 @@ export function ProjectAboutCard({
         {localizedDesc ? (
           <div dangerouslySetInnerHTML={{ __html: localizedDesc }} />
         ) : (
-          <p>{getString("no_desc", { name: nameText, district: project.district || "" })}</p>
+          <p>{getString("no_desc", { name: nameText, district: project.district ? getDistrictName(project.district, language) : "" })}</p>
         )}
       </div>
 

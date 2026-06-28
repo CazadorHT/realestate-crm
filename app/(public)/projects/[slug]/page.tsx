@@ -4,8 +4,9 @@ import { notFound } from "next/navigation";
 import { ChevronRight, MapPin, Building2, Calendar, LayoutGrid, CheckCircle } from "lucide-react";
 import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations, getLocalizedField } from "@/lib/i18n";
-import { getProjectBySlug, getPropertiesInProject, getAllProjectSlugs } from "@/features/public/projects";
+import { getProjectBySlug, getPropertiesInProject, getAllProjectSlugs, getRelatedProjects } from "@/features/public/projects";
 import { ProjectPropertiesClient } from "@/components/public/ProjectPropertiesClient";
+import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
 import { ProjectHero } from "@/components/public/project-detail/ProjectHero";
 import { ProjectAboutCard } from "@/components/public/project-detail/ProjectAboutCard";
 import { ProjectFacilitiesCard } from "@/components/public/project-detail/ProjectFacilitiesCard";
@@ -29,6 +30,9 @@ const DETAIL_LOCALIZATION: Record<string, Record<string, string>> = {
     cn: "{name} 位于 {district} 区域的黄金地段，周边配套设施完善，出行便利，无论是自住还是长期投资都是极佳之选。",
     ru: "{name} расположен в превосходном месте района {district}, в окружении развитой инфраструктуры, предлагая отличные возможности для жизни или инвестиций.",
   },
+  related_projects: { th: "โครงการอื่นๆ ที่น่าสนใจใกล้เคียง", en: "Other Interesting Projects Nearby", cn: "附近其他热门项目", ru: "Другие интересные проекты рядом" },
+  units: { th: "ยูนิต", en: "units", cn: "套", ru: "ед." },
+  view_project: { th: "ดูโครงการ", en: "View Project", cn: "查看项目", ru: "Посмотреть проект" },
 };
 
 export async function generateStaticParams() {
@@ -100,6 +104,7 @@ export default async function ProjectDetailPage(
   const nameText = project.name[language as keyof typeof project.name] || project.name.en || project.name.th;
   
   const { properties } = await getPropertiesInProject(project.id, { limit: 100 });
+  const relatedProjects = await getRelatedProjects(project.id, project.district, project.province);
 
   const getString = (key: string, params?: Record<string, string | number>) => {
     let val = DETAIL_LOCALIZATION[key]?.[language] || DETAIL_LOCALIZATION[key]?.th || "";
@@ -171,15 +176,15 @@ export default async function ProjectDetailPage(
       />
 
       {/* Main Content Area */}
-      <div className="max-w-screen-2xl mx-auto px-5 md:px-8 py-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-screen-2xl mx-auto px-5 md:px-8 py-10 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
         
         {/* Left column (2 cols) - Listings */}
-        <div className="lg:col-span-2 space-y-10">
+        <div className="md:col-span-2 lg:col-span-3 space-y-10 ">
           <ProjectPropertiesClient initialProperties={properties} project={project} />
         </div>
 
         {/* Right column (1 col) - Project Info Card */}
-        <div className="space-y-6">
+        <div className="md:col-span-1 lg:col-span-1 space-y-6">
           <ProjectAboutCard
             project={project}
             language={language}
@@ -201,6 +206,26 @@ export default async function ProjectDetailPage(
         </div>
 
       </div>
+
+      {/* Related Projects Section */}
+      {relatedProjects.length > 0 && (
+        <div className="max-w-screen-2xl mx-auto px-5 md:px-8 pb-16">
+          <section className="space-y-6 pt-10 border-t border-slate-200/60">
+            <div className="flex items-center gap-2.5">
+              <Building2 className="w-5 h-5 text-indigo-500" />
+              <h2 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight">
+                {getString("related_projects")}
+              </h2>
+            </div>
+            <AreaProjectsCarousel
+              projects={relatedProjects}
+              language={language}
+              viewDetailsLabel={getString("view_project")}
+              unitsLabel={getString("units")}
+            />
+          </section>
+        </div>
+      )}
     </div>
   );
 }

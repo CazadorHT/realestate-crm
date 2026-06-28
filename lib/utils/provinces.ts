@@ -115,3 +115,49 @@ export function getProvinceName(thaiName: string, lang: string): string {
   // Fallback: Return original if no mapping found
   return thaiName;
 }
+
+/**
+ * Get localized district (amphoe/khet) name
+ * @param thaiName Original Thai name from database (e.g., 'เขตบางนา', 'บางนา')
+ * @param lang Current language code ('th', 'en', 'cn', 'ru')
+ * @returns Localized name or cleaned Thai name
+ */
+export function getDistrictName(thaiName: string, lang: string): string {
+  if (!thaiName) return "";
+  if (lang === "th") return thaiName;
+
+  // Normalize: remove "เขต" or "อำเภอ" or "อ." prefix if present
+  const cleanName = thaiName.replace(/^(เขต|อำเภอ|อ\.)/, "").trim();
+
+  const mapped = PROVINCES[cleanName];
+  if (mapped) {
+    if (lang === "cn") return mapped.cn;
+    if (lang === "ru") return mapped.ru;
+    return mapped.en;
+  }
+
+  return cleanName;
+}
+
+/**
+ * Get localized subdistrict (tambon/khwaeng) name
+ * @param thaiName Original Thai name from database (e.g., 'แขวงบางนา', 'บางนา')
+ * @param lang Current language code ('th', 'en', 'cn', 'ru')
+ * @returns Localized name or cleaned Thai name
+ */
+export function getSubdistrictName(thaiName: string, lang: string): string {
+  if (!thaiName) return "";
+  if (lang === "th") return thaiName;
+
+  // Normalize: remove "แขวง" or "ตำบล" or "ต." prefix if present
+  const cleanName = thaiName.replace(/^(แขวง|ตำบล|ต\.)/, "").trim();
+
+  const mapped = PROVINCES[cleanName];
+  if (mapped) {
+    if (lang === "cn") return mapped.cn;
+    if (lang === "ru") return mapped.ru;
+    return mapped.en;
+  }
+
+  return cleanName;
+}

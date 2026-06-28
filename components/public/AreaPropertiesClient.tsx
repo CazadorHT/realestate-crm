@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { ChevronDown, Grid3X3, SlidersHorizontal, Building2 } from "lucide-react";
+import { ChevronDown, Grid3X3, SlidersHorizontal, Building2, Check } from "lucide-react";
 import { PropertyCard } from "@/components/public/PropertyCard";
 import { useLanguage } from "@/components/providers/LanguageProvider";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import type { PublicPropertyNearStation } from "@/features/public/stations";
 
 interface AreaPropertiesClientProps {
@@ -28,6 +29,8 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
   view_more: { th: "โหลดข้อมูลเพิ่มเติม", en: "Load More", cn: "加载更多", ru: "Показать еще" },
   showing_count: { th: "แสดง {count} จากทั้งหมด {total} รายการ", en: "Showing {count} of {total} listings", cn: "显示 {total} 套房源中的 {count} 套", ru: "Показано {count} из {total} объявлений" },
   filter_all_types: { th: "ทุกประเภททรัพย์", en: "All Types", cn: "所有物业类型", ru: "Все типы" },
+  property_type: { th: "เลือกประเภททรัพย์สิน", en: "Property Type", cn: "选择物业类型", ru: "Тип недвижимости" },
+  sort_by: { th: "จัดเรียงตาม", en: "Sort By", cn: "排序方式", ru: "Сортировка" },
 };
 
 export function AreaPropertiesClient({ initialProperties, areaName }: AreaPropertiesClientProps) {
@@ -36,6 +39,9 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
   const [propertyTypeFilter, setPropertyTypeFilter] = useState<string>("ALL");
   const [sort, setSort] = useState<SortType>("newest");
   const [visibleCount, setVisibleCount] = useState(12);
+
+  const [propertyTypeDialogOpen, setPropertyTypeDialogOpen] = useState(false);
+  const [sortDialogOpen, setSortDialogOpen] = useState(false);
 
   const t = useCallback((key: string, params?: Record<string, string | number>) => {
     let val = TRANSLATIONS[key]?.[language] || TRANSLATIONS[key]?.th || globalT(key, params);
@@ -125,10 +131,10 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
       {/* Filters Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white/80 backdrop-blur-xs p-4 rounded-2xl border border-slate-200/60 shadow-xs">
         {/* Listing Type tabs */}
-        <div className="flex bg-slate-100 p-1 rounded-xl w-fit">
+        <div className="flex bg-slate-100 p-1 rounded-xl w-full sm:w-fit">
           <button
             onClick={() => { setFilter("ALL"); setVisibleCount(12); }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
               filter === "ALL"
                 ? "bg-white text-slate-900 shadow-xs"
                 : "text-slate-500 hover:text-slate-800"
@@ -138,7 +144,7 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
           </button>
           <button
             onClick={() => { setFilter("SALE"); setVisibleCount(12); }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
               filter === "SALE"
                 ? "bg-white text-slate-900 shadow-xs"
                 : "text-slate-500 hover:text-slate-800"
@@ -148,7 +154,7 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
           </button>
           <button
             onClick={() => { setFilter("RENT"); setVisibleCount(12); }}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-bold transition-all text-center cursor-pointer ${
               filter === "RENT"
                 ? "bg-white text-slate-900 shadow-xs"
                 : "text-slate-500 hover:text-slate-800"
@@ -159,37 +165,99 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
         </div>
 
         {/* Sort Select & Info */}
-        <div className="flex flex-wrap items-center gap-3 self-end sm:self-auto justify-end">
+        <div className="flex items-center gap-2.5 w-full sm:w-auto justify-between sm:justify-end">
           <span className="text-xs text-slate-400 font-medium hidden md:inline">
             {t("showing_count", { count: visibleProperties.length, total: filteredAndSorted.length })}
           </span>
 
-          {/* Property Type Filter Select */}
+          {/* Property Type Filter */}
           {availablePropertyTypes.length > 0 && (
-            <div className="relative">
-              <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              <select
-                value={propertyTypeFilter}
-                onChange={(e) => { setPropertyTypeFilter(e.target.value); setVisibleCount(12); }}
-                className="pl-10 pr-8 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all appearance-none cursor-pointer min-w-[140px]"
-              >
-                <option value="ALL">{t("filter_all_types")}</option>
-                {availablePropertyTypes.map(type => (
-                  <option key={type} value={type}>
-                    {t(`property_types.${type.toLowerCase()}`)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-            </div>
+            <>
+              {/* Desktop native select */}
+              <div className="relative hidden sm:block sm:flex-initial">
+                <Building2 className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <select
+                  value={propertyTypeFilter}
+                  onChange={(e) => { setPropertyTypeFilter(e.target.value); setVisibleCount(12); }}
+                  className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all appearance-none cursor-pointer min-w-[140px]"
+                >
+                  <option value="ALL">{t("filter_all_types")}</option>
+                  {availablePropertyTypes.map(type => (
+                    <option key={type} value={type}>
+                      {t(`property_types.${type.toLowerCase()}`)}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+              </div>
+
+              {/* Mobile drawer button trigger */}
+              <div className="relative flex-1 sm:hidden">
+                <button
+                  type="button"
+                  onClick={() => setPropertyTypeDialogOpen(true)}
+                  className="w-full px-3.5 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold text-slate-750 transition-all appearance-none cursor-pointer flex items-center justify-between shadow-2xs h-[38px]"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span className="truncate">
+                      {propertyTypeFilter === "ALL"
+                        ? t("filter_all_types")
+                        : t(`property_types.${propertyTypeFilter.toLowerCase()}`)}
+                    </span>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 ml-1" />
+                </button>
+
+                <ResponsiveDialog
+                  open={propertyTypeDialogOpen}
+                  onOpenChange={setPropertyTypeDialogOpen}
+                  title={t("property_type")}
+                  confirmOnClose={false}
+                >
+                  <div className="flex flex-col bg-white">
+                    <button
+                      onClick={() => {
+                        setPropertyTypeFilter("ALL");
+                        setVisibleCount(12);
+                        setPropertyTypeDialogOpen(false);
+                      }}
+                      className={`w-full flex items-center justify-between px-6 py-4.5 text-sm font-bold border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors ${
+                        propertyTypeFilter === "ALL" ? "text-indigo-600 bg-indigo-50/20" : "text-slate-700"
+                      }`}
+                    >
+                      <span>{t("filter_all_types")}</span>
+                      {propertyTypeFilter === "ALL" && <Check className="w-4.5 h-4.5 text-indigo-650" />}
+                    </button>
+                    {availablePropertyTypes.map(type => (
+                      <button
+                        key={type}
+                        onClick={() => {
+                          setPropertyTypeFilter(type);
+                          setVisibleCount(12);
+                          setPropertyTypeDialogOpen(false);
+                        }}
+                        className={`w-full flex items-center justify-between px-6 py-4.5 text-sm font-bold border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors ${
+                          propertyTypeFilter === type ? "text-indigo-600 bg-indigo-50/20" : "text-slate-700"
+                        }`}
+                      >
+                        <span>{t(`property_types.${type.toLowerCase()}`)}</span>
+                        {propertyTypeFilter === type && <Check className="w-4.5 h-4.5 text-indigo-650" />}
+                      </button>
+                    ))}
+                  </div>
+                </ResponsiveDialog>
+              </div>
+            </>
           )}
 
-          <div className="relative">
+          {/* Desktop Sort filter select */}
+          <div className="relative hidden sm:block sm:flex-initial">
             <SlidersHorizontal className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
             <select
               value={sort}
               onChange={(e) => { setSort(e.target.value as SortType); setVisibleCount(12); }}
-              className="pl-10 pr-8 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all appearance-none cursor-pointer min-w-[140px]"
+              className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all appearance-none cursor-pointer min-w-[140px]"
             >
               <option value="newest">{t("sort_newest")}</option>
               <option value="price-asc">{t("sort_price_asc")}</option>
@@ -198,6 +266,47 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
               <option value="size-desc">{t("sort_size_desc")}</option>
             </select>
             <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          </div>
+
+          {/* Mobile Sort drawer button trigger */}
+          <div className="relative flex-1 sm:hidden">
+            <button
+              type="button"
+              onClick={() => setSortDialogOpen(true)}
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-xs font-bold text-slate-750 transition-all appearance-none cursor-pointer flex items-center justify-between shadow-2xs h-[38px]"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <SlidersHorizontal className="w-4 h-4 text-slate-400 shrink-0" />
+                <span className="truncate">{t(`sort_${sort.replace("-", "_")}` as any)}</span>
+              </div>
+              <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 ml-1" />
+            </button>
+
+            <ResponsiveDialog
+              open={sortDialogOpen}
+              onOpenChange={setSortDialogOpen}
+              title={t("sort_by")}
+              confirmOnClose={false}
+            >
+              <div className="flex flex-col bg-white">
+                {(["newest", "price-asc", "price-desc", "size-asc", "size-desc"] as SortType[]).map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => {
+                      setSort(opt);
+                      setVisibleCount(12);
+                      setSortDialogOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-6 py-4.5 text-sm font-bold border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors ${
+                      sort === opt ? "text-indigo-600 bg-indigo-50/20" : "text-slate-700"
+                    }`}
+                  >
+                    <span>{t(`sort_${opt.replace("-", "_")}` as any)}</span>
+                    {sort === opt && <Check className="w-4.5 h-4.5 text-indigo-650" />}
+                  </button>
+                ))}
+              </div>
+            </ResponsiveDialog>
           </div>
         </div>
       </div>

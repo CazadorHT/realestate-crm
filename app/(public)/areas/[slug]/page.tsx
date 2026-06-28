@@ -231,15 +231,15 @@ export default async function AreaDetailPage(
 
       {/* Main Content Layout (2:1 Column Grid) */}
       <main className="max-w-screen-2xl mx-auto px-5 md:px-8 py-10 md:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
           
           {/* Left Column (2/3): Interactive Listings List */}
-          <div className="lg:col-span-3 space-y-8">
+          <div className="md:col-span-2 lg:col-span-3 space-y-8">
             <section className="space-y-6">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3.5">
-                <div className="flex items-center gap-2.5">
-                  <Building2 className="w-6 h-6 text-indigo-650" />
-                  <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3.5 gap-2">
+                <div className="flex items-start sm:items-center gap-2.5">
+                  <Building2 className="w-5.5 h-5.5 text-indigo-650 shrink-0 mt-0.5 sm:mt-0" />
+                  <h2 className="text-lg md:text-xl font-extrabold text-slate-900 tracking-tight leading-tight">
                     {language === "en"
                       ? `Active Listings in ${nameText}`
                       : language === "cn"
@@ -249,7 +249,7 @@ export default async function AreaDetailPage(
                           : `ประกาศในย่าน ${nameText}`}
                   </h2>
                 </div>
-                <span className="text-xs font-bold px-3 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full">
+                <span className="self-start sm:self-auto text-[10px] sm:text-xs font-bold px-2.5 py-1 bg-indigo-50 text-indigo-700 border border-indigo-100 rounded-full shrink-0 ml-[30px] sm:ml-0">
                   {properties.length} {t("listings_count")}
                 </span>
               </div>
@@ -258,7 +258,7 @@ export default async function AreaDetailPage(
           </div>
 
           {/* Right Column (1/3): Area Information & Profile Sidebar */}
-          <div className="lg:col-span-1 space-y-8">
+          <div className="md:col-span-1 lg:col-span-1 space-y-8">
             
             {/* 1. Market Insights Dashboard */}
             <section className="space-y-4 bg-white/90 p-6 rounded-3xl border border-slate-200/50 shadow-xs">

@@ -63,16 +63,27 @@ export interface PublicPropertyNearStation {
   district: string | null;
   province: string | null;
   popular_area: string | null;
+  popular_area_en?: string | null;
+  popular_area_cn?: string | null;
+  popular_area_ru?: string | null;
   near_transit: boolean | null;
   transit_station_name: string | null;
   transit_station_name_en: string | null;
+  transit_station_name_cn?: string | null;
+  transit_station_name_ru?: string | null;
+  transit_type?: string | null;
   transit_distance_meters: number | null;
+  nearby_transits?: any[] | null;
   is_hot_deal: boolean | null;
   is_featured: boolean | null;
   currency: string | null;
   is_fully_furnished: boolean | null;
   is_pet_friendly: boolean | null;
   verified: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  min_contract_months?: number | null;
+  features?: any[] | null;
 }
 
 // ============================================================
@@ -394,7 +405,10 @@ export async function getPropertiesNearStation(
   let query = supabase
     .from("properties")
     .select(
-      "id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, near_transit, transit_station_name, transit_station_name_en, transit_distance_meters, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified",
+      `id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months,
+      property_features (
+        features (id, name, name_en, name_cn, name_ru, icon_key)
+      )`,
       { count: "exact" }
     )
     .eq("status", "ACTIVE")
@@ -428,8 +442,16 @@ export async function getPropertiesNearStation(
     return { properties: [], total: 0 };
   }
 
+  const mapped = (data || []).map((row: any) => {
+    const { property_features, ...rest } = row;
+    return {
+      ...rest,
+      features: (property_features || []).map((pf: any) => pf.features).filter((f: any) => !!f),
+    };
+  });
+
   return {
-    properties: (data || []) as PublicPropertyNearStation[],
+    properties: mapped as PublicPropertyNearStation[],
     total: count || 0,
   };
 }
