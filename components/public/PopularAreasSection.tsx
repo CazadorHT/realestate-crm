@@ -4,13 +4,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, ArrowRight } from "lucide-react";
+import { MapPin, ArrowRight, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
 import AOS from "aos";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
 import { getProvinceName } from "@/lib/utils/provinces";
 import { m, AnimatePresence } from "framer-motion";
-import { RefreshCw } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -48,6 +47,18 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
       const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
       setShowLeftFade(scrollLeft > 20);
       setShowRightFade(scrollLeft < scrollWidth - clientWidth - 20);
+    }
+  };
+
+  const scrollPrev = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: -450, behavior: "smooth" });
+    }
+  };
+
+  const scrollNext = () => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollBy({ left: 450, behavior: "smooth" });
     }
   };
 
@@ -509,7 +520,25 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
               </p>
             </m.div>
           ) : (
-            <div className="relative">
+            <div className="relative group/nav">
+              {/* Floating Navigation Arrows - Desktop Only */}
+<button
+  onClick={scrollPrev}
+  disabled={!showLeftFade}
+  aria-label="Previous areas"
+  className="absolute left-4 top-1/2 -translate-y-[calc(50%+16px)] z-20 hidden xl:flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.2)] text-slate-900 hover:text-blue-600 hover:scale-110 transition-all active:scale-95 disabled:opacity-0 disabled:pointer-events-none duration-300 cursor-pointer rounded-full"
+>
+  <ChevronLeft className="h-6 w-6 stroke-[2.5]" />
+</button>
+<button
+  onClick={scrollNext}
+  disabled={!showRightFade}
+  aria-label="Next areas"
+  className="absolute right-4 top-1/2 -translate-y-[calc(50%+16px)] z-20 hidden xl:flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.2)] text-slate-900 hover:text-blue-600 hover:scale-110 transition-all active:scale-95 disabled:opacity-0 disabled:pointer-events-none duration-300 cursor-pointer rounded-full"
+>
+  <ChevronRight className="h-6 w-6 stroke-[2.5]" />
+</button>
+
               {/* Edge Fade Indicators to signal horizontal scrolling */}
               <div className={`absolute left-0 top-0 bottom-8 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showLeftFade ? "opacity-100" : "opacity-0"}`} />
               <div className={`absolute right-0 top-0 bottom-8 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showRightFade ? "opacity-100" : "opacity-0"}`} />
