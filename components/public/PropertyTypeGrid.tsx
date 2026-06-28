@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useLanguage } from "@/components/providers/LanguageProvider";
@@ -62,6 +63,14 @@ export function PropertyTypeGrid({
   isLoading?: boolean;
 }) {
   const { t, language } = useLanguage();
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const ua = window.navigator.userAgent.toLowerCase();
+      setIsIOS(/iphone|ipad|ipod/.test(ua));
+    }
+  }, []);
   const propertyTypes = [
     {
       image: "/images/property-types/condo.webp",
@@ -175,10 +184,10 @@ export function PropertyTypeGrid({
               : propertyTypes.map((type, idx) => (
                   <m.div
                     key={idx}
-                    initial={{ opacity: 0, y: 15 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.4, delay: idx * 0.05 }}
+                    initial={isIOS ? undefined : { opacity: 0, y: 15 }}
+                    whileInView={isIOS ? undefined : { opacity: 1, y: 0 }}
+                    viewport={isIOS ? undefined : { once: true }}
+                    transition={isIOS ? undefined : { duration: 0.4, delay: idx * 0.05 }}
                     className="shrink-0 w-24 md:w-32 snap-center"
                   >
                     <PropertyTypeCard {...type} />

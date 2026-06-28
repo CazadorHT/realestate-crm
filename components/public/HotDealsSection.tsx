@@ -20,6 +20,7 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
   const [isLoading, setIsLoading] = useState(!initialProperties);
   const [isMounted, setIsMounted] = useState(false);
   const [isEmpty, setIsEmpty] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // 1. Track Dwell Time for Analytics
@@ -45,6 +46,11 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
 
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const ua = window.navigator.userAgent.toLowerCase();
+      setIsIOS(/iphone|ipad|ipod/.test(ua));
+    }
+
     async function loadHotDeals() {
       // 🛡️ Performance: Skip fetch if server already provided data
       if (initialProperties && initialProperties.length > 0) {
@@ -220,31 +226,37 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
           </div>
         ) : (
           /* Horizontal Scroll on Mobile / Grid on Desktop */
-          <div
-            ref={scrollRef}
-            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory scroll-pl-4 sm:scroll-pl-6 md:scroll-pl-0 py-4 px-4 sm:px-6 md:px-6 lg:px-8 md:py-0 after:content-[''] after:w-px after:shrink-0 md:after:hidden"
-          >
-            {displayProperties.slice(0, 4).map((property, index) => (
-              <m.div
-                key={property.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ 
-                  duration: 0.6, 
-                  delay: index * 0.15,
-                  ease: [0.21, 1.02, 0.73, 1] // Custom premium elastic-out
-                }}
-                className="w-[78vw] max-w-[310px] sm:max-w-[340px] md:w-auto md:max-w-none snap-start shrink-0 relative group"
-              >
-                {/* Card Wrapper with Premium Glow Effect */}
-                <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-0 lg:p-1 lg:bg-linear-to-b from-white/80 to-white/40 lg:shadow-xl lg:shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">
-                  <div className="md:group-hover:scale-[1.02] transition-all duration-500 ">
-                    <PropertyCard property={property} hideShare={true} />
+          <div className="relative">
+            {/* Edge Fade Indicators to signal horizontal scrolling on mobile */}
+            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-slate-800 to-transparent pointer-events-none z-10 md:hidden" />
+            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-slate-800 to-transparent pointer-events-none z-10 md:hidden" />
+
+            <div
+              ref={scrollRef}
+              className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory scroll-pl-4 sm:scroll-pl-6 md:scroll-pl-0 py-4 px-4 sm:px-6 md:px-6 lg:px-8 md:py-0 after:content-[''] after:w-px after:shrink-0 md:after:hidden"
+            >
+              {displayProperties.slice(0, 4).map((property, index) => (
+                <m.div
+                  key={property.id}
+                  initial={isIOS ? undefined : { opacity: 0, y: 30 }}
+                  whileInView={isIOS ? undefined : { opacity: 1, y: 0 }}
+                  viewport={isIOS ? undefined : { once: true, margin: "-50px" }}
+                  transition={isIOS ? undefined : { 
+                    duration: 0.6, 
+                    delay: index * 0.15,
+                    ease: [0.21, 1.02, 0.73, 1] // Custom premium elastic-out
+                  }}
+                  className="w-[78vw] max-w-[310px] sm:max-w-[340px] md:w-auto md:max-w-none snap-start shrink-0 relative group"
+                >
+                  {/* Card Wrapper with Premium Glow Effect */}
+                  <div className="rounded-2xl md:rounded-[1.5rem] p-1 md:p-0 lg:p-1 lg:bg-linear-to-b from-white/80 to-white/40 lg:shadow-xl lg:shadow-orange-900/5 group-hover:shadow-orange-600/20 transition-all duration-500 ">
+                    <div className="md:group-hover:scale-[1.02] transition-all duration-500 ">
+                      <PropertyCard property={property} hideShare={true} />
+                    </div>
                   </div>
-                </div>
-              </m.div>
-            ))}
+                </m.div>
+              ))}
+            </div>
           </div>
         )}
 
