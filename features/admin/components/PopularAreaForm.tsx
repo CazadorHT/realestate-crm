@@ -257,7 +257,7 @@ export function PopularAreaForm({
                   variant="outline"
                   disabled={isGeneratingAi || !form.watch("name") || !form.watch("name_en")}
                   onClick={handleGenerateAiContent}
-                  className="h-8 text-[11px] font-bold text-indigo-600 border-indigo-200 bg-white hover:bg-indigo-50 shrink-0 transition-all"
+                  className="h-8 text-[11px] font-bold text-indigo-600! border-indigo-200 bg-white hover:bg-indigo-50 shrink-0 transition-all"
                 >
                   {isGeneratingAi ? (
                     <>

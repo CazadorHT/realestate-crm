@@ -636,7 +636,7 @@ export async function generateAreaSeoContentAction(
     const { getAiModelConfig } = await import("@/features/ai-settings/actions");
     const { logAiUsage } = await import("@/features/ai-monitor/actions");
     const aiConfig = await getAiModelConfig();
-    const modelName = aiConfig.blog_generator_model || "gemini-1.5-flash";
+    const modelName = aiConfig.blog_generator_model || "gemini-flash-lite-latest";
 
     const prompt = `
       You are a premium luxury and residential real estate investment analyst in Thailand.

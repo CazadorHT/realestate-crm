@@ -25,6 +25,7 @@ import {
   ArrowUpDown,
   ChevronUp,
   ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -34,7 +35,10 @@ import {
 } from "@/features/admin/popular-areas-actions";
 import { useTableSelection } from "@/hooks/useTableSelection";
 import { BulkActionToolbar } from "@/components/ui/bulk-action-toolbar";
-import { bulkDeletePopularAreasAction } from "@/features/admin/popular-areas-bulk-actions";
+import {
+  bulkDeletePopularAreasAction,
+  bulkGenerateAreaSeoContentAction,
+} from "@/features/admin/popular-areas-bulk-actions";
 import { cn } from "@/lib/utils";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { EditPopularAreaDialog } from "./EditPopularAreaDialog";
@@ -283,6 +287,7 @@ export function PopularAreasTable({
   const [deleteConfirmItem, setDeleteConfirmItem] = useState<PopularArea | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [isGeneratingAiBulk, setIsGeneratingAiBulk] = useState(false);
   const [isAllAcrossSelected, setIsAllAcrossSelected] = useState(false);
    const [isBulkDeleteOpen, setIsBulkDeleteOpen] = useState(false);
   const [viewingAreaProperties, setViewingAreaProperties] = useState<PopularArea | null>(null);
@@ -424,6 +429,39 @@ export function PopularAreasTable({
     executeAction();
   };
 
+  const handleBulkAiGenerate = async () => {
+    setIsGeneratingAiBulk(true);
+    const ids = (isAllAcrossSelected ? undefined : Array.from(selectedIds)) as string[] | undefined;
+    const count = isAllAcrossSelected ? totalCount : selectedIds.size;
+    
+    const executeAction = async () => {
+      const processId = startProcess(`สร้างเนื้อหาและ SEO ด้วย AI (${count} รายการ)`, { 
+        type: "AI_GENERATION",
+        onRetry: executeAction
+      });
+
+      try {
+        const res = await bulkGenerateAreaSeoContentAction(processId, ids, isAllAcrossSelected, search);
+        setIsGeneratingAiBulk(false);
+        
+        if (res.success) {
+          finishProcess(processId, "SUCCESS", res.message);
+          setIsAllAcrossSelected(false);
+          clearSelection();
+          router.refresh();
+        } else {
+          finishProcess(processId, "ERROR", res.message);
+        }
+      } catch (err: unknown) {
+        setIsGeneratingAiBulk(false);
+        const errorMessage = err instanceof Error ? err.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+        finishProcess(processId, "ERROR", `[PopularAreasTable:handleBulkAiGenerate] ${errorMessage}`);
+      }
+    };
+
+    executeAction();
+  };
+
   const start = (page - 1) * pageSize;
   const isDraggingEnabled = !search && sortBy === "sort_order";
 
@@ -436,15 +474,26 @@ export function PopularAreasTable({
         onDelete={handleBulkDelete}
         entityName="ทำเล"
         extraActions={
-          <Button
-            variant="outline"
-            className="h-10 px-4 border-indigo-100 bg-white hover:text-indigo-600 text-indigo-600 hover:bg-indigo-50 font-bold rounded-xl gap-2 text-xs"
-            onClick={handleBulkTranslate}
-            disabled={isTranslating}
-          >
-            <Languages className="h-4 w-4" />
-            แปล ({isAllAcrossSelected ? totalCount : selectedCount})
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="h-10 px-4 border-indigo-100 bg-white hover:text-indigo-600 text-indigo-600 hover:bg-indigo-50 font-bold rounded-xl gap-2 text-xs"
+              onClick={handleBulkTranslate}
+              disabled={isTranslating || isGeneratingAiBulk}
+            >
+              <Languages className="h-4 w-4" />
+              แปล ({isAllAcrossSelected ? totalCount : selectedCount})
+            </Button>
+            <Button
+              variant="outline"
+              className="h-10 px-4 border-violet-100 bg-white hover:text-violet-600 text-violet-600 hover:bg-violet-50 font-bold rounded-xl gap-2 text-xs animate-pulse hover:animate-none"
+              onClick={handleBulkAiGenerate}
+              disabled={isTranslating || isGeneratingAiBulk}
+            >
+              <Sparkles className="h-4 w-4 text-violet-500" />
+              เจน AI ทั้งหมด ({isAllAcrossSelected ? totalCount : selectedCount})
+            </Button>
+          </div>
         }
       />
 
