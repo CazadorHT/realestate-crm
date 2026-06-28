@@ -282,4 +282,50 @@ Return ONLY the raw JSON string. Do not include markdown code block syntax (like
   }
 }
 
+/**
+ * Fetch all transit stations with the count of active properties near them
+ */
+export async function getTransitStationsWithCountsAction() {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+
+    // 1. Fetch all transit stations
+    const { data: stations, error: stationsError } = await ctx.supabase
+      .from("ref_master_data")
+      .select("*")
+      .eq("type", "TRANSIT_STATION")
+      .order("sort_order", { ascending: true });
+
+    if (stationsError) throw stationsError;
+
+    // 2. Fetch count of properties grouped by transit_station_name from properties view
+    const { data: counts, error: countsError } = await ctx.supabase
+      .from("properties")
+      .select("transit_station_name")
+      .is("deleted_at", null)
+      .eq("status", "ACTIVE"); // only active properties
+
+    if (countsError) throw countsError;
+
+    const countMap: Record<string, number> = {};
+    for (const p of (counts || [])) {
+      if (p.transit_station_name) {
+        countMap[p.transit_station_name] = (countMap[p.transit_station_name] || 0) + 1;
+      }
+    }
+
+    // 3. Map count to stations
+    return (stations || []).map((station: any) => ({
+      ...station,
+      property_count: countMap[station.code] || 0,
+    }));
+  } catch (err) {
+    console.error("Error in getTransitStationsWithCountsAction:", err);
+    return [];
+  }
+}
+
+
+
 

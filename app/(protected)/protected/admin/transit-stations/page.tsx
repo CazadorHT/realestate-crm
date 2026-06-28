@@ -16,9 +16,10 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { 
-  getAllMasterDataAction, 
+  getTransitStationsWithCountsAction, 
 } from "@/features/properties/actions/fetch-master-data";
 import { StationEditDialog } from "./components/StationEditDialog";
+import { LOGO_PATHS } from "@/components/public/near-station/helpers/station-selector-helpers";
 
 interface StationItem {
   id?: string;
@@ -39,6 +40,7 @@ interface StationItem {
   };
   sort_order: number;
   is_active: boolean;
+  property_count?: number;
 }
 
 const LINE_LABELS: Record<string, string> = {
@@ -72,6 +74,7 @@ export default function TransitStationsAdminPage() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [lineFilter, setLineFilter] = React.useState<string>("ALL");
+  const [propertyFilter, setPropertyFilter] = React.useState<string>("ALL");
 
   // Modal / Edit state
   const [isEditOpen, setIsEditOpen] = React.useState(false);
@@ -80,7 +83,7 @@ export default function TransitStationsAdminPage() {
   const loadStations = React.useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await getAllMasterDataAction("TRANSIT_STATION");
+      const data = await getTransitStationsWithCountsAction();
       setStations(data as StationItem[]);
     } catch (err) {
       toast.error("ไม่สามารถโหลดข้อมูลสถานีได้");
@@ -99,16 +102,27 @@ export default function TransitStationsAdminPage() {
   };
 
   const filteredStations = stations.filter((station) => {
+    // 1. Search filter
     const q = searchQuery.toLowerCase();
     const matchesSearch = 
       station.code.toLowerCase().includes(q) ||
       station.label.th.toLowerCase().includes(q) ||
       station.label.en.toLowerCase().includes(q);
 
+    // 2. Line filter
     const transitType = station.metadata?.transit_type || "OTHER";
     const matchesLine = lineFilter === "ALL" || transitType === lineFilter;
 
-    return matchesSearch && matchesLine;
+    // 3. Property count filter
+    const count = station.property_count || 0;
+    let matchesProperty = true;
+    if (propertyFilter === "HAS_PROPERTIES") {
+      matchesProperty = count > 0;
+    } else if (propertyFilter === "NO_PROPERTIES") {
+      matchesProperty = count === 0;
+    }
+
+    return matchesSearch && matchesLine && matchesProperty;
   });
 
   return (
@@ -129,8 +143,8 @@ export default function TransitStationsAdminPage() {
       </div>
 
       {/* Filter and Search controls */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-white p-6 rounded-2xl border border-slate-100 shadow-xs">
-        <div className="relative w-full sm:max-w-md">
+      <div className="flex flex-col xl:flex-row gap-4 justify-between items-center bg-white p-6 rounded-2xl border border-slate-100 shadow-xs">
+        <div className="relative w-full xl:max-w-md">
           <Search className="absolute left-3.5 top-3 h-4.5 w-4.5 text-slate-400" />
           <Input
             placeholder="ค้นหาตามรหัส หรือชื่อสถานี..."
@@ -140,19 +154,46 @@ export default function TransitStationsAdminPage() {
           />
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto">
-          <Label className="text-sm font-semibold text-slate-600 shrink-0">สายรถไฟฟ้า:</Label>
-          <Select value={lineFilter} onValueChange={setLineFilter}>
-            <SelectTrigger className="w-full sm:w-48 h-10.5 rounded-xl border-slate-200">
-              <SelectValue placeholder="เลือกสายทั้งหมด" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">ทุกสาย</SelectItem>
-              {Object.entries(LINE_LABELS).map(([key, label]) => (
-                <SelectItem key={key} value={key}>{label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full xl:w-auto">
+          {/* Line Filter */}
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+            <Label className="text-sm font-semibold text-slate-650 shrink-0">สายรถไฟฟ้า:</Label>
+            <Select value={lineFilter} onValueChange={setLineFilter}>
+              <SelectTrigger className="w-full sm:w-56 h-10.5 rounded-xl border-slate-200 bg-white">
+                <SelectValue placeholder="เลือกสายทั้งหมด" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">ทุกสาย</SelectItem>
+                {Object.entries(LINE_LABELS).map(([key, label]) => (
+                  <SelectItem key={key} value={key}>
+                    <div className="flex items-center gap-2">
+                      {LOGO_PATHS[key] ? (
+                        <img src={LOGO_PATHS[key]} alt={key} className="h-4 w-auto object-contain shrink-0" />
+                      ) : (
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: LINE_COLORS[key] || "#6b7280" }} />
+                      )}
+                      <span>{label}</span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Property Count Filter */}
+          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+            <Label className="text-sm font-semibold text-slate-650 shrink-0">จำนวนทรัพย์สิน:</Label>
+            <Select value={propertyFilter} onValueChange={setPropertyFilter}>
+              <SelectTrigger className="w-full sm:w-48 h-10.5 rounded-xl border-slate-200 bg-white">
+                <SelectValue placeholder="ทั้งหมด" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">ทั้งหมด</SelectItem>
+                <SelectItem value="HAS_PROPERTIES">มีทรัพย์สิน (≥ 1)</SelectItem>
+                <SelectItem value="NO_PROPERTIES">ไม่มีทรัพย์สิน (0)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
@@ -176,6 +217,7 @@ export default function TransitStationsAdminPage() {
                 <tr className="bg-slate-50/75 border-b border-slate-100 text-slate-500 text-xs font-bold uppercase tracking-wider">
                   <th className="px-6 py-4">สถานี (TH / EN)</th>
                   <th className="px-6 py-4">สายรถไฟฟ้า</th>
+                  <th className="px-6 py-4">จำนวนทรัพย์</th>
                   <th className="px-6 py-4">URL Slug</th>
                   <th className="px-6 py-4">สถานะ SEO</th>
                   <th className="px-6 py-4 text-center">จัดการ</th>
@@ -203,12 +245,26 @@ export default function TransitStationsAdminPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
-                          <span 
-                            className="w-3 h-3 rounded-full shrink-0" 
-                            style={{ backgroundColor: lineColor }}
-                          />
+                          {LOGO_PATHS[transitType] ? (
+                            <img src={LOGO_PATHS[transitType]} alt={transitType} className="h-5 w-auto object-contain shrink-0" />
+                          ) : (
+                            <span 
+                              className="w-3 h-3 rounded-full shrink-0" 
+                              style={{ backgroundColor: lineColor }}
+                            />
+                          )}
                           <span className="font-medium text-slate-600">{lineName}</span>
                         </div>
+                      </td>
+                      {/* Property Count Column */}
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                          (station.property_count || 0) > 0 
+                            ? "bg-indigo-50 text-indigo-700 border border-indigo-100" 
+                            : "bg-slate-50 text-slate-400 border border-slate-100"
+                        }`}>
+                          {station.property_count || 0} รายการ
+                        </span>
                       </td>
                       <td className="px-6 py-4">
                         <code className="text-xs bg-slate-100 px-2.5 py-1 rounded-md text-slate-700 font-mono">
