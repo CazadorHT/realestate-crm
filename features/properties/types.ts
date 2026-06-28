@@ -259,6 +259,7 @@ export interface PropertyDetail {
   popular_area_en?: string | null;
   popular_area_cn?: string | null;
   popular_area_ru?: string | null;
+  popular_area_slug?: string | null;
 
   subdistrict_en?: string | null;
   subdistrict_cn?: string | null;

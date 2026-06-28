@@ -256,6 +256,24 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     }
   }
 
+  let popularAreaSlug: string | null = null;
+  const areaNameName = address.popular_area;
+  if (areaNameName) {
+    try {
+      const { data: areaObj } = await supabase
+        .from("popular_areas_v3")
+        .select("slug")
+        .eq("name->>th", areaNameName.trim())
+        .eq("is_active", true)
+        .maybeSingle();
+      if (areaObj?.slug) {
+        popularAreaSlug = areaObj.slug;
+      }
+    } catch (err) {
+      console.error("Error looking up popular area slug in fetch-public-property:", err);
+    }
+  }
+
   const data: PropertyDetail = {
     id: rawData.id,
     slug: address.slug || slugOrId,
@@ -365,6 +383,7 @@ export async function getPublicPropertyDetail(slugOrId: string): Promise<Propert
     popular_area_en: address.popular_area_en || null,
     popular_area_cn: address.popular_area_cn || null,
     popular_area_ru: address.popular_area_ru || null,
+    popular_area_slug: popularAreaSlug,
 
     subdistrict_en: address.subdistrict_en || null,
     subdistrict_cn: address.subdistrict_cn || null,

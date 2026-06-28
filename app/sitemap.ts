@@ -173,6 +173,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   );
 
+  // 7. Fetch Active Popular Areas
+  const { data: areas } = await supabase
+    .from("popular_areas_v3")
+    .select("slug, updated_at")
+    .eq("is_active", true)
+    .not("slug", "is", null);
+
+  const areaRoutes: MetadataRoute.Sitemap = (areas || []).map(
+    (area: any) => ({
+      url: `${baseUrl}/areas/${area.slug}`,
+      lastModified: area.updated_at ? new Date(area.updated_at) : new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+      alternates: getAlternates(`/areas/${area.slug}`),
+    }),
+  );
+
   return [
     ...staticRoutes,
     ...propertyRoutes,
@@ -180,5 +197,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...serviceRoutes,
     ...stationRoutes,
     ...projectRoutes,
+    ...areaRoutes,
   ];
 }

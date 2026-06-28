@@ -9,6 +9,13 @@ import { subscribeToLineAction } from "@/features/leads/public-actions";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { siteConfig } from "@/lib/site-config";
 import { useSiteConfig } from "@/components/providers/SiteConfigProvider";
+import { getTransitLinesWithStations } from "@/features/public/stations";
+
+interface DisplayStation {
+  slug: string;
+  label: { th: string; en: string; cn?: string; ru?: string };
+  prefix?: string;
+}
 
 export function PublicFooter() {
   const { language, t } = useLanguage();
@@ -16,8 +23,74 @@ export function PublicFooter() {
   const [mounted, setMounted] = useState(false);
   const currentYear = mounted ? new Date().getFullYear() : 2026;
 
+  const [rawStations, setRawStations] = useState<DisplayStation[]>([
+    { slug: "bts-asok", label: { th: "อโศก", en: "Asok", cn: "阿索克", ru: "Асок" }, prefix: "BTS" },
+    { slug: "bts-thong-lo", label: { th: "ทองหล่อ", en: "Thong Lo", cn: "通罗", ru: "Тонгло" }, prefix: "BTS" },
+    { slug: "bts-ari", label: { th: "อารีย์", en: "Ari", cn: "阿里", ru: "Ари" }, prefix: "BTS" },
+    { slug: "mrt-phra-ram-9", label: { th: "พระราม 9", en: "Phra Ram 9", cn: "拉玛九", ru: "Рама 9" }, prefix: "MRT" },
+    { slug: "mrt-sukhumvit", label: { th: "สุขุมวิท", en: "Sukhumvit", cn: "素坤逸", ru: "Сукхумвит" }, prefix: "MRT" },
+    { slug: "mrt-huai-khwang", label: { th: "ห้วยขวาง", en: "Huai Khwang", cn: "辉煌", ru: "Хуайкхванг" }, prefix: "MRT" },
+    { slug: "arl-makkasan", label: { th: "มักกะสัน", en: "Makkasan", cn: "目甲讪", ru: "Маккасан" }, prefix: "ARL" },
+  ]);
+
   useEffect(() => {
     setMounted(true);
+
+    async function loadActiveStations() {
+      try {
+        const lines = await getTransitLinesWithStations();
+        
+        // Group stations by main categories: BTS, MRT, ARL
+        const btsStations: DisplayStation[] = [];
+        const mrtStations: DisplayStation[] = [];
+        const arlStations: DisplayStation[] = [];
+        
+        for (const line of lines) {
+          const type = line.type;
+          
+          if (type === "BTS" || type === "GOLD") {
+            for (const station of line.stations) {
+              btsStations.push({
+                slug: station.slug,
+                label: station.label,
+                prefix: "BTS"
+              });
+            }
+          } else if (type.startsWith("MRT")) {
+            for (const station of line.stations) {
+              mrtStations.push({
+                slug: station.slug,
+                label: station.label,
+                prefix: "MRT"
+              });
+            }
+          } else if (type === "ARL") {
+            for (const station of line.stations) {
+              arlStations.push({
+                slug: station.slug,
+                label: station.label,
+                prefix: "ARL"
+              });
+            }
+          }
+        }
+        
+        // Take up to 3 from each group to keep it compact
+        const activeStations: DisplayStation[] = [
+          ...btsStations.slice(0, 3),
+          ...mrtStations.slice(0, 3),
+          ...arlStations.slice(0, 3)
+        ];
+        
+        if (activeStations.length > 0) {
+          setRawStations(activeStations);
+        }
+      } catch (err) {
+        console.error("Error loading transit stations for footer:", err);
+      }
+    }
+
+    loadActiveStations();
   }, []);
 
   const siteName = settings.site_name || siteConfig.name;
@@ -60,16 +133,21 @@ export function PublicFooter() {
     { name: t("nav.contact"), href: "/contact" },
   ];
 
-  const transitStations = [
-    { name: language === "th" ? "BTS อโศก" : "BTS Asok", href: "/near-station/bts-asok" },
-    { name: language === "th" ? "BTS ทองหล่อ" : "BTS Thong Lo", href: "/near-station/bts-thong-lo" },
-    { name: language === "th" ? "BTS อารีย์" : "BTS Ari", href: "/near-station/bts-ari" },
-    { name: language === "th" ? "BTS พญาไท" : "BTS Phaya Thai", href: "/near-station/bts-phaya-thai" },
-    { name: language === "th" ? "MRT พระราม 9" : "MRT Phra Ram 9", href: "/near-station/mrt-phra-ram-9" },
-    { name: language === "th" ? "MRT สุขุมวิท" : "MRT Sukhumvit", href: "/near-station/mrt-sukhumvit" },
-    { name: language === "th" ? "MRT ห้วยขวาง" : "MRT Huai Khwang", href: "/near-station/mrt-huai-khwang" },
-    { name: language === "th" ? "ARL มักกะสัน" : "ARL Makkasan", href: "/near-station/arl-makkasan" },
-  ];
+  const getStationNameFromLabel = (label: { th: string; en: string; cn?: string; ru?: string }) => {
+    if (language === "th") return label.th;
+    if (language === "cn") return label.cn || label.en;
+    if (language === "ru") return label.ru || label.en;
+    return label.en;
+  };
+
+  const transitStations = rawStations.map((station) => {
+    const name = getStationNameFromLabel(station.label);
+    const prefix = station.prefix ? `${station.prefix} - ` : "";
+    return {
+      name: `${prefix}${name}`,
+      href: `/near-station/${station.slug}`,
+    };
+  });
 
   const socialMedia = [
     {
@@ -214,7 +292,7 @@ export function PublicFooter() {
             {/* 4. Transit Stations (2 cols) */}
             <div className="lg:col-span-2">
               <h3 className="font-bold text-white mb-6 text-lg tracking-tight">
-                {language === "th" ? "ใกล้รถไฟฟ้า" : "Near Station"}
+                {t("search.near_train")}
               </h3>
               <ul className="space-y-3">
                 {transitStations.map((station) => (

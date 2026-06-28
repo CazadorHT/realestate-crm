@@ -33,6 +33,7 @@ describe('Admin Logic - Popular Areas Validation', () => {
       name: "Sukhumvit",
       name_en: "Sukhumvit",
       name_cn: "素坤逸",
+      slug: "sukhumvit",
       province: "กรุงเทพมหานคร",
     };
     const result = popularAreaSchema.safeParse(validArea);

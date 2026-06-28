@@ -59,6 +59,7 @@ interface PropertyHeaderProps {
       | { th?: string; en?: string; cn?: string; ru?: string }
       | string
       | null;
+    popular_area_slug?: string | null;
     is_fully_furnished?: boolean | null;
     is_bare_shell?: boolean | null;
     floor?: number | null;
@@ -243,7 +244,13 @@ export function PropertyHeader({
                               "popular_area",
                               language,
                             ),
-                            href: `/properties?popular_area=${property.popular_area}`,
+                            href: property.popular_area_slug
+                              ? `/areas/${property.popular_area_slug}`
+                              : `/properties?popular_area=${encodeURIComponent(
+                                  typeof property.popular_area === "object"
+                                    ? property.popular_area?.th || ""
+                                    : property.popular_area || ""
+                                )}`,
                           },
                         ]
                       : []),

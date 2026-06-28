@@ -28,6 +28,10 @@ interface PopularAreaRpcRow {
   province: string | null;
   property_count: number | null;
   created_at: string | null;
+  description: Record<string, string> | null;
+  seo_title: Record<string, string> | null;
+  seo_description: Record<string, string> | null;
+  is_ai_generated: boolean | null;
 }
 
 type PopularAreaInsert =
@@ -169,14 +173,16 @@ export async function createPopularArea(
         ru: parsed.name_ru || "",
       },
       province: parsed.province,
-      slug: parsed.name_en 
-        ? parsed.name_en.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') + '-' + Date.now().toString().slice(-4) 
-        : `area-${Date.now()}`,
+      slug: parsed.slug,
       image_url: parsed.image_url,
       featured: parsed.featured,
       is_active: parsed.is_active,
       sort_order: nextOrder,
       tenant_id: ctx.tenantId ?? null,
+      description: parsed.description || {},
+      seo_title: parsed.seo_title || {},
+      seo_description: parsed.seo_description || {},
+      is_ai_generated: parsed.is_ai_generated || false,
     };
 
     const { error } = await supabase
@@ -225,9 +231,14 @@ export async function updatePopularArea(
         ru: parsed.name_ru || "",
       },
       province: parsed.province,
+      slug: parsed.slug,
       image_url: parsed.image_url,
       featured: parsed.featured,
       is_active: parsed.is_active,
+      description: parsed.description || {},
+      seo_title: parsed.seo_title || {},
+      seo_description: parsed.seo_description || {},
+      is_ai_generated: parsed.is_ai_generated,
       updated_at: new Date().toISOString(),
     };
 
@@ -609,4 +620,87 @@ export async function bulkTranslatePopularAreasAction(
     return { success: false, message: mapDbError(error) };
   }
 }
+
+/**
+ * Generate SEO description content for a popular area using Gemini
+ */
+export async function generateAreaSeoContentAction(
+  nameTh: string,
+  nameEn: string,
+  province: string
+) {
+  try {
+    const ctx = await requireAuthContext();
+    assertStaff(ctx.role);
+
+    const { getAiModelConfig } = await import("@/features/ai-settings/actions");
+    const { logAiUsage } = await import("@/features/ai-monitor/actions");
+    const aiConfig = await getAiModelConfig();
+    const modelName = aiConfig.blog_generator_model || "gemini-1.5-flash";
+
+    const prompt = `
+      You are a premium luxury and residential real estate investment analyst in Thailand.
+      Generate complete information for a popular geographic area in Thailand.
+      Area Name (Thai): ${nameTh}
+      Area Name (English): ${nameEn}
+      Province: ${province}
+      
+      Tasks:
+      1. Write a short, engaging description/guide for this area in 4 languages: Thai (th), English (en), Chinese (cn), and Russian (ru). Focus on location highlights, premium lifestyle, transportation connectivity (like BTS/MRT), and residential attractiveness. Keep each translation around 80-120 words. Use simple HTML tags (<p>, <strong>, <ul>, <li>).
+      2. Write a highly optimized SEO Title and SEO Meta Description for this area page in all 4 languages.
+      3. Generate a clean URL slug in English (lowercase, alphanumeric characters and hyphens only, e.g., "sukhumvit" or "bang-na").
+      
+      Format the response as a strict JSON object matching this schema exactly:
+      {
+        "slug": "url-slug",
+        "description": {
+          "th": "Thai description...",
+          "en": "English description...",
+          "cn": "Chinese description...",
+          "ru": "Russian description..."
+        },
+        "seoTitle": {
+          "th": "SEO Title in Thai (under 60 chars)",
+          "en": "SEO Title in English (under 60 chars)",
+          "cn": "SEO Title in Chinese (under 60 chars)",
+          "ru": "SEO Title in Russian (under 60 chars)"
+        },
+        "seoDescription": {
+          "th": "SEO Description in Thai (under 160 chars)",
+          "en": "SEO Description in English (under 160 chars)",
+          "cn": "SEO Description in Chinese (under 160 chars)",
+          "ru": "SEO Description in Russian (under 160 chars)"
+        }
+      }
+      Do not include markdown code block syntax (like \`\`\`json). Output ONLY the raw JSON string.
+    `;
+
+    const result = await generateText(prompt, modelName);
+    
+    let parsed = null;
+    try {
+      const jsonStr = result.text.replace(/```json|```/g, "").trim();
+      parsed = JSON.parse(jsonStr);
+    } catch (parseErr) {
+      console.error("Gemini parse error:", parseErr, "Raw output:", result.text);
+      return { success: false, message: "AI คืนค่าข้อมูลในรูปแบบที่อ่านไม่ได้ กรุณาลองใหม่อีกครั้ง" };
+    }
+
+    await logAiUsage({
+      model: modelName,
+      feature: "popular_area_generator",
+      status: "success",
+    });
+
+    return {
+      success: true,
+      data: parsed,
+    };
+  } catch (error: unknown) {
+    console.error("generateAreaSeoContentAction error:", error);
+    return { success: false, message: mapDbError(error) };
+  }
+}
+
+
 

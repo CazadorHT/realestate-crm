@@ -1735,8 +1735,11 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean | null
+          is_ai_generated: boolean | null
           name: Json
           province: string | null
+          seo_description: Json | null
+          seo_title: Json | null
           slug: string | null
           sort_order: number | null
           tenant_id: string | null
@@ -1749,8 +1752,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_ai_generated?: boolean | null
           name?: Json
           province?: string | null
+          seo_description?: Json | null
+          seo_title?: Json | null
           slug?: string | null
           sort_order?: number | null
           tenant_id?: string | null
@@ -1763,8 +1769,11 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean | null
+          is_ai_generated?: boolean | null
           name?: Json
           province?: string | null
+          seo_description?: Json | null
+          seo_title?: Json | null
           slug?: string | null
           sort_order?: number | null
           tenant_id?: string | null
@@ -5412,16 +5421,20 @@ export type Database = {
         Args: { target_tenant_id?: string }
         Returns: {
           created_at: string
+          description: Json
           featured: boolean
           id: string
           image_url: string
           is_active: boolean
+          is_ai_generated: boolean
           name: string
           name_cn: string
           name_en: string
           name_ru: string
           property_count: number
           province: string
+          seo_description: Json
+          seo_title: Json
           slug: string
           sort_order: number
         }[]

@@ -507,7 +507,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
               }`}
             >
               {items.map((it, index) => {
-                const href = `/properties?popular_area=${encodeURIComponent(it.popular_area)}`;
+                const href = `/areas/${it.slug}`;
                 return (
                   <m.div
                     key={it.key}

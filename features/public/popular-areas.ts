@@ -15,6 +15,7 @@ export type PopularAreaItem = {
   name_en?: string | null; // Compatibility
   name_cn?: string | null; // Compatibility
   name_ru?: string | null; // Compatibility
+  slug: string;
 };
 
 /**
@@ -122,7 +123,7 @@ export const getPopularAreasAction = unstable_cache(
       }
 
       const map = new Map<string, PopularAreaItem>();
-      let areasQuery = client.from("popular_areas_v3").select("name, province");
+      let areasQuery = client.from("popular_areas_v3").select("name, province, slug");
 
       if (province && provinceMap[province]) {
         areasQuery = areasQuery.or(`province.in.(${provinceMap[province].join(",")}),province.is.null`);
@@ -137,7 +138,7 @@ export const getPopularAreasAction = unstable_cache(
         const areaNameEn = typeof a.name === "string" ? null : a.name?.en || null;
         const areaNameCn = typeof a.name === "string" ? null : a.name?.cn || null;
         const areaNameRu = typeof a.name === "string" ? null : a.name?.ru || null;
-        areaTranslations.set(areaNameTh, { en: areaNameEn, cn: areaNameCn, ru: areaNameRu });
+        areaTranslations.set(areaNameTh, { en: areaNameEn, cn: areaNameCn, ru: areaNameRu, slug: a.slug || "" });
       });
 
       const validAreaNames = new Set(areaTranslations.keys());
@@ -165,6 +166,7 @@ export const getPopularAreasAction = unstable_cache(
             province: prov,
             count: 1,
             cover,
+            slug: trans?.slug || encodeURIComponent(area),
           });
         } else {
           existing.count += 1;

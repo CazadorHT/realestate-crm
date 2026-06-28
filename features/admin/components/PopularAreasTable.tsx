@@ -77,6 +77,10 @@ export type PopularArea = {
   slug?: string | null;
   image_url?: string | null;
   sort_order: number | null;
+  description?: Record<string, string> | null;
+  seo_title?: Record<string, string> | null;
+  seo_description?: Record<string, string> | null;
+  is_ai_generated?: boolean | null;
 };
 
 interface SortableRowProps {
