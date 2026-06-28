@@ -181,8 +181,8 @@ export function RecentlyViewedSection({
   const checkScrollPosition = () => {
     if (!scrollContainerRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-    setCanScrollLeft(scrollLeft > 0);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    setCanScrollLeft(scrollLeft > 20);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 20);
   };
 
   const scrollPrev = () => {
@@ -290,7 +290,11 @@ export function RecentlyViewedSection({
           canScrollRight={canScrollRight}
         />
 
-        <div>
+        <div className="relative">
+          {/* Edge Fade Indicators to signal horizontal scrolling on mobile */}
+          <div className={`absolute left-0 top-0 bottom-4 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 md:hidden transition-opacity duration-300 ${canScrollLeft ? "opacity-100" : "opacity-0"}`} />
+          <div className={`absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 md:hidden transition-opacity duration-300 ${canScrollRight ? "opacity-100" : "opacity-0"}`} />
+
           <div
             ref={scrollContainerRef}
             onMouseDown={handleMouseDown}
