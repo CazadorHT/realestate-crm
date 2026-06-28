@@ -40,6 +40,18 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
   const isFirstMount = useRef(true);
   const areaCache = useRef<Record<string, PopularAreaItem[]>>({});
 
+  const [showLeftFade, setShowLeftFade] = useState(false);
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current) {
+      setShowLeftFade(scrollContainerRef.current.scrollLeft > 5);
+    }
+  };
+
+  useEffect(() => {
+    setShowLeftFade(false);
+  }, [items]);
+
   // Dynamic provinces state
   const [provinces, setProvinces] = useState<Province[]>(initialProvinces || []);
   const [isNextHovered, setIsNextHovered] = useState(false);
@@ -495,11 +507,12 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
           ) : (
             <div className="relative">
               {/* Edge Fade Indicators to signal horizontal scrolling on mobile */}
-              <div className="absolute left-0 top-0 bottom-8 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 md:hidden" />
+              <div className={`absolute left-0 top-0 bottom-8 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 md:hidden transition-opacity duration-300 ${showLeftFade ? "opacity-100" : "opacity-0"}`} />
               <div className="absolute right-0 top-0 bottom-8 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 md:hidden" />
 
               <div
                 ref={scrollContainerRef}
+                onScroll={handleScroll}
                 onMouseDown={handleMouseDown}
                 onMouseLeave={handleMouseLeave}
                 onMouseUp={handleMouseUp}
