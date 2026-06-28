@@ -228,7 +228,7 @@ export function HotDealsSection({ initialProperties }: { initialProperties?: Api
           /* Horizontal Scroll on Mobile / Grid on Desktop */
           <div
             ref={scrollRef}
-            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory scroll-pl-4 sm:scroll-pl-6 md:scroll-pl-0 py-4 px-4 sm:px-6 md:px-6 lg:px-8 md:py-0 after:content-[''] after:w-px after:shrink-0 md:after:hidden mask-linear-fade md:[mask-image:none] md:[-webkit-mask-image:none]"
+            className="flex md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-x-auto md:overflow-visible scrollbar-hide snap-x snap-mandatory scroll-pl-4 sm:scroll-pl-6 md:scroll-pl-0 py-4 px-4 sm:px-6 md:px-6 lg:px-8 md:py-0 after:content-[''] after:w-px after:shrink-0 md:after:hidden mobile-mask-fade"
           >
             {displayProperties.slice(0, 4).map((property, index) => (
               <m.div

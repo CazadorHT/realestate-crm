@@ -83,9 +83,14 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
   const [isLoading, setIsLoading] = useState(!initialProperties);
   const [isMounted, setIsMounted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
+    if (typeof window !== "undefined") {
+      const ua = window.navigator.userAgent.toLowerCase();
+      setIsIOS(/iphone|ipad|ipod/.test(ua));
+    }
   }, []);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -653,10 +658,10 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
                   return (
                     <m.div
                       key={property.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
+                      initial={isIOS ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                      whileInView={isIOS ? { opacity: 1, y: 0 } : { opacity: 1, y: 0 }}
                       viewport={{ once: true }}
-                      transition={{ duration: 0.5, delay: (index % 4) * 0.1 }}
+                      transition={isIOS ? { duration: 0 } : { duration: 0.5, delay: (index % 4) * 0.1 }}
                       className="relative group"
                     >
                       <PropertyCard property={property} priority={index === 0} />
