@@ -493,75 +493,81 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
               </p>
             </m.div>
           ) : (
-            <div
-              ref={scrollContainerRef}
-              onMouseDown={handleMouseDown}
-              onMouseLeave={handleMouseLeave}
-              onMouseUp={handleMouseUp}
-              onMouseMove={handleMouseMove}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-              className={`flex w-full gap-4 sm:gap-5 overflow-x-auto pb-8 pt-4 px-4 md:px-0  snap-x snap-mandatory scrollbar-none transition-all!  ${
-                isDragging ? "cursor-grabbing scale-[0.99]" : "cursor-grab"
-              }`}
-            >
-              {items.map((it, index) => {
-                const href = `/areas/${it.slug}`;
-                return (
-                  <m.div
-                    key={it.key}
-                    initial={{ opacity: 0, y: 15 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.05 }}
-                    className="shrink-0 snap-start"
-                  >
-                    <Link
-                      href={href}
-                      onClick={(e) => {
-                        if (isDragging) return e.preventDefault();
-                      }}
-                      className="group w-[220px] sm:w-[260px] relative isolate overflow-hidden bg-slate-900 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all! duration-500! text-left block rounded-xl sm:rounded-4xl"
-                    >
-                      {/* Image & Overlays */}
-                      <div className="absolute inset-0 -z-10">
-                        <Image
-                          src={it.cover || "/images/area-placeholder1.jpg"}
-                          alt={it.popular_area}
-                          fill
-                          sizes="(max-width: 640px) 220px, 260px"
-                          className="object-cover transition-transform! duration-1000! group-hover:scale-110 "
-                        />
-                        {/* Double Gradient for readability */}
-                        <div className="absolute inset-0 bg-black/30 transition-opacity! duration-500! group-hover:opacity-40" />
-                        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/10 to-transparent opacity-90" />
-                      </div>
+            <div className="relative">
+              {/* Edge Fade Indicators to signal horizontal scrolling on mobile */}
+              <div className="absolute left-0 top-0 bottom-8 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 md:hidden" />
+              <div className="absolute right-0 top-0 bottom-8 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 md:hidden" />
 
-                      <div className="relative p-5 sm:p-6 h-[160px] sm:h-[180px] flex flex-col justify-end">
-                        {/* ชื่อทำเล: ขยับขึ้นเสมอในมือถือ และขยับเมื่อ Hover ใน Desktop */}
-                        <div className="transform transition-transform! duration-300! -translate-y-10 lg:translate-y-0 lg:group-hover:-translate-y-10">
-                          <h3 className="text-white text-xl sm:text-2xl  font-semibold tracking-tight drop-shadow-lg truncate ">
-                            {getLocaleValue(it, "popular_area", language)}
-                          </h3>
+              <div
+                ref={scrollContainerRef}
+                onMouseDown={handleMouseDown}
+                onMouseLeave={handleMouseLeave}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                className={`flex w-full gap-4 sm:gap-5 overflow-x-auto pb-8 pt-4 px-4 md:px-0  snap-x snap-mandatory scrollbar-none transition-all!  ${
+                  isDragging ? "cursor-grabbing scale-[0.99]" : "cursor-grab"
+                }`}
+              >
+                {items.map((it, index) => {
+                  const href = `/areas/${it.slug}`;
+                  return (
+                    <m.div
+                      key={it.key}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.05 }}
+                      className="shrink-0 snap-start"
+                    >
+                      <Link
+                        href={href}
+                        onClick={(e) => {
+                          if (isDragging) return e.preventDefault();
+                        }}
+                        className="group w-[220px] sm:w-[260px] relative isolate overflow-hidden bg-slate-900 shadow-md hover:shadow-xl hover:-translate-y-2 transition-all! duration-500! text-left block rounded-xl sm:rounded-4xl"
+                      >
+                        {/* Image & Overlays */}
+                        <div className="absolute inset-0 -z-10">
+                          <Image
+                            src={it.cover || "/images/area-placeholder1.jpg"}
+                            alt={it.popular_area}
+                            fill
+                            sizes="(max-width: 640px) 220px, 260px"
+                            className="object-cover transition-transform! duration-1000! group-hover:scale-110 "
+                          />
+                          {/* Double Gradient for readability */}
+                          <div className="absolute inset-0 bg-black/30 transition-opacity! duration-500! group-hover:opacity-40" />
+                          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/10 to-transparent opacity-90" />
                         </div>
-                        {/* แถวข้อมูล: แสดงเลยในมือถือ และแสดงเมื่อ Hover ใน Desktop */}
-                        <div className="absolute bottom-5 sm:bottom-6 left-5 sm:left-6 right-5 sm:right-6 flex items-center justify-between opacity-100 lg:opacity-0 lg:group-hover:opacity-100 translate-y-0 lg:translate-y-2 lg:group-hover:translate-y-0 transition-all! duration-300! gap-4">
-                          <p className="bg-white/30 backdrop-blur-md border border-white/30 text-white/90 text-[10px] sm:text-[11px] font-medium px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-xl truncate max-w-[60%]">
-                            {it.count.toLocaleString()}{" "}
-                            {t("property_listing.found_suffix")}
-                          </p>
-                          <div className="flex items-center gap-1 text-white text-[10px] sm:text-xs font-semibold uppercase tracking-wider shrink-0">
-                            <span className="hidden sm:inline truncate max-w-[80px]">
-                              {t("home.popular_areas.explore")}
-                            </span>
-                            <ArrowRight className="h-3 w-3 shrink-0 transition-transform! lg:group-hover:translate-x-1" />
+
+                        <div className="relative p-5 sm:p-6 h-[160px] sm:h-[180px] flex flex-col justify-end">
+                          {/* ชื่อทำเล: ขยับขึ้นเสมอในมือถือ และขยับเมื่อ Hover ใน Desktop */}
+                          <div className="transform transition-transform! duration-300! -translate-y-10 lg:translate-y-0 lg:group-hover:-translate-y-10">
+                            <h3 className="text-white text-xl sm:text-2xl  font-semibold tracking-tight drop-shadow-lg truncate ">
+                              {getLocaleValue(it, "popular_area", language)}
+                            </h3>
+                          </div>
+                          {/* แถวข้อมูล: แสดงเลยในมือถือ และแสดงเมื่อ Hover ใน Desktop */}
+                          <div className="absolute bottom-5 sm:bottom-6 left-5 sm:left-6 right-5 sm:right-6 flex items-center justify-between opacity-100 lg:opacity-0 lg:group-hover:opacity-100 translate-y-0 lg:translate-y-2 lg:group-hover:translate-y-0 transition-all! duration-300! gap-4">
+                            <p className="bg-white/30 backdrop-blur-md border border-white/30 text-white/90 text-[10px] sm:text-[11px] font-medium px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full shadow-xl truncate max-w-[60%]">
+                              {it.count.toLocaleString()}{" "}
+                              {t("property_listing.found_suffix")}
+                            </p>
+                            <div className="flex items-center gap-1 text-white text-[10px] sm:text-xs font-semibold uppercase tracking-wider shrink-0">
+                              <span className="hidden sm:inline truncate max-w-[80px]">
+                                {t("home.popular_areas.explore")}
+                              </span>
+                              <ArrowRight className="h-3 w-3 shrink-0 transition-transform! lg:group-hover:translate-x-1" />
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </Link>
-                  </m.div>
-                );
-              })}
+                      </Link>
+                    </m.div>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
