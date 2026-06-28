@@ -41,15 +41,19 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
   const areaCache = useRef<Record<string, PopularAreaItem[]>>({});
 
   const [showLeftFade, setShowLeftFade] = useState(false);
+  const [showRightFade, setShowRightFade] = useState(true);
 
   const handleScroll = () => {
     if (scrollContainerRef.current) {
-      setShowLeftFade(scrollContainerRef.current.scrollLeft > 20);
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      setShowLeftFade(scrollLeft > 20);
+      setShowRightFade(scrollLeft < scrollWidth - clientWidth - 20);
     }
   };
 
   useEffect(() => {
     setShowLeftFade(false);
+    setShowRightFade(items.length > 0);
   }, [items]);
 
   // Dynamic provinces state
@@ -506,9 +510,9 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
             </m.div>
           ) : (
             <div className="relative">
-              {/* Edge Fade Indicators to signal horizontal scrolling on mobile */}
+              {/* Edge Fade Indicators to signal horizontal scrolling */}
               <div className={`absolute left-0 top-0 bottom-8 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showLeftFade ? "opacity-100" : "opacity-0"}`} />
-              <div className="absolute right-0 top-0 bottom-8 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
+              <div className={`absolute right-0 top-0 bottom-8 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showRightFade ? "opacity-100" : "opacity-0"}`} />
 
               <div
                 ref={scrollContainerRef}
@@ -550,9 +554,9 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                             sizes="(max-width: 640px) 220px, 260px"
                             className="object-cover transition-transform! duration-1000! group-hover:scale-110 "
                           />
-                          {/* Double Gradient for readability */}
-                          <div className="absolute inset-0 bg-black/30 transition-opacity! duration-500! group-hover:opacity-40" />
-                          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/10 to-transparent opacity-90" />
+                          {/* Softened Double Gradient for enhanced color vibrancy and readability */}
+                          <div className="absolute inset-0 bg-black/15 transition-opacity! duration-500! group-hover:opacity-25" />
+                          <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent opacity-85" />
                         </div>
 
                         <div className="relative p-5 sm:p-6 h-[160px] sm:h-[180px] flex flex-col justify-end">
