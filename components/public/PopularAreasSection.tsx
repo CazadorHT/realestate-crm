@@ -507,8 +507,8 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
           ) : (
             <div className="relative">
               {/* Edge Fade Indicators to signal horizontal scrolling on mobile */}
-              <div className={`absolute left-0 top-0 bottom-8 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 md:hidden transition-opacity duration-300 ${showLeftFade ? "opacity-100" : "opacity-0"}`} />
-              <div className="absolute right-0 top-0 bottom-8 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 md:hidden" />
+              <div className={`absolute left-0 top-0 bottom-8 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showLeftFade ? "opacity-100" : "opacity-0"}`} />
+              <div className="absolute right-0 top-0 bottom-8 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10" />
 
               <div
                 ref={scrollContainerRef}

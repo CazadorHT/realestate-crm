@@ -34,7 +34,7 @@ export function RecentlyViewedHeader({
             {showingRecommended ? (
               <>
                 <span className="text-transparent bg-clip-text bg-linear-to-r from-amber-600 to-orange-600">
-                  {t("recently_viewed.property_types")}
+                  {t("recently_viewed.property_types")} {" "}
                 </span>
                 <br className="hidden md:block" />
                 {t("recently_viewed.title_recommended")}
@@ -42,10 +42,10 @@ export function RecentlyViewedHeader({
             ) : (
               <>
                 <span className="text-transparent bg-clip-text bg-linear-to-r from-blue-600 to-purple-600">
-                  {t("recently_viewed.property_types")}
+                  {t("recently_viewed.property_types")} {" "}
                 </span>
                 <br className="hidden md:block" />
-                {t("recently_viewed.title_recent")}
+                {t("recently_viewed.title_recent")} 
               </>
             )}
           </h2>
