@@ -14,11 +14,31 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   upsertMasterDataAction,
   generateAIStationDataAction
 } from "@/features/properties/actions/fetch-master-data";
 import { LOGO_PATHS } from "@/components/public/near-station/helpers/station-selector-helpers";
+
+const LINE_LABELS: Record<string, string> = {
+  BTS: "BTS Skytrain",
+  MRT: "MRT Blue Line",
+  MRT_PURPLE: "MRT Purple Line",
+  MRT_YELLOW: "MRT Yellow Line",
+  MRT_PINK: "MRT Pink Line",
+  MRT_ORANGE: "MRT Orange Line",
+  ARL: "Airport Rail Link",
+  SRT_RED: "SRT Red Line",
+  GOLD: "Gold Line",
+  BRT: "BRT",
+};
 
 interface StationItem {
   id?: string;
@@ -46,6 +66,7 @@ interface StationEditDialogProps {
   isOpen: boolean;
   onClose: (open: boolean) => void;
   station: StationItem | null;
+  mode: "add" | "edit";
   onSaveSuccess: () => void;
 }
 
@@ -70,6 +91,7 @@ export function StationEditDialog({
   isOpen,
   onClose,
   station,
+  mode,
   onSaveSuccess,
 }: StationEditDialogProps) {
   const [isSaving, setIsSaving] = React.useState(false);
@@ -77,6 +99,13 @@ export function StationEditDialog({
   const [isFormDirty, setIsFormDirty] = React.useState(false);
 
   // Form states
+  const [formCode, setFormCode] = React.useState("");
+  const [formLabelTh, setFormLabelTh] = React.useState("");
+  const [formLabelEn, setFormLabelEn] = React.useState("");
+  const [formLabelCn, setFormLabelCn] = React.useState("");
+  const [formLabelRu, setFormLabelRu] = React.useState("");
+  const [formTransitType, setFormTransitType] = React.useState("BTS");
+
   const [formSlug, setFormSlug] = React.useState("");
   const [formGoogleMapsLink, setFormGoogleMapsLink] = React.useState("");
   const [formSeoTitle, setFormSeoTitle] = React.useState("");
@@ -92,6 +121,13 @@ export function StationEditDialog({
   React.useEffect(() => {
     if (isOpen && station) {
       const meta = station.metadata || {};
+      setFormCode(station.code);
+      setFormLabelTh(station.label.th);
+      setFormLabelEn(station.label.en);
+      setFormLabelCn(station.label.cn || "");
+      setFormLabelRu(station.label.ru || "");
+      setFormTransitType(meta.transit_type || "BTS");
+
       setFormSlug(meta.slug || station.code.toLowerCase().replace(/_/g, "-"));
       setFormGoogleMapsLink(meta.google_maps_link || "");
       setFormSeoTitle(meta.seo_title || "");
@@ -118,14 +154,21 @@ export function StationEditDialog({
   };
 
   const handleAiGenerate = async () => {
-    if (!station) return;
+    const labelTh = mode === "add" ? formLabelTh : (station?.label.th || "");
+    const labelEn = mode === "add" ? formLabelEn : (station?.label.en || "");
+    const transitTypeVal = mode === "add" ? formTransitType : (station?.metadata?.transit_type || "BTS");
+
+    if (!labelTh.trim()) {
+      toast.error("กรุณาระบุชื่อสถานี (ภาษาไทย) ก่อนเจนด้วย AI");
+      return;
+    }
     setIsAiGenerating(true);
     const toastId = toast.loading("🤖 Gemini กำลังสร้างข้อมูลและคำอธิบายทำเลแบบเจาะลึก 4 ภาษา...");
     try {
       const res = await generateAIStationDataAction(
-        station.label.th,
-        station.label.en,
-        station.metadata?.transit_type || "BTS"
+        labelTh,
+        labelEn || labelTh,
+        transitTypeVal
       );
 
       if (res.success && res.data) {
@@ -153,6 +196,14 @@ export function StationEditDialog({
     if (e) e.preventDefault();
     if (!station) return;
 
+    if (mode === "add" && !formCode.trim()) {
+      toast.error("กรุณาระบุรหัสสถานี (Station Code)");
+      return;
+    }
+    if (mode === "add" && !formLabelTh.trim()) {
+      toast.error("กรุณาระบุชื่อสถานี (ภาษาไทย)");
+      return;
+    }
     if (!formSlug.trim()) {
       toast.error("กรุณาระบุ URL Slug");
       return;
@@ -163,6 +214,7 @@ export function StationEditDialog({
       const existingMeta = station.metadata || {};
       const updatedMetadata = {
         ...existingMeta,
+        transit_type: mode === "add" ? formTransitType : (existingMeta.transit_type || "BTS"),
         slug: formSlug.trim().toLowerCase(),
         google_maps_link: formGoogleMapsLink.trim(),
         seo_title: formSeoTitle.trim(),
@@ -179,15 +231,20 @@ export function StationEditDialog({
 
       const res = await upsertMasterDataAction({
         type: "TRANSIT_STATION",
-        code: station.code,
-        label: station.label as any,
+        code: mode === "add" ? formCode.trim().toLowerCase() : station.code,
+        label: {
+          th: formLabelTh.trim(),
+          en: formLabelEn.trim() || formLabelTh.trim(),
+          cn: formLabelCn.trim() || undefined,
+          ru: formLabelRu.trim() || undefined,
+        } as any,
         metadata: updatedMetadata,
         sort_order: station.sort_order,
         is_active: station.is_active,
       });
 
       if (res.success) {
-        toast.success("บันทึกข้อมูล SEO สถานีสำเร็จ ✨");
+        toast.success(mode === "add" ? "เพิ่มสถานีรถไฟฟ้าใหม่สำเร็จ ✨" : "บันทึกข้อมูล SEO สถานีสำเร็จ ✨");
         setIsFormDirty(false);
         onSaveSuccess();
         onClose(false);
@@ -203,7 +260,7 @@ export function StationEditDialog({
 
   if (!station) return null;
 
-  const transitType = station.metadata?.transit_type || "BTS";
+  const transitType = mode === "add" ? formTransitType : (station.metadata?.transit_type || "BTS");
   const logoPath = LOGO_PATHS[transitType];
 
   return (
@@ -223,10 +280,18 @@ export function StationEditDialog({
               style={{ backgroundColor: station.metadata?.line_color || "#3b82f6" }}
             />
           )}
-          <span>ตั้งค่า SEO หน้าสถานี: {station.label.th} ({station.code})</span>
+          <span>
+            {mode === "add" 
+              ? "เพิ่มสถานีรถไฟฟ้าใหม่" 
+              : `ตั้งค่า SEO หน้าสถานี: ${station.label.th} (${station.code})`}
+          </span>
         </div>
       }
-      description={`จัดการ URL Slug, Google Maps Link, Meta Tags และ คำอธิบายทำเลบนหน้า Landing Page ของสถานี ${station.label.th}`}
+      description={
+        mode === "add"
+          ? "กรอกข้อมูลพื้นฐานสถานีรถไฟฟ้าใหม่ พร้อมคำอธิบายทำเล พิกัด และ SEO Metadata"
+          : `จัดการ URL Slug, Google Maps Link, Meta Tags และ คำอธิบายทำเลบนหน้า Landing Page ของสถานี ${station.label.th}`
+      }
       className="sm:max-w-2xl"
       footer={
         <div className="flex justify-between items-center gap-3 w-full px-6 sm:px-0">
@@ -278,6 +343,95 @@ export function StationEditDialog({
       }
     >
       <form onSubmit={handleSave} className="space-y-5 p-6 max-h-[60vh] overflow-y-auto">
+        {mode === "add" && (
+          <div className="space-y-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/60 mb-4">
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">ข้อมูลพื้นฐานสถานีรถไฟฟ้าใหม่</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="formCode" className="text-xs font-bold text-slate-700">รหัสสถานี (Station Code) *</Label>
+                <Input
+                  id="formCode"
+                  value={formCode}
+                  onChange={(e) => {
+                    const val = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, "");
+                    setFormCode(val);
+                    // auto generate slug
+                    setFormSlug(val.replace(/_/g, "-"));
+                    setIsFormDirty(true);
+                  }}
+                  placeholder="เช่น bts_phrom_phong"
+                  className="h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500 bg-white"
+                />
+                <p className="text-[10px] text-slate-400 font-medium">ภาษาอังกฤษตัวพิมพ์เล็ก ตัวเลข และ _ เท่านั้น</p>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="formTransitType" className="text-xs font-bold text-slate-700">สายรถไฟฟ้าที่สังกัด *</Label>
+                <Select value={formTransitType} onValueChange={(val) => { setFormTransitType(val); setIsFormDirty(true); }}>
+                  <SelectTrigger className="h-10.5 rounded-xl border-slate-200 bg-white">
+                    <SelectValue placeholder="เลือกสายรถไฟฟ้า" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(LINE_LABELS).map(([key, label]) => (
+                      <SelectItem key={key} value={key}>
+                        {label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="formLabelTh" className="text-xs font-bold text-slate-700">ชื่อสถานี (ภาษาไทย) *</Label>
+                <Input
+                  id="formLabelTh"
+                  value={formLabelTh}
+                  onChange={(e) => { setFormLabelTh(e.target.value); setIsFormDirty(true); }}
+                  placeholder="เช่น พร้อมพงษ์"
+                  className="h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500 bg-white"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="formLabelEn" className="text-xs font-bold text-slate-700">ชื่อสถานี (ภาษาอังกฤษ)</Label>
+                <Input
+                  id="formLabelEn"
+                  value={formLabelEn}
+                  onChange={(e) => { setFormLabelEn(e.target.value); setIsFormDirty(true); }}
+                  placeholder="เช่น Phrom Phong"
+                  className="h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500 bg-white"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="formLabelCn" className="text-xs font-bold text-slate-500">ชื่อสถานี (ภาษาจีน)</Label>
+                <Input
+                  id="formLabelCn"
+                  value={formLabelCn}
+                  onChange={(e) => { setFormLabelCn(e.target.value); setIsFormDirty(true); }}
+                  placeholder="เช่น 蓬蓬"
+                  className="h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500 bg-white"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="formLabelRu" className="text-xs font-bold text-slate-500">ชื่อสถานี (ภาษารัสเซีย)</Label>
+                <Input
+                  id="formLabelRu"
+                  value={formLabelRu}
+                  onChange={(e) => { setFormLabelRu(e.target.value); setIsFormDirty(true); }}
+                  placeholder="เช่น Промпонг"
+                  className="h-10.5 rounded-xl border-slate-200 focus-visible:ring-indigo-500 bg-white"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="space-y-2">
           <Label htmlFor="slug" className="text-sm font-bold text-slate-700">URL Slug (ต่อจาก /near-station/)</Label>
           <Input

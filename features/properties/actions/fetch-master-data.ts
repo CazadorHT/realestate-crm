@@ -315,11 +315,21 @@ export async function getTransitStationsWithCountsAction() {
       }
     }
 
-    // 3. Map count to stations
-    return (stations || []).map((station: any) => ({
-      ...station,
-      property_count: countMap[station.code] || 0,
-    }));
+    // 3. Map count to stations by matching code, th label, or en label
+    return (stations || []).map((station: any) => {
+      const code = station.code;
+      const thName = station.label?.th || "";
+      const enName = station.label?.en || "";
+      
+      const count = (countMap[code] || 0) + 
+                    (thName ? (countMap[thName] || 0) : 0) + 
+                    (enName ? (countMap[enName] || 0) : 0);
+
+      return {
+        ...station,
+        property_count: count,
+      };
+    });
   } catch (err) {
     console.error("Error in getTransitStationsWithCountsAction:", err);
     return [];

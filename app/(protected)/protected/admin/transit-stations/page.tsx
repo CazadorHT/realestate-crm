@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { 
-  Train, Search, Edit2, Loader2, AlertCircle, ExternalLink
+  Train, Search, Edit2, Loader2, AlertCircle, ExternalLink, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,6 +78,7 @@ export default function TransitStationsAdminPage() {
 
   // Modal / Edit state
   const [isEditOpen, setIsEditOpen] = React.useState(false);
+  const [dialogMode, setDialogMode] = React.useState<"add" | "edit">("edit");
   const [currentStation, setCurrentStation] = React.useState<StationItem | null>(null);
 
   const loadStations = React.useCallback(async () => {
@@ -96,7 +97,29 @@ export default function TransitStationsAdminPage() {
     loadStations();
   }, [loadStations]);
 
+  const handleOpenAdd = () => {
+    setDialogMode("add");
+    setCurrentStation({
+      type: "TRANSIT_STATION",
+      code: "",
+      label: { th: "", en: "", cn: "", ru: "" },
+      metadata: {
+        transit_type: "BTS",
+        slug: "",
+        seo_title: "",
+        seo_description: "",
+        description: { th: "", en: "", cn: "", ru: "" },
+        latitude: undefined,
+        longitude: undefined,
+      },
+      sort_order: stations.length * 10,
+      is_active: true,
+    });
+    setIsEditOpen(true);
+  };
+
   const handleOpenEdit = (station: StationItem) => {
+    setDialogMode("edit");
     setCurrentStation(station);
     setIsEditOpen(true);
   };
@@ -132,13 +155,24 @@ export default function TransitStationsAdminPage() {
         <div className="absolute -right-10 -top-10 w-60 h-60 bg-indigo-500/10 rounded-full blur-3xl" />
         <div className="absolute -left-10 -bottom-10 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl" />
         
-        <div className="relative z-10 space-y-2">
-          <h1 className="text-3xl font-semibold tracking-tight">
-            จัดการ SEO สถานีรถไฟฟ้า
-          </h1>
-          <p className="text-sm text-indigo-200/80 max-w-xl font-medium">
-            จัดการข้อมูลคำค้นหา คีย์เวิร์ด ชื่อหัวข้อ (SEO Title/Description) และรายละเอียดทำเลของสถานีรถไฟฟ้าสำหรับหน้าค้นหาหลัก
-          </p>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-semibold tracking-tight">
+              จัดการ SEO สถานีรถไฟฟ้า
+            </h1>
+            <p className="text-sm text-indigo-200/80 max-w-xl font-medium">
+              จัดการข้อมูลคำค้นหา คีย์เวิร์ด ชื่อหัวข้อ (SEO Title/Description) และรายละเอียดทำเลของสถานีรถไฟฟ้าสำหรับหน้าค้นหาหลัก
+            </p>
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleOpenAdd}
+            className="h-12 px-6 rounded-2xl bg-indigo-500 hover:bg-indigo-600 text-white font-semibold shadow-lg shadow-indigo-500/25 transition-all duration-300 hover:scale-105 flex items-center gap-2 self-start md:self-auto shrink-0 cursor-pointer"
+          >
+            <Plus className="h-5 w-5" />
+            เพิ่มสถานีรถไฟฟ้าใหม่ (Add Station)
+          </Button>
         </div>
       </div>
 
@@ -339,6 +373,7 @@ export default function TransitStationsAdminPage() {
         isOpen={isEditOpen}
         onClose={setIsEditOpen}
         station={currentStation}
+        mode={dialogMode}
         onSaveSuccess={loadStations}
       />
     </div>
