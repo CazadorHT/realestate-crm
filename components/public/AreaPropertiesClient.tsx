@@ -314,7 +314,7 @@ export function AreaPropertiesClient({ initialProperties, areaName }: AreaProper
       {/* Grid of properties */}
       {visibleProperties.length > 0 ? (
         <div className="space-y-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
             {visibleProperties.map((property) => (
               <PropertyCard key={property.id} property={property as any} />
             ))}

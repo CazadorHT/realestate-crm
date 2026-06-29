@@ -19,7 +19,7 @@ export function PropertyGrid({ properties, currentPage }: PropertyGridProps) {
   return (
     <m.div
       layout
-      className="grid gap-6 md:gap-y-8 lg:gap-x-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mb-12"
+      className="grid gap-6 md:gap-y-8 lg:gap-x-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 mb-12"
     >
       <AnimatePresence mode="popLayout">
         {properties.map((item, i) => (

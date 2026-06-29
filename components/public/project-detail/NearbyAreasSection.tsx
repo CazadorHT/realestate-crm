@@ -175,10 +175,10 @@ export function NearbyAreasSection({ areas, language, title, embedded }: NearbyA
 
                   {/* Text */}
                   <div className="absolute bottom-3 left-3 right-3 text-left">
-                    <span className="block text-xs font-bold text-white tracking-tight drop-shadow-xs line-clamp-1">
+                    <span className="block text-sm font-bold text-white tracking-tight drop-shadow-xs line-clamp-1">
                       {item.name[language as keyof typeof item.name] || item.name.th}
                     </span>
-                    <span className="block text-[9px] text-slate-300 mt-0.5 truncate">
+                    <span className="block text-xs text-slate-300 mt-0.5 truncate">
                       {getProvinceName(item.province, language)}
                     </span>
                   </div>

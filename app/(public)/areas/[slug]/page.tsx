@@ -232,10 +232,10 @@ export default async function AreaDetailPage(
 
       {/* Main Content Layout (2:1 Column Grid) */}
       <main className="max-w-screen-2xl mx-auto px-5 md:px-8 py-10 md:py-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           
           {/* Left Column (2/3): Interactive Listings List */}
-          <div className="md:col-span-2 lg:col-span-3 space-y-8">
+          <div className="w-full flex-1  lg:shrink-0  space-y-8">
             <section className="space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-slate-100 pb-3.5 gap-2">
                 <div className="flex items-start sm:items-center gap-2.5">
@@ -259,7 +259,7 @@ export default async function AreaDetailPage(
           </div>
 
           {/* Right Column (1/3): Area Information & Profile Sidebar */}
-          <div className="md:col-span-1 lg:col-span-1 space-y-8">
+          <div className="w-full lg:w-96 lg:shrink-0  space-y-8">
             
             {/* 1. Market Insights Dashboard */}
             <section className="space-y-4 bg-white/90 p-6 rounded-3xl border border-slate-200/50 shadow-xs">

@@ -179,15 +179,15 @@ export default async function ProjectDetailPage(
       />
 
       {/* Main Content Area */}
-      <div className="max-w-screen-2xl mx-auto px-5 md:px-8 py-10 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-8">
+      <div className="max-w-screen-2xl mx-auto px-5 md:px-8 py-10 flex flex-col lg:flex-row gap-8 items-start">
         
         {/* Left column (2 cols) - Listings */}
-        <div className="md:col-span-2 lg:col-span-3 space-y-10 ">
+        <div className="lg:flex-1 w-full space-y-10 ">
           <ProjectPropertiesClient initialProperties={properties} project={project} />
         </div>
 
         {/* Right column (1 col) - Project Info Card */}
-        <div className="md:col-span-1 lg:col-span-1 space-y-6">
+        <div className="lg:w-98 lg:shrink-0 w-full space-y-6">
           <ProjectAboutCard
             project={project}
             language={language}

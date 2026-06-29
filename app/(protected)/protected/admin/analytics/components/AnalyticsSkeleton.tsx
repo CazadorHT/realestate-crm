@@ -17,7 +17,7 @@ export function AnalyticsSkeleton() {
       </div>
 
       {/* Overview Cards Skeleton */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4 md:gap-6">
         {[1, 2, 3].map((i) => (
           <Card key={i} className="border-none shadow-sm h-32">
             <CardHeader className="pb-2">
