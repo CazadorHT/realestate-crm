@@ -205,40 +205,98 @@ export function RecentlyViewedSection({
   }, [items]);
 
   const schemaScript = useMemo(() => {
+    // สร้าง priceSpecification พร้อมราคาก่อนลด (ถ้ามี)
+    const buildPriceSpec = (
+      currentPrice: number,
+      originalPrice: number | null | undefined,
+      unitCode?: string,
+    ) => {
+      const base: Record<string, any> = {
+        "@type": "UnitPriceSpecification",
+        "price": currentPrice,
+        "priceCurrency": "THB",
+        "valueAddedTaxIncluded": true,
+        ...(unitCode && {
+          "referenceQuantity": { "@type": "QuantitativeValue", "value": 1, "unitCode": unitCode },
+        }),
+      };
+      if (originalPrice && originalPrice > currentPrice) {
+        return [
+          base,
+          {
+            "@type": "UnitPriceSpecification",
+            "name": "Original Price",
+            "price": originalPrice,
+            "priceCurrency": "THB",
+            "valueAddedTaxIncluded": true,
+            ...(unitCode && {
+              "referenceQuantity": { "@type": "QuantitativeValue", "value": 1, "unitCode": unitCode },
+            }),
+          },
+        ];
+      }
+      return base;
+    };
+
+    const createOffer = (
+      priceVal: number | null | undefined,
+      originalVal: number | null | undefined,
+      businessFunc: string,
+      unitCode?: string,
+    ) => ({
+      "@type": "Offer",
+      "price": Math.max(1, priceVal || 0),
+      "priceCurrency": "THB",
+      "availability": "https://schema.org/InStock",
+      "businessFunction": businessFunc,
+      "priceSpecification": buildPriceSpec(Math.max(1, priceVal || 0), originalVal, unitCode),
+    });
+
     const schemaData = {
       "@context": "https://schema.org",
       "@type": "ItemList",
       "@id": `${siteConfig.url}/#recently-viewed-list`,
-      name: showingRecommended
-        ? t("recently_viewed.schema_rec_name")
-        : t("recently_viewed.schema_recent_name"),
-      description: showingRecommended
-        ? t("recently_viewed.schema_rec_desc")
-        : t("recently_viewed.schema_recent_desc"),
-      numberOfItems: items.length,
-      itemListElement: items.slice(0, 10).map((item, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        item: {
-          "@type": "Product",
-          name: getLocaleValue(item, "title", language),
-          url: item.slug
-            ? `${siteConfig.url}/properties/${item.slug}`
-            : `${siteConfig.url}/properties/${item.id}`,
-          image: item.image_url || `${siteConfig.url}${siteConfig.ogImage}`,
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: "5",
-            reviewCount: "1",
-          },
-          offers: {
-            "@type": "Offer",
-            price: Math.max(1, item.price || item.rental_price || 0),
-            priceCurrency: "THB",
-            availability: "https://schema.org/InStock",
-          }
+      "name": showingRecommended
+        ? t("recently_viewed.schema_rec_name") || "Recommended Properties"
+        : t("recently_viewed.schema_recent_name") || "Recently Viewed Properties",
+      "description": showingRecommended
+        ? t("recently_viewed.schema_rec_desc") || "Properties recommended for you"
+        : t("recently_viewed.schema_recent_desc") || "Properties you have recently viewed",
+      "numberOfItems": items.length,
+      "itemListElement": items.slice(0, 10).map((item, index) => {
+        const propertyName = getLocaleValue(item, "title", language) || item.title_en || item.title || "Real Estate Property";
+        const propertyUrl = item.slug
+          ? `${siteConfig.url}/properties/${item.slug}`
+          : `${siteConfig.url}/properties/${item.id}`;
+
+        const isRent = item.listing_type === "RENT";
+        const isSaleAndRent = item.listing_type === "SALE_AND_RENT";
+
+        let offersStructure: any;
+        if (isSaleAndRent && item.price && item.rental_price) {
+          offersStructure = [
+            createOffer(item.price, item.original_price, "http://purl.org/goodrelations/v1#Sell"),
+            createOffer(item.rental_price, item.original_rental_price, "http://purl.org/goodrelations/v1#LeaseOut", "MON"),
+          ];
+        } else if (isRent) {
+          offersStructure = createOffer(item.rental_price, item.original_rental_price, "http://purl.org/goodrelations/v1#LeaseOut", "MON");
+        } else {
+          offersStructure = createOffer(item.price, item.original_price, "http://purl.org/goodrelations/v1#Sell");
         }
-      })),
+
+        return {
+          "@type": "ListItem",
+          "position": index + 1,
+          "item": {
+            "@type": "RealEstateListing",
+            "@id": `${propertyUrl}#recent-item-${item.id}`,
+            "name": propertyName,
+            "url": propertyUrl,
+            "image": item.image_url || `${siteConfig.url}${siteConfig.ogImage}`,
+            "offers": offersStructure,
+          },
+        };
+      }),
     };
 
     return (

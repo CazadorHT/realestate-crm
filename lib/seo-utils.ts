@@ -800,70 +800,140 @@ export function generateBreadcrumbSchema(
 
 /**
  * Generate Structured Data (JSON-LD)
- * Updated to include more granular details
+ * Uses RealEstateListing schema to avoid Product-specific validation
+ * (hasMerchantReturnPolicy, shippingDetails, gtin, brand).
  */
 export function generateStructuredData(
   data: PropertyDataForSEO,
 ): Record<string, any> {
+  // Map property_type to a single Schema.org residential type
+  const schemaTypeMap: Record<string, string> = {
+    HOUSE: "SingleFamilyResidence",
+    VILLA: "SingleFamilyResidence",
+    POOL_VILLA: "SingleFamilyResidence",
+    TOWNHOME: "SingleFamilyResidence",
+    CONDO: "Apartment",
+    LAND: "Place",
+    OFFICE_BUILDING: "Place",
+    COMMERCIAL_BUILDING: "Place",
+    WAREHOUSE: "Place",
+    OTHER: "Accommodation",
+  };
+
+  const propertySchemaType = schemaTypeMap[data.property_type] || "Accommodation";
+
   const structuredData: Record<string, any> = {
     "@context": "https://schema.org",
     "@type": "RealEstateListing",
-    name: data.title,
-    description: data.description?.replace(/<[^>]*>?/gm, "") || data.title,
-    url: `${siteConfig.url}/properties/${data.slug || data.id}`,
+    "name": data.title,
+    "description": data.description?.replace(/<[^>]*>?/gm, "") || data.title,
+    "url": `${siteConfig.url}/properties/${data.slug || data.id}`,
   };
 
-  // Main Entity (The actual property)
-  structuredData.mainEntity = {
-    "@type": [
-      "Place",
-      "Accommodation",
-      data.property_type === "HOUSE"
-        ? "House"
-        : data.property_type === "CONDO"
-          ? "Apartment"
-          : "Accommodation",
-    ],
-    name: data.title,
-    address: {
+  // Main Entity — ปรับดึงค่าตรงจาก Data Object ป้องกัน getLocalizedField ทำงานพลาด
+  const mainEntity: Record<string, any> = {
+    "@type": propertySchemaType,
+    "name": data.title,
+    "address": {
       "@type": "PostalAddress",
-      streetAddress: getLocalizedField<string>(data, "address_line1", "th"),
-      addressLocality: getLocalizedField<string>(data, "district", "th"),
-      addressRegion: getLocalizedField<string>(data, "province", "th"),
-      postalCode: data.postal_code,
-      addressCountry: "TH",
+      "streetAddress": data.address_line1 || "",
+      "addressLocality": data.district || "",
+      "addressRegion": data.province || "Bangkok", // ใส่ Fallback เผื่อข้อมูลในเบสว่าง
+      "postalCode": data.postal_code || "",
+      "addressCountry": "TH",
     },
   };
 
-  // Offer Details — typed as Service to avoid Product schema warnings (shippingDetails, gtin etc.)
-  if (data.price || data.rental_price) {
-    structuredData.mainEntity.offers = {
-      "@type": "Offer",
-      price: data.price || data.rental_price,
-      priceCurrency: "THB",
-      availability: "https://schema.org/InStock",
-      itemOffered: {
-        "@type": "Service",
-        name: data.listing_type === "RENT"
-          ? `${data.property_type || "Property"} for Rent`
-          : `${data.property_type || "Property"} for Sale`,
-        serviceType: "Real Estate Brokerage",
-        areaServed: {
-          "@type": "Country",
-          name: "Thailand",
-        },
-      },
+  // Room details
+  if (data.bedrooms) mainEntity.numberOfRooms = data.bedrooms;
+  if (data.size_sqm) {
+    mainEntity.floorSize = {
+      "@type": "QuantitativeValue",
+      "value": data.size_sqm,
+      "unitCode": "MTK", // ตารางเมตรสากล
     };
   }
 
-  // Room details
-  if (data.bedrooms) structuredData.mainEntity.numberOfRooms = data.bedrooms;
-  if (data.size_sqm) {
-    structuredData.mainEntity.floorSize = {
-      "@type": "QuantitativeValue",
-      value: data.size_sqm,
-      unitCode: "MTK",
-    };
+  structuredData.mainEntity = mainEntity;
+
+  const offerList: Record<string, any>[] = [];
+
+  // สำหรับกรณี ประกาศขาย (SALE หรือ SALE_AND_RENT)
+  if (data.price && data.listing_type !== "RENT") {
+    const salePriceSpec: Record<string, any>[] = [
+      {
+        "@type": "UnitPriceSpecification",
+        "price": data.price,
+        "priceCurrency": "THB",
+        "valueAddedTaxIncluded": true,
+      },
+    ];
+    
+    if (data.original_price && data.original_price > data.price) {
+      salePriceSpec.push({
+        "@type": "UnitPriceSpecification",
+        "name": "Original Price",
+        "price": data.original_price,
+        "priceCurrency": "THB",
+        "valueAddedTaxIncluded": true,
+      });
+    }
+
+    offerList.push({
+      "@type": "Offer",
+      "price": data.price,
+      "priceCurrency": "THB",
+      "availability": "https://schema.org/InStock",
+      "businessFunction": "http://purl.org/goodrelations/v1#Sell",
+      "priceSpecification": salePriceSpec.length === 1 ? salePriceSpec[0] : salePriceSpec,
+    });
+  }
+
+  // สำหรับกรณี ปล่อยเช่า (RENT หรือ SALE_AND_RENT)
+  if (data.rental_price && data.listing_type !== "SALE") {
+    const rentPriceSpec: Record<string, any>[] = [
+      {
+        "@type": "UnitPriceSpecification",
+        "price": data.rental_price,
+        "priceCurrency": "THB",
+        "valueAddedTaxIncluded": true,
+        "referenceQuantity": {
+          "@type": "QuantitativeValue",
+          "value": 1,
+          "unitCode": "MON", // ต่อเดือนสากล
+        },
+      },
+    ];
+    
+    if (data.original_rental_price && data.original_rental_price > data.rental_price) {
+      rentPriceSpec.push({
+        "@type": "UnitPriceSpecification",
+        "name": "Original Rent Price",
+        "price": data.original_rental_price,
+        "priceCurrency": "THB",
+        "valueAddedTaxIncluded": true,
+        "referenceQuantity": {
+          "@type": "QuantitativeValue",
+          "value": 1,
+          "unitCode": "MON",
+        },
+      });
+    }
+
+    offerList.push({
+      "@type": "Offer",
+      "price": data.rental_price,
+      "priceCurrency": "THB",
+      "availability": "https://schema.org/InStock",
+      "businessFunction": "http://purl.org/goodrelations/v1#LeaseOut",
+      "priceSpecification": rentPriceSpec.length === 1 ? rentPriceSpec[0] : rentPriceSpec,
+    });
+  }
+
+  if (offerList.length === 1) {
+    structuredData.offers = offerList[0];          
+  } else if (offerList.length > 1) {
+    structuredData.offers = offerList;             
   }
 
   return structuredData;
