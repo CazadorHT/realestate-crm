@@ -338,24 +338,122 @@ export async function getTransitAndProjectsInArea(
 }
 
 /**
- * Get other active areas to recommend (related areas navigation)
+ * Get top popular areas without any exclusion (for project/station pages).
+ * Only returns areas that have at least one active property.
  */
-export async function getRelatedAreas(excludeId: string): Promise<any[]> {
+export async function getPopularAreas(limit = 6): Promise<any[]> {
   const supabase = await createClient();
 
+  // 1. Fetch the set of popular_area names that have active properties
+  const { data: propAreas } = await supabase
+    .from("properties")
+    .select("popular_area")
+    .eq("status", "ACTIVE")
+    .is("deleted_at", null)
+    .not("popular_area", "is", null);
+
+  const activeAreaNames = new Set<string>(
+    (propAreas || []).map((p: any) => (p.popular_area as string)?.trim()).filter(Boolean)
+  );
+
+  // 2. Fetch candidate areas (fetch more so we can filter to the requested limit)
+  const { data, error } = await supabase
+    .from("popular_areas_v3")
+    .select("id, name, slug, image_url, province")
+    .eq("is_active", true)
+    .order("sort_order")
+    .limit(200);
+
+  if (error || !data) return [];
+
+  const result = [];
+  for (const item of data) {
+    if (result.length >= limit) break;
+
+    const nameObj = item.name as Record<string, string> | null || {};
+    const nameTh = (nameObj.th || "").trim();
+
+    // Skip areas with no active properties
+    if (!activeAreaNames.has(nameTh)) continue;
+
+    let imageUrl = item.image_url;
+
+    if (!imageUrl) {
+      const { data: propImg } = await supabase
+        .from("properties")
+        .select("main_image, images")
+        .eq("popular_area", nameTh)
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null)
+        .limit(1)
+        .maybeSingle();
+
+      if (propImg) {
+        imageUrl = propImg.main_image;
+        if (!imageUrl && propImg.images) {
+          try {
+            const imgs = typeof propImg.images === "string"
+              ? JSON.parse(propImg.images)
+              : propImg.images;
+            if (Array.isArray(imgs) && imgs.length > 0) {
+              imageUrl = imgs[0]?.image_url || imgs[0] || "";
+            }
+          } catch (e) {}
+        }
+      }
+    }
+
+    result.push({
+      id: item.id,
+      name: { th: nameTh, en: nameObj.en || "" },
+      slug: item.slug || "",
+      imageUrl: imageUrl || null,
+      province: item.province,
+    });
+  }
+  return result;
+}
+
+/**
+ * Get other active areas to recommend (related areas navigation).
+ * Only returns areas that have at least one active property.
+ */
+export async function getRelatedAreas(excludeId: string, limit = 50): Promise<any[]> {
+  const supabase = await createClient();
+
+  // 1. Fetch the set of popular_area names that have active properties
+  const { data: propAreas } = await supabase
+    .from("properties")
+    .select("popular_area")
+    .eq("status", "ACTIVE")
+    .is("deleted_at", null)
+    .not("popular_area", "is", null);
+
+  const activeAreaNames = new Set<string>(
+    (propAreas || []).map((p: any) => (p.popular_area as string)?.trim()).filter(Boolean)
+  );
+
+  // 2. Fetch all candidate areas (excluding current)
   const { data, error } = await supabase
     .from("popular_areas_v3")
     .select("id, name, slug, image_url, province")
     .eq("is_active", true)
     .neq("id", excludeId)
     .order("sort_order")
-    .limit(5);
+    .limit(200); // fetch more then filter in-memory
 
   if (error || !data) return [];
 
   const result = [];
   for (const item of data) {
+    if (result.length >= limit) break;
+
     const nameObj = item.name as Record<string, string> | null || {};
+    const nameTh = (nameObj.th || "").trim();
+
+    // Skip areas with no active properties
+    if (!activeAreaNames.has(nameTh)) continue;
+
     let imageUrl = item.image_url;
 
     if (!imageUrl) {
@@ -363,7 +461,7 @@ export async function getRelatedAreas(excludeId: string): Promise<any[]> {
       const { data: propImg } = await supabase
         .from("properties")
         .select("main_image, images")
-        .eq("popular_area", nameObj.th || "")
+        .eq("popular_area", nameTh)
         .eq("status", "ACTIVE")
         .is("deleted_at", null)
         .limit(1)
@@ -386,10 +484,7 @@ export async function getRelatedAreas(excludeId: string): Promise<any[]> {
 
     result.push({
       id: item.id,
-      name: {
-        th: nameObj.th || "",
-        en: nameObj.en || "",
-      },
+      name: { th: nameTh, en: nameObj.en || "" },
       slug: item.slug || "",
       imageUrl: imageUrl || null,
       province: item.province,

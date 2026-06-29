@@ -5,12 +5,14 @@ import { ChevronRight, MapPin, Building2, Calendar, LayoutGrid, CheckCircle } fr
 import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations, getLocalizedField } from "@/lib/i18n";
 import { getProjectBySlug, getPropertiesInProject, getAllProjectSlugs, getRelatedProjects } from "@/features/public/projects";
+import { getPopularAreas } from "@/features/public/areas";
 import { ProjectPropertiesClient } from "@/components/public/ProjectPropertiesClient";
 import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
 import { ProjectHero } from "@/components/public/project-detail/ProjectHero";
 import { ProjectAboutCard } from "@/components/public/project-detail/ProjectAboutCard";
 import { ProjectFacilitiesCard } from "@/components/public/project-detail/ProjectFacilitiesCard";
 import { ProjectLocationMapCard } from "@/components/public/project-detail/ProjectLocationMapCard";
+import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
 
 export const revalidate = 3600; // 1 hour
 
@@ -105,6 +107,7 @@ export default async function ProjectDetailPage(
   
   const { properties } = await getPropertiesInProject(project.id, { limit: 100 });
   const relatedProjects = await getRelatedProjects(project.id, project.district, project.province);
+  const nearbyAreas = await getPopularAreas(50);
 
   const getString = (key: string, params?: Record<string, string | number>) => {
     let val = DETAIL_LOCALIZATION[key]?.[language] || DETAIL_LOCALIZATION[key]?.th || "";
@@ -209,7 +212,7 @@ export default async function ProjectDetailPage(
 
       {/* Related Projects Section */}
       {relatedProjects.length > 0 && (
-        <div className="max-w-screen-2xl mx-auto px-5 md:px-8 pb-16">
+        <div className="max-w-screen-2xl mx-auto px-5 md:px-8 pb-8">
           <section className="space-y-6 pt-10 border-t border-slate-200/60">
             <div className="flex items-center gap-2.5">
               <Building2 className="w-5 h-5 text-indigo-500" />
@@ -225,6 +228,11 @@ export default async function ProjectDetailPage(
             />
           </section>
         </div>
+      )}
+
+      {/* Nearby Areas Section */}
+      {nearbyAreas.length > 0 && (
+        <NearbyAreasSection areas={nearbyAreas} language={language} />
       )}
     </div>
   );

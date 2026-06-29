@@ -14,6 +14,7 @@ import {
 } from "@/features/public/areas";
 import { AreaPropertiesClient } from "@/components/public/AreaPropertiesClient";
 import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
+import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
 import { getProvinceName } from "@/lib/utils/provinces";
 
 export const revalidate = 3600; // 1 hour caching
@@ -399,36 +400,12 @@ export default async function AreaDetailPage(
         {/* Related Areas Section */}
         {relatedAreas.length > 0 && (
           <section className="space-y-6 pt-10 mt-10 border-t border-slate-200/60">
-            <div className="flex items-center gap-2.5">
-              <Compass className="w-5 h-5 text-indigo-500" />
-              <h2 className="text-lg md:text-xl font-bold text-slate-800 tracking-tight">
-                {t("related_areas")}
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-              {relatedAreas.map(item => (
-                <Link
-                  key={item.id}
-                  href={`/areas/${item.slug}`}
-                  className="group relative h-40 rounded-2xl overflow-hidden shadow-xs hover:shadow-md transition-all border border-slate-200/40"
-                >
-                  {item.imageUrl ? (
-                    <div className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-300 select-none" style={{ backgroundImage: `url(${item.imageUrl})` }} />
-                  ) : (
-                    <div className="absolute inset-0 bg-linear-to-br from-indigo-900 to-indigo-950" />
-                  )}
-                  <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-900/40 to-transparent" />
-                  <div className="absolute bottom-3 left-3 right-3 text-left">
-                    <span className="block text-xs font-bold text-white tracking-tight drop-shadow-xs">
-                      {item.name[language as keyof typeof item.name] || item.name.th}
-                    </span>
-                    <span className="block text-[9px] text-slate-300 mt-0.5 truncate">
-                      {item.province ? getProvinceName(item.province, language) : (language === "en" ? "Bangkok" : language === "cn" ? "曼谷" : language === "ru" ? "Бангкок" : "กรุงเทพมหานคร")}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <NearbyAreasSection
+              areas={relatedAreas}
+              language={language}
+              title={t("related_areas")}
+              embedded
+            />
           </section>
         )}
       </main>
