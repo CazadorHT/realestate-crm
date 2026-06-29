@@ -16,6 +16,8 @@ export interface StationForSEO {
   latitude?: number;
   longitude?: number;
   propertyCount?: number;
+  minPrice?: number | null;
+  minRentalPrice?: number | null;
 }
 
 export interface TransitLine {
@@ -136,12 +138,17 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
   // Fetch active station names from active properties to show only stations that have properties
   const { data: properties } = await supabase
     .from("properties")
-    .select("transit_station_name, transit_station_name_en, nearby_transits")
+    .select("transit_station_name, transit_station_name_en, nearby_transits, price, rental_price")
     .eq("status", "ACTIVE")
     .is("deleted_at", null);
 
   const activeStationNames = new Set<string>();
-  const propertyStationsList: Set<string>[] = [];
+  const propertyStationsWithPrices: Array<{
+    stations: Set<string>;
+    price: number | null;
+    rental_price: number | null;
+  }> = [];
+
   if (properties) {
     for (const prop of properties) {
       const propStations = new Set<string>();
@@ -171,7 +178,11 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
           }
         }
       }
-      propertyStationsList.push(propStations);
+      propertyStationsWithPrices.push({
+        stations: propStations,
+        price: prop.price ?? null,
+        rental_price: prop.rental_price ?? null
+      });
     }
   }
 
@@ -240,15 +251,30 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
       continue; // Skip stations with 0 properties
     }
 
-    // Count properties for this station
+    // Count properties for this station and calculate minimum prices
     let propertyCount = 0;
-    for (const propStations of propertyStationsList) {
+    let minPrice: number | null = null;
+    let minRentalPrice: number | null = null;
+
+    for (const itemPrice of propertyStationsWithPrices) {
       if (
-        (nameTh && propStations.has(nameTh)) ||
-        (nameEn && propStations.has(nameEn)) ||
-        propStations.has(codeLower)
+        (nameTh && itemPrice.stations.has(nameTh)) ||
+        (nameEn && itemPrice.stations.has(nameEn)) ||
+        itemPrice.stations.has(codeLower)
       ) {
         propertyCount++;
+        
+        if (itemPrice.price !== null) {
+          if (minPrice === null || itemPrice.price < minPrice) {
+            minPrice = itemPrice.price;
+          }
+        }
+        
+        if (itemPrice.rental_price !== null) {
+          if (minRentalPrice === null || itemPrice.rental_price < minRentalPrice) {
+            minRentalPrice = itemPrice.rental_price;
+          }
+        }
       }
     }
 
@@ -262,6 +288,8 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
       latitude: metadata?.latitude as number | undefined,
       longitude: metadata?.longitude as number | undefined,
       propertyCount,
+      minPrice,
+      minRentalPrice,
     };
 
     if (!grouped.has(transitType)) {
@@ -275,6 +303,8 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
   for (const type of LINE_ORDER) {
     const stations = grouped.get(type);
     if (stations && stations.length > 0) {
+      // Sort stations by property count descending
+      stations.sort((a, b) => (b.propertyCount || 0) - (a.propertyCount || 0));
       const info = lineInfoMap.get(type) || { label: { th: type, en: type }, color: "#6B7280" };
       lines.push({
         type,
@@ -288,6 +318,8 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
   // Add any remaining types not in LINE_ORDER
   for (const [type, stations] of grouped) {
     if (!LINE_ORDER.includes(type) && stations.length > 0) {
+      // Sort stations by property count descending
+      stations.sort((a, b) => (b.propertyCount || 0) - (a.propertyCount || 0));
       const info = lineInfoMap.get(type) || { label: { th: type, en: type }, color: "#6B7280" };
       lines.push({
         type,

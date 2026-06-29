@@ -2,11 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Train, ChevronRight } from "lucide-react";
+import { Train, ChevronRight, Search, Flame } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { cn } from "@/lib/utils";
 import type { TransitLine } from "@/features/public/stations";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
+import { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription } from "@/components/ui/drawer";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TransitStationsSectionProps {
   lines: TransitLine[];
@@ -87,12 +91,120 @@ const getLineLogo = (type: string, color: string) => {
   );
 };
 
+const POPULAR_STATION_CODES = new Set([
+  // BTS Main Line
+  "E4", "E5", "E6", "E7", "C1", "N5", "N8", "S6", "E9",
+  // MRT Blue Line
+  "BL22", "BL26", "BL28", "BL23", "BL27", "BL30"
+]);
+
+const POPULAR_LABEL: Record<string, string> = {
+  th: "ยอดนิยม",
+  en: "Popular",
+  cn: "热门",
+  ru: "Популярно"
+};
+
+function isPopularStation(station: any): boolean {
+  return (
+    POPULAR_STATION_CODES.has(station.code) ||
+    (station.propertyCount !== undefined && station.propertyCount >= 20)
+  );
+}
+
+function getStationPriceInfo(
+  minPrice: number | null | undefined,
+  minRentalPrice: number | null | undefined,
+  lang: string
+): {
+  sale: { prefix: string; value: string } | null;
+  rent: { prefix: string; value: string } | null;
+} {
+  let sale: { prefix: string; value: string } | null = null;
+  let rent: { prefix: string; value: string } | null = null;
+
+  if (minPrice && minPrice > 0) {
+    let prefix = "";
+    let value = "";
+    
+    if (lang === "th") {
+      prefix = "เริ่ม";
+    } else if (lang === "cn") {
+      prefix = "起价";
+    } else if (lang === "ru") {
+      prefix = "от";
+    } else {
+      prefix = "Starts";
+    }
+
+    if (minPrice >= 1000000) {
+      const millions = Number((minPrice / 1000000).toFixed(1));
+      value = `฿${millions}M`;
+    } else {
+      value = `฿${minPrice.toLocaleString()}`;
+    }
+
+    if (lang === "cn") {
+      sale = { prefix: "", value: `${value} 起` };
+    } else {
+      sale = { prefix, value };
+    }
+  }
+
+  if (minRentalPrice && minRentalPrice > 0) {
+    let prefix = "";
+    let value = "";
+
+    if (lang === "th") {
+      prefix = "เช่า";
+    } else if (lang === "cn") {
+      prefix = "租";
+    } else if (lang === "ru") {
+      prefix = "Аренда";
+    } else {
+      prefix = "Rent";
+    }
+
+    if (minRentalPrice >= 1000) {
+      const thousands = Number((minRentalPrice / 1000).toFixed(0));
+      value = `฿${thousands}k/mo`;
+    } else {
+      value = `฿${minRentalPrice}/mo`;
+    }
+
+    if (lang === "th") {
+      value = value.replace("/mo", "/ด.");
+    } else if (lang === "cn") {
+      value = value.replace("/mo", "/月");
+    } else if (lang === "ru") {
+      value = value.replace("/mo", "/мес");
+    }
+
+    rent = { prefix, value };
+  }
+
+  return { sale, rent };
+}
+
+const SkeletonCard = () => (
+  <div className="flex items-center gap-2.5 px-3 sm:px-4 py-3 sm:py-3.5 rounded-2xl bg-white border border-slate-100 animate-pulse w-full">
+    {/* Dot */}
+    <div className="w-2.5 h-2.5 rounded-full bg-slate-200 shrink-0" />
+    {/* Text blocks */}
+    <div className="min-w-0 flex-1 space-y-1.5">
+      <div className="h-4 bg-slate-200 rounded-sm w-3/4" />
+      <div className="h-3 bg-slate-200 rounded-sm w-1/2" />
+    </div>
+  </div>
+);
+
 // ============================================================
 // Main Component
 // ============================================================
 
 export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
   const { language } = useLanguage();
+  const isMobile = useIsMobile();
 
   // Sort lines dynamically according to user's desired order
   const sortedLines = [...lines].sort((a, b) => {
@@ -106,14 +218,54 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
   const [activeLineType, setActiveLineType] = useState<string>(
     sortedLines[0]?.type || "BTS"
   );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   const activeLine = sortedLines.find((line) => line.type === activeLineType) || sortedLines[0];
+
+  const handleLineChange = (type: string) => {
+    if (type === activeLineType) return;
+    setSearchQuery("");
+    setIsTransitioning(true);
+    setActiveLineType(type);
+    setTimeout(() => {
+      setIsTransitioning(false);
+    }, 250);
+  };
 
   if (!lines || lines.length === 0) return null;
 
   const tTitle = SECTION_CONTENT.title[language as keyof typeof SECTION_CONTENT.title] || SECTION_CONTENT.title.th;
   const tDescription = SECTION_CONTENT.description[language as keyof typeof SECTION_CONTENT.description] || SECTION_CONTENT.description.th;
   const tAllStations = SECTION_CONTENT.allStations[language as keyof typeof SECTION_CONTENT.allStations] || SECTION_CONTENT.allStations.th;
+
+  // Filter stations based on search query
+  const filteredStations = activeLine.stations.filter((station) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase().trim();
+    const thName = station.label.th?.toLowerCase() || "";
+    const enName = station.label.en?.toLowerCase() || "";
+    const cnName = station.label.cn?.toLowerCase() || "";
+    const ruName = station.label.ru?.toLowerCase() || "";
+    const code = station.code.toLowerCase();
+    
+    return (
+      thName.includes(query) ||
+      enName.includes(query) ||
+      cnName.includes(query) ||
+      ruName.includes(query) ||
+      code.includes(query)
+    );
+  });
+
+  const activeLineDisplayLabel = LINE_DISPLAY_LABELS[activeLine.type] || activeLine.label;
+  const activeLineLabelText = (activeLineDisplayLabel as Record<string, string>)[language] || activeLineDisplayLabel.th;
+
+  // Show only 5 stations if not searching, otherwise show all matching search results
+  const showAll = searchQuery.trim().length > 0;
+  const displayStations = showAll ? filteredStations : filteredStations.slice(0, 5);
 
   return (
     <section className="py-12 bg-white">
@@ -162,21 +314,21 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
             return (
               <m.button
                 key={line.type}
-                onClick={() => setActiveLineType(line.type)}
-                whileHover={{ scale: 1.03 }}
+                onClick={() => handleLineChange(line.type)}
+                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex flex-col items-center shrink-0 w-18 sm:w-22 md:w-26 lg:w-30 snap-start cursor-pointer select-none group focus:outline-hidden"
+                className="flex flex-col  items-center shrink-0 w-18 sm:w-22 md:w-26 lg:w-30 snap-start cursor-pointer select-none group focus:outline-hidden"
               >
                 {/* Logo Box */}
                 <div
-                  className="w-14 h-14 sm:w-18 sm:h-18 md:w-22 md:h-22 rounded-2xl bg-white border-2 flex items-center justify-center p-2 transition-all duration-300 relative"
+                  className="w-14 h-14 sm:w-18 sm:h-18 md:w-22 md:h-22 rounded-2xl bg-white border flex items-center justify-center p-2 transition-all duration-300 relative"
                   style={{
-                    borderColor: line.color,
+                    borderColor: isActive ? line.color : "#e2e8f0",
                     boxShadow: isActive 
-                      ? `0 0 16px ${line.color}35` 
+                      ? `0 0 0 3px ${line.color}20, 0 8px 24px ${line.color}25` 
                       : `0 2px 4px rgba(0,0,0,0.02)`,
-                    transform: isActive ? 'scale(1.02)' : 'none',
-                    borderWidth: isActive ? '2.5px' : '2px',
+                    transform: isActive ? 'scale(1.04)' : 'none',
+                    borderWidth: isActive ? '3px' : '1px',
                   }}
                 >
                   {getLineLogo(line.type, line.color)}
@@ -184,7 +336,7 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                   {/* Active Indicator Dot */}
                   {isActive && (
                     <span 
-                      className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ring-2"
+                      className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ring-2 animate-pulse"
                       style={{ 
                         backgroundColor: line.color,
                         // @ts-ignore
@@ -197,9 +349,9 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                 {/* Name Label */}
                 <span
                   className={cn(
-                    "block text-xs sm:text-xs md:text-sm font-bold text-center mt-2.5 transition-colors duration-200 line-clamp-1 w-full px-1",
+                    "block text-xs sm:text-xs md:text-sm font-bold text-center mt-2.5 transition-all duration-200 line-clamp-1 w-full px-1",
                     isActive 
-                      ? "text-slate-900 font-extrabold" 
+                      ? "text-slate-900 font-black scale-105" 
                       : "text-slate-500 group-hover:text-slate-800"
                   )}
                   style={{
@@ -215,56 +367,346 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
 
         {/* Station Grid Container */}
         <div className="bg-slate-50/50 rounded-3xl border border-slate-100 p-4 sm:p-6 md:p-8 mt-4">
+          
+          {/* Grid Header & Search */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
+            <h3 className="text-xs sm:text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: activeLine.color }} />
+              {activeLineLabelText}
+            </h3>
+            
+            {/* Search Input */}
+            <div className="relative w-full sm:w-72">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <Input
+                type="text"
+                placeholder={
+                  language === "th" 
+                    ? `ค้นหาสถานีในสาย ${activeLineLabelText}...` 
+                    : `Search stations in ${activeLineLabelText}...`
+                }
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-8 h-9 text-xs placeholder:text-xs  bg-white border-slate-200 focus-visible:ring-blue-500 focus-visible:ring-1 rounded-xl w-full"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <span className="text-[10px] font-bold">×</span>
+                </button>
+              )}
+            </div>
+          </div>
+
           <AnimatePresence mode="wait">
             <m.div
-              key={activeLineType}
-              initial={{ opacity: 0, y: 10 }}
+              key={activeLineType + (isTransitioning ? "-loading" : "-ready")}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.25 }}
-              className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-3"
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="flex items-center justify-center w-full"
             >
-              {activeLine.stations.slice(0, 5).map((station) => {
-                const stationName = station.label[language as keyof typeof station.label] || station.label.th;
-                
-                return (
-                  <Link
-                    key={station.code}
-                    href={`/near-station/${station.slug}`}
-                    className="group flex items-center gap-2.5 px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-white hover:bg-slate-100/50 border border-slate-100 hover:border-slate-200 transition-all duration-200 hover:shadow-xs"
-                  >
-                    <div
-                      className="w-2.5 h-2.5 rounded-full shrink-0 ring-2 ring-offset-1"
-                      style={{ 
-                        backgroundColor: activeLine.color, 
-                        // @ts-ignore
-                        "--tw-ring-color": `${activeLine.color}25` 
-                      }}
-                    />
-                    <div className="min-w-0">
-                      <span className="block text-sm font-bold text-slate-800 group-hover:text-blue-600 truncate transition-colors">
-                        {stationName}
-                      </span>
-                      <span className="block text-[10px] text-slate-400 truncate mt-0.5">
-                        {station.label.en}
-                      </span>
-                    </div>
-                  </Link>
-                );
-              })}
-
-              {activeLine.stations.length > 5 && (
-                <Link
-                  href={`/near-station`}
-                  className="group flex items-center justify-between px-3 sm:px-4 py-2.5 sm:py-3 rounded-2xl bg-blue-50/30 hover:bg-blue-50/60 border border-dashed border-blue-200/80 hover:border-blue-300 transition-all duration-200"
-                >
-                  <span className="text-sm font-bold text-blue-600 group-hover:text-blue-700">
+              {isTransitioning ? (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 xl:grid-cols-6 gap-3 w-full">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <SkeletonCard key={i} />
+                  ))}
+                </div>
+              ) : filteredStations.length === 0 ? (
+                <div className="py-12 flex flex-col items-center justify-center text-center w-full">
+                  <Search className="w-10 h-10 text-slate-300 mb-3 animate-bounce" />
+                  <p className="text-sm font-bold text-slate-800">
+                    {language === "th" ? "ไม่พบสถานีที่ค้นหา" : "No stations found"}
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
                     {language === "th" 
-                      ? `ดูทั้งหมด +${activeLine.stations.length - 5} สถานี` 
-                      : `View +${activeLine.stations.length - 5} More`}
-                  </span>
-                  <ChevronRight className="w-4 h-4 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
-                </Link>
+                      ? `ไม่พบสถานี "${searchQuery}" ในสายนี้` 
+                      : `No stations match "${searchQuery}" in this line`}
+                  </p>
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="mt-4 text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                  >
+                    {language === "th" ? "ล้างการค้นหา" : "Clear search"}
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-2.5 w-full self-start">
+                  {displayStations.map((station) => {
+                    const stationName = station.label[language as keyof typeof station.label] || station.label.th;
+                    const prices = getStationPriceInfo(station.minPrice, station.minRentalPrice, language);
+                    const isPop = isPopularStation(station);
+                    
+                    return (
+                      <Link
+                        key={station.code}
+                        href={`/near-station/${station.slug}`}
+                        className="group relative flex items-center justify-between px-2 sm:px-4 py-2.5 sm:py-3.5 rounded-2xl bg-white hover:bg-slate-50 border border-slate-100 hover:border-slate-200 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xs overflow-hidden w-full"
+                      >
+                        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+                          {/* Station Dot with soft wrapper */}
+                          <div 
+                            className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0"
+                            style={{ backgroundColor: `${activeLine.color}15` }}
+                          >
+                            <div 
+                              className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full border border-white"
+                              style={{ backgroundColor: activeLine.color }}
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="block text-xs sm:text-sm font-bold text-slate-800 group-hover:text-blue-600 truncate transition-colors">
+                              {stationName}
+                            </span>
+                            {prices.sale && (
+                              <span className="block text-[10px] sm:text-xs mt-0.5 leading-tight">
+                                {prices.sale?.prefix && (
+                                  <span className="text-slate-400 font-normal mr-0.5">
+                                    {prices.sale?.prefix}
+                                  </span>
+                                )}
+                                <span className="text-blue-600 font-extrabold">
+                                  {prices.sale?.value}
+                                </span>
+                              </span>
+                            )}
+                            {prices.rent && (
+                              <span className="block text-[10px] sm:text-xs mt-0.5 leading-tight">
+                                {prices.rent?.prefix && (
+                                  <span className="text-slate-400 font-normal mr-0.5">
+                                    {prices.rent?.prefix}
+                                  </span>
+                                )}
+                                <span className="text-purple-600 font-extrabold">
+                                  {prices.rent?.value}
+                                </span>
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-col items-end shrink-0 gap-1 pl-1">
+                          {isPop && (
+                            <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 text-[8px] font-bold px-1 py-0.5 rounded-md border border-amber-100">
+                              <Flame className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                              {POPULAR_LABEL[language] || POPULAR_LABEL.en}
+                            </span>
+                          )}
+                          <span className="text-[9px] sm:text-[11px] font-bold text-slate-500 bg-slate-100/70 px-1.5 sm:px-2.5 py-0.5 rounded-full shrink-0">
+                            {station.propertyCount} {station.propertyCount === 1 ? "unit" : "units"}
+                          </span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+
+                  {!showAll && filteredStations.length > 5 && (
+                    isMobile ? (
+                      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} shouldScaleBackground={false}>
+                        <DrawerTrigger asChild>
+                          <button
+                            className="group flex items-center justify-between px-3 sm:px-4 py-3 sm:py-3.5 rounded-2xl bg-blue-50/20 hover:bg-blue-50/40 border border-dashed border-blue-200/60 hover:border-blue-300 transition-all duration-200 cursor-pointer text-left w-full h-full"
+                          >
+                            <span className="text-sm font-bold text-blue-600 group-hover:text-blue-700">
+                              {language === "th" 
+                                ? `ดูอีก +${filteredStations.length - 5} สถานี` 
+                                : `View +${filteredStations.length - 5} More`}
+                            </span>
+                            <ChevronRight className="w-4 h-4 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
+                          </button>
+                        </DrawerTrigger>
+                        <DrawerContent 
+                          className="p-4 bg-white rounded-t-3xl max-h-[85vh] outline-none"
+                          onCloseAutoFocus={(e) => e.preventDefault()}
+                        >
+                          <DrawerHeader className="text-left px-1 pb-2 border-b border-slate-100">
+                            <DrawerTitle className="text-sm font-black text-slate-800 flex items-center gap-1.5">
+                              <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: activeLine.color }} />
+                              {activeLineLabelText} ({language === "th" ? "สถานีที่เหลือ" : "More Stations"})
+                            </DrawerTitle>
+                            <DrawerDescription className="sr-only">
+                              List of remaining transit stations
+                            </DrawerDescription>
+                          </DrawerHeader>
+                          <div className="flex flex-col gap-1 overflow-y-auto mt-3 pr-1 pb-8">
+                            {filteredStations.slice(5).map((station) => {
+                              const stationName = station.label[language as keyof typeof station.label] || station.label.th;
+                              const prices = getStationPriceInfo(station.minPrice, station.minRentalPrice, language);
+                              const isPop = isPopularStation(station);
+                              
+                              return (
+                                <Link
+                                  key={station.code}
+                                  href={`/near-station/${station.slug}`}
+                                  onClick={() => {
+                                    setDrawerOpen(false);
+                                    setPopoverOpen(false);
+                                  }}
+                                  className="group flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 active:bg-slate-100 transition-colors w-full"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    {/* Station Dot with soft wrapper */}
+                                    <div 
+                                      className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0"
+                                      style={{ backgroundColor: `${activeLine.color}15` }}
+                                    >
+                                      <div 
+                                        className="w-2 h-2 rounded-full"
+                                        style={{ backgroundColor: activeLine.color }}
+                                      />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <span className="block text-xs sm:text-sm font-bold text-slate-800 group-hover:text-blue-600 truncate transition-colors">
+                                        {stationName}
+                                      </span>
+                                      {prices.sale && (
+                                        <span className="block text-[10px] mt-0.5 leading-tight">
+                                          {prices.sale?.prefix && (
+                                            <span className="text-slate-400 font-normal mr-0.5">
+                                              {prices.sale?.prefix}
+                                            </span>
+                                          )}
+                                          <span className="text-blue-600 font-extrabold">
+                                            {prices.sale?.value}
+                                          </span>
+                                        </span>
+                                      )}
+                                      {prices.rent && (
+                                        <span className="block text-[10px] mt-0.5 leading-tight">
+                                          {prices.rent?.prefix && (
+                                            <span className="text-slate-400 font-normal mr-0.5">
+                                              {prices.rent?.prefix}
+                                            </span>
+                                          )}
+                                          <span className="text-purple-600 font-extrabold">
+                                            {prices.rent?.value}
+                                          </span>
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex flex-col items-end shrink-0 gap-1 pl-2">
+                                    {isPop && (
+                                      <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 text-[8px] font-bold px-1.5 py-0.5 rounded-md border border-amber-100">
+                                        <Flame className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                                        {POPULAR_LABEL[language] || POPULAR_LABEL.en}
+                                      </span>
+                                    )}
+                                    <span className="text-[10px] text-slate-500 bg-slate-100/70 px-2 py-0.5 rounded-full font-bold">
+                                      {station.propertyCount} {station.propertyCount === 1 ? "unit" : "units"}
+                                    </span>
+                                  </div>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </DrawerContent>
+                      </Drawer>
+                    ) : (
+                      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                        <PopoverTrigger asChild>
+                          <button
+                            className="group flex items-center justify-between px-3 sm:px-4 py-3 sm:py-3.5 rounded-2xl bg-blue-50/20 hover:bg-blue-50/40 border border-dashed border-blue-200/60 hover:border-blue-300 transition-all duration-200 cursor-pointer text-left w-full h-full"
+                          >
+                            <span className="text-sm font-bold text-blue-600 group-hover:text-blue-700">
+                              {language === "th" 
+                                ? `ดูอีก +${filteredStations.length - 5} สถานี` 
+                                : `View +${filteredStations.length - 5} More`}
+                            </span>
+                            <ChevronRight className="w-4 h-4 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
+                          </button>
+                        </PopoverTrigger>
+                        <PopoverContent 
+                          className="w-80 p-3 rounded-2xl shadow-xl border-slate-200 bg-white z-50" 
+                          align="end"
+                          onCloseAutoFocus={(e) => e.preventDefault()}
+                        >
+                          <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5 px-1 pb-1 border-b border-slate-100 flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeLine.color }} />
+                            {activeLineLabelText} ({language === "th" ? "สถานีที่เหลือ" : "More Stations"})
+                          </h4>
+                          <div className="flex flex-col gap-1 max-h-64 overflow-y-auto pr-1">
+                            {filteredStations.slice(5).map((station) => {
+                              const stationName = station.label[language as keyof typeof station.label] || station.label.th;
+                              const prices = getStationPriceInfo(station.minPrice, station.minRentalPrice, language);
+                              const isPop = isPopularStation(station);
+                              
+                              return (
+                                <Link
+                                  key={station.code}
+                                  href={`/near-station/${station.slug}`}
+                                  onClick={() => {
+                                    setDrawerOpen(false);
+                                    setPopoverOpen(false);
+                                  }}
+                                  className="group flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors w-full"
+                                >
+                                  <div className="flex items-center gap-3 min-w-0">
+                                    {/* Station Dot with soft wrapper */}
+                                    <div 
+                                      className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0"
+                                      style={{ backgroundColor: `${activeLine.color}15` }}
+                                    >
+                                      <div 
+                                        className="w-2 h-2 rounded-full"
+                                        style={{ backgroundColor: activeLine.color }}
+                                      />
+                                    </div>
+                                    <div className="min-w-0">
+                                      <span className="block text-xs font-bold text-slate-800 group-hover:text-blue-600 truncate transition-colors">
+                                        {stationName}
+                                      </span>
+                                      {prices.sale && (
+                                        <span className="block text-[10px] mt-0.5 leading-tight">
+                                          {prices.sale?.prefix && (
+                                            <span className="text-slate-400 font-normal mr-0.5">
+                                              {prices.sale?.prefix}
+                                            </span>
+                                          )}
+                                          <span className="text-blue-600 font-extrabold">
+                                            {prices.sale?.value}
+                                          </span>
+                                        </span>
+                                      )}
+                                      {prices.rent && (
+                                        <span className="block text-[10px] mt-0.5 leading-tight">
+                                          {prices.rent?.prefix && (
+                                            <span className="text-slate-400 font-normal mr-0.5">
+                                              {prices.rent?.prefix}
+                                            </span>
+                                          )}
+                                          <span className="text-purple-600 font-extrabold">
+                                            {prices.rent?.value}
+                                          </span>
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex flex-col items-end shrink-0 gap-1 pl-2">
+                                    {isPop && (
+                                      <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 text-[8px] font-bold px-1.5 py-0.5 rounded-md border border-amber-100">
+                                        <Flame className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                                        {POPULAR_LABEL[language] || POPULAR_LABEL.en}
+                                      </span>
+                                    )}
+                                    <span className="text-[10px] text-slate-500 bg-slate-100/70 px-2 py-0.5 rounded-full font-bold">
+                                      {station.propertyCount} {station.propertyCount === 1 ? "unit" : "units"}
+                                    </span>
+                                  </div>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    )
+                  )}
+                </div>
               )}
             </m.div>
           </AnimatePresence>

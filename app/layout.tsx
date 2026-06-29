@@ -229,7 +229,7 @@ export default async function RootLayout({
   const isLegalPage = pathname.includes("privacy-policy") || pathname.includes("terms");
 
   return (
-    <html lang={lang} data-scroll-behavior="smooth">
+    <html lang={lang}>
       <head>
         {/* Resource Hinting: S-Tier Performance Optimization */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -243,6 +243,11 @@ export default async function RootLayout({
         <link rel="preconnect" href={process.env.NEXT_PUBLIC_SUPABASE_URL} crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={process.env.NEXT_PUBLIC_SUPABASE_URL} />
 
+      </head>
+      <body
+        className={`${prompt.className} ${notoThai.variable} antialiased`}
+        style={{ scrollbarGutter: "stable" }}
+      >
         {/* Meta Pixel Safe Stub to prevent "fbq is not defined" ReferenceError */}
         <Script id="meta-pixel-stub" strategy="beforeInteractive">
           {`
@@ -256,7 +261,7 @@ export default async function RootLayout({
           `}
         </Script>
       
-        {/* Google Tag Manager - load immediately in head so page-level events are available early */}
+        {/* Google Tag Manager - load immediately so page-level events are available early */}
         {gtmId && (
           <Script id="gtm-script" strategy="beforeInteractive">
             {`(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -267,11 +272,7 @@ export default async function RootLayout({
           </Script>
         )}
         {/* End Google Tag Manager */}
-      </head>
-      <body
-        className={`${prompt.className} ${notoThai.variable} antialiased`}
-        style={{ scrollbarGutter: "stable" }}
-      >
+
         {/* Google Tag Manager (noscript) — suppressed on legal pages to pass Google OAuth verification */}
         {!isLegalPage && settings.google_tag_manager_enabled && settings.google_tag_manager_id && (
           <noscript>
