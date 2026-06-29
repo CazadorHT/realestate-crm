@@ -19,6 +19,13 @@ export function getLocalizedField<T>(
 ): T {
   if (!data) return "" as any;
 
+  // Check if we are trying to get a field that is itself a nested object containing regional translations 
+  // (e.g., station.description where description is { th: "...", en: "...", ... })
+  if (data[field] && typeof data[field] === "object" && !Array.isArray(data[field])) {
+    const obj = data[field];
+    return (obj[language] || obj[defaultLang] || "") as any;
+  }
+
   // If language is default, return the base field
   if (language === defaultLang) {
     return data[field] || "";
