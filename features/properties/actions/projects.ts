@@ -1,6 +1,6 @@
 "use server";
 
-import { requireAuthContext, assertStaff } from "@/lib/authz";
+import { requireAuthContext, assertAdminOrManager, assertStaff } from "@/lib/authz";
 import { type Database, type Json } from "@/lib/database.types.generated";
 import { mapDbError } from "@/lib/db-error";
 
@@ -37,7 +37,7 @@ export interface ProjectAdminItem {
 export async function getAdminProjectsAction(): Promise<ProjectAdminItem[]> {
   try {
     const ctx = await requireAuthContext();
-    assertStaff(ctx.role);
+    assertAdminOrManager(ctx.role);
 
     // Fetch projects for tenant
     const { data: projects, error: projectsError } = await ctx.supabase
@@ -79,7 +79,13 @@ export async function getAdminProjectsAction(): Promise<ProjectAdminItem[]> {
 export async function upsertProjectAction(input: ProjectAdminItem) {
   try {
     const ctx = await requireAuthContext();
-    assertStaff(ctx.role);
+    
+    // Dynamic Role Check: Only Admin/Manager can update existing projects, but any staff (including AGENT) can create a new project.
+    if (input.id) {
+      assertAdminOrManager(ctx.role);
+    } else {
+      assertStaff(ctx.role);
+    }
 
     if (!input.slug || !input.slug.trim()) {
       return { success: false, message: "กรุณาระบุ URL Slug" };
@@ -140,7 +146,14 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
         : `สร้างโครงการใหม่: ${input.name.th} [Slug: ${input.slug}]`
     });
 
-    return { success: true, message: "บันทึกข้อมูลโครงการสำเร็จ ✨" };
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/protected/admin/projects");
+    revalidatePath("/projects");
+    if (input.slug) {
+      revalidatePath(`/projects/${input.slug}`);
+    }
+
+    return { success: true, message: "บันทึกข้อมูลโครงการสำเร็จ ✨", id: data.id };
   } catch (err: any) {
     console.error("upsertProjectAction error:", err);
     return { success: false, message: mapDbError(err) };
@@ -153,7 +166,7 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
 export async function deleteProjectAction(id: string) {
   try {
     const ctx = await requireAuthContext();
-    assertStaff(ctx.role);
+    assertAdminOrManager(ctx.role);
 
     const { error } = await ctx.supabase
       .from("projects")
@@ -172,6 +185,10 @@ export async function deleteProjectAction(id: string) {
       description: `ลบข้อมูลโครงการ ID: ${id}`
     });
 
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/protected/admin/projects");
+    revalidatePath("/projects");
+
     return { success: true, message: "ลบข้อมูลโครงการสำเร็จ 🗑️" };
   } catch (err: any) {
     console.error("deleteProjectAction error:", err);
@@ -185,7 +202,7 @@ export async function deleteProjectAction(id: string) {
 export async function generateAIProjectDataAction(projectName: string) {
   try {
     const ctx = await requireAuthContext();
-    assertStaff(ctx.role);
+    assertAdminOrManager(ctx.role);
 
     const { generateText } = await import("@/lib/ai/gemini");
 
@@ -277,7 +294,7 @@ Return ONLY the raw JSON string. Do not include markdown code block syntax (like
 export async function reorderProjectsAction(ids: string[], offset: number = 0) {
   try {
     const ctx = await requireAuthContext();
-    assertStaff(ctx.role);
+    assertAdminOrManager(ctx.role);
 
     const { revalidatePath } = await import("next/cache");
 

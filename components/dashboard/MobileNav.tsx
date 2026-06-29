@@ -252,7 +252,7 @@ export function MobileNav({
       href: "/protected/admin/projects",
       icon: Building2,
       active: pathname?.startsWith("/protected/admin/projects") ?? false,
-      roles: ["ADMIN", "MANAGER", "AGENT"],
+      roles: ["ADMIN", "MANAGER"],
     },
   ];
 

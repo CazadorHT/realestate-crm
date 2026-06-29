@@ -95,7 +95,7 @@ export function usePropertyFormData(
           }
         }
 
-        // Load popular areas for initial province
+        // Load popular areas
         await fetchPopularAreas(province);
 
         // If edit mode, load assigned agents
@@ -117,7 +117,7 @@ export function usePropertyFormData(
 
     loadData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, defaultValuesId, showAllOwners]); // Removed form from deps to avoid loops, watching province separately
+  }, [mode, defaultValuesId, showAllOwners]);
 
   // Re-fetch popular areas when province changes
   React.useEffect(() => {

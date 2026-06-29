@@ -10,6 +10,7 @@ import {
   MapPin,
   Languages,
   Sparkles,
+  Plus,
 } from "lucide-react";
 import {
   FormField,
@@ -31,6 +32,7 @@ import type { PropertyFormValues } from "@/features/properties/schema";
 
 import { getProjectSuggestions } from "../../../actions/project-suggestions";
 import { AddressSelectorField } from "./AddressSelectorField";
+import { QuickCreateProjectDialog } from "./QuickCreateProjectDialog";
 
 interface AddressSectionProps {
   form?: UseFormReturn<PropertyFormValues>;
@@ -61,8 +63,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
   const [suggestions, setSuggestions] = React.useState<any[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = React.useState(false);
   const [showDropdown, setShowDropdown] = React.useState(false);
+  const [isCreateProjectOpen, setIsCreateProjectOpen] = React.useState(false);
 
   const watchedAddressLine1 = form.watch("address_line1") || "";
+  const watchedAddressLine1En = form.watch("address_line1_en") || "";
+  const watchedProvince = form.watch("province") || "";
+  const watchedDistrict = form.watch("district") || "";
+  const watchedSubdistrict = form.watch("subdistrict") || "";
 
   const fetchSuggestions = React.useCallback(async (val: string) => {
     setIsLoadingSuggestions(true);
@@ -129,9 +136,6 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     ensureSubDistrictsLoaded();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  const watchedProvince = form.watch("province");
-  const watchedDistrict = form.watch("district");
 
   const activeProvinceId = provinces.find(
     (p) => p.name_th === watchedProvince,
@@ -307,7 +311,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                       autoComplete="off"
                     />
 
-                    {showDropdown && (suggestions.length > 0 || isLoadingSuggestions) && (
+                    {showDropdown && (suggestions.length > 0 || isLoadingSuggestions || (watchedAddressLine1.trim().length >= 2 && !form.getValues("project_id"))) && (
                       <div className="absolute z-[999] w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto divide-y divide-slate-100">
                         {isLoadingSuggestions && suggestions.length === 0 ? (
                           <div className="px-4 py-3 text-xs text-slate-400 flex items-center gap-2">
@@ -315,19 +319,31 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
                             <span>กำลังค้นหาโครงการ...</span>
                           </div>
                         ) : (
-                          suggestions.map((proj) => (
-                            <button
-                              key={proj.address_line1}
-                              type="button"
-                              onMouseDown={() => handleSelectProject(proj)}
-                              className="w-full px-4 py-2.5 text-left text-xs hover:bg-slate-50 transition-colors flex flex-col gap-0.5"
-                            >
-                              <span className="font-semibold text-slate-800">{proj.address_line1}</span>
-                              <span className="text-[10px] text-slate-400">
-                                {[proj.subdistrict, proj.district, proj.province].filter(Boolean).join(" » ")}
-                              </span>
-                            </button>
-                          ))
+                          <>
+                            {suggestions.map((proj) => (
+                              <button
+                                key={proj.address_line1}
+                                type="button"
+                                onMouseDown={() => handleSelectProject(proj)}
+                                className="w-full px-4 py-2.5 text-left text-xs hover:bg-slate-50 transition-colors flex flex-col gap-0.5"
+                              >
+                                <span className="font-semibold text-slate-800">{proj.address_line1}</span>
+                                <span className="text-[10px] text-slate-400">
+                                  {[proj.subdistrict, proj.district, proj.province].filter(Boolean).join(" » ")}
+                                </span>
+                              </button>
+                            ))}
+                            {watchedAddressLine1.trim().length >= 2 && !form.getValues("project_id") && (
+                              <button
+                                type="button"
+                                onMouseDown={() => setIsCreateProjectOpen(true)}
+                                className="w-full px-4 py-3 text-left text-xs bg-indigo-50/70 hover:bg-indigo-50 text-indigo-700 font-bold border-t border-indigo-100 flex items-center gap-1.5 transition-colors"
+                              >
+                                <Plus className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                                <span>สร้างโครงการใหม่: "{watchedAddressLine1}" เข้าระบบ</span>
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     )}
@@ -461,6 +477,55 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
           />
         </div>
       </CardContent>
+
+      <QuickCreateProjectDialog
+        isOpen={isCreateProjectOpen}
+        onClose={setIsCreateProjectOpen}
+        defaultName={watchedAddressLine1}
+        defaultNameEn={watchedAddressLine1En}
+        defaultProvince={watchedProvince}
+        defaultDistrict={watchedDistrict}
+        defaultSubdistrict={watchedSubdistrict}
+        onCreated={(proj) => {
+          form.setValue("address_line1", proj.nameTh || proj.nameEn, { shouldValidate: true, shouldDirty: true });
+          if (proj.nameEn) {
+            form.setValue("address_line1_en", proj.nameEn, { shouldValidate: true, shouldDirty: true });
+          }
+          form.setValue("project_id", proj.id, { shouldValidate: true, shouldDirty: true });
+          if (proj.province) {
+            form.setValue("province", proj.province, { shouldValidate: true, shouldDirty: true });
+          }
+          if (proj.district) {
+            form.setValue("district", proj.district, { shouldValidate: true, shouldDirty: true });
+          }
+          if (proj.subdistrict) {
+            const subName = proj.subdistrict;
+            form.setValue("subdistrict", subName, { shouldValidate: true, shouldDirty: true });
+            
+            // Resolve postal code from subdistrict name
+            if (proj.province && proj.district) {
+              const provId = provinces.find(p => p.name_th === proj.province)?.id;
+              if (provId) {
+                const dists = getDistricts(provId);
+                const distId = dists.find(d => d.name_th === proj.district)?.id;
+                if (distId) {
+                  const subs = getSubDistricts(distId);
+                  const matchedSub = subs.find(s => 
+                    s.name_th === subName || 
+                    s.name_th.replace(/^(แขวง|ตำบล)/, "") === subName.replace(/^(แขวง|ตำบล)/, "")
+                  );
+                  if (matchedSub?.zip_code) {
+                    form.setValue("postal_code", String(matchedSub.zip_code), { shouldValidate: true, shouldDirty: true });
+                  }
+                }
+              }
+            }
+          }
+          if (proj.googleMapsUrl) {
+            form.setValue("google_maps_link", proj.googleMapsUrl, { shouldValidate: true, shouldDirty: true });
+          }
+        }}
+      />
     </Card>
   );
 }

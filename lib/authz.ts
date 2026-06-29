@@ -201,7 +201,8 @@ export function assertSystemAdmin(role: UserRole) {
 }
 
 export function assertAdminOrManager(role: UserRole) {
-  if (role !== "ADMIN" && role !== "MANAGER") {
+  const r = (role || "").toUpperCase();
+  if (r !== "ADMIN" && r !== "MANAGER" && r !== "OWNER") {
     throw new AuthzError(
       "FORBIDDEN",
       "Forbidden: Admin or Manager access only",

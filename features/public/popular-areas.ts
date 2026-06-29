@@ -73,7 +73,21 @@ export const getPopularAreasAction = unstable_cache(
       // 🛡️ Admin Mode: Just return strings of all area names (Unoptimized but complete)
       if (!onlyActive) {
         let query = client.from("popular_areas_v3").select("name, province").order("name->>'th'");
-        if (province) query = query.eq("province", province);
+        if (province) {
+          const bangkokMetro = [
+            "กรุงเทพมหานคร",
+            "สมุทรปราการ",
+            "นนทบุรี",
+            "ปทุมธานี",
+            "สมุทรสาคร",
+            "นครปฐม",
+          ];
+          if (bangkokMetro.includes(province)) {
+            query = query.in("province", bangkokMetro);
+          } else {
+            query = query.eq("province", province);
+          }
+        }
         const { data } = await query;
         return (data || []).map((item: any) => {
           if (typeof item.name === "string") return item.name;

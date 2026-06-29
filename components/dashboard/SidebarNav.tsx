@@ -269,7 +269,7 @@ export function SidebarNav({
       href: "/protected/admin/projects",
       icon: Building2,
       active: pathname?.startsWith("/protected/admin/projects") ?? false,
-      roles: ["ADMIN", "MANAGER", "AGENT"],
+      roles: ["ADMIN", "MANAGER"],
       description: "จัดการข้อมูลโครงการ อสังหาริมทรัพย์ สิ่งอำนวยความสะดวก และ SEO",
     },
   ];

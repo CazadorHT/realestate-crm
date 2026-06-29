@@ -88,6 +88,12 @@ export async function upsertMasterDataAction(input: {
       description: `อัปเดต Master Data: ${input.type} [${input.code}]`
     });
 
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/protected/admin/master-data");
+    revalidatePath("/protected/admin/transit-stations");
+    revalidatePath("/(public)/areas/[slug]", "layout");
+    revalidatePath("/(public)/properties", "layout");
+
     return { success: true, message: "บันทึกข้อมูล Master Data สำเร็จ ✨" };
   } catch (err: any) {
     console.error("upsertMasterData error:", err);
@@ -120,6 +126,12 @@ export async function deleteMasterDataAction(type: string, code: string) {
       actor_id: ctx.user.id,
       description: `ลบ Master Data: ${type} [${code}]`
     });
+
+    const { revalidatePath } = await import("next/cache");
+    revalidatePath("/protected/admin/master-data");
+    revalidatePath("/protected/admin/transit-stations");
+    revalidatePath("/(public)/areas/[slug]", "layout");
+    revalidatePath("/(public)/properties", "layout");
 
     return { success: true, message: "ลบข้อมูล Master Data สำเร็จ 🗑️" };
   } catch (err: any) {
@@ -299,32 +311,60 @@ export async function getTransitStationsWithCountsAction() {
 
     if (stationsError) throw stationsError;
 
-    // 2. Fetch count of properties grouped by transit_station_name from properties view
+    // 2. Fetch count of properties grouped by transit_station_name and nearby_transits from properties view
     const { data: counts, error: countsError } = await ctx.supabase
       .from("properties")
-      .select("transit_station_name")
+      .select("transit_station_name, nearby_transits")
       .is("deleted_at", null)
       .eq("status", "ACTIVE"); // only active properties
 
     if (countsError) throw countsError;
 
-    const countMap: Record<string, number> = {};
-    for (const p of (counts || [])) {
-      if (p.transit_station_name) {
-        countMap[p.transit_station_name] = (countMap[p.transit_station_name] || 0) + 1;
-      }
-    }
-
-    // 3. Map count to stations by matching code, th label, or en label
+    // 3. Map counts by matching station credentials (code, label.th, label.en) against property attributes
     return (stations || []).map((station: any) => {
-      const code = station.code;
-      const thName = station.label?.th || "";
-      const enName = station.label?.en || "";
+      const code = (station.code || "").toLowerCase();
+      const thName = (station.label?.th || "").toLowerCase();
+      const enName = (station.label?.en || "").toLowerCase();
       
-      const count = (countMap[code] || 0) + 
-                    (thName ? (countMap[thName] || 0) : 0) + 
-                    (enName ? (countMap[enName] || 0) : 0);
-
+      let count = 0;
+      
+      for (const p of (counts || [])) {
+        let isMatched = false;
+        
+        // Check primary station code
+        if (p.transit_station_name) {
+          const primary = p.transit_station_name.toLowerCase();
+          if (primary === code || primary === thName || primary === enName) {
+            isMatched = true;
+          }
+        }
+        
+        // Check nearby transits if not already matched
+        if (!isMatched && p.nearby_transits && Array.isArray(p.nearby_transits)) {
+          for (const item of p.nearby_transits) {
+            if (item && typeof item === "object") {
+              const anyItem = item as any;
+              const itemTh = (anyItem.station_name || "").toString().toLowerCase();
+              const itemEn = (anyItem.station_name_en || "").toString().toLowerCase();
+              const itemCode = (anyItem.code || "").toString().toLowerCase();
+              
+              if (
+                (itemCode && itemCode === code) ||
+                (itemTh && (itemTh === thName || itemTh === code)) ||
+                (itemEn && (itemEn === enName || itemEn === code))
+              ) {
+                isMatched = true;
+                break;
+              }
+            }
+          }
+        }
+        
+        if (isMatched) {
+          count++;
+        }
+      }
+      
       return {
         ...station,
         property_count: count,
