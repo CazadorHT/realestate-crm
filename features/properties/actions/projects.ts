@@ -202,7 +202,7 @@ export async function deleteProjectAction(id: string) {
 export async function generateAIProjectDataAction(projectName: string) {
   try {
     const ctx = await requireAuthContext();
-    assertAdminOrManager(ctx.role);
+    assertStaff(ctx.role);
 
     const { generateText } = await import("@/lib/ai/gemini");
 

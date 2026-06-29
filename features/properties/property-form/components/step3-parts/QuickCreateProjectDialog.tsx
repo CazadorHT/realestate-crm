@@ -330,7 +330,7 @@ export function QuickCreateProjectDialog({
       <div className="space-y-6 p-1 max-h-[48vh] overflow-y-auto pr-2 scrollbar-thin">
         {/* Section 1: Basic Info */}
         <div className="space-y-4 rounded-2xl border border-slate-200/80 bg-slate-50/30 p-5">
-          <h4 className="text-xs font-bold text-slate-800 flex items-center gap-2 pb-1 border-b border-slate-100">
+          <h4 className="text-xs font-semibold text-slate-800 flex items-center gap-2 pb-1 border-b border-slate-100">
             <Building2 className="w-4 h-4 text-indigo-500" />
             <span>ข้อมูลโครงการพื้นฐาน</span>
           </h4>
@@ -338,7 +338,7 @@ export function QuickCreateProjectDialog({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Name TH */}
             <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ชื่อโครงการภาษาไทย *</span>
               </Label>
@@ -346,13 +346,13 @@ export function QuickCreateProjectDialog({
                 value={nameTh} 
                 onChange={(e) => setNameTh(e.target.value)} 
                 placeholder="เช่น เอลิโอ เดล เนสท์" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
             {/* Name EN */}
             <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ชื่อโครงการภาษาอังกฤษ *</span>
               </Label>
@@ -360,13 +360,13 @@ export function QuickCreateProjectDialog({
                 value={nameEn} 
                 onChange={(e) => setNameEn(e.target.value)} 
                 placeholder="เช่น Elio Del Nest" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
             {/* Property Type */}
             <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ประเภทโครงการ</span>
               </Label>
@@ -374,7 +374,7 @@ export function QuickCreateProjectDialog({
                 <select
                   value={propertyType}
                   onChange={(e) => setPropertyType(e.target.value)}
-                  className="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 pr-10 text-xs font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-150 focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-xs"
+                  className="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 pr-10 text-sm font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-150 focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-xs"
                 >
                   {PROPERTY_TYPES.map(t => (
                     <option key={t.value} value={t.value}>{t.label}</option>
@@ -388,7 +388,7 @@ export function QuickCreateProjectDialog({
 
             {/* Developer */}
             <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ผู้พัฒนา (Developer)</span>
               </Label>
@@ -396,13 +396,13 @@ export function QuickCreateProjectDialog({
                 value={developer} 
                 onChange={(e) => setDeveloper(e.target.value)} 
                 placeholder="เช่น Ananda Development" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
             {/* Year Completed */}
             <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ปีที่สร้างเสร็จ</span>
               </Label>
@@ -411,13 +411,13 @@ export function QuickCreateProjectDialog({
                 value={yearCompleted} 
                 onChange={(e) => setYearCompleted(e.target.value)} 
                 placeholder="เช่น 2020" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
             {/* Total Units */}
             <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>จำนวนยูนิตทั้งหมด</span>
               </Label>
@@ -426,7 +426,7 @@ export function QuickCreateProjectDialog({
                 value={totalUnits} 
                 onChange={(e) => setTotalUnits(e.target.value)} 
                 placeholder="เช่น 1459" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
           </div>
@@ -434,7 +434,7 @@ export function QuickCreateProjectDialog({
 
         {/* Section 2: Location & Address */}
         <div className="space-y-4 rounded-2xl border border-slate-200/80 bg-slate-50/30 p-5">
-          <h4 className="text-xs font-bold text-slate-800 flex items-center gap-2 pb-1 border-b border-slate-100">
+          <h4 className="text-xs font-semibold text-slate-800 flex items-center gap-2 pb-1 border-b border-slate-100">
             <MapPin className="w-4 h-4 text-indigo-500" />
             <span>ตำแหน่งที่ตั้งและพิกัด</span>
           </h4>
@@ -442,7 +442,7 @@ export function QuickCreateProjectDialog({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Google Maps URL */}
             <div className="col-span-1 sm:col-span-2 space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>พิกัดแผนที่ (Google Maps Link)</span>
               </Label>
@@ -450,13 +450,13 @@ export function QuickCreateProjectDialog({
                 value={googleMapsUrl} 
                 onChange={(e) => handleGoogleMapsUrlChange(e.target.value)} 
                 placeholder="วางลิงก์ Google Maps เช่น https://maps.app.goo.gl/..." 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
             {/* Latitude */}
             <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ละติจูด (Latitude)</span>
               </Label>
@@ -464,14 +464,14 @@ export function QuickCreateProjectDialog({
                 value={lat} 
                 onChange={(e) => setLat(e.target.value)} 
                 placeholder="ดึงจากลิงก์อัตโนมัติ" 
-                className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-semibold text-slate-500 placeholder-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 cursor-not-allowed"
+                className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-semibold text-slate-500 placeholder:text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 cursor-not-allowed"
                 readOnly
               />
             </div>
 
             {/* Longitude */}
             <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ลองจิจูด (Longitude)</span>
               </Label>
@@ -479,14 +479,14 @@ export function QuickCreateProjectDialog({
                 value={lng} 
                 onChange={(e) => setLng(e.target.value)} 
                 placeholder="ดึงจากลิงก์อัตโนมัติ" 
-                className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-xs font-semibold text-slate-500 placeholder-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 cursor-not-allowed"
+                className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-semibold text-slate-500 placeholder:text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 cursor-not-allowed"
                 readOnly
               />
             </div>
 
             {/* Province */}
             <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>จังหวัด</span>
               </Label>
@@ -494,13 +494,13 @@ export function QuickCreateProjectDialog({
                 value={province} 
                 onChange={(e) => setProvince(e.target.value)} 
                 placeholder="กรุงเทพมหานคร" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
             {/* District */}
             <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>เขต / อำเภอ</span>
               </Label>
@@ -508,13 +508,13 @@ export function QuickCreateProjectDialog({
                 value={district} 
                 onChange={(e) => setDistrict(e.target.value)} 
                 placeholder="เขตบางนา" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
             {/* Subdistrict */}
             <div className="col-span-1 sm:col-span-2 space-y-1.5 text-left group">
-              <Label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
+              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>แขวง / ตำบล</span>
               </Label>
@@ -522,7 +522,7 @@ export function QuickCreateProjectDialog({
                 value={subdistrict} 
                 onChange={(e) => setSubdistrict(e.target.value)} 
                 placeholder="แขวงบางนาเหนือ" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-800 placeholder-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
           </div>
