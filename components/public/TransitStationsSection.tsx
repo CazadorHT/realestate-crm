@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Train, ChevronRight, Search, Flame } from "lucide-react";
 import { m, AnimatePresence } from "framer-motion";
@@ -205,6 +205,11 @@ const SkeletonCard = () => (
 export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
   const { language } = useLanguage();
   const isMobile = useIsMobile();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Sort lines dynamically according to user's desired order
   const sortedLines = [...lines].sort((a, b) => {
@@ -223,10 +228,51 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
 
+  // Force clear pointer-events and scroll lock on body when drawer closes
+  useEffect(() => {
+    if (!drawerOpen) {
+      const cleanup = () => {
+        if (typeof document !== "undefined") {
+          document.body.style.pointerEvents = "";
+          document.body.style.overflow = "";
+        }
+      };
+      cleanup();
+      const t = setTimeout(cleanup, 100);
+      return () => clearTimeout(t);
+    }
+  }, [drawerOpen]);
+
+  // Force clear pointer-events on body when popover closes
+  useEffect(() => {
+    if (!popoverOpen) {
+      const cleanup = () => {
+        if (typeof document !== "undefined") {
+          document.body.style.pointerEvents = "";
+        }
+      };
+      cleanup();
+      const t = setTimeout(cleanup, 100);
+      return () => clearTimeout(t);
+    }
+  }, [popoverOpen]);
+
+  // General unmount cleanup to avoid memory leaks or style locks on navigation
+  useEffect(() => {
+    return () => {
+      if (typeof document !== "undefined") {
+        document.body.style.pointerEvents = "";
+        document.body.style.overflow = "";
+      }
+    };
+  }, []);
+
   const activeLine = sortedLines.find((line) => line.type === activeLineType) || sortedLines[0];
 
   const handleLineChange = (type: string) => {
     if (type === activeLineType) return;
+    setDrawerOpen(false);
+    setPopoverOpen(false);
     setSearchQuery("");
     setIsTransitioning(true);
     setActiveLineType(type);
@@ -234,6 +280,7 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
       setIsTransitioning(false);
     }, 250);
   };
+
 
   if (!lines || lines.length === 0) return null;
 
@@ -504,20 +551,21 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                   })}
 
                   {!showAll && filteredStations.length > 5 && (
-                    isMobile ? (
+                    !mounted ? (
+                      <button
+                        className="group flex items-center justify-between px-3 sm:px-4 py-3 sm:py-3.5 rounded-2xl bg-blue-50/20 hover:bg-blue-50/40 border border-dashed border-blue-200/60 hover:border-blue-300 transition-all duration-200 cursor-pointer text-left w-full h-full"
+                      >
+                        <span className="text-sm font-bold text-blue-600 group-hover:text-blue-700">
+                          {language === "th" 
+                            ? `ดูอีก +${filteredStations.length - 5} สถานี` 
+                            : `View +${filteredStations.length - 5} More`}
+                        </span>
+                        <ChevronRight className="w-4 h-4 text-blue-500 group-hover:translate-x-0.5 transition-transform" />
+                      </button>
+                    ) : isMobile ? (
                       <Drawer
                         open={drawerOpen}
-                        onOpenChange={(open) => {
-                          setDrawerOpen(open);
-                          if (!open) {
-                            // Blur active element to prevent browser scroll-to-focus on close
-                            requestAnimationFrame(() => {
-                              if (document.activeElement instanceof HTMLElement) {
-                                document.activeElement.blur();
-                              }
-                            });
-                          }
-                        }}
+                        onOpenChange={setDrawerOpen}
                         shouldScaleBackground={false}
                       >
                         <DrawerTrigger asChild>
@@ -546,28 +594,14 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                               List of remaining transit stations
                             </DrawerDescription>
                           </DrawerHeader>
-                          <m.div
-                            className="flex flex-col gap-1 overflow-y-auto mt-3 pr-1 pb-8"
-                            initial="hidden"
-                            animate="visible"
-                            variants={{
-                              hidden: {},
-                              visible: { transition: { staggerChildren: 0.035 } },
-                            }}
-                          >
+                          <div className="flex flex-col gap-1 overflow-y-auto mt-3 pr-1 pb-8">
                             {filteredStations.slice(5).map((station) => {
                               const stationName = station.label[language as keyof typeof station.label] || station.label.th;
                               const prices = getStationPriceInfo(station.minPrice, station.minRentalPrice, language);
                               const isPop = isPopularStation(station);
                               
                               return (
-                                <m.div
-                                  key={station.code}
-                                  variants={{
-                                    hidden: { opacity: 0, x: -12 },
-                                    visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
-                                  }}
-                                >
+                                <div key={station.code}>
                                   <Link
                                     href={`/near-station/${station.slug}`}
                                     onClick={() => {
@@ -630,26 +664,16 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                                       </span>
                                     </div>
                                   </Link>
-                                </m.div>
+                                </div>
                               );
                             })}
-                          </m.div>
+                          </div>
                         </DrawerContent>
                       </Drawer>
                     ) : (
                       <Popover
                         open={popoverOpen}
-                        onOpenChange={(open) => {
-                          setPopoverOpen(open);
-                          if (!open) {
-                            // Blur active element to prevent browser scroll-to-focus on close
-                            requestAnimationFrame(() => {
-                              if (document.activeElement instanceof HTMLElement) {
-                                document.activeElement.blur();
-                              }
-                            });
-                          }
-                        }}
+                        onOpenChange={setPopoverOpen}
                       >
                         <PopoverTrigger asChild>
                           <button
@@ -673,28 +697,14 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeLine.color }} />
                             {activeLineLabelText} ({language === "th" ? "สถานีที่เหลือ" : "More Stations"})
                           </h4>
-                          <m.div
-                            className="flex flex-col gap-1 max-h-64 overflow-y-auto pr-1"
-                            initial="hidden"
-                            animate="visible"
-                            variants={{
-                              hidden: {},
-                              visible: { transition: { staggerChildren: 0.03 } },
-                            }}
-                          >
+                          <div className="flex flex-col gap-1 max-h-64 overflow-y-auto pr-1">
                             {filteredStations.slice(5).map((station) => {
                               const stationName = station.label[language as keyof typeof station.label] || station.label.th;
                               const prices = getStationPriceInfo(station.minPrice, station.minRentalPrice, language);
                               const isPop = isPopularStation(station);
                               
                               return (
-                                <m.div
-                                  key={station.code}
-                                  variants={{
-                                    hidden: { opacity: 0, y: 8 },
-                                    visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
-                                  }}
-                                >
+                                <div key={station.code}>
                                   <Link
                                     href={`/near-station/${station.slug}`}
                                     onClick={() => {
@@ -757,10 +767,10 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                                       </span>
                                     </div>
                                   </Link>
-                                </m.div>
+                                </div>
                               );
                             })}
-                          </m.div>
+                          </div>
                         </PopoverContent>
                       </Popover>
                     )
