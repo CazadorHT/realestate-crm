@@ -91,8 +91,10 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
       return { success: false, message: "กรุณาระบุ URL Slug" };
     }
 
+    const tenantId = await resolveTenantId(ctx.supabase, ctx.user.id, ctx.tenantId);
+
     const projectData: any = {
-      tenant_id: ctx.tenantId,
+      tenant_id: tenantId,
       name: input.name as unknown as Json,
       slug: input.slug.trim().toLowerCase(),
       developer: input.developer || null,
@@ -138,7 +140,7 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
       activity_type: input.id ? "PROJECT_UPDATE" : "PROJECT_CREATE",
       target_entity: "projects",
       target_id: data.id,
-      tenant_id: ctx.tenantId || "SYSTEM",
+      tenant_id: tenantId,
       actor_id: ctx.user.id,
       metadata: { slug: input.slug } as Json,
       description: input.id
@@ -175,12 +177,14 @@ export async function deleteProjectAction(id: string) {
 
     if (error) throw error;
 
+    const tenantId = await resolveTenantId(ctx.supabase, ctx.user.id, ctx.tenantId);
+
     // V3 Audit Logging
     await ctx.supabase.from("activity_timeline_v3").insert({
       activity_type: "PROJECT_DELETE",
       target_entity: "projects",
       target_id: id,
-      tenant_id: ctx.tenantId || "SYSTEM",
+      tenant_id: tenantId,
       actor_id: ctx.user.id,
       description: `ลบข้อมูลโครงการ ID: ${id}`
     });
@@ -306,6 +310,8 @@ export async function reorderProjectsAction(ids: string[], offset: number = 0) {
 
     if (fetchError) throw fetchError;
 
+    const tenantId = await resolveTenantId(ctx.supabase, ctx.user.id, ctx.tenantId);
+
     const updates = ids.map((id, index) => {
       const proj = currentProjects?.find((p) => p.id === id);
       return {
@@ -314,7 +320,7 @@ export async function reorderProjectsAction(ids: string[], offset: number = 0) {
         slug: proj?.slug || "",
         property_type: proj?.property_type || 1,
         sort_order: offset + index + 1,
-        tenant_id: ctx.tenantId ?? null,
+        tenant_id: tenantId,
       };
     });
 
@@ -330,4 +336,35 @@ export async function reorderProjectsAction(ids: string[], offset: number = 0) {
     console.error("reorderProjectsAction error:", error);
     return { success: false, message: mapDbError(error) };
   }
+}
+
+/**
+ * Resolves the tenant ID dynamically for mutating operations to prevent RLS failures
+ */
+async function resolveTenantId(
+  supabase: any,
+  userId: string,
+  contextTenantId?: string
+): Promise<string> {
+  if (contextTenantId && contextTenantId !== "SYSTEM") return contextTenantId;
+
+  // Fallback to user membership
+  const { data: member } = await supabase
+    .from("tenant_members_v3")
+    .select("tenant_id")
+    .eq("identity_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  if (member?.tenant_id) {
+    return member.tenant_id;
+  }
+
+  const { getSystemConfig } = await import("@/lib/actions/system-config");
+  const config = await getSystemConfig();
+  if (config?.default_tenant_id) {
+    return config.default_tenant_id;
+  }
+
+  throw new Error("Unauthorized: Tenant ID is required but missing");
 }
