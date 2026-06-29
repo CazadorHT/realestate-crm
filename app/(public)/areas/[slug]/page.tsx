@@ -188,7 +188,7 @@ export default async function AreaDetailPage(
       />
 
       {/* Hero Visual Section */}
-      <section className="relative overflow-hidden pt-16 pb-12 md:pt-24 md:pb-16 bg-slate-900 text-white">
+      <section className="relative overflow-hidden mt-16 pt-16 pb-12 md:pt-24 md:pb-16 bg-slate-900 text-white">
         {areaCover ? (
           <div className="absolute inset-0 bg-cover bg-center opacity-30 select-none" style={{ backgroundImage: `url(${areaCover})` }} />
         ) : (

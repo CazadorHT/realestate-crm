@@ -27,7 +27,7 @@ export function StationHero({
 
   return (
     <section 
-      className="relative overflow-hidden pt-16 pb-12 md:pt-24 md:pb-16 text-white min-h-[400px] flex items-center bg-[#020617] transition-colors duration-500"
+      className="relative overflow-hidden mt-10 pt-16 pb-12 md:pt-24 md:pb-16 text-white min-h-[400px] flex items-center bg-[#020617] transition-colors duration-500"
     >
       {/* Background Image Layer */}
       <div 
@@ -57,7 +57,7 @@ export function StationHero({
         </nav>
 
         {/* Station Info */}
-        <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
+        <div className="flex flex-row items-center gap-4 md:gap-6">
           <div
             className="w-16 h-16 md:w-20 md:h-20 rounded-2xl flex items-center justify-center shadow-lg shrink-0 border border-slate-100 bg-white p-2 md:p-3 overflow-hidden"
           >

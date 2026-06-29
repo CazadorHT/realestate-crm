@@ -21,7 +21,7 @@ export function ProjectHero({
   };
 
   return (
-    <section className="relative overflow-hidden pt-20 pb-12 md:pt-32 md:pb-20 text-white bg-slate-950">
+    <section className="relative overflow-hidden mt-10 pt-20 pb-12 md:pt-32 md:pb-20 text-white bg-slate-950">
       <div 
         className="absolute inset-0 bg-cover bg-center opacity-30 blur-xs brightness-50"
         style={{ backgroundImage: `url(${project.imageUrl || "/images/hero-projects.jpg"})` }}
