@@ -505,7 +505,21 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
 
                   {!showAll && filteredStations.length > 5 && (
                     isMobile ? (
-                      <Drawer open={drawerOpen} onOpenChange={setDrawerOpen} shouldScaleBackground={false}>
+                      <Drawer
+                        open={drawerOpen}
+                        onOpenChange={(open) => {
+                          setDrawerOpen(open);
+                          if (!open) {
+                            // Blur active element to prevent browser scroll-to-focus on close
+                            requestAnimationFrame(() => {
+                              if (document.activeElement instanceof HTMLElement) {
+                                document.activeElement.blur();
+                              }
+                            });
+                          }
+                        }}
+                        shouldScaleBackground={false}
+                      >
                         <DrawerTrigger asChild>
                           <button
                             className="group flex items-center justify-between px-3 sm:px-4 py-3 sm:py-3.5 rounded-2xl bg-blue-50/20 hover:bg-blue-50/40 border border-dashed border-blue-200/60 hover:border-blue-300 transition-all duration-200 cursor-pointer text-left w-full h-full"
@@ -520,6 +534,7 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                         </DrawerTrigger>
                         <DrawerContent 
                           className="p-4 bg-white rounded-t-3xl max-h-[85vh] outline-none"
+                          onOpenAutoFocus={(e) => e.preventDefault()}
                           onCloseAutoFocus={(e) => e.preventDefault()}
                         >
                           <DrawerHeader className="text-left px-1 pb-2 border-b border-slate-100">
@@ -531,83 +546,111 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                               List of remaining transit stations
                             </DrawerDescription>
                           </DrawerHeader>
-                          <div className="flex flex-col gap-1 overflow-y-auto mt-3 pr-1 pb-8">
+                          <m.div
+                            className="flex flex-col gap-1 overflow-y-auto mt-3 pr-1 pb-8"
+                            initial="hidden"
+                            animate="visible"
+                            variants={{
+                              hidden: {},
+                              visible: { transition: { staggerChildren: 0.035 } },
+                            }}
+                          >
                             {filteredStations.slice(5).map((station) => {
                               const stationName = station.label[language as keyof typeof station.label] || station.label.th;
                               const prices = getStationPriceInfo(station.minPrice, station.minRentalPrice, language);
                               const isPop = isPopularStation(station);
                               
                               return (
-                                <Link
+                                <m.div
                                   key={station.code}
-                                  href={`/near-station/${station.slug}`}
-                                  onClick={() => {
-                                    setDrawerOpen(false);
-                                    setPopoverOpen(false);
+                                  variants={{
+                                    hidden: { opacity: 0, x: -12 },
+                                    visible: { opacity: 1, x: 0, transition: { duration: 0.25, ease: "easeOut" } },
                                   }}
-                                  className="group flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 active:bg-slate-100 transition-colors w-full"
                                 >
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    {/* Station Dot with soft wrapper */}
-                                    <div 
-                                      className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0"
-                                      style={{ backgroundColor: `${activeLine.color}15` }}
-                                    >
+                                  <Link
+                                    href={`/near-station/${station.slug}`}
+                                    onClick={() => {
+                                      setDrawerOpen(false);
+                                      setPopoverOpen(false);
+                                    }}
+                                    className="group flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 active:bg-slate-100 transition-colors w-full"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      {/* Station Dot with soft wrapper */}
                                       <div 
-                                        className="w-2 h-2 rounded-full"
-                                        style={{ backgroundColor: activeLine.color }}
-                                      />
-                                    </div>
-                                    <div className="min-w-0">
-                                      <span className="block text-xs sm:text-sm font-bold text-slate-800 group-hover:text-blue-600 truncate transition-colors">
-                                        {stationName}
-                                      </span>
-                                      {prices.sale && (
-                                        <span className="block text-[10px] mt-0.5 leading-tight">
-                                          {prices.sale?.prefix && (
-                                            <span className="text-slate-400 font-normal mr-0.5">
-                                              {prices.sale?.prefix}
+                                        className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0"
+                                        style={{ backgroundColor: `${activeLine.color}15` }}
+                                      >
+                                        <div 
+                                          className="w-2 h-2 rounded-full"
+                                          style={{ backgroundColor: activeLine.color }}
+                                        />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <span className="block text-xs sm:text-sm font-bold text-slate-800 group-hover:text-blue-600 truncate transition-colors">
+                                          {stationName}
+                                        </span>
+                                        {prices.sale && (
+                                          <span className="block text-[10px] mt-0.5 leading-tight">
+                                            {prices.sale?.prefix && (
+                                              <span className="text-slate-400 font-normal mr-0.5">
+                                                {prices.sale?.prefix}
+                                              </span>
+                                            )}
+                                            <span className="text-blue-600 font-extrabold">
+                                              {prices.sale?.value}
                                             </span>
-                                          )}
-                                          <span className="text-blue-600 font-extrabold">
-                                            {prices.sale?.value}
                                           </span>
+                                        )}
+                                        {prices.rent && (
+                                          <span className="block text-[10px] mt-0.5 leading-tight">
+                                            {prices.rent?.prefix && (
+                                              <span className="text-slate-400 font-normal mr-0.5">
+                                                {prices.rent?.prefix}
+                                              </span>
+                                            )}
+                                            <span className="text-purple-600 font-extrabold">
+                                              {prices.rent?.value}
+                                            </span>
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex flex-col items-end shrink-0 gap-1 pl-2">
+                                      {isPop && (
+                                        <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 text-[8px] font-bold px-1.5 py-0.5 rounded-md border border-amber-100">
+                                          <Flame className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                                          {POPULAR_LABEL[language] || POPULAR_LABEL.en}
                                         </span>
                                       )}
-                                      {prices.rent && (
-                                        <span className="block text-[10px] mt-0.5 leading-tight">
-                                          {prices.rent?.prefix && (
-                                            <span className="text-slate-400 font-normal mr-0.5">
-                                              {prices.rent?.prefix}
-                                            </span>
-                                          )}
-                                          <span className="text-purple-600 font-extrabold">
-                                            {prices.rent?.value}
-                                          </span>
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="flex flex-col items-end shrink-0 gap-1 pl-2">
-                                    {isPop && (
-                                      <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 text-[8px] font-bold px-1.5 py-0.5 rounded-md border border-amber-100">
-                                        <Flame className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                                        {POPULAR_LABEL[language] || POPULAR_LABEL.en}
+                                      <span className="text-[10px] text-slate-500 bg-slate-100/70 px-2 py-0.5 rounded-full font-bold">
+                                        {station.propertyCount} {station.propertyCount === 1 ? "unit" : "units"}
                                       </span>
-                                    )}
-                                    <span className="text-[10px] text-slate-500 bg-slate-100/70 px-2 py-0.5 rounded-full font-bold">
-                                      {station.propertyCount} {station.propertyCount === 1 ? "unit" : "units"}
-                                    </span>
-                                  </div>
-                                </Link>
+                                    </div>
+                                  </Link>
+                                </m.div>
                               );
                             })}
-                          </div>
+                          </m.div>
                         </DrawerContent>
                       </Drawer>
                     ) : (
-                      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+                      <Popover
+                        open={popoverOpen}
+                        onOpenChange={(open) => {
+                          setPopoverOpen(open);
+                          if (!open) {
+                            // Blur active element to prevent browser scroll-to-focus on close
+                            requestAnimationFrame(() => {
+                              if (document.activeElement instanceof HTMLElement) {
+                                document.activeElement.blur();
+                              }
+                            });
+                          }
+                        }}
+                      >
                         <PopoverTrigger asChild>
                           <button
                             className="group flex items-center justify-between px-3 sm:px-4 py-3 sm:py-3.5 rounded-2xl bg-blue-50/20 hover:bg-blue-50/40 border border-dashed border-blue-200/60 hover:border-blue-300 transition-all duration-200 cursor-pointer text-left w-full h-full"
@@ -623,85 +666,101 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
                         <PopoverContent 
                           className="w-80 p-3 rounded-2xl shadow-xl border-slate-200 bg-white z-50" 
                           align="end"
+                          onOpenAutoFocus={(e) => e.preventDefault()}
                           onCloseAutoFocus={(e) => e.preventDefault()}
                         >
                           <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2.5 px-1 pb-1 border-b border-slate-100 flex items-center gap-1.5">
                             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: activeLine.color }} />
                             {activeLineLabelText} ({language === "th" ? "สถานีที่เหลือ" : "More Stations"})
                           </h4>
-                          <div className="flex flex-col gap-1 max-h-64 overflow-y-auto pr-1">
+                          <m.div
+                            className="flex flex-col gap-1 max-h-64 overflow-y-auto pr-1"
+                            initial="hidden"
+                            animate="visible"
+                            variants={{
+                              hidden: {},
+                              visible: { transition: { staggerChildren: 0.03 } },
+                            }}
+                          >
                             {filteredStations.slice(5).map((station) => {
                               const stationName = station.label[language as keyof typeof station.label] || station.label.th;
                               const prices = getStationPriceInfo(station.minPrice, station.minRentalPrice, language);
                               const isPop = isPopularStation(station);
                               
                               return (
-                                <Link
+                                <m.div
                                   key={station.code}
-                                  href={`/near-station/${station.slug}`}
-                                  onClick={() => {
-                                    setDrawerOpen(false);
-                                    setPopoverOpen(false);
+                                  variants={{
+                                    hidden: { opacity: 0, y: 8 },
+                                    visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: "easeOut" } },
                                   }}
-                                  className="group flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors w-full"
                                 >
-                                  <div className="flex items-center gap-3 min-w-0">
-                                    {/* Station Dot with soft wrapper */}
-                                    <div 
-                                      className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0"
-                                      style={{ backgroundColor: `${activeLine.color}15` }}
-                                    >
+                                  <Link
+                                    href={`/near-station/${station.slug}`}
+                                    onClick={() => {
+                                      setDrawerOpen(false);
+                                      setPopoverOpen(false);
+                                    }}
+                                    className="group flex items-center justify-between p-2 rounded-xl hover:bg-slate-50 transition-colors w-full"
+                                  >
+                                    <div className="flex items-center gap-3 min-w-0">
+                                      {/* Station Dot with soft wrapper */}
                                       <div 
-                                        className="w-2 h-2 rounded-full"
-                                        style={{ backgroundColor: activeLine.color }}
-                                      />
-                                    </div>
-                                    <div className="min-w-0">
-                                      <span className="block text-xs font-bold text-slate-800 group-hover:text-blue-600 truncate transition-colors">
-                                        {stationName}
-                                      </span>
-                                      {prices.sale && (
-                                        <span className="block text-[10px] mt-0.5 leading-tight">
-                                          {prices.sale?.prefix && (
-                                            <span className="text-slate-400 font-normal mr-0.5">
-                                              {prices.sale?.prefix}
+                                        className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shrink-0"
+                                        style={{ backgroundColor: `${activeLine.color}15` }}
+                                      >
+                                        <div 
+                                          className="w-2 h-2 rounded-full"
+                                          style={{ backgroundColor: activeLine.color }}
+                                        />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <span className="block text-xs font-bold text-slate-800 group-hover:text-blue-600 truncate transition-colors">
+                                          {stationName}
+                                        </span>
+                                        {prices.sale && (
+                                          <span className="block text-[10px] mt-0.5 leading-tight">
+                                            {prices.sale?.prefix && (
+                                              <span className="text-slate-400 font-normal mr-0.5">
+                                                {prices.sale?.prefix}
+                                              </span>
+                                            )}
+                                            <span className="text-blue-600 font-extrabold">
+                                              {prices.sale?.value}
                                             </span>
-                                          )}
-                                          <span className="text-blue-600 font-extrabold">
-                                            {prices.sale?.value}
                                           </span>
+                                        )}
+                                        {prices.rent && (
+                                          <span className="block text-[10px] mt-0.5 leading-tight">
+                                            {prices.rent?.prefix && (
+                                              <span className="text-slate-400 font-normal mr-0.5">
+                                                {prices.rent?.prefix}
+                                              </span>
+                                            )}
+                                            <span className="text-purple-600 font-extrabold">
+                                              {prices.rent?.value}
+                                            </span>
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="flex flex-col items-end shrink-0 gap-1 pl-2">
+                                      {isPop && (
+                                        <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 text-[8px] font-bold px-1.5 py-0.5 rounded-md border border-amber-100">
+                                          <Flame className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
+                                          {POPULAR_LABEL[language] || POPULAR_LABEL.en}
                                         </span>
                                       )}
-                                      {prices.rent && (
-                                        <span className="block text-[10px] mt-0.5 leading-tight">
-                                          {prices.rent?.prefix && (
-                                            <span className="text-slate-400 font-normal mr-0.5">
-                                              {prices.rent?.prefix}
-                                            </span>
-                                          )}
-                                          <span className="text-purple-600 font-extrabold">
-                                            {prices.rent?.value}
-                                          </span>
-                                        </span>
-                                      )}
-                                    </div>
-                                  </div>
-                                  
-                                  <div className="flex flex-col items-end shrink-0 gap-1 pl-2">
-                                    {isPop && (
-                                      <span className="inline-flex items-center gap-0.5 bg-amber-50 text-amber-700 text-[8px] font-bold px-1.5 py-0.5 rounded-md border border-amber-100">
-                                        <Flame className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
-                                        {POPULAR_LABEL[language] || POPULAR_LABEL.en}
+                                      <span className="text-[10px] text-slate-500 bg-slate-100/70 px-2 py-0.5 rounded-full font-bold">
+                                        {station.propertyCount} {station.propertyCount === 1 ? "unit" : "units"}
                                       </span>
-                                    )}
-                                    <span className="text-[10px] text-slate-500 bg-slate-100/70 px-2 py-0.5 rounded-full font-bold">
-                                      {station.propertyCount} {station.propertyCount === 1 ? "unit" : "units"}
-                                    </span>
-                                  </div>
-                                </Link>
+                                    </div>
+                                  </Link>
+                                </m.div>
                               );
                             })}
-                          </div>
+                          </m.div>
                         </PopoverContent>
                       </Popover>
                     )

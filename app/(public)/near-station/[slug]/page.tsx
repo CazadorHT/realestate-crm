@@ -15,6 +15,7 @@ import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { StationQuickSelector } from "@/components/public/StationQuickSelector";
 import { StationHero } from "@/components/public/near-station/StationHero";
 import { StationSeoContent } from "@/components/public/near-station/StationSeoContent";
+import { NearbyStationsSection } from "@/components/public/near-station/NearbyStationsSection";
 
 export const revalidate = 3600;
 
@@ -277,6 +278,14 @@ export default async function StationDetailPage(
         initialProperties={properties as any}
         initialTransitStation={`${station.label.th}|${station.transitType}`}
         basePath={`/near-station/${station.slug}`}
+      />
+
+      {/* Nearby Stations on Same Line */}
+      <NearbyStationsSection
+        lines={lines}
+        currentStationSlug={station.slug}
+        currentTransitType={station.transitType}
+        lineColor={station.lineColor}
       />
 
       {/* SEO Content Section */}
