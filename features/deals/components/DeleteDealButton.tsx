@@ -84,7 +84,7 @@ export function DeleteDealButton({
               {customerName && (
                 <div className="flex gap-2">
                   <span className="font-semibold text-slate-400 shrink-0 w-14">ลูกค้า:</span>{" "}
-                  <span className="font-semibold text-slate-800">{customerName}</span>
+                  <span className="font-semibold text-slate-800 line-clamp-1">{customerName}</span>
                 </div>
               )}
             </div>

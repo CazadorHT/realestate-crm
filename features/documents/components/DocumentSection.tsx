@@ -20,7 +20,7 @@ export function DocumentSection({ ownerId, ownerType, tenantId }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 flex flex-col h-full overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-teal-900/5">
+    <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-teal-900/5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 border-b border-slate-50 bg-slate-50/20">
         <div className="flex items-center gap-4">
           <div className="h-10 w-10 rounded-xl bg-teal-500 flex items-center justify-center shrink-0 shadow-lg shadow-teal-100 text-white">

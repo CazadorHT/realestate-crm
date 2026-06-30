@@ -577,6 +577,7 @@ export function TemplateDialog({
                     <ResponsiveDialog
                       open={templateDialogOpen}
                       onOpenChange={setTemplateDialogOpen}
+                      className="sm:max-w-md!"
                       title="เลือกต้นแบบสัญญา"
                       description="ค้นหาและเลือกต้นแบบที่ต้องการใช้สร้างเอกสาร"
                       trigger={
@@ -634,7 +635,7 @@ export function TemplateDialog({
                     <Label className="text-xs font-semibold text-slate-500 uppercase tracking-widest ml-1">
                       ภาษาที่แสดง (Localization)
                     </Label>
-                    <div className="grid grid-cols-3 gap-2 p-1 bg-slate-100/50 rounded-2xl border border-slate-200/50">
+                    <div className="grid grid-cols-4 gap-2 p-1 bg-slate-100/50 rounded-2xl border border-slate-200/50">
                       {[
                         { id: "th", label: "ไทย", icon: "🇹🇭" },
                         { id: "en", label: "EN", icon: "🇺🇸" },
@@ -648,7 +649,7 @@ export function TemplateDialog({
                           className={cn(
                             "h-10 rounded-xl text-xs font-semibold transition-all",
                             language === lang.id
-                              ? "bg-white text-blue-600 shadow-sm border border-slate-200"
+                              ? "bg-white hover:bg-blue-50 text-blue-600 shadow-sm border border-slate-200"
                               : "text-slate-500 hover:bg-white/50"
                           )}
                           onClick={() => setLanguage(lang.id)}
@@ -717,7 +718,7 @@ export function TemplateDialog({
                 </Label>
               </div>
                 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
                 <div className="space-y-2">
                   <Label htmlFor="bankName" className="text-xs font-semibold text-slate-500 ml-1">ธนาคารที่รับเงิน</Label>
                   <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุชื่อธนาคารสำหรับรับชำระเงิน</p>
@@ -740,10 +741,8 @@ export function TemplateDialog({
                     className="h-11 rounded-xl border-slate-200 bg-white"
                   />
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div className="space-y-2">
+              <div className="space-y-2">
                   <Label htmlFor="paymentPeriod" className="text-xs font-semibold text-slate-500 ml-1">รอบการชำระ</Label>
                   <p className="text-[10px] text-slate-400 ml-1 font-medium">เช่น ทุกวันที่ 5 ของเดือน</p>
                   <Input
@@ -756,18 +755,20 @@ export function TemplateDialog({
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-semibold text-slate-500 ml-1">วิธีชำระเงิน</Label>
+                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุวิธีที่ลูกค้าจะใช้ชำระเงินสำหรับเอกสารนี้</p>
                   <ResponsiveDialog
                     open={paymentMethodDialogOpen}
                     onOpenChange={setPaymentMethodDialogOpen}
                     title="เลือกวิธีชำระเงิน"
                     description="ระบุวิธีที่ลูกค้าจะใช้ชำระเงินสำหรับเอกสารนี้"
+                    className="sm:max-w-md!"
                     trigger={
                       <Button
                         variant="outline"
                         className="w-full h-11 rounded-xl border-slate-200 bg-white font-semibold flex items-center justify-between px-4 hover:bg-slate-50!"
                         onClick={() => setPaymentMethodDialogOpen(true)}
                       >
-                        <span className="text-slate-700">
+                        <span className="text-slate-700 text-sm">
                           {paymentMethod === "Transfer" ? "โอนเงิน (Transfer)" : 
                            paymentMethod === "Cash" ? "เงินสด (Cash)" :
                            paymentMethod === "Cheque" ? "เช็ค (Cheque)" :

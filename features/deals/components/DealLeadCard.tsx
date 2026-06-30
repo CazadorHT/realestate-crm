@@ -37,7 +37,7 @@ export function DealLeadCard({ lead }: DealLeadCardProps) {
           <div className="flex-1 min-w-0">
             <Link
               href={`/protected/leads/${lead.id}`}
-              className="font-semibold text-lg hover:text-primary transition-colors"
+              className="font-semibold text-lg hover:text-primary transition-colors line-clamp-1 truncate"
             >
               {name}
             </Link>

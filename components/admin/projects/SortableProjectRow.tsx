@@ -97,7 +97,7 @@ export function SortableProjectRow({
         <span className="font-medium text-slate-600">{project.developer || "-"}</span>
       </td>
       <td className="px-6 py-4 text-center">
-        <span className="font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded-md text-xs">
+        <span className="font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded-md text-xs line-clamp-1">
           {project.property_count || 0} ทรัพย์
         </span>
       </td>
