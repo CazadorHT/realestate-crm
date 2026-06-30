@@ -287,7 +287,7 @@ export function QuickInfoSection({
         </div>
 
         {/* province */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2 lg:col-span-4">
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-6 md:col-span-2 lg:col-span-4">
           <FormField
             control={form.control}
             name="province"
