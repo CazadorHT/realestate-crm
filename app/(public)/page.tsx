@@ -81,8 +81,8 @@ const FAQSection = dynamic(
   { loading: () => <SectionSkeleton /> }
 );
 
-// S-Tier Scaling: Static generation with one-minute revalidation (The Development Hardening)
-export const revalidate = 60;
+// S-Tier Scaling: Static generation with 5-minute revalidation (Egress Optimized)
+export const revalidate = 300;
 
 /**
  * [S-Tier] Hardened Metadata Generator
@@ -139,7 +139,7 @@ export default async function LandingPage() {
     transitLines
   ] = await Promise.all([
     getPublicProvincesAction(),
-    getPublicProperties({ limit: 100 }),
+    getPublicProperties({ limit: 24 }),
     getPublicProperties({ filter: 'hot_deals', limit: 4 }),
     getBlogPosts(undefined, 4),
     getPartners({ activeOnly: true }),

@@ -12,8 +12,9 @@ export async function generateLivingInsiderXML() {
     .from("properties")
     .select(
       `
-      *,
-      property_syndication!left(*)
+      id, title, description, property_type, listing_type,
+      price, rental_price, province, district, subdistrict,
+      size_sqm, bedrooms, bathrooms, images, updated_at
     `,
     )
     .eq("status", "ACTIVE")

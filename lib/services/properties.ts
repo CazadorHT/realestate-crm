@@ -104,12 +104,12 @@ const PUBLIC_COLUMNS = `
   size_sqm, land_size_sqwah, parking_slots, floor, created_at, updated_at,
   listing_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru, province, district, subdistrict,
   address_line1, address_line1_en, address_line1_cn, address_line1_ru,
-  nearby_places, nearby_transits, is_hot_deal,
+  nearby_transits, is_hot_deal,
   near_transit, transit_type, transit_station_name,
   transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_distance_meters,
   google_maps_link, is_fully_furnished, is_bare_shell,
   is_pet_friendly, is_foreigner_quota, is_tax_registered,
-  ai_summary_content, amenities,
+  amenities,
   property_images (
     image_url, storage_path, is_cover, sort_order
   ),
@@ -378,7 +378,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
             airbnb_daily_price: (row.amenities as any)?.airbnb_daily_price ?? null,
             airbnb_monthly_price: (row.amenities as any)?.airbnb_monthly_price ?? null,
             airbnb_min_contract: (row.amenities as any)?.airbnb_min_contract ?? null,
-            nearby_places: getSafeNearbyPlaces(row.nearby_places),
+            nearby_places: [],
             nearby_transits: getSafeNearbyTransits(row.nearby_transits),
           };
         });
@@ -430,7 +430,7 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
     airbnb_daily_price: (typedRow.amenities as any)?.airbnb_daily_price ?? null,
     airbnb_monthly_price: (typedRow.amenities as any)?.airbnb_monthly_price ?? null,
     airbnb_min_contract: (typedRow.amenities as any)?.airbnb_min_contract ?? null,
-    nearby_places: getSafeNearbyPlaces(typedRow.nearby_places),
+    nearby_places: [],
     nearby_transits: getSafeNearbyTransits(typedRow.nearby_transits),
   };
 });

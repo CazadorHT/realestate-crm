@@ -87,7 +87,8 @@ export async function getRecommendedProperties(
   if (popularAreaNames.length > 0) {
     const { data: areaData } = await supabase
       .from("popular_areas_v3")
-      .select("name");
+      .select("name")
+      .in("name", popularAreaNames);
 
     (areaData || []).forEach((a: any) => {
       const areaNameTh = typeof a.name === "string" ? a.name : a.name?.th || a.name?.default || "";
