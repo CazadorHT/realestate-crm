@@ -28,7 +28,7 @@ export const EMPTY_VALUES: PropertyFormValues = {
   floor: undefined,
   is_total_floors: false,
   min_contract_months: 12,
-  verified: false,
+  verified: true,
   airbnb_daily_price: undefined,
   airbnb_monthly_price: undefined,
   airbnb_min_contract: "",

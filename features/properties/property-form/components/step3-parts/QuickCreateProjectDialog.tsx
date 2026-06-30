@@ -6,12 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Loader2, Sparkles, Building2, ChevronDown, MapPin } from "lucide-react";
+import { Loader2, Sparkles, Building2, ChevronDown, MapPin, Search, Check } from "lucide-react";
 import { 
   upsertProjectAction, 
   generateAIProjectDataAction 
 } from "@/features/properties/actions/projects";
 import slugify from "slugify";
+import { useThaiAddress } from "@/hooks/useThaiAddress";
+import { cn } from "@/lib/utils";
 
 // Property types mapping
 const PROPERTY_TYPES = [
@@ -79,13 +81,57 @@ export function QuickCreateProjectDialog({
   const [district, setDistrict] = React.useState("");
   const [subdistrict, setSubdistrict] = React.useState("");
   const [googleMapsUrl, setGoogleMapsUrl] = React.useState("");
-  const [lat, setLat] = React.useState("");
-  const [lng, setLng] = React.useState("");
   const [yearCompleted, setYearCompleted] = React.useState("");
   const [totalUnits, setTotalUnits] = React.useState("");
 
   // Other AI filled states
   const [aiData, setAiData] = React.useState<any>(null);
+
+  // Thai address cascading
+  const {
+    provinces,
+    getDistricts,
+    getSubDistricts,
+    ensureDistrictsLoaded,
+    ensureSubDistrictsLoaded,
+    loading: addressLoading,
+  } = useThaiAddress();
+
+  // Province/District search state
+  const [provinceSearch, setProvinceSearch] = React.useState("");
+  const [districtSearch, setDistrictSearch] = React.useState("");
+  const [subdistrictSearch, setSubdistrictSearch] = React.useState("");
+
+  React.useEffect(() => {
+    ensureDistrictsLoaded();
+    ensureSubDistrictsLoaded();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Derived cascading options
+  const activeProvinceId = provinces.find((p) => p.name_th === province)?.id;
+  const districtOptions = activeProvinceId ? getDistricts(activeProvinceId) : [];
+  const activeDistrictId = districtOptions.find((d) => d.name_th === district)?.id;
+  const subDistrictOptions = activeDistrictId ? getSubDistricts(activeDistrictId) : [];
+
+  // Filtered options for search
+  const filteredProvinces = React.useMemo(() => {
+    const q = provinceSearch.trim().toLowerCase();
+    if (!q) return provinces;
+    return provinces.filter((p) => p.name_th.toLowerCase().includes(q) || p.name_en.toLowerCase().includes(q));
+  }, [provinces, provinceSearch]);
+
+  const filteredDistricts = React.useMemo(() => {
+    const q = districtSearch.trim().toLowerCase();
+    if (!q) return districtOptions;
+    return districtOptions.filter((d) => d.name_th.toLowerCase().includes(q) || d.name_en.toLowerCase().includes(q));
+  }, [districtOptions, districtSearch]);
+
+  const filteredSubDistricts = React.useMemo(() => {
+    const q = subdistrictSearch.trim().toLowerCase();
+    if (!q) return subDistrictOptions;
+    return subDistrictOptions.filter((s) => s.name_th.toLowerCase().includes(q) || s.name_en.toLowerCase().includes(q));
+  }, [subDistrictOptions, subdistrictSearch]);
 
   // Initialize fields
   React.useEffect(() => {
@@ -107,22 +153,15 @@ export function QuickCreateProjectDialog({
       setDistrict(defaultDistrict || "");
       setSubdistrict(defaultSubdistrict || "");
       setGoogleMapsUrl("");
-      setLat("");
-      setLng("");
       setYearCompleted("");
       setTotalUnits("");
       setAiData(null);
     }
   }, [isOpen, defaultName, defaultNameEn, defaultProvince, defaultDistrict, defaultSubdistrict]);
 
-  // Handle maps URL change
+  // Handle maps URL change — parse coords for payload but don't show in UI
   const handleGoogleMapsUrlChange = (url: string) => {
     setGoogleMapsUrl(url);
-    const coords = parseCoordinatesFromGoogleMaps(url);
-    if (coords) {
-      setLat(coords.lat.toString());
-      setLng(coords.lng.toString());
-    }
   };
 
   // Run AI auto-fill
@@ -148,14 +187,7 @@ export function QuickCreateProjectDialog({
         if (d.province) setProvince(d.province);
         if (d.district) setDistrict(d.district);
         if (d.subdistrict) setSubdistrict(d.subdistrict);
-        if (d.googleMapsUrl) {
-          setGoogleMapsUrl(d.googleMapsUrl);
-          const coords = parseCoordinatesFromGoogleMaps(d.googleMapsUrl);
-          if (coords) {
-            setLat(coords.lat.toString());
-            setLng(coords.lng.toString());
-          }
-        }
+        // Google Maps URL — ให้ user กรอกเอง ไม่ให้ AI override
         setAiData(d);
         toast.success("AI กรอกข้อมูลโครงการสำเร็จเสร็จสิ้น! ✨", { id: toastId });
       } else {
@@ -191,8 +223,10 @@ export function QuickCreateProjectDialog({
         province: province.trim() || "กรุงเทพมหานคร",
         district: district.trim() || null,
         subdistrict: subdistrict.trim() || null,
-        latitude: lat.trim() ? Number(lat) : null,
-        longitude: lng.trim() ? Number(lng) : null,
+        ...(() => {
+          const coords = parseCoordinatesFromGoogleMaps(googleMapsUrl);
+          return coords ? { latitude: coords.lat, longitude: coords.lng } : { latitude: null, longitude: null };
+        })(),
         year_completed: yearCompleted.trim() ? Number(yearCompleted) : null,
         total_units: totalUnits.trim() ? Number(totalUnits) : null,
         is_active: true,
@@ -454,80 +488,181 @@ export function QuickCreateProjectDialog({
               />
             </div>
 
-            {/* Latitude */}
-            <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>ละติจูด (Latitude)</span>
-              </Label>
-              <Input 
-                value={lat} 
-                onChange={(e) => setLat(e.target.value)} 
-                placeholder="ดึงจากลิงก์อัตโนมัติ" 
-                className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-semibold text-slate-500 placeholder:text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 cursor-not-allowed"
-                readOnly
-              />
-            </div>
-
-            {/* Longitude */}
-            <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>ลองจิจูด (Longitude)</span>
-              </Label>
-              <Input 
-                value={lng} 
-                onChange={(e) => setLng(e.target.value)} 
-                placeholder="ดึงจากลิงก์อัตโนมัติ" 
-                className="h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-sm font-semibold text-slate-500 placeholder:text-slate-400 focus-visible:ring-0 focus-visible:ring-offset-0 cursor-not-allowed"
-                readOnly
-              />
-            </div>
-
             {/* Province */}
-            <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>จังหวัด</span>
-              </Label>
-              <Input 
-                value={province} 
-                onChange={(e) => setProvince(e.target.value)} 
-                placeholder="กรุงเทพมหานคร" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
-              />
-            </div>
+            <AddressCascadeField
+              label="จังหวัด"
+              value={province}
+              options={filteredProvinces}
+              allOptions={provinces}
+              search={provinceSearch}
+              onSearch={setProvinceSearch}
+              loading={addressLoading}
+              onSelect={(opt) => {
+                setProvince(opt.name_th);
+                setDistrict("");
+                setSubdistrict("");
+                setDistrictSearch("");
+                setSubdistrictSearch("");
+              }}
+            />
 
             {/* District */}
-            <div className="space-y-1.5 text-left group">
-              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>เขต / อำเภอ</span>
-              </Label>
-              <Input 
-                value={district} 
-                onChange={(e) => setDistrict(e.target.value)} 
-                placeholder="เขตบางนา" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
-              />
-            </div>
+            <AddressCascadeField
+              label="เขต / อำเภอ"
+              value={district}
+              options={filteredDistricts}
+              allOptions={districtOptions}
+              search={districtSearch}
+              onSearch={setDistrictSearch}
+              disabled={!activeProvinceId}
+              placeholder={!activeProvinceId ? "เลือกจังหวัดก่อน" : "เลือกเขต / อำเภอ"}
+              onSelect={(opt) => {
+                setDistrict(opt.name_th);
+                setSubdistrict("");
+                setSubdistrictSearch("");
+              }}
+            />
 
             {/* Subdistrict */}
-            <div className="col-span-1 sm:col-span-2 space-y-1.5 text-left group">
-              <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
-                <span>แขวง / ตำบล</span>
-              </Label>
-              <Input 
-                value={subdistrict} 
-                onChange={(e) => setSubdistrict(e.target.value)} 
-                placeholder="แขวงบางนาเหนือ" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+            <div className="col-span-1 sm:col-span-2">
+              <AddressCascadeField
+                label="แขวง / ตำบล"
+                value={subdistrict}
+                options={filteredSubDistricts}
+                allOptions={subDistrictOptions}
+                search={subdistrictSearch}
+                onSearch={setSubdistrictSearch}
+                disabled={!activeDistrictId}
+                placeholder={!activeDistrictId ? "เลือกเขต / อำเภอก่อน" : "เลือกแขวง / ตำบล"}
+                onSelect={(opt) => setSubdistrict(opt.name_th)}
               />
             </div>
           </div>
         </div>
       </div>
     </ResponsiveDialog>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Inline helper: cascading address dropdown with built-in search
+// ─────────────────────────────────────────────────────────────────────────────
+interface AddressCascadeFieldProps {
+  label: string;
+  value: string;
+  options: Array<{ id: number; name_th: string; name_en: string }>;
+  allOptions: Array<{ id: number; name_th: string; name_en: string }>;
+  search: string;
+  onSearch: (q: string) => void;
+  onSelect: (opt: { id: number; name_th: string; name_en: string }) => void;
+  disabled?: boolean;
+  placeholder?: string;
+  loading?: boolean;
+}
+
+function AddressCascadeField({
+  label,
+  value,
+  options,
+  allOptions,
+  search,
+  onSearch,
+  onSelect,
+  disabled = false,
+  placeholder = "เลือก...",
+  loading = false,
+}: AddressCascadeFieldProps) {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  React.useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+        onSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open, onSearch]);
+
+  return (
+    <div className="space-y-1.5 text-left" ref={ref}>
+      <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+        <MapPin className="w-3.5 h-3.5" />
+        <span>{label}</span>
+        {loading && <span className="animate-pulse text-slate-300">...</span>}
+      </Label>
+      <div className="relative">
+        <button
+          type="button"
+          disabled={disabled}
+          onClick={() => !disabled && setOpen((o) => !o)}
+          className={cn(
+            "w-full h-11 rounded-xl border px-3.5 text-sm font-semibold text-left transition-all duration-200 flex items-center justify-between gap-2 shadow-xs",
+            disabled
+              ? "border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed"
+              : open
+                ? "border-indigo-500 bg-white ring-2 ring-indigo-100 text-slate-800"
+                : value
+                  ? "border-indigo-200 bg-white text-slate-800 hover:border-indigo-400"
+                  : "border-slate-200 bg-white text-slate-400 hover:border-slate-300"
+          )}
+        >
+          <span className="truncate">{value || placeholder}</span>
+          <ChevronDown className={cn("w-4 h-4 shrink-0 text-slate-400 transition-transform", open && "rotate-180")} />
+        </button>
+
+        {open && (
+          <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+            {/* Search box */}
+            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-100 bg-slate-50/60">
+              <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <input
+                autoFocus
+                value={search}
+                onChange={(e) => onSearch(e.target.value)}
+                placeholder={`ค้นหา${label}...`}
+                className="flex-1 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 outline-none font-medium"
+              />
+            </div>
+            {/* Options list */}
+            <div className="max-h-52 overflow-y-auto py-1">
+              {allOptions.length === 0 ? (
+                <p className="px-4 py-6 text-center text-xs text-slate-400">กรุณาเลือกข้อมูลก่อนหน้า</p>
+              ) : options.length === 0 ? (
+                <p className="px-4 py-6 text-center text-xs text-slate-400">ไม่พบ{label}ที่ค้นหา</p>
+              ) : (
+                options.map((opt) => {
+                  const selected = opt.name_th === value;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        onSelect(opt);
+                        onSearch("");
+                        setOpen(false);
+                      }}
+                      className={cn(
+                        "w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left",
+                        selected
+                          ? "bg-indigo-50 text-indigo-700 font-bold"
+                          : "text-slate-700 hover:bg-slate-50 font-medium"
+                      )}
+                    >
+                      <span>{opt.name_th}</span>
+                      {selected && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
