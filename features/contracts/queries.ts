@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext } from "@/lib/authz";
 import { RentalContractWithRelations } from "./types";
+import { decrypt } from "@/lib/crypto";
 
 /**
  * Fetch rental contracts with optional tenant filtering.
@@ -24,16 +25,21 @@ export async function getContracts({
       status,
       tenant_id,
       created_at,
-      property:properties (
+      total_amount,
+      property:properties!crm_deals_v3_property_id_fkey (
         id,
-        title
+        title,
+        main_image,
+        rental_price
       ),
-      lead:crm_leads_v3 (
+      lead:crm_leads_v3!crm_deals_v3_lead_id_fkey (
         id,
         identity:identities_v3!crm_leads_v3_identity_id_fkey (
           display_name,
           phone,
-          email
+          email,
+          line_id,
+          social_links
         )
       )
     `,
@@ -85,7 +91,7 @@ export async function getContracts({
   }
 
   const { data, error, count } = await query
-    .order("transaction_date", { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (error) {
     console.error("getContracts Error:", error);
@@ -103,7 +109,7 @@ export async function getContracts({
       start_date: row.transaction_date || row.created_at || new Date().toISOString(),
       end_date: row.transaction_end_date || new Date().toISOString(),
       lease_term_months: meta.lease_term_months || null,
-      rent_price: meta.rent_price || null,
+      rent_price: meta.rent_price || row.total_amount || row.property?.rental_price || null,
       deposit_amount: meta.deposit_amount || null,
       created_at: row.created_at,
       deal_id: row.id,
@@ -111,12 +117,20 @@ export async function getContracts({
       tenant_id: row.tenant_id,
       deal: {
         id: row.id,
-        property: row.property ? { id: row.property.id, title: row.property.title } : null,
+        property: row.property ? { 
+          id: row.property.id, 
+          title: row.property.title, 
+          cover_image_url: row.property.main_image 
+        } : null,
         lead: leadData ? {
           id: leadData.id,
-          full_name: identity?.display_name || "Unknown Lead",
-          phone: identity?.phone || null,
-          email: identity?.email || null,
+          full_name: decrypt(identity?.display_name) || "Unknown Lead",
+          phone: decrypt(identity?.phone) || null,
+          email: decrypt(identity?.email) || null,
+          line_id: decrypt(identity?.line_id) || null,
+          wechat_id: decrypt((identity?.social_links as any)?.wechat_id) || null,
+          whatsapp: decrypt((identity?.social_links as any)?.whatsapp) || null,
+          facebook: decrypt((identity?.social_links as any)?.facebook) || decrypt((identity?.social_links as any)?.facebook_psid) || null,
         } : null,
       },
     };

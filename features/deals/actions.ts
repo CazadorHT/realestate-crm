@@ -30,6 +30,79 @@ import { getDealDiff } from "./logic/diff";
 import { FinanceMath } from "@/lib/finance/precision";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+// Helper: Sync a CLOSED_WIN deal to financial_ledger_v3 (idempotent via upsert-like logic)
+// - เมื่อดีลเป็น CLOSED_WIN: บันทึกยอดคอมมิชชันหักส่วน Co-Agent/Co-Broker ออก
+// - เมื่อดีลไม่ใช่ CLOSED_WIN แล้ว: ลบรายการที่เกี่ยวข้องออก
+async function syncDealToLedger(
+  supabase: ReturnType<typeof createAdminClient>,
+  dealId: string,
+  tenantId: string,
+) {
+  try {
+    // 1. ดึงข้อมูลดีลและ commissions ล่าสุด
+    const { data: deal } = await supabase
+      .from("crm_deals_v3")
+      .select("id, status, commission_total, branch_id")
+      .eq("id", dealId)
+      .single();
+
+    // 2. ลบรายการเก่าของดีลนี้ออกก่อนเสมอ (idempotent)
+    await supabase
+      .from("financial_ledger_v3")
+      .delete()
+      .eq("reference_entity", "DEAL")
+      .eq("reference_id", dealId)
+      .eq("transaction_type", "deal_closed");
+
+    // ถ้าดีลไม่ใช่ CLOSED_WIN ให้หยุดแค่นี้ (ลบแล้วก็จบ)
+    if (!deal || deal.status !== "CLOSED_WIN") return;
+
+    const grossCommission = Number(deal.commission_total) || 0;
+    if (grossCommission <= 0) return;
+
+    // 3. คำนวณส่วนหัก Co-Agent/Co-Broker ภายนอก (recipient_role = 'CO_AGENT')
+    const { data: commissions } = await supabase
+      .from("crm_deal_commissions_v3")
+      .select("recipient_role, amount, net_amount, tax_amount")
+      .eq("deal_id", dealId)
+      .eq("tenant_id", tenantId);
+
+    let coAgentGross = 0;
+    if (commissions && commissions.length > 0) {
+      coAgentGross = commissions
+        .filter((c: { recipient_role: string }) => c.recipient_role === "CO_AGENT")
+        .reduce((sum: number, c: { amount: number | null }) => sum + (Number(c.amount) || 0), 0);
+    }
+
+    // ยอดสุทธิบริษัท = ยอดคอมมิชชันรวม - ส่วนที่จ่ายให้ Co-Agent ภายนอก
+    const netCompanyAmount = grossCommission - coAgentGross;
+    if (netCompanyAmount <= 0) return;
+
+    // 4. บันทึกลง financial_ledger_v3
+    await supabase.from("financial_ledger_v3").insert({
+      tenant_id: tenantId,
+      branch_id: deal.branch_id || null,
+      transaction_type: "deal_closed",
+      reference_entity: "DEAL",
+      reference_id: dealId,
+      amount_net: netCompanyAmount,
+      amount_total: netCompanyAmount,
+      tax_amount: 0,
+      wht_amount: 0,
+      status: "cleared",
+      metadata: {
+        gross_commission: grossCommission,
+        co_agent_deduction: coAgentGross,
+        synced_at: new Date().toISOString(),
+      },
+    });
+  } catch (err) {
+    // ไม่ให้ error ของ ledger sync มา block การทำงานหลัก เพียงแต่ log เตือน
+    console.error("[syncDealToLedger] Failed to sync deal to ledger:", err);
+  }
+}
+
+
 // Helper: Adjust property stock and auto-update status using Atomic RPC
 async function adjustPropertyStock(
   ctx: { supabase: AuthContext["supabase"]; tenantId: string },
@@ -187,6 +260,8 @@ export async function createDealAction(input: CreateDealInput) {
 
     revalidatePath(`/protected/leads/${validated.lead_id}`);
     revalidatePath("/protected/deals");
+    // 💰 Sync to financial ledger for dashboard stats
+    await syncDealToLedger(adminSupabase, data.id, tenantId);
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
@@ -358,6 +433,8 @@ export async function updateDealAction(input: UpdateDealInput) {
     }
 
     revalidatePath("/protected/deals");
+    // 💰 Sync to financial ledger for dashboard stats (re-syncs after any deal update)
+    await syncDealToLedger(adminSupabase, validated.id, tenantId);
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
     revalidateTag("dashboard-performance", "seconds");
@@ -638,6 +715,9 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
     );
 
     revalidatePath("/protected/deals/[id]");
+    // 💰 Re-sync ledger now that commissions (and co-agent splits) are updated
+    await syncDealToLedger(adminSupabase, dealId, tenantId);
+    revalidateTag("dashboard-stats", "seconds");
     return { success: true, message: "คำนวณค่าคอมมิชชั่นและออกใบแจ้งหนี้สำเร็จ" };
   } catch (error: unknown) {
     console.error("Calculate Commissions Error:", error);
@@ -645,5 +725,117 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
       ? error.issues[0].message 
       : mapDbError(error);
     return { success: false, message };
+  }
+}
+
+export async function updateDealCommissionsAction(
+  dealId: string,
+  commissionsList: {
+    id?: string;
+    recipient_id?: string | null;
+    recipient_role: string;
+    percentage: number;
+    amount: number;
+    tax_rate?: number;
+    tax_amount: number;
+    net_amount: number;
+  }[]
+) {
+  try {
+    const { supabase, user, role, tenantId: userTenantId } = await requireAuthContext();
+    assertStaff(role);
+
+    const adminSupabase = createAdminClient();
+    let tenantId = userTenantId;
+    if (!tenantId) {
+      const { data: dealData } = await adminSupabase
+        .from("crm_deals_v3")
+        .select("tenant_id")
+        .eq("id", dealId)
+        .single();
+      if (dealData?.tenant_id) {
+        tenantId = dealData.tenant_id;
+      }
+    }
+
+    if (!tenantId) throw new Error("Tenant ID is required but missing");
+    const scoped = getScopedRevenueClient(adminSupabase, tenantId);
+
+    // 1. Find all existing commission IDs for this deal
+    const { data: existingComms, error: fetchErr } = await scoped
+      .commissions()
+      .select("id")
+      .eq("deal_id", dealId);
+    if (fetchErr) throw new Error(mapDbError(fetchErr));
+
+    const existingIds = (existingComms || []).map((c) => c.id);
+    const incomingIds = commissionsList.map((c) => c.id).filter(Boolean) as string[];
+
+    // 2. Delete any commissions that are NOT in the incoming list
+    const idsToDelete = existingIds.filter((id) => !incomingIds.includes(id));
+    if (idsToDelete.length > 0) {
+      const { error: deleteErr } = await scoped
+        .commissions()
+        .delete()
+        .in("id", idsToDelete);
+      if (deleteErr) throw new Error(mapDbError(deleteErr));
+    }
+
+    // 3. Insert new and update existing commissions
+    for (const comm of commissionsList) {
+      if (comm.id) {
+        // Update
+        const { error: updateErr } = await scoped
+          .commissions()
+          .update({
+            recipient_id: comm.recipient_id || null,
+            recipient_role: comm.recipient_role,
+            percentage: comm.percentage,
+            amount: comm.amount,
+            tax_rate: comm.tax_rate ?? 0,
+            tax_amount: comm.tax_amount,
+            net_amount: comm.net_amount,
+          })
+          .eq("id", comm.id);
+        if (updateErr) throw new Error(mapDbError(updateErr));
+      } else {
+        // Insert new
+        const { error: insertErr } = await scoped
+          .commissions()
+          .insert({
+            deal_id: dealId,
+            tenant_id: tenantId,
+            recipient_id: comm.recipient_id || null,
+            recipient_role: comm.recipient_role,
+            percentage: comm.percentage,
+            amount: comm.amount,
+            tax_rate: comm.tax_rate ?? 0,
+            tax_amount: comm.tax_amount,
+            net_amount: comm.net_amount,
+            status: "UNPAID",
+          });
+        if (insertErr) throw new Error(mapDbError(insertErr));
+      }
+    }
+
+    await logAudit(
+      { supabase, user, role },
+      {
+        action: "finance.commission_update",
+        entity: "deals",
+        entityId: dealId,
+        summary: `แก้ไขการจัดสรรค่าคอมมิชชั่นของดีลด้วยตนเอง`,
+        metadata: { commissionsCount: commissionsList.length }
+      }
+    );
+
+    revalidatePath(`/protected/deals/${dealId}`);
+    // 💰 Re-sync ledger after manual commission adjustment (co-agent deduction may have changed)
+    await syncDealToLedger(adminSupabase, dealId, tenantId);
+    revalidateTag("dashboard-stats", "seconds");
+    return { success: true, message: "บันทึกการปรับปรุงค่าคอมมิชชั่นสำเร็จ" };
+  } catch (error: unknown) {
+    console.error("Update Commissions Error:", error);
+    return { success: false, message: error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการบันทึกข้อมูล" };
   }
 }

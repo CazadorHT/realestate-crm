@@ -93,27 +93,15 @@ export async function getTopAgents({
     const isAllTeam = !teamId || teamId.toUpperCase() === "ALL";
 
     let query = supabase
-      .from("financial_ledger_v3")
+      .from("crm_deal_commissions_v3")
       .select(`
-        to_identity_id,
-        amount_total,
+        recipient_id,
+        amount,
         tenant_id,
         created_at,
-        agent:profiles!to_identity_id${!isAllTeam ? "!inner" : ""} (
-          id,
-          full_name,
-          avatar_url,
-          team_id,
-          team:teams_v3!inner (
-            id,
-            name,
-            tenants:tenants_v3 (
-              name
-            )
-          )
-        )
+        deal:crm_deals_v3!inner(status)
       `)
-      .eq("transaction_type", "commission_payout");
+      .eq("deal.status", "CLOSED_WIN");
     
     if (range !== "all" && range !== "ALL" && startDate) {
       query = query.gte("created_at", startDate);
@@ -127,14 +115,14 @@ export async function getTopAgents({
     let profileTenantId: string | null = null;
 
     if (user) {
-      const { data: profile } = await supabase.from("profiles")
-        .select("role, team:teams_v3!inner(tenant_id)")
-        .eq("id", user.id)
-        .single();
+      const { data: member } = await supabase.from("tenant_members_v3")
+        .select("role, tenant_id")
+        .eq("identity_id", user.id)
+        .limit(1)
+        .maybeSingle();
       
-      isAdmin = profile?.role === "ADMIN" || profile?.role === "MANAGER";
-      const profileTeam = profile?.team as { tenant_id: string } | null;
-      profileTenantId = profileTeam?.tenant_id || null;
+      isAdmin = member?.role === "ADMIN" || member?.role === "MANAGER" || member?.role === "OWNER";
+      profileTenantId = member?.tenant_id || null;
     }
 
     const isAllTenant = !tenantId || tenantId.toUpperCase() === "ALL";
@@ -149,31 +137,49 @@ export async function getTopAgents({
       query = query.eq("tenant_id", activeTenantId);
     }
 
-    if (!isAllTeam) {
-      query = query.eq("agent.team_id", teamId);
-    }
-
-    const { data: deals, error } = await query;
+    const { data: deals, error: dealsError } = await query;
     
-    if (error) {
+    if (dealsError) {
+      console.error("getTopAgents deals query error:", dealsError);
       return [];
     }
 
-    interface AgentDataJoin {
-      id: string;
-      full_name: string | null;
-      avatar_url: string | null;
-      team_id: string | null;
-      team: {
-        id: string;
-        name: string;
-        tenants: { name: string }[] | { name: string } | null;
-      } | null;
+    // Fetch profiles separately
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url");
+
+    if (profilesError) {
+      console.error("getTopAgents profiles query error:", profilesError);
+      return [];
     }
 
-    type LedgerWithAgent = LedgerRow & {
-      agent: AgentDataJoin | null;
-    };
+    // Fetch memberships and teams separately
+    const { data: members, error: membersError } = await supabase
+      .from("tenant_members_v3")
+      .select(`
+        identity_id,
+        team_id,
+        team:teams_v3 (
+          id,
+          name,
+          tenant:tenants_v3 (
+            id,
+            name
+          )
+        )
+      `);
+
+    if (membersError) {
+      console.error("getTopAgents members query error:", membersError);
+      return [];
+    }
+
+    const profileMap = new Map<string, any>();
+    (profiles || []).forEach((p: any) => profileMap.set(p.id, p));
+
+    const memberMap = new Map<string, any>();
+    (members || []).forEach((m: any) => memberMap.set(m.identity_id, m));
 
     interface AgentStatRecord {
       count: number;
@@ -186,18 +192,27 @@ export async function getTopAgents({
 
     const agentStats = new Map<string, AgentStatRecord>();
 
-    (deals as unknown as LedgerWithAgent[] || []).forEach((d) => {
-      const agentData = d.agent; 
-      const agentId = d.to_identity_id || "unknown";
+    (deals || []).forEach((d: any) => {
+      const agentId = d.recipient_id;
+      if (!agentId) return;
 
-      const teamData = agentData?.team;
-      const tenantData = teamData?.tenants ? (Array.isArray(teamData.tenants) ? teamData.tenants[0] : teamData.tenants) : null;
+      const profile = profileMap.get(agentId);
+      const member = memberMap.get(agentId);
+      if (!profile) return;
+
+      // Filter by team if requested
+      if (!isAllTeam && member?.team_id !== teamId) {
+        return;
+      }
+
+      const teamData = member?.team;
+      const tenantData = teamData?.tenant;
 
       const current = agentStats.get(agentId) || {
         count: 0,
         commission: 0,
-        name: agentData?.full_name || "Unknown Agent",
-        avatar: agentData?.avatar_url || null,
+        name: profile.full_name || "Unknown Agent",
+        avatar: profile.avatar_url || null,
         branchName: tenantData?.name || "ยังไม่ได้สังกัด",
         teamName: teamData?.name || "ไม่มีทีม",
       };
@@ -205,7 +220,7 @@ export async function getTopAgents({
       agentStats.set(agentId, {
         ...current,
         count: current.count + 1,
-        commission: current.commission + (Number(d.amount_total) || 0),
+        commission: current.commission + (Number(d.amount) || 0),
       });
     });
 

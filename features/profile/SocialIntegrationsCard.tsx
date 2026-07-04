@@ -80,7 +80,7 @@ export function SocialIntegrationsCard({ metadata }: SocialIntegrationsCardProps
                 variant="outline"
                 onClick={handleDisconnect}
                 disabled={isDisconnecting}
-                className="w-full sm:w-auto border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 rounded-xl h-11 px-5 font-bold text-xs transition-all active:scale-95"
+                className="w-full sm:w-auto border-rose-200 text-rose-600! hover:bg-rose-50 hover:border-rose-300 rounded-xl h-11 px-5 font-bold text-xs transition-all active:scale-95"
               >
                 {isDisconnecting ? (
                   <>

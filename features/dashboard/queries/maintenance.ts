@@ -45,35 +45,34 @@ export async function getSetupProgress(tenantId?: string | null, userId?: string
       await Promise.all([
         applyTenantFilter(
           supabase
-            .from("tenant_members")
+            .from("tenant_members_v3")
             .select("id", { count: "exact", head: true }),
         ),
         applyTenantFilter(
           supabase
-            .from("properties")
+            .from("properties_core")
             .select("id", { count: "exact", head: true })
             .is("deleted_at", null),
         ),
         applyTenantFilter(
           supabase
-            .from("leads")
-            .select("id", { count: "exact", head: true })
-            .is("deleted_at", null),
+            .from("crm_leads_v3")
+            .select("id", { count: "exact", head: true }),
         ),
         tenantId && tenantId !== "ALL"
           ? supabase
-              .from("tenants")
+              .from("tenants_v3")
               .select("name, logo_url", { count: "exact" })
               .eq("id", tenantId)
-          : supabase.from("tenants").select("name, logo_url", { count: "exact" }),
+          : supabase.from("tenants_v3").select("name, logo_url", { count: "exact" }),
         getSiteSettings(),
         supabase
-          .from("tenant_members")
+          .from("tenant_members_v3")
           .select("id, profiles!inner(line_user_id, line_id)", { count: "exact", head: true })
           .eq("tenant_id", tenantId || "")
           .or("line_user_id.not.is.null,line_id.not.is.null", { foreignTable: "profiles" }),
         supabase
-          .from("tenant_invitations")
+          .from("tenant_invitations_v3")
           .select("id", { count: "exact", head: true })
           .eq("tenant_id", tenantId || "")
           .eq("status", "PENDING"),

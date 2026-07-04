@@ -75,11 +75,11 @@ export default async function DealsPage({
 
 async function DealsStatsSection({ timeRange }: { timeRange: string }) {
   const dealsStats = await getDealsPageStats(timeRange);
-  const { totalDeals, activeDeals, wonDeals, lostDeals, totalCommission } = dealsStats;
+  const { totalDeals, activeDeals, wonDeals, lostDeals, totalCommission, netCommission } = dealsStats;
 
   return (
     <>
-      <div id="tour-deals-stats" className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-5">
+      <div id="tour-deals-stats" className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">ดีลทั้งหมด</CardTitle>
@@ -126,7 +126,7 @@ async function DealsStatsSection({ timeRange }: { timeRange: string }) {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Commission</CardTitle>
+            <CardTitle className="text-sm font-medium">ค่าคอมมิชชันรวม (ก่อนหัก Co-Broker)</CardTitle>
             <DollarSign className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
@@ -137,7 +137,24 @@ async function DealsStatsSection({ timeRange }: { timeRange: string }) {
                 maximumFractionDigits: 1,
               }).format(totalCommission)}
             </div>
-            <p className="text-xs text-slate-500 mt-1">Total commission</p>
+            <p className="text-xs text-slate-500 mt-1">Before co-broker</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">ค่าคอมมิชชันสุทธิ (หลังหัก Co-Broker)</CardTitle>
+            <DollarSign className="h-4 w-4 text-emerald-500" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-emerald-600">
+              {new Intl.NumberFormat("th-TH", {
+                notation: "compact",
+                compactDisplay: "short",
+                maximumFractionDigits: 1,
+              }).format(netCommission || 0)}
+            </div>
+            <p className="text-xs text-slate-500 mt-1">After co-broker</p>
           </CardContent>
         </Card>
       </div>

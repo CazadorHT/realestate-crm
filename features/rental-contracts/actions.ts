@@ -30,7 +30,19 @@ export async function getContractByDealId(
 
     let query = supabase
       .from("crm_deals_v3")
-      .select("id, agent_id, branch_id, closed_at, co_agent_contact, co_agent_name, co_agent_online, commission_total, created_at, created_by, currency, deal_type, lead_id, metadata, net_received, partner_co_broker_id, property_id, source, status, tenant_id, title, total_amount, transaction_date, transaction_end_date, undetermined_date, updated_at, vat_amount, wht_amount")
+      .select(`
+        id, agent_id, branch_id, closed_at, co_agent_contact, co_agent_name, co_agent_online, 
+        commission_total, created_at, created_by, currency, deal_type, lead_id, metadata, 
+        net_received, partner_co_broker_id, property_id, source, status, tenant_id, title, 
+        total_amount, transaction_date, transaction_end_date, undetermined_date, updated_at, 
+        vat_amount, wht_amount,
+        property:properties (
+          rental_price,
+          price,
+          original_price,
+          original_rental_price
+        )
+      `)
       .eq("id", dealId)
       .order("created_at", { ascending: false })
       .limit(1);
@@ -45,14 +57,18 @@ export async function getContractByDealId(
 
     const row = contracts[0];
     const meta = (row.metadata as Record<string, Json>) || {};
-    const statusVal = row.status === "WON" ? "ACTIVE" : row.status === "TERMINATED" ? "TERMINATED" : "DRAFT";
+    const statusVal = row.status === "CLOSED_WIN" ? "ACTIVE" : row.status === "TERMINATED" ? "TERMINATED" : "DRAFT";
+
+    const totalAmtNum = row.total_amount ? Number(row.total_amount) : 0;
+    const propPrice = (row.property as any)?.rental_price || (row.property as any)?.price || 0;
+    const rentPriceVal = totalAmtNum > 0 ? totalAmtNum : ((meta.rent_price as number) || propPrice);
 
     return {
       id: row.id,
       deal_id: row.id,
       start_date: row.transaction_date ?? undefined,
       end_date: row.transaction_end_date ?? undefined,
-      rent_price: (row.total_amount ?? (meta.rent_price as number)) || undefined,
+      rent_price: rentPriceVal || undefined,
       deposit_amount: (meta.deposit_amount as number) ?? null,
       lease_term_months: (meta.lease_term_months as number) || undefined,
       payment_cycle: (meta.payment_cycle as string) || undefined,
@@ -117,7 +133,8 @@ export async function upsertContractAction(
       metadata: mergedMeta,
       transaction_date: values.start_date ?? existingDeal.transaction_date,
       transaction_end_date: values.end_date ?? existingDeal.transaction_end_date,
-      status: values.status === "ACTIVE" ? "WON" : (values.status || existingDeal.status),
+      status: values.status === "ACTIVE" ? "CLOSED_WIN" : (values.status || existingDeal.status),
+      total_amount: values.rent_price ?? undefined,
       updated_at: new Date().toISOString(),
     };
 

@@ -30,6 +30,7 @@ type ListArgs = {
   source?: string;
   page?: number;
   pageSize?: number;
+  sortOrder?: "asc" | "desc";
 };
 // ใช้สำหรับแสดง leads หลายรายการ
 export async function getLeadsQuery(args: ListArgs = {}) {
@@ -43,6 +44,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
   const source = (args.source ?? "").trim();
   const page = Math.max(1, args.page ?? 1);
   const pageSize = Math.min(200, Math.max(5, args.pageSize ?? 10));
+  const sortOrder = args.sortOrder ?? "desc";
 
   let query = supabase
     .from("crm_leads_v3")
@@ -52,7 +54,7 @@ export async function getLeadsQuery(args: ListArgs = {}) {
     query = query.eq("tenant_id", tenantId);
   }
 
-  query = query.order("created_at", { ascending: false });
+  query = query.order("created_at", { ascending: sortOrder === "asc" });
 
   if (q) {
     query = query.or(

@@ -1,17 +1,18 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { DealWithProperty, DealCommission, InvoiceRow } from "./types";
 import { getScopedRevenueClient } from "./logic/scoped-client";
+import { decrypt } from "@/lib/crypto";
 
 export async function getDealsByLeadId(
   leadId: string,
 ): Promise<DealWithProperty[]> {
-  const { supabase, role, tenantId } = await requireAuthContext();
+  const { supabase, role, tenantId, user } = await requireAuthContext();
   assertStaff(role);
 
   const scoped = getScopedRevenueClient(supabase, tenantId);
 
   // Fetch deals and join with properties (select title, price, etc.)
-  const { data, error } = await scoped
+  let query = scoped
     .deals()
     .select(
       `
@@ -23,19 +24,55 @@ export async function getDealsByLeadId(
         original_price,
         rental_price,
         original_rental_price,
-        images
-      )
+        property_images:property_media_v3 (
+          id,
+          property_id,
+          url,
+          is_cover,
+          sort_order
+        )
+      ),
+      commissions:crm_deal_commissions_v3 ( recipient_role, amount )
     `,
     )
-    .eq("lead_id", leadId)
-    .order("created_at", { ascending: false });
+    .eq("lead_id", leadId);
+
+  if (role === "AGENT") {
+    query = query.or(`agent_id.eq.${user.id},created_by.eq.${user.id}`);
+  }
+
+  const { data, error } = await query.order("created_at", { ascending: false });
 
   if (error) {
     console.error("Error fetching deals:", error);
     return [];
   }
 
-  return (data || []) as DealWithProperty[];
+  return (data || []).map((d: any) => {
+    const gross = Number(d.commission_total) || 0;
+    const coAgentSum = (d.commissions || [])
+      .filter((c: any) => c.recipient_role === "CO_AGENT")
+      .reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0);
+    const netCommission = gross - coAgentSum;
+
+    const property = d.property ? {
+      ...d.property,
+      images: (d.property.property_images || []).map((img: any) => ({
+        id: img.id,
+        property_id: img.property_id,
+        image_url: img.url,
+        is_cover: img.is_cover,
+        sort_order: img.sort_order,
+      })),
+    } : null;
+
+    return {
+      ...d,
+      property,
+      commission_net: netCommission,
+      commission_amount: netCommission,
+    };
+  }) as any;
 }
 
 export async function getDealById(
@@ -58,14 +95,22 @@ export async function getDealById(
         original_price,
         rental_price,
         original_rental_price,
-        images
+        property_images:property_media_v3 (
+          id,
+          property_id,
+          url,
+          is_cover,
+          sort_order
+        )
       ),
-      lead:leads (
+      lead:crm_leads_v3 (
         id,
-        full_name,
-        email,
-        phone,
-        stage
+        stage,
+        identity:identities_v3!crm_leads_v3_identity_id_fkey (
+          display_name,
+          email,
+          phone
+        )
       )
     `,
     )
@@ -76,7 +121,32 @@ export async function getDealById(
     return null;
   }
 
-  return data as unknown as DealWithProperty;
+  const rawDeal = data as any;
+  const lead = rawDeal.lead ? {
+    id: rawDeal.lead.id,
+    full_name: decrypt(rawDeal.lead.identity?.display_name) || "Unknown Lead",
+    email: decrypt(rawDeal.lead.identity?.email) || null,
+    phone: decrypt(rawDeal.lead.identity?.phone) || null,
+    stage: rawDeal.lead.stage,
+  } : null;
+
+  // Map property_images to images (as array of { id, property_id, url, is_cover, sort_order })
+  const property = rawDeal.property ? {
+    ...rawDeal.property,
+    images: (rawDeal.property.property_images || []).map((i: any) => ({
+      id: i.id,
+      property_id: i.property_id,
+      image_url: i.url,
+      is_cover: i.is_cover,
+      sort_order: i.sort_order,
+    })),
+  } : null;
+
+  return {
+    ...rawDeal,
+    lead,
+    property,
+  } as unknown as DealWithProperty;
 }
 
 export async function getDealCommissions(dealId: string): Promise<DealCommission[]> {
@@ -117,11 +187,15 @@ export async function getDealCommissions(dealId: string): Promise<DealCommission
 }
 
 export async function getDealsPageStats(timeRange: string = "all") {
-  const { supabase, role, tenantId } = await requireAuthContext();
+  const { supabase, role, tenantId, user } = await requireAuthContext();
   assertStaff(role);
 
   const scoped = getScopedRevenueClient(supabase, tenantId);
-  let query = scoped.deals().select("status, commission_total, deal_type, created_at");
+  let query = scoped.deals().select("id, status, commission_total, deal_type, created_at, commissions:crm_deal_commissions_v3(recipient_role, amount)");
+
+  if (role === "AGENT") {
+    query = query.or(`agent_id.eq.${user.id},created_by.eq.${user.id}`);
+  }
 
   // Handle Time Range
   const now = new Date();
@@ -130,7 +204,6 @@ export async function getDealsPageStats(timeRange: string = "all") {
   if (timeRange !== "all") {
     let startDate: string | null = null;
     let endDate: string | null = null;
-    // ... logic remains same ...
     if (timeRange === "this-month") {
       startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     } else if (timeRange === "6-months") {
@@ -173,21 +246,35 @@ export async function getDealsPageStats(timeRange: string = "all") {
       wonDeals: 0,
       lostDeals: 0,
       totalCommission: 0,
+      netCommission: 0,
     };
   }
 
+  let totalGross = 0;
+  let totalNet = 0;
+  const rawData = (data || []) as any[];
+
+  rawData.forEach((d) => {
+    if (d.status === "CLOSED_WIN") {
+      const gross = Number(d.commission_total) || 0;
+      const coAgentSum = ((d as any).commissions || [])
+        .filter((c: any) => c.recipient_role === "CO_AGENT")
+        .reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0);
+      totalGross += gross;
+      totalNet += gross - coAgentSum;
+    }
+  });
+
   const stats = {
-    totalDeals: data.length,
-    activeDeals: data.filter(
+    totalDeals: rawData.length,
+    activeDeals: rawData.filter(
       (d) => d.status === "NEGOTIATING" || d.status === "SIGNED",
     ).length,
-    wonDeals: data.filter((d) => d.status === "CLOSED_WIN").length,
-    lostDeals: data.filter((d) => d.status === "CLOSED_LOSS").length,
-    totalCommission: data
-      .filter((d) => d.status === "CLOSED_WIN" && d.commission_total)
-      .reduce((sum, d) => sum + (d.commission_total || 0), 0),
+    wonDeals: rawData.filter((d) => d.status === "CLOSED_WIN").length,
+    lostDeals: rawData.filter((d) => d.status === "CLOSED_LOSS").length,
+    totalCommission: totalGross,
+    netCommission: totalNet,
   };
-
 
   return stats;
 }
@@ -210,3 +297,27 @@ export async function getInvoicesByDealId(dealId: string): Promise<InvoiceRow[]>
 
   return (data || []) as InvoiceRow[];
 }
+
+export async function getTenantAgents(): Promise<{ id: string; display_name: string; role: string; avatar_url: string | null }[]> {
+  const { supabase, role } = await requireAuthContext();
+  assertStaff(role);
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, full_name, display_name, role, avatar_url")
+    .eq("is_active", true)
+    .is("deleted_at", null);
+
+  if (error) {
+    console.error("Error fetching tenant agents:", error);
+    return [];
+  }
+
+  return (data || []).map((p) => ({
+    id: p.id,
+    display_name: p.display_name || p.full_name || "Unnamed Agent",
+    role: p.role || "AGENT",
+    avatar_url: p.avatar_url,
+  }));
+}
+

@@ -353,36 +353,52 @@ export function CoBrokerDetailDrawer({
                     ยังไม่มีประวัติดีลที่ปิดสำเร็จ
                   </p>
                 ) : (
-                  deals.map((deal) => (
-                    <div
-                      key={deal.id}
-                      className="p-4 flex justify-between items-center hover:bg-slate-50 transition-colors"
-                    >
-                      <div>
-                        <p className="text-sm font-bold text-slate-900">
-                          {deal.property?.title || "ไม่ระบุทรัพย์"}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground italic">
-                          {deal.transaction_date
-                            ? new Date(
-                                deal.transaction_date,
-                              ).toLocaleDateString("th-TH")
-                            : "ไม่ระบุวันที่"}
-                        </p>
+                  deals.map((deal) => {
+                    const titleVal = deal.property?.title;
+                    const titleStr = typeof titleVal === 'string' 
+                      ? titleVal 
+                      : (titleVal?.th || titleVal?.en || "ไม่ระบุทรัพย์");
+                    
+                    const dealStatusMap: Record<string, string> = {
+                      'CLOSED_WIN': 'ปิดดีลสำเร็จ',
+                      'CLOSED_LOST': 'ปิดดีลไม่สำเร็จ',
+                      'CLOSED_LOSS': 'ปิดดีลไม่สำเร็จ',
+                      'NEGOTIATING': 'กำลังเจรจา',
+                      'SIGNED': 'เซ็นสัญญาแล้ว',
+                      'ACTIVE': 'ดำเนินงานอยู่',
+                    };
+                    
+                    return (
+                      <div
+                        key={deal.id}
+                        className="p-4 flex justify-between items-center hover:bg-slate-50 transition-colors"
+                      >
+                        <div>
+                          <p className="text-sm font-bold text-slate-900">
+                            {titleStr}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground italic">
+                            {deal.transaction_date
+                              ? new Date(
+                                  deal.transaction_date,
+                                ).toLocaleDateString("th-TH")
+                              : "ไม่ระบุวันที่"}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-bold text-emerald-600">
+                            {FinanceMath.format(deal.commission_amount || 0)}
+                          </p>
+                          <Badge
+                            variant="outline"
+                            className="text-[8px] h-4 uppercase"
+                          >
+                            {dealStatusMap[deal.status] || deal.status}
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm font-bold text-emerald-600">
-                          {FinanceMath.format(deal.commission_amount || 0)}
-                        </p>
-                        <Badge
-                          variant="outline"
-                          className="text-[8px] h-4 uppercase"
-                        >
-                          {deal.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             </div>

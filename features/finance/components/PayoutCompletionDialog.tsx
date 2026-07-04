@@ -104,11 +104,6 @@ export function PayoutCompletionDialog({
   };
 
   const handleSubmit = async () => {
-    if (!slipUrl) {
-      toast.error("กรุณาอัปโหลดหลักฐานการโอนเงิน");
-      return;
-    }
-
     setIsSubmitting(true);
     try {
       const res = await markAsPaidAction(selectedPayout.id, {
@@ -303,7 +298,7 @@ export function PayoutCompletionDialog({
                     <Button 
                       className="flex-2 h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-100 disabled:opacity-50"
                       onClick={handleSubmit}
-                      disabled={isSubmitting || isUploading || !slipUrl}
+                      disabled={isSubmitting || isUploading}
                     >
                       {isSubmitting ? (
                         <>

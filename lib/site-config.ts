@@ -24,8 +24,8 @@ export const siteConfig = {
   company: "VC Connect Asset Co., Ltd.",
   description: "VC Connect Asset นายหน้าอสังหาริมทรัพย์มืออาชีพ บริการรับฝากขาย ฝากเช่า บ้าน คอนโด และที่ดิน ครบวงจร ดูแลและให้คำปรึกษาอย่างใกล้ชิดในทุกขั้นตอน เพื่อให้คุณได้ข้อเสนอที่ดีที่สุด",
   url: siteUrl,
-  logo: "/images/branding/vcc-asset/logo-dark.svg",
-  logoDark: "/images/branding/vcc-asset/logo-light.svg",
+  logo: "/images/branding/vcc-asset/png/logo-dark.png",
+  logoDark: "/images/branding/vcc-asset/png/logo-dark.png",
   brandCard: "/images/branding/vcc-asset/favicon-animated-light.svg",
   brandCardDark: "/images/branding/vcc-asset/png/favicon-dark.png",
   ogImage: "/images/hero-realestate.png",
@@ -69,8 +69,8 @@ export const siteConfig = {
     lineId: "@vcconnectasset",
     address: "20th Floor, G Tower, Ratchadaphisek Road, Huai Khwang Subdistrict, Huai Khwang District, Bangkok 10310",
   },
-  companySignature: "/images/branding/vcc-asset/logo-dark.svg",
-  companyStamp: "/images/branding/vcc-asset/logo-light.svg",
+  companySignature: "/images/branding/vcc-asset/png/logo-dark.png",
+  companyStamp: "/images/branding/vcc-asset/png/logo-dark.png",
   // ============================================================
   // Third-party site verification tokens
   // Update these when transferring ownership of the project

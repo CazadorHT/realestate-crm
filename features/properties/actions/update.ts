@@ -601,25 +601,28 @@ export async function updatePropertyStatusAction(input: {
       return { success: false, message: "กรุณาตรวจสอบข้อมูล AI ในหน้าแก้ไขก่อนเปลี่ยนสถานะ" };
     }
 
-    const { error: updateError } = await supabase
-      .rpc("sync_property_inventory_atomic", {
+    const oldStatusStr = getStatusFromDb(existing.status);
+
+    // 1. Update status directly to properties_core
+    const { error: directError } = await supabase
+      .from("properties_core")
+      .update({ status: PROPERTY_STATUS_DB_VALUE[input.status as PropertyStatus] })
+      .eq("id", input.id);
+    
+    if (directError) return { success: false, message: mapDbError(directError) };
+
+    // 2. Sync inventory if transitioning into or out of SOLD/RENTED
+    if (input.status === "SOLD" || input.status === "RENTED" || oldStatusStr === "SOLD" || oldStatusStr === "RENTED") {
+      const isEntering = input.status === "SOLD" || input.status === "RENTED";
+      const targetDealType = (input.status === "RENTED" || oldStatusStr === "RENTED") ? "RENT" : "SALE";
+      
+      await supabase.rpc("sync_property_inventory_atomic", {
         p_property_id: input.id,
-        p_adjustment: (input.status === "SOLD" || input.status === "RENTED") ? 1 : -1,
-        p_deal_type: input.status === "RENTED" ? "RENT" : "SALE",
+        p_adjustment: isEntering ? 1 : -1,
+        p_deal_type: targetDealType,
         p_tenant_id: propertyTenantId
       });
-
-    if (updateError) {
-      // Fallback to direct update if RPC fails (legacy support during migration)
-      const { error: directError } = await supabase
-        .from("properties_core")
-        .update({ status: PROPERTY_STATUS_DB_VALUE[input.status as PropertyStatus] })
-        .eq("id", input.id);
-      
-      if (directError) return { success: false, message: mapDbError(directError) };
     }
-
-    const oldStatusStr = getStatusFromDb(existing.status);
 
     await logAudit({ supabase, user, role }, {
       action: "property.status_update",

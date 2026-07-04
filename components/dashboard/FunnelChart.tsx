@@ -137,7 +137,7 @@ export function FunnelChart({ data }: FunnelChartProps) {
                   <TooltipTrigger asChild>
                     <div className="flex flex-col items-end cursor-help">
                       <span className="font-bold text-rose-500 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-100 text-[11px]">
-                        -{dropRate}%
+                        {dropRate === 0 ? "0%" : `-${dropRate}%`}
                       </span>
                       <span className="opacity-70 text-[9px] mt-1 font-medium truncate max-w-full text-right leading-tight">
                         ↓ {stepTranslation[step.step] || step.step}

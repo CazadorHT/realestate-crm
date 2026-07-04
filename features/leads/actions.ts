@@ -131,7 +131,7 @@ export const createLeadAction = createSafeAction(
       source: data.source || "DIRECT",
       stage: data.stage || "NEW",
       status: "ACTIVE",
-      assigned_to: data.assigned_to || null,
+      assigned_to: data.assigned_to || userId,
       budget_min: data.budget_min !== null && data.budget_min !== undefined ? Number(data.budget_min) : null,
       budget_max: data.budget_max !== null && data.budget_max !== undefined ? Number(data.budget_max) : null,
       min_bedrooms: data.min_bedrooms !== null && data.min_bedrooms !== undefined ? Number(data.min_bedrooms) : null,

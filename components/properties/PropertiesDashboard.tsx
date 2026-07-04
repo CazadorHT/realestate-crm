@@ -142,7 +142,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
   return (
     <div className="space-y-4 md:space-y-6 mb-8 mt-2">
       {/* Metric Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
             <CardTitle className="text-[11px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
@@ -201,6 +201,28 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
           </CardContent>
         </Card>
 
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
+            <CardTitle className="text-[11px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
+              ค่าคอมฯ สุทธิปิดได้
+            </CardTitle>
+            <div className="p-1.5 sm:p-2 bg-indigo-100 rounded-lg shrink-0">
+              <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-indigo-600" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-3 sm:p-4 pt-0 sm:pt-0">
+            <div className="text-xl sm:text-2xl font-bold text-indigo-600">
+              {new Intl.NumberFormat("th-TH", {
+                notation: "compact",
+                maximumFractionDigits: 1,
+              }).format(stats.totalNetRealizedCommission || 0)}
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
+              บาท (หลังหัก Co-Broker)
+            </p>
+          </CardContent>
+        </Card>
+
         <Card className="hover:shadow-md transition-shadow cursor-default">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 sm:p-4 pb-1 sm:pb-2">
             <CardTitle className="text-[11px] sm:text-sm font-medium text-muted-foreground line-clamp-1">
@@ -214,13 +236,13 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
             <div className="flex flex-col gap-1 mt-1">
               <div className="flex justify-between items-baseline gap-2">
                 <span className="text-[11px] text-muted-foreground uppercase font-bold shrink-0">
-                  ขาย
+                  ขาย (สุทธิ)
                 </span>
                 <span className="text-sm sm:text-lg font-bold text-amber-600 truncate">
                   {new Intl.NumberFormat("th-TH", {
                     notation: "compact",
                     maximumFractionDigits: 1,
-                  }).format(stats.totalSaleCommission || 0)}
+                  }).format(stats.totalNetSaleCommission || 0)}
                 </span>
               </div>
               <div className="flex justify-between items-baseline gap-2">

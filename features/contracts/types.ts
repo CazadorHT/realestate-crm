@@ -15,12 +15,17 @@ export type RentalContractWithRelations = {
     property: {
       id: string;
       title: string;
+      cover_image_url?: string | null;
     } | null;
     lead: {
       id: string;
       full_name: string;
       phone: string | null;
       email: string | null;
+      line_id?: string | null;
+      wechat_id?: string | null;
+      whatsapp?: string | null;
+      facebook?: string | null;
     } | null;
   } | null;
 };

@@ -291,6 +291,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_token_ledgers_2027q1: {
+        Row: {
+          completion_tokens: number | null
+          cost_thb: number | null
+          created_at: string
+          feature: string
+          id: string
+          model: string
+          prompt_tokens: number | null
+          tenant_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          completion_tokens?: number | null
+          cost_thb?: number | null
+          created_at?: string
+          feature: string
+          id?: string
+          model: string
+          prompt_tokens?: number | null
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          completion_tokens?: number | null
+          cost_thb?: number | null
+          created_at?: string
+          feature?: string
+          id?: string
+          model?: string
+          prompt_tokens?: number | null
+          tenant_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       audit_logs_v3_2026_05: {
         Row: {
           action: string
@@ -444,6 +480,75 @@ export type Database = {
           new_data?: Json | null
           old_data?: Json | null
           tenant_id?: string | null
+        }
+        Relationships: []
+      }
+      audit_logs_v3_2026_09: {
+        Row: {
+          action: string
+          actor_id: string | null
+          client_ip: string | null
+          created_at: string
+          entity_id: string | null
+          entity_table: string
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          tenant_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          client_ip?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_table: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          tenant_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          client_ip?: string | null
+          created_at?: string
+          entity_id?: string | null
+          entity_table?: string
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          tenant_id?: string | null
+        }
+        Relationships: []
+      }
+      banks: {
+        Row: {
+          code: string
+          created_at: string | null
+          id: number
+          is_active: boolean | null
+          name_en: string
+          name_th: string
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name_en: string
+          name_th: string
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          id?: number
+          is_active?: boolean | null
+          name_en?: string
+          name_th?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -1132,8 +1237,10 @@ export type Database = {
           file_name: string
           id: string
           is_encrypted: boolean | null
+          mime_type: string | null
           owner_entity: string
           owner_id: string
+          size_bytes: number | null
           storage_path: string
           tenant_id: string | null
         }
@@ -1149,8 +1256,10 @@ export type Database = {
           file_name: string
           id?: string
           is_encrypted?: boolean | null
+          mime_type?: string | null
           owner_entity: string
           owner_id: string
+          size_bytes?: number | null
           storage_path: string
           tenant_id?: string | null
         }
@@ -1166,8 +1275,10 @@ export type Database = {
           file_name?: string
           id?: string
           is_encrypted?: boolean | null
+          mime_type?: string | null
           owner_entity?: string
           owner_id?: string
+          size_bytes?: number | null
           storage_path?: string
           tenant_id?: string | null
         }
@@ -1566,6 +1677,58 @@ export type Database = {
             columns: ["source_id"]
             isOneToOne: false
             referencedRelation: "data_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      line_groups: {
+        Row: {
+          created_at: string | null
+          group_id: string
+          group_name: string
+          is_active: boolean | null
+          picture_url: string | null
+          tenant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          group_id: string
+          group_name: string
+          is_active?: boolean | null
+          picture_url?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          group_id?: string
+          group_name?: string
+          is_active?: boolean | null
+          picture_url?: string | null
+          tenant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "line_groups_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "mv_executive_dashboard"
+            referencedColumns: ["tenant_id"]
+          },
+          {
+            foreignKeyName: "line_groups_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "line_groups_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants_v3"
             referencedColumns: ["id"]
           },
         ]
@@ -3671,6 +3834,36 @@ export type Database = {
         }
         Relationships: []
       }
+      traffic_views_v3_2026_09: {
+        Row: {
+          created_at: string
+          id: string
+          identity_id: string | null
+          target_id: string
+          target_type: string
+          tenant_id: string | null
+          visitor_session_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          identity_id?: string | null
+          target_id: string
+          target_type: string
+          tenant_id?: string | null
+          visitor_session_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          identity_id?: string | null
+          target_id?: string
+          target_type?: string
+          tenant_id?: string | null
+          visitor_session_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       blog_posts: {
@@ -4160,11 +4353,11 @@ export type Database = {
           file_name?: string | null
           id?: string | null
           is_encrypted?: boolean | null
-          mime_type?: never
+          mime_type?: string | null
           owner_id?: string | null
           owner_type?: string | null
           parent_id?: never
-          size_bytes?: never
+          size_bytes?: number | null
           storage_path?: string | null
           tenant_id?: string | null
           version?: never
@@ -4181,11 +4374,11 @@ export type Database = {
           file_name?: string | null
           id?: string | null
           is_encrypted?: boolean | null
-          mime_type?: never
+          mime_type?: string | null
           owner_id?: string | null
           owner_type?: string | null
           parent_id?: never
-          size_bytes?: never
+          size_bytes?: number | null
           storage_path?: string | null
           tenant_id?: string | null
           version?: never

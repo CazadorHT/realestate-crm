@@ -107,29 +107,24 @@ export async function getLineGroups(tenantId?: string | null) {
   const { createClient } = await import("@/lib/supabase/server");
   const supabase = (await createClient()) as unknown as SupabaseClient<LegacyDatabase>;
 
-  let query = supabase
-    .from("notification_channels_v3")
-    .select("id, platform, external_channel_id, channel_name, picture_url")
-    .eq("is_active", true);
-
-  if (tenantId && tenantId !== "ALL") {
-    query = query.or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
-  }
-
-  const { data, error } = await query.order("updated_at", {
-    ascending: false,
-  });
+  const { data, error } = await (supabase as any)
+    .from("line_groups")
+    .select("group_id, group_name, picture_url, is_active")
+    .eq("is_active", true)
+    .order("updated_at", {
+      ascending: false,
+    });
 
   if (error) {
     console.error("Error fetching line groups:", error);
     return [];
   }
-  return (data || []).map((c) => ({
-    group_id: c.id,
-    group_name: c.channel_name,
+  return (data || []).map((c: any) => ({
+    group_id: c.group_id,
+    group_name: c.group_name,
     picture_url: c.picture_url,
-    platform: c.platform,
-    external_channel_id: c.external_channel_id,
+    platform: "LINE",
+    external_channel_id: c.group_id,
   }));
 }
 

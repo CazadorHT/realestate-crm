@@ -10,6 +10,7 @@ export const rentNotificationRuleSchema = z.object({
   is_active: z.boolean(),
   language: z.enum(["th", "en", "cn", "ru"]),
   tenant_id: z.string().uuid().optional().nullable(),
+  custom_group_name: z.string().optional(),
 });
 
 export type RentNotificationRuleInput = z.infer<

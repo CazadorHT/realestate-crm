@@ -22,7 +22,9 @@ export default async function LeadEditPage({
   async function onSubmitAction(values: LeadFormValues) {
     "use server";
     const res = await updateLeadAction({ id, ...values });
-    if (!res.success) throw new Error(res.error);
+    if (!res.success) {
+      return { success: false, message: res.error || "เกิดข้อผิดพลาดในการแก้ไขลีด" };
+    }
     redirect(`/protected/leads/${id}?success=true`);
   }
 

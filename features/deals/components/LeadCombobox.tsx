@@ -51,12 +51,14 @@ export function LeadCombobox({
   const pageSize = 20;
   const listRef = useRef<HTMLDivElement>(null);
 
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+
   const selected = useMemo(
     () => items.find((x) => x.id === value) ?? null,
     [items, value]
   );
 
-  async function fetchPage(nextPage = 1, currentQ = q) {
+  async function fetchPage(nextPage = 1, currentQ = q, currentSort = sortOrder) {
     const isInitial = nextPage === 1;
     if (isInitial) setIsLoading(true);
     else setIsFetchingMore(true);
@@ -66,6 +68,7 @@ export function LeadCombobox({
       if (currentQ) params.set("q", currentQ);
       params.set("page", String(nextPage));
       params.set("pageSize", String(pageSize));
+      params.set("sortOrder", currentSort);
 
       const res = await fetch(`/api/leads?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch leads");
@@ -96,19 +99,18 @@ export function LeadCombobox({
     }
   }
 
-  // Load on open
+  // Load on open or sortOrder change
   useEffect(() => {
     if (!open) return;
-    setQ("");
-    fetchPage(1, "");
+    fetchPage(1, q, sortOrder);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, sortOrder]);
 
   // Debounced search
   useEffect(() => {
     if (!open) return;
     const handle = setTimeout(() => {
-      fetchPage(1, q);
+      fetchPage(1, q, sortOrder);
     }, 250);
     return () => clearTimeout(handle);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -194,7 +196,7 @@ export function LeadCombobox({
       onOpenChange={setOpen}
       title="เลือกลูกค้า (ลีด)"
       description="ค้นหาลีดด้วยชื่อ เบอร์โทรศัพท์ หรืออีเมล"
-      className="sm:max-w-[560px]"
+      className="sm:max-w-md!"
       trigger={trigger}
       isLoading={isLoading}
       minHeight="440px"
@@ -220,12 +222,24 @@ export function LeadCombobox({
               </button>
             )}
           </div>
-          {items.length > 0 && (
-            <p className="text-[11px] text-slate-400 mt-2 px-1">
-              พบ <span className="font-bold text-slate-600">{items.length}</span> รายการ
-              {hasMore ? "+" : ""}
-            </p>
-          )}
+          <div className="flex items-center justify-between mt-2 px-1">
+            {items.length > 0 ? (
+              <p className="text-[11px] text-slate-400">
+                พบ <span className="font-bold text-slate-600">{items.length}</span> รายการ
+                {hasMore ? "+" : ""}
+              </p>
+            ) : <div />}
+            <div className="flex items-center gap-1.5 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-100">
+              <span className="text-[10px] text-slate-400 font-medium">เรียงลำดับ:</span>
+              <button
+                type="button"
+                onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
+                className="text-[10px] font-black text-blue-600 hover:text-blue-800 cursor-pointer"
+              >
+                {sortOrder === "desc" ? "ใหม่ ➔ เก่า" : "เก่า ➔ ใหม่"}
+              </button>
+            </div>
+          </div>
         </div>
 
         <div
@@ -245,7 +259,7 @@ export function LeadCombobox({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-2">
+            <div className="grid grid-cols-3 gap-2 pt-2">
               {items.map((item) => {
                 const isSelected = value === item.id;
                 const color = nameToColor(item.full_name);
@@ -282,7 +296,7 @@ export function LeadCombobox({
                         "font-bold text-sm truncate leading-snug transition-colors text-center",
                         isSelected ? "text-blue-700" : "text-slate-900 group-hover:text-blue-700"
                       )}>
-                        {item.full_name}
+                        คุณ {item.full_name}
                       </p>
                       {contactLine && (
                         <p className="flex items-center justify-center gap-1.5 text-xs text-slate-400 mt-0.5 truncate">

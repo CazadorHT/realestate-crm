@@ -479,7 +479,7 @@ export function SidebarNav({
             item.active
               ? "text-blue-700 font-semibold"
               : "text-slate-600 hover:text-slate-900 hover:bg-slate-50/50 font-medium",
-            isCollapsed && "justify-center px-0",
+            isCollapsed && "justify-center px-0 flex-col h-auto py-2.5 gap-1",
           )}
         >
           {item.active && (
@@ -499,7 +499,8 @@ export function SidebarNav({
           
           <div className={cn(
             "relative z-10 flex items-center gap-3",
-            !isCollapsed && "w-full"
+            !isCollapsed && "w-full",
+            isCollapsed && "flex-col gap-1 items-center justify-center w-full"
           )}>
             {navigatingTo === item.href ? (
               <Loader2 className="h-4.5 w-4.5 animate-spin text-blue-600 shrink-0" />
@@ -518,11 +519,15 @@ export function SidebarNav({
               <m.div 
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-blue-500 border-2 border-white shadow-sm" 
+                className="absolute top-0 right-3 h-2 w-2 rounded-full bg-blue-500 border-2 border-white shadow-sm" 
               />
             )}
             
-            {!isCollapsed && (
+            {isCollapsed ? (
+              <span className="text-[9px] text-center font-medium leading-tight truncate w-full px-1">
+                {item.title}
+              </span>
+            ) : (
               <m.span 
                 initial={false}
                 animate={{ opacity: 1, x: 0 }}

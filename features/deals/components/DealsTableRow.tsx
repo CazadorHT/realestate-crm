@@ -35,6 +35,10 @@ export function DealsTableRow({
     deal.created_at &&
     differenceInHours(new Date(), new Date(deal.created_at)) < 24;
 
+  const netComm = (deal as any).commission_net !== undefined 
+    ? (deal as any).commission_net 
+    : (Number(deal.commission_total) || 0);
+
   return (
     <TableRow
       className={`hover:bg-slate-50/50 transition-colors ${isSelected ? "bg-blue-50/50" : ""}`}
@@ -87,12 +91,12 @@ export function DealsTableRow({
             setNavigatingId(`lead-${deal.lead_id}`);
             router.push(`/protected/leads/${deal.lead_id}`);
           }}
-          className="text-[11px] font-bold text-slate-600 hover:text-blue-600 hover:underline transition-colors line-clamp-1 uppercase tracking-tight cursor-pointer relative"
+          className="text-xs font-bold text-slate-600 hover:text-blue-600 hover:underline transition-colors line-clamp-1  tracking-tight cursor-pointer relative"
         >
           {navigatingId === `lead-${deal.lead_id}` && (
             <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-0.5" />
           )}
-          {deal.lead?.full_name || "-"}
+          คุณ {deal.lead?.full_name || "ไม่ได้ระบุ"}
         </div>
       </TableCell>
       <TableCell className="font-bold text-slate-700 text-[11px]">
@@ -127,13 +131,16 @@ export function DealsTableRow({
         </div>
       </TableCell>
       <TableCell>
-        {deal.commission_amount ? (
-          <span className="text-green-600 font-bold text-[11px] whitespace-nowrap">
-            {deal.commission_amount.toLocaleString()} ฿
+        <div className="flex flex-col">
+          <span className="text-green-600 font-bold text-[11.5px] whitespace-nowrap" title="ค่าคอมมิชชันหลังหัก Co-Broker">
+            {netComm.toLocaleString()} ฿
           </span>
-        ) : (
-          <span className="text-slate-300">-</span>
-        )}
+          {deal.commission_total && Number(deal.commission_total) > Number(netComm) && (
+            <span className="text-[9px] text-slate-400 line-through whitespace-nowrap" title="ค่าคอมมิชชันก่อนหัก Co-Broker (Gross)">
+              {Number(deal.commission_total).toLocaleString()} ฿
+            </span>
+          )}
+        </div>
       </TableCell>
       <TableCell className="text-slate-500 text-[11px] font-bold">
         {deal.deal_type === "RENT" && deal.duration_months ? (

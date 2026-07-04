@@ -15,7 +15,7 @@ export async function getPropertiesForSelect() {
   let query = supabase
     .from("properties")
     .select(
-      `id, title, price, original_price, rental_price, original_rental_price, listing_type, commission_sale_percentage, commission_rent_months, popular_area, province, images`,
+      `id, title, price, original_price, rental_price, original_rental_price, listing_type, commission_sale_percentage, commission_rent_months, popular_area, province, main_image`,
     )
     .is("deleted_at", null);
 
@@ -27,11 +27,8 @@ export async function getPropertiesForSelect() {
 
   if (error) throw error;
 
-  // Map to include cover_image
   return (data ?? []).map((p) => {
-    const imagesRaw = (p.images as unknown) ?? null;
-    const images: PropertyImageMetadata[] = Array.isArray(imagesRaw) ? (imagesRaw as PropertyImageMetadata[]) : [];
-    const coverUrl = images.find((img) => img.is_cover)?.url || images[0]?.url || null;
+    const coverUrl = p.main_image || null;
     return {
       ...p,
       id: p.id!,

@@ -73,7 +73,7 @@ export default function PayoutDashboardPage() {
     paidAmountThisMonth: 0,
     totalPoolAmount: 0
   });
-  const pageSize = 10;
+  const pageSize = 50;
   
   // ✅ High Performance Store (Zustand)
   const selectedIds = usePayoutStore(state => state.selectedIds);
@@ -94,8 +94,29 @@ export default function PayoutDashboardPage() {
   const [isAllBranches, setIsAllBranches] = useState(false);
 
   useEffect(() => {
-    const activeTenantId = document.cookie.split('; ').find(row => row.startsWith('active_tenant_id='))?.split('=')[1];
-    setIsAllBranches(activeTenantId === 'ALL');
+    const checkAccess = async () => {
+      const activeTenantId = document.cookie.split('; ').find(row => row.startsWith('active_tenant_id='))?.split('=')[1];
+      const isAll = activeTenantId === 'ALL';
+      
+      if (isAll) {
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("role")
+            .eq("id", user.id)
+            .single();
+          if (profile && (profile.role === "ADMIN" || profile.role === "MANAGER")) {
+            setIsAllBranches(false);
+            return;
+          }
+        }
+      }
+      setIsAllBranches(isAll);
+    };
+    checkAccess();
   }, []);
 
   // Recalculate Preview State
@@ -365,6 +386,48 @@ export default function PayoutDashboardPage() {
         previewData={previewData}
         onConfirm={() => targetId && handleRecalculate(targetId, true)}
       />
+
+      {/* 🟢 Bulk Action Floating Bar */}
+      {selectedIds.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-md text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom duration-300 border border-slate-800">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-semibold text-slate-400">เลือกแล้ว {selectedIds.size} รายการ</span>
+            <span className="text-sm font-bold text-indigo-400">
+              ยอดสุทธิรวม: {formatCurrency(currentTotal)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl px-4 h-10 border-none"
+              onClick={async () => {
+                const ids = Array.from(selectedIds);
+                setLoading(true);
+                const res = await bulkMarkAsReadyToPayAction(ids);
+                if (res.success) {
+                  toast.success(res.message || "อนุมัติรายการสำเร็จ");
+                  clearSelection();
+                  fetchPayouts();
+                } else {
+                  toast.error(res.error || "เกิดข้อผิดพลาดในการอนุมัติ");
+                }
+                setLoading(false);
+              }}
+              disabled={loading || isAllBranches}
+            >
+              อนุมัติพร้อมจ่าย (Approve Ready)
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl px-4 h-10 font-semibold"
+              onClick={clearSelection}
+            >
+              ยกเลิก
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

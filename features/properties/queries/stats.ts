@@ -1,5 +1,6 @@
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { getScopedRevenueClient } from "@/features/deals/logic/scoped-client";
 import { PropertyStats } from "./types";
 
 export async function getPropertiesDashboardStatsQuery(
@@ -42,7 +43,7 @@ export async function getPropertiesDashboardStatsQuery(
     // Type distribution
     buildBaseQuery().select("property_type"),
     // Financial aggregation (Still need some rows for complex commission logic, but limited to ACTIVE/SOLD/RENTED)
-    buildBaseQuery().select("status, price, rental_price, original_price, original_rental_price, listing_type, commission_sale_percentage, commission_rent_months").in("status", ["ACTIVE", "SOLD", "RENTED"])
+    buildBaseQuery().select("status, price, rental_price, original_price, original_rental_price, listing_type, commission_sale_percentage, commission_rent_months, co_agent_sale_commission_percent").in("status", ["ACTIVE", "SOLD", "RENTED"])
   ]);
 
   const statusStats = statusStatsRaw as { status: string | null }[] | null;
@@ -56,6 +57,7 @@ export async function getPropertiesDashboardStatsQuery(
     listing_type: string | null; 
     commission_sale_percentage: number | null; 
     commission_rent_months: number | null;
+    co_agent_sale_commission_percent: number | null;
   }[] | null;
 
   // Financial calculations
@@ -63,23 +65,41 @@ export async function getPropertiesDashboardStatsQuery(
   let totalSaleCommission = 0;
   let totalRentCommission = 0;
   let totalRealizedCommission = 0;
+  let totalNetSaleCommission = 0;
+  let totalNetRealizedCommission = 0;
+
+  // Query actual CLOSED_WIN deals and their commissions to calculate true realized/net commissions
+  const scoped = getScopedRevenueClient(supabase, tenantId);
+  const { data: closedDeals } = (await scoped.deals()
+    .select("id, commission_total, commissions:crm_deal_commissions_v3(recipient_role, amount)")
+    .eq("status", "CLOSED_WIN")) as any;
+
+  closedDeals?.forEach((d: any) => {
+    const gross = Number(d.commission_total) || 0;
+    const coAgentSum = ((d as any).commissions || [])
+      .filter((c: any) => c.recipient_role === "CO_AGENT")
+      .reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0);
+    totalRealizedCommission += gross;
+    totalNetRealizedCommission += gross - coAgentSum;
+  });
 
   financialData?.forEach((p) => {
     const salePrice = (p.price ?? 0) > 0 ? (p.price ?? 0) : (p.original_price ?? 0);
     const rentPrice = (p.rental_price ?? 0) > 0 ? (p.rental_price ?? 0) : (p.original_rental_price ?? 0);
 
+    const saleCommPercent = p.commission_sale_percentage || 3;
+    const coBrokerPercent = p.co_agent_sale_commission_percent || 0;
+    const netSaleCommPercent = Math.max(0, saleCommPercent - coBrokerPercent);
+
     if (p.status === "ACTIVE") {
       totalValue += (salePrice || 0);
       if ((p.listing_type === "SALE" || p.listing_type === "SALE_AND_RENT") && salePrice > 0) {
-        totalSaleCommission += (salePrice * (p.commission_sale_percentage || 3)) / 100;
+        totalSaleCommission += (salePrice * saleCommPercent) / 100;
+        totalNetSaleCommission += (salePrice * netSaleCommPercent) / 100;
       }
       if ((p.listing_type === "RENT" || p.listing_type === "SALE_AND_RENT") && rentPrice > 0) {
         totalRentCommission += rentPrice * (p.commission_rent_months || 1);
       }
-    } else if (p.status === "SOLD") {
-      totalRealizedCommission += (salePrice * (p.commission_sale_percentage || 3)) / 100;
-    } else if (p.status === "RENTED") {
-      totalRealizedCommission += rentPrice * (p.commission_rent_months || 1);
     }
   });
 
@@ -104,6 +124,8 @@ export async function getPropertiesDashboardStatsQuery(
     totalSaleCommission,
     totalRentCommission,
     totalRealizedCommission,
+    totalNetRealizedCommission,
+    totalNetSaleCommission,
     byType: Array.from(typeMap.entries()).map(([name, value]) => ({ name, value })),
     byStatus: Array.from(statusMap.entries()).map(([name, value]) => ({ name, value })),
     aiReviewCount: aiReviewCount || 0,

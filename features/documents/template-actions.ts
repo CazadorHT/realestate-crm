@@ -12,18 +12,34 @@ import { type Database } from "@/lib/database.types.generated";
 
 // 1. Get All Templates
 export async function getTemplatesAction() {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("contract_templates")
-    .select("id, name, content, description, type, is_active, created_at")
+    .select("id, name, content, description, type, is_active, created_at, tenant_id")
     .eq("is_active", true)
     .order("created_at", { ascending: false });
+
+  if (tenantId && tenantId !== "ALL") {
+    query = query.eq("tenant_id", tenantId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Fetch Templates Error:", error);
     return [];
+  }
+
+  if (data && (!tenantId || tenantId === "ALL")) {
+    const seen = new Set();
+    return data.filter((item: any) => {
+      const key = item.type || item.name;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 
   return data;

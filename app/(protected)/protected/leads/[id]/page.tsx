@@ -290,7 +290,7 @@ export default async function LeadDetailPage({
       {/* Main Content - Dynamic Grid for 3 Section Lists */}
       <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 items-start">
         {/* Deals Section */}
-        <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 flex flex-col h-[500px] xl:h-[600px] overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-indigo-900/5">
+        <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 flex flex-col overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-indigo-900/5">
           <div className="flex items-center justify-between gap-4 p-5 border-b border-slate-50 bg-slate-50/20">
             <div className="flex items-center gap-4">
               <div className="h-10 w-10 rounded-xl bg-indigo-500 shadow-lg shadow-indigo-100 flex items-center justify-center shrink-0 text-white">
@@ -315,12 +315,12 @@ export default async function LeadDetailPage({
         </div>
 
         {/* Documents Section */}
-        <div className="h-[500px] xl:h-[600px]">
+        <div className="h-auto max-h-[600px]">
            <DocumentSection ownerId={id} ownerType="LEAD" tenantId={tenantId || lead.tenant_id} />
         </div>
 
         {/* Timeline */}
-        <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 flex flex-col h-[500px] xl:h-[600px] overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-orange-900/5 sm:col-span-1 lg:col-span-2 xl:col-span-1">
+        <div className="rounded-2xl border-none bg-white shadow-sm ring-1 ring-slate-100 flex flex-col max-h-[600px]  overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-orange-900/5 sm:col-span-1 lg:col-span-2 xl:col-span-1">
           <div className="flex items-center justify-between gap-4 p-5 border-b border-slate-50 bg-slate-50/20">
             <div className="flex items-center gap-4">
               <div className="h-10 w-10 rounded-xl bg-orange-500 shadow-lg shadow-orange-100 flex items-center justify-center shrink-0 text-white">

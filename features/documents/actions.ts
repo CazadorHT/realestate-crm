@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { decrypt } from "@/lib/crypto";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import {
   createDocumentSchema,
@@ -329,6 +330,8 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
         tenant_id:
           tenantId && tenantId !== "ALL" ? tenantId : validated.tenant_id,
         is_encrypted: false,
+        size_bytes: validated.size_bytes || 0,
+        mime_type: validated.mime_type || null,
       })
       .select("id, file_name, storage_path")
       .single();
@@ -606,14 +609,15 @@ export async function searchOwnerAction(
     assertStaff(role);
 
     const q = query.trim();
-    // If empty query, we return the 10 most recent items of that type
     const isInitialFetch = !q;
 
     if (type === "LEAD") {
-      let qry = supabase.from("leads").select("id, full_name, email");
+      let qry = supabase
+        .from("crm_leads_v3")
+        .select("id, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name, email)");
 
       if (!isInitialFetch) {
-        qry = qry.or(`full_name.ilike.%${q}%,email.ilike.%${q}%`);
+        qry = qry.or(`display_name.ilike.%${q}%,email.ilike.%${q}%`, { foreignTable: "identities_v3" });
       }
 
       if (tenantId && tenantId !== "ALL") {
@@ -624,10 +628,14 @@ export async function searchOwnerAction(
         .order("created_at", { ascending: false })
         .limit(10);
       if (error) throw error;
-      return (data || []).map((l) => ({
-        id: l.id as string,
-        label: `${l.full_name} (${l.email || "N/A"})`,
-      }));
+      return (data || []).map((l: any) => {
+        const name = decrypt(l.identity?.display_name) || "Unknown Lead";
+        const email = decrypt(l.identity?.email) || "N/A";
+        return {
+          id: l.id as string,
+          label: `${name} (${email})`,
+        };
+      });
     } else if (type === "PROPERTY") {
       let qry = supabase
         .from("properties")
@@ -648,18 +656,12 @@ export async function searchOwnerAction(
       if (error) throw error;
       return (data || []).map((p) => ({
         id: p.id as string,
-        label: p.title || "",
+        label: p.title || "Unnamed Property",
       }));
     } else if (type === "DEAL") {
       let qry = supabase
-        .from("deals")
-        .select("id, leads(full_name), properties(title)");
-
-      if (!isInitialFetch) {
-        qry = qry.or(
-          `leads.full_name.ilike.%${q}%,properties.title.ilike.%${q}%`,
-        );
-      }
+        .from("crm_deals_v3")
+        .select("id, lead:crm_leads_v3(identity:identities_v3(display_name)), property:properties(title)");
 
       if (tenantId && tenantId !== "ALL") {
         qry = qry.eq("tenant_id", tenantId);
@@ -669,37 +671,48 @@ export async function searchOwnerAction(
         .order("created_at", { ascending: false })
         .limit(10);
       if (error) throw error;
-      return (data || []).map((d) => ({
-        id: d.id as string,
-        label: `${(d.leads as unknown as { full_name: string } | null)?.full_name || "Unknown Lead"} - ${(d.properties as unknown as { title: string } | null)?.title || "Unknown Property"}`,
-      }));
+
+      let results = (data || []).map((d: any) => {
+        const leadName = decrypt(d.lead?.identity?.display_name) || "Unknown Lead";
+        const propTitle = d.property?.title || "Unknown Property";
+        return {
+          id: d.id as string,
+          label: `${leadName} - ${propTitle}`,
+        };
+      });
+
+      if (q) {
+        results = results.filter(r => r.label.toLowerCase().includes(q.toLowerCase()));
+      }
+      return results;
     } else if (type === "RENTAL_CONTRACT") {
-      // For rental contracts, we usually search by lead name or property in the associated deal
       let qry = supabase
-        .from("rental_contracts")
-        .select("id, deals(leads(full_name), properties(title))")
-        .or(
-          `deals.leads.full_name.ilike.%${q}%,deals.properties.title.ilike.%${q}%`,
-        );
+        .from("crm_deals_v3")
+        .select("id, lead:crm_leads_v3(identity:identities_v3(display_name)), property:properties(title)")
+        .eq("deal_type", "RENT");
 
       if (tenantId && tenantId !== "ALL") {
-        // Need to join deals to filter by tenant_id if tenant_id is on deals
-        // Actually rental_contracts might have tenant_id too. Let's assume matches pattern.
         qry = qry.eq("tenant_id", tenantId);
       }
 
-      const { data, error } = await qry.limit(10);
+      const { data, error } = await qry
+        .order("created_at", { ascending: false })
+        .limit(10);
       if (error) throw error;
-      return (data || []).map((c) => {
-        const deal = c.deals as unknown as {
-          leads: { full_name: string } | null;
-          properties: { title: string } | null;
-        } | null;
+
+      let results = (data || []).map((d: any) => {
+        const leadName = decrypt(d.lead?.identity?.display_name) || "Unknown Lead";
+        const propTitle = d.property?.title || "Unknown Property";
         return {
-          id: c.id as string,
-          label: `Contract: ${deal?.leads?.full_name || "N/A"} - ${deal?.properties?.title || "N/A"}`,
+          id: d.id as string,
+          label: `สัญญาเช่า: ${leadName} - ${propTitle}`,
         };
       });
+
+      if (q) {
+        results = results.filter(r => r.label.toLowerCase().includes(q.toLowerCase()));
+      }
+      return results;
     }
 
     return [];

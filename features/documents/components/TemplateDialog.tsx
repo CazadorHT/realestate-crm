@@ -4,8 +4,15 @@ import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { getTemplatesAction } from "../template-actions";
 import {
+  getBanksAction,
+  createBankAction,
+  updateBankAction,
+  deleteBankAction
+} from "@/features/finance/bank-actions";
+import {
   generateDocumentFromTemplateAction,
   generateDocxDocumentFromTemplateAction,
+  getDealDetailsAction,
 } from "../generation-actions";
 import { createDocumentRecordAction, searchOwnerAction } from "../actions";
 import { DOC_TYPE_LABELS, DocumentOwnerType } from "../schema";
@@ -29,11 +36,17 @@ import {
   Image as ImageIcon,
   X,
   Check,
+  Pencil,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { PropertyCombobox } from "@/components/PropertyCombobox";
+import { LeadCombobox } from "@/components/LeadCombobox";
+import { DealCombobox } from "@/features/deals/components/DealCombobox";
 
 interface TemplateDialogProps {
   ownerId?: string;
@@ -66,14 +79,53 @@ export function TemplateDialog({
   const [ownerResults, setOwnerResults] = useState<
     { id: string; label: string }[]
   >([]);
-  const [selectedOwnerId, setSelectedOwnerId] = useState(initialOwnerId || "");
+  const [selectedDealId, setSelectedDealId] = useState(
+    initialOwnerType === "DEAL" || !initialOwnerType ? initialOwnerId || "" : ""
+  );
+  const [selectedLeadId, setSelectedLeadId] = useState(
+    initialOwnerType === "LEAD" ? initialOwnerId || "" : ""
+  );
+  const [selectedPropertyId, setSelectedPropertyId] = useState(
+    initialOwnerType === "PROPERTY" ? initialOwnerId || "" : ""
+  );
   const [isSearching, setIsSearching] = useState(false);
+
+  const activeOwnerId =
+    targetOwnerType === "DEAL"
+      ? selectedDealId
+      : targetOwnerType === "LEAD"
+        ? selectedLeadId
+        : selectedPropertyId;
 
   // Slip & Bank State
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [slipPreview, setSlipPreview] = useState<string | null>(null);
   const [bankName, setBankName] = useState("");
   const [bankAccountNo, setBankAccountNo] = useState("");
+
+  // Banks States
+  const [banks, setBanks] = useState<{ id: string | number; code: string; name_th: string; name_en: string }[]>([]);
+  const [isBankSelectorOpen, setIsBankSelectorOpen] = useState(false);
+  const [bankSearchQuery, setBankSearchQuery] = useState("");
+  const [isManageBanksOpen, setIsManageBanksOpen] = useState(false);
+  const [bankForm, setBankForm] = useState({ id: "" as string | number, code: "", name_th: "", name_en: "" });
+  const [isEditingBank, setIsEditingBank] = useState(false);
+  const [isSubmittingBank, setIsSubmittingBank] = useState(false);
+
+  async function loadBanks() {
+    try {
+      const res = await getBanksAction();
+      if (res.success && res.data) {
+        setBanks(res.data as any);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  useEffect(() => {
+    loadBanks();
+  }, []);
 
   // New manual override fields
   const [paymentPeriod, setPaymentPeriod] = useState("");
@@ -82,6 +134,15 @@ export function TemplateDialog({
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientLine, setClientLine] = useState("");
+  const [clientPassport, setClientPassport] = useState("");
+  const [clientIdCard, setClientIdCard] = useState("");
+  const [clientNationality, setClientNationality] = useState("");
+  const [reservationFee, setReservationFee] = useState("");
+  const [securityDeposit, setSecurityDeposit] = useState("");
+  const [bookingAmount, setBookingAmount] = useState("");
+  const [contractDueDate, setContractDueDate] = useState("");
+  const [dealRentalPrice, setDealRentalPrice] = useState<number | null>(null);
+  const [selectedBank, setSelectedBank] = useState<{ name_th: string; name_en: string } | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 4;
 
@@ -92,17 +153,30 @@ export function TemplateDialog({
   const resetForm = () => {
     setOwnerSearch("");
     setOwnerResults([]);
-    setSelectedOwnerId(initialOwnerId || "");
+    setSelectedDealId(initialOwnerType === "DEAL" || !initialOwnerType ? initialOwnerId || "" : "");
+    setSelectedLeadId(initialOwnerType === "LEAD" ? initialOwnerId || "" : "");
+    setSelectedPropertyId(initialOwnerType === "PROPERTY" ? initialOwnerId || "" : "");
     setSlipFile(null);
     setSlipPreview(null);
     setBankName("");
+    setSelectedBank(null);
     setBankAccountNo("");
+    setBankSearchQuery("");
+    setIsBankSelectorOpen(false);
     setPaymentPeriod("");
     setPaymentMethod("Transfer");
     setAccountName("");
     setClientName("");
     setClientEmail("");
     setClientLine("");
+    setClientPassport("");
+    setClientIdCard("");
+    setClientNationality("");
+    setReservationFee("");
+    setSecurityDeposit("");
+    setBookingAmount("");
+    setContractDueDate("");
+    setDealRentalPrice(null);
     setTargetOwnerType(initialOwnerType || "DEAL");
     setCustomFile(null);
     setCurrentStep(initialOwnerId ? 2 : 1);
@@ -157,7 +231,7 @@ export function TemplateDialog({
   // Sync lead/owner details when selected
   useEffect(() => {
     const fetchDetails = async () => {
-      const finalId = selectedOwnerId || initialOwnerId;
+      const finalId = activeOwnerId || initialOwnerId;
       if (!finalId) return;
 
       try {
@@ -190,7 +264,7 @@ export function TemplateDialog({
     };
     fetchDetails();
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOwnerId, initialOwnerId, targetOwnerType, initialOwnerType]);
+  }, [activeOwnerId, initialOwnerId, targetOwnerType, initialOwnerType]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -209,7 +283,7 @@ export function TemplateDialog({
   };
 
   async function handleGenerate() {
-    const finalOwnerId = selectedOwnerId || initialOwnerId;
+    const finalOwnerId = activeOwnerId || initialOwnerId;
     const finalOwnerType = initialOwnerId ? initialOwnerType : targetOwnerType;
 
     if (!finalOwnerId) {
@@ -264,6 +338,7 @@ export function TemplateDialog({
           file_name: `Slip_${fileName}`,
           storage_path: filePath,
           mime_type: slipFile.type,
+          size_bytes: slipFile.size,
           version: 1,
         });
 
@@ -271,6 +346,10 @@ export function TemplateDialog({
       }
 
       let res;
+      const resolvedBankName = language === "th"
+        ? (selectedBank?.name_th || bankName)
+        : (selectedBank?.name_en || selectedBank?.name_th || bankName);
+
       if (templateSource === "standard") {
         res = await generateDocumentFromTemplateAction(
           selectedTemplateId,
@@ -279,7 +358,7 @@ export function TemplateDialog({
           {
             language: language as "th" | "en" | "cn" | "ru",
             slip_url: slipUrl,
-            bank_name: bankName,
+            bank_name: resolvedBankName,
             bank_account_no: bankAccountNo,
             payment_period: paymentPeriod,
             payment_method: paymentMethod,
@@ -287,6 +366,13 @@ export function TemplateDialog({
             client_name_override: clientName,
             client_email_override: clientEmail,
             client_line_override: clientLine,
+            reservation_fee: reservationFee,
+            security_deposit: securityDeposit,
+            booking_amount: bookingAmount,
+            contract_due_date: contractDueDate,
+            client_passport: clientPassport,
+            client_id_card: clientIdCard,
+            client_nationality: clientNationality,
           },
         );
       } else {
@@ -308,7 +394,7 @@ export function TemplateDialog({
           {
             language: language as "th" | "en" | "cn" | "ru",
             slip_url: slipUrl,
-            bank_name: bankName,
+            bank_name: resolvedBankName,
             bank_account_no: bankAccountNo,
             payment_period: paymentPeriod,
             payment_method: paymentMethod,
@@ -316,6 +402,13 @@ export function TemplateDialog({
             client_name_override: clientName,
             client_email_override: clientEmail,
             client_line_override: clientLine,
+            reservation_fee: reservationFee,
+            security_deposit: securityDeposit,
+            booking_amount: bookingAmount,
+            contract_due_date: contractDueDate,
+            client_passport: clientPassport,
+            client_id_card: clientIdCard,
+            client_nationality: clientNationality,
           },
           { templateName: customFile!.name.replace(".docx", "") },
         );
@@ -343,8 +436,9 @@ export function TemplateDialog({
     activeTemplate?.type === "RESERVATION_DOCUMENT";
 
   return (
-    <ResponsiveDialog
-      open={open}
+    <>
+      <ResponsiveDialog
+        open={open}
       onOpenChange={setOpen}
       className="sm:max-w-[800px]"
       trigger={
@@ -385,7 +479,7 @@ export function TemplateDialog({
             <Button
               type="button"
               onClick={() => {
-                if (currentStep === 1 && !selectedOwnerId && !initialOwnerId) {
+                if (currentStep === 1 && !activeOwnerId && !initialOwnerId) {
                    toast.error("กรุณาเลือกผู้รับเอกสารก่อนไปขั้นตอนถัดไป");
                    return;
                 }
@@ -472,9 +566,6 @@ export function TemplateDialog({
                   )}
                   onClick={() => {
                     setTargetOwnerType(type);
-                    setOwnerSearch("");
-                    setOwnerResults([]);
-                    setSelectedOwnerId("");
                   }}
                 >
                   {type === "DEAL"
@@ -486,67 +577,70 @@ export function TemplateDialog({
               ))}
             </div>
 
-            <div className="relative">
-              <Input
-                placeholder={`ค้นหาชื่อ ${targetOwnerType === "DEAL" ? "ลูกค้าหรือทรัพย์สินในดีล" : targetOwnerType === "LEAD" ? "ลูกค้า" : "ทรัพย์สิน"}...`}
-                value={ownerSearch}
-                onChange={(e) => setOwnerSearch(e.target.value)}
-                className="pl-11 h-12 rounded-2xl border-slate-100 bg-white focus:border-blue-500 shadow-xs"
-              />
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 text-slate-400" />
-              {isSearching && (
-                <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4.5 w-4.5 animate-spin text-blue-500" />
-              )}
-            </div>
+            {targetOwnerType === "DEAL" && (
+              <DealCombobox
+                value={selectedDealId || null}
+                onChange={(val, picked) => {
+                  setSelectedDealId(val || "");
+                  setOwnerSearch(picked ? `${picked.property_title || "ดีล"} (${picked.lead_name || ""})` : "");
+                  if (picked) {
+                    const rent = picked.rental_price || null;
+                    const price = picked.price || null;
+                    const base = rent || price || null;
+                    setDealRentalPrice(base);
+                    if (base) {
+                      setBookingAmount(String(base));
+                      if (rent) {
+                        setReservationFee(String(rent));
+                        setSecurityDeposit(String(rent * 2));
+                      } else {
+                        setReservationFee("");
+                        setSecurityDeposit("");
+                      }
+                    }
 
-            {ownerResults.length > 0 && !selectedOwnerId && (
-              <div className="border border-slate-100 rounded-2xl bg-white max-h-[240px] overflow-y-auto shadow-xl animate-in fade-in slide-in-from-top-2">
-                <div className="p-2 border-b border-slate-50 bg-white sticky top-0 z-10">
-                   <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest pl-2">
-                    {ownerSearch.trim() === "" ? "รายการล่าสุด (Recent Items)" : "ผลการค้นหา (Search Results)"}
-                   </p>
-                </div>
-                {ownerResults.map((r) => (
-                  <div
-                    key={r.id}
-                    className="p-3.5 hover:bg-blue-50 cursor-pointer text-sm border-b border-slate-50 last:border-0 flex items-center justify-between group"
-                    onClick={() => {
-                      setSelectedOwnerId(r.id);
-                      setOwnerSearch(r.label);
-                      setOwnerResults([]);
-                    }}
-                  >
-                    <span className="font-semibold text-slate-700 group-hover:text-blue-700 transition-colors">{r.label}</span>
-                    <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="sm" className="h-7 text-[10px] font-semibold text-blue-600 bg-blue-50 rounded-lg">เลือก</Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    // Fetch full lead/tenant details from deal to pre-fill overrides
+                    getDealDetailsAction(picked.id).then((res) => {
+                      if (res.success && res.data?.lead) {
+                        setClientName(res.data.lead.full_name || "");
+                        setClientEmail(res.data.lead.email || "");
+                        setClientLine(res.data.lead.line_id || "");
+                      }
+                    }).catch((err) => console.error("Error pre-filling overrides:", err));
+                  } else {
+                    setDealRentalPrice(null);
+                    setBookingAmount("");
+                    setReservationFee("");
+                    setSecurityDeposit("");
+                    setClientName("");
+                    setClientEmail("");
+                    setClientLine("");
+                    setClientPassport("");
+                    setClientIdCard("");
+                    setClientNationality("");
+                  }
+                }}
+              />
             )}
 
-            {selectedOwnerId && (
-              <div className="flex items-center justify-between bg-blue-600 p-3 rounded-2xl border border-blue-700 shadow-lg shadow-blue-100 animate-in zoom-in-95">
-                <div className="flex items-center gap-2 min-w-0">
-                   <div className="h-6 w-6 bg-white/20 rounded-lg flex items-center justify-center shrink-0">
-                      <FileText className="h-3.5 w-3.5 text-white" />
-                   </div>
-                   <span className="text-sm font-semibold text-white truncate pr-2">
-                    {ownerSearch}
-                  </span>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-white/60 hover:text-white hover:bg-white/10 rounded-lg shrink-0"
-                  onClick={() => {
-                    setSelectedOwnerId("");
-                    setOwnerSearch("");
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+            {targetOwnerType === "LEAD" && (
+              <LeadCombobox
+                value={selectedLeadId || null}
+                onChangeAction={(val, picked) => {
+                  setSelectedLeadId(val || "");
+                  setOwnerSearch(picked ? picked.full_name : "");
+                }}
+              />
+            )}
+
+            {targetOwnerType === "PROPERTY" && (
+              <PropertyCombobox
+                value={selectedPropertyId || null}
+                onChangeAction={(val, picked) => {
+                  setSelectedPropertyId(val || "");
+                  setOwnerSearch(picked ? picked.title : "");
+                }}
+              />
             )}
           </div>
         )}
@@ -720,15 +814,28 @@ export function TemplateDialog({
                 
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
                 <div className="space-y-2">
-                  <Label htmlFor="bankName" className="text-xs font-semibold text-slate-500 ml-1">ธนาคารที่รับเงิน</Label>
-                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุชื่อธนาคารสำหรับรับชำระเงิน</p>
-                  <Input
-                    id="bankName"
-                    placeholder="เช่น กสิกรไทย (KBank)"
-                    value={bankName}
-                    onChange={(e) => setBankName(e.target.value)}
-                    className="h-11 rounded-xl border-slate-200 bg-white"
-                  />
+                  <div className="flex items-center justify-between ml-1">
+                    <Label htmlFor="bankName" className="text-xs font-semibold text-slate-500">ธนาคารที่รับเงิน</Label>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setIsManageBanksOpen(true)}
+                      className="h-6 text-[10px] text-indigo-600 hover:text-indigo-700 font-semibold p-0 flex items-center gap-1 hover:bg-transparent"
+                    >
+                      <Plus className="h-3 w-3" /> จัดการธนาคาร
+                    </Button>
+                  </div>
+                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุหรือเลือกชื่อธนาคารสำหรับรับชำระเงิน</p>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setIsBankSelectorOpen(true)}
+                    className="w-full h-11 px-4 text-left rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between text-sm text-slate-800"
+                  >
+                    <span>{bankName || "เลือกธนาคาร..."}</span>
+                    <Search className="h-4 w-4 text-slate-400" />
+                  </button>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="bankAccountNo" className="text-xs font-semibold text-slate-500 ml-1">เลขที่บัญชี</Label>
@@ -833,6 +940,89 @@ export function TemplateDialog({
                   className="h-11 rounded-xl border-slate-200 bg-white"
                 />
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+                <div className="space-y-2">
+                  <Label htmlFor="reservationFee" className="text-xs font-semibold text-slate-500 ml-1">เงินมัดจำ / ค่าจอง (Reservation Fee)</Label>
+                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุยอดเงินจอง (เช่น 5000)</p>
+                  <Input
+                    id="reservationFee"
+                    placeholder="เช่น 5000"
+                    value={reservationFee}
+                    onChange={(e) => setReservationFee(e.target.value)}
+                    className="h-11 rounded-xl border-slate-200 bg-white"
+                  />
+                  <div className="flex gap-1.5 mt-2">
+                    {[1, 2, 3].map((m) => (
+                      <Button
+                        key={m}
+                        type="button"
+                        variant="outline"
+                        className="h-7 text-[10px] px-2 py-0.5 rounded-lg border-slate-200 text-slate-600! hover:bg-slate-50 transition-colors"
+                        onClick={() => {
+                          if (dealRentalPrice) {
+                            setReservationFee(String(dealRentalPrice * m));
+                          }
+                        }}
+                        disabled={!dealRentalPrice}
+                      >
+                        {m} เดือน
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="securityDeposit" className="text-xs font-semibold text-slate-500 ml-1">เงินประกัน (Security Deposit)</Label>
+                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุยอดเงินประกันสัญญา (เช่น 20000)</p>
+                  <Input
+                    id="securityDeposit"
+                    placeholder="เช่น 20000"
+                    value={securityDeposit}
+                    onChange={(e) => setSecurityDeposit(e.target.value)}
+                    className="h-11 rounded-xl border-slate-200 bg-white"
+                  />
+                  <div className="flex gap-1.5 mt-2">
+                    {[1, 2, 3].map((m) => (
+                      <Button
+                        key={m}
+                        type="button"
+                        variant="outline"
+                        className="h-7 text-[10px] px-2 py-0.5 rounded-lg border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+                        onClick={() => {
+                          if (dealRentalPrice) {
+                            setSecurityDeposit(String(dealRentalPrice * m));
+                          }
+                        }}
+                        disabled={!dealRentalPrice}
+                      >
+                        {m} เดือน
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bookingAmount" className="text-xs font-semibold text-slate-500 ml-1">ราคาอสังหาฯ / ค่าเช่า (Override Price)</Label>
+                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุเมื่อต้องการแก้ไขราคาจากดีล</p>
+                  <Input
+                    id="bookingAmount"
+                    placeholder="ระบุราคาอสังหาฯ"
+                    value={bookingAmount}
+                    onChange={(e) => setBookingAmount(e.target.value)}
+                    className="h-11 rounded-xl border-slate-200 bg-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="contractDueDate" className="text-xs font-semibold text-slate-500 ml-1">กำหนดเซ็นสัญญา (Contract Due Date)</Label>
+                  <p className="text-[10px] text-slate-400 ml-1 font-medium">เช่น 15 กรกฎาคม 2026 หรือ 15th July 2026</p>
+                  <Input
+                    id="contractDueDate"
+                    placeholder="เช่น 15th July 2026"
+                    value={contractDueDate}
+                    onChange={(e) => setContractDueDate(e.target.value)}
+                    className="h-11 rounded-xl border-slate-200 bg-white"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="px-6">
@@ -849,11 +1039,54 @@ export function TemplateDialog({
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">ชื่อ-นามสกุล</Label>
+                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">ชื่อ-นามสกุล (Tenant Name)</Label>
                     <Input
                       className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
                       value={clientName}
                       onChange={(e) => setClientName(e.target.value)}
+                      placeholder="เช่น Marianne"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">สัญชาติ (Nationality)</Label>
+                    <Input
+                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
+                      value={clientNationality}
+                      onChange={(e) => setClientNationality(e.target.value)}
+                      placeholder="เช่น French / Thai"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">เลขบัตรประชาชน (ID Card Number)</Label>
+                    <Input
+                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
+                      value={clientIdCard}
+                      onChange={(e) => setClientIdCard(e.target.value)}
+                      placeholder="เช่น 1100101234567"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">เลขพาสปอร์ต (Passport Number)</Label>
+                    <Input
+                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
+                      value={clientPassport}
+                      onChange={(e) => setClientPassport(e.target.value)}
+                      placeholder="เช่น AA1234567"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">Email Address</Label>
+                    <Input
+                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
+                      value={clientEmail}
+                      onChange={(e) => setClientEmail(e.target.value)}
+                      placeholder="เช่น customer@email.com"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -862,16 +1095,9 @@ export function TemplateDialog({
                       className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
                       value={clientLine}
                       onChange={(e) => setClientLine(e.target.value)}
+                      placeholder="เช่น line_id"
                     />
                   </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">Email Address</Label>
-                  <Input
-                    className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
-                    value={clientEmail}
-                    onChange={(e) => setClientEmail(e.target.value)}
-                  />
                 </div>
               </div>
             </div>
@@ -973,7 +1199,241 @@ export function TemplateDialog({
           </div>
         )}
         </div>
-      
-    </ResponsiveDialog>
+      </ResponsiveDialog>
+
+      {/* Bank Selector Dialog */}
+      <ResponsiveDialog
+        open={isBankSelectorOpen}
+        onOpenChange={setIsBankSelectorOpen}
+        title="เลือกธนาคารที่รับเงิน"
+        description="กรุณาค้นหาและเลือกธนาคารสำหรับรับชำระเงิน"
+        className="max-w-md"
+      >
+        <div className="p-6 space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="ค้นหาชื่อหรือรหัสย่อธนาคาร..."
+              value={bankSearchQuery}
+              onChange={(e) => setBankSearchQuery(e.target.value)}
+              className="pl-9 h-10 rounded-xl border-slate-200"
+            />
+          </div>
+
+          <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
+            {banks
+              .filter((b) =>
+                b.name_th.toLowerCase().includes(bankSearchQuery.toLowerCase()) ||
+                b.name_en.toLowerCase().includes(bankSearchQuery.toLowerCase()) ||
+                b.code.toLowerCase().includes(bankSearchQuery.toLowerCase())
+              )
+              .map((bank) => (
+                <div
+                  key={bank.id}
+                  onClick={() => {
+                    setBankName(bank.name_th);
+                    setSelectedBank(bank);
+                    setIsBankSelectorOpen(false);
+                    setBankSearchQuery("");
+                  }}
+                  className="flex items-center justify-between p-3 bg-white border border-slate-100 rounded-xl hover:bg-slate-50/50 hover:border-slate-200 cursor-pointer transition-all"
+                >
+                  <div className="space-y-0.5">
+                    <p className="text-sm font-semibold text-slate-800">
+                      {bank.name_th}
+                    </p>
+                    <p className="text-xs text-slate-400 font-medium">
+                      {bank.name_en} ({bank.code})
+                    </p>
+                  </div>
+                  {bankName === bank.name_th && (
+                    <Check className="h-4 w-4 text-indigo-600 font-bold" />
+                  )}
+                </div>
+              ))}
+          </div>
+        </div>
+      </ResponsiveDialog>
+
+      {/* Manage Banks Dialog */}
+      <ResponsiveDialog
+        open={isManageBanksOpen}
+        onOpenChange={setIsManageBanksOpen}
+        title="จัดการรายการธนาคาร"
+        description="เพิ่ม แก้ไข หรือลบธนาคารที่แสดงในระบบเพื่อความสะดวกในการเลือกใช้งาน"
+        className="max-w-md"
+      >
+        <div className="p-6 space-y-4">
+          {/* Add / Edit Bank Form */}
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
+            <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider">
+              {isEditingBank ? "แก้ไขธนาคาร" : "เพิ่มธนาคารใหม่"}
+            </h4>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] font-semibold text-slate-500">รหัสย่อ</Label>
+                <Input
+                  placeholder="เช่น KBANK"
+                  value={bankForm.code}
+                  onChange={(e) => setBankForm({ ...bankForm, code: e.target.value })}
+                  className="h-9 text-xs rounded-lg border-slate-200 bg-white"
+                />
+              </div>
+              <div className="space-y-1 col-span-2">
+                <Label className="text-[10px] font-semibold text-slate-500">ชื่อภาษาไทย</Label>
+                <Input
+                  placeholder="เช่น ธนาคารกสิกรไทย"
+                  value={bankForm.name_th}
+                  onChange={(e) => setBankForm({ ...bankForm, name_th: e.target.value })}
+                  className="h-9 text-xs rounded-lg border-slate-200 bg-white"
+                />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label className="text-[10px] font-semibold text-slate-500">ชื่อภาษาอังกฤษ</Label>
+              <Input
+                placeholder="เช่น Kasikornbank"
+                value={bankForm.name_en}
+                onChange={(e) => setBankForm({ ...bankForm, name_en: e.target.value })}
+                className="h-9 text-xs rounded-lg border-slate-200 bg-white"
+              />
+            </div>
+            <div className="flex gap-2 justify-end pt-1">
+              {isEditingBank && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setIsEditingBank(false);
+                    setBankForm({ id: "", code: "", name_th: "", name_en: "" });
+                  }}
+                  className="h-8 text-xs text-slate-500"
+                >
+                  ยกเลิก
+                </Button>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                onClick={async () => {
+                  if (!bankForm.code || !bankForm.name_th || !bankForm.name_en) {
+                    toast.error("กรุณากรอกข้อมูลให้ครบถ้วน");
+                    return;
+                  }
+                  setIsSubmittingBank(true);
+                  try {
+                    if (isEditingBank) {
+                      const res = await updateBankAction(bankForm.id, {
+                        code: bankForm.code,
+                        name_th: bankForm.name_th,
+                        name_en: bankForm.name_en,
+                      });
+                      if (res.success) {
+                        toast.success("แก้ไขข้อมูลธนาคารสำเร็จ");
+                        setIsEditingBank(false);
+                        setBankForm({ id: "", code: "", name_th: "", name_en: "" });
+                        loadBanks();
+                      } else {
+                        toast.error(res.error || "เกิดข้อผิดพลาด");
+                      }
+                    } else {
+                      const res = await createBankAction({
+                        code: bankForm.code,
+                        name_th: bankForm.name_th,
+                        name_en: bankForm.name_en,
+                      });
+                      if (res.success) {
+                        toast.success("เพิ่มธนาคารสำเร็จ");
+                        setBankForm({ id: "", code: "", name_th: "", name_en: "" });
+                        loadBanks();
+                      } else {
+                        toast.error(res.error || "เกิดข้อผิดพลาด");
+                      }
+                    }
+                  } catch (err) {
+                    toast.error("เกิดข้อผิดพลาด");
+                  } finally {
+                    setIsSubmittingBank(false);
+                  }
+                }}
+                disabled={isSubmittingBank}
+                className="h-8 text-xs bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-3"
+              >
+                {isSubmittingBank ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : isEditingBank ? (
+                  "บันทึก"
+                ) : (
+                  "เพิ่ม"
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Banks List */}
+          <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider ml-1">รายการทั้งหมด</h4>
+            {banks.map((bank) => (
+              <div
+                key={bank.id}
+                className="flex items-center justify-between p-2.5 bg-white border border-slate-100 rounded-lg hover:border-slate-200 transition-colors"
+              >
+                <div className="space-y-0.5">
+                  <p className="text-xs font-semibold text-slate-800">
+                    {bank.name_th}
+                  </p>
+                  <p className="text-[10px] text-slate-400 font-medium">
+                    {bank.name_en} ({bank.code})
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      setIsEditingBank(true);
+                      setBankForm({
+                        id: bank.id,
+                        code: bank.code,
+                        name_th: bank.name_th,
+                        name_en: bank.name_en,
+                      });
+                    }}
+                    className="h-7 w-7 text-slate-400 hover:text-indigo-600 hover:bg-slate-50"
+                  >
+                    <Pencil className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={async () => {
+                      if (confirm(`ยืนยันการลบธนาคาร ${bank.name_th}?`)) {
+                        try {
+                          const res = await deleteBankAction(bank.id);
+                          if (res.success) {
+                            toast.success("ลบธนาคารสำเร็จ");
+                            loadBanks();
+                          } else {
+                            toast.error(res.error || "เกิดข้อผิดพลาด");
+                          }
+                        } catch (err) {
+                          toast.error("เกิดข้อผิดพลาด");
+                        }
+                      }
+                    }}
+                    className="h-7 w-7 text-slate-400 hover:text-red-600 hover:bg-slate-50"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </ResponsiveDialog>
+    </>
   );
 }

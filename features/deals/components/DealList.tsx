@@ -162,10 +162,10 @@ export function DealList({ deals, properties = [], hasActiveFilters = false }: D
                     {/* Title: Compact font */}
                     <Link
                       href={`/protected/properties/${deal.property_id || ""}`}
-                      className="font-semibold text-sm lg:text-base text-slate-800 hover:text-blue-600 transition-colors block line-clamp-1 leading-normal"
+                      className="font-semibold text-sm lg:text-base text-slate-800 hover:text-blue-600 transition-colors block  leading-normal"
                       title={deal.property?.title || "Property"}
                     >
-                      🔥 {deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}
+                      <span className="line-clamp-2">{deal.property?.title || "ทรัพย์ไม่ระบุชื่อ"}</span>
                     </Link>
 
                     {/* Metadata: Dates & Duration */}

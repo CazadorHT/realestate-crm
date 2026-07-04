@@ -27,6 +27,7 @@ import { Plus, Check, ChevronsUpDown, Bell, Clock, Languages, Calendar, ChevronL
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PropertyCombobox } from "@/components/PropertyCombobox";
 import {
   rentNotificationRuleSchema,
   RentNotificationRuleInput,
@@ -100,6 +101,7 @@ export function AddRuleDialog({
       is_active: existingRule?.is_active ?? true,
       language: (existingRule?.language as "th" | "en" | "cn" | "ru") || "th",
       tenant_id: existingRule?.tenant_id || tenantId || null,
+      custom_group_name: existingRule?.channel?.channel_name || "",
     },
   });
 
@@ -113,6 +115,7 @@ export function AddRuleDialog({
         is_active: existingRule.is_active ?? true,
         language: (existingRule.language as "th" | "en" | "cn" | "ru") || "th",
         tenant_id: existingRule.tenant_id || tenantId || null,
+        custom_group_name: existingRule.channel?.channel_name || "",
       });
     }
   }, [existingRule, form, tenantId]);
@@ -281,94 +284,21 @@ export function AddRuleDialog({
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
                           <FormLabel className="text-sm font-bold text-slate-700 ml-1">เลือกทรัพย์ (Property)</FormLabel>
-                          <ResponsiveDialog
-                            open={propertySearchOpen}
-                            onOpenChange={setPropertySearchOpen}
-                            title="เลือกทรัพย์"
-                            description="ค้นหาและเลือกทรัพย์ที่ต้องการตั้งค่าแจ้งเตือน (แสดงเฉพาะทรัพย์ที่มีสัญญาเช่าแล้ว)"
-                            className="sm:max-w-md"
-                            trigger={
-                              <FormControl>
-                                <Button
-                                  variant="outline"
-                                  type="button"
-                                  role="combobox"
-                                  className={cn(
-                                    "w-full justify-between h-11 rounded-xl border-slate-200 bg-slate-50/50",
-                                    !field.value && "text-slate-400"
-                                  )}
-                                >
-                                  <div className="flex items-center gap-2 truncate">
-                                    {field.value
-                                      ? properties.find((p: any) => p.id === field.value)
-                                          ?.title ||
-                                        existingRule?.properties?.title ||
-                                        "Unknown Property"
-                                      : "ค้นหาทรัพย์..."}
-                                  </div>
-                                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                </Button>
-                              </FormControl>
-                            }
-                          >
-                            <div className="flex flex-col h-[60vh] sm:h-auto">
-                              <div className="p-4 border-b border-slate-50 sticky top-0 bg-white z-10">
-                                <div className="relative">
-                                  <Plus className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 rotate-45" />
-                                  <Input
-                                    placeholder="พิมพ์ชื่อทรัพย์..."
-                                    className="pl-10 h-10 rounded-xl"
-                                    value={propertySearchQuery}
-                                    onChange={(e) => setPropertySearchQuery(e.target.value)}
-                                    autoFocus
-                                  />
-                                </div>
-                              </div>
-                              <div className="flex-1 overflow-y-auto p-2 pointer-events-auto">
-                                {(() => {
-                                  const filtered = properties.filter((p) =>
-                                    p.title.toLowerCase().includes(propertySearchQuery.toLowerCase())
-                                  );
-
-                                  if (filtered.length === 0) {
-                                    return (
-                                      <div className="p-8 text-center text-sm text-slate-400">
-                                        ไม่พบทรัพย์ที่คุณกำลังหา
-                                      </div>
-                                    );
-                                  }
-
-                                  return (
-                                    <div className="space-y-1">
-                                      {filtered.map((property: any) => (
-                                        <button
-                                          key={property.id}
-                                          type="button"
-                                          className={cn(
-                                            "w-full flex items-center justify-between p-3 rounded-xl transition-all active:scale-[0.98]",
-                                            property.id === field.value
-                                              ? "bg-blue-50 text-blue-700"
-                                              : "hover:bg-slate-50 text-slate-700"
-                                          )}
-                                          onClick={() => {
-                                            form.setValue("property_id", property.id);
-                                            setPropertySearchOpen(false);
-                                          }}
-                                        >
-                                          <div className="flex flex-col text-left min-w-0">
-                                            <span className="font-bold text-sm truncate">{property.title}</span>
-                                          </div>
-                                          {property.id === field.value && (
-                                            <Check className="h-4 w-4 text-blue-600 shrink-0" />
-                                          )}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                            </div>
-                          </ResponsiveDialog>
+                          <FormControl>
+                            <PropertyCombobox
+                              value={field.value}
+                              onChangeAction={(id) => {
+                                field.onChange(id);
+                              }}
+                              placeholder="ค้นหาและเลือกทรัพย์..."
+                              className="w-full"
+                              initialProperty={existingRule?.properties ? {
+                                id: existingRule.properties.id,
+                                title: existingRule.properties.title,
+                                cover_image_url: (existingRule.properties as any).cover_image,
+                              } : null}
+                            />
+                          </FormControl>
                           <FormDescription className="text-[11px] text-rose-500 font-medium ml-1">
                             * แสดงเฉพาะทรัพย์ที่มีสัญญาเช่า (Active Contract) เท่านั้น
                           </FormDescription>
@@ -478,6 +408,20 @@ export function AddRuleDialog({
                                 </div>
                               </ResponsiveDialog>
                               <FormMessage />
+
+                              {/* 📝 Custom Group Name Input */}
+                              {field.value && (
+                                <div className="mt-3.5 space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
+                                  <FormLabel className="text-xs font-bold text-slate-500 ml-1">
+                                    ตั้งชื่อกลุ่มไลน์นี้ใหม่ (เปลี่ยนจาก {selectedGroup?.group_name})
+                                  </FormLabel>
+                                  <Input
+                                    placeholder="เช่น กลุ่มคอนโด 202, กลุ่มเจ้านาย ฯลฯ"
+                                    {...form.register("custom_group_name")}
+                                    className="h-11 rounded-xl bg-slate-50/50 border-slate-200 focus:bg-white transition-colors"
+                                  />
+                                </div>
+                              )}
                             </FormItem>
                           );
                         }}

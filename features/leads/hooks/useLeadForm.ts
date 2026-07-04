@@ -18,7 +18,7 @@ function isNextRedirectError(e: unknown) {
 
 export function useLeadForm(
   initialValues?: Partial<LeadFormValues>,
-  onSubmitAction?: (values: LeadFormValues) => Promise<void>,
+  onSubmitAction?: (values: LeadFormValues) => Promise<void | { success: boolean; message: string }>,
 ) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);

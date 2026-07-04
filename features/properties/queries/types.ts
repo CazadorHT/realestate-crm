@@ -26,6 +26,8 @@ export type PropertyStats = {
   totalSaleCommission: number;
   totalRentCommission: number;
   totalRealizedCommission: number;
+  totalNetRealizedCommission: number;
+  totalNetSaleCommission: number;
   byType: { name: string; value: number }[];
   byStatus: { name: string; value: number }[];
   aiReviewCount: number;

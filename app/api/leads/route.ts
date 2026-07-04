@@ -10,8 +10,9 @@ export async function GET(request: Request) {
   const q = url.searchParams.get("q") ?? undefined;
   const page = Number(url.searchParams.get("page") ?? "1");
   const pageSize = Number(url.searchParams.get("pageSize") ?? "200");
+  const sortOrder = (url.searchParams.get("sortOrder") as "asc" | "desc") || "desc";
 
-  const res = await getLeadsQuery({ q, page, pageSize });
+  const res = await getLeadsQuery({ q, page, pageSize, sortOrder });
 
   return NextResponse.json(res);
 }

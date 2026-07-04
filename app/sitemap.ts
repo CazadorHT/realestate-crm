@@ -143,7 +143,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // 5. Fetch Active Transit Stations
   const { data: stations } = await supabase
     .from("ref_master_data")
-    .select("metadata, updated_at")
+    .select("metadata")
     .eq("type", "TRANSIT_STATION")
     .eq("is_active", true);
 
@@ -151,7 +151,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .filter((s: any) => s.metadata?.slug)
     .map((s: any) => ({
       url: `${baseUrl}/near-station/${s.metadata.slug}`,
-      lastModified: s.updated_at ? new Date(s.updated_at) : new Date(),
+      lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.8,
       alternates: getAlternates(`/near-station/${s.metadata.slug}`),

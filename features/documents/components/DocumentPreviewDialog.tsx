@@ -75,6 +75,35 @@ export function DocumentPreviewDialog({
     }
   };
 
+  const handleDownloadWord = async () => {
+    if (!content) return;
+
+    if (storagePath.toLowerCase().endsWith(".docx") || storagePath.toLowerCase().endsWith(".doc")) {
+      handleDownload();
+      return;
+    }
+
+    const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
+      "xmlns:w='urn:schemas-microsoft-com:office:word' " +
+      "xmlns='http://www.w3.org/TR/REC-html40'>" +
+      "<head><title>Document</title><meta charset='utf-8'></head><body>";
+    const footer = "</body></html>";
+    const sourceHTML = header + content + footer;
+
+    const blob = new Blob(['\ufeff' + sourceHTML], {
+      type: "application/vnd.ms-word"
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = documentName.replace(/\.[^/.]+$/, "") + ".doc";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <ResponsiveDialog
       open={open}
@@ -107,11 +136,12 @@ export function DocumentPreviewDialog({
           <Button
             variant="outline"
             size="lg"
-            onClick={handleDownload}
+            onClick={handleDownloadWord}
+            disabled={!content}
             className="h-12 flex-1 sm:flex-none gap-2 rounded-2xl border-slate-200 font-bold text-slate-600 bg-white"
           >
-            <Download className="h-4 w-4" />
-            ดาวน์โหลด
+            <FileText className="h-4 w-4 text-blue-600" />
+            ดาวน์โหลด Word (.doc)
           </Button>
           <Button
             variant="outline"
@@ -120,8 +150,17 @@ export function DocumentPreviewDialog({
             disabled={!content}
             className="h-12 flex-1 sm:flex-none gap-2 rounded-2xl border-slate-200 font-bold text-slate-600 bg-white"
           >
-            <Printer className="h-4 w-4" />
-            พิมพ์
+            <Printer className="h-4 w-4 text-indigo-600" />
+            ดาวน์โหลด PDF / พิมพ์
+          </Button>
+          <Button
+            variant="ghost"
+            size="lg"
+            onClick={handleDownload}
+            className="h-12 flex-1 sm:flex-none gap-2 rounded-2xl border-transparent font-bold text-slate-500 hover:bg-slate-100"
+          >
+            <Download className="h-4 w-4" />
+            ดาวน์โหลดไฟล์ดิบ (.html)
           </Button>
           <Button
             variant="default"
@@ -135,7 +174,7 @@ export function DocumentPreviewDialog({
               )
             }
             disabled={!content}
-            className="h-12 hidden sm:flex gap-2 rounded-2xl font-bold bg-slate-900 text-white shadow-xl shadow-slate-200"
+            className="h-12 hidden sm:flex gap-2 rounded-2xl font-bold bg-slate-900 text-white shadow-xl shadow-slate-200 ml-auto"
           >
             <Maximize2 className="h-4 w-4" />
             เปิดหน้าต่างใหม่

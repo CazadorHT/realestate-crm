@@ -74,6 +74,7 @@ export function DealStatusPicker({ value, onChange, disabled }: DealStatusPicker
       onOpenChange={setOpen}
       title="สถานะดีล"
       description="เลือกสถานะปัจจุบันเพื่อติดตามความคืบหน้าของดีล"
+      className="sm:max-w-sm!"
       trigger={
         <Button
           type="button"

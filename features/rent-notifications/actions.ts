@@ -65,34 +65,106 @@ export async function createRentNotificationRule(
   data: RentNotificationRuleInput,
 ) {
   try {
-    const { supabase, user, role } = await requireAuthContext();
-    assertStaff(role);
+     const { supabase, user, role } = await requireAuthContext();
+     assertStaff(role);
 
-    const parsed = rentNotificationRuleSchema.parse(data);
-    if (!parsed.property_id) {
-      return { success: false, message: "กรุณาระบุรหัสทรัพย์สิน" };
-    }
-    if (!parsed.tenant_id) {
-      return { success: false, message: "กรุณาระบุรหัสสาขา" };
-    }
-    await checkPropertyAccess(supabase, user, role, parsed.property_id);
+     const parsed = rentNotificationRuleSchema.parse(data);
+     if (!parsed.property_id) {
+       return { success: false, message: "กรุณาระบุรหัสทรัพย์สิน" };
+     }
 
-    const { error } = await supabase.from("rent_notification_rules_v3").insert({
-      property_id: parsed.property_id,
-      channel_id: parsed.line_group_id,
-      notification_day: parsed.notification_day,
-      notification_hour: parsed.notification_hour,
-      is_active: parsed.is_active,
-      language: parsed.language,
-      tenant_id: parsed.tenant_id,
-    });
+     let tenantIdToUse = parsed.tenant_id;
+     if (!tenantIdToUse || tenantIdToUse === "ALL") {
+       const { data: prop } = await supabase
+         .from("properties_core")
+         .select("tenant_id")
+         .eq("id", parsed.property_id)
+         .single();
+       if (prop?.tenant_id) {
+         tenantIdToUse = prop.tenant_id;
+       }
+     }
 
-    if (error) throw error;
-    revalidatePath("/protected/rent-notifications");
-    return { success: true };
+     if (!tenantIdToUse || tenantIdToUse === "ALL") {
+       return { success: false, message: "กรุณาระบุรหัสสาขา" };
+     }
+
+     await checkPropertyAccess(supabase, user, role, parsed.property_id);
+
+     let targetChannelId = parsed.line_group_id;
+
+     // If the selected group ID is not a UUID, it means it is a raw line group from line_groups
+     const isUuid = /^[0-9a-fA-F-]{36}$/.test(targetChannelId);
+     if (!isUuid) {
+       const { data: groupDetail } = await supabase
+         .from("line_groups")
+         .select("*")
+         .eq("group_id", targetChannelId)
+         .maybeSingle();
+
+       const groupName = parsed.custom_group_name || groupDetail?.group_name || "LINE Group";
+       const pictureUrl = groupDetail?.picture_url || null;
+
+       const { data: newChannel, error: channelInsertError } = await supabase
+         .from("notification_channels_v3")
+         .insert({
+           tenant_id: tenantIdToUse,
+           platform: "LINE",
+           external_channel_id: targetChannelId,
+           channel_name: groupName,
+           picture_url: pictureUrl,
+           is_active: true,
+         })
+         .select("id")
+         .single();
+
+       if (channelInsertError) {
+         console.error("Failed to migrate LINE group to channels:", channelInsertError);
+         throw channelInsertError;
+       }
+       
+       targetChannelId = newChannel.id;
+
+       // Also update name in the raw line_groups table for future references
+       if (parsed.custom_group_name) {
+         await supabase
+           .from("line_groups")
+           .update({ group_name: parsed.custom_group_name })
+           .eq("group_id", groupDetail?.group_id || targetChannelId);
+       }
+     } else if (parsed.custom_group_name) {
+       // If it is already registered, update name in both tables
+       const { data: channelDetail } = await supabase
+         .from("notification_channels_v3")
+         .update({ channel_name: parsed.custom_group_name })
+         .eq("id", targetChannelId)
+         .select("external_channel_id")
+         .maybeSingle();
+
+       if (channelDetail?.external_channel_id) {
+         await supabase
+           .from("line_groups")
+           .update({ group_name: parsed.custom_group_name })
+           .eq("group_id", channelDetail.external_channel_id);
+       }
+     }
+
+     const { error } = await supabase.from("rent_notification_rules_v3").insert({
+       property_id: parsed.property_id,
+       channel_id: targetChannelId,
+       notification_day: parsed.notification_day,
+       notification_hour: parsed.notification_hour,
+       is_active: parsed.is_active,
+       language: parsed.language,
+       tenant_id: tenantIdToUse,
+     });
+
+     if (error) throw error;
+     revalidatePath("/protected/rent-notifications");
+     return { success: true };
   } catch (err: unknown) {
-    console.error("createRentNotificationRule error:", err);
-    return { success: false, message: mapDbError(err) };
+     console.error("createRentNotificationRule error:", err);
+     return { success: false, message: mapDbError(err) };
   }
 }
 
@@ -102,34 +174,93 @@ export async function updateRentNotificationRule(
   tenantId?: string | null,
 ) {
   try {
-    const { supabase, user, role } = await requireAuthContext();
-    assertStaff(role);
+     const { supabase, user, role } = await requireAuthContext();
+     assertStaff(role);
 
-    await checkRuleAccess(supabase, user, role, id);
+     const { data: existingRule } = await supabase
+       .from("rent_notification_rules_v3")
+       .select("channel_id")
+       .eq("id", id)
+       .single();
 
-    const updateData: any = { ...data };
-    if (updateData.line_group_id) {
-      updateData.channel_id = updateData.line_group_id;
-      delete updateData.line_group_id;
-    }
+     await checkRuleAccess(supabase, user, role, id);
 
-    let query = supabase
-      .from("rent_notification_rules_v3")
-      .update(updateData)
-      .eq("id", id);
-    
-    if (tenantId && tenantId !== "ALL") {
-      query = query.eq("tenant_id", tenantId);
-    }
+     const updateData: any = { ...data };
+     if (updateData.custom_group_name && existingRule) {
+       let channelId = existingRule.channel_id;
+       // Update the channel name
+       const { data: channelDetail } = await supabase
+         .from("notification_channels_v3")
+         .update({ channel_name: updateData.custom_group_name })
+         .eq("id", channelId)
+         .select("external_channel_id")
+         .maybeSingle();
 
-    const { error } = await query;
+       if (channelDetail?.external_channel_id) {
+         await supabase
+           .from("line_groups")
+           .update({ group_name: updateData.custom_group_name })
+           .eq("group_id", channelDetail.external_channel_id);
+       }
+       delete updateData.custom_group_name;
+     }
 
-    if (error) throw error;
-    revalidatePath("/protected/rent-notifications");
-    return { success: true };
+     if (updateData.line_group_id) {
+       let targetChannelId = updateData.line_group_id;
+       const isUuid = /^[0-9a-fA-F-]{36}$/.test(targetChannelId);
+
+       if (!isUuid && tenantId) {
+         const { data: groupDetail } = await supabase
+           .from("line_groups")
+           .select("*")
+           .eq("group_id", targetChannelId)
+           .maybeSingle();
+
+         const groupName = updateData.custom_group_name || groupDetail?.group_name || "LINE Group";
+         const pictureUrl = groupDetail?.picture_url || null;
+
+         const { data: newChannel, error: channelInsertError } = await supabase
+           .from("notification_channels_v3")
+           .insert({
+             tenant_id: tenantId,
+             platform: "LINE",
+             external_channel_id: targetChannelId,
+             channel_name: groupName,
+             picture_url: pictureUrl,
+             is_active: true,
+           })
+           .select("id")
+           .single();
+
+         if (channelInsertError) {
+           console.error("Failed to migrate LINE group to channels:", channelInsertError);
+           throw channelInsertError;
+         }
+         
+         targetChannelId = newChannel.id;
+       }
+
+       updateData.channel_id = targetChannelId;
+       delete updateData.line_group_id;
+     }
+
+     let query = supabase
+       .from("rent_notification_rules_v3")
+       .update(updateData)
+       .eq("id", id);
+     
+     if (tenantId && tenantId !== "ALL") {
+       query = query.eq("tenant_id", tenantId);
+     }
+
+     const { error } = await query;
+
+     if (error) throw error;
+     revalidatePath("/protected/rent-notifications");
+     return { success: true };
   } catch (err: unknown) {
-    console.error("updateRentNotificationRule error:", err);
-    return { success: false, message: mapDbError(err) };
+     console.error("updateRentNotificationRule error:", err);
+     return { success: false, message: mapDbError(err) };
   }
 }
 
@@ -331,7 +462,7 @@ export async function testSendRentNotification(ruleId: string, tenantId?: string
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
-        to: rule.line_group_id,
+        to: rawRule.channel.external_channel_id,
         messages: [message],
       }),
     });

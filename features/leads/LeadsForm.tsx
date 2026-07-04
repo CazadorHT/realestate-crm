@@ -12,7 +12,7 @@ import { LeadStatusSection } from "./components/LeadStatusSection";
 type Props = {
   leadId?: string;
   initialValues?: Partial<LeadFormValues>;
-  onSubmitAction: (values: LeadFormValues) => Promise<void>;
+  onSubmitAction: (values: LeadFormValues) => Promise<void | { success: boolean; message: string }>;
 };
 
 export function LeadForm({ initialValues, onSubmitAction }: Props) {

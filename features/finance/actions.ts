@@ -402,22 +402,25 @@ export async function markAsPaidAction(
   try {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertStaff(role);
-    if (!tenantId) {
+    const isStaffControl = role === "ADMIN" || role === "MANAGER";
+    if (!isStaffControl && (!tenantId || tenantId === "ALL")) {
       throw new Error("กรุณาสลับสาขาให้ถูกต้องก่อนดำเนินการบันทึกการโอนเงิน");
     }
 
-    // 1. Audit Hardening: Validate Slip URL (Must be an image or PDF)
-    const isLocal =
-      payload.slip_url.includes("localhost") ||
-      payload.slip_url.includes("127.0.0.1");
-    if (
-      !isLocal &&
-      !payload.slip_url.match(/\.(jpg|jpeg|png|pdf|webp)/i) &&
-      !payload.slip_url.includes("storage")
-    ) {
-      throw new Error(
-        "รูปแบบไฟล์สลิปไม่ถูกต้อง หรือลิงก์ไม่ปลอดภัย (อนุญาตเฉพาะ JPG, PNG, PDF)",
-      );
+    // 1. Audit Hardening: Validate Slip URL (Must be an image or PDF) if provided
+    if (payload.slip_url) {
+      const isLocal =
+        payload.slip_url.includes("localhost") ||
+        payload.slip_url.includes("127.0.0.1");
+      if (
+        !isLocal &&
+        !payload.slip_url.match(/\.(jpg|jpeg|png|pdf|webp)/i) &&
+        !payload.slip_url.includes("storage")
+      ) {
+        throw new Error(
+          "รูปแบบไฟล์สลิปไม่ถูกต้อง หรือลิงก์ไม่ปลอดภัย (อนุญาตเฉพาะ JPG, PNG, PDF)",
+        );
+      }
     }
 
     // 2. Fetch current record + adjustments
@@ -497,27 +500,31 @@ export async function markAsPaidAction(
     revalidatePath("/protected/finance/payouts");
     revalidatePath("/protected/wallet");
 
-    // 🚀 Background Automation
-    const { inngest } = await import("@/lib/inngest/client");
-    const recipientName =
-      (current.recipient as any)?.display_name || "Unknown Partner";
+    // 🚀 Background Automation (Fail-safe)
+    try {
+      const { inngest } = await import("@/lib/inngest/client");
+      const recipientName =
+        (current.recipient as any)?.display_name || "Unknown Partner";
 
-    await inngest.send({
-      name: "finance.commission_paid",
-      data: {
-        commissionId,
-        agentName: recipientName,
-        amount: Number(current.amount),
-        taxAmount: Number(current.tax_amount),
-        netAmount: netTransfer.toNumber(),
-        dealId: current.deal_id,
-        reference: payload.payment_reference,
-        paidAt: updated?.paid_at || new Date().toISOString(),
-        lineUserId: (current.recipient as any)?.line_id,
-        telegramId: null,
-        idempotencyKey: `${current.deal_id}-${commissionId}`,
-      },
-    }).catch(e => console.warn("Inngest commission_paid skip:", e.message));
+      await inngest.send({
+        name: "finance.commission_paid",
+        data: {
+          commissionId,
+          agentName: recipientName,
+          amount: Number(current.amount),
+          taxAmount: Number(current.tax_amount),
+          netAmount: netTransfer.toNumber(),
+          dealId: current.deal_id,
+          reference: payload.payment_reference,
+          paidAt: updated?.paid_at || new Date().toISOString(),
+          lineUserId: (current.recipient as any)?.line_id,
+          telegramId: null,
+          idempotencyKey: `${current.deal_id}-${commissionId}`,
+        },
+      });
+    } catch (inngestErr: any) {
+      console.warn("Inngest commission_paid skip:", inngestErr.message);
+    }
 
     return {
       success: true,
@@ -585,7 +592,7 @@ export async function getPayoutQueueAction(filters?: {
     const to = from + pageSize - 1;
 
     let queryBuilder = supabase.from("crm_deal_commissions_v3").select(
-      "*, recipient:identities_v3!crm_deal_commissions_v3_recipient_id_fkey(id, display_name, phone), deal:crm_deals_v3!crm_deal_commissions_v3_deal_id_fkey(id, commission_total, property:properties_core(id, property_type, listing_type, details:properties_details(title)))",
+      "*, recipient:identities_v3!crm_deal_commissions_v3_recipient_id_fkey(id, display_name, phone), deal:crm_deals_v3!crm_deal_commissions_v3_deal_id_fkey(id, commission_total, co_agent_name, property:properties_core(id, property_type, listing_type, details:properties_details(title)))",
       { count: "exact" },
     );
 
@@ -660,7 +667,18 @@ export async function getPayoutQueueAction(filters?: {
       const recipient = item.recipient;
       const deal = item.deal as any;
 
-      const recipientName = (recipient as any)?.display_name || "Unknown Partner";
+      let recipientName = (recipient as any)?.display_name;
+      if (!recipientName) {
+        if (item.recipient_role === "AGENCY") {
+          recipientName = "บริษัท (Agency)";
+        } else if (item.recipient_role === "TEAM_POOL") {
+          recipientName = "กองกลางทีม (Team Pool)";
+        } else if (item.recipient_role === "CO_AGENT" && deal?.co_agent_name) {
+          recipientName = deal.co_agent_name;
+        } else {
+          recipientName = "Unknown Partner";
+        }
+      }
       const actualDealCommission = Number(deal?.commission_total || 0);
       const calculatedTotal = commissionSumsByDeal[item.deal_id as string] || 0;
 

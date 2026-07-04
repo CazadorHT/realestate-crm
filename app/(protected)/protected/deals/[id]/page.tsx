@@ -11,7 +11,7 @@ import {
 } from "react-icons/ri";
 
 import { getPropertiesForSelect } from "@/features/properties/queries/search";
-import { getDealById, getDealCommissions, getInvoicesByDealId } from "@/features/deals/queries";
+import { getDealById, getDealCommissions, getInvoicesByDealId, getTenantAgents } from "@/features/deals/queries";
 import { Button } from "@/components/ui/button";
 import { DealFormDialog } from "@/features/deals/components/DealFormDialog";
 import { DocumentSection } from "@/features/documents/components/DocumentSection";
@@ -38,6 +38,7 @@ export default async function DealDetailPage({ params }: PageProps) {
   const commissions = await getDealCommissions(id);
   const invoices = await getInvoicesByDealId(id);
   const properties = await getPropertiesForSelect();
+  const agents = await getTenantAgents();
 
   if (!deal) {
     notFound();
@@ -139,18 +140,8 @@ export default async function DealDetailPage({ params }: PageProps) {
             isRent={isRent}
             commissions={commissions}
             invoices={invoices}
+            agents={agents}
           />
-
-          <DealLeadCard lead={deal.lead ?? null} />
-
-          <DealCoAgentCard
-            name={deal.co_agent_name}
-            contact={deal.co_agent_contact}
-            online={deal.co_agent_online}
-          />
-
-          {/* Documents Section */}
-          <DocumentSection ownerId={deal.id} ownerType="DEAL" tenantId={tenantId} />
 
           {/* Rental Contract Section */}
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
@@ -187,12 +178,22 @@ export default async function DealDetailPage({ params }: PageProps) {
               />
             </div>
           </div>
+
+          {/* Documents Section */}
+          <DocumentSection ownerId={deal.id} ownerType="DEAL" tenantId={tenantId} />
+
         </div>
 
         {/* Right Column - Property Card */}
         <div className="space-y-6">
           <DealPropertyCard property={deal.property} isRent={isRent} />
-
+           
+          <DealLeadCard lead={deal.lead ?? null} />
+          <DealCoAgentCard
+            name={deal.co_agent_name}
+            contact={deal.co_agent_contact}
+            online={deal.co_agent_online}
+          />
           {/* Activity Timeline Placeholder */}
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
             <div className="flex items-center gap-4 p-5 border-b border-slate-200">

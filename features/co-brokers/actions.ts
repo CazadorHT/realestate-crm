@@ -381,52 +381,44 @@ export async function getCoBrokerPerformanceAction(id: string) {
   try {
     const { supabase, tenantId } = await requireAuthContext();
 
-    // 🌐 Performance Optimization: Execute all count queries concurrently
-    let totalQ = supabase
-      .from("properties_core")
-      .select("id", { count: "exact", head: true })
-      .eq("co_broker_id", id);
-
-    let activeQ = supabase
-      .from("properties_core")
-      .select("id", { count: "exact", head: true })
-      .eq("co_broker_id", id)
-      .eq("status", 1);
-
-    let soldQ = supabase
-      .from("properties_core")
-      .select("id", { count: "exact", head: true })
-      .eq("co_broker_id", id)
-      .in("status", [4, 5]);
-
-    let commQ = supabase
-      .from("crm_deal_commissions_v3")
-      .select("net_amount, status")
-      .eq("recipient_id", id);
+    // 🌐 Query deals instead of properties for partner performance metrics
+    let dealsQ = supabase
+      .from("crm_deals_v3")
+      .select("id, status");
 
     if (tenantId && tenantId !== "ALL") {
-      totalQ = totalQ.eq("tenant_id", tenantId);
-      activeQ = activeQ.eq("tenant_id", tenantId);
-      soldQ = soldQ.eq("tenant_id", tenantId);
+      dealsQ = dealsQ.eq("tenant_id", tenantId);
+    }
+    
+    // Filter deals where this co-broker is a partner
+    dealsQ = dealsQ.eq("partner_co_broker_id", id);
+
+    const { data: brokerDeals, error: dealsErr } = await dealsQ;
+    if (dealsErr) throw dealsErr;
+
+    const dealIds = (brokerDeals || []).map((d) => d.id);
+    const totalListings = brokerDeals?.length || 0;
+    const activeListings = (brokerDeals || []).filter(d => d.status === "NEGOTIATING" || d.status === "SIGNED").length;
+    const soldListings = (brokerDeals || []).filter(d => d.status === "CLOSED_WIN").length;
+
+    // Fetch commissions for realized & accrued earnings
+    let commQ = supabase
+      .from("crm_deal_commissions_v3")
+      .select("net_amount, status, recipient_id, recipient_role, deal_id");
+
+    if (tenantId && tenantId !== "ALL") {
       commQ = commQ.eq("tenant_id", tenantId);
     }
 
-    const [totalRes, activeRes, soldRes, commRes] = await Promise.all([
-      totalQ,
-      activeQ,
-      soldQ,
-      commQ,
-    ]);
+    // Build conditional logic: either recipient is direct co-broker, or role is CO_AGENT under broker's deals
+    if (dealIds.length > 0) {
+      commQ = commQ.or(`recipient_id.eq.${id},and(recipient_role.eq.CO_AGENT,deal_id.in.(${dealIds.join(",")}))`);
+    } else {
+      commQ = commQ.eq("recipient_id", id);
+    }
 
-    if (totalRes.error) throw totalRes.error;
-    if (activeRes.error) throw activeRes.error;
-    if (soldRes.error) throw soldRes.error;
-    if (commRes.error) throw commRes.error;
-
-    const totalListings = totalRes.count || 0;
-    const activeListings = activeRes.count || 0;
-    const soldListings = soldRes.count || 0;
-    const commissions = commRes.data || [];
+    const { data: commissions, error: commErr } = await commQ;
+    if (commErr) throw commErr;
 
     const realizedEarnings = (commissions as { status: string | null; net_amount: number | null }[])
       .filter((c) => c.status === "PAID")
@@ -439,14 +431,14 @@ export async function getCoBrokerPerformanceAction(id: string) {
     return {
       success: true,
       stats: {
-        totalListings: totalListings || 0,
-        activeListings: activeListings || 0,
-        soldListings: soldListings || 0,
+        totalListings,
+        activeListings,
+        soldListings,
         realizedEarnings,
         accruedEarnings,
         conversionRate:
-          (totalListings || 0) > 0
-            ? ((soldListings || 0) / (totalListings || 0)) * 100
+          totalListings > 0
+            ? (soldListings / totalListings) * 100
             : 0,
       },
     };

@@ -27,7 +27,7 @@ export function DealPropertyCard({ property, isRent }: DealPropertyCardProps) {
       {property ? (
         <div className="p-0">
           {/* Property Image */}
-          <div className="aspect-4/3 bg-slate-100 relative overflow-hidden">
+          <div className="aspect-3/2 bg-slate-100 relative overflow-hidden">
             {property.images?.[0]?.image_url ? (
               <img
                 src={

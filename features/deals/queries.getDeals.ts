@@ -3,6 +3,7 @@ import { differenceInMonths } from "date-fns";
 import { Deal, DealStatus, DealType, DealStats, DealWithProperty, JoinedDealRow } from "./types";
 import { getScopedRevenueClient } from "./logic/scoped-client";
 import { Database } from "@/lib/database.types.generated";
+import { decrypt } from "@/lib/crypto";
 
 type ListArgs = {
   q?: string;
@@ -35,7 +36,7 @@ export async function getDeals({
   ascending = false,
   timeRange = "all",
 }: ListArgs = {}) {
-  const { supabase, role, tenantId } = await requireAuthContext();
+  const { supabase, role, tenantId, user } = await requireAuthContext();
   assertStaff(role);
   const trimmed = (q || "").toString().trim();
   const validPage = typeof page === "number" && !isNaN(page) ? page : 1;
@@ -48,11 +49,16 @@ export async function getDeals({
   let query = scoped.deals().select(
       `
       *,
-      property:properties!inner ( id, title, listing_type, property_type, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images:property_media_v3 ( id, property_id, url, is_cover, sort_order ) ),
-      lead:leads ( id, full_name, phone, email, stage )
+      property:properties!crm_deals_v3_property_id_fkey!inner ( id, title, listing_type, property_type, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images:property_media_v3 ( id, property_id, url, is_cover, sort_order ) ),
+      lead:crm_leads_v3 ( id, stage, identity:identities_v3!crm_leads_v3_identity_id_fkey ( display_name, email, phone ) ),
+      commissions:crm_deal_commissions_v3 ( recipient_role, amount )
     `,
       { count: "exact" },
     );
+
+  if (role === "AGENT") {
+    query = query.or(`agent_id.eq.${user.id},created_by.eq.${user.id}`);
+  }
 
   // Branch isolation is already handled by getScopedRevenueClient
 
@@ -111,7 +117,7 @@ export async function getDeals({
   const { data, count, error } = await query.range(from, to);
 
   if (error) {
-    console.error("getDeals error:", error);
+    console.error("getDeals error:", error.message, "details:", error.details, "hint:", error.hint);
     return { data: [], count: 0, page: pageSafe, pageSize: size };
   }
 
@@ -129,16 +135,23 @@ export async function getDeals({
       if (tenantId) propQuery.eq("tenant_id", tenantId);
       const propRes = await propQuery;
 
-      const leadQuery = supabase
-        .from("leads")
-        .select("id")
-        .ilike("full_name", `%${trimmed}%`);
+      let allLeadsQuery = supabase
+        .from("crm_leads_v3")
+        .select("id, identity:identities_v3!crm_leads_v3_identity_id_fkey(display_name)");
       
-      if (tenantId) leadQuery.eq("tenant_id", tenantId);
-      const leadRes = await leadQuery;
+      if (tenantId && tenantId !== "ALL") {
+        allLeadsQuery = allLeadsQuery.eq("tenant_id", tenantId);
+      }
+      const { data: allLeads } = await allLeadsQuery;
+
+      const leadIds = (allLeads || [])
+        .filter((l: any) => {
+          const decryptedName = decrypt(l.identity?.display_name) || "";
+          return decryptedName.toLowerCase().includes(trimmed.toLowerCase());
+        })
+        .map((l) => l.id);
 
       const propIds = (propRes.data ?? []).map((p) => p.id);
-      const leadIds = (leadRes.data ?? []).map((l) => l.id);
 
       // Build a new deals query scoped by found property/lead ids (if any)
       if (
@@ -151,8 +164,9 @@ export async function getDeals({
           .select(
             `
       *,
-      property:properties!inner ( id, title, listing_type, property_type, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images:property_media_v3 ( id, property_id, url, is_cover, sort_order ) ),
-      lead:leads ( id, full_name, phone, email, stage )
+      property:properties!crm_deals_v3_property_id_fkey!inner ( id, title, listing_type, property_type, price, original_price, rental_price, original_rental_price, deleted_at, province, district, popular_area, property_images:property_media_v3 ( id, property_id, url, is_cover, sort_order ) ),
+      lead:crm_leads_v3 ( id, stage, identity:identities_v3!crm_leads_v3_identity_id_fkey ( display_name, email, phone ) ),
+      commissions:crm_deal_commissions_v3 ( recipient_role, amount )
     `,
             { count: "exact" },
           )
@@ -187,7 +201,13 @@ export async function getDeals({
           original_rental_price: d.property.original_rental_price,
           province: d.property.province,
           popular_area: d.property.popular_area,
-          images: d.property.property_images ?? [],
+          images: (d.property.property_images || []).map((img: any) => ({
+            id: img.id,
+            property_id: img.property_id,
+            image_url: img.url,
+            is_cover: img.is_cover,
+            sort_order: img.sort_order,
+          })),
         }
       : null;
 
@@ -204,21 +224,34 @@ export async function getDeals({
       );
     }
 
+    // Calculate net commission (gross - co-agent splits)
+    const gross = Number(d.commission_total) || 0;
+    const coAgentSum = ((d as any).commissions || [])
+      .filter((c: any) => c.recipient_role === "CO_AGENT")
+      .reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0);
+    const netCommission = gross - coAgentSum;
+
     // Return the correctly typed shape
-    const leadObj = d.lead;
+    const leadObj = d.lead as any;
+    const decryptedName = leadObj ? (decrypt(leadObj.identity?.display_name) || "Unknown Lead") : null;
+    const decryptedEmail = leadObj ? (decrypt(leadObj.identity?.email) || null) : null;
+    const decryptedPhone = leadObj ? (decrypt(leadObj.identity?.phone) || null) : null;
+
     return {
       ...d,
       property,
       lead: leadObj ? { 
         id: leadObj.id, 
-        display_name: leadObj.display_name || leadObj.full_name || null,
-        full_name: leadObj.full_name || leadObj.display_name || null,
-        email: leadObj.email || null,
-        phone: leadObj.phone || null,
+        display_name: decryptedName,
+        full_name: decryptedName,
+        email: decryptedEmail,
+        phone: decryptedPhone,
         stage: leadObj.stage || null,
       } : null,
       duration_months,
-    } as DealWithProperty;
+      commission_net: netCommission,
+      commission_amount: netCommission,
+    } as any;
   });
 
   return {
@@ -306,7 +339,7 @@ export async function getAllDealIdsQuery({
   if (listing_type || property_type) {
     // If we need property-level filtering just for IDs, we filter by the joined relation
     const propFilterQuery = scoped.deals()
-      .select("id, property:properties!inner(listing_type, property_type)")
+      .select("id, property:properties!crm_deals_v3_property_id_fkey!inner(listing_type, property_type)")
       .match({
         ...(listing_type ? { "property.listing_type": listing_type } : {}),
         ...(property_type ? { "property.property_type": property_type } : {}),
@@ -344,7 +377,7 @@ export async function getDealStats(): Promise<DealStats | null> {
     deal_type, 
     status, 
     commission_total,
-    property:properties!inner(listing_type, property_type)
+    property:properties!crm_deals_v3_property_id_fkey!inner(listing_type, property_type)
   `);
 
   const { data, error } = await query;

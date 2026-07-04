@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { getSystemConfig } from "@/lib/actions/system-config";
+import { decrypt } from "@/lib/crypto";
 import { PropertyTableData, PropertyStatus, PropertyType, ListingType } from "../types";
 import { getPublicImageUrl } from "@/features/properties/image-utils";
 
@@ -331,20 +332,20 @@ export async function getPropertiesTableData(params: {
         .order("sort_order", { ascending: true }),
 
       supabase
-        .from("leads")
+        .from("crm_deals_v3")
         .select("property_id")
         .in("property_id", propertyIds),
 
       soldOrRentedIds.length > 0
         ? supabase
-            .from("deals")
+            .from("crm_deals_v3")
             .select(
               `
           property_id,
           deal_type,
           status,
           updated_at,
-          lead:leads(full_name)
+          lead:crm_leads_v3(identity:identities_v3(display_name))
         `,
             )
             .in("property_id", soldOrRentedIds)
@@ -397,10 +398,11 @@ export async function getPropertiesTableData(params: {
   closedLeadsResult.data?.forEach((d) => {
     const deal = d as unknown as {
       property_id: string;
-      lead: { full_name: string } | null;
+      lead: { identity: { display_name: string } | null } | null;
     };
     const pid = deal?.property_id;
-    const name = deal?.lead?.full_name;
+    const encryptedName = deal?.lead?.identity?.display_name;
+    const name = encryptedName ? decrypt(encryptedName) : null;
     if (pid && !closedLeadNameMap.has(pid) && name) {
       closedLeadNameMap.set(pid, name);
     }

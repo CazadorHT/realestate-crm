@@ -41,24 +41,56 @@ export async function getRentNotificationRules() {
 }
 
 export async function getLineGroups() {
-  const supabase = createClient() as unknown as SupabaseClient<LegacyDatabase>;
-  // Fetch only active groups or all? Let's fetch all for now or active.
-  const { data, error } = await supabase
+  const supabase = createClient() as any;
+  // 1. Fetch registered channels in notification_channels_v3
+  const { data: channels, error: channelsError } = await supabase
     .from("notification_channels_v3")
     .select("id, platform, external_channel_id, channel_name, picture_url, is_active")
     .eq("is_active", true)
     .order("updated_at", { ascending: false });
 
-  if (error) {
-    console.error("Error fetching line groups:", error);
-    return [];
+  if (channelsError) {
+    console.error("Error fetching line channels:", channelsError);
   }
-  
-  return (data || []).map((c) => ({
-    group_id: c.id,
-    group_name: c.channel_name,
-    picture_url: c.picture_url,
-    platform: c.platform,
-    external_channel_id: c.external_channel_id,
-  }));
+
+  // 2. Fetch unclaimed groups from line_groups
+  const { data: rawGroups, error: groupsError } = await supabase
+    .from("line_groups")
+    .select("group_id, group_name, picture_url");
+
+  if (groupsError) {
+    console.error("Error fetching raw line groups:", groupsError);
+  }
+
+  const result: any[] = [];
+  const registeredExternals = new Set<string>();
+
+  // Add registered channels first
+  (channels || []).forEach((c: any) => {
+    registeredExternals.add(c.external_channel_id);
+    result.push({
+      group_id: c.id, // We use the UUID as the selection ID
+      group_name: c.channel_name,
+      picture_url: c.picture_url,
+      platform: c.platform,
+      external_channel_id: c.external_channel_id,
+      is_registered: true,
+    });
+  });
+
+  // Add unclaimed groups that are not already registered
+  (rawGroups || []).forEach((g: any) => {
+    if (!registeredExternals.has(g.group_id)) {
+      result.push({
+        group_id: g.group_id, // We use the LINE external ID as the selection ID
+        group_name: g.group_name,
+        picture_url: g.picture_url,
+        platform: "LINE",
+        external_channel_id: g.group_id,
+        is_registered: false,
+      });
+    }
+  });
+
+  return result;
 }

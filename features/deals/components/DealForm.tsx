@@ -337,13 +337,6 @@ export function DealForm({
                   );
                 })}
               </div>
-              {selectedProperty?.listing_type && 
-               selectedProperty.listing_type !== "SALE_AND_RENT" && 
-               selectedProperty.listing_type !== "SALE_RENT" && (
-                <p className="text-[10px] text-amber-600 mt-1.5 font-semibold">
-                  * จำกัดเฉพาะดีล {selectedProperty.listing_type === "RENT" ? "เช่า" : "ขาย"} ตามประเภทประกาศของทรัพย์
-                </p>
-              )}
               <FormMessage />
             </FormItem>
           )}

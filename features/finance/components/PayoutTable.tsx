@@ -70,6 +70,40 @@ export function PayoutTable({
     );
   }
 
+  // Group payouts by deal
+  const groupedDeals = payouts.reduce((acc: any[], curr) => {
+    const existing = acc.find(item => item.dealId === curr.deal_id);
+    if (existing) {
+      existing.splits.push(curr);
+      existing.totalAmount += Number(curr.amount || 0);
+      existing.totalWht += Number(curr.wht_amount || 0);
+      existing.totalNet += Number(curr.net_transfer_amount || curr.net_amount || 0);
+      
+      const statuses = existing.splits.map((s: any) => s.status);
+      if (statuses.every((s: string) => s === "PAID")) {
+        existing.status = "PAID";
+      } else if (statuses.every((s: string) => s === "UNPAID")) {
+        existing.status = "UNPAID";
+      } else if (statuses.every((s: string) => s === "READY_TO_PAY")) {
+        existing.status = "READY_TO_PAY";
+      } else {
+        existing.status = "MIXED";
+      }
+    } else {
+      acc.push({
+        dealId: curr.deal_id,
+        dealTitle: curr.property?.title || "ไม่ระบุโครงการ",
+        propertyTitle: curr.property?.title || "ไม่ทราบชื่อทรัพย์สิน",
+        totalAmount: Number(curr.amount || 0),
+        totalWht: Number(curr.wht_amount || 0),
+        totalNet: Number(curr.net_transfer_amount || curr.net_amount || 0),
+        status: curr.status,
+        splits: [curr]
+      });
+    }
+    return acc;
+  }, []);
+
   return (
     <div className="bg-white/80 backdrop-blur-xl rounded-4xl border border-white/50 shadow-2xl shadow-slate-200/40 overflow-hidden animate-in slide-in-from-bottom-6 duration-700 relative">
       {/* ⏳ Subtle Loading Progress Bar */}
@@ -84,25 +118,25 @@ export function PayoutTable({
           <TableHeader className="bg-slate-50/50">
             <TableRow className="hover:bg-transparent border-slate-100">
               <TableHead className="w-12 text-center h-14 pl-4"></TableHead>
-              <TableHead className="w-[200px] text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">โครงการ / ทรัพย์สิน</TableHead>
-              <TableHead className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">เบิกจ่ายให้ (ผู้รับ)</TableHead>
-              <TableHead className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">สถานะ</TableHead>
-              <TableHead className="text-right text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">ยอดคอมมิชชันดิบ</TableHead>
-              <TableHead className="text-right text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">หัก ณ ที่จ่าย (3%)</TableHead>
-              <TableHead className="text-right text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">ยอดโอน (สุทธิ)</TableHead>
-              <TableHead className="text-center text-[10px] uppercase tracking-widest font-semibold text-slate-400 pr-8 h-14">จัดการ</TableHead>
+              <TableHead className="w-[300px] text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">โครงการ / ทรัพย์สิน</TableHead>
+              <TableHead className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">ผู้รับเงิน</TableHead>
+              <TableHead className="text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">สถานะภาพรวม</TableHead>
+              <TableHead className="text-right text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">คอมมิชชันรวม</TableHead>
+              <TableHead className="text-right text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">หัก ณ ที่จ่ายรวม (3%)</TableHead>
+              <TableHead className="text-right text-[10px] uppercase tracking-widest font-semibold text-slate-400 h-14">ยอดโอนรวม (สุทธิ)</TableHead>
+              <TableHead className="text-center text-[10px] uppercase tracking-widest font-semibold text-slate-400 pr-8 h-14">ขยายรายละเอียด</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {payouts.map((payout) => (
+            {groupedDeals.map((deal) => (
               <PayoutTableRow 
-                key={payout.id} 
-                payout={payout} 
+                key={deal.dealId} 
+                deal={deal} 
                 onUpdate={onUpdate}
                 onOpenHistory={onViewHistory}
                 onOpenPaidDialog={onViewReceipt}
                 onRecalculate={onRecalculate}
-                isRecalculating={recalculatingIds.has(payout.id)}
+                recalculatingIds={recalculatingIds}
                 disabledAction={disabledAction}
               />
             ))}

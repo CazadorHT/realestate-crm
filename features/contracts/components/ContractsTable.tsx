@@ -33,6 +33,32 @@ import { RentalContractWithRelations } from "../types";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
+function formatLeaseTerm(months: number | null | undefined) {
+  if (!months) return "";
+  if (months % 12 === 0) {
+    const years = months / 12;
+    return `${years} ปี (${months} เดือน)`;
+  }
+  return `${months} เดือน`;
+}
+
+function getMonthsBetween(startStr: string, endStr: string) {
+  const start = new Date(startStr);
+  const end = new Date(endStr);
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return 0;
+  const yearDiff = end.getFullYear() - start.getFullYear();
+  const monthDiff = end.getMonth() - start.getMonth();
+  let totalMonths = yearDiff * 12 + monthDiff;
+  
+  const dayDiff = end.getDate() - start.getDate();
+  if (dayDiff >= 27) {
+    totalMonths += 1;
+  } else if (dayDiff <= -27) {
+    totalMonths -= 1;
+  }
+  return totalMonths > 0 ? totalMonths : 0;
+}
+
 function getContractStatus(endDate: string) {
   const now = new Date();
   const end = new Date(endDate);
@@ -204,10 +230,6 @@ export function ContractsTable({
                 const tenantName =
                   contract.deal?.lead?.full_name ||
                   "ไม่ระบุ";
-                const tenantContact =
-                  contract.deal?.lead?.phone ||
-                  contract.deal?.lead?.email ||
-                  "-";
 
                 return (
                   <TableRow
@@ -245,28 +267,67 @@ export function ContractsTable({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div
-                        onClick={() => {
-                          setNavigatingId(`deal-${contract.deal_id}`);
-                          router.push(`/protected/deals/${contract.deal_id}`);
-                        }}
-                        className="text-blue-600 max-w-sm! hover:underline font-medium line-clamp-1 cursor-pointer relative"
-                      >
-                        {navigatingId === `deal-${contract.deal_id}` && (
-                          <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-1" />
-                        )}
-                        {propertyTitle}
-                      </div>
-                      <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                        <Calendar className="h-3 w-3" />
-                        Deal: {contract.deal_id.slice(0, 8)}...
+                      <div className="flex items-center gap-3">
+                        <div className="h-20 w-40 rounded-lg overflow-hidden shrink-0 border border-slate-100 bg-slate-50 relative flex items-center justify-center">
+                          {contract.deal?.property?.cover_image_url ? (
+                            <img
+                              src={contract.deal.property.cover_image_url}
+                              alt={propertyTitle}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <FileText className="h-4 w-4 text-slate-400" />
+                          )}
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <div
+                            onClick={() => {
+                              setNavigatingId(`deal-${contract.deal_id}`);
+                              router.push(`/protected/deals/${contract.deal_id}`);
+                            }}
+                            className="text-blue-600 max-w-md hover:underline font-semibold line-clamp-1 cursor-pointer relative"
+                          >
+                            {navigatingId === `deal-${contract.deal_id}` && (
+                              <Loader2 className="h-3 w-3 animate-spin text-blue-600 absolute -left-4 top-1" />
+                            )}
+                            <span className="text-md line-clamp-1 truncate">{propertyTitle}</span>
+                          </div>
+                          <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
+                            <Calendar className="h-3 w-3" />
+                            Deal: {contract.deal_id.slice(0, 8)}...
+                          </div>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="font-medium">{tenantName}</div>
-                      <div className="text-xs text-slate-500">
-                        {tenantContact}
-                      </div>
+                      {(() => {
+                        const lead = contract.deal?.lead;
+                        if (!lead) return <div className="text-xs text-slate-400">ไม่ระบุข้อมูลผู้ติดต่อ</div>;
+                        const contacts = [
+                          { label: "Phone", value: lead.phone },
+                          { label: "Email", value: lead.email },
+                          { label: "Line", value: lead.line_id, color: "text-[#06C755] font-semibold" },
+                          { label: "WeChat", value: lead.wechat_id, color: "text-[#07C160] font-semibold" },
+                          { label: "WhatsApp", value: lead.whatsapp, color: "text-[#25D366] font-semibold" },
+                          { label: "Facebook", value: lead.facebook, color: "text-[#1877F2] font-semibold" },
+                        ].filter(c => !!c.value);
+
+                        if (contacts.length === 0) {
+                          return <div className="text-xs text-slate-400">ไม่ได้ระบุเบอร์หรือemail</div>;
+                        }
+
+                        return (
+                          <div className="flex flex-col gap-0.5 mt-1">
+                            {contacts.map((c, idx) => (
+                              <div key={idx} className="text-xs text-slate-500 flex items-center gap-1">
+                                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">{c.label}:</span>
+                                <span className={c.color || "text-slate-600"}>{c.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
@@ -275,11 +336,17 @@ export function ContractsTable({
                       <div className="text-sm">
                         {formatDate(contract.end_date)}
                       </div>
-                      {contract.lease_term_months && (
-                        <div className="text-xs text-slate-500 mt-1">
-                          {contract.lease_term_months} เดือน
-                        </div>
-                      )}
+                      {(() => {
+                        const term = contract.lease_term_months || 
+                          (contract.start_date && contract.end_date ? getMonthsBetween(contract.start_date, contract.end_date) : 0);
+                        return term > 0 ? (
+                          <div className="text-xs mt-1">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                              {formatLeaseTerm(term)}
+                            </span>
+                          </div>
+                        ) : null;
+                      })()}
                     </TableCell>
                     <TableCell>
                       {contract.rent_price ? (
@@ -416,7 +483,7 @@ export function ContractsTable({
                   <div className="flex items-start gap-4 pr-10">
                     <div
                       className={cn(
-                        "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm",
+                        "h-12 w-12 rounded-2xl flex items-center justify-center shrink-0 border overflow-hidden bg-slate-50",
                         statusInfo.status === "expired"
                           ? "bg-red-50 text-red-500"
                           : statusInfo.status === "expiring-soon"
@@ -424,7 +491,15 @@ export function ContractsTable({
                             : "bg-blue-50 text-blue-500",
                       )}
                     >
-                      <FileText className="h-6 w-6" />
+                      {contract.deal?.property?.cover_image_url ? (
+                        <img
+                          src={contract.deal.property.cover_image_url}
+                          alt={propertyTitle}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <FileText className="h-6 w-6" />
+                      )}
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -464,6 +539,33 @@ export function ContractsTable({
                       <p className="text-xs font-bold text-slate-700 truncate">
                         {tenantName}
                       </p>
+                      {(() => {
+                        const lead = contract.deal?.lead;
+                        if (!lead) return <div className="text-[9px] text-slate-400">ไม่ระบุ</div>;
+                        const contacts = [
+                          { label: "Phone", value: lead.phone },
+                          { label: "Email", value: lead.email },
+                          { label: "Line", value: lead.line_id, color: "text-[#06C755] font-semibold" },
+                          { label: "WeChat", value: lead.wechat_id, color: "text-[#07C160] font-semibold" },
+                          { label: "WhatsApp", value: lead.whatsapp, color: "text-[#25D366] font-semibold" },
+                          { label: "Facebook", value: lead.facebook, color: "text-[#1877F2] font-semibold" },
+                        ].filter(c => !!c.value);
+
+                        if (contacts.length === 0) {
+                          return <div className="text-[9px] text-slate-400">ไม่ได้ระบุติดต่อ</div>;
+                        }
+
+                        return (
+                          <div className="flex flex-col gap-0.5 mt-0.5">
+                            {contacts.map((c, idx) => (
+                              <div key={idx} className="text-[9px] text-slate-500 flex items-center gap-1">
+                                <span className="text-[8px] text-slate-400 uppercase font-bold tracking-wider">{c.label}:</span>
+                                <span className={`${c.color || "text-slate-600"} truncate max-w-[120px]`}>{c.value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()}
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
@@ -486,6 +588,17 @@ export function ContractsTable({
                         {formatDate(contract.start_date)} -{" "}
                         {formatDate(contract.end_date)}
                       </p>
+                      {(() => {
+                        const term = contract.lease_term_months || 
+                          (contract.start_date && contract.end_date ? getMonthsBetween(contract.start_date, contract.end_date) : 0);
+                        return term > 0 ? (
+                          <div className="mt-1">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                              {formatLeaseTerm(term)}
+                            </span>
+                          </div>
+                        ) : null;
+                      })()}
                     </div>
                     <div className="space-y-1">
                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">

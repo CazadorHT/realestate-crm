@@ -497,7 +497,7 @@ export function PropertiesTable({
 
       <div id="tour-property-list-top" className="rounded-md border border-gray-200 shadow-sm bg-card overflow-hidden">
         {/* Desktop Table View */}
-        <div className="hidden lg:block overflow-x-auto max-h-[calc(100vh-200px)]">
+        <div className="hidden lg:block overflow-x-auto h-full">
           <Table>
             <TableHeader className="sticky top-0 z-20 bg-card shadow-[0_1px_3px_0_rgba(0,0,0,0.05)]">
               {/* Rest of the table header content ... */}

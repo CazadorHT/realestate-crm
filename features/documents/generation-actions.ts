@@ -17,6 +17,7 @@ import { siteConfig } from "@/lib/site-config";
 import fs from "fs";
 import path from "path";
 import PizZip from "pizzip";
+import { decrypt } from "@/lib/crypto";
 // @ts-ignore
 import Docxtemplater from "docxtemplater";
 import { z } from "zod";
@@ -35,6 +36,11 @@ const additionalDataSchema = z
     slip_url: z.string().optional(),
     reservation_fee: z.string().optional(),
     booking_amount: z.string().optional(),
+    security_deposit: z.string().optional(),
+    contract_due_date: z.string().optional(),
+    client_passport: z.string().optional(),
+    client_id_card: z.string().optional(),
+    client_nationality: z.string().optional(),
   })
   .passthrough();
 
@@ -128,7 +134,9 @@ export async function generateDocumentFromTemplateAction(
 
     // 2. Fetch Owner Data (Lead, Property, Deal)
     const validData = additionalDataSchema.parse(additionalData);
-    const lang = validData.language;
+    const lang = (validData.language === "th" || validData.language === "en" || validData.language === "cn" || validData.language === "ru")
+      ? validData.language
+      : "th";
     const translations = await getTranslations(lang);
 
     // Base64 process for config images (Logo, Signature, Stamp)
@@ -157,14 +165,31 @@ export async function generateDocumentFromTemplateAction(
     };
 
     if (ownerType === "LEAD") {
-      const { data: lead, error: lError } = await supabase
-        .from("leads")
-        .select("id, full_name, email, phone, line_id, tenant_id")
+      const { data: leadData, error: lError } = await supabase
+        .from("crm_leads_v3")
+        .select(`
+          id,
+          tenant_id,
+          identity:identities_v3!crm_leads_v3_identity_id_fkey(
+            display_name,
+            email,
+            phone,
+            line_id
+          )
+        `)
         .eq("id", ownerId)
         .single();
       if (lError) throw new Error(mapDbError(lError));
-      if (!lead) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
-      ownerTenantId = lead.tenant_id;
+      if (!leadData) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
+      ownerTenantId = leadData.tenant_id;
+      const lead = {
+        id: leadData.id,
+        tenant_id: leadData.tenant_id,
+        full_name: decrypt((leadData.identity as any)?.display_name) || "",
+        email: decrypt((leadData.identity as any)?.email) || "",
+        phone: decrypt((leadData.identity as any)?.phone) || "",
+        line_id: (leadData.identity as any)?.line_id || ""
+      };
       contextData.lead = localizeObject(lead, lang);
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
@@ -177,14 +202,65 @@ export async function generateDocumentFromTemplateAction(
       ownerTenantId = property.tenant_id;
       contextData.property = localizeObject(property, lang);
     } else if (ownerType === "DEAL") {
-      const { data: deal, error: dError } = await supabase
-        .from("deals")
-        .select("id, deal_type, transaction_date, tenant_id, lead:leads(id, full_name, email, phone, line_id), property:properties(id, title, title_en, title_cn, title_ru, price, original_price, rental_price, original_rental_price)")
+      const { data: dealData, error: dError } = await supabase
+        .from("crm_deals_v3")
+        .select(`
+          id,
+          deal_type,
+          transaction_date,
+          tenant_id,
+          lead:crm_leads_v3(
+            id,
+            identity:identities_v3!crm_leads_v3_identity_id_fkey(
+              display_name,
+              email,
+              phone,
+              line_id
+            )
+          ),
+          property:properties!crm_deals_v3_property_id_fkey(
+            id,
+            title,
+            title_en,
+            title_cn,
+            title_ru,
+            price,
+            rental_price
+          )
+        `)
         .eq("id", ownerId)
         .single();
       if (dError) throw new Error(mapDbError(dError));
-      if (!deal) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
-      ownerTenantId = deal.tenant_id;
+      if (!dealData) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
+      ownerTenantId = dealData.tenant_id;
+
+      const propRaw = dealData.property as any;
+
+      const deal = {
+        id: dealData.id,
+        deal_type: dealData.deal_type,
+        transaction_date: dealData.transaction_date,
+        tenant_id: dealData.tenant_id,
+        lead: dealData.lead ? {
+          id: (dealData.lead as any).id,
+          full_name: decrypt((dealData.lead as any).identity?.display_name) || "",
+          email: decrypt((dealData.lead as any).identity?.email) || "",
+          phone: decrypt((dealData.lead as any).identity?.phone) || "",
+          line_id: (dealData.lead as any).identity?.line_id || ""
+        } : null,
+        property: propRaw ? {
+          id: propRaw.id,
+          title: propRaw.title || "",
+          title_en: propRaw.title_en || propRaw.title || "",
+          title_cn: propRaw.title_cn || propRaw.title || "",
+          title_ru: propRaw.title_ru || propRaw.title || "",
+          price: propRaw.price,
+          rental_price: propRaw.rental_price,
+          original_price: propRaw.price,
+          original_rental_price: propRaw.rental_price
+        } : null
+      };
+
       contextData.deal = localizeObject(deal, lang);
       contextData.lead = localizeObject(deal.lead, lang);
       contextData.property = localizeObject(deal.property, lang);
@@ -192,9 +268,16 @@ export async function generateDocumentFromTemplateAction(
       // Add formatted values based on deal type
       if (deal && contextData.property) {
         const isRent = deal.deal_type === "RENT";
-        const price = isRent
+        let price = isRent
           ? contextData.property.rental_price
           : contextData.property.price;
+
+        if (validData.booking_amount) {
+          const overridePrice = parseFloat(validData.booking_amount.replace(/,/g, ""));
+          if (!isNaN(overridePrice)) {
+            price = overridePrice;
+          }
+        }
 
         contextData.deal.formatted_price = formatCurrency(price);
         contextData.deal.price = price;
@@ -232,8 +315,21 @@ export async function generateDocumentFromTemplateAction(
       }
 
       // Allow templates to use deal.reservation_fee or deal.booking_amount
-      contextData.deal.reservation_fee = validData.reservation_fee || "";
+      const rawResFee = validData.reservation_fee || "";
+      const resFeeNum = parseFloat(rawResFee.replace(/,/g, "")) || 0;
+      contextData.deal.reservation_fee = resFeeNum > 0 ? formatCurrency(resFeeNum) : "";
+      contextData.deal.reservation_fee_words = resFeeNum > 0
+        ? (lang === "th" ? amountToThaiWords(resFeeNum) : amountToEnglishWords(resFeeNum))
+        : "";
       contextData.deal.booking_amount = validData.booking_amount || "";
+      contextData.deal.contract_due_date = validData.contract_due_date || "";
+      
+      const rawSecDep = validData.security_deposit || "";
+      const secDepNum = parseFloat(rawSecDep.replace(/,/g, "")) || 0;
+      contextData.deal.security_deposit = secDepNum > 0 ? formatCurrency(secDepNum) : "";
+      contextData.deal.security_deposit_words = secDepNum > 0
+        ? (lang === "th" ? amountToThaiWords(secDepNum) : amountToEnglishWords(secDepNum))
+        : "";
     } else if (ownerType === "RENTAL_CONTRACT") {
       const { data: contract, error: cError } = await supabase
         .from("rental_contracts")
@@ -245,6 +341,73 @@ export async function generateDocumentFromTemplateAction(
       ownerTenantId = contract.tenant_id;
       contextData.contract = localizeObject(contract, lang);
     }
+
+    // Populate identity info if any nationality, passport or id card are provided
+    if (contextData.lead) {
+      let identityInfo = "";
+      if (validData.client_id_card) {
+        identityInfo += `<br><span style="color: #666;">${lang === "th" ? "เลขบัตรประชาชน" : "ID Card No."}:</span> <span>${validData.client_id_card}</span>`;
+      }
+      if (validData.client_passport) {
+        identityInfo += `<br><span style="color: #666;">${lang === "th" ? "เลขที่พาสปอร์ต" : "Passport No."}:</span> <span>${validData.client_passport}</span>`;
+      }
+      if (validData.client_nationality) {
+        identityInfo += `<br><span style="color: #666;">${lang === "th" ? "สัญชาติ" : "Nationality"}:</span> <span>${validData.client_nationality}</span>`;
+      }
+      contextData.lead.identity_info = identityInfo;
+    }
+
+    // Build financial_info_html block
+    const rawResFee = validData.reservation_fee || "";
+    const resFeeNum = parseFloat(rawResFee.replace(/,/g, "")) || 0;
+    const formattedResFee = resFeeNum > 0 ? formatCurrency(resFeeNum) : "";
+    const resFeeWords = resFeeNum > 0
+      ? (lang === "th" ? amountToThaiWords(resFeeNum) : amountToEnglishWords(resFeeNum))
+      : "";
+
+    const rawSecDep = validData.security_deposit || "";
+    const secDepNum = parseFloat(rawSecDep.replace(/,/g, "")) || 0;
+    const formattedSecDep = secDepNum > 0 ? formatCurrency(secDepNum) : "";
+    const secDepWords = secDepNum > 0
+      ? (lang === "th" ? amountToThaiWords(secDepNum) : amountToEnglishWords(secDepNum))
+      : "";
+
+    let financial_info_html = "";
+    const reservationLabel = translations.reservation_deposit || (lang === "th" ? "ได้รับเงินมัดจำการจองเป็นจำนวนเงิน" : "Reservation Deposit Amount");
+    const securityLabel = lang === "th" ? "เงินประกันการเช่า / Security Deposit" : "Security Deposit";
+
+    if (formattedSecDep) {
+      financial_info_html = `
+      <div style="display: flex; gap: 15px; margin-bottom: 15px; width: 100%;">
+        <div style="flex: 1; text-align: center; background-color: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 10px;">
+          <p style="font-size: 11px; margin: 0 0 5px 0; color: #4f46e5; font-weight: bold;">${reservationLabel}</p>
+          <div style="font-size: 18px; font-weight: bold; color: #4338ca;">
+            ${formattedResFee} THB
+          </div>
+          <div style="font-size: 10px; font-style: italic; color: #666; margin-top: 3px;">( ${resFeeWords} )</div>
+        </div>
+        
+        <div style="flex: 1; text-align: center; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px;">
+          <p style="font-size: 11px; margin: 0 0 5px 0; color: #16a34a; font-weight: bold;">${securityLabel}</p>
+          <div style="font-size: 18px; font-weight: bold; color: #15803d;">
+            ${formattedSecDep} THB
+          </div>
+          <div style="font-size: 10px; font-style: italic; color: #666; margin-top: 3px;">( ${secDepWords} )</div>
+        </div>
+      </div>
+      `;
+    } else {
+      financial_info_html = `
+      <div style="text-align: center; margin-bottom: 15px; width: 100%;">
+        <p style="font-size: 13px; margin-bottom: 5px;">${reservationLabel}:</p>
+        <div style="background-color: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 10px; font-size: 20px; font-weight: bold; color: #4338ca;">
+          ${formattedResFee} THB
+        </div>
+        <div style="font-size: 11px; font-style: italic; color: #666; margin-top: 3px;">( ${resFeeWords} )</div>
+      </div>
+      `;
+    }
+    contextData.financial_info_html = financial_info_html;
 
     // Merge additional data (properly sanitized by Zod)
     contextData = { ...contextData, ...validData };
@@ -261,6 +424,14 @@ export async function generateDocumentFromTemplateAction(
     if (!contextData.deal) contextData.deal = {};
     if (contextData.slip_url) contextData.deal.slip_url = contextData.slip_url;
 
+    if (contextData.property && contextData.property.id) {
+      const fullId = contextData.property.id;
+      const shortId = fullId.includes("-") ? fullId.split("-")[0] : fullId;
+      contextData.property.id = shortId;
+      contextData.property.property_code = `RES-${shortId}`;
+      contextData.property.short_id = shortId;
+    }
+
     // Apply Overrides
     if (validData.client_name_override && contextData.lead) {
       contextData.lead.full_name = validData.client_name_override;
@@ -276,6 +447,27 @@ export async function generateDocumentFromTemplateAction(
       validData.payment_period || contextData.deal?.payment_period || "";
     contextData.payment_method = validData.payment_method || "Transfer";
     contextData.account_name = validData.account_name || "";
+    contextData.bank_account_name = validData.account_name || "";
+
+    if (contextData.lead) {
+      if (validData.client_passport) contextData.lead.passport = validData.client_passport;
+      if (validData.client_id_card) contextData.lead.id_card = validData.client_id_card;
+      if (validData.client_nationality) contextData.lead.nationality = validData.client_nationality;
+    }
+    contextData.client_passport = validData.client_passport || "";
+    contextData.client_id_card = validData.client_id_card || "";
+    contextData.client_nationality = validData.client_nationality || "";
+
+    // Add translation terms directly to context for convenience
+    contextData.terms_deposit = lang === "th"
+      ? "เงินจองนี้ถือเป็นส่วนหนึ่งของค่าทำสัญญา"
+      : "Reservation deposit part of contract fee.";
+    contextData.terms_sign_by = lang === "th"
+      ? "ผู้จองตกลงจะเข้าทำสัญญาภายใน"
+      : "Sign contract by:";
+    contextData.terms_payment_transfer = lang === "th"
+      ? "วิธีชำระเงินที่ระบุ: Transfer (โปรดเก็บหลักฐานการโอนเงิน)"
+      : "Payment Method: Transfer (Please keep the transfer slip)";
 
     // Check for critical missing data
     if (ownerType === "DEAL" && (!contextData.lead || !contextData.property)) {
@@ -426,6 +618,7 @@ export async function generateDocumentFromTemplateAction(
       file_name: displayFileName,
       storage_path: storagePath,
       mime_type: "text/html",
+      size_bytes: uint8Array.byteLength,
       version: 1,
       tenant_id: ownerTenantId,
     });
@@ -481,7 +674,9 @@ export async function generateDocxDocumentFromTemplateAction(
     const templateBuffer = Buffer.from(await fileData.arrayBuffer());
 
     // 2. Prepare Context (similar to generateDocumentFromTemplateAction)
-    const lang = validData.language;
+    const lang = (validData.language === "th" || validData.language === "en" || validData.language === "cn" || validData.language === "ru")
+      ? validData.language
+      : "th";
     const translations = await getTranslations(lang);
 
     let contextData: Record<string, any> = {
@@ -492,14 +687,31 @@ export async function generateDocxDocumentFromTemplateAction(
     };
 
     if (ownerType === "LEAD") {
-      const { data: lead, error: lError } = await supabase
-        .from("leads")
-        .select("id, full_name, email, phone, line_id, tenant_id")
+      const { data: leadData, error: lError } = await supabase
+        .from("crm_leads_v3")
+        .select(`
+          id,
+          tenant_id,
+          identity:identities_v3!crm_leads_v3_identity_id_fkey(
+            display_name,
+            email,
+            phone,
+            line_id
+          )
+        `)
         .eq("id", ownerId)
         .single();
       if (lError) throw new Error(mapDbError(lError));
-      if (!lead) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
-      ownerTenantId = lead.tenant_id;
+      if (!leadData) throw new Error("ไม่พบข้อมูลลีดที่ระบุ");
+      ownerTenantId = leadData.tenant_id;
+      const lead = {
+        id: leadData.id,
+        tenant_id: leadData.tenant_id,
+        full_name: decrypt((leadData.identity as any)?.display_name) || "",
+        email: decrypt((leadData.identity as any)?.email) || "",
+        phone: decrypt((leadData.identity as any)?.phone) || "",
+        line_id: (leadData.identity as any)?.line_id || ""
+      };
       contextData.lead = localizeObject(lead, lang);
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
@@ -512,23 +724,82 @@ export async function generateDocxDocumentFromTemplateAction(
       ownerTenantId = property.tenant_id;
       contextData.property = localizeObject(property, lang);
     } else if (ownerType === "DEAL") {
-      const { data: deal, error: dError } = await supabase
-        .from("deals")
-        .select("id, deal_type, transaction_date, tenant_id, lead:leads(id, full_name, email, phone, line_id), property:properties(id, title, title_en, title_cn, title_ru, price, original_price, rental_price, original_rental_price)")
+      const { data: dealData, error: dError } = await supabase
+        .from("crm_deals_v3")
+        .select(`
+          id,
+          deal_type,
+          transaction_date,
+          tenant_id,
+          lead:crm_leads_v3(
+            id,
+            identity:identities_v3!crm_leads_v3_identity_id_fkey(
+              display_name,
+              email,
+              phone,
+              line_id
+            )
+          ),
+          property:properties!crm_deals_v3_property_id_fkey(
+            id,
+            title,
+            title_en,
+            title_cn,
+            title_ru,
+            price,
+            rental_price
+          )
+        `)
         .eq("id", ownerId)
         .single();
       if (dError) throw new Error(mapDbError(dError));
-      if (!deal) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
-      ownerTenantId = deal.tenant_id;
+      if (!dealData) throw new Error("ไม่พบข้อมูลดีลที่ระบุ");
+      ownerTenantId = dealData.tenant_id;
+
+      const propRaw = dealData.property as any;
+
+      const deal = {
+        id: dealData.id,
+        deal_type: dealData.deal_type,
+        transaction_date: dealData.transaction_date,
+        tenant_id: dealData.tenant_id,
+        lead: dealData.lead ? {
+          id: (dealData.lead as any).id,
+          full_name: decrypt((dealData.lead as any).identity?.display_name) || "",
+          email: decrypt((dealData.lead as any).identity?.email) || "",
+          phone: decrypt((dealData.lead as any).identity?.phone) || "",
+          line_id: (dealData.lead as any).identity?.line_id || ""
+        } : null,
+        property: propRaw ? {
+          id: propRaw.id,
+          title: propRaw.title || "",
+          title_en: propRaw.title_en || propRaw.title || "",
+          title_cn: propRaw.title_cn || propRaw.title || "",
+          title_ru: propRaw.title_ru || propRaw.title || "",
+          price: propRaw.price,
+          rental_price: propRaw.rental_price,
+          original_price: propRaw.price,
+          original_rental_price: propRaw.rental_price
+        } : null
+      };
+
       contextData.deal = localizeObject(deal, lang);
       contextData.lead = localizeObject(deal.lead, lang);
       contextData.property = localizeObject(deal.property, lang);
 
       if (deal && contextData.property) {
         const isRent = deal.deal_type === "RENT";
-        const price = isRent
+        let price = isRent
           ? contextData.property.rental_price
           : contextData.property.price;
+
+        if (validData.booking_amount) {
+          const overridePrice = parseFloat(validData.booking_amount.replace(/,/g, ""));
+          if (!isNaN(overridePrice)) {
+            price = overridePrice;
+          }
+        }
+
         contextData.deal.formatted_price = formatCurrency(price);
         contextData.deal.price = price;
         contextData.deal.amount_in_words =
@@ -557,8 +828,22 @@ export async function generateDocxDocumentFromTemplateAction(
           }
         }
       }
-      contextData.deal.reservation_fee = validData.reservation_fee || "";
+      
+      const rawResFee = validData.reservation_fee || "";
+      const resFeeNum = parseFloat(rawResFee.replace(/,/g, "")) || 0;
+      contextData.deal.reservation_fee = resFeeNum > 0 ? formatCurrency(resFeeNum) : "";
+      contextData.deal.reservation_fee_words = resFeeNum > 0
+        ? (lang === "th" ? amountToThaiWords(resFeeNum) : amountToEnglishWords(resFeeNum))
+        : "";
       contextData.deal.booking_amount = validData.booking_amount || "";
+      contextData.deal.contract_due_date = validData.contract_due_date || "";
+      
+      const rawSecDep = validData.security_deposit || "";
+      const secDepNum = parseFloat(rawSecDep.replace(/,/g, "")) || 0;
+      contextData.deal.security_deposit = secDepNum > 0 ? formatCurrency(secDepNum) : "";
+      contextData.deal.security_deposit_words = secDepNum > 0
+        ? (lang === "th" ? amountToThaiWords(secDepNum) : amountToEnglishWords(secDepNum))
+        : "";
     } else if (ownerType === "RENTAL_CONTRACT") {
       const { data: contract, error: cError } = await supabase
         .from("rental_contracts")
@@ -574,6 +859,14 @@ export async function generateDocxDocumentFromTemplateAction(
     // Merge additional data (properly sanitized)
     contextData = { ...contextData, ...validData };
 
+    if (contextData.property && contextData.property.id) {
+      const fullId = contextData.property.id;
+      const shortId = fullId.includes("-") ? fullId.split("-")[0] : fullId;
+      contextData.property.id = shortId;
+      contextData.property.property_code = `RES-${shortId}`;
+      contextData.property.short_id = shortId;
+    }
+
     if (validData.client_name_override && contextData.lead) {
       contextData.lead.full_name = validData.client_name_override;
     }
@@ -588,6 +881,27 @@ export async function generateDocxDocumentFromTemplateAction(
       validData.payment_period || contextData.deal?.payment_period || "";
     contextData.payment_method = validData.payment_method || "Transfer";
     contextData.account_name = validData.account_name || "";
+    contextData.bank_account_name = validData.account_name || "";
+
+    if (contextData.lead) {
+      if (validData.client_passport) contextData.lead.passport = validData.client_passport;
+      if (validData.client_id_card) contextData.lead.id_card = validData.client_id_card;
+      if (validData.client_nationality) contextData.lead.nationality = validData.client_nationality;
+    }
+    contextData.client_passport = validData.client_passport || "";
+    contextData.client_id_card = validData.client_id_card || "";
+    contextData.client_nationality = validData.client_nationality || "";
+
+    // Add translation terms directly to context for convenience
+    contextData.terms_deposit = lang === "th"
+      ? "เงินจองนี้ถือเป็นส่วนหนึ่งของค่าทำสัญญา"
+      : "Reservation deposit part of contract fee.";
+    contextData.terms_sign_by = lang === "th"
+      ? "ผู้จองตกลงจะเข้าทำสัญญาภายใน"
+      : "Sign contract by:";
+    contextData.terms_payment_transfer = lang === "th"
+      ? "วิธีชำระเงินที่ระบุ: Transfer (โปรดเก็บหลักฐานการโอนเงิน)"
+      : "Payment Method: Transfer (Please keep the transfer slip)";
 
     // 3. Process the DOCX with docxtemplater
     let zip;
@@ -659,6 +973,7 @@ export async function generateDocxDocumentFromTemplateAction(
       storage_path: finalStoragePath,
       mime_type:
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      size_bytes: buf.length,
       version: 1,
       tenant_id: ownerTenantId,
     });
@@ -684,3 +999,58 @@ export async function generateDocxDocumentFromTemplateAction(
     };
   }
 }
+
+export async function getDealDetailsAction(dealId: string) {
+  try {
+    const { role } = await requireAuthContext();
+    assertStaff(role);
+
+    const supabase = await createClient();
+    const { data: dealData, error: dError } = await supabase
+      .from("crm_deals_v3")
+      .select(`
+        id,
+        deal_type,
+        transaction_date,
+        lead:crm_leads_v3(
+          id,
+          identity:identities_v3!crm_leads_v3_identity_id_fkey(
+            display_name,
+            email,
+            phone,
+            line_id
+          )
+        )
+      `)
+      .eq("id", dealId)
+      .single();
+
+    if (dError) throw new Error(dError.message);
+    if (!dealData) throw new Error("Deal not found");
+
+    const leadRaw = dealData.lead as any;
+    const identityRaw = leadRaw?.identity;
+
+    return {
+      success: true,
+      data: {
+        id: dealData.id,
+        deal_type: dealData.deal_type,
+        lead: leadRaw ? {
+          id: leadRaw.id,
+          full_name: decrypt(identityRaw?.display_name) || "",
+          email: decrypt(identityRaw?.email) || "",
+          phone: decrypt(identityRaw?.phone) || "",
+          line_id: identityRaw?.line_id || ""
+        } : null
+      }
+    };
+  } catch (error) {
+    console.error("Error fetching deal details:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+

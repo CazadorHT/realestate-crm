@@ -48,9 +48,9 @@ export function WalletHistoryList({ history }: WalletHistoryListProps) {
                   {formatCurrency(record.net_transfer_amount || record.net_amount)}
                 </span>
                 <div className="flex gap-1.5">
-                  {record.total_adjustments && record.total_adjustments !== 0 && (
+                  {record.total_adjustments !== undefined && record.total_adjustments !== null && Number(record.total_adjustments) !== 0 && (
                     <Badge variant="outline" className="text-[8px] px-1.5 h-4 border-amber-200 text-amber-600 bg-amber-50 font-bold">
-                      {record.total_adjustments > 0 ? "+" : ""}{record.total_adjustments} ปรับปรุง
+                      {Number(record.total_adjustments) > 0 ? "+" : ""}{record.total_adjustments} ปรับปรุง
                     </Badge>
                   )}
                   {record.status === "PAID" ? (
