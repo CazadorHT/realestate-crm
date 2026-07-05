@@ -320,7 +320,13 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
         
         {/* Header Section */}
         <div className="pb-6 border-b border-slate-100 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <div className="max-w-4xl">
+          <m.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="max-w-4xl"
+          >
             <div className="flex items-center gap-2 mb-2">
               <span className="w-1.5 h-6 rounded-full bg-blue-500 shrink-0" />
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-slate-900 tracking-tight">
@@ -341,7 +347,7 @@ export function TransitStationsSection({ lines }: TransitStationsSectionProps) {
             <p className="text-xs sm:text-sm md:text-md text-slate-500 leading-relaxed pl-3.5">
               {tDescription}
             </p>
-          </div>
+          </m.div>
           <Link
             href="/near-station"
             className="text-xs sm:text-sm font-bold text-blue-600 hover:text-blue-700 flex items-center gap-0.5 hover:underline shrink-0 self-start md:self-end transition-all pb-1 row-start-1"

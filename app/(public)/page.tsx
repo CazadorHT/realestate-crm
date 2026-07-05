@@ -18,10 +18,8 @@ import { getBlogPosts } from "@/lib/services/blog";
 import { getPartners } from "@/features/admin/partners-actions";
 import { getServerFAQs, type FAQItem } from "@/lib/services/faqs";
 import { getLocalizedField } from "@/lib/i18n";
-import { getTransitLinesWithStations } from "@/features/public/stations";
-import { TransitStationsSection } from "@/components/public/TransitStationsSection";
 import { getPublicProjects } from "@/features/public/projects";
-import { FeaturedProjectsSection } from "@/components/public/FeaturedProjectsSection";
+import { getTransitLinesWithStations } from "@/features/public/stations";
 
 // Critical Above-the-Fold components (Stay static for visual stability)
 import { HeroSection } from "@/components/public/HeroSection";
@@ -49,6 +47,16 @@ const PopularAreasSection = dynamic(
 const PropertyListingSection = dynamic(
   () => import("@/components/public/PropertyListingSection").then((mod) => mod.PropertyListingSection),
   { loading: () => <PropertyListingSkeleton /> }
+);
+
+const TransitStationsSection = dynamic(
+  () => import("@/components/public/TransitStationsSection").then((mod) => mod.TransitStationsSection),
+  { loading: () => <SectionSkeleton /> }
+);
+
+const FeaturedProjectsSection = dynamic(
+  () => import("@/components/public/FeaturedProjectsSection").then((mod) => mod.FeaturedProjectsSection),
+  { loading: () => <SectionSkeleton /> }
 );
 
 
