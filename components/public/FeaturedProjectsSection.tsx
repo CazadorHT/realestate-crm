@@ -220,7 +220,7 @@ export function FeaturedProjectsSection({
             ref={scrollRef}
             className="flex gap-6 overflow-x-auto pb-6 scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
-            {projects.map((proj) => {
+            {projects.map((proj, index) => {
               const nameText = proj.name[language as keyof typeof proj.name] || proj.name.th;
               const hasSale = proj.priceMin != null;
               const hasRent = proj.rentalMin != null;
@@ -242,78 +242,86 @@ export function FeaturedProjectsSection({
                   : provinceName;
 
               return (
-                <Link
+                <m.div
                   key={proj.id}
-                  href={`/projects/${proj.slug}`}
-                  className="group bg-white rounded-3xl overflow-hidden border border-slate-200/60 hover:border-slate-350 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col shrink-0 w-72 md:w-80 snap-start"
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.05 }}
+                  className="shrink-0 snap-start"
                 >
-                  {/* Project Image */}
-                  <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 shrink-0">
-                    {proj.imageUrl ? (
-                      <div
-                        className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
-                        style={{ backgroundImage: `url(${proj.imageUrl})` }}
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-150 flex items-center justify-center text-slate-300">
-                        <Building2 className="w-12 h-12 stroke-[1.5]" />
+                  <Link
+                    href={`/projects/${proj.slug}`}
+                    className="group bg-white rounded-3xl overflow-hidden border border-slate-200/60 hover:border-slate-350 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col w-72 md:w-80 h-full"
+                  >
+                    {/* Project Image */}
+                    <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 shrink-0">
+                      {proj.imageUrl ? (
+                        <div
+                          className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
+                          style={{ backgroundImage: `url(${proj.imageUrl})` }}
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-150 flex items-center justify-center text-slate-300">
+                          <Building2 className="w-12 h-12 stroke-[1.5]" />
+                        </div>
+                      )}
+                      {/* Unit Count Badge */}
+                      <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1.2 rounded-full border border-white/10 shadow-xs">
+                        {proj.propertyCount > 0 
+                          ? getPageString("units_available", { count: proj.propertyCount })
+                          : getPageString("no_units")
+                        }
                       </div>
-                    )}
-                    {/* Unit Count Badge */}
-                    <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-bold px-2.5 py-1.2 rounded-full border border-white/10 shadow-xs">
-                      {proj.propertyCount > 0 
-                        ? getPageString("units_available", { count: proj.propertyCount })
-                        : getPageString("no_units")
-                      }
                     </div>
-                  </div>
 
-                  {/* Project Info */}
-                  <div className="p-5 flex-1 flex flex-col justify-between text-left">
-                    <div>
-                      <h3 className="font-extrabold text-slate-800 text-sm group-hover:text-blue-600 transition-colors line-clamp-1">
-                        {nameText}
-                      </h3>
-                      {proj.developer && (
-                        <p className="text-[10px] text-slate-400 mt-0.5 font-medium">
-                          {getPageString("developer")}: {proj.developer}
+                    {/* Project Info */}
+                    <div className="p-5 flex-1 flex flex-col justify-between text-left">
+                      <div>
+                        <h3 className="font-extrabold text-slate-800 text-sm group-hover:text-blue-600 transition-colors line-clamp-1">
+                          {nameText}
+                        </h3>
+                        {proj.developer && (
+                          <p className="text-[10px] text-slate-400 mt-0.5 font-medium">
+                            {getPageString("developer")}: {proj.developer}
+                          </p>
+                        )}
+                        <p className="text-[10px] text-slate-500 mt-2.5 flex items-center gap-1 line-clamp-1">
+                          <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                          <span>{locationText}</span>
                         </p>
-                      )}
-                      <p className="text-[10px] text-slate-500 mt-2.5 flex items-center gap-1 line-clamp-1">
-                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                        <span>{locationText}</span>
-                      </p>
+                      </div>
+                      
+                      {/* Divider */}
+                      <div className="h-px bg-slate-100 my-3.5 w-full" />
+                      
+                      {/* Price Info */}
+                      <div className="space-y-1.5">
+                        {hasSale && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">{getPageString("price_sale")}</span>
+                            <span className="font-extrabold text-blue-600">
+                              {getPageString("price_from", { price: `${formatPrice(proj.priceMin!, language)} THB` })}
+                            </span>
+                          </div>
+                        )}
+                        {hasRent && (
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">{getPageString("price_rent")}</span>
+                            <span className="font-extrabold text-teal-600">
+                              {getPageString("price_from", { price: `${formatPrice(proj.rentalMin!, language)} /mo` })}
+                            </span>
+                          </div>
+                        )}
+                        {!hasSale && !hasRent && (
+                          <div className="text-center py-1">
+                            <span className="text-xs text-slate-400 font-semibold italic">{getPageString("no_units")}</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    
-                    {/* Divider */}
-                    <div className="h-px bg-slate-100 my-3.5 w-full" />
-                    
-                    {/* Price Info */}
-                    <div className="space-y-1.5">
-                      {hasSale && (
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">{getPageString("price_sale")}</span>
-                          <span className="font-extrabold text-blue-600">
-                            {getPageString("price_from", { price: `${formatPrice(proj.priceMin!, language)} THB` })}
-                          </span>
-                        </div>
-                      )}
-                      {hasRent && (
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-[9px] font-extrabold text-slate-400 uppercase tracking-wider">{getPageString("price_rent")}</span>
-                          <span className="font-extrabold text-teal-600">
-                            {getPageString("price_from", { price: `${formatPrice(proj.rentalMin!, language)} /mo` })}
-                          </span>
-                        </div>
-                      )}
-                      {!hasSale && !hasRent && (
-                        <div className="text-center py-1">
-                          <span className="text-xs text-slate-400 font-semibold italic">{getPageString("no_units")}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Link>
+                  </Link>
+                </m.div>
               );
             })}
           </div>
