@@ -139,17 +139,17 @@ const CLIENT_LOCALIZATION: Record<string, Record<string, string>> = {
 };
 
 const PROJECT_PROPERTY_TYPES = [
-  { value: "ALL", icon: Compass, iconBg: "bg-slate-50 text-slate-500", label: { th: "ทุกประเภทโครงการ", en: "All Project Types" } },
-  { value: "1", icon: Building2, iconBg: "bg-blue-50 text-blue-600", label: { th: "คอนโดมิเนียม", en: "Condominium" } },
-  { value: "2", icon: Home, iconBg: "bg-emerald-50 text-emerald-600", label: { th: "บ้านเดี่ยว", en: "House" } },
-  { value: "3", icon: Home, iconBg: "bg-teal-50 text-teal-600", label: { th: "ทาวน์โฮม", en: "Townhome" } },
-  { value: "4", icon: MapIcon, iconBg: "bg-amber-50 text-amber-605", label: { th: "ที่ดิน", en: "Land" } },
-  { value: "5", icon: Store, iconBg: "bg-rose-50 text-rose-600", label: { th: "อาคารพาณิชย์", en: "Commercial Building" } },
-  { value: "8", icon: Sparkles, iconBg: "bg-violet-50 text-violet-600", label: { th: "วิลล่า", en: "Villa" } },
-  { value: "9", icon: Sparkles, iconBg: "bg-purple-50 text-purple-600", label: { th: "พูลวิลล่า", en: "Pool Villa" } },
-  { value: "7", icon: Briefcase, iconBg: "bg-indigo-50 text-indigo-600", label: { th: "อาคารสำนักงาน", en: "Office Building" } },
-  { value: "6", icon: Warehouse, iconBg: "bg-cyan-50 text-cyan-600", label: { th: "โกดัง / โรงงาน", en: "Warehouse" } },
-  { value: "10", icon: HelpCircle, iconBg: "bg-slate-100 text-slate-600", label: { th: "อื่นๆ", en: "Other" } },
+  { value: "ALL", icon: Compass, iconBg: "bg-slate-50 text-slate-500", label: { th: "ทุกประเภทโครงการ", en: "All Project Types", cn: "所有项目类型", ru: "Все типы проектов" } },
+  { value: "1", icon: Building2, iconBg: "bg-blue-50 text-blue-600", label: { th: "คอนโดมิเนียม", en: "Condominium", cn: "公寓", ru: "Кондоминиум" } },
+  { value: "2", icon: Home, iconBg: "bg-emerald-50 text-emerald-600", label: { th: "บ้านเดี่ยว", en: "House", cn: "独栋别墅", ru: "Отдельный дом" } },
+  { value: "3", icon: Home, iconBg: "bg-teal-50 text-teal-600", label: { th: "ทาวน์โฮม", en: "Townhome", cn: "联排别墅", ru: "Таунхаус" } },
+  { value: "4", icon: MapIcon, iconBg: "bg-amber-50 text-amber-605", label: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" } },
+  { value: "5", icon: Store, iconBg: "bg-rose-50 text-rose-600", label: { th: "อาคารพาณิชย์", en: "Commercial Building", cn: "商业楼宇", ru: "Коммерческое здание" } },
+  { value: "8", icon: Sparkles, iconBg: "bg-violet-50 text-violet-600", label: { th: "วิลล่า", en: "Villa", cn: "独栋วิลล่า", ru: "Вилла" } },
+  { value: "9", icon: Sparkles, iconBg: "bg-purple-50 text-purple-600", label: { th: "พูลวิลล่า", en: "Pool Villa", cn: "泳池别墅", ru: "Вилла с бассейном" } },
+  { value: "7", icon: Briefcase, iconBg: "bg-indigo-50 text-indigo-600", label: { th: "อาคารสำนักงาน", en: "Office Building", cn: "写字楼", ru: "Офисное здание" } },
+  { value: "6", icon: Warehouse, iconBg: "bg-cyan-50 text-cyan-600", label: { th: "โกดัง / โรงงาน", en: "Warehouse", cn: "仓库/工厂", ru: "Склад / Фабрика" } },
+  { value: "10", icon: HelpCircle, iconBg: "bg-slate-100 text-slate-600", label: { th: "อื่นๆ", en: "Other", cn: "其他", ru: "Другое" } },
 ];
 
 function formatPrice(amount: number, lang: string): string {
@@ -270,35 +270,77 @@ export function ProjectsHubClient({
     return Array.from(provSet).sort((a, b) => a.localeCompare(b, "th"));
   }, [initialProjects]);
 
-  // Compute project count for each province dynamically
+  // Compute project count for each province dynamically based on other active filters
   const provinceCounts = React.useMemo(() => {
     const counts: Record<string, number> = {};
     initialProjects.forEach((p) => {
-      if (p.province) {
+      if (!p.province) return;
+
+      const matchesType = selectedType === "ALL" || p.propertyType === Number(selectedType);
+      const matchesArea = selectedArea === "ALL" || p.popularArea?.trim() === selectedArea;
+      const matchesDeveloper = selectedDeveloper === "ALL" || p.developer?.trim() === selectedDeveloper;
+      
+      let matchesSearch = true;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const nameTh = (p.name.th || "").toLowerCase();
+        const nameEn = (p.name.en || "").toLowerCase();
+        const dev = (p.developer || "").toLowerCase();
+        matchesSearch = nameTh.includes(q) || nameEn.includes(q) || dev.includes(q);
+      }
+
+      if (matchesType && matchesArea && matchesDeveloper && matchesSearch) {
         const norm = normalizeProvince(p.province);
         counts[norm] = (counts[norm] || 0) + 1;
       }
     });
     return counts;
-  }, [initialProjects]);
+  }, [initialProjects, selectedType, selectedArea, selectedDeveloper, searchQuery]);
 
-  // Compute project count for each property type dynamically (filtered by province)
+  // Compute project count for each property type dynamically based on other active filters
   const typeCounts = React.useMemo(() => {
     const counts: Record<string, number> = {};
     initialProjects.forEach((p) => {
       const normProv = p.province ? normalizeProvince(p.province) : "";
-      if (selectedProvince === "ALL" || normProv === selectedProvince) {
+      const matchesProvince = selectedProvince === "ALL" || normProv === selectedProvince;
+      const matchesArea = selectedArea === "ALL" || p.popularArea?.trim() === selectedArea;
+      const matchesDeveloper = selectedDeveloper === "ALL" || p.developer?.trim() === selectedDeveloper;
+      
+      let matchesSearch = true;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const nameTh = (p.name.th || "").toLowerCase();
+        const nameEn = (p.name.en || "").toLowerCase();
+        const dev = (p.developer || "").toLowerCase();
+        matchesSearch = nameTh.includes(q) || nameEn.includes(q) || dev.includes(q);
+      }
+
+      if (matchesProvince && matchesArea && matchesDeveloper && matchesSearch) {
         const typeStr = String(p.propertyType);
         counts[typeStr] = (counts[typeStr] || 0) + 1;
       }
     });
     return counts;
-  }, [initialProjects, selectedProvince]);
+  }, [initialProjects, selectedProvince, selectedArea, selectedDeveloper, searchQuery]);
 
   const totalProjectsInProvince = React.useMemo(() => {
-    if (selectedProvince === "ALL") return initialProjects.length;
-    return initialProjects.filter(p => p.province && normalizeProvince(p.province) === selectedProvince).length;
-  }, [initialProjects, selectedProvince]);
+    return initialProjects.filter((p) => {
+      const normProv = p.province ? normalizeProvince(p.province) : "";
+      const matchesProvince = selectedProvince === "ALL" || normProv === selectedProvince;
+      const matchesArea = selectedArea === "ALL" || p.popularArea?.trim() === selectedArea;
+      const matchesDeveloper = selectedDeveloper === "ALL" || p.developer?.trim() === selectedDeveloper;
+      
+      let matchesSearch = true;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const nameTh = (p.name.th || "").toLowerCase();
+        const nameEn = (p.name.en || "").toLowerCase();
+        const dev = (p.developer || "").toLowerCase();
+        matchesSearch = nameTh.includes(q) || nameEn.includes(q) || dev.includes(q);
+      }
+      return matchesProvince && matchesArea && matchesDeveloper && matchesSearch;
+    }).length;
+  }, [initialProjects, selectedProvince, selectedArea, selectedDeveloper, searchQuery]);
 
   const sortedPropertyTypes = React.useMemo(() => {
     const allOption = PROJECT_PROPERTY_TYPES.find((t) => t.value === "ALL")!;
@@ -322,21 +364,31 @@ export function ProjectsHubClient({
     return Array.from(devSet).sort((a, b) => a.localeCompare(b, "th"));
   }, [initialProjects]);
 
-  // Compute project count for each developer dynamically (filtered by province & type)
+  // Compute project count for each developer dynamically based on other active filters
   const developerCounts = React.useMemo(() => {
     const counts: Record<string, number> = {};
     initialProjects.forEach((p) => {
       const normProv = p.province ? normalizeProvince(p.province) : "";
       const matchesProvince = selectedProvince === "ALL" || normProv === selectedProvince;
       const matchesType = selectedType === "ALL" || p.propertyType === Number(selectedType);
+      const matchesArea = selectedArea === "ALL" || p.popularArea?.trim() === selectedArea;
       
-      if (p.developer && matchesProvince && matchesType) {
+      let matchesSearch = true;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const nameTh = (p.name.th || "").toLowerCase();
+        const nameEn = (p.name.en || "").toLowerCase();
+        const dev = (p.developer || "").toLowerCase();
+        matchesSearch = nameTh.includes(q) || nameEn.includes(q) || dev.includes(q);
+      }
+      
+      if (p.developer && matchesProvince && matchesType && matchesArea && matchesSearch) {
         const dev = p.developer.trim();
         counts[dev] = (counts[dev] || 0) + 1;
       }
     });
     return counts;
-  }, [initialProjects, selectedProvince, selectedType]);
+  }, [initialProjects, selectedProvince, selectedType, selectedArea, searchQuery]);
 
   // Sort developers by active count descending
   const sortedDevelopers = React.useMemo(() => {
@@ -347,12 +399,25 @@ export function ProjectsHubClient({
     });
   }, [developers, developerCounts]);
 
-  // Extract unique popular areas dynamically from projects with count of projects in each area (filtered by selected province)
+  // Extract unique popular areas dynamically from projects with count of projects in each area (filtered by other active filters)
   const popularAreas = React.useMemo(() => {
     const areaMap = new Map<string, { th: string; lang: string; count: number }>();
     initialProjects.forEach((p) => {
       const normProv = p.province ? normalizeProvince(p.province) : "";
-      if (p.popularArea && (selectedProvince === "ALL" || normProv === selectedProvince)) {
+      const matchesProvince = selectedProvince === "ALL" || normProv === selectedProvince;
+      const matchesType = selectedType === "ALL" || p.propertyType === Number(selectedType);
+      const matchesDeveloper = selectedDeveloper === "ALL" || p.developer?.trim() === selectedDeveloper;
+      
+      let matchesSearch = true;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const nameTh = (p.name.th || "").toLowerCase();
+        const nameEn = (p.name.en || "").toLowerCase();
+        const dev = (p.developer || "").toLowerCase();
+        matchesSearch = nameTh.includes(q) || nameEn.includes(q) || dev.includes(q);
+      }
+
+      if (p.popularArea && matchesProvince && matchesType && matchesDeveloper && matchesSearch) {
         const areaTh = p.popularArea.trim();
         const areaLang = (
           language === "en" ? p.popularAreaEn :
@@ -367,7 +432,7 @@ export function ProjectsHubClient({
       }
     });
     return Array.from(areaMap.values()).sort((a: any, b: any) => a.lang.localeCompare(b.lang, language));
-  }, [initialProjects, language, selectedProvince]);
+  }, [initialProjects, language, selectedProvince, selectedType, selectedDeveloper, searchQuery]);
 
   // Filter & Sort Logic
   const filteredAndSortedProjects = React.useMemo(() => {
@@ -441,7 +506,7 @@ export function ProjectsHubClient({
   };
 
   const selectedTypeObj = PROJECT_PROPERTY_TYPES.find((t) => t.value === selectedType);
-  const selectedTypeLabel = selectedTypeObj ? (language === "en" ? selectedTypeObj.label.en : selectedTypeObj.label.th) : "";
+  const selectedTypeLabel = selectedTypeObj ? (selectedTypeObj.label[language as keyof typeof selectedTypeObj.label] || selectedTypeObj.label.th) : "";
 
   const getSubtitleText = (count: number) => {
     const provName = selectedProvince === "ALL" 
@@ -586,6 +651,8 @@ export function ProjectsHubClient({
                         const isSelected = selectedProvince === prov;
                         const labelText = getProvinceName(prov, language);
                         const provColor = getProvinceColor(prov);
+                        const count = provinceCounts[prov] || 0;
+                        const isDisabled = count === 0;
                         return (
                           <button
                             key={prov}
@@ -594,19 +661,22 @@ export function ProjectsHubClient({
                               setSelectedArea("ALL");
                               setIsProvinceDialogOpen(false);
                             }}
+                            disabled={isDisabled}
                             className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
                               isSelected
                                 ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
-                                : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                                : isDisabled
+                                  ? "border-slate-100 bg-slate-50/40 text-slate-350 cursor-not-allowed opacity-50 pointer-events-none"
+                                  : "border-slate-100 hover:bg-slate-50 text-slate-600"
                             }`}
                           >
                             <div className="flex items-center gap-3">
-                              <div className={`p-2 rounded-lg shrink-0 ${provColor.bg} ${provColor.text}`}>
+                              <div className={`p-2 rounded-lg shrink-0 ${provColor.bg} ${provColor.text} ${isDisabled ? "opacity-40" : ""}`}>
                                 <MapPin className="w-4 h-4" />
                               </div>
                               <span>
                                 {labelText}
-                                <span className="text-[10px] opacity-60 font-medium ml-1">({provinceCounts[prov] || 0})</span>
+                                <span className="text-[10px] opacity-60 font-medium ml-1">({count})</span>
                               </span>
                             </div>
                             {isSelected && (
@@ -641,7 +711,7 @@ export function ProjectsHubClient({
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                     {sortedPropertyTypes.map((type) => {
                       const isSelected = selectedType === type.value;
-                      const labelText = language === "en" ? type.label.en : type.label.th;
+                      const labelText = type.label[language as keyof typeof type.label] || type.label.th;
                       const count = type.value === "ALL" ? totalProjectsInProvince : (typeCounts[type.value] || 0);
                       const isDisabled = type.value !== "ALL" && count === 0;
 
@@ -877,7 +947,7 @@ export function ProjectsHubClient({
           >
             <AnimatePresence mode="popLayout">
               {filteredAndSortedProjects.map((project) => {
-                const nameText = project.name[language as keyof typeof project.name] || project.name.th;
+                const nameText = (language === "th" ? project.name.th : (project.name.en || project.name.th)) || project.name.th;
                 const hasSale = project.priceMin != null;
                 const hasRent = project.rentalMin != null;
                 
@@ -890,7 +960,9 @@ export function ProjectsHubClient({
 
                 // Find type config
                 const typeConfig = PROJECT_PROPERTY_TYPES.find((t) => t.value === String(project.propertyType));
-                const typeLabelText = typeConfig ? (language === "en" ? typeConfig.label.en : typeConfig.label.th) : "";
+                const typeLabelText = typeConfig ? (typeConfig.label[language as keyof typeof typeConfig.label] || typeConfig.label.th) : "";
+                const provinceName = project.province ? getProvinceName(project.province, language) : "";
+                const locationText = [areaName, provinceName].filter(Boolean).join(" • ");
 
                 return (
                   <m.div
@@ -955,7 +1027,7 @@ export function ProjectsHubClient({
 
                         <p className="text-xs text-slate-550 mt-3.5 flex items-center gap-1 line-clamp-1">
                           <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                          <span>{project.subdistrict ? `${project.subdistrict}, ` : ""}{project.district}</span>
+                          <span>{locationText}</span>
                         </p>
 
                         {/* Divider */}
