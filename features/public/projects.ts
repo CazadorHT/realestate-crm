@@ -1,5 +1,5 @@
 "use server";
-
+import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { PublicPropertyNearStation } from "./stations";
 
@@ -48,174 +48,183 @@ export interface PublicProject {
  * Get all active projects with property counts and price stats
  */
 export async function getPublicProjects(): Promise<PublicProject[]> {
-  const supabase = await createClient();
+  return unstable_cache(
+    async () => {
+      const supabase = await createClient();
 
-  // Fetch all active projects
-  const { data: projects, error } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true })
-    .order("created_at", { ascending: false });
+      // Fetch all active projects
+      const { data: projects, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .order("created_at", { ascending: false });
 
-  if (error || !projects) {
-    console.error("Error fetching projects:", error?.message);
-    return [];
-  }
-
-  // Fetch properties grouped by project_id to compute stats in memory (highly efficient)
-  const { data: activeProps } = await supabase
-    .from("properties")
-    .select("id, project_id, price, rental_price, status, main_image, listing_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru")
-    .eq("status", "ACTIVE")
-    .is("deleted_at", null);
-
-  const props = activeProps || [];
-  const projectPropsMap = new Map<string, any[]>();
-  for (const p of props) {
-    if (p.project_id) {
-      if (!projectPropsMap.has(p.project_id)) {
-        projectPropsMap.set(p.project_id, []);
+      if (error || !projects) {
+        console.error("Error fetching projects:", error?.message);
+        return [];
       }
-      projectPropsMap.get(p.project_id)!.push(p);
-    }
-  }
 
-  return projects.map((p: any) => {
-    const associatedProps = projectPropsMap.get(p.id) || [];
-    const saleProps = associatedProps.filter((prop: any) => prop.listing_type === "SALE" || prop.listing_type === "SALE_AND_RENT");
-    const rentProps = associatedProps.filter((prop: any) => prop.listing_type === "RENT" || prop.listing_type === "SALE_AND_RENT");
+      // Fetch properties grouped by project_id to compute stats in memory (highly efficient)
+      const { data: activeProps } = await supabase
+        .from("properties")
+        .select("id, project_id, price, rental_price, status, main_image, listing_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru")
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null);
 
-    const prices = saleProps.map((prop: any) => prop.price).filter((price: any) => price != null);
-    const rentals = rentProps.map((prop: any) => prop.rental_price).filter((price: any) => price != null);
-    
-    // Find the most common popular_area for this project
-    const popularAreaCounts = new Map<string, { count: number, en: string | null, cn: string | null, ru: string | null }>();
-    for (const prop of associatedProps) {
-      if (prop.popular_area) {
-        const area = prop.popular_area.trim();
-        const current = popularAreaCounts.get(area) || { count: 0, en: prop.popular_area_en, cn: prop.popular_area_cn, ru: prop.popular_area_ru };
-        current.count += 1;
-        popularAreaCounts.set(area, current);
+      const props = activeProps || [];
+      const projectPropsMap = new Map<string, any[]>();
+      for (const p of props) {
+        if (p.project_id) {
+          if (!projectPropsMap.has(p.project_id)) {
+            projectPropsMap.set(p.project_id, []);
+          }
+          projectPropsMap.get(p.project_id)!.push(p);
+        }
       }
-    }
-    
-    let bestArea: string | null = null;
-    let bestAreaEn: string | null = null;
-    let bestAreaCn: string | null = null;
-    let bestAreaRu: string | null = null;
-    let maxCount = 0;
-    
-    popularAreaCounts.forEach((val, key) => {
-      if (val.count > maxCount) {
-        maxCount = val.count;
-        bestArea = key;
-        bestAreaEn = val.en;
-        bestAreaCn = val.cn;
-        bestAreaRu = val.ru;
-      }
-    });
 
-    const coverImage = p.image_url || associatedProps.find((prop: any) => prop.main_image)?.main_image || null;
+      return projects.map((p: any) => {
+        const associatedProps = projectPropsMap.get(p.id) || [];
+        const saleProps = associatedProps.filter((prop: any) => prop.listing_type === "SALE" || prop.listing_type === "SALE_AND_RENT");
+        const rentProps = associatedProps.filter((prop: any) => prop.listing_type === "RENT" || prop.listing_type === "SALE_AND_RENT");
 
-    return {
-      id: p.id,
-      name: p.name || { th: "", en: "" },
-      slug: p.slug,
-      developer: p.developer,
-      propertyType: p.property_type,
-      province: p.province,
-      district: p.district,
-      subdistrict: p.subdistrict,
-      latitude: p.latitude,
-      longitude: p.longitude,
-      yearCompleted: p.year_completed,
-      totalUnits: p.total_units,
-      description: p.description,
-      imageUrl: coverImage,
-      galleryUrls: p.gallery_urls || [],
-      facilities: p.facilities || [],
-      nearestStationCode: p.nearest_station_code,
-      nearestStationDistance: p.nearest_station_distance,
-      seoTitle: p.seo_title,
-      seoDescription: p.seo_description,
-      propertyCount: associatedProps.length,
-      priceMin: prices.length > 0 ? Math.min(...prices) : null,
-      priceMax: prices.length > 0 ? Math.max(...prices) : null,
-      rentalMin: rentals.length > 0 ? Math.min(...rentals) : null,
-      rentalMax: rentals.length > 0 ? Math.max(...rentals) : null,
-      popularArea: bestArea,
-      popularAreaEn: bestAreaEn,
-      popularAreaCn: bestAreaCn,
-      popularAreaRu: bestAreaRu,
-      sortOrder: p.sort_order ?? 0,
-    };
-  }).filter((p: any) => p.propertyCount > 0);
+        const prices = saleProps.map((prop: any) => prop.price).filter((price: any) => price != null);
+        const rentals = rentProps.map((prop: any) => prop.rental_price).filter((price: any) => price != null);
+        
+        // Find the most common popular_area for this project
+        const popularAreaCounts = new Map<string, { count: number, en: string | null, cn: string | null, ru: string | null }>();
+        for (const prop of associatedProps) {
+          if (prop.popular_area) {
+            const area = prop.popular_area.trim();
+            const current = popularAreaCounts.get(area) || { count: 0, en: prop.popular_area_en, cn: prop.popular_area_cn, ru: prop.popular_area_ru };
+            current.count += 1;
+            popularAreaCounts.set(area, current);
+          }
+        }
+        
+        let bestArea: string | null = null;
+        let bestAreaEn: string | null = null;
+        let bestAreaCn: string | null = null;
+        let bestAreaRu: string | null = null;
+        let maxCount = 0;
+        
+        popularAreaCounts.forEach((val, key) => {
+          if (val.count > maxCount) {
+            maxCount = val.count;
+            bestArea = key;
+            bestAreaEn = val.en;
+            bestAreaCn = val.cn;
+            bestAreaRu = val.ru;
+          }
+        });
+
+        const coverImage = p.image_url || associatedProps.find((prop: any) => prop.main_image)?.main_image || null;
+
+        return {
+          id: p.id,
+          name: p.name || { th: "", en: "" },
+          slug: p.slug,
+          developer: p.developer,
+          propertyType: p.property_type,
+          province: p.province,
+          district: p.district,
+          subdistrict: p.subdistrict,
+          latitude: p.latitude,
+          longitude: p.longitude,
+          yearCompleted: p.year_completed,
+          totalUnits: p.total_units,
+          description: p.description,
+          imageUrl: coverImage,
+          galleryUrls: p.gallery_urls || [],
+          facilities: p.facilities || [],
+          nearestStationCode: p.nearest_station_code,
+          nearestStationDistance: p.nearest_station_distance,
+          seoTitle: p.seo_title,
+          seoDescription: p.seo_description,
+          propertyCount: associatedProps.length,
+          priceMin: prices.length > 0 ? Math.min(...prices) : null,
+          priceMax: prices.length > 0 ? Math.max(...prices) : null,
+          rentalMin: rentals.length > 0 ? Math.min(...rentals) : null,
+          rentalMax: rentals.length > 0 ? Math.max(...rentals) : null,
+          popularArea: bestArea,
+          popularAreaEn: bestAreaEn,
+          popularAreaCn: bestAreaCn,
+          popularAreaRu: bestAreaRu,
+          sortOrder: p.sort_order ?? 0,
+        };
+      }).filter((p: any) => p.propertyCount > 0);
+    },
+    ["public-projects-list-v1"],
+    { revalidate: 3600, tags: ["projects", "properties", "public-data"] }
+  )();
 }
 
-/**
- * Get a single project by its slug
- */
 export async function getProjectBySlug(slug: string): Promise<PublicProject | null> {
-  const supabase = await createClient();
+  return unstable_cache(
+    async () => {
+      const supabase = await createClient();
 
-  const { data: p, error } = await supabase
-    .from("projects")
-    .select("*")
-    .eq("slug", slug)
-    .eq("is_active", true)
-    .maybeSingle();
+      const { data: p, error } = await supabase
+        .from("projects")
+        .select("*")
+        .eq("slug", slug)
+        .eq("is_active", true)
+        .maybeSingle();
 
-  if (error || !p) {
-    if (error) console.error("Error fetching project by slug:", error.message);
-    return null;
-  }
+      if (error || !p) {
+        if (error) console.error("Error fetching project by slug:", error.message);
+        return null;
+      }
 
-  // Fetch properties belonging to this project
-  const { data: activeProps } = await supabase
-    .from("properties")
-    .select("id, price, rental_price, status, main_image, listing_type")
-    .eq("project_id", p.id)
-    .eq("status", "ACTIVE")
-    .is("deleted_at", null);
+      // Fetch properties belonging to this project
+      const { data: activeProps } = await supabase
+        .from("properties")
+        .select("id, price, rental_price, status, main_image, listing_type")
+        .eq("project_id", p.id)
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null);
 
-  const props = activeProps || [];
-  const saleProps = props.filter((prop: any) => prop.listing_type === "SALE" || prop.listing_type === "SALE_AND_RENT");
-  const rentProps = props.filter((prop: any) => prop.listing_type === "RENT" || prop.listing_type === "SALE_AND_RENT");
+      const props = activeProps || [];
+      const saleProps = props.filter((prop: any) => prop.listing_type === "SALE" || prop.listing_type === "SALE_AND_RENT");
+      const rentProps = props.filter((prop: any) => prop.listing_type === "RENT" || prop.listing_type === "SALE_AND_RENT");
 
-  const prices = saleProps.map((prop: any) => prop.price).filter((price: any) => price != null);
-  const rentals = rentProps.map((prop: any) => prop.rental_price).filter((price: any) => price != null);
+      const prices = saleProps.map((prop: any) => prop.price).filter((price: any) => price != null);
+      const rentals = rentProps.map((prop: any) => prop.rental_price).filter((price: any) => price != null);
 
-  const coverImage = p.image_url || props.find((prop: any) => prop.main_image)?.main_image || null;
+      const coverImage = p.image_url || props.find((prop: any) => prop.main_image)?.main_image || null;
 
-  return {
-    id: p.id,
-    name: p.name || { th: "", en: "" },
-    slug: p.slug,
-    developer: p.developer,
-    propertyType: p.property_type,
-    province: p.province,
-    district: p.district,
-    subdistrict: p.subdistrict,
-    latitude: p.latitude,
-    longitude: p.longitude,
-    yearCompleted: p.year_completed,
-    totalUnits: p.total_units,
-    description: p.description,
-    imageUrl: coverImage,
-    galleryUrls: p.gallery_urls || [],
-    facilities: p.facilities || [],
-    nearestStationCode: p.nearest_station_code,
-    nearestStationDistance: p.nearest_station_distance,
-    seoTitle: p.seo_title,
-    seoDescription: p.seo_description,
-    propertyCount: props.length,
-    priceMin: prices.length > 0 ? Math.min(...prices) : null,
-    priceMax: prices.length > 0 ? Math.max(...prices) : null,
-    rentalMin: rentals.length > 0 ? Math.min(...rentals) : null,
-    rentalMax: rentals.length > 0 ? Math.max(...rentals) : null,
-    sortOrder: p.sort_order ?? 0,
-  };
+      return {
+        id: p.id,
+        name: p.name || { th: "", en: "" },
+        slug: p.slug,
+        developer: p.developer,
+        propertyType: p.property_type,
+        province: p.province,
+        district: p.district,
+        subdistrict: p.subdistrict,
+        latitude: p.latitude,
+        longitude: p.longitude,
+        yearCompleted: p.year_completed,
+        totalUnits: p.total_units,
+        description: p.description,
+        imageUrl: coverImage,
+        galleryUrls: p.gallery_urls || [],
+        facilities: p.facilities || [],
+        nearestStationCode: p.nearest_station_code,
+        nearestStationDistance: p.nearest_station_distance,
+        seoTitle: p.seo_title,
+        seoDescription: p.seo_description,
+        propertyCount: props.length,
+        priceMin: prices.length > 0 ? Math.min(...prices) : null,
+        priceMax: prices.length > 0 ? Math.max(...prices) : null,
+        rentalMin: rentals.length > 0 ? Math.min(...rentals) : null,
+        rentalMax: rentals.length > 0 ? Math.max(...rentals) : null,
+        sortOrder: p.sort_order ?? 0,
+      };
+    },
+    ["public-project-by-slug", slug],
+    { revalidate: 3600, tags: ["projects", "public-data"] }
+  )();
 }
 
 /**
@@ -230,47 +239,53 @@ export async function getPropertiesInProject(
     offset?: number;
   }
 ): Promise<{ properties: PublicPropertyNearStation[]; total: number }> {
-  const supabase = await createClient();
-  const limit = filters?.limit || 12;
-  const offset = filters?.offset || 0;
+  return unstable_cache(
+    async () => {
+      const supabase = await createClient();
+      const limit = filters?.limit || 12;
+      const offset = filters?.offset || 0;
 
-  let query = supabase
-    .from("properties")
-    .select(
-      "id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months",
-      { count: "exact" }
-    )
-    .eq("project_id", projectId)
-    .eq("status", "ACTIVE")
-    .is("deleted_at", null);
+      let query = supabase
+        .from("properties")
+        .select(
+          "id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months",
+          { count: "exact" }
+        )
+        .eq("project_id", projectId)
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null);
 
-  if (filters?.listing_type && filters.listing_type !== "ALL") {
-    query = query.eq("listing_type", filters.listing_type);
-  }
-  if (filters?.property_type && filters.property_type !== "ALL") {
-    query = query.eq("property_type", filters.property_type);
-  }
+      if (filters?.listing_type && filters.listing_type !== "ALL") {
+        query = query.eq("listing_type", filters.listing_type);
+      }
+      if (filters?.property_type && filters.property_type !== "ALL") {
+        query = query.eq("property_type", filters.property_type);
+      }
 
-  query = query
-    .order("is_featured", { ascending: false })
-    .order("is_hot_deal", { ascending: false })
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+      query = query
+        .order("is_featured", { ascending: false })
+        .order("is_hot_deal", { ascending: false })
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
 
-  const { data, error, count } = await query;
+      const { data, error, count } = await query;
 
-  if (error) {
-    console.error("Error fetching properties in project:", error.message);
-    return { properties: [], total: 0 };
-  }
+      if (error) {
+        console.error("Error fetching properties in project:", error.message);
+        return { properties: [], total: 0 };
+      }
 
-  return {
-    properties: (data || []).map((p: any) => ({
-      ...p,
-      image_url: p.main_image,
-    })) as unknown as PublicPropertyNearStation[],
-    total: count || 0,
-  };
+      return {
+        properties: (data || []).map((p: any) => ({
+          ...p,
+          image_url: p.main_image,
+        })) as unknown as PublicPropertyNearStation[],
+        total: count || 0,
+      };
+    },
+    ["public-properties-in-project", projectId, JSON.stringify(filters || {})],
+    { revalidate: 3600, tags: ["properties", "public-data"] }
+  )();
 }
 
 /**

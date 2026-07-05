@@ -395,42 +395,48 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 );
 
 export const getPublicPropertyBySlug = cache(async (slug: string) => {
-  const supabase = await createClient();
-  const { data, error } = await supabase.from("properties").select(PUBLIC_COLUMNS).eq("slug", slug).eq("status", "ACTIVE").single();
-  if (error || !data) return null;
+  return unstable_cache(
+    async () => {
+      const supabase = await createClient();
+      const { data, error } = await supabase.from("properties").select(PUBLIC_COLUMNS).eq("slug", slug).eq("status", "ACTIVE").single();
+      if (error || !data) return null;
 
-  const typedRow = data as unknown as PropertyRow;
-  let trans = { en: null as string | null, cn: null as string | null, ru: null as string | null };
-  if (typedRow.popular_area) {
-    const { data: areaData } = await supabase
-      .from("popular_areas")
-      .select("name, name_en, name_cn, name_ru")
-      .eq("name", typedRow.popular_area)
-      .single();
-    if (areaData) {
-      const a = areaData as { name_en: string | null; name_cn: string | null; name_ru: string | null };
-      trans = { en: a.name_en, cn: a.name_cn, ru: a.name_ru };
-    }
-  }
+      const typedRow = data as unknown as PropertyRow;
+      let trans = { en: null as string | null, cn: null as string | null, ru: null as string | null };
+      if (typedRow.popular_area) {
+        const { data: areaData } = await supabase
+          .from("popular_areas")
+          .select("name, name_en, name_cn, name_ru")
+          .eq("name", typedRow.popular_area)
+          .single();
+        if (areaData) {
+          const a = areaData as { name_en: string | null; name_cn: string | null; name_ru: string | null };
+          trans = { en: a.name_en, cn: a.name_cn, ru: a.name_ru };
+        }
+      }
 
-  const finalImages = (typedRow.property_images && typedRow.property_images.length > 0) 
-    ? typedRow.property_images.map((img: NonNullable<PropertyRow['property_images']>[number]) => ({ ...img, url: img.image_url })) 
-    : getSafeImages(typedRow.images);
+      const finalImages = (typedRow.property_images && typedRow.property_images.length > 0) 
+        ? typedRow.property_images.map((img: NonNullable<PropertyRow['property_images']>[number]) => ({ ...img, url: img.image_url })) 
+        : getSafeImages(typedRow.images);
 
-  return {
-    ...typedRow,
-    popular_area_en: trans.en,
-    popular_area_cn: trans.cn,
-    popular_area_ru: trans.ru,
-    image_url: getCoverImage(finalImages),
-    images: finalImages,
-    location: buildLocation(typedRow),
-    features: (typedRow.property_features || []).map((pf: NonNullable<PropertyRow['property_features']>[number]) => pf.features).filter((f): f is NonNullable<typeof f> => !!f),
-    allow_airbnb: !!(typedRow.amenities as any)?.allow_airbnb,
-    airbnb_daily_price: (typedRow.amenities as any)?.airbnb_daily_price ?? null,
-    airbnb_monthly_price: (typedRow.amenities as any)?.airbnb_monthly_price ?? null,
-    airbnb_min_contract: (typedRow.amenities as any)?.airbnb_min_contract ?? null,
-    nearby_places: [],
-    nearby_transits: getSafeNearbyTransits(typedRow.nearby_transits),
-  };
+      return {
+        ...typedRow,
+        popular_area_en: trans.en,
+        popular_area_cn: trans.cn,
+        popular_area_ru: trans.ru,
+        image_url: getCoverImage(finalImages),
+        images: finalImages,
+        location: buildLocation(typedRow),
+        features: (typedRow.property_features || []).map((pf: NonNullable<PropertyRow['property_features']>[number]) => pf.features).filter((f): f is NonNullable<typeof f> => !!f),
+        allow_airbnb: !!(typedRow.amenities as any)?.allow_airbnb,
+        airbnb_daily_price: (typedRow.amenities as any)?.airbnb_daily_price ?? null,
+        airbnb_monthly_price: (typedRow.amenities as any)?.airbnb_monthly_price ?? null,
+        airbnb_min_contract: (typedRow.amenities as any)?.airbnb_min_contract ?? null,
+        nearby_places: [],
+        nearby_transits: getSafeNearbyTransits(typedRow.nearby_transits),
+      };
+    },
+    ["public-property-by-slug", slug],
+    { revalidate: 3600, tags: ["properties", "public-data"] }
+  )();
 });

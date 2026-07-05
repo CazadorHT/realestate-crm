@@ -1,5 +1,5 @@
 "use server";
-
+import { unstable_cache } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
 // ============================================================
@@ -337,77 +337,83 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
  * Get a single station by its slug for the detail page
  */
 export async function getStationBySlug(slug: string): Promise<StationDetail | null> {
-  const supabase = await createClient();
+  return unstable_cache(
+    async () => {
+      const supabase = await createClient();
 
-  // Fetch all stations to find by slug and determine neighbors
-  const { data, error } = await supabase
-    .from("ref_master_data")
-    .select("code, label, metadata, sort_order")
-    .eq("type", "TRANSIT_STATION")
-    .eq("is_active", true)
-    .order("sort_order", { ascending: true });
+      // Fetch all stations to find by slug and determine neighbors
+      const { data, error } = await supabase
+        .from("ref_master_data")
+        .select("code, label, metadata, sort_order")
+        .eq("type", "TRANSIT_STATION")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
 
-  if (error || !data) {
-    console.error("Error fetching station by slug:", error?.message);
-    return null;
-  }
+      if (error || !data) {
+        console.error("Error fetching station by slug:", error?.message);
+        return null;
+      }
 
-  // Find the station by slug
-  let targetIndex = -1;
-  const stationsWithMeta = data.map((item: any, index: number) => {
-    const metadata = item.metadata as Record<string, unknown> | null;
-    const label = item.label as { th: string; en: string; cn?: string; ru?: string } | null;
-    const itemSlug = (metadata?.slug as string) || generateSlug(item.code);
+      // Find the station by slug
+      let targetIndex = -1;
+      const stationsWithMeta = data.map((item: any, index: number) => {
+        const metadata = item.metadata as Record<string, unknown> | null;
+        const label = item.label as { th: string; en: string; cn?: string; ru?: string } | null;
+        const itemSlug = (metadata?.slug as string) || generateSlug(item.code);
 
-    if (itemSlug === slug) {
-      targetIndex = index;
-    }
+        if (itemSlug === slug) {
+          targetIndex = index;
+        }
 
-    return {
-      code: item.code,
-      slug: itemSlug,
-      label: label || { th: item.code, en: item.code },
-      transitType: (metadata?.transit_type as string) || "OTHER",
-      metadata,
-      sortOrder: item.sort_order as number,
-    };
-  });
+        return {
+          code: item.code,
+          slug: itemSlug,
+          label: label || { th: item.code, en: item.code },
+          transitType: (metadata?.transit_type as string) || "OTHER",
+          metadata,
+          sortOrder: item.sort_order as number,
+        };
+      });
 
-  if (targetIndex === -1) return null;
+      if (targetIndex === -1) return null;
 
-  const target = stationsWithMeta[targetIndex];
-  const metadata = target.metadata;
+      const target = stationsWithMeta[targetIndex];
+      const metadata = target.metadata;
 
-  // Find prev/next stations on the same line
-  const sameLine = stationsWithMeta.filter((s: any) => s.transitType === target.transitType);
-  const lineIndex = sameLine.findIndex((s: any) => s.slug === slug);
+      // Find prev/next stations on the same line
+      const sameLine = stationsWithMeta.filter((s: any) => s.transitType === target.transitType);
+      const lineIndex = sameLine.findIndex((s: any) => s.slug === slug);
 
-  const prevStation = lineIndex > 0 ? {
-    slug: sameLine[lineIndex - 1].slug,
-    label: { th: sameLine[lineIndex - 1].label.th, en: sameLine[lineIndex - 1].label.en },
-  } : null;
+      const prevStation = lineIndex > 0 ? {
+        slug: sameLine[lineIndex - 1].slug,
+        label: { th: sameLine[lineIndex - 1].label.th, en: sameLine[lineIndex - 1].label.en },
+      } : null;
 
-  const nextStation = lineIndex < sameLine.length - 1 ? {
-    slug: sameLine[lineIndex + 1].slug,
-    label: { th: sameLine[lineIndex + 1].label.th, en: sameLine[lineIndex + 1].label.en },
-  } : null;
+      const nextStation = lineIndex < sameLine.length - 1 ? {
+        slug: sameLine[lineIndex + 1].slug,
+        label: { th: sameLine[lineIndex + 1].label.th, en: sameLine[lineIndex + 1].label.en },
+      } : null;
 
-  return {
-    code: target.code,
-    slug: target.slug,
-    label: target.label,
-    transitType: target.transitType,
-    lineName: (metadata?.line_name as string) || LINE_LABELS[target.transitType]?.en || target.transitType,
-    lineColor: (metadata?.line_color as string) || LINE_COLORS[target.transitType] || "#6B7280",
-    latitude: metadata?.latitude as number | undefined,
-    longitude: metadata?.longitude as number | undefined,
-    seoTitle: metadata?.seo_title as string | undefined,
-    seoDescription: metadata?.seo_description as string | undefined,
-    description: metadata?.description as StationDetail["description"] | undefined,
-    bgImage: (metadata?.bg_image as string) || (metadata?.image_url as string) || null,
-    prevStation,
-    nextStation,
-  };
+      return {
+        code: target.code,
+        slug: target.slug,
+        label: target.label,
+        transitType: target.transitType,
+        lineName: (metadata?.line_name as string) || LINE_LABELS[target.transitType]?.en || target.transitType,
+        lineColor: (metadata?.line_color as string) || LINE_COLORS[target.transitType] || "#6B7280",
+        latitude: metadata?.latitude as number | undefined,
+        longitude: metadata?.longitude as number | undefined,
+        seoTitle: metadata?.seo_title as string | undefined,
+        seoDescription: metadata?.seo_description as string | undefined,
+        description: metadata?.description as StationDetail["description"] | undefined,
+        bgImage: (metadata?.bg_image as string) || (metadata?.image_url as string) || null,
+        prevStation,
+        nextStation,
+      };
+    },
+    ["public-station-by-slug", slug],
+    { revalidate: 3600, tags: ["stations", "public-data"] }
+  )();
 }
 
 /**
@@ -423,69 +429,75 @@ export async function getPropertiesNearStation(
     offset?: number;
   }
 ): Promise<{ properties: PublicPropertyNearStation[]; total: number }> {
-  const supabase = await createClient();
-  const limit = filters?.limit || 12;
-  const offset = filters?.offset || 0;
+  return unstable_cache(
+    async () => {
+      const supabase = await createClient();
+      const limit = filters?.limit || 12;
+      const offset = filters?.offset || 0;
 
-  // Sanitize station names to prevent injection
-  const cleanTh = stationNameTh.replace(/"/g, "");
-  const cleanEn = stationNameEn.replace(/"/g, "");
+      // Sanitize station names to prevent injection
+      const cleanTh = stationNameTh.replace(/"/g, "");
+      const cleanEn = stationNameEn.replace(/"/g, "");
 
-  const jsonTh = `[{"station_name":"${cleanTh}"}]`;
-  const jsonEn = `[{"station_name_en":"${cleanEn}"}]`;
+      const jsonTh = `[{"station_name":"${cleanTh}"}]`;
+      const jsonEn = `[{"station_name_en":"${cleanEn}"}]`;
 
-  let query = supabase
-    .from("properties")
-    .select(
-      `id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months,
-      property_features (
-        features (id, name, name_en, name_cn, name_ru, icon_key)
-      )`,
-      { count: "exact" }
-    )
-    .eq("status", "ACTIVE")
-    .is("deleted_at", null)
-    .or(
-      `nearby_transits.cs."${jsonTh.replace(/"/g, '\\"')}",` +
-      `nearby_transits.cs."${jsonEn.replace(/"/g, '\\"')}",` +
-      `transit_station_name.eq."${cleanTh}",` +
-      `transit_station_name_en.eq."${cleanEn}"`
-    );
+      let query = supabase
+        .from("properties")
+        .select(
+          `id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru, images, main_image, price, rental_price, original_price, original_rental_price, price_per_sqm, rent_price_per_sqm, land_size_sqwah, bedrooms, bathrooms, size_sqm, property_type, listing_type, status, district, province, popular_area, popular_area_en, popular_area_cn, popular_area_ru, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, nearby_transits, is_hot_deal, is_featured, currency, is_fully_furnished, is_pet_friendly, verified, created_at, updated_at, min_contract_months,
+          property_features (
+            features (id, name, name_en, name_cn, name_ru, icon_key)
+          )`,
+          { count: "exact" }
+        )
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null)
+        .or(
+          `nearby_transits.cs."${jsonTh.replace(/"/g, '\\"')}",` +
+          `nearby_transits.cs."${jsonEn.replace(/"/g, '\\"')}",` +
+          `transit_station_name.eq."${cleanTh}",` +
+          `transit_station_name_en.eq."${cleanEn}"`
+        );
 
-  // Apply optional filters
-  if (filters?.listing_type && filters.listing_type !== "ALL") {
-    query = query.eq("listing_type", filters.listing_type);
-  }
-  if (filters?.property_type && filters.property_type !== "ALL") {
-    query = query.eq("property_type", filters.property_type);
-  }
+      // Apply optional filters
+      if (filters?.listing_type && filters.listing_type !== "ALL") {
+        query = query.eq("listing_type", filters.listing_type);
+      }
+      if (filters?.property_type && filters.property_type !== "ALL") {
+        query = query.eq("property_type", filters.property_type);
+      }
 
-  // Ordering: featured first, then hot deals, then by price
-  query = query
-    .order("is_featured", { ascending: false })
-    .order("is_hot_deal", { ascending: false })
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
+      // Ordering: featured first, then hot deals, then by price
+      query = query
+        .order("is_featured", { ascending: false })
+        .order("is_hot_deal", { ascending: false })
+        .order("created_at", { ascending: false })
+        .range(offset, offset + limit - 1);
 
-  const { data, error, count } = await query;
+      const { data, error, count } = await query;
 
-  if (error) {
-    console.error("Error fetching properties near station:", error.message);
-    return { properties: [], total: 0 };
-  }
+      if (error) {
+        console.error("Error fetching properties near station:", error.message);
+        return { properties: [], total: 0 };
+      }
 
-  const mapped = (data || []).map((row: any) => {
-    const { property_features, ...rest } = row;
-    return {
-      ...rest,
-      features: (property_features || []).map((pf: any) => pf.features).filter((f: any) => !!f),
-    };
-  });
+      const mapped = (data || []).map((row: any) => {
+        const { property_features, ...rest } = row;
+        return {
+          ...rest,
+          features: (property_features || []).map((pf: any) => pf.features).filter((f: any) => !!f),
+        };
+      });
 
-  return {
-    properties: mapped as PublicPropertyNearStation[],
-    total: count || 0,
-  };
+      return {
+        properties: mapped as PublicPropertyNearStation[],
+        total: count || 0,
+      };
+    },
+    ["public-properties-near-station", stationNameTh, stationNameEn, JSON.stringify(filters || {})],
+    { revalidate: 3600, tags: ["properties", "stations", "public-data"] }
+  )();
 }
 
 /**
