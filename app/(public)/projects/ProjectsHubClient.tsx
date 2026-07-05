@@ -123,6 +123,18 @@ const CLIENT_LOCALIZATION: Record<string, Record<string, string>> = {
     en: "Apply",
     cn: "确定",
     ru: "Применить",
+  },
+  filter_developer: {
+    th: "ผู้พัฒนาโครงการ",
+    en: "Developer",
+    cn: "开发商",
+    ru: "Застройщик",
+  },
+  filter_all_developers: {
+    th: "ผู้พัฒนาทั้งหมด",
+    en: "All Developers",
+    cn: "所有开发商",
+    ru: "Все застройщики",
   }
 };
 
@@ -231,9 +243,11 @@ export function ProjectsHubClient({
   const [selectedType, setSelectedType] = React.useState<string>("ALL");
   const [selectedProvince, setSelectedProvince] = React.useState<string>("ALL");
   const [selectedArea, setSelectedArea] = React.useState<string>("ALL");
+  const [selectedDeveloper, setSelectedDeveloper] = React.useState<string>("ALL");
   const [sortBy, setSortBy] = React.useState<"DEFAULT" | "PRICE_LOW" | "UNITS_HIGH" | "NAME_AZ">("DEFAULT");
   const [isTypeDialogOpen, setIsTypeDialogOpen] = React.useState(false);
   const [isProvinceDialogOpen, setIsProvinceDialogOpen] = React.useState(false);
+  const [isDeveloperDialogOpen, setIsDeveloperDialogOpen] = React.useState(false);
 
   const getPageString = (key: string, params?: Record<string, string | number>) => {
     let val = translations[key]?.[language] || CLIENT_LOCALIZATION[key]?.[language] || translations[key]?.th || CLIENT_LOCALIZATION[key]?.th || "";
@@ -297,6 +311,42 @@ export function ProjectsHubClient({
     return [allOption, ...sortedOthers];
   }, [typeCounts]);
 
+  // Extract unique developers dynamically from projects
+  const developers = React.useMemo(() => {
+    const devSet = new Set<string>();
+    initialProjects.forEach((p) => {
+      if (p.developer) {
+        devSet.add(p.developer.trim());
+      }
+    });
+    return Array.from(devSet).sort((a, b) => a.localeCompare(b, "th"));
+  }, [initialProjects]);
+
+  // Compute project count for each developer dynamically (filtered by province & type)
+  const developerCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    initialProjects.forEach((p) => {
+      const normProv = p.province ? normalizeProvince(p.province) : "";
+      const matchesProvince = selectedProvince === "ALL" || normProv === selectedProvince;
+      const matchesType = selectedType === "ALL" || p.propertyType === Number(selectedType);
+      
+      if (p.developer && matchesProvince && matchesType) {
+        const dev = p.developer.trim();
+        counts[dev] = (counts[dev] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [initialProjects, selectedProvince, selectedType]);
+
+  // Sort developers by active count descending
+  const sortedDevelopers = React.useMemo(() => {
+    return [...developers].sort((a, b) => {
+      const countA = developerCounts[a] || 0;
+      const countB = developerCounts[b] || 0;
+      return countB - countA;
+    });
+  }, [developers, developerCounts]);
+
   // Extract unique popular areas dynamically from projects with count of projects in each area (filtered by selected province)
   const popularAreas = React.useMemo(() => {
     const areaMap = new Map<string, { th: string; lang: string; count: number }>();
@@ -349,6 +399,11 @@ export function ProjectsHubClient({
       result = result.filter((p) => p.popularArea?.trim() === selectedArea);
     }
 
+    // 4.5 Developer Filter
+    if (selectedDeveloper !== "ALL") {
+      result = result.filter((p) => p.developer?.trim() === selectedDeveloper);
+    }
+
     // 5. Sorting
     if (sortBy === "DEFAULT") {
       result.sort((a, b) => {
@@ -374,13 +429,14 @@ export function ProjectsHubClient({
     }
 
     return result;
-  }, [initialProjects, searchQuery, selectedType, selectedProvince, selectedArea, sortBy, language]);
+  }, [initialProjects, searchQuery, selectedType, selectedProvince, selectedArea, selectedDeveloper, sortBy, language]);
 
   const handleResetFilters = () => {
     setSearchQuery("");
     setSelectedType("ALL");
     setSelectedProvince("ALL");
     setSelectedArea("ALL");
+    setSelectedDeveloper("ALL");
     setSortBy("DEFAULT");
   };
 
@@ -496,7 +552,7 @@ export function ProjectsHubClient({
                     </Button>
                   }
                 >
-                  <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                  <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                       {/* All Provinces Option */}
                       <button
@@ -581,7 +637,7 @@ export function ProjectsHubClient({
                   </Button>
                 }
               >
-                <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                     {sortedPropertyTypes.map((type) => {
                       const isSelected = selectedType === type.value;
@@ -626,6 +682,97 @@ export function ProjectsHubClient({
                 </div>
               </ResponsiveDialog>
 
+              {/* Developer Selector Dialog */}
+              {developers.length > 0 && (
+                <ResponsiveDialog
+                  open={isDeveloperDialogOpen}
+                  onOpenChange={setIsDeveloperDialogOpen}
+                  title={getPageString("filter_developer")}
+                  trigger={
+                    <Button
+                      variant="outline"
+                      className="h-11 px-4 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700! font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
+                    >
+                      <div className="p-1 bg-violet-50 text-violet-600 rounded-md shrink-0">
+                        <Building2 className="h-4 w-4" />
+                      </div>
+                      <span>
+                        {selectedDeveloper === "ALL" 
+                          ? getPageString("filter_all_developers") 
+                          : selectedDeveloper}
+                      </span>
+                    </Button>
+                  }
+                >
+                  <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-200 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2 ">
+                      {/* All Developers Option */}
+                      <button
+                        onClick={() => {
+                          setSelectedDeveloper("ALL");
+                          setIsDeveloperDialogOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
+                          selectedDeveloper === "ALL"
+                            ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
+                            : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-violet-50 text-violet-500 shrink-0">
+                            <Building2 className="w-4 h-4" />
+                          </div>
+                          <span>
+                            {getPageString("filter_all_developers")}
+                            <span className="text-[10px] opacity-60 font-medium ml-1">({initialProjects.filter(p => p.developer).length})</span>
+                          </span>
+                        </div>
+                        {selectedDeveloper === "ALL" && (
+                          <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                        )}
+                      </button>
+
+                      {/* Individual Developers */}
+                      {sortedDevelopers.map((dev) => {
+                        const isSelected = selectedDeveloper === dev;
+                        const count = developerCounts[dev] || 0;
+                        const isDisabled = count === 0;
+                        return (
+                          <button
+                            key={dev}
+                            onClick={() => {
+                              setSelectedDeveloper(dev);
+                              setIsDeveloperDialogOpen(false);
+                            }}
+                            disabled={isDisabled}
+                            className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
+                              isSelected
+                                ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
+                                : isDisabled
+                                  ? "border-slate-100 bg-slate-50/40 text-slate-350 cursor-not-allowed opacity-50 pointer-events-none"
+                                  : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`p-2 rounded-lg shrink-0 bg-slate-50 text-slate-500 ${isDisabled ? "opacity-40" : ""}`}>
+                                <Building2 className="w-4 h-4" />
+                              </div>
+                              <span>
+                                {dev}
+                                <span className="text-[10px] text-blue-500 font-medium ml-1">({count})</span>
+                              </span>
+                            </div>
+                            {isSelected && (
+                              <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </ResponsiveDialog>
+              )}
+
               {/* Sort By Dropdown */}
               <div className="relative">
                 <Select value={sortBy} onValueChange={(val) => setSortBy(val as any)}>
@@ -645,7 +792,7 @@ export function ProjectsHubClient({
               </div>
 
               {/* Clear Filters Button */}
-              {(searchQuery || selectedType !== "ALL" || selectedProvince !== "ALL" || selectedArea !== "ALL" || sortBy !== "DEFAULT") && (
+              {(searchQuery || selectedType !== "ALL" || selectedProvince !== "ALL" || selectedArea !== "ALL" || selectedDeveloper !== "ALL" || sortBy !== "DEFAULT") && (
                 <button
                   onClick={handleResetFilters}
                   className="flex items-center gap-1 px-3 h-11 text-xs font-bold text-red-500 hover:text-red-650 hover:bg-red-50/50 rounded-xl transition-all"
@@ -783,9 +930,10 @@ export function ProjectsHubClient({
                       {/* Content */}
                       <div className="p-5 flex flex-col flex-1">
                         <div className="mb-2 flex items-center gap-2">
-                          {typeLabelText && (
-                            <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-50 text-blue-600 uppercase">
-                              {typeLabelText}
+                          {typeConfig && typeConfig.value !== "ALL" && (
+                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${typeConfig.iconBg}`}>
+                              <typeConfig.icon className="w-3 h-3 stroke-[2.5]" />
+                              <span>{typeLabelText}</span>
                             </span>
                           )}
                           {areaName && (
