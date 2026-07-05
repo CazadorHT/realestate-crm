@@ -96,9 +96,24 @@ export const getPopularAreasAction = unstable_cache(
       }
 
       // 🚀 Public Mode: Full optimization for landing page
+      const bkkVicinity = [
+        "กรุงเทพมหานคร",
+        "สมุทรปราการ",
+        "นนทบุรี",
+        "ปทุมธานี",
+        "สมุทรสาคร",
+        "นครปฐม",
+      ];
       const provinceMap: Record<string, string[]> = {
-        Bangkok: ["กรุงเทพมหานคร"],
+        Bangkok: bkkVicinity,
+        กรุงเทพมหานคร: bkkVicinity,
+        นนทบุรี: bkkVicinity,
+        สมุทรปราการ: bkkVicinity,
+        ปทุมธานี: bkkVicinity,
+        สมุทรสาคร: bkkVicinity,
+        นครปฐม: bkkVicinity,
         Phuket: ["ภูเก็ต", "Phuket"],
+        ภูเก็ต: ["ภูเก็ต", "Phuket"],
       };
 
       let query = client

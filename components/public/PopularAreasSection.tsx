@@ -67,12 +67,18 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
     setShowRightFade(items.length > 0);
   }, [items]);
 
-  // Dynamic provinces state
-  const [provinces, setProvinces] = useState<Province[]>(initialProvinces || []);
+  // Dynamic provinces state (filter out vicinities to avoid redundant options)
+  const [provinces, setProvinces] = useState<Province[]>(() => {
+    const raw = initialProvinces || [];
+    const vicinities = ["นนทบุรี", "สมุทรปราการ", "ปทุมธานี", "สมุทรสาคร", "นครปฐม"];
+    return raw.filter(p => !vicinities.includes(p.id));
+  });
   const [isNextHovered, setIsNextHovered] = useState(false);
   const [activeProvIndex, setActiveProvIndex] = useState(() => {
-    if (!initialProvinces) return 0;
-    const bkkIndex = initialProvinces.findIndex(
+    const raw = initialProvinces || [];
+    const vicinities = ["นนทบุรี", "สมุทรปราการ", "ปทุมธานี", "สมุทรสาคร", "นครปฐม"];
+    const filtered = raw.filter(p => !vicinities.includes(p.id));
+    const bkkIndex = filtered.findIndex(
       (p) => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร",
     );
     return bkkIndex !== -1 ? bkkIndex : 0;
@@ -135,8 +141,10 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
         if (res.ok) {
           const data = await res.json();
           if (data && data.length > 0) {
-            setProvinces(data);
-            const bkkIndex = data.findIndex(
+            const vicinities = ["นนทบุรี", "สมุทรปราการ", "ปทุมธานี", "สมุทรสาคร", "นครปฐม"];
+            const filtered = data.filter((p: any) => !vicinities.includes(p.id));
+            setProvinces(filtered);
+            const bkkIndex = filtered.findIndex(
               (p: any) => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร",
             );
             if (bkkIndex !== -1) setActiveProvIndex(bkkIndex);
