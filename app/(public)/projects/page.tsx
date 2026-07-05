@@ -4,6 +4,7 @@ import { Building2, MapPin, ChevronRight, Home, DollarSign, Calendar } from "luc
 import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations } from "@/lib/i18n";
 import { getPublicProjects, type PublicProject } from "@/features/public/projects";
+import { ProjectsHubClient } from "./ProjectsHubClient";
 
 export const revalidate = 3600; // 1 hour
 
@@ -130,133 +131,12 @@ export default async function ProjectsHubPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-20 pb-16 md:pt-32 md:pb-24 text-white bg-slate-950">
-        {/* Background Overlay */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-40 blur-xs brightness-50"
-          style={{ backgroundImage: `url('/images/hero-projects.jpg')` }}
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/80 to-transparent" />
-
-        <div className="relative max-w-screen-2xl mx-auto px-5 md:px-8 z-10">
-          <nav aria-label="breadcrumb" className="mb-6">
-            <ol className="flex items-center gap-2 text-sm text-slate-300 flex-wrap">
-              <li><Link href="/" className="hover:text-white transition-colors">{getPageString("breadcrumb_home")}</Link></li>
-              <li><ChevronRight className="w-3.5 h-3.5 opacity-60" /></li>
-              <li className="text-white font-medium">{getPageString("breadcrumb_projects")}</li>
-            </ol>
-          </nav>
-
-          <div className="flex flex-col md:flex-row md:items-center gap-6">
-            <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shrink-0">
-              <Building2 className="w-10 h-10 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight drop-shadow-sm">
-                {getPageString("title")}
-              </h1>
-              <p className="text-lg text-slate-200 mt-2 font-medium drop-shadow-xs">
-                {getPageString("subtitle", { totalCount: projects.length })}
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Projects Directory */}
-      <section className="max-w-screen-2xl mx-auto px-5 md:px-8 pb-16 pt-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {projects.map((project) => {
-            const nameText = project.name[language as keyof typeof project.name] || project.name.th;
-            const hasSale = project.priceMin != null;
-            const hasRent = project.rentalMin != null;
-
-            return (
-              <Link
-                key={project.id}
-                href={`/projects/${project.slug}`}
-                className="group bg-white rounded-3xl overflow-hidden border border-slate-200/60 hover:border-slate-300 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col h-full"
-              >
-                {/* Cover Image */}
-                <div className="relative aspect-video w-full bg-slate-100 overflow-hidden shrink-0">
-                  {project.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={project.imageUrl}
-                      alt={nameText}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-slate-100 to-slate-200">
-                      <Building2 className="w-12 h-12 text-slate-300" />
-                    </div>
-                  )}
-                  {/* Property Count Badge */}
-                  <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-xs text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/10">
-                    {project.propertyCount > 0 
-                      ? getPageString("units_available", { count: project.propertyCount })
-                      : getPageString("no_units")
-                    }
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-5 flex flex-col flex-1">
-                  <div className="mb-2">
-                    <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-bold bg-blue-50 text-blue-600 uppercase">
-                      {project.propertyType === 1 ? getPageString("filter_condo") : getPageString("filter_house")}
-                    </span>
-                  </div>
-
-                  <h3 className="text-lg font-bold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
-                    {nameText}
-                  </h3>
-
-                  {project.developer && (
-                    <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-                      <span className="font-medium text-slate-500">{getPageString("developer")}:</span> {project.developer}
-                    </p>
-                  )}
-
-                  <p className="text-xs text-slate-500 mt-3 flex items-center gap-1 line-clamp-1">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                    <span>{project.subdistrict ? `${project.subdistrict}, ` : ""}{project.district}</span>
-                  </p>
-
-                  {/* Divider */}
-                  <div className="h-px bg-slate-100 my-4 w-full" />
-
-                  {/* Price Info */}
-                  <div className="mt-auto space-y-1.5">
-                    {hasSale && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{getPageString("price_sale")}</span>
-                        <span className="text-sm font-extrabold text-blue-600">
-                          {getPageString("price_from", { price: `${formatPrice(project.priceMin!, language)} THB` })}
-                        </span>
-                      </div>
-                    )}
-                    {hasRent && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{getPageString("price_rent")}</span>
-                        <span className="text-sm font-extrabold text-teal-600">
-                          {getPageString("price_from", { price: `${formatPrice(project.rentalMin!, language)} /mo` })}
-                        </span>
-                      </div>
-                    )}
-                    {!hasSale && !hasRent && (
-                      <div className="text-center py-1">
-                        <span className="text-xs text-slate-400 font-medium italic">{getPageString("no_units")}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
+      {/* Projects Directory (Client Filters & Grid) */}
+      <ProjectsHubClient 
+        initialProjects={projects}
+        language={language}
+        translations={PAGE_LOCALIZATION}
+      />
 
       {/* SEO Section */}
       <section className="bg-white/60 backdrop-blur-sm border-t border-slate-100">

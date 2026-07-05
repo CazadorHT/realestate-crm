@@ -33,6 +33,11 @@ export interface PublicProject {
   priceMax: number | null;
   rentalMin: number | null;
   rentalMax: number | null;
+  popularArea?: string | null;
+  popularAreaEn?: string | null;
+  popularAreaCn?: string | null;
+  popularAreaRu?: string | null;
+  sortOrder: number;
 }
 
 // ============================================================
@@ -61,7 +66,7 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
   // Fetch properties grouped by project_id to compute stats in memory (highly efficient)
   const { data: activeProps } = await supabase
     .from("properties")
-    .select("id, project_id, price, rental_price, status, main_image")
+    .select("id, project_id, price, rental_price, status, main_image, listing_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru")
     .eq("status", "ACTIVE")
     .is("deleted_at", null);
 
@@ -78,9 +83,39 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
 
   return projects.map((p: any) => {
     const associatedProps = projectPropsMap.get(p.id) || [];
-    const prices = associatedProps.map((prop: any) => prop.price).filter((price: any) => price != null);
-    const rentals = associatedProps.map((prop: any) => prop.rental_price).filter((price: any) => price != null);
+    const saleProps = associatedProps.filter((prop: any) => prop.listing_type === "SALE" || prop.listing_type === "SALE_AND_RENT");
+    const rentProps = associatedProps.filter((prop: any) => prop.listing_type === "RENT" || prop.listing_type === "SALE_AND_RENT");
+
+    const prices = saleProps.map((prop: any) => prop.price).filter((price: any) => price != null);
+    const rentals = rentProps.map((prop: any) => prop.rental_price).filter((price: any) => price != null);
     
+    // Find the most common popular_area for this project
+    const popularAreaCounts = new Map<string, { count: number, en: string | null, cn: string | null, ru: string | null }>();
+    for (const prop of associatedProps) {
+      if (prop.popular_area) {
+        const area = prop.popular_area.trim();
+        const current = popularAreaCounts.get(area) || { count: 0, en: prop.popular_area_en, cn: prop.popular_area_cn, ru: prop.popular_area_ru };
+        current.count += 1;
+        popularAreaCounts.set(area, current);
+      }
+    }
+    
+    let bestArea: string | null = null;
+    let bestAreaEn: string | null = null;
+    let bestAreaCn: string | null = null;
+    let bestAreaRu: string | null = null;
+    let maxCount = 0;
+    
+    popularAreaCounts.forEach((val, key) => {
+      if (val.count > maxCount) {
+        maxCount = val.count;
+        bestArea = key;
+        bestAreaEn = val.en;
+        bestAreaCn = val.cn;
+        bestAreaRu = val.ru;
+      }
+    });
+
     const coverImage = p.image_url || associatedProps.find((prop: any) => prop.main_image)?.main_image || null;
 
     return {
@@ -109,8 +144,13 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
       priceMax: prices.length > 0 ? Math.max(...prices) : null,
       rentalMin: rentals.length > 0 ? Math.min(...rentals) : null,
       rentalMax: rentals.length > 0 ? Math.max(...rentals) : null,
+      popularArea: bestArea,
+      popularAreaEn: bestAreaEn,
+      popularAreaCn: bestAreaCn,
+      popularAreaRu: bestAreaRu,
+      sortOrder: p.sort_order ?? 0,
     };
-  });
+  }).filter((p: any) => p.propertyCount > 0);
 }
 
 /**
@@ -134,14 +174,17 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
   // Fetch properties belonging to this project
   const { data: activeProps } = await supabase
     .from("properties")
-    .select("id, price, rental_price, status, main_image")
+    .select("id, price, rental_price, status, main_image, listing_type")
     .eq("project_id", p.id)
     .eq("status", "ACTIVE")
     .is("deleted_at", null);
 
   const props = activeProps || [];
-  const prices = props.map((prop: any) => prop.price).filter((price: any) => price != null);
-  const rentals = props.map((prop: any) => prop.rental_price).filter((price: any) => price != null);
+  const saleProps = props.filter((prop: any) => prop.listing_type === "SALE" || prop.listing_type === "SALE_AND_RENT");
+  const rentProps = props.filter((prop: any) => prop.listing_type === "RENT" || prop.listing_type === "SALE_AND_RENT");
+
+  const prices = saleProps.map((prop: any) => prop.price).filter((price: any) => price != null);
+  const rentals = rentProps.map((prop: any) => prop.rental_price).filter((price: any) => price != null);
 
   const coverImage = p.image_url || props.find((prop: any) => prop.main_image)?.main_image || null;
 
@@ -171,6 +214,7 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
     priceMax: prices.length > 0 ? Math.max(...prices) : null,
     rentalMin: rentals.length > 0 ? Math.min(...rentals) : null,
     rentalMax: rentals.length > 0 ? Math.max(...rentals) : null,
+    sortOrder: p.sort_order ?? 0,
   };
 }
 

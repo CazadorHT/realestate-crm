@@ -20,6 +20,8 @@ import { getServerFAQs, type FAQItem } from "@/lib/services/faqs";
 import { getLocalizedField } from "@/lib/i18n";
 import { getTransitLinesWithStations } from "@/features/public/stations";
 import { TransitStationsSection } from "@/components/public/TransitStationsSection";
+import { getPublicProjects } from "@/features/public/projects";
+import { FeaturedProjectsSection } from "@/components/public/FeaturedProjectsSection";
 
 // Critical Above-the-Fold components (Stay static for visual stability)
 import { HeroSection } from "@/components/public/HeroSection";
@@ -136,7 +138,8 @@ export default async function LandingPage() {
     initialPosts,
     partnersRes,
     serverFaqs,
-    transitLines
+    transitLines,
+    projects
   ] = await Promise.all([
     getPublicProvincesAction(),
     getPublicProperties({ limit: 24 }),
@@ -144,7 +147,8 @@ export default async function LandingPage() {
     getBlogPosts(undefined, 4),
     getPartners({ activeOnly: true }),
     getServerFAQs(),
-    getTransitLinesWithStations()
+    getTransitLinesWithStations(),
+    getPublicProjects()
   ]);
 
   const partners = partnersRes.success ? partnersRes.data : [];
@@ -299,6 +303,11 @@ export default async function LandingPage() {
       {/* TRANSIT STATION LANDINGS */}
       {transitLines && transitLines.length > 0 && (
         <TransitStationsSection lines={transitLines} />
+      )}
+
+      {/* FEATURED PROJECTS CAROUSEL */}
+      {projects && projects.length > 0 && (
+        <FeaturedProjectsSection projects={projects.slice(0, 10)} language={language} />
       )}
       
       {/* BELOW THE FOLD: Dynamic / Lazy with realistic height placeholders */}

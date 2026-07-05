@@ -1,0 +1,754 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { 
+  Building2, 
+  MapPin, 
+  Search, 
+  SlidersHorizontal, 
+  ArrowUpDown, 
+  X, 
+  ChevronLeft, 
+  ChevronRight,
+  Home,
+  Map as MapIcon,
+  Store,
+  Briefcase,
+  Warehouse,
+  Compass,
+  Sparkles,
+  HelpCircle
+} from "lucide-react";
+import type { PublicProject } from "@/features/public/projects";
+import { getProvinceName } from "@/lib/utils/provinces";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
+import { Button } from "@/components/ui/button";
+
+interface ProjectsHubClientProps {
+  initialProjects: PublicProject[];
+  language: string;
+  translations: Record<string, Record<string, string>>;
+}
+
+const CLIENT_LOCALIZATION: Record<string, Record<string, string>> = {
+  search_placeholder: {
+    th: "ค้นหาด้วยชื่อโครงการ หรือผู้พัฒนา...",
+    en: "Search by project name or developer...",
+    cn: "搜索楼盘名称或开发商...",
+    ru: "Поиск по названию или застройщику...",
+  },
+  filter_all_areas: {
+    th: "ทุกย่าน/ทำเล",
+    en: "All Areas",
+    cn: "所有区域",
+    ru: "Все районы",
+  },
+  sort_by: {
+    th: "จัดเรียงตาม",
+    en: "Sort By",
+    cn: "排序方式",
+    ru: "Сортировка",
+  },
+  sort_default: {
+    th: "แนะนำ / เริ่มต้น",
+    en: "Recommended",
+    cn: "推荐",
+    ru: "Рекомендуемые",
+  },
+  sort_price_low: {
+    th: "ราคาเริ่มต้น: ต่ำ - สูง",
+    en: "Price: Low to High",
+    cn: "价格：从低到高",
+    ru: "Цена: по возрастанию",
+  },
+  sort_units_high: {
+    th: "จำนวนห้องว่าง: มาก - น้อย",
+    en: "Available Rooms: High to Low",
+    cn: "房源数量：从多到少",
+    ru: "Комнат в наличии: по убыванию",
+  },
+  sort_name_az: {
+    th: "ชื่อโครงการ A - Z",
+    en: "Name: A - Z",
+    cn: "名称：A - Z",
+    ru: "Название: А - Я",
+  },
+  no_projects_found: {
+    th: "ไม่พบโครงการที่ตรงกับเงื่อนไขการค้นหาของคุณ",
+    en: "No projects match your search criteria.",
+    cn: "没有找到符合您搜索条件的楼盘项目。",
+    ru: "Проекты, соответствующие вашему запросу, не найдены.",
+  },
+  clear_filters: {
+    th: "ล้างตัวกรองทั้งหมด",
+    en: "Clear All Filters",
+    cn: "清除所有筛选",
+    ru: "Сбросить фильтры",
+  },
+  popular_areas_title: {
+    th: "เลือกตามย่านทำเล",
+    en: "Browse by Area",
+    cn: "按区域浏览",
+    ru: "Популярные районы",
+  },
+  filter_property_type: {
+    th: "ประเภทโครงการ",
+    en: "Project Type",
+    cn: "项目类型",
+    ru: "Тип проекта",
+  },
+  filter_all_provinces: {
+    th: "ทุกจังหวัด",
+    en: "All Provinces",
+    cn: "所有省份",
+    ru: "Все провинции",
+  },
+  filter_province: {
+    th: "จังหวัด",
+    en: "Province",
+    cn: "省份",
+    ru: "Провинция",
+  },
+  confirm: {
+    th: "ตกลง",
+    en: "Apply",
+    cn: "确定",
+    ru: "Применить",
+  }
+};
+
+const PROJECT_PROPERTY_TYPES = [
+  { value: "ALL", icon: Compass, iconBg: "bg-slate-50 text-slate-500", label: { th: "ทุกประเภทโครงการ", en: "All Project Types" } },
+  { value: "1", icon: Building2, iconBg: "bg-blue-50 text-blue-600", label: { th: "คอนโดมิเนียม", en: "Condominium" } },
+  { value: "2", icon: Home, iconBg: "bg-emerald-50 text-emerald-600", label: { th: "บ้านเดี่ยว", en: "House" } },
+  { value: "3", icon: Home, iconBg: "bg-teal-50 text-teal-600", label: { th: "ทาวน์โฮม", en: "Townhome" } },
+  { value: "4", icon: MapIcon, iconBg: "bg-amber-50 text-amber-605", label: { th: "ที่ดิน", en: "Land" } },
+  { value: "5", icon: Store, iconBg: "bg-rose-50 text-rose-600", label: { th: "อาคารพาณิชย์", en: "Commercial Building" } },
+  { value: "8", icon: Sparkles, iconBg: "bg-violet-50 text-violet-600", label: { th: "วิลล่า", en: "Villa" } },
+  { value: "9", icon: Sparkles, iconBg: "bg-purple-50 text-purple-600", label: { th: "พูลวิลล่า", en: "Pool Villa" } },
+  { value: "7", icon: Briefcase, iconBg: "bg-indigo-50 text-indigo-600", label: { th: "อาคารสำนักงาน", en: "Office Building" } },
+  { value: "6", icon: Warehouse, iconBg: "bg-cyan-50 text-cyan-600", label: { th: "โกดัง / โรงงาน", en: "Warehouse" } },
+  { value: "10", icon: HelpCircle, iconBg: "bg-slate-100 text-slate-600", label: { th: "อื่นๆ", en: "Other" } },
+];
+
+function formatPrice(amount: number, lang: string): string {
+  if (amount >= 1000000) {
+    const value = amount / 1000000;
+    const formatted = value.toFixed(1).replace(/\.0$/, "");
+    return lang === "th" ? `${formatted} ล้าน` : `${formatted}M`;
+  }
+  return new Intl.NumberFormat(lang === "th" ? "th-TH" : "en-US", {
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
+
+function normalizeProvince(prov: string): string {
+  const p = prov.trim();
+  const lower = p.toLowerCase();
+  if (lower === "bangkok" || lower === "กรุงเทพ" || lower === "กรุงเทพฯ") return "กรุงเทพมหานคร";
+  if (lower === "samut prakan" || lower === "samutprakan") return "สมุทรปราการ";
+  if (lower === "nonthaburi") return "นนทบุรี";
+  if (lower === "pathum thani" || lower === "pathumthani") return "ปทุมธานี";
+  if (lower === "chonburi" || lower === "chon buri") return "ชลบุรี";
+  if (lower === "phuket") return "ภูเก็ต";
+  return p;
+}
+
+const getProvinceColor = (prov: string): { bg: string; text: string } => {
+  const p = prov.trim();
+  const lower = p.toLowerCase();
+  if (lower === "กรุงเทพมหานคร" || lower === "bangkok") {
+    return { bg: "bg-blue-50", text: "text-blue-600" };
+  }
+  if (lower === "นนทบุรี" || lower === "nonthaburi") {
+    return { bg: "bg-purple-50", text: "text-purple-600" };
+  }
+  if (lower === "ปทุมธานี" || lower === "pathum thani" || lower === "pathumthani") {
+    return { bg: "bg-amber-50", text: "text-amber-600" };
+  }
+  if (lower === "สมุทรปราการ" || lower === "samut prakan" || lower === "samutprakan") {
+    return { bg: "bg-emerald-50", text: "text-emerald-650" };
+  }
+  if (lower === "ชลบุรี" || lower === "chonburi" || lower === "chon buri") {
+    return { bg: "bg-teal-50", text: "text-teal-600" };
+  }
+  if (lower === "ภูเก็ต" || lower === "phuket") {
+    return { bg: "bg-rose-50", text: "text-rose-600" };
+  }
+  // Alternating colors
+  const colors = [
+    { bg: "bg-indigo-50", text: "text-indigo-600" },
+    { bg: "bg-orange-50", text: "text-orange-605" },
+    { bg: "bg-cyan-50", text: "text-cyan-600" },
+    { bg: "bg-pink-50", text: "text-pink-600" }
+  ];
+  let sum = 0;
+  for (let i = 0; i < p.length; i++) {
+    sum += p.charCodeAt(i);
+  }
+  return colors[sum % colors.length];
+};
+
+export function ProjectsHubClient({
+  initialProjects,
+  language,
+  translations,
+}: ProjectsHubClientProps) {
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [selectedType, setSelectedType] = React.useState<string>("ALL");
+  const [selectedProvince, setSelectedProvince] = React.useState<string>("ALL");
+  const [selectedArea, setSelectedArea] = React.useState<string>("ALL");
+  const [sortBy, setSortBy] = React.useState<"DEFAULT" | "PRICE_LOW" | "UNITS_HIGH" | "NAME_AZ">("DEFAULT");
+  const [isTypeDialogOpen, setIsTypeDialogOpen] = React.useState(false);
+  const [isProvinceDialogOpen, setIsProvinceDialogOpen] = React.useState(false);
+
+  const getPageString = (key: string, params?: Record<string, string | number>) => {
+    let val = translations[key]?.[language] || CLIENT_LOCALIZATION[key]?.[language] || translations[key]?.th || CLIENT_LOCALIZATION[key]?.th || "";
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        val = val.replace(`{${k}}`, String(v));
+      });
+    }
+    return val;
+  };
+
+  // Extract unique provinces dynamically from projects
+  const provinces = React.useMemo(() => {
+    const provSet = new Set<string>();
+    initialProjects.forEach((p) => {
+      if (p.province) {
+        provSet.add(normalizeProvince(p.province));
+      }
+    });
+    return Array.from(provSet).sort((a, b) => a.localeCompare(b, "th"));
+  }, [initialProjects]);
+
+  // Extract unique popular areas dynamically from projects with count of projects in each area (filtered by selected province)
+  const popularAreas = React.useMemo(() => {
+    const areaMap = new Map<string, { th: string; lang: string; count: number }>();
+    initialProjects.forEach((p) => {
+      const normProv = p.province ? normalizeProvince(p.province) : "";
+      if (p.popularArea && (selectedProvince === "ALL" || normProv === selectedProvince)) {
+        const areaTh = p.popularArea.trim();
+        const areaLang = (
+          language === "en" ? p.popularAreaEn :
+          language === "cn" ? p.popularAreaCn :
+          language === "ru" ? p.popularAreaRu :
+          p.popularArea
+        ) || p.popularArea;
+        
+        const existing = areaMap.get(areaTh) || { th: areaTh, lang: areaLang, count: 0 };
+        existing.count += 1;
+        areaMap.set(areaTh, existing);
+      }
+    });
+    return Array.from(areaMap.values()).sort((a: any, b: any) => a.lang.localeCompare(b.lang, language));
+  }, [initialProjects, language, selectedProvince]);
+
+  // Filter & Sort Logic
+  const filteredAndSortedProjects = React.useMemo(() => {
+    let result = [...initialProjects];
+
+    // 1. Search Query
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((p) => {
+        const nameTh = (p.name.th || "").toLowerCase();
+        const nameEn = (p.name.en || "").toLowerCase();
+        const dev = (p.developer || "").toLowerCase();
+        return nameTh.includes(q) || nameEn.includes(q) || dev.includes(q);
+      });
+    }
+
+    // 2. Property Type Filter
+    if (selectedType !== "ALL") {
+      result = result.filter((p) => p.propertyType === Number(selectedType));
+    }
+
+    // 3. Province Filter
+    if (selectedProvince !== "ALL") {
+      result = result.filter((p) => p.province && normalizeProvince(p.province) === selectedProvince);
+    }
+
+    // 4. Popular Area Filter
+    if (selectedArea !== "ALL") {
+      result = result.filter((p) => p.popularArea?.trim() === selectedArea);
+    }
+
+    // 5. Sorting
+    if (sortBy === "DEFAULT") {
+      result.sort((a, b) => {
+        if (a.sortOrder !== b.sortOrder) {
+          return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+        }
+        return b.propertyCount - a.propertyCount;
+      });
+    } else if (sortBy === "PRICE_LOW") {
+      result.sort((a, b) => {
+        const priceA = a.priceMin ?? a.rentalMin ?? Infinity;
+        const priceB = b.priceMin ?? b.rentalMin ?? Infinity;
+        return priceA - priceB;
+      });
+    } else if (sortBy === "UNITS_HIGH") {
+      result.sort((a, b) => b.propertyCount - a.propertyCount);
+    } else if (sortBy === "NAME_AZ") {
+      result.sort((a, b) => {
+        const nameA = a.name[language as keyof typeof a.name] || a.name.th;
+        const nameB = b.name[language as keyof typeof b.name] || b.name.th;
+        return nameA.localeCompare(nameB, language);
+      });
+    }
+
+    return result;
+  }, [initialProjects, searchQuery, selectedType, selectedProvince, selectedArea, sortBy, language]);
+
+  const handleResetFilters = () => {
+    setSearchQuery("");
+    setSelectedType("ALL");
+    setSelectedProvince("ALL");
+    setSelectedArea("ALL");
+    setSortBy("DEFAULT");
+  };
+
+  const selectedTypeObj = PROJECT_PROPERTY_TYPES.find((t) => t.value === selectedType);
+  const selectedTypeLabel = selectedTypeObj ? (language === "en" ? selectedTypeObj.label.en : selectedTypeObj.label.th) : "";
+
+  const getSubtitleText = (count: number) => {
+    const provName = selectedProvince === "ALL" 
+      ? (language === "th" ? "กรุงเทพฯ และปริมณฑล" : language === "en" ? "Bangkok & Vicinity" : selectedProvince)
+      : getProvinceName(selectedProvince, language);
+
+    if (language === "en") {
+      return `Explore ${count} premier condominium and residential projects in ${provName}`;
+    }
+    if (language === "cn") {
+      return `汇聚${provName}地区共 ${count} 个优质公寓及住宅项目`;
+    }
+    if (language === "ru") {
+      return `Исследуйте ${count} жилых комплексов и проектов в ${provName}`;
+    }
+    return `รวมคอนโดมิเนียมและโครงการบ้านเด่น ${count} โครงการใน${provName}`;
+  };
+
+  return (
+    <>
+      {/* Hero Section - Dynamically updates subtitle with province and project count */}
+      <section className="relative overflow-hidden pt-24 pb-20 md:pt-36 md:pb-32 text-white bg-slate-950">
+        {/* Background Overlay */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-80 blur-xs scale-105 duration-1000 select-none pointer-events-none"
+          style={{ backgroundImage: `url('/images/hero-projects.png')` }}
+        />
+        <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/40 to-slate-950/20" />
+        
+        {/* Decorative Light Glows */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 left-1/4 -translate-y-1/2 w-[350px] h-[350px] bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="relative max-w-screen-2xl mx-auto px-5 md:px-8 z-10">
+          <nav aria-label="breadcrumb" className="mb-6 md:mb-8">
+            <ol className="flex items-center gap-2 text-xs text-slate-400 bg-white/5 backdrop-blur-md px-4 py-2 rounded-full border border-white/5 w-fit">
+              <li><Link href="/" className="hover:text-white transition-colors">{getPageString("breadcrumb_home")}</Link></li>
+              <li><ChevronRight className="w-3.5 h-3.5 opacity-60 text-slate-500" /></li>
+              <li className="text-slate-200 font-bold">{getPageString("breadcrumb_projects")}</li>
+            </ol>
+          </nav>
+
+          <div className="flex flex-col md:flex-row md:items-center gap-6 md:gap-8">
+            <div className="p-5 rounded-3xl bg-linear-to-tr from-blue-600/30 to-indigo-600/30 backdrop-blur-xl border border-white/10 shrink-0 shadow-2xl shadow-blue-500/5">
+              <Building2 className="w-12 h-12 text-blue-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-5xl lg:text-6xl font-black text-white tracking-tight drop-shadow-md leading-none bg-linear-to-r from-white via-white to-slate-300 bg-clip-text text-transparent">
+                {getPageString("title")}
+              </h1>
+              <p className="text-base md:text-lg text-slate-300 mt-3.5 font-medium max-w-2xl leading-relaxed">
+                {getSubtitleText(filteredAndSortedProjects.length)}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Controls Container - Sticky & Refined */}
+      <section className="sticky top-[62px] z-30 w-full bg-white/90 backdrop-blur-md border-b border-slate-200/85 shadow-xs">
+        <div className="max-w-screen-2xl mx-auto px-5 md:px-8 pt-5 pb-4">
+          <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
+            {/* Search Input */}
+            <div className="relative flex-1 max-w-xl group">
+              <Search className="absolute left-4 top-3.5 h-4 w-4 text-slate-450 group-focus-within:text-blue-600 transition-colors" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={getPageString("search_placeholder")}
+                className="w-full h-11 pl-11 pr-10 rounded-2xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-4 focus:ring-blue-50/80 focus:border-blue-500 transition-all font-medium text-xs text-slate-800 placeholder:text-slate-400"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3.5 top-3.5 p-0.5 hover:bg-slate-200 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Main Action Filters */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Province Selector Dialog */}
+              {provinces.length > 0 && (
+                <ResponsiveDialog
+                  open={isProvinceDialogOpen}
+                  onOpenChange={setIsProvinceDialogOpen}
+                  title={getPageString("filter_province")}
+                  trigger={
+                    <Button
+                      variant="outline"
+                      className="h-11 px-4 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700! font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
+                    >
+                      <div className={`p-1 rounded-md shrink-0 ${
+                        selectedProvince === "ALL" 
+                          ? "bg-red-50 text-red-550" 
+                          : `${getProvinceColor(selectedProvince).bg} ${getProvinceColor(selectedProvince).text}`
+                      }`}>
+                        <MapPin className="h-4 w-4" />
+                      </div>
+                      <span>
+                        {selectedProvince === "ALL" 
+                          ? getPageString("filter_all_provinces") 
+                          : getProvinceName(selectedProvince, language)}
+                      </span>
+                    </Button>
+                  }
+                >
+                  <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {/* All Provinces Option */}
+                      <button
+                        onClick={() => {
+                          setSelectedProvince("ALL");
+                          setSelectedArea("ALL");
+                          setIsProvinceDialogOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
+                          selectedProvince === "ALL"
+                            ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
+                            : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-red-50 text-red-500 shrink-0">
+                            <MapPin className="w-4 h-4" />
+                          </div>
+                          <span>{getPageString("filter_all_provinces")}</span>
+                        </div>
+                        {selectedProvince === "ALL" && (
+                          <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                        )}
+                      </button>
+
+                      {/* Individual Provinces */}
+                      {provinces.map((prov) => {
+                        const isSelected = selectedProvince === prov;
+                        const labelText = getProvinceName(prov, language);
+                        const provColor = getProvinceColor(prov);
+                        return (
+                          <button
+                            key={prov}
+                            onClick={() => {
+                              setSelectedProvince(prov);
+                              setSelectedArea("ALL");
+                              setIsProvinceDialogOpen(false);
+                            }}
+                            className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
+                              isSelected
+                                ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
+                                : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                            }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className={`p-2 rounded-lg shrink-0 ${provColor.bg} ${provColor.text}`}>
+                                <MapPin className="w-4 h-4" />
+                              </div>
+                              <span>{labelText}</span>
+                            </div>
+                            {isSelected && (
+                              <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </ResponsiveDialog>
+              )}
+
+              {/* Property Type Selector Dialog */}
+              <ResponsiveDialog
+                open={isTypeDialogOpen}
+                onOpenChange={setIsTypeDialogOpen}
+                title={getPageString("filter_property_type")}
+                trigger={
+                  <Button
+                    variant="outline"
+                    className="h-11 px-4 rounded-xl border border-slate-200 hover:border-slate-350 hover:bg-slate-50 text-slate-700! font-semibold text-xs flex items-center gap-2 cursor-pointer shadow-xs transition-all"
+                  >
+                    <div className="p-1 bg-blue-50 text-blue-600 rounded-md shrink-0">
+                      <Building2 className="h-4 w-4" />
+                    </div>
+                    <span>{selectedTypeLabel}</span>
+                  </Button>
+                }
+              >
+                <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                    {PROJECT_PROPERTY_TYPES.map((type) => {
+                      const isSelected = selectedType === type.value;
+                      const labelText = language === "en" ? type.label.en : type.label.th;
+                      return (
+                        <button
+                          key={type.value}
+                          onClick={() => {
+                            setSelectedType(type.value);
+                            setIsTypeDialogOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
+                            isSelected
+                              ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
+                              : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`p-2 rounded-lg shrink-0 ${type.iconBg}`}>
+                              <type.icon className="w-4 h-4" />
+                            </div>
+                            <span>{labelText}</span>
+                          </div>
+                          {isSelected && (
+                            <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </ResponsiveDialog>
+
+              {/* Sort By Dropdown */}
+              <div className="relative">
+                <Select value={sortBy} onValueChange={(val) => setSortBy(val as any)}>
+                  <SelectTrigger className="h-11! px-4 min-w-[160px] rounded-xl border border-slate-200 bg-white hover:border-slate-350 hover:shadow-xs focus:ring-0 focus:ring-offset-0 transition-all text-xs font-bold text-slate-700 flex items-center gap-2 cursor-pointer">
+                    <div className="p-1 bg-indigo-50 text-indigo-600 rounded-md shrink-0">
+                      <ArrowUpDown className="h-4 w-4" />
+                    </div>
+                    <SelectValue placeholder={getPageString("sort_default")} />
+                  </SelectTrigger>
+                  <SelectContent align="start" className="rounded-xl border-slate-200 shadow-lg">
+                    <SelectItem value="DEFAULT" className="font-bold text-xs">{getPageString("sort_default")}</SelectItem>
+                    <SelectItem value="PRICE_LOW" className="font-bold text-xs">{getPageString("sort_price_low")}</SelectItem>
+                    <SelectItem value="UNITS_HIGH" className="font-bold text-xs">{getPageString("sort_units_high")}</SelectItem>
+                    <SelectItem value="NAME_AZ" className="font-bold text-xs">{getPageString("sort_name_az")}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Clear Filters Button */}
+              {(searchQuery || selectedType !== "ALL" || selectedProvince !== "ALL" || selectedArea !== "ALL" || sortBy !== "DEFAULT") && (
+                <button
+                  onClick={handleResetFilters}
+                  className="flex items-center gap-1 px-3 h-11 text-xs font-bold text-red-500 hover:text-red-650 hover:bg-red-50/50 rounded-xl transition-all"
+                >
+                  <X className="h-4 w-4" />
+                  <span>{getPageString("clear_filters")}</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Popular Areas Multi-Row Wrapper (ย่าน ใช้ 2 บรรทัดได้เลย) */}
+          {popularAreas.length > 0 && (
+            <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col md:flex-row items-start gap-4">
+              {/* Prefix Badge */}
+              <div className="shrink-0 bg-slate-100 text-slate-650 text-[10px] font-extrabold uppercase px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                <div className="p-1 bg-red-50 text-red-500 rounded-md">
+                  <MapPin className="w-3.5 h-3.5" />
+                </div>
+                <span>{getPageString("popular_areas_title")}</span>
+              </div>
+
+              {/* Flex Wrapping Row Container (Wraps cleanly to 2 rows naturally) */}
+              <div className="flex flex-wrap gap-2.5 flex-1">
+                <button
+                  onClick={() => setSelectedArea("ALL")}
+                  className={`h-8 px-3 rounded-lg text-xs font-bold transition-all border ${
+                    selectedArea === "ALL"
+                      ? "bg-blue-50 border-blue-200 text-blue-600 shadow-xs"
+                      : "border-slate-200 bg-white hover:bg-slate-50 text-slate-500"
+                  }`}
+                >
+                  {getPageString("filter_all_areas")}
+                </button>
+                {popularAreas.map((area: any) => {
+                  const isSelected = selectedArea === area.th;
+                  return (
+                    <button
+                      key={area.th}
+                      onClick={() => setSelectedArea(isSelected ? "ALL" : area.th)}
+                      className={`h-8 px-3.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-1.5 ${
+                        isSelected
+                          ? "bg-blue-50 border-blue-200 text-blue-600 shadow-xs"
+                          : "border-slate-200 bg-white hover:bg-slate-50 text-slate-500"
+                      }`}
+                    >
+                      {isSelected && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0 animate-pulse" />
+                      )}
+                      <span>{area.lang}</span>
+                      <span className="text-[10px] opacity-70">({area.count})</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Projects Grid Section */}
+      <section className="max-w-screen-2xl mx-auto px-5 md:px-8 pb-20 pt-10">
+        {filteredAndSortedProjects.length === 0 ? (
+          <div className="py-20 text-center max-w-md mx-auto">
+            <div className="h-16 w-16 bg-slate-100 rounded-3xl flex items-center justify-center mx-auto text-slate-455 mb-4 border border-slate-200/50">
+              <Building2 className="h-8 w-8" />
+            </div>
+            <h3 className="text-lg font-bold text-slate-800">{getPageString("no_projects_found")}</h3>
+            <button
+              onClick={handleResetFilters}
+              className="mt-4 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all active:scale-95 shadow-sm"
+            >
+              {getPageString("clear_filters")}
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in duration-300">
+            {filteredAndSortedProjects.map((project) => {
+              const nameText = project.name[language as keyof typeof project.name] || project.name.th;
+              const hasSale = project.priceMin != null;
+              const hasRent = project.rentalMin != null;
+              
+              const areaName = (
+                language === "en" ? project.popularAreaEn :
+                language === "cn" ? project.popularAreaCn :
+                language === "ru" ? project.popularAreaRu :
+                project.popularArea
+              ) || project.popularArea;
+
+              // Find type config
+              const typeConfig = PROJECT_PROPERTY_TYPES.find((t) => t.value === String(project.propertyType));
+              const typeLabelText = typeConfig ? (language === "en" ? typeConfig.label.en : typeConfig.label.th) : "";
+
+              return (
+                <Link
+                  key={project.id}
+                  href={`/projects/${project.slug}`}
+                  className="group bg-white rounded-3xl overflow-hidden border border-slate-200/60 hover:border-slate-350 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
+                >
+                  {/* Cover Image */}
+                  <div className="relative aspect-video w-full bg-slate-100 overflow-hidden shrink-0">
+                    {project.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={project.imageUrl}
+                        alt={nameText}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-150">
+                        <Building2 className="w-12 h-12 text-slate-300" />
+                      </div>
+                    )}
+                    {/* Property Count Badge */}
+                    <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-xs text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/10">
+                      {project.propertyCount > 0 
+                        ? getPageString("units_available", { count: project.propertyCount })
+                        : getPageString("no_units")
+                      }
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="p-5 flex flex-col flex-1">
+                    <div className="mb-2 flex items-center gap-2">
+                      {typeLabelText && (
+                        <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-50 text-blue-600 uppercase">
+                          {typeLabelText}
+                        </span>
+                      )}
+                      {areaName && (
+                        <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-650">
+                          {areaName}
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                      {nameText}
+                    </h3>
+
+                    {project.developer && (
+                      <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                        <span className="font-semibold text-slate-505">{getPageString("developer")}:</span> {project.developer}
+                      </p>
+                    )}
+
+                    <p className="text-xs text-slate-550 mt-3.5 flex items-center gap-1 line-clamp-1">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                      <span>{project.subdistrict ? `${project.subdistrict}, ` : ""}{project.district}</span>
+                    </p>
+
+                    {/* Divider */}
+                    <div className="h-px bg-slate-100 my-4 w-full" />
+
+                    {/* Price Info */}
+                    <div className="mt-auto space-y-2">
+                      {hasSale && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{getPageString("price_sale")}</span>
+                          <span className="text-xs font-extrabold text-blue-600">
+                            {getPageString("price_from", { price: `${formatPrice(project.priceMin!, language)} THB` })}
+                          </span>
+                        </div>
+                      )}
+                      {hasRent && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{getPageString("price_rent")}</span>
+                          <span className="text-xs font-extrabold text-teal-600">
+                            {getPageString("price_from", { price: `${formatPrice(project.rentalMin!, language)} /mo` })}
+                          </span>
+                        </div>
+                      )}
+                      {!hasSale && !hasRent && (
+                        <div className="text-center py-1">
+                          <span className="text-xs text-slate-400 font-semibold italic">{getPageString("no_units")}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
