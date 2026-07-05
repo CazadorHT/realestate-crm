@@ -267,10 +267,20 @@ describe('Co-Brokers Module - Definitive Case', () => {
 
   describe('getCoBrokerPerformanceAction', () => {
     it('should calculate listings and earnings correctly', async () => {
+      const mockDeals = [
+        { id: 'd1', status: 'NEGOTIATING' },
+        { id: 'd2', status: 'NEGOTIATING' },
+        { id: 'd3', status: 'NEGOTIATING' },
+        { id: 'd4', status: 'SIGNED' },
+        { id: 'd5', status: 'SIGNED' },
+        { id: 'd6', status: 'CLOSED_WIN' },
+        { id: 'd7', status: 'CLOSED_WIN' },
+        { id: 'd8', status: 'CLOSED_LOST' },
+        { id: 'd9', status: 'CLOSED_LOST' },
+        { id: 'd10', status: 'CLOSED_LOST' }
+      ];
       mockSupabase
-        .mockTableResult('properties_core', [{ id: 'p1' }], 10) // total
-        .mockTableResult('properties_core', [{ id: 'p1' }], 5)  // active
-        .mockTableResult('properties_core', [{ id: 'p1' }], 2)  // sold
+        .mockTableResult('crm_deals_v3', mockDeals)
         .mockTableResult('crm_deal_commissions_v3', [
           { status: 'PAID', net_amount: 50000 },
           { status: 'READY_TO_PAY', net_amount: 25000 }
@@ -571,10 +581,7 @@ describe('Co-Brokers Module - Definitive Case', () => {
     describe('getCoBrokerPerformanceAction - Partial Outages & Division by Zero', () => {
       it('should catch partial database timeouts during concurrent Promise.all execution', async () => {
         mockSupabase
-          .mockTableResult('properties_core', [{ id: 'p1' }], 10)
-          .mockTableResult('properties_core', [{ id: 'p1' }], 5)
-          .mockTableResult('properties_core', [{ id: 'p1' }], 2)
-          .mockTableError('crm_deal_commissions_v3', new Error('PGRST504: Gateway Timeout during commission aggregation'));
+          .mockTableError('crm_deals_v3', new Error('PGRST504: Gateway Timeout during commission aggregation'));
 
         const result = await getCoBrokerPerformanceAction('cb1');
         expect(result.success).toBe(false);
@@ -583,9 +590,7 @@ describe('Co-Brokers Module - Definitive Case', () => {
 
       it('should maintain absolute mathematical stability against Division by Zero (0 total listings)', async () => {
         mockSupabase
-          .mockTableResult('properties_core', [], 0) // 0 total
-          .mockTableResult('properties_core', [], 0) // 0 active
-          .mockTableResult('properties_core', [], 0) // 0 sold
+          .mockTableResult('crm_deals_v3', []) // 0 total
           .mockTableResult('crm_deal_commissions_v3', []); // 0 comms
 
         const result = await getCoBrokerPerformanceAction('cb_zero');
@@ -596,9 +601,7 @@ describe('Co-Brokers Module - Definitive Case', () => {
 
       it('should safely fall back to 0 when calculating earnings from corrupted commission rows with malicious string amounts', async () => {
         mockSupabase
-          .mockTableResult('properties_core', [{ id: 'p1' }], 1)
-          .mockTableResult('properties_core', [{ id: 'p1' }], 1)
-          .mockTableResult('properties_core', [{ id: 'p1' }], 1)
+          .mockTableResult('crm_deals_v3', [{ id: 'd1', status: 'CLOSED_WIN' }])
           .mockTableResult('crm_deal_commissions_v3', [
             { status: 'PAID', net_amount: 'DROP TABLE' as any },
             { status: 'PAID', net_amount: 'NaN' as any },
