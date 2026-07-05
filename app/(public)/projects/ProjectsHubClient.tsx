@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
+import { m, AnimatePresence } from "framer-motion";
 
 interface ProjectsHubClientProps {
   initialProjects: PublicProject[];
@@ -197,6 +198,30 @@ const getProvinceColor = (prov: string): { bg: string; text: string } => {
   return colors[sum % colors.length];
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.04,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { opacity: 0, y: 20, scale: 0.96 },
+  show: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    transition: { 
+      type: "spring" as const, 
+      stiffness: 100, 
+      damping: 15,
+    } 
+  },
+};
+
 export function ProjectsHubClient({
   initialProjects,
   language,
@@ -230,6 +255,47 @@ export function ProjectsHubClient({
     });
     return Array.from(provSet).sort((a, b) => a.localeCompare(b, "th"));
   }, [initialProjects]);
+
+  // Compute project count for each province dynamically
+  const provinceCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    initialProjects.forEach((p) => {
+      if (p.province) {
+        const norm = normalizeProvince(p.province);
+        counts[norm] = (counts[norm] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [initialProjects]);
+
+  // Compute project count for each property type dynamically (filtered by province)
+  const typeCounts = React.useMemo(() => {
+    const counts: Record<string, number> = {};
+    initialProjects.forEach((p) => {
+      const normProv = p.province ? normalizeProvince(p.province) : "";
+      if (selectedProvince === "ALL" || normProv === selectedProvince) {
+        const typeStr = String(p.propertyType);
+        counts[typeStr] = (counts[typeStr] || 0) + 1;
+      }
+    });
+    return counts;
+  }, [initialProjects, selectedProvince]);
+
+  const totalProjectsInProvince = React.useMemo(() => {
+    if (selectedProvince === "ALL") return initialProjects.length;
+    return initialProjects.filter(p => p.province && normalizeProvince(p.province) === selectedProvince).length;
+  }, [initialProjects, selectedProvince]);
+
+  const sortedPropertyTypes = React.useMemo(() => {
+    const allOption = PROJECT_PROPERTY_TYPES.find((t) => t.value === "ALL")!;
+    const otherOptions = PROJECT_PROPERTY_TYPES.filter((t) => t.value !== "ALL");
+    const sortedOthers = [...otherOptions].sort((a, b) => {
+      const countA = typeCounts[a.value] || 0;
+      const countB = typeCounts[b.value] || 0;
+      return countB - countA;
+    });
+    return [allOption, ...sortedOthers];
+  }, [typeCounts]);
 
   // Extract unique popular areas dynamically from projects with count of projects in each area (filtered by selected province)
   const popularAreas = React.useMemo(() => {
@@ -449,7 +515,10 @@ export function ProjectsHubClient({
                           <div className="p-2 rounded-lg bg-red-50 text-red-500 shrink-0">
                             <MapPin className="w-4 h-4" />
                           </div>
-                          <span>{getPageString("filter_all_provinces")}</span>
+                          <span>
+                            {getPageString("filter_all_provinces")}
+                            <span className="text-[10px] opacity-60 font-medium ml-1">({initialProjects.length})</span>
+                          </span>
                         </div>
                         {selectedProvince === "ALL" && (
                           <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
@@ -479,7 +548,10 @@ export function ProjectsHubClient({
                               <div className={`p-2 rounded-lg shrink-0 ${provColor.bg} ${provColor.text}`}>
                                 <MapPin className="w-4 h-4" />
                               </div>
-                              <span>{labelText}</span>
+                              <span>
+                                {labelText}
+                                <span className="text-[10px] opacity-60 font-medium ml-1">({provinceCounts[prov] || 0})</span>
+                              </span>
                             </div>
                             {isSelected && (
                               <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
@@ -511,9 +583,12 @@ export function ProjectsHubClient({
               >
                 <div className="p-5 space-y-4 max-h-[60vh] overflow-y-auto">
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                    {PROJECT_PROPERTY_TYPES.map((type) => {
+                    {sortedPropertyTypes.map((type) => {
                       const isSelected = selectedType === type.value;
                       const labelText = language === "en" ? type.label.en : type.label.th;
+                      const count = type.value === "ALL" ? totalProjectsInProvince : (typeCounts[type.value] || 0);
+                      const isDisabled = type.value !== "ALL" && count === 0;
+
                       return (
                         <button
                           key={type.value}
@@ -521,17 +596,25 @@ export function ProjectsHubClient({
                             setSelectedType(type.value);
                             setIsTypeDialogOpen(false);
                           }}
+                          disabled={isDisabled}
                           className={`w-full text-left px-4 py-3 rounded-xl font-bold text-xs transition-all border flex items-center justify-between ${
                             isSelected
                               ? "bg-blue-50/80 border-blue-200 text-blue-600 shadow-xs"
-                              : "border-slate-100 hover:bg-slate-50 text-slate-600"
+                              : isDisabled
+                                ? "border-slate-100 bg-slate-50/40 text-slate-350 cursor-not-allowed opacity-50 pointer-events-none"
+                                : "border-slate-100 hover:bg-slate-50 text-slate-600"
                           }`}
                         >
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg shrink-0 ${type.iconBg}`}>
+                            <div className={`p-2 rounded-lg shrink-0 ${type.iconBg} ${isDisabled ? "opacity-40" : ""}`}>
                               <type.icon className="w-4 h-4" />
                             </div>
-                            <span>{labelText}</span>
+                            <span>
+                              {labelText}
+                              <span className="text-[10px] opacity-60 font-medium ml-1">
+                                ({count})
+                              </span>
+                            </span>
                           </div>
                           {isSelected && (
                             <span className="w-2 h-2 rounded-full bg-blue-500 mr-2" />
@@ -639,114 +722,128 @@ export function ProjectsHubClient({
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in duration-300">
-            {filteredAndSortedProjects.map((project) => {
-              const nameText = project.name[language as keyof typeof project.name] || project.name.th;
-              const hasSale = project.priceMin != null;
-              const hasRent = project.rentalMin != null;
-              
-              const areaName = (
-                language === "en" ? project.popularAreaEn :
-                language === "cn" ? project.popularAreaCn :
-                language === "ru" ? project.popularAreaRu :
-                project.popularArea
-              ) || project.popularArea;
+          <m.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredAndSortedProjects.map((project) => {
+                const nameText = project.name[language as keyof typeof project.name] || project.name.th;
+                const hasSale = project.priceMin != null;
+                const hasRent = project.rentalMin != null;
+                
+                const areaName = (
+                  language === "en" ? project.popularAreaEn :
+                  language === "cn" ? project.popularAreaCn :
+                  language === "ru" ? project.popularAreaRu :
+                  project.popularArea
+                ) || project.popularArea;
 
-              // Find type config
-              const typeConfig = PROJECT_PROPERTY_TYPES.find((t) => t.value === String(project.propertyType));
-              const typeLabelText = typeConfig ? (language === "en" ? typeConfig.label.en : typeConfig.label.th) : "";
+                // Find type config
+                const typeConfig = PROJECT_PROPERTY_TYPES.find((t) => t.value === String(project.propertyType));
+                const typeLabelText = typeConfig ? (language === "en" ? typeConfig.label.en : typeConfig.label.th) : "";
 
-              return (
-                <Link
-                  key={project.id}
-                  href={`/projects/${project.slug}`}
-                  className="group bg-white rounded-3xl overflow-hidden border border-slate-200/60 hover:border-slate-350 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
-                >
-                  {/* Cover Image */}
-                  <div className="relative aspect-video w-full bg-slate-100 overflow-hidden shrink-0">
-                    {project.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={project.imageUrl}
-                        alt={nameText}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-150">
-                        <Building2 className="w-12 h-12 text-slate-300" />
+                return (
+                  <m.div
+                    key={project.id}
+                    variants={cardVariants}
+                    layout
+                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                    className="h-full"
+                  >
+                    <Link
+                      href={`/projects/${project.slug}`}
+                      className="group bg-white rounded-3xl overflow-hidden border border-slate-200/60 hover:border-slate-350 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
+                    >
+                      {/* Cover Image */}
+                      <div className="relative aspect-video w-full bg-slate-100 overflow-hidden shrink-0">
+                        {project.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={project.imageUrl}
+                            alt={nameText}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-150">
+                            <Building2 className="w-12 h-12 text-slate-300" />
+                          </div>
+                        )}
+                        {/* Property Count Badge */}
+                        <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-xs text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/10">
+                          {project.propertyCount > 0 
+                            ? getPageString("units_available", { count: project.propertyCount })
+                            : getPageString("no_units")
+                          }
+                        </div>
                       </div>
-                    )}
-                    {/* Property Count Badge */}
-                    <div className="absolute top-3 right-3 bg-slate-900/80 backdrop-blur-xs text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/10">
-                      {project.propertyCount > 0 
-                        ? getPageString("units_available", { count: project.propertyCount })
-                        : getPageString("no_units")
-                      }
-                    </div>
-                  </div>
 
-                  {/* Content */}
-                  <div className="p-5 flex flex-col flex-1">
-                    <div className="mb-2 flex items-center gap-2">
-                      {typeLabelText && (
-                        <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-50 text-blue-600 uppercase">
-                          {typeLabelText}
-                        </span>
-                      )}
-                      {areaName && (
-                        <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-650">
-                          {areaName}
-                        </span>
-                      )}
-                    </div>
-
-                    <h3 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
-                      {nameText}
-                    </h3>
-
-                    {project.developer && (
-                      <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
-                        <span className="font-semibold text-slate-505">{getPageString("developer")}:</span> {project.developer}
-                      </p>
-                    )}
-
-                    <p className="text-xs text-slate-550 mt-3.5 flex items-center gap-1 line-clamp-1">
-                      <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span>{project.subdistrict ? `${project.subdistrict}, ` : ""}{project.district}</span>
-                    </p>
-
-                    {/* Divider */}
-                    <div className="h-px bg-slate-100 my-4 w-full" />
-
-                    {/* Price Info */}
-                    <div className="mt-auto space-y-2">
-                      {hasSale && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{getPageString("price_sale")}</span>
-                          <span className="text-xs font-extrabold text-blue-600">
-                            {getPageString("price_from", { price: `${formatPrice(project.priceMin!, language)} THB` })}
-                          </span>
+                      {/* Content */}
+                      <div className="p-5 flex flex-col flex-1">
+                        <div className="mb-2 flex items-center gap-2">
+                          {typeLabelText && (
+                            <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-50 text-blue-600 uppercase">
+                              {typeLabelText}
+                            </span>
+                          )}
+                          {areaName && (
+                            <span className="inline-flex px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 text-slate-650">
+                              {areaName}
+                            </span>
+                          )}
                         </div>
-                      )}
-                      {hasRent && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{getPageString("price_rent")}</span>
-                          <span className="text-xs font-extrabold text-teal-600">
-                            {getPageString("price_from", { price: `${formatPrice(project.rentalMin!, language)} /mo` })}
-                          </span>
+
+                        <h3 className="text-base font-bold text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
+                          {nameText}
+                        </h3>
+
+                        {project.developer && (
+                          <p className="text-xs text-slate-400 mt-1 flex items-center gap-1">
+                            <span className="font-semibold text-slate-505">{getPageString("developer")}:</span> {project.developer}
+                          </p>
+                        )}
+
+                        <p className="text-xs text-slate-550 mt-3.5 flex items-center gap-1 line-clamp-1">
+                          <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                          <span>{project.subdistrict ? `${project.subdistrict}, ` : ""}{project.district}</span>
+                        </p>
+
+                        {/* Divider */}
+                        <div className="h-px bg-slate-100 my-4 w-full" />
+
+                        {/* Price Info */}
+                        <div className="mt-auto space-y-2">
+                          {hasSale && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{getPageString("price_sale")}</span>
+                              <span className="text-xs font-extrabold text-blue-600">
+                                {getPageString("price_from", { price: `${formatPrice(project.priceMin!, language)} THB` })}
+                              </span>
+                            </div>
+                          )}
+                          {hasRent && (
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">{getPageString("price_rent")}</span>
+                              <span className="text-xs font-extrabold text-teal-600">
+                                {getPageString("price_from", { price: `${formatPrice(project.rentalMin!, language)} /mo` })}
+                              </span>
+                            </div>
+                          )}
+                          {!hasSale && !hasRent && (
+                            <div className="text-center py-1">
+                              <span className="text-xs text-slate-400 font-semibold italic">{getPageString("no_units")}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                      {!hasSale && !hasRent && (
-                        <div className="text-center py-1">
-                          <span className="text-xs text-slate-400 font-semibold italic">{getPageString("no_units")}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
+                      </div>
+                    </Link>
+                  </m.div>
+                );
+              })}
+            </AnimatePresence>
+          </m.div>
         )}
       </section>
     </>
