@@ -36,6 +36,60 @@ import { mapDbError } from "@/lib/db-error";
 import { encrypt, generateBlindIndex } from "@/lib/crypto";
 
 
+function parseCoordinatesFromGoogleMaps(url: string): { lat: number; lng: number } | null {
+  if (!url) return null;
+  const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
+  const qMatch = url.match(/[?&](?:q|query)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
+  const pathMatch = url.match(/\/(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (pathMatch) return { lat: parseFloat(pathMatch[1]), lng: parseFloat(pathMatch[2]) };
+  return null;
+}
+
+async function syncProjectAddress(supabase: any, projectId: string | null | undefined, values: any) {
+  if (!projectId) return;
+  try {
+    const { data: project } = await supabase
+      .from("projects")
+      .select("province, district, subdistrict, latitude, longitude")
+      .eq("id", projectId)
+      .maybeSingle();
+
+    if (!project) return;
+
+    const updates: any = {};
+    if (values.province && project.province !== values.province) {
+      updates.province = values.province;
+    }
+    if (values.district && project.district !== values.district) {
+      updates.district = values.district;
+    }
+    if (values.subdistrict && project.subdistrict !== values.subdistrict) {
+      updates.subdistrict = values.subdistrict;
+    }
+
+    if ((!project.latitude || !project.longitude) && values.google_maps_link) {
+      const coords = parseCoordinatesFromGoogleMaps(values.google_maps_link);
+      if (coords) {
+        updates.latitude = coords.lat;
+        updates.longitude = coords.lng;
+        updates.location = `POINT(${coords.lng} ${coords.lat})`;
+      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await supabase
+        .from("projects")
+        .update(updates)
+        .eq("id", projectId);
+    }
+  } catch (error) {
+    console.error("Failed to sync project address:", error);
+  }
+}
+
+
 /**
  * Resolve tenant ID from context, member profile, or system config.
  * Throws an error if no tenant ID is found to prevent cross-tenant data leaks.
@@ -398,6 +452,9 @@ export async function createPropertyAction(
       propertyId: core.id,
       usedPaths: images ?? [],
     });
+
+    // Sync project address if property is linked to a project
+    await syncProjectAddress(supabase, safeValues.project_id, safeValues);
 
     await logAudit(
       { supabase, user, role },

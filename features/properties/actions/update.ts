@@ -47,6 +47,59 @@ import { encrypt, generateBlindIndex } from "@/lib/crypto";
  */
 import { getPropertyDiff } from "../logic/diff";
 
+function parseCoordinatesFromGoogleMaps(url: string): { lat: number; lng: number } | null {
+  if (!url) return null;
+  const atMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (atMatch) return { lat: parseFloat(atMatch[1]), lng: parseFloat(atMatch[2]) };
+  const qMatch = url.match(/[?&](?:q|query)=(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (qMatch) return { lat: parseFloat(qMatch[1]), lng: parseFloat(qMatch[2]) };
+  const pathMatch = url.match(/\/(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if (pathMatch) return { lat: parseFloat(pathMatch[1]), lng: parseFloat(pathMatch[2]) };
+  return null;
+}
+
+async function syncProjectAddress(supabase: any, projectId: string | null | undefined, values: any) {
+  if (!projectId) return;
+  try {
+    const { data: project } = await supabase
+      .from("projects")
+      .select("province, district, subdistrict, latitude, longitude")
+      .eq("id", projectId)
+      .maybeSingle();
+
+    if (!project) return;
+
+    const updates: any = {};
+    if (values.province && project.province !== values.province) {
+      updates.province = values.province;
+    }
+    if (values.district && project.district !== values.district) {
+      updates.district = values.district;
+    }
+    if (values.subdistrict && project.subdistrict !== values.subdistrict) {
+      updates.subdistrict = values.subdistrict;
+    }
+
+    if ((!project.latitude || !project.longitude) && values.google_maps_link) {
+      const coords = parseCoordinatesFromGoogleMaps(values.google_maps_link);
+      if (coords) {
+        updates.latitude = coords.lat;
+        updates.longitude = coords.lng;
+        updates.location = `POINT(${coords.lng} ${coords.lat})`;
+      }
+    }
+
+    if (Object.keys(updates).length > 0) {
+      await supabase
+        .from("projects")
+        .update(updates)
+        .eq("id", projectId);
+    }
+  } catch (error) {
+    console.error("Failed to sync project address:", error);
+  }
+}
+
 /**
  * Update property with images (Elite Orchestrator Pattern)
  * Uses atomic RPC for data integrity and semantic diffing for audit transparency.
@@ -486,6 +539,9 @@ export async function updatePropertyAction(
 
     // 6) POST-UPDATE SIDE EFFECTS (Wrapped in try-catch to prevent failure of main action)
     try {
+      // Sync project address if property is linked to a project
+      await syncProjectAddress(supabase, safeValues.project_id, safeValues);
+
       if (images !== undefined) {
         await finalizeUploadSession({ supabase, userId: user.id, sessionId, propertyId: id, usedPaths: images });
         const { data: currentMedia } = await supabase.from("property_media_v3").select("id, storage_path").eq("property_id", id);
