@@ -72,7 +72,11 @@ export async function GET(request: Request) {
   try {
     // ⚡ Execute Optimized Server-Side Fetch
     const result = await getPublicProperties(options);
-    return NextResponse.json(result);
+    return NextResponse.json(result, {
+      headers: {
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+      },
+    });
   } catch (error) {
     console.error("[API] Failed to load public properties:", error);
     return NextResponse.json(
