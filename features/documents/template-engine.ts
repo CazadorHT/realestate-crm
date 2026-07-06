@@ -172,18 +172,12 @@ export function formatDate(
     const date = new Date(dateStr);
     if (isNaN(date.getTime())) return "-";
 
-    const locales = {
-      th: "th-TH",
-      en: "en-US",
-      cn: "zh-CN",
-      ru: "ru-RU",
-    };
+    // Always use DD/MM/YYYY (CE year) format
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear(); // CE year (ค.ศ.)
 
-    return date.toLocaleDateString(locales[lang], {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+    return `${day}/${month}/${year}`;
   } catch (e) {
     return "-";
   }

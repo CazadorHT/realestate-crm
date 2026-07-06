@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
-import { Eye, Printer, Loader2, Maximize2, Download, FileText, ChevronLeft, X } from "lucide-react";
+import { Eye, Printer, Loader2, Maximize2, Download, FileText, X } from "lucide-react";
 import { downloadDocumentAction, getDocumentSignedUrl } from "../actions";
 import { toast } from "sonner";
 
@@ -24,7 +24,7 @@ export function DocumentPreviewDialog({
   const [content, setContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function loadContent() {
+  const loadContent = useCallback(async () => {
     setLoading(true);
     try {
       const res = await downloadDocumentAction(storagePath);
@@ -38,7 +38,7 @@ export function DocumentPreviewDialog({
     } finally {
       setLoading(false);
     }
-  }
+  }, [storagePath]);
 
   useEffect(() => {
     if (open && !content) {
@@ -53,11 +53,9 @@ export function DocumentPreviewDialog({
       printWindow.document.write(content);
       printWindow.document.close();
       printWindow.focus();
-      // Wait for resources (fonts/styles) to load
       setTimeout(() => {
         printWindow.print();
-        printWindow.close();
-      }, 500);
+      }, 800);
     }
   };
 
@@ -104,11 +102,18 @@ export function DocumentPreviewDialog({
     URL.revokeObjectURL(url);
   };
 
+  const handleOpenFullPage = () => {
+    if (!content) return;
+    const blob = new Blob([content], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank");
+  };
+
   return (
     <ResponsiveDialog
       open={open}
       onOpenChange={setOpen}
-      className="sm:max-w-7xl! h-[96vh] flex flex-col overflow-hidden"
+      className="sm:max-w-[95vw]! md:max-w-[90vw]! lg:max-w-[1200px]! h-[98vh] flex flex-col overflow-hidden"
       trigger={
         trigger || (
           <Button 
@@ -122,67 +127,63 @@ export function DocumentPreviewDialog({
       }
       title={
         <div className="flex items-center gap-3 w-full pr-12">
-          <div className="p-2.5 bg-slate-50 rounded-xl text-slate-600 shrink-0">
+          <div className="p-2.5 bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl text-indigo-600 shrink-0 shadow-sm">
             <FileText className="h-5 w-5" />
           </div>
           <div className="flex flex-col min-w-0">
-            <span className="text-xl font-black text-slate-900 tracking-tight truncate leading-tight">ดูตัวอย่างเอกสาร</span>
+            <span className="text-lg font-black text-slate-900 tracking-tight truncate leading-tight">เอกสาร</span>
             <span className="text-[10px] font-bold text-slate-400 truncate uppercase mt-0.5 tracking-wider">{documentName}</span>
           </div>
         </div>
       }
       footer={
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-3 w-full shrink-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full shrink-0 bg-gradient-to-r from-slate-50 to-white">
+          {/* Download Actions */}
+          <Button
+            variant="default"
+            size="lg"
+            onClick={handlePrint}
+            disabled={!content}
+            className="h-11 flex-1 sm:flex-none gap-2 rounded-2xl font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-lg shadow-indigo-100 transition-all active:scale-[0.98]"
+          >
+            <Printer className="h-4 w-4" />
+            <span className="hidden sm:inline">ดาวน์โหลด PDF / พิมพ์</span>
+            <span className="sm:hidden">PDF / พิมพ์</span>
+          </Button>
           <Button
             variant="outline"
             size="lg"
             onClick={handleDownloadWord}
             disabled={!content}
-            className="h-12 flex-1 sm:flex-none gap-2 rounded-2xl border-slate-200 font-bold text-slate-600 bg-white"
+            className="h-11 flex-1 sm:flex-none gap-2 rounded-2xl border-slate-200 font-bold text-slate-600 bg-white hover:bg-slate-50 transition-all active:scale-[0.98]"
           >
             <FileText className="h-4 w-4 text-blue-600" />
-            ดาวน์โหลด Word (.doc)
-          </Button>
-          <Button
-            variant="outline"
-            size="lg"
-            onClick={handlePrint}
-            disabled={!content}
-            className="h-12 flex-1 sm:flex-none gap-2 rounded-2xl border-slate-200 font-bold text-slate-600 bg-white"
-          >
-            <Printer className="h-4 w-4 text-indigo-600" />
-            ดาวน์โหลด PDF / พิมพ์
+            <span className="hidden sm:inline">ดาวน์โหลด Word (.doc)</span>
+            <span className="sm:hidden">Word</span>
           </Button>
           <Button
             variant="ghost"
             size="lg"
             onClick={handleDownload}
-            className="h-12 flex-1 sm:flex-none gap-2 rounded-2xl border-transparent font-bold text-slate-500 hover:bg-slate-100"
+            className="h-11 gap-2 rounded-2xl border-transparent font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
           >
             <Download className="h-4 w-4" />
-            ดาวน์โหลดไฟล์ดิบ (.html)
+            <span className="hidden sm:inline">HTML</span>
           </Button>
           <Button
-            variant="default"
+            variant="ghost"
             size="lg"
-            onClick={() =>
-              window.open(
-                window.URL.createObjectURL(
-                  new Blob([content || ""], { type: "text/html" }),
-                ),
-                "_blank",
-              )
-            }
+            onClick={handleOpenFullPage}
             disabled={!content}
-            className="h-12 hidden sm:flex gap-2 rounded-2xl font-bold bg-slate-900 text-white shadow-xl shadow-slate-200 ml-auto"
+            className="h-11 gap-2 rounded-2xl font-bold text-slate-400 hover:text-slate-600 hover:bg-slate-100 ml-auto transition-all hidden sm:flex"
           >
             <Maximize2 className="h-4 w-4" />
-            เปิดหน้าต่างใหม่
+            เปิดเต็มจอ
           </Button>
         </div>
       }
     >
-      <div className="flex-1 bg-slate-100 rounded-3xl overflow-auto p-4 sm:p-10 flex justify-center min-h-[500px]">
+      <div className="flex-1 bg-gradient-to-b from-slate-100 to-slate-50 rounded-2xl overflow-auto flex justify-center min-h-[500px] p-2 sm:p-6">
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-4">
             <div className="relative">
@@ -194,12 +195,12 @@ export function DocumentPreviewDialog({
             <span className="text-sm font-black uppercase tracking-widest italic animate-pulse">กำลังดึงข้อมูลเอกสาร...</span>
           </div>
         ) : content ? (
-          <div className="bg-white shadow-2xl min-h-full w-full max-w-[800px] rounded-xl relative overflow-hidden group">
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none border-4 border-blue-500/20 rounded-xl z-10" />
+          <div className="bg-white shadow-2xl shadow-slate-200/50 w-full max-w-[850px] rounded-xl relative overflow-hidden ring-1 ring-slate-200/50">
             <iframe
               srcDoc={content}
-              className="w-full h-full border-none min-h-[1100px] sm:min-h-full scale-[0.98] sm:scale-100 transition-transform origin-top"
+              className="w-full border-none"
               title="Document Preview"
+              style={{ minHeight: "1200px", height: "100%" }}
             />
           </div>
         ) : (
@@ -207,7 +208,7 @@ export function DocumentPreviewDialog({
             <div className="h-20 w-20 bg-slate-50 rounded-full flex items-center justify-center">
               <X className="h-10 w-10" />
             </div>
-            <span className="font-bold">ไท่พบเนื้อหาในเอกสารนี้</span>
+            <span className="font-bold">ไม่พบเนื้อหาในเอกสารนี้</span>
           </div>
         )}
       </div>

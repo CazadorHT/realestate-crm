@@ -257,7 +257,143 @@ export function DocumentsGrid({
         </div>
       )}
 
-      <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+      {/* Desktop Table View (>= lg) */}
+      <div className="hidden lg:block bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
+        <table className="w-full text-sm border-collapse text-left">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold">
+              <th className="p-4 w-12 text-center">
+                <Checkbox
+                  checked={isAllSelected && documents.length > 0}
+                  onCheckedChange={() => toggleSelectAll(allIds)}
+                  aria-label="เลือกทั้งหมด"
+                />
+              </th>
+              <th className="p-4">ชื่อไฟล์</th>
+              <th className="p-4 w-40">ประเภทเอกสาร</th>
+              <th className="p-4 w-48">วันที่สร้าง</th>
+              <th className="p-4">ข้อมูลอ้างอิง</th>
+              <th className="p-4 w-44 text-right">การจัดการ</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {documents && documents.length > 0 ? (
+              documents.map((doc) => (
+                <tr 
+                  key={doc.id}
+                  className={`hover:bg-slate-50/50 transition-colors ${
+                    isSelected(doc.id) ? "bg-blue-50/30" : ""
+                  }`}
+                >
+                  <td className="p-4 text-center">
+                    <Checkbox
+                      checked={isSelected(doc.id)}
+                      onCheckedChange={() => toggleSelect(doc.id)}
+                      aria-label={`เลือก ${doc.file_name}`}
+                    />
+                  </td>
+                  <td className="p-4 font-medium text-slate-900">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
+                          doc.document_type === "SLIP"
+                            ? "bg-emerald-50 text-emerald-600 border-emerald-100"
+                            : "bg-blue-50 text-blue-600 border-blue-100"
+                        }`}
+                      >
+                        {doc.document_type === "SLIP" ? (
+                          <ImageIcon className="h-5 w-5" />
+                        ) : (
+                          <FileText className="h-5 w-5" />
+                        )}
+                      </div>
+                      <div className="min-w-0 max-w-[280px]">
+                        <div className="truncate font-semibold text-slate-800" title={doc.file_name}>
+                          {doc.file_name}
+                        </div>
+                        <div className="text-[11px] text-slate-400 font-medium">
+                          {formatSize(doc.size_bytes || 0)}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <Badge
+                      variant="outline"
+                      className={`text-xs border shadow-xs ${
+                        doc.document_type === "SLIP"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-blue-50 text-blue-700 border-blue-200"
+                      }`}
+                    >
+                      {DOC_TYPE_LABELS[doc.document_type?.toUpperCase() || ""] ||
+                        doc.document_type ||
+                        "อื่นๆ"}
+                    </Badge>
+                  </td>
+                  <td className="p-4 text-slate-500 font-medium whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-slate-400" />
+                      {format(new Date(doc.created_at), "d MMM yyyy HH:mm", {
+                        locale: th,
+                      })}
+                    </div>
+                  </td>
+                  <td className="p-4 max-w-sm!">
+                    <DocumentOwnerInfo document={doc} />
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center justify-end gap-1.5">
+                      <DocumentPreviewDialog
+                        documentId={doc.id}
+                        documentName={doc.file_name}
+                        storagePath={doc.storage_path}
+                        trigger={
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2.5 gap-1.5 rounded-lg border-slate-200 text-xs font-semibold text-slate-700! bg-white hover:bg-slate-50"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                            ดูตัวอย่าง
+                          </Button>
+                        }
+                      />
+                      <DocumentActions document={doc} tenantId={tenantId} />
+                      <ConfirmDialog
+                        title="ลบเอกสาร"
+                        description={`คุณแน่ใจหรือไม่ที่จะลบเอกสาร "${doc.file_name}"?`}
+                        confirmText="ลบออก"
+                        variant="destructive"
+                        onConfirm={() => handleDelete(doc.id, doc.storage_path)}
+                        trigger={
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-8 w-8 rounded-lg"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        }
+                      />
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="text-center py-16 text-slate-400">
+                  <FileText className="h-16 w-16 text-slate-300 mx-auto mb-3" />
+                  <p className="font-medium text-slate-500">ไม่พบเอกสาร</p>
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Mobile/Tablet Grid View (< lg) */}
+      <div className="lg:hidden grid gap-4 grid-cols-1 md:grid-cols-2">
         {documents && documents.length > 0 ? (
           documents.map((doc) => (
             <Card

@@ -33,6 +33,7 @@ export function DocumentActions({ document: doc, tenantId }: DocumentActionsProp
     <ResponsiveDialog
       open={menuOpen}
       onOpenChange={setMenuOpen}
+      className="sm:max-w-sm!"
       trigger={
         <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all">
           <MoreVertical className="h-4 w-4" />
@@ -51,7 +52,7 @@ export function DocumentActions({ document: doc, tenantId }: DocumentActionsProp
           trigger={
             <Button
               variant="outline"
-              className="w-full h-14 justify-start gap-4 px-4 rounded-2xl border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/30 text-slate-700 transition-all hover:scale-[1.01]"
+              className="w-full h-14 justify-start gap-4 px-4 rounded-2xl border-slate-100 hover:border-indigo-100 hover:bg-indigo-50/30 text-slate-700! transition-all hover:scale-[1.01]"
               onClick={() => setMenuOpen(false)}
             >
               <div className="h-10 w-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600 shrink-0">
@@ -72,7 +73,7 @@ export function DocumentActions({ document: doc, tenantId }: DocumentActionsProp
           trigger={
             <Button
               variant="outline"
-              className="w-full h-14 justify-start gap-4 px-4 rounded-2xl border-slate-100 hover:border-emerald-100 hover:bg-emerald-50/30 text-slate-700 transition-all hover:scale-[1.01]"
+              className="w-full h-14 justify-start gap-4 px-4 rounded-2xl border-slate-100 hover:border-emerald-100 hover:bg-emerald-50/30 text-slate-700! transition-all hover:scale-[1.01]"
               onClick={() => setMenuOpen(false)}
             >
               <div className="h-10 w-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
@@ -94,7 +95,7 @@ export function DocumentActions({ document: doc, tenantId }: DocumentActionsProp
           trigger={
             <Button
               variant="outline"
-              className="w-full h-14 justify-start gap-4 px-4 rounded-2xl border-slate-100 hover:border-amber-100 hover:bg-amber-50/30 text-slate-700 transition-all hover:scale-[1.01]"
+              className="w-full h-14 justify-start gap-4 px-4 rounded-2xl border-slate-100 hover:border-amber-100 hover:bg-amber-50/30 text-slate-700! transition-all hover:scale-[1.01]"
               onClick={() => setMenuOpen(false)}
             >
               <div className="h-10 w-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600 shrink-0">

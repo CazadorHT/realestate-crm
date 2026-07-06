@@ -62,24 +62,6 @@ async function seedTemplates() {
   
   img { max-width: 100%; height: auto; }
 
-  .slip-container {
-    text-align: center;
-    margin: 10px 0;
-    page-break-inside: avoid;
-    flex-grow: 0;
-    flex-shrink: 1;
-    min-height: 0;
-  }
-  
-  .slip-image {
-    max-height: 80mm;
-    max-width: 100mm;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 2px;
-    object-fit: contain;
-  }
-
   table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
   th, td { border: 1px solid var(--border-color); padding: 6px 10px; text-align: left; }
   th { background-color: #f8fafc; font-weight: bold; }
@@ -100,8 +82,8 @@ async function seedTemplates() {
         <td style="width: 50%; vertical-align: top; border: none;">
           <img src="{{config.logoDark}}" alt="Logo" style="height: 60px; margin-bottom: 10px;">
           <div style="font-size: 11px; color: #666;">
-            <strong>VC Connect Asset Co., Ltd.</strong><br>
-            20th Floor, G Tower, Ratchadaphisek Road, Huai Khwang Subdistrict, Huai Khwang District, Bangkok 10310
+            <strong>{{config.company}}</strong><br>
+            {{config.contact.address}}
           </div>
         </td>
         <td style="width: 50%; text-align: right; vertical-align: top; border: none;">
@@ -114,7 +96,7 @@ async function seedTemplates() {
             </tr>
             <tr style="border: none;">
               <td style="text-align: right; color: #666; padding-right: 10px; border: none;">ID</td>
-              <td style="text-align: left; font-weight: bold; border: none;">{{deal.id}}</td>
+              <td style="text-align: left; font-weight: bold; border: none;">{{document_number}}</td>
             </tr>
           </table>
         </td>
@@ -136,8 +118,8 @@ async function seedTemplates() {
       </div>
     </div>
 
-    <!-- Main Info -->
-    {{financial_info_html}}
+    <!-- Financial Table -->
+    {{financial_table_html}}
 
     <!-- Bank & Payment Detail -->
     <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #c7d2fe; border-radius: 8px; background-color: #eff6ff; font-size: 12px;">
@@ -149,19 +131,17 @@ async function seedTemplates() {
       <div style="margin-top: 5px;"><span style="color: #666;">{{t.payment_method}}:</span> <strong>{{payment_method}}</strong></div>
     </div>
 
-    <!-- Transfer Slip -->
-    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 40mm; max-height: 80mm; margin: 5px 0;">
-      <img src="{{deal.slip_url}}" class="slip-image" alt="Transfer Slip" style="max-height: 80mm; max-width: 100mm; object-fit: contain;">
-    </div>
+    <!-- Transfer Slip (conditional) -->
+    {{slip_html}}
 
     <div style="margin-top: auto;">
       <!-- Terms -->
       <div style="font-size: 10px; color: #666; line-height: 1.4; margin-bottom: 15px; padding: 10px; background-color: #fff9f0; border-radius: 5px;">
         <strong style="color: #d97706;">{{t.terms_conditions}}:</strong>
         <ol style="margin: 5px 0 0 15px; padding: 0;">
-          <li>{{t.terms_deposit}}</li>
-          <li>{{t.terms_sign_by}} <strong>{{deal.contract_due_date}}</strong></li>
-          <li>{{t.terms_payment_transfer}}</li>
+          <li>{{terms_deposit}}</li>
+          <li>{{terms_sign_by}} <strong>{{deal.contract_due_date}}</strong></li>
+          <li>{{terms_payment_transfer}}</li>
         </ol>
       </div>
 
@@ -172,12 +152,11 @@ async function seedTemplates() {
           <div style="font-size: 10px;">{{t.customer_signature}}</div>
         </div>
         <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
-          <img src="{{config.stamp}}" style="height: 50px; object-fit: contain; margin-bottom: 5px;" alt="Stamp">
-          <div style="font-size: 10px;">{{t.official_stamp}}</div>
+          <img src="{{config.logoDark}}" style="height: 50px; object-fit: contain; margin-bottom: 5px;" alt="Company">
+          <div style="font-size: 9px; color: #999;">{{config.company}}</div>
         </div>
         <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
-          <img src="{{config.signature}}" style="height: 40px; object-fit: contain; margin-bottom: 5px;" alt="Signature">
-          <div style="border-bottom: 1px solid #333; width: 100%; height: 5px; margin-bottom: 5px;"></div>
+          <div style="border-bottom: 1px solid #333; width: 100%; height: 25px; margin-bottom: 5px;"></div>
           <div style="font-size: 10px;">{{t.agent_signature}}</div>
         </div>
       </div>
@@ -233,25 +212,52 @@ async function seedTemplates() {
     },
   ];
 
-  console.log("Seeding templates...");
+  console.log("Seeding templates into cms_content_v3...");
+
+  // Get a system author ID if possible to assign as author
+  const { data: profiles } = await supabase.from("profiles").select("id").limit(1);
+  const authorId = profiles?.[0]?.id || "2504d7ce-1d15-4cc4-b079-db6378cb2f2d"; // Fallback to baseline default author
 
   for (const template of templates) {
-    // Check if exists
+    // Generate an slug based on name
+    const slug = template.name.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
+
+    // Check if exists in cms_content_v3
     const { data: existing } = await supabase
-      .from("contract_templates")
+      .from("cms_content_v3")
       .select("id")
-      .eq("name", template.name)
+      .eq("content_type", "CONTRACT_TEMPLATE")
+      .eq("slug", slug)
       .single();
 
+    const dbRecord = {
+      content_type: "CONTRACT_TEMPLATE",
+      slug: slug,
+      title: { th: template.name, en: template.name },
+      content: { th: template.content, en: template.content },
+      meta_data: {
+        excerpt: template.description || "",
+        category: template.type
+      },
+      status: "PUBLISHED",
+      author_id: authorId,
+      updated_at: new Date().toISOString()
+    };
+
     if (existing) {
-      console.log(`Updating existing template: ${template.name}`);
+      console.log(`Updating existing template in cms_content_v3: ${template.name}`);
       await supabase
-        .from("contract_templates")
-        .update({ ...template, updated_at: new Date().toISOString() })
+        .from("cms_content_v3")
+        .update(dbRecord)
         .eq("id", existing.id);
     } else {
-      console.log(`Inserting new template: ${template.name}`);
-      await supabase.from("contract_templates").insert([template]);
+      console.log(`Inserting new template into cms_content_v3: ${template.name}`);
+      await supabase.from("cms_content_v3").insert([
+        {
+          ...dbRecord,
+          created_at: new Date().toISOString()
+        }
+      ]);
     }
   }
 

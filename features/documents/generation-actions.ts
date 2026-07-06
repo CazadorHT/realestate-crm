@@ -23,6 +23,21 @@ import Docxtemplater from "docxtemplater";
 import { z } from "zod";
 import { mapDbError } from "@/lib/db-error";
 
+/** Generate a short, human-readable document number based on template type */
+function generateDocumentNumber(templateType: string, ownerId: string): string {
+  const prefixMap: Record<string, string> = {
+    RESERVATION_DOCUMENT: "BK",
+    SALE_CONTRACT: "SC",
+    LEASE_CONTRACT: "LC",
+    RENT_RECEIPT: "RC",
+  };
+  const prefix = prefixMap[templateType] || "DOC";
+  // Take 6 chars from owner ID (remove dashes) for uniqueness
+  const shortId = ownerId.replace(/-/g, "").substring(0, 6).toUpperCase();
+  const ts = Date.now().toString(36).slice(-3).toUpperCase();
+  return `${prefix}-${shortId}${ts}`;
+}
+
 // Schema for document additional data (shared overrides)
 const additionalDataSchema = z
   .object({
@@ -194,11 +209,20 @@ export async function generateDocumentFromTemplateAction(
     } else if (ownerType === "PROPERTY") {
       const { data: property, error: pError } = await supabase
         .from("properties")
-        .select("id, title, title_en, title_cn, title_ru, price, original_price, rental_price, original_rental_price, tenant_id")
+        .select(`
+          id, title, title_en, title_cn, title_ru, price, original_price, rental_price, original_rental_price, tenant_id, floor,
+          project_id,
+          project:project_id(id, name)
+        `)
         .eq("id", ownerId)
         .single();
       if (pError) throw new Error(mapDbError(pError));
       if (!property) throw new Error("ไม่พบข้อมูลทรัพย์สินที่ระบุ");
+      ownerTenantId = property.tenant_id;
+      contextData.property = localizeObject(property, lang);
+      if (property.project) {
+        contextData.project = localizeObject(property.project, lang);
+      }
       ownerTenantId = property.tenant_id;
       contextData.property = localizeObject(property, lang);
     } else if (ownerType === "DEAL") {
@@ -344,6 +368,10 @@ export async function generateDocumentFromTemplateAction(
 
     // Populate identity info if any nationality, passport or id card are provided
     if (contextData.lead) {
+      // Phone fallback
+      if (!contextData.lead.phone || contextData.lead.phone.trim() === "") {
+        contextData.lead.phone = lang === "th" ? "(ไม่ได้ระบุ)" : "(Not specified)";
+      }
       let identityInfo = "";
       if (validData.client_id_card) {
         identityInfo += `<br><span style="color: #666;">${lang === "th" ? "เลขบัตรประชาชน" : "ID Card No."}:</span> <span>${validData.client_id_card}</span>`;
@@ -354,10 +382,13 @@ export async function generateDocumentFromTemplateAction(
       if (validData.client_nationality) {
         identityInfo += `<br><span style="color: #666;">${lang === "th" ? "สัญชาติ" : "Nationality"}:</span> <span>${validData.client_nationality}</span>`;
       }
+      if (validData.client_email_override) {
+        identityInfo += `<br><span style="color: #666;">Email:</span> <span>${validData.client_email_override}</span>`;
+      }
       contextData.lead.identity_info = identityInfo;
     }
 
-    // Build financial_info_html block
+    // Build financial_table_html block — professional table layout
     const rawResFee = validData.reservation_fee || "";
     const resFeeNum = parseFloat(rawResFee.replace(/,/g, "")) || 0;
     const formattedResFee = resFeeNum > 0 ? formatCurrency(resFeeNum) : "";
@@ -372,42 +403,98 @@ export async function generateDocumentFromTemplateAction(
       ? (lang === "th" ? amountToThaiWords(secDepNum) : amountToEnglishWords(secDepNum))
       : "";
 
-    let financial_info_html = "";
-    const reservationLabel = translations.reservation_deposit || (lang === "th" ? "ได้รับเงินมัดจำการจองเป็นจำนวนเงิน" : "Reservation Deposit Amount");
-    const securityLabel = lang === "th" ? "เงินประกันการเช่า / Security Deposit" : "Security Deposit";
+    // Determine month labels based on input compared to rental price
+    const dealPrice = contextData.deal?.price || contextData.property?.rental_price || 0;
+    let resFeeMonths = 0;
+    let secDepMonths = 0;
 
-    if (formattedSecDep) {
-      financial_info_html = `
-      <div style="display: flex; gap: 15px; margin-bottom: 15px; width: 100%;">
-        <div style="flex: 1; text-align: center; background-color: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 10px;">
-          <p style="font-size: 11px; margin: 0 0 5px 0; color: #4f46e5; font-weight: bold;">${reservationLabel}</p>
-          <div style="font-size: 18px; font-weight: bold; color: #4338ca;">
-            ${formattedResFee} THB
-          </div>
-          <div style="font-size: 10px; font-style: italic; color: #666; margin-top: 3px;">( ${resFeeWords} )</div>
-        </div>
-        
-        <div style="flex: 1; text-align: center; background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px;">
-          <p style="font-size: 11px; margin: 0 0 5px 0; color: #16a34a; font-weight: bold;">${securityLabel}</p>
-          <div style="font-size: 18px; font-weight: bold; color: #15803d;">
-            ${formattedSecDep} THB
-          </div>
-          <div style="font-size: 10px; font-style: italic; color: #666; margin-top: 3px;">( ${secDepWords} )</div>
-        </div>
-      </div>
-      `;
-    } else {
-      financial_info_html = `
-      <div style="text-align: center; margin-bottom: 15px; width: 100%;">
-        <p style="font-size: 13px; margin-bottom: 5px;">${reservationLabel}:</p>
-        <div style="background-color: #eef2ff; border: 1px solid #c7d2fe; border-radius: 8px; padding: 10px; font-size: 20px; font-weight: bold; color: #4338ca;">
-          ${formattedResFee} THB
-        </div>
-        <div style="font-size: 11px; font-style: italic; color: #666; margin-top: 3px;">( ${resFeeWords} )</div>
-      </div>
+    if (dealPrice > 0) {
+      const rMonths = Math.round(resFeeNum / dealPrice);
+      if (Math.abs(resFeeNum - rMonths * dealPrice) < 2) {
+        resFeeMonths = rMonths;
+      }
+      const sMonths = Math.round(secDepNum / dealPrice);
+      if (Math.abs(secDepNum - sMonths * dealPrice) < 2) {
+        secDepMonths = sMonths;
+      }
+    }
+
+    const descLabel = translations.description || (lang === "th" ? "รายการ" : "Description");
+    const qtyLabel = translations.quantity || (lang === "th" ? "จำนวน" : "Quantity");
+    const unitPriceLabel = translations.unit_price || (lang === "th" ? "ราคาต่อหน่วย" : "Unit Price");
+    const totalLabel = translations.total || (lang === "th" ? "ยอดรวม" : "Total");
+
+    const reservationLabel = lang === "th" 
+      ? `เงินมัดจำ / ค่าจอง (Reservation Fee)${resFeeMonths > 0 ? ` (${resFeeMonths} เดือน)` : ""}` 
+      : `Reservation Fee${resFeeMonths > 0 ? ` (${resFeeMonths} Month${resFeeMonths > 1 ? "s" : ""})` : ""}`;
+
+    const securityLabel = lang === "th" 
+      ? `เงินประกัน (Security Deposit)${secDepMonths > 0 ? ` (${secDepMonths} เดือน)` : ""}` 
+      : `Security Deposit${secDepMonths > 0 ? ` (${secDepMonths} Month${secDepMonths > 1 ? "s" : ""})` : ""}`;
+
+    const grandTotalLabel = lang === "th" ? "รวมทั้งสิ้น / Grand Total" : "Grand Total";
+
+    let rowNum = 0;
+    let tableRows = "";
+    let grandTotal = 0;
+
+    if (resFeeNum > 0) {
+      rowNum++;
+      grandTotal += resFeeNum;
+      tableRows += `
+        <tr>
+          <td style="text-align: center; width: 40px;">${rowNum}</td>
+          <td>${reservationLabel}</td>
+          <td style="text-align: center; width: 70px;">1</td>
+          <td style="text-align: right; width: 110px;">${formattedResFee}</td>
+          <td style="text-align: right; width: 110px;">${formattedResFee}</td>
+        </tr>`;
+    }
+
+    if (secDepNum > 0) {
+      rowNum++;
+      grandTotal += secDepNum;
+      tableRows += `
+        <tr>
+          <td style="text-align: center;">${rowNum}</td>
+          <td>${securityLabel}</td>
+          <td style="text-align: center;">1</td>
+          <td style="text-align: right;">${formattedSecDep}</td>
+          <td style="text-align: right;">${formattedSecDep}</td>
+        </tr>`;
+    }
+
+    const formattedGrandTotal = formatCurrency(grandTotal);
+    const grandTotalWords = grandTotal > 0
+      ? (lang === "th" ? amountToThaiWords(grandTotal) : amountToEnglishWords(grandTotal))
+      : "";
+
+    let financial_table_html = "";
+    if (rowNum > 0) {
+      financial_table_html = `
+      <table style="width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 12px;">
+        <thead>
+          <tr style="background-color: #f1f5f9;">
+            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 40px; color: #475569;">#</th>
+            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: left; color: #475569;">${descLabel}</th>
+            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: center; width: 70px; color: #475569;">${qtyLabel}</th>
+            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; width: 110px; color: #475569;">${unitPriceLabel}</th>
+            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; width: 110px; color: #475569;">${totalLabel}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tableRows}
+          <tr style="background-color: #f8fafc;">
+            <td colspan="4" style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold; color: #1e293b;">${grandTotalLabel}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold; font-size: 14px; color: #4338ca;">${formattedGrandTotal} THB</td>
+          </tr>
+        </tbody>
+      </table>
+      <div style="font-size: 11px; font-style: italic; color: #64748b; text-align: right; margin-top: -8px; margin-bottom: 10px;">( ${grandTotalWords} )</div>
       `;
     }
-    contextData.financial_info_html = financial_info_html;
+    contextData.financial_info_html = financial_table_html;
+    contextData.financial_table_html = financial_table_html;
 
     // Merge additional data (properly sanitized by Zod)
     contextData = { ...contextData, ...validData };
@@ -423,6 +510,18 @@ export async function generateDocumentFromTemplateAction(
     // Fix: Ensure slip_url is available consistently across all owner types
     if (!contextData.deal) contextData.deal = {};
     if (contextData.slip_url) contextData.deal.slip_url = contextData.slip_url;
+
+    // Build slip_html — only show if slip_url exists
+    const slipLabel = lang === "th" ? "หลักฐานการโอนเงิน" : "Payment Record (Transfer)";
+    if (contextData.slip_url && contextData.slip_url.startsWith("data:")) {
+      contextData.slip_html = `
+      <div style="text-align: center; margin: 10px 0; page-break-inside: avoid;">
+        <p style="font-size: 11px; color: #666; margin-bottom: 5px;">${slipLabel}</p>
+        <img src="${contextData.slip_url}" style="max-height: 80mm; max-width: 100mm; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2px; object-fit: contain;" alt="Transfer Slip">
+      </div>`;
+    } else {
+      contextData.slip_html = "";
+    }
 
     if (contextData.property && contextData.property.id) {
       const fullId = contextData.property.id;
@@ -458,16 +557,13 @@ export async function generateDocumentFromTemplateAction(
     contextData.client_id_card = validData.client_id_card || "";
     contextData.client_nationality = validData.client_nationality || "";
 
-    // Add translation terms directly to context for convenience
-    contextData.terms_deposit = lang === "th"
-      ? "เงินจองนี้ถือเป็นส่วนหนึ่งของค่าทำสัญญา"
-      : "Reservation deposit part of contract fee.";
-    contextData.terms_sign_by = lang === "th"
-      ? "ผู้จองตกลงจะเข้าทำสัญญาภายใน"
-      : "Sign contract by:";
-    contextData.terms_payment_transfer = lang === "th"
-      ? "วิธีชำระเงินที่ระบุ: Transfer (โปรดเก็บหลักฐานการโอนเงิน)"
-      : "Payment Method: Transfer (Please keep the transfer slip)";
+    // Add translation terms from locale — use translations from locale files only
+    contextData.terms_deposit = translations.terms_deposit || "Reservation deposit part of contract fee.";
+    contextData.terms_sign_by = translations.terms_sign_by || "Sign contract by:";
+    contextData.terms_payment_transfer = translations.terms_payment_transfer || "Payment Method: Transfer (Please keep the transfer slip)";
+
+    // Generate document number based on template type
+    contextData.document_number = generateDocumentNumber(template.type, ownerId);
 
     // Check for critical missing data
     if (ownerType === "DEAL" && (!contextData.lead || !contextData.property)) {
@@ -892,16 +988,10 @@ export async function generateDocxDocumentFromTemplateAction(
     contextData.client_id_card = validData.client_id_card || "";
     contextData.client_nationality = validData.client_nationality || "";
 
-    // Add translation terms directly to context for convenience
-    contextData.terms_deposit = lang === "th"
-      ? "เงินจองนี้ถือเป็นส่วนหนึ่งของค่าทำสัญญา"
-      : "Reservation deposit part of contract fee.";
-    contextData.terms_sign_by = lang === "th"
-      ? "ผู้จองตกลงจะเข้าทำสัญญาภายใน"
-      : "Sign contract by:";
-    contextData.terms_payment_transfer = lang === "th"
-      ? "วิธีชำระเงินที่ระบุ: Transfer (โปรดเก็บหลักฐานการโอนเงิน)"
-      : "Payment Method: Transfer (Please keep the transfer slip)";
+    // Add translation terms from locale — use translations from locale files only
+    contextData.terms_deposit = translations.terms_deposit || "Reservation deposit part of contract fee.";
+    contextData.terms_sign_by = translations.terms_sign_by || "Sign contract by:";
+    contextData.terms_payment_transfer = translations.terms_payment_transfer || "Payment Method: Transfer (Please keep the transfer slip)";
 
     // 3. Process the DOCX with docxtemplater
     let zip;
