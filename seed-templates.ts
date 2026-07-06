@@ -98,6 +98,10 @@ async function seedTemplates() {
               <td style="text-align: right; color: #666; padding-right: 10px; border: none;">ID</td>
               <td style="text-align: left; font-weight: bold; border: none;">{{document_number}}</td>
             </tr>
+            <tr style="border: none;">
+              <td style="text-align: right; color: #666; padding-right: 10px; border: none;">Project</td>
+              <td style="text-align: left; font-weight: bold; border: none; color: #4f46e5;">{{project.name}}</td>
+            </tr>
           </table>
         </td>
       </tr>
@@ -114,7 +118,11 @@ async function seedTemplates() {
       </div>
       <div style="width: 50%; padding: 10px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
         <div style="font-size: 11px; font-weight: bold; margin-bottom: 3px;">{{t.property_details}}</div>
-        <div style="font-size: 12px;">{{property.title}}</div>
+        <div style="font-size: 12px; font-weight: bold; color: #0c4a6e; margin-bottom: 3px;">{{property.title}}</div>
+        <div style="font-size: 11px; color: #475569;">
+          <strong>{{t.floor}}:</strong> {{property.floor || "-"}} | 
+          <strong>{{t.unit}}:</strong> {{property.unit_number || property.unit || "-"}}
+        </div>
       </div>
     </div>
 
@@ -158,6 +166,165 @@ async function seedTemplates() {
         <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
           <div style="border-bottom: 1px solid #333; width: 100%; height: 25px; margin-bottom: 5px;"></div>
           <div style="font-size: 10px;">{{t.agent_signature}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`.trim(),
+    },
+    {
+      name: "ใบเสร็จค่าเช่า (Rent Receipt)",
+      description: "แบบฟอร์มใบเสร็จรับเงินค่าเช่าและค่ามัดจำ ดึงข้อมูลจากดีลและลูกค้า",
+      type: "RENT_RECEIPT" as const,
+      content: `
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+  
+  :root {
+    --primary-color: #0c4a6e;
+    --border-color: #e2e8f0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body { 
+    font-family: 'Sarabun', sans-serif; 
+    line-height: 1.4; 
+    color: #1e293b; 
+    margin: 0;
+    padding: 0;
+    -webkit-print-color-adjust: exact;
+    background-color: #f1f5f9;
+  }
+
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 10mm;
+    margin: 10mm auto;
+    background: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  @media print {
+    body { background: none; margin: 0; padding: 0; }
+    .page {
+      margin: 0;
+      box-shadow: none;
+      width: 210mm;
+      height: 297mm;
+      padding: 10mm;
+    }
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    .no-print { display: none; }
+  }
+
+  h1, h2, h3 { color: var(--primary-color); text-align: center; margin: 0 0 10px 0; }
+  
+  img { max-width: 100%; height: auto; }
+
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; }
+  th, td { border: 1px solid var(--border-color); padding: 6px 10px; text-align: left; }
+  th { background-color: #f8fafc; font-weight: bold; }
+  
+  .content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+</style>
+
+<div class="content-wrapper">
+  <div style="display: flex; flex-direction: column; min-height: 100%;">
+    <!-- Header -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+      <tr>
+        <td style="width: 50%; vertical-align: top; border: none;">
+          <img src="{{config.logoDark}}" alt="Logo" style="height: 60px; margin-bottom: 10px;">
+          <div style="font-size: 11px; color: #666;">
+            <strong>{{config.company}}</strong><br>
+            {{config.contact.address}}
+          </div>
+        </td>
+        <td style="width: 50%; text-align: right; vertical-align: top; border: none;">
+          <div style="font-size: 10px; color: #999; margin-bottom: 5px;">Original</div>
+          <div style="font-size: 24px; font-weight: bold; color: #10b981; margin-bottom: 10px;">{{t.rent_receipt}}</div>
+          <table style="width: 100%; font-size: 12px; margin: 0; border-collapse: collapse;">
+            <tr style="border: none;">
+              <td style="text-align: right; color: #666; padding-right: 10px; border: none;">{{t.date}}</td>
+              <td style="text-align: left; font-weight: bold; border: none;">{{date.today}}</td>
+            </tr>
+            <tr style="border: none;">
+              <td style="text-align: right; color: #666; padding-right: 10px; border: none;">ID</td>
+              <td style="text-align: left; font-weight: bold; border: none;">{{document_number}}</td>
+            </tr>
+            <tr style="border: none;">
+              <td style="text-align: right; color: #666; padding-right: 10px; border: none;">Project</td>
+              <td style="text-align: left; font-weight: bold; border: none; color: #10b981;">{{project.name}}</td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+
+    <h3 style="text-align: center; color: #059669; border-bottom: 2px solid #a7f3d0; padding-bottom: 5px; margin-bottom: 15px; font-size: 16px;">{{t.rent_receipt}}</h3>
+
+    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 13px;">
+      <div style="width: 45%;">
+        <span style="color: #666;">{{t.client}}:</span> <span style="font-weight: bold;">{{lead.full_name}}</span><br>
+        <span style="color: #666;">{{t.phone}}:</span> <span>{{lead.phone}}</span><br>
+        <span style="color: #666;">Line ID:</span> <span>{{lead.line_id}}</span>
+        {{lead.identity_info}}
+      </div>
+      <div style="width: 50%; padding: 10px; background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="font-size: 11px; font-weight: bold; margin-bottom: 3px;">{{t.property_details}}</div>
+        <div style="font-size: 12px; font-weight: bold; color: #065f46; margin-bottom: 3px;">{{property.title}}</div>
+        <div style="font-size: 11px; color: #475569;">
+          <strong>{{t.floor}}:</strong> {{property.floor || "-"}} | 
+          <strong>{{t.unit}}:</strong> {{property.unit_number || property.unit || "-"}}
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial Table -->
+    {{financial_table_html}}
+
+    <!-- Bank & Payment Detail -->
+    <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #a7f3d0; border-radius: 8px; background-color: #ecfdf5; font-size: 12px;">
+      <div style="display: flex; justify-content: space-between;">
+        <div><span style="color: #666;">{{t.bank}}:</span> <strong>{{bank_name}}</strong></div>
+        <div><span style="color: #666;">{{t.account_no}}:</span> <strong>{{bank_account_no}}</strong></div>
+        <div><span style="color: #666;">{{t.account_name}}:</span> <strong>{{account_name}}</strong></div>
+      </div>
+      <div style="margin-top: 5px;"><span style="color: #666;">{{t.payment_method}}:</span> <strong>{{payment_method}}</strong></div>
+    </div>
+
+    <!-- Transfer Slip (conditional) -->
+    {{slip_html}}
+
+    <div style="margin-top: auto;">
+      <!-- Signatures -->
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 20px;">
+        <div style="text-align: center; width: 30%;">
+          <div style="border-bottom: 1px solid #333; height: 25px; margin-bottom: 5px;"></div>
+          <div style="font-size: 10px;">{{t.customer_signature}}</div>
+        </div>
+        <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
+          <img src="{{config.logoDark}}" style="height: 50px; object-fit: contain; margin-bottom: 5px;" alt="Company">
+          <div style="font-size: 9px; color: #999;">{{config.company}}</div>
+        </div>
+        <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
+          <div style="border-bottom: 1px solid #333; width: 100%; height: 25px; margin-bottom: 5px;"></div>
+          <div style="font-size: 10px;">{{t.authorized_signature}}</div>
         </div>
       </div>
     </div>

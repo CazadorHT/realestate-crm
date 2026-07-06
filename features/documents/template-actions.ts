@@ -18,8 +18,7 @@ export async function getTemplatesAction() {
   let query = supabase
     .from("contract_templates")
     .select("id, name, content, description, type, is_active, created_at, tenant_id")
-    .eq("is_active", true)
-    .order("created_at", { ascending: false });
+    .eq("is_active", true);
 
   if (tenantId && tenantId !== "ALL") {
     query = query.eq("tenant_id", tenantId);
@@ -32,9 +31,31 @@ export async function getTemplatesAction() {
     return [];
   }
 
-  if (data && (!tenantId || tenantId === "ALL")) {
+  // Sort by custom business priority
+  // 1: ใบจองทรัพย์ (RESERVATION_DOCUMENT)
+  // 2: ใบเสร็จค่าเช่า (RENT_RECEIPT)
+  // 3: สัญญาเช่า (LEASE_CONTRACT)
+  // 4: สัญญาซื้อขาย (SALE_CONTRACT)
+  const sortedData = [...(data || [])].sort((a, b) => {
+    const weights: Record<string, number> = {
+      RESERVATION_DOCUMENT: 1,
+      RENT_RECEIPT: 2,
+      LEASE_CONTRACT: 3,
+      SALE_CONTRACT: 4,
+    };
+    const wA = weights[a.type] || 99;
+    const wB = weights[b.type] || 99;
+    return wA - wB;
+  });
+
+  if (error) {
+    console.error("Fetch Templates Error:", error);
+    return [];
+  }
+
+  if (sortedData && (!tenantId || tenantId === "ALL")) {
     const seen = new Set();
-    return data.filter((item: any) => {
+    return sortedData.filter((item: any) => {
       const key = item.type || item.name;
       if (seen.has(key)) return false;
       seen.add(key);
@@ -42,7 +63,7 @@ export async function getTemplatesAction() {
     });
   }
 
-  return data;
+  return sortedData;
 }
 
 // 2. Create Template (Admin only)

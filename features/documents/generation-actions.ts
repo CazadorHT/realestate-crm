@@ -56,6 +56,8 @@ const additionalDataSchema = z
     client_passport: z.string().optional(),
     client_id_card: z.string().optional(),
     client_nationality: z.string().optional(),
+    unit_number_override: z.string().optional(),
+    floor_override: z.string().optional(),
   })
   .passthrough();
 
@@ -221,10 +223,11 @@ export async function generateDocumentFromTemplateAction(
       ownerTenantId = property.tenant_id;
       contextData.property = localizeObject(property, lang);
       if (property.project) {
-        contextData.project = localizeObject(property.project, lang);
+        const localizedProject = localizeObject(property.project, lang);
+        contextData.project = {
+          name: localizedProject.name || ""
+        };
       }
-      ownerTenantId = property.tenant_id;
-      contextData.property = localizeObject(property, lang);
     } else if (ownerType === "DEAL") {
       const { data: dealData, error: dError } = await supabase
         .from("crm_deals_v3")
@@ -249,7 +252,10 @@ export async function generateDocumentFromTemplateAction(
             title_cn,
             title_ru,
             price,
-            rental_price
+            rental_price,
+            floor,
+            project_id,
+            project:project_id(id, name)
           )
         `)
         .eq("id", ownerId)
@@ -281,13 +287,21 @@ export async function generateDocumentFromTemplateAction(
           price: propRaw.price,
           rental_price: propRaw.rental_price,
           original_price: propRaw.price,
-          original_rental_price: propRaw.rental_price
+          original_rental_price: propRaw.rental_price,
+          floor: propRaw.floor,
+          project: propRaw.project ? localizeObject(propRaw.project, lang) : null
         } : null
       };
 
       contextData.deal = localizeObject(deal, lang);
       contextData.lead = localizeObject(deal.lead, lang);
       contextData.property = localizeObject(deal.property, lang);
+      if (deal.property && deal.property.project) {
+        const localizedProject = localizeObject(deal.property.project, lang);
+        contextData.project = {
+          name: localizedProject.name || ""
+        };
+      }
 
       // Add formatted values based on deal type
       if (deal && contextData.property) {
@@ -529,6 +543,13 @@ export async function generateDocumentFromTemplateAction(
       contextData.property.id = shortId;
       contextData.property.property_code = `RES-${shortId}`;
       contextData.property.short_id = shortId;
+      if (validData.unit_number_override) {
+        contextData.property.unit_number = validData.unit_number_override;
+        contextData.property.unit = validData.unit_number_override;
+      }
+      if (validData.floor_override) {
+        contextData.property.floor = validData.floor_override;
+      }
     }
 
     // Apply Overrides

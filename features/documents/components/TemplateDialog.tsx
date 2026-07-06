@@ -141,6 +141,8 @@ export function TemplateDialog({
   const [securityDeposit, setSecurityDeposit] = useState("");
   const [bookingAmount, setBookingAmount] = useState("");
   const [contractDueDate, setContractDueDate] = useState("");
+  const [unitNumberOverride, setUnitNumberOverride] = useState("");
+  const [floorOverride, setFloorOverride] = useState("");
   const [dealRentalPrice, setDealRentalPrice] = useState<number | null>(null);
   const [selectedBank, setSelectedBank] = useState<{ name_th: string; name_en: string } | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
@@ -176,6 +178,8 @@ export function TemplateDialog({
     setSecurityDeposit("");
     setBookingAmount("");
     setContractDueDate("");
+    setUnitNumberOverride("");
+    setFloorOverride("");
     setDealRentalPrice(null);
     setTargetOwnerType(initialOwnerType || "DEAL");
     setCustomFile(null);
@@ -373,6 +377,8 @@ export function TemplateDialog({
             client_passport: clientPassport,
             client_id_card: clientIdCard,
             client_nationality: clientNationality,
+            unit_number_override: unitNumberOverride,
+            floor_override: floorOverride,
           },
         );
       } else {
@@ -409,6 +415,8 @@ export function TemplateDialog({
             client_passport: clientPassport,
             client_id_card: clientIdCard,
             client_nationality: clientNationality,
+            unit_number_override: unitNumberOverride,
+            floor_override: floorOverride,
           },
           { templateName: customFile!.name.replace(".docx", "") },
         );
@@ -1019,6 +1027,28 @@ export function TemplateDialog({
                     placeholder="เช่น 15th July 2026"
                     value={contractDueDate}
                     onChange={(e) => setContractDueDate(e.target.value)}
+                    className="h-11 rounded-xl border-slate-200 bg-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="unitNumberOverride" className="text-xs font-semibold text-slate-500 ml-1">เลขที่ห้อง (Unit Number Override)</Label>
+                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุเลขที่ห้อง/ยูนิตที่ต้องการแสดงในเอกสาร</p>
+                  <Input
+                    id="unitNumberOverride"
+                    placeholder="เช่น 123/45"
+                    value={unitNumberOverride}
+                    onChange={(e) => setUnitNumberOverride(e.target.value)}
+                    className="h-11 rounded-xl border-slate-200 bg-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="floorOverride" className="text-xs font-semibold text-slate-500 ml-1">ชั้น (Floor Override)</Label>
+                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุชั้นที่ต้องการแสดงในเอกสาร</p>
+                  <Input
+                    id="floorOverride"
+                    placeholder="เช่น 18"
+                    value={floorOverride}
+                    onChange={(e) => setFloorOverride(e.target.value)}
                     className="h-11 rounded-xl border-slate-200 bg-white"
                   />
                 </div>
