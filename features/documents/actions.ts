@@ -379,7 +379,9 @@ export async function getDocumentSignedUrl(
   if (docErr || !doc) return null;
 
   // Create a signed URL valid for 1 hour (3600 seconds)
-  const { data, error } = await supabase.storage
+  const { createAdminClient } = await import("@/lib/supabase/admin");
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient.storage
     .from(bucket)
     .createSignedUrl(storagePath, 3600, {
       download: false,

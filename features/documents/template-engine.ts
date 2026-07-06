@@ -4,19 +4,35 @@
  */
 export function replacePlaceholders(content: string, data: any): string {
   if (!content) return "";
-  return content.replace(/\{\{(.*?)\}\}/g, (match, key) => {
-    const keys = key.trim().split(".");
-    let value = data;
+  return content.replace(/\{\{(.*?)\}\}/g, (match, expression) => {
+    // Support basic logical fallbacks like key || "fallback"
+    const parts = expression.split("||").map((p: string) => p.trim());
+    
+    for (const part of parts) {
+      // If it is a quoted string literal, return it
+      if ((part.startsWith("'") && part.endsWith("'")) || (part.startsWith("\"") && part.endsWith("\""))) {
+        return part.slice(1, -1);
+      }
+      
+      const keys = part.split(".");
+      let value = data;
+      let found = true;
 
-    for (const k of keys) {
-      if (value && typeof value === "object" && k in value) {
-        value = value[k];
-      } else {
-        return "";
+      for (const k of keys) {
+        if (value && typeof value === "object" && k in value) {
+          value = value[k];
+        } else {
+          found = false;
+          break;
+        }
+      }
+
+      if (found && value !== null && value !== undefined && value !== "") {
+        return String(value);
       }
     }
 
-    return value !== null && value !== undefined && value !== "" ? String(value) : "";
+    return "";
   });
 }
 

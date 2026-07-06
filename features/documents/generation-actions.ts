@@ -18,6 +18,7 @@ import fs from "fs";
 import path from "path";
 import PizZip from "pizzip";
 import { decrypt } from "@/lib/crypto";
+import { getLeadByIdQuery } from "@/features/leads/queries";
 // @ts-ignore
 import Docxtemplater from "docxtemplater";
 import { z } from "zod";
@@ -45,6 +46,8 @@ const additionalDataSchema = z
     client_name_override: z.string().optional(),
     client_email_override: z.string().email().optional().or(z.literal("")),
     client_line_override: z.string().optional(),
+    client_whatsapp_override: z.string().optional(),
+    client_wechat_override: z.string().optional(),
     payment_period: z.string().optional(),
     payment_method: z.string().optional(),
     account_name: z.string().optional(),
@@ -81,10 +84,11 @@ async function getImageBase64(
     if (
       imageUrl.includes("/") &&
       !imageUrl.startsWith("/") &&
-      !imageUrl.startsWith("http") &&
-      supabase
+      !imageUrl.startsWith("http")
     ) {
-      const { data, error } = await supabase.storage
+      const { createAdminClient } = await import("@/lib/supabase/admin");
+      const adminClient = createAdminClient();
+      const { data, error } = await adminClient.storage
         .from("documents")
         .download(imageUrl);
       if (error || !data) {
@@ -213,6 +217,7 @@ export async function generateDocumentFromTemplateAction(
         .from("properties")
         .select(`
           id, title, title_en, title_cn, title_ru, price, original_price, rental_price, original_rental_price, tenant_id, floor,
+          bedrooms, bathrooms, size_sqm,
           project_id,
           project:project_id(id, name)
         `)
@@ -223,10 +228,9 @@ export async function generateDocumentFromTemplateAction(
       ownerTenantId = property.tenant_id;
       contextData.property = localizeObject(property, lang);
       if (property.project) {
-        const localizedProject = localizeObject(property.project, lang);
-        contextData.project = {
-          name: localizedProject.name || ""
-        };
+        const rawProj = property.project as any;
+        const nameVal = rawProj.name ? (rawProj.name[lang] || rawProj.name.en || rawProj.name.th || "") : "";
+        contextData.project = { name: nameVal };
       }
     } else if (ownerType === "DEAL") {
       const { data: dealData, error: dError } = await supabase
@@ -254,6 +258,9 @@ export async function generateDocumentFromTemplateAction(
             price,
             rental_price,
             floor,
+            bedrooms,
+            bathrooms,
+            size_sqm,
             project_id,
             project:project_id(id, name)
           )
@@ -289,7 +296,10 @@ export async function generateDocumentFromTemplateAction(
           original_price: propRaw.price,
           original_rental_price: propRaw.rental_price,
           floor: propRaw.floor,
-          project: propRaw.project ? localizeObject(propRaw.project, lang) : null
+          bedrooms: propRaw.bedrooms,
+          bathrooms: propRaw.bathrooms,
+          size_sqm: propRaw.size_sqm,
+          project: propRaw.project ? propRaw.project : null
         } : null
       };
 
@@ -297,10 +307,9 @@ export async function generateDocumentFromTemplateAction(
       contextData.lead = localizeObject(deal.lead, lang);
       contextData.property = localizeObject(deal.property, lang);
       if (deal.property && deal.property.project) {
-        const localizedProject = localizeObject(deal.property.project, lang);
-        contextData.project = {
-          name: localizedProject.name || ""
-        };
+        const rawProj = deal.property.project as any;
+        const nameVal = rawProj.name ? (rawProj.name[lang] || rawProj.name.en || rawProj.name.th || "") : "";
+        contextData.project = { name: nameVal };
       }
 
       // Add formatted values based on deal type
@@ -385,6 +394,9 @@ export async function generateDocumentFromTemplateAction(
       // Phone fallback
       if (!contextData.lead.phone || contextData.lead.phone.trim() === "") {
         contextData.lead.phone = lang === "th" ? "(ไม่ได้ระบุ)" : "(Not specified)";
+      }
+      if (!contextData.lead.line_id || contextData.lead.line_id.trim() === "") {
+        contextData.lead.line_id = lang === "th" ? "(ไม่ได้ระบุ)" : "(Not specified)";
       }
       let identityInfo = "";
       if (validData.client_id_card) {
@@ -507,11 +519,26 @@ export async function generateDocumentFromTemplateAction(
       <div style="font-size: 11px; font-style: italic; color: #64748b; text-align: right; margin-top: -8px; margin-bottom: 10px;">( ${grandTotalWords} )</div>
       `;
     }
-    contextData.financial_info_html = financial_table_html;
+     contextData.financial_info_html = financial_table_html;
     contextData.financial_table_html = financial_table_html;
 
     // Merge additional data (properly sanitized by Zod)
     contextData = { ...contextData, ...validData };
+
+    if (contextData.property && contextData.property.id) {
+      const fullId = contextData.property.id;
+      const shortId = fullId.includes("-") ? fullId.split("-")[0] : fullId;
+      contextData.property.id = shortId;
+      contextData.property.property_code = `RES-${shortId}`;
+      contextData.property.short_id = shortId;
+      if (validData.unit_number_override) {
+        contextData.property.unit_number = validData.unit_number_override;
+        contextData.property.unit = validData.unit_number_override;
+      }
+      if (validData.floor_override) {
+        contextData.property.floor = validData.floor_override;
+      }
+    }
 
     // Final Image Processing (e.g. Slip) - Convert to Base64
     if (contextData.slip_url) {
@@ -537,21 +564,6 @@ export async function generateDocumentFromTemplateAction(
       contextData.slip_html = "";
     }
 
-    if (contextData.property && contextData.property.id) {
-      const fullId = contextData.property.id;
-      const shortId = fullId.includes("-") ? fullId.split("-")[0] : fullId;
-      contextData.property.id = shortId;
-      contextData.property.property_code = `RES-${shortId}`;
-      contextData.property.short_id = shortId;
-      if (validData.unit_number_override) {
-        contextData.property.unit_number = validData.unit_number_override;
-        contextData.property.unit = validData.unit_number_override;
-      }
-      if (validData.floor_override) {
-        contextData.property.floor = validData.floor_override;
-      }
-    }
-
     // Apply Overrides
     if (validData.client_name_override && contextData.lead) {
       contextData.lead.full_name = validData.client_name_override;
@@ -561,6 +573,12 @@ export async function generateDocumentFromTemplateAction(
     }
     if (validData.client_line_override && contextData.lead) {
       contextData.lead.line_id = validData.client_line_override;
+    }
+    if (validData.client_whatsapp_override && contextData.lead) {
+      contextData.lead.whatsapp = validData.client_whatsapp_override;
+    }
+    if (validData.client_wechat_override && contextData.lead) {
+      contextData.lead.wechat_id = validData.client_wechat_override;
     }
 
     contextData.payment_period =
@@ -993,6 +1011,12 @@ export async function generateDocxDocumentFromTemplateAction(
     if (validData.client_line_override && contextData.lead) {
       contextData.lead.line_id = validData.client_line_override;
     }
+    if (validData.client_whatsapp_override && contextData.lead) {
+      contextData.lead.whatsapp = validData.client_whatsapp_override;
+    }
+    if (validData.client_wechat_override && contextData.lead) {
+      contextData.lead.wechat_id = validData.client_wechat_override;
+    }
 
     contextData.payment_period =
       validData.payment_period || contextData.deal?.payment_period || "";
@@ -1125,12 +1149,21 @@ export async function getDealDetailsAction(dealId: string) {
         transaction_date,
         lead:crm_leads_v3(
           id,
+          utm_data,
           identity:identities_v3!crm_leads_v3_identity_id_fkey(
             display_name,
             email,
             phone,
-            line_id
+            line_id,
+            social_links
           )
+        ),
+        property:properties!crm_deals_v3_property_id_fkey(
+          id,
+          floor,
+          bedrooms,
+          bathrooms,
+          size_sqm
         )
       `)
       .eq("id", dealId)
@@ -1141,6 +1174,9 @@ export async function getDealDetailsAction(dealId: string) {
 
     const leadRaw = dealData.lead as any;
     const identityRaw = leadRaw?.identity;
+    const socialLinks = identityRaw?.social_links || {};
+    const utmData = leadRaw?.utm_data as any || {};
+    const prefs = utmData.preferences || {};
 
     return {
       success: true,
@@ -1152,12 +1188,86 @@ export async function getDealDetailsAction(dealId: string) {
           full_name: decrypt(identityRaw?.display_name) || "",
           email: decrypt(identityRaw?.email) || "",
           phone: decrypt(identityRaw?.phone) || "",
-          line_id: identityRaw?.line_id || ""
+          line_id: identityRaw?.line_id || "",
+          whatsapp: decrypt(socialLinks.whatsapp) || "",
+          wechat_id: decrypt(socialLinks.wechat_id) || "",
+          nationality: prefs.nationality || "",
+          id_card: prefs.id_card || "",
+          passport: prefs.passport || ""
+        } : null,
+        property: dealData.property ? {
+          id: (dealData.property as any).id,
+          floor: (dealData.property as any).floor || "",
+          bedrooms: (dealData.property as any).bedrooms || "",
+          bathrooms: (dealData.property as any).bathrooms || "",
+          size_sqm: (dealData.property as any).size_sqm || ""
         } : null
       }
     };
   } catch (error) {
     console.error("Error fetching deal details:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+
+export async function getLeadDetailsAction(leadId: string) {
+  try {
+    const { role } = await requireAuthContext();
+    assertStaff(role);
+
+    const lead = await getLeadByIdQuery(leadId);
+    if (!lead) throw new Error("Lead not found");
+
+    return {
+      success: true,
+      data: lead
+    };
+  } catch (error) {
+    console.error("Error fetching lead details:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : String(error)
+    };
+  }
+}
+
+export async function uploadDocumentToStorageAction(
+  formData: FormData,
+  filePath: string
+) {
+  try {
+    const { role } = await requireAuthContext();
+    assertStaff(role);
+
+    const file = formData.get("file") as File;
+    if (!file) throw new Error("No file uploaded");
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminClient = createAdminClient();
+
+    const { data, error } = await adminClient.storage
+      .from("documents")
+      .upload(filePath, buffer, {
+        contentType: file.type,
+        upsert: true,
+      });
+
+    if (error) {
+      console.error("Admin storage upload error:", error);
+      throw new Error(error.message);
+    }
+
+    return {
+      success: true,
+      path: data.path
+    };
+  } catch (error) {
+    console.error("uploadDocumentToStorageAction error:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : String(error)

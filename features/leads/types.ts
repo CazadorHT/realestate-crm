@@ -20,6 +20,8 @@ export interface LeadPreferences {
   whatsapp_id?: string | null;
   wechat_id?: string | null;
   preferred_language?: string | null;
+  id_card?: string | null;
+  passport?: string | null;
 }
 
 // --- Extended Feature Types (V3 Hardened) ---
@@ -52,6 +54,8 @@ export type LeadWithJoins = LeadRow & {
   preferences?: Json | null;
   is_foreigner?: boolean | null;
   nationality?: string | null;
+  id_card?: string | null;
+  passport?: string | null;
   preferred_property_types?: string[] | null;
   [key: string]: any;
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import { UseFormReturn } from "react-hook-form";
-import { UserCircle, Phone as PhoneIcon, Mail, Globe, MessageSquare } from "lucide-react";
+import { UserCircle, Phone as PhoneIcon, Mail, Globe, MessageSquare, CreditCard, Fingerprint } from "lucide-react";
 import { FaLine,FaWhatsapp } from "react-icons/fa";
 import { IoLogoWechat } from "react-icons/io5";
 import {
@@ -203,6 +203,44 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
               />
             </div>
           </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              เลขบัตรประชาชน (ID Card Number)
+            </Label>
+            <div className="relative group">
+              <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+              <Input
+                className="pl-9 h-11 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 bg-slate-50/50 rounded-xl"
+                placeholder="ระบุเลขบัตรประชาชน 13 หลัก"
+                autoComplete="off"
+                {...form.register("id_card")}
+              />
+            </div>
+            {form.formState.errors.id_card && (
+              <p className="text-red-500 text-xs font-semibold mt-1">
+                {form.formState.errors.id_card.message}
+              </p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs font-bold uppercase tracking-wider text-slate-500">
+              เลขพาสปอร์ต (Passport Number)
+            </Label>
+            <div className="relative group">
+              <Fingerprint className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
+              <Input
+                className="pl-9 h-11 border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/20 bg-slate-50/50 rounded-xl"
+                placeholder="ระบุเลขพาสปอร์ต (e.g. AA1234567)"
+                autoComplete="off"
+                {...form.register("passport")}
+              />
+            </div>
+            {form.formState.errors.passport && (
+              <p className="text-red-500 text-xs font-semibold mt-1">
+                {form.formState.errors.passport.message}
+              </p>
+            )}
+          </div>
         </div>
 
         <div className="space-y-3 pt-2">
@@ -220,18 +258,18 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
                     (nationality as string).length > 0
                   ? (nationality as string).split(",").map((x) => x.trim())
                   : [];
-              const isSelected = selected.includes(nat);
+              const isSelected = selected.includes(nat.value);
 
               return (
                 <button
-                  key={nat}
+                  key={nat.value}
                   type="button"
                   onClick={() => {
                     let newSelected = [...selected];
                     if (isSelected) {
-                      newSelected = newSelected.filter((x) => x !== nat);
+                      newSelected = newSelected.filter((x) => x !== nat.value);
                     } else {
-                      newSelected.push(nat);
+                      newSelected.push(nat.value);
                     }
                     form.setValue("nationality", newSelected);
                     const hasThai = newSelected.includes("ไทย");
@@ -249,7 +287,7 @@ export function LeadContactSection({ form }: LeadContactSectionProps) {
                   <div
                     className={`w-2 h-2 rounded-full shrink-0 ${isSelected ? "bg-emerald-500" : "bg-slate-300"}`}
                   />
-                  {nat}
+                  {nat.label}
                 </button>
               );
             })}

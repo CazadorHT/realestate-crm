@@ -103,12 +103,13 @@ export const createLeadAction = createSafeAction(
       // Non-blocking but should be logged
     }
 
-    // 3. Create preferences object for utm_data.preferences
     const prefs = {
       note: data.note || null,
       lead_type: data.lead_type || null,
       nationality: data.nationality || null,
       is_foreigner: !!data.is_foreigner,
+      id_card: data.id_card || null,
+      passport: data.passport || null,
       property_types: data.preferred_property_types || null,
       min_bathrooms: data.min_bathrooms !== null && data.min_bathrooms !== undefined ? Number(data.min_bathrooms) : null,
       min_size: data.min_size_sqm !== null && data.min_size_sqm !== undefined ? Number(data.min_size_sqm) : null,
@@ -256,6 +257,8 @@ export const updateLeadAction = createSafeAction(
       lead_type: updateData.lead_type || null,
       nationality: updateData.nationality || null,
       is_foreigner: !!updateData.is_foreigner,
+      id_card: updateData.id_card || null,
+      passport: updateData.passport || null,
       property_types: updateData.preferred_property_types || null,
       min_bathrooms: updateData.min_bathrooms !== null && updateData.min_bathrooms !== undefined ? Number(updateData.min_bathrooms) : null,
       min_size: updateData.min_size_sqm !== null && updateData.min_size_sqm !== undefined ? Number(updateData.min_size_sqm) : null,

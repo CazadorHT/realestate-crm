@@ -21,6 +21,8 @@ export function leadRowToFormValues(row: Partial<LeadWithJoins>): LeadFormValues
     lead_type: (row.lead_type as any) ?? null,
     nationality: row.nationality ?? null,
     is_foreigner: (row.is_foreigner as unknown) === "true" || !!row.is_foreigner,
+    id_card: row.id_card ?? null,
+    passport: row.passport ?? null,
 
     budget_min: row.budget_min !== null && row.budget_min !== undefined ? Number(row.budget_min) : null,
     budget_max: row.budget_max !== null && row.budget_max !== undefined ? Number(row.budget_max) : null,

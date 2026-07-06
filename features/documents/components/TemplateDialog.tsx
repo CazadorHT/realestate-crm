@@ -13,6 +13,8 @@ import {
   generateDocumentFromTemplateAction,
   generateDocxDocumentFromTemplateAction,
   getDealDetailsAction,
+  getLeadDetailsAction,
+  uploadDocumentToStorageAction,
 } from "../generation-actions";
 import { createDocumentRecordAction, searchOwnerAction } from "../actions";
 import { DOC_TYPE_LABELS, DocumentOwnerType } from "../schema";
@@ -134,6 +136,8 @@ export function TemplateDialog({
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
   const [clientLine, setClientLine] = useState("");
+  const [clientWhatsapp, setClientWhatsapp] = useState("");
+  const [clientWechat, setClientWechat] = useState("");
   const [clientPassport, setClientPassport] = useState("");
   const [clientIdCard, setClientIdCard] = useState("");
   const [clientNationality, setClientNationality] = useState("");
@@ -171,6 +175,8 @@ export function TemplateDialog({
     setClientName("");
     setClientEmail("");
     setClientLine("");
+    setClientWhatsapp("");
+    setClientWechat("");
     setClientPassport("");
     setClientIdCard("");
     setClientNationality("");
@@ -240,49 +246,77 @@ export function TemplateDialog({
 
       try {
         if (targetOwnerType === "LEAD" || initialOwnerType === "LEAD") {
-          const { data } = await supabase
-            .from("leads")
-            .select("id, full_name, email, line_id")
-            .eq("id", finalId)
-            .single();
-          if (data) {
+          const res = await getLeadDetailsAction(finalId);
+          if (res.success && res.data) {
+            const data = res.data;
             setClientName(data.full_name || "");
             setClientEmail(data.email || "");
             setClientLine(data.line_id || "");
+            setClientWhatsapp(data.whatsapp || "");
+            setClientWechat(data.wechat_id || "");
+            setClientNationality(data.nationality ? (Array.isArray(data.nationality) ? data.nationality.join(", ") : data.nationality) : "");
+            setClientIdCard(data.id_card || "");
+            setClientPassport(data.passport || "");
           }
         } else if (targetOwnerType === "DEAL" || initialOwnerType === "DEAL") {
-          const { data } = await supabase
-            .from("deals")
-            .select("id, leads(id, full_name, email, line_id)")
-            .eq("id", finalId)
-            .single();
-          if (data && data.leads) {
-            setClientName(data.leads.full_name || "");
-            setClientEmail(data.leads.email || "");
-            setClientLine(data.leads.line_id || "");
+          const res = await getDealDetailsAction(finalId);
+          if (res.success && res.data && res.data.lead) {
+            const lead = res.data.lead;
+            setClientName(lead.full_name || "");
+            setClientEmail(lead.email || "");
+            setClientLine(lead.line_id || "");
+            setClientWhatsapp(lead.whatsapp || "");
+            setClientWechat(lead.wechat_id || "");
+            setClientNationality(lead.nationality ? (Array.isArray(lead.nationality) ? lead.nationality.join(", ") : lead.nationality) : "");
+            setClientIdCard(lead.id_card || "");
+            setClientPassport(lead.passport || "");
           }
         }
       } catch (err) {
-        console.error("Fetch lead error:", err);
+        console.error("Fetch lead/deal error:", err);
       }
     };
     fetchDetails();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeOwnerId, initialOwnerId, targetOwnerType, initialOwnerType]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
         toast.error("ไฟล์ต้องมีขนาดไม่เกิน 5MB");
         return;
       }
-      setSlipFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSlipPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+
+      setLoading(true);
+      try {
+        const { compressImage } = await import("@/lib/image-compression");
+        const result = await compressImage(file, {
+          maxSizeMB: 0.5, // Target size under 500KB
+          maxWidthOrHeight: 1200, // Optimize width/height for readable slips
+          fileType: "image/jpeg",
+        });
+
+        setSlipFile(result.compressedFile);
+        
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setSlipPreview(reader.result as string);
+        };
+        reader.readAsDataURL(result.compressedFile);
+        
+        toast.success(`บีบอัดรูปภาพเรียบร้อย ประหยัดพื้นที่ได้ ${result.compressionRatio.toFixed(0)}%`);
+      } catch (err) {
+        console.error("Compression error:", err);
+        setSlipFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setSlipPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -328,11 +362,13 @@ export function TemplateDialog({
         const fileName = `slip_${Date.now()}.${fileExt}`;
         const filePath = `slips/${finalOwnerId}/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from("documents")
-          .upload(filePath, slipFile);
+        const formData = new FormData();
+        formData.append("file", slipFile);
 
-        if (uploadError) throw new Error("อัปโหลดสลิปไม่สำเร็จ");
+        const uploadRes = await uploadDocumentToStorageAction(formData, filePath);
+        if (!uploadRes.success) {
+          throw new Error(`อัปโหลดสลิปไม่สำเร็จ: ${uploadRes.error}`);
+        }
 
         // Record the Slip as a separate document so it can be managed (deleted)
         await createDocumentRecordAction({
@@ -370,6 +406,8 @@ export function TemplateDialog({
             client_name_override: clientName,
             client_email_override: clientEmail,
             client_line_override: clientLine,
+            client_whatsapp_override: clientWhatsapp,
+            client_wechat_override: clientWechat,
             reservation_fee: reservationFee,
             security_deposit: securityDeposit,
             booking_amount: bookingAmount,
@@ -387,11 +425,13 @@ export function TemplateDialog({
         const fileName = `template_${Date.now()}.${fileExt}`;
         const filePath = `temp_templates/${finalOwnerId}/${fileName}`;
 
-        const { error: uploadCustomError } = await supabase.storage
-          .from("documents")
-          .upload(filePath, customFile!);
+        const formData = new FormData();
+        formData.append("file", customFile!);
 
-        if (uploadCustomError) throw new Error("อัปโหลดไฟล์เทมเพลตไม่สำเร็จ");
+        const uploadRes = await uploadDocumentToStorageAction(formData, filePath);
+        if (!uploadRes.success) {
+          throw new Error(`อัปโหลดไฟล์เทมเพลตไม่สำเร็จ: ${uploadRes.error}`);
+        }
 
         res = await generateDocxDocumentFromTemplateAction(
           finalOwnerId as string,
@@ -408,6 +448,8 @@ export function TemplateDialog({
             client_name_override: clientName,
             client_email_override: clientEmail,
             client_line_override: clientLine,
+            client_whatsapp_override: clientWhatsapp,
+            client_wechat_override: clientWechat,
             reservation_fee: reservationFee,
             security_deposit: securityDeposit,
             booking_amount: bookingAmount,
@@ -609,10 +651,24 @@ export function TemplateDialog({
 
                     // Fetch full lead/tenant details from deal to pre-fill overrides
                     getDealDetailsAction(picked.id).then((res) => {
-                      if (res.success && res.data?.lead) {
-                        setClientName(res.data.lead.full_name || "");
-                        setClientEmail(res.data.lead.email || "");
-                        setClientLine(res.data.lead.line_id || "");
+                      if (res.success && res.data) {
+                        if (res.data.lead) {
+                          setClientName(res.data.lead.full_name || "");
+                          setClientEmail(res.data.lead.email || "");
+                          setClientLine(res.data.lead.line_id || "");
+                          setClientWhatsapp(res.data.lead.whatsapp || "");
+                          setClientWechat(res.data.lead.wechat_id || "");
+                          setClientNationality(res.data.lead.nationality ? (Array.isArray(res.data.lead.nationality) ? res.data.lead.nationality.join(", ") : res.data.lead.nationality) : "");
+                          setClientIdCard(res.data.lead.id_card || "");
+                          setClientPassport(res.data.lead.passport || "");
+                        }
+                        if (res.data.property) {
+                          setFloorOverride(String(res.data.property.floor || ""));
+                          // Try to pre-fill unit if it was set
+                          if ((res.data.property as any).unit_number) {
+                            setUnitNumberOverride(String((res.data.property as any).unit_number));
+                          }
+                        }
                       }
                     }).catch((err) => console.error("Error pre-filling overrides:", err));
                   } else {
@@ -623,9 +679,13 @@ export function TemplateDialog({
                     setClientName("");
                     setClientEmail("");
                     setClientLine("");
+                    setClientWhatsapp("");
+                    setClientWechat("");
                     setClientPassport("");
                     setClientIdCard("");
                     setClientNationality("");
+                    setFloorOverride("");
+                    setUnitNumberOverride("");
                   }
                 }}
               />
@@ -637,6 +697,31 @@ export function TemplateDialog({
                 onChangeAction={(val, picked) => {
                   setSelectedLeadId(val || "");
                   setOwnerSearch(picked ? picked.full_name : "");
+                  
+                  if (picked) {
+                    getLeadDetailsAction(picked.id).then((res) => {
+                      if (res.success && res.data) {
+                        const data = res.data;
+                        setClientName(data.full_name || "");
+                        setClientEmail(data.email || "");
+                        setClientLine(data.line_id || "");
+                        setClientWhatsapp(data.whatsapp || "");
+                        setClientWechat(data.wechat_id || "");
+                        setClientNationality(data.nationality ? (Array.isArray(data.nationality) ? data.nationality.join(", ") : data.nationality) : "");
+                        setClientIdCard(data.id_card || "");
+                        setClientPassport(data.passport || "");
+                      }
+                    }).catch((err) => console.error("Error pre-filling overrides:", err));
+                  } else {
+                    setClientName("");
+                    setClientEmail("");
+                    setClientLine("");
+                    setClientWhatsapp("");
+                    setClientWechat("");
+                    setClientPassport("");
+                    setClientIdCard("");
+                    setClientNationality("");
+                  }
                 }}
               />
             )}
@@ -709,6 +794,23 @@ export function TemplateDialog({
                             onClick={() => {
                               setSelectedTemplateId(t.id);
                               setTemplateDialogOpen(false);
+                              
+                              // Automatically adjust variables depending on the type of template selected
+                              if (t.type === "RENT_RECEIPT") {
+                                // For rent receipts, set booking price to rental_price, and clear reservation fee variables
+                                if (dealRentalPrice) {
+                                  setBookingAmount(String(dealRentalPrice));
+                                  setReservationFee("");
+                                  setSecurityDeposit("");
+                                }
+                              } else if (t.type === "RESERVATION_DOCUMENT") {
+                                // For reservation forms, restore default rental price calculations
+                                if (dealRentalPrice) {
+                                  setBookingAmount(String(dealRentalPrice));
+                                  setReservationFee(String(dealRentalPrice));
+                                  setSecurityDeposit(String(dealRentalPrice * 2));
+                                }
+                              }
                             }}
                           >
                             <div className={cn(
@@ -1126,6 +1228,27 @@ export function TemplateDialog({
                       value={clientLine}
                       onChange={(e) => setClientLine(e.target.value)}
                       placeholder="เช่น line_id"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">WhatsApp</Label>
+                    <Input
+                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
+                      value={clientWhatsapp}
+                      onChange={(e) => setClientWhatsapp(e.target.value)}
+                      placeholder="เช่น whatsapp number"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">WeChat ID</Label>
+                    <Input
+                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
+                      value={clientWechat}
+                      onChange={(e) => setClientWechat(e.target.value)}
+                      placeholder="เช่น wechat_id"
                     />
                   </div>
                 </div>

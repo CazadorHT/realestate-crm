@@ -43,6 +43,8 @@ export function useLeadForm(
       is_foreigner: false,
       lead_type: "INDIVIDUAL",
       nationality: ["ไทย"],
+      id_card: "",
+      passport: "",
       preferred_locations: [],
       note: "",
       ...initialValues,

@@ -65,6 +65,8 @@ export const leadFormSchema = z.object({
     .nullable()
     .default(["ไทย"]),
   is_foreigner: z.coerce.boolean().optional(),
+  id_card: z.string().trim().optional().nullable(),
+  passport: z.string().trim().optional().nullable(),
 
   // property_type[] จะส่งเป็น string[] ก่อน แล้วค่อย validate แบบ enum ถ้าต้องการเข้มขึ้น
 

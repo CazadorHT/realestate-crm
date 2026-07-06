@@ -121,7 +121,10 @@ async function seedTemplates() {
         <div style="font-size: 12px; font-weight: bold; color: #0c4a6e; margin-bottom: 3px;">{{property.title}}</div>
         <div style="font-size: 11px; color: #475569;">
           <strong>{{t.floor}}:</strong> {{property.floor || "-"}} | 
-          <strong>{{t.unit}}:</strong> {{property.unit_number || property.unit || "-"}}
+          <strong>{{t.unit}}:</strong> {{property.unit_number || property.unit || "-"}}<br>
+          <strong>{{t.bedrooms}}:</strong> {{property.bedrooms || "0"}} {{t.bed}} | 
+          <strong>{{t.bathrooms}}:</strong> {{property.bathrooms || "0"}} {{t.bath}} | 
+          <strong>{{t.size_sqm}}:</strong> {{property.size_sqm || "-"}}
         </div>
       </div>
     </div>
@@ -290,7 +293,10 @@ async function seedTemplates() {
         <div style="font-size: 12px; font-weight: bold; color: #065f46; margin-bottom: 3px;">{{property.title}}</div>
         <div style="font-size: 11px; color: #475569;">
           <strong>{{t.floor}}:</strong> {{property.floor || "-"}} | 
-          <strong>{{t.unit}}:</strong> {{property.unit_number || property.unit || "-"}}
+          <strong>{{t.unit}}:</strong> {{property.unit_number || property.unit || "-"}}<br>
+          <strong>{{t.bedrooms}}:</strong> {{property.bedrooms || "0"}} {{t.bed}} | 
+          <strong>{{t.bathrooms}}:</strong> {{property.bathrooms || "0"}} {{t.bath}} | 
+          <strong>{{t.size_sqm}}:</strong> {{property.size_sqm || "-"}}
         </div>
       </div>
     </div>

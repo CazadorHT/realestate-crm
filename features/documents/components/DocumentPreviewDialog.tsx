@@ -22,23 +22,38 @@ export function DocumentPreviewDialog({
 }: DocumentPreviewDialogProps) {
   const [open, setOpen] = useState(false);
   const [content, setContent] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const isImage =
+    storagePath.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|svg)$/) ||
+    documentName.toLowerCase().match(/\.(jpg|jpeg|png|gif|webp|svg)$/);
 
   const loadContent = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await downloadDocumentAction(storagePath);
-      if (res.success && res.data) {
-        setContent(res.data);
+      if (isImage) {
+        const url = await getDocumentSignedUrl(storagePath);
+        if (url) {
+          setImageUrl(url);
+          setContent("IMAGE");
+        } else {
+          toast.error("ไม่สามารถดาวน์โหลดภาพสลิปได้");
+        }
       } else {
-        toast.error(res.message || "ไม่สามารถโหลดเนื้อหาเอกสารได้");
+        const res = await downloadDocumentAction(storagePath);
+        if (res.success && res.data) {
+          setContent(res.data);
+        } else {
+          toast.error(res.message || "ไม่สามารถโหลดเนื้อหาเอกสารได้");
+        }
       }
     } catch (err) {
       toast.error("เกิดข้อผิดพลาดในการโหลดเอกสาร");
     } finally {
       setLoading(false);
     }
-  }, [storagePath]);
+  }, [storagePath, isImage]);
 
   useEffect(() => {
     if (open && !content) {
@@ -49,8 +64,12 @@ export function DocumentPreviewDialog({
 
   const handlePrint = () => {
     const printWindow = window.open("", "_blank");
-    if (printWindow && content) {
-      printWindow.document.write(content);
+    if (printWindow) {
+      if (isImage && imageUrl) {
+        printWindow.document.write(`<div style="display:flex;justify-content:center;align-items:center;height:100vh;"><img src="${imageUrl}" style="max-width:100%;max-height:100%;object-fit:contain;" /></div>`);
+      } else if (content) {
+        printWindow.document.write(content);
+      }
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => {
@@ -60,7 +79,7 @@ export function DocumentPreviewDialog({
   };
 
   const handleDownload = async () => {
-    const url = await getDocumentSignedUrl(storagePath);
+    const url = isImage ? imageUrl : await getDocumentSignedUrl(storagePath);
     if (url) {
       const link = document.createElement("a");
       link.href = url;
@@ -74,7 +93,7 @@ export function DocumentPreviewDialog({
   };
 
   const handleDownloadWord = async () => {
-    if (!content) return;
+    if (!content || isImage) return;
 
     if (storagePath.toLowerCase().endsWith(".docx") || storagePath.toLowerCase().endsWith(".doc")) {
       handleDownload();
@@ -103,10 +122,13 @@ export function DocumentPreviewDialog({
   };
 
   const handleOpenFullPage = () => {
-    if (!content) return;
-    const blob = new Blob([content], { type: "text/html" });
-    const url = URL.createObjectURL(blob);
-    window.open(url, "_blank");
+    if (isImage && imageUrl) {
+      window.open(imageUrl, "_blank");
+    } else if (content) {
+      const blob = new Blob([content], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    }
   };
 
   return (
@@ -195,13 +217,22 @@ export function DocumentPreviewDialog({
             <span className="text-sm font-black uppercase tracking-widest italic animate-pulse">กำลังดึงข้อมูลเอกสาร...</span>
           </div>
         ) : content ? (
-          <div className="bg-white shadow-2xl shadow-slate-200/50 w-full max-w-[850px] rounded-xl relative overflow-hidden ring-1 ring-slate-200/50">
-            <iframe
-              srcDoc={content}
-              className="w-full border-none"
-              title="Document Preview"
-              style={{ minHeight: "1200px", height: "100%" }}
-            />
+          <div className="bg-white shadow-2xl shadow-slate-200/50 w-full max-w-[850px] rounded-xl relative overflow-hidden ring-1 ring-slate-200/50 flex justify-center items-center p-4">
+            {isImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={imageUrl || ""}
+                className="max-w-full max-h-[80vh] object-contain rounded-lg"
+                alt={documentName}
+              />
+            ) : (
+              <iframe
+                srcDoc={content}
+                className="w-full border-none"
+                title="Document Preview"
+                style={{ minHeight: "1200px", height: "100%" }}
+              />
+            )}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-slate-300 gap-4">

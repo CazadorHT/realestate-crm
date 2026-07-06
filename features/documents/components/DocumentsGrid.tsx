@@ -292,8 +292,8 @@ export function DocumentsGrid({
                       aria-label={`เลือก ${doc.file_name}`}
                     />
                   </td>
-                  <td className="p-4 font-medium text-slate-900">
-                    <div className="flex items-center gap-3">
+                  <td className="p-4 font-medium text-slate-900 lg:w-70">
+                    <div className="flex items-center gap-3 ">
                       <div
                         className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 border transition-colors ${
                           doc.document_type === "SLIP"

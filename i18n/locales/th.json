@@ -1318,7 +1318,12 @@
     "search_ref_placeholder": "พิมพ์ค้นหาชื่อลูกค้าหรือทรัพย์สิน...",
     "upload_slip_label": "อัปโหลดหลักฐานการโอน (Transfer Slip)",
     "slip_upload_hint": "รองรับ JPG, PNG (ไม่เกิน 5MB) - รูปจะปรากฏในเอกสารให้อัตโนมัติ",
-    "generate_btn": "ยืนยันและสร้างไฟล์"
+    "generate_btn": "ยืนยันและสร้างไฟล์",
+    "bedrooms": "ห้องนอน",
+    "bathrooms": "ห้องน้ำ",
+    "size_sqm": "พื้นที่ (ตร.ม.)",
+    "bed": "นอน",
+    "bath": "น้ำ"
   },
   "support": {
     "title": "ช่วยเหลือและสนับสนุน",

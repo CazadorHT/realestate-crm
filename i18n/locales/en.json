@@ -1316,7 +1316,12 @@
     "search_ref_placeholder": "Type to search name or property...",
     "upload_slip_label": "Upload Transfer Slip",
     "slip_upload_hint": "Supports JPG, PNG (Max 5MB) - Image will appear in the document automatically",
-    "generate_btn": "Confirm & Generate"
+    "generate_btn": "Confirm & Generate",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "size_sqm": "Size (Sqm)",
+    "bed": "Bed",
+    "bath": "Bath"
   },
   "support": {
     "title": "Help & Support",
