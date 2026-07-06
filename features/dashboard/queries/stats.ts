@@ -111,6 +111,16 @@ export async function getDashboardStats({
     let leadsCurQuery = supabase.from("crm_leads_v3").select("id", { count: "exact", head: true });
     let commissionDealsQuery = supabase.from("financial_ledger_v3").select("amount_total, created_at").eq("transaction_type", "deal_closed");
     
+    if (view === "personal" && agentId) {
+      revCurQuery = revCurQuery.eq("assigned_to", agentId);
+      leadsCurQuery = leadsCurQuery.eq("assigned_to", agentId);
+      commissionDealsQuery = commissionDealsQuery.eq("to_identity_id", agentId);
+    } else if (activeTenantId) {
+      revCurQuery = revCurQuery.eq("tenant_id", activeTenantId);
+      leadsCurQuery = leadsCurQuery.eq("tenant_id", activeTenantId);
+      commissionDealsQuery = commissionDealsQuery.eq("tenant_id", activeTenantId);
+    }
+    
     if (range !== "all" && range !== "ALL" && startDate) {
       revCurQuery = revCurQuery.gte("updated_at", startDate);
       leadsCurQuery = leadsCurQuery.gte("created_at", startDate);
@@ -220,7 +230,11 @@ export async function getRevenueChartData(args: DashboardQueryArgs): Promise<Rev
       .eq("transaction_type", "deal_closed");
 
     // We will filter by date in memory to support fallback
-    if (activeTenantId) query = query.eq("tenant_id", activeTenantId);
+    if (args.view === "personal" && args.agentId) {
+      query = query.eq("to_identity_id", args.agentId);
+    } else if (activeTenantId) {
+      query = query.eq("tenant_id", activeTenantId);
+    }
 
     const { data: rawData } = await query;
 
@@ -342,7 +356,10 @@ export async function getFunnelStats(args: DashboardQueryArgs): Promise<FunnelDa
       }
     }
 
-    if (activeTenantId) {
+    if (args.view === "personal" && args.agentId) {
+      query = query.eq("assigned_to", args.agentId);
+      dealsQuery = dealsQuery.eq("agent_id", args.agentId);
+    } else if (activeTenantId) {
       query = query.eq("tenant_id", activeTenantId);
       dealsQuery = dealsQuery.eq("tenant_id", activeTenantId);
     }
@@ -415,8 +432,6 @@ export async function getPipelineStats(args: DashboardQueryArgs): Promise<Pipeli
       }
     }
 
-    if (activeTenantId) query = query.eq("tenant_id", activeTenantId);
-
     let dealsQuery = supabase.from("crm_deals_v3").select("status, property_id, updated_at").in("status", ["SIGNED", "CLOSED_WIN"]);
     
     if (args.range !== "all" && args.range !== "ALL" && startDate) {
@@ -426,7 +441,10 @@ export async function getPipelineStats(args: DashboardQueryArgs): Promise<Pipeli
       }
     }
 
-    if (activeTenantId) {
+    if (args.view === "personal" && args.agentId) {
+      query = query.eq("assigned_to", args.agentId);
+      dealsQuery = dealsQuery.eq("agent_id", args.agentId);
+    } else if (activeTenantId) {
       query = query.eq("tenant_id", activeTenantId);
       dealsQuery = dealsQuery.eq("tenant_id", activeTenantId);
     }

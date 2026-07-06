@@ -249,10 +249,14 @@ export async function getMarketingPerformanceData({
   tenantId,
   teamId,
   range = "month",
+  view,
+  agentId,
 }: {
   tenantId?: string | null;
   teamId?: string | null;
   range?: string;
+  view?: string;
+  agentId?: string | null;
 }): Promise<MarketingPerformanceData[]> {
   try {
     const supabase = await createClient();
@@ -266,7 +270,9 @@ export async function getMarketingPerformanceData({
       query = query.gte("created_at", startDate);
     }
 
-    if (tenantId && tenantId !== "ALL") {
+    if (view === "personal" && agentId) {
+      query = query.eq("assigned_to", agentId);
+    } else if (tenantId && tenantId !== "ALL") {
       query = query.eq("tenant_id", tenantId);
     }
 

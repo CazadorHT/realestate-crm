@@ -352,6 +352,8 @@ export default async function DashboardPage(props: {
                     branchId={branchId}
                     teamId={teamId}
                     range={range}
+                    view={view}
+                    agentId={view === "staff" ? agentId : (view === "personal" ? user?.id : undefined)}
                   />
                 </Suspense>
               </ErrorBoundary>
@@ -604,16 +606,22 @@ async function MarketingROIWrapper({
   branchId,
   teamId,
   range,
+  view,
+  agentId,
 }: {
   tenantId?: string | null;
   branchId?: string;
   teamId?: string;
   range?: string;
+  view?: string;
+  agentId?: string | null;
 }) {
   const data = await getMarketingPerformanceData({
     tenantId: branchId || tenantId,
     teamId,
     range,
+    view,
+    agentId,
   });
   return <MarketingROISummary data={data} />;
 }
