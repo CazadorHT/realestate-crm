@@ -53,7 +53,7 @@ export function DashboardFilters({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isAdmin = role === "ADMIN" || role === "MANAGER";
+  const isAdmin = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
 
   // Dialog states
   const [isRangeOpen, setIsRangeOpen] = useState(false);

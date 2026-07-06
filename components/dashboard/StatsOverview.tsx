@@ -73,7 +73,7 @@ export function StatsOverview({
   initialBranchId = "all",
   initialTeamId = "all"
 }: StatsOverviewProps) {
-  const isAdmin = role === "ADMIN" || role === "MANAGER";
+  const isAdmin = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
   const searchParams = useSearchParams();
   
   // --- States ---

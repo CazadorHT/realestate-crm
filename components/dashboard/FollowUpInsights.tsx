@@ -16,7 +16,7 @@ interface FollowUpInsightsProps {
 export function FollowUpInsights({ leads = [], role, view = "personal" }: FollowUpInsightsProps) {
   const router = useRouter();
   const [navigatingId, setNavigatingId] = useState<string | null>(null);
-  const isAdminView = (role === "ADMIN" || role === "MANAGER") && view !== "personal";
+  const isAdminView = (role === "ADMIN" || role === "MANAGER" || role === "OWNER") && view !== "personal";
   return (
     <Card className="shadow-sm h-full border-orange-200 bg-orange-50/50">
       <CardHeader className="pb-2 px-4 sm:px-6">

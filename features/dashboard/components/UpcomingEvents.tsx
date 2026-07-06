@@ -15,7 +15,7 @@ interface UpcomingEventsProps {
 }
 
 export function UpcomingEvents({ events, role, view = "personal" }: UpcomingEventsProps) {
-  const isAdminView = (role === "ADMIN" || role === "MANAGER") && view !== "personal";
+  const isAdminView = (role === "ADMIN" || role === "MANAGER" || role === "OWNER") && view !== "personal";
   const getEventDateLabel = (dateStr: string) => {
     const date = new Date(dateStr);
     if (isToday(date)) return "วันนี้";

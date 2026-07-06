@@ -36,7 +36,7 @@ const typeLabels = {
 };
 
 export function AgendaList({ agenda = [], role, view = "personal" }: AgendaListProps) {
-  const isAdminView = (role === "ADMIN" || role === "MANAGER") && view !== "personal";
+  const isAdminView = (role === "ADMIN" || role === "MANAGER" || role === "OWNER") && view !== "personal";
 
   return (
     <Card className="shadow-sm min-h-[350px] max-h-[520px] h-auto border-slate-200 overflow-hidden flex flex-col rounded-3xl transition-all duration-500">

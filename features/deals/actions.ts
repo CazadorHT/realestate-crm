@@ -189,6 +189,7 @@ export async function createDealAction(input: CreateDealInput) {
       commission_amount, 
       commission_percent, 
       duration_months, 
+      internal_co_agent_id_temp,
       ...insertData 
     } = {
       ...validated,
@@ -215,7 +216,8 @@ export async function createDealAction(input: CreateDealInput) {
         commission_total: commission_amount,
         metadata: { 
           commission_percent,
-          duration_months: duration_months_val 
+          duration_months: duration_months_val,
+          co_agent_id: internal_co_agent_id_temp || undefined,
         },
       })
       .select("id")
@@ -345,6 +347,7 @@ export async function updateDealAction(input: UpdateDealInput) {
       commission_amount, 
       commission_percent, 
       duration_months, 
+      internal_co_agent_id_temp,
       ...updateData 
     } = {
       ...validated,
@@ -367,7 +370,8 @@ export async function updateDealAction(input: UpdateDealInput) {
         metadata: { 
           ...(currentDeal.metadata as Record<string, unknown>),
           ...(commission_percent !== undefined ? { commission_percent } : {}),
-          ...(duration_months !== undefined ? { duration_months } : {})
+          ...(duration_months !== undefined ? { duration_months } : {}),
+          ...(internal_co_agent_id_temp !== undefined ? { co_agent_id: internal_co_agent_id_temp } : {})
         },
         updated_at: new Date().toISOString(),
       })
@@ -551,8 +555,12 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
         created_by,
         agent_id,
         partner_co_broker_id,
+        co_agent_name,
+        co_agent_contact,
+        co_agent_online,
         commission_total,
         property_id,
+        metadata,
         property:properties_core!property_id (
           id,
           assigned_to
@@ -583,7 +591,9 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
       enableTeamPoolByDefault: false,
     };
 
-    const agentIds = [deal.property?.assigned_to, deal.created_by].filter(Boolean) as string[];
+    const internalCoAgentId = (deal.metadata as any)?.co_agent_id as string | undefined;
+
+    const agentIds = [deal.property?.assigned_to, deal.created_by, internalCoAgentId].filter(Boolean) as string[];
     let agentProfiles: ProfileWithTax[] = [];
     
     if (agentIds.length > 0) {
@@ -624,7 +634,8 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
     let splits: SplitWithTax[] = [];
 
     if (rules.enableAdvancedSplit) {
-      splits = calculateAdvancedSplit(
+      // 1. Calculate standard splits (Listing 30%, Closing 50%, Agency 20%)
+      const standardSplits = calculateAdvancedSplit(
         deal.commission_total || 0,
         {
           listingPercent: rules.defaultListingPercent ?? 30,
@@ -638,7 +649,42 @@ export async function calculateAndSaveCommissionsAction(dealId: string) {
           closingAgentId: deal.created_by || undefined,
         },
         globalDefaultWht
-      ).map((s) => {
+      );
+
+      // 2. Adjust splits if internal co-agent is present (split closing 50/50)
+      standardSplits.forEach((s) => {
+        if (s.role === "CLOSING" && internalCoAgentId) {
+          const originalClosingPercent = s.percentage;
+          const originalClosingAmount = s.amount;
+          
+          // Split Closing Agent's share 50/50
+          const splitPercent = originalClosingPercent / 2;
+          const splitAmount = originalClosingAmount / 2;
+
+          // Closing Agent (Closing Partner 1)
+          splits.push({
+            ...s,
+            percentage: splitPercent,
+            amount: splitAmount,
+            agentId: s.agentId,
+          });
+
+          // Internal Co-Agent (Closing Partner 2)
+          splits.push({
+            role: "CLOSING" as CommissionRole,
+            percentage: splitPercent,
+            amount: splitAmount,
+            whtAmount: 0, // Calculated below
+            netAmount: splitAmount,
+            agentId: internalCoAgentId,
+          });
+        } else {
+          splits.push(s);
+        }
+      });
+
+      // 3. Map tax rate & calculate net values
+      splits = splits.map((s) => {
         let actualTaxRate = globalDefaultWht;
         if (s.role === "LISTING" || s.role === "CLOSING") {
           actualTaxRate = getTaxRateForAgent(s.agentId);

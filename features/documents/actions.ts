@@ -281,7 +281,7 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
 
     const validated = createDocumentSchema.parse(input);
 
-    const canBypass = role === "ADMIN" || role === "MANAGER";
+    const canBypass = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
 
     if (!canBypass) {
       if (validated.owner_type === "PROPERTY") {
@@ -357,26 +357,45 @@ export async function createDocumentRecordAction(input: CreateDocumentInput) {
   }
 }
 
+// Helper to verify if user has access to document parent entity (property, lead, deal)
+async function verifyDocumentAccess(supabase: any, user: any, role: string, ownerType: string, ownerId: string): Promise<boolean> {
+  const canBypass = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
+  if (canBypass) return true;
+
+  if (ownerType === "PROPERTY") {
+    const { data: prop } = await supabase.from("properties_core").select("created_by, assigned_to").eq("id", ownerId).single();
+    return !!prop && (prop.created_by === user.id || prop.assigned_to === user.id);
+  } else if (ownerType === "LEAD") {
+    const { data: lead } = await supabase.from("leads").select("created_by, assigned_to").eq("id", ownerId).single();
+    return !!lead && (lead.created_by === user.id || lead.assigned_to === user.id);
+  } else if (ownerType === "DEAL" || ownerType === "RENTAL_CONTRACT") {
+    const { data: deal } = await supabase.from("crm_deals_v3").select("created_by, agent_id").eq("id", ownerId).single();
+    return !!deal && (deal.created_by === user.id || deal.agent_id === user.id);
+  }
+  return false;
+}
+
 // 3. Get Signed URL (for viewing)
 export async function getDocumentSignedUrl(
   storagePath: string,
   bucket = "documents",
 ) {
-  const { supabase, role, tenantId } = await requireAuthContext();
+  const { supabase, user, role } = await requireAuthContext();
   assertStaff(role);
 
-  // Verify document existence/access first
-  const { data: doc, error: docErr } = await (
-    tenantId && tenantId !== "ALL"
-      ? supabase
-          .from("documents")
-          .select("id")
-          .eq("storage_path", storagePath)
-          .eq("tenant_id", tenantId)
-      : supabase.from("documents").select("id").eq("storage_path", storagePath)
-  ).single();
+  // Fetch document owner metadata to verify access
+  const { data: doc, error: docErr } = await supabase
+    .from("documents")
+    .select("id, owner_type, owner_id")
+    .eq("storage_path", storagePath)
+    .limit(1)
+    .maybeSingle();
 
   if (docErr || !doc) return null;
+
+  // Verify access at Application Level (AGENT check)
+  const hasAccess = await verifyDocumentAccess(supabase, user, role, doc.owner_type, doc.owner_id);
+  if (!hasAccess) return null;
 
   // Create a signed URL valid for 1 hour (3600 seconds)
   const { createAdminClient } = await import("@/lib/supabase/admin");
@@ -401,16 +420,12 @@ export async function getDocumentVersionsAction(documentId: string) {
     assertStaff(role);
 
     // 1. Get current document to find its parent_id and owner
-    let qInitial = supabase
+    // RLS via the documents view already ensures only same-tenant staff can see the row
+    const { data: currentDoc, error: cError } = await supabase
       .from("documents")
       .select("id, parent_id, owner_id")
-      .eq("id", documentId);
-
-    if (tenantId && tenantId !== "ALL") {
-      qInitial = qInitial.eq("tenant_id", tenantId);
-    }
-
-    const { data: currentDoc, error: cError } = await qInitial.single();
+      .eq("id", documentId)
+      .single();
 
     if (cError || !currentDoc) throw new Error("ไม่พบเอกสารที่ระบุ");
 
@@ -434,16 +449,11 @@ export async function getDocumentVersionsAction(documentId: string) {
       const MAX_DEPTH = 20; // Safety limit
 
       while (current.parent_id && depth < MAX_DEPTH) {
-        let qParent = supabase
+        const { data: parent } = await supabase
           .from("documents")
           .select("id, parent_id, owner_id")
-          .eq("id", current.parent_id);
-
-        if (tenantId && tenantId !== "ALL") {
-          qParent = qParent.eq("tenant_id", tenantId);
-        }
-
-        const { data: parent } = await qParent.single();
+          .eq("id", current.parent_id)
+          .single();
         if (!parent) break;
         current = parent;
         depth++;
@@ -454,18 +464,11 @@ export async function getDocumentVersionsAction(documentId: string) {
     // 3. Fetch all documents for this owner to reconstruct potential chains
     // In a production app, we'd use a recursive CTE or a root_id column.
     // Here we fetch all docs for the owner and find those connected to the root.
-    let vQuery = supabase
+    const { data: allDocs, error: vError } = await supabase
       .from("documents")
       .select("id, parent_id, owner_id, version, created_at")
-      .eq("owner_id", currentDoc.owner_id as string); // TypeScript cast for safety
-
-    if (tenantId && tenantId !== "ALL") {
-      vQuery = vQuery.eq("tenant_id", tenantId);
-    }
-
-    const { data: allDocs, error: vError } = await vQuery.order("version", {
-      ascending: false,
-    });
+      .eq("owner_id", currentDoc.owner_id as string)
+      .order("version", { ascending: false });
 
     if (vError) throw new Error(mapDbError(vError));
 
@@ -510,7 +513,7 @@ export async function deleteDocumentAction(id: string, storagePath: string) {
       return { success: false, message: "ไม่พบเอกสารที่ต้องการลบ" };
     }
 
-    const canBypass = role === "ADMIN" || role === "MANAGER";
+    const canBypass = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
 
     if (!canBypass) {
       if (doc.owner_type === "PROPERTY") {
@@ -542,13 +545,10 @@ export async function deleteDocumentAction(id: string, storagePath: string) {
     if (storageError)
       console.error("Storage Delete Error (non-fatal):", storageError);
 
-    const { error: dbError } = await (tenantId && tenantId !== "ALL"
-      ? supabase
-          .from("documents_v3")
-          .delete()
-          .eq("id", id)
-          .eq("tenant_id", tenantId)
-      : supabase.from("documents_v3").delete().eq("id", id));
+    const { error: dbError } = await supabase
+      .from("documents_v3")
+      .delete()
+      .eq("id", id);
 
     if (dbError) throw new Error(mapDbError(dbError));
 
@@ -567,26 +567,30 @@ export async function deleteDocumentAction(id: string, storagePath: string) {
  */
 export async function downloadDocumentAction(storagePath: string) {
   try {
-    const { supabase, role, tenantId } = await requireAuthContext();
+    const { supabase, user, role } = await requireAuthContext();
     assertStaff(role);
 
-    const { data: doc, error: docErr } = await (
-      tenantId && tenantId !== "ALL"
-        ? supabase
-            .from("documents")
-            .select("id")
-            .eq("storage_path", storagePath)
-            .eq("tenant_id", tenantId)
-        : supabase
-            .from("documents")
-            .select("id")
-            .eq("storage_path", storagePath)
-    ).single();
+    // Fetch document metadata to check access
+    const { data: doc, error: docErr } = await supabase
+      .from("documents")
+      .select("id, owner_type, owner_id")
+      .eq("storage_path", storagePath)
+      .limit(1)
+      .maybeSingle();
 
     if (docErr || !doc)
       throw new Error("ไม่พบเอกสาร หรือคุณไม่มีสิทธิ์เข้าถึง");
 
-    const { data, error } = await supabase.storage
+    // Verify access at Application Level (AGENT check)
+    const hasAccess = await verifyDocumentAccess(supabase, user, role, doc.owner_type, doc.owner_id);
+    if (!hasAccess) {
+      throw new Error("คุณไม่มีสิทธิ์เข้าถึงเอกสารนี้");
+    }
+
+    // Use admin client for storage download to bypass storage RLS
+    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const adminClient = createAdminClient();
+    const { data, error } = await adminClient.storage
       .from("documents")
       .download(storagePath);
 
@@ -745,19 +749,13 @@ export async function verifyAiAnalysisAction(
       summary,
     });
 
-    let updateQuery = supabase
+    const { error } = await supabase
       .from("documents_v3")
       .update({
         ai_summary: JSON.stringify(validatedData),
         ai_verified_status: "VERIFIED",
       })
       .eq("id", documentId);
-
-    if (tenantId && tenantId !== "ALL") {
-      updateQuery = updateQuery.eq("tenant_id", tenantId);
-    }
-
-    const { error } = await updateQuery;
 
     if (error) throw new Error(mapDbError(error));
 

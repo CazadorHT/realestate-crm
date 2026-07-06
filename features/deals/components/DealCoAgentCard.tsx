@@ -12,6 +12,8 @@ export function DealCoAgentCard({
   contact,
   online,
 }: DealCoAgentCardProps) {
+  const isInternal = name && !contact && !online;
+
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
       <div className="flex items-center gap-4 px-5 py-4 border-b border-slate-200">
@@ -20,7 +22,9 @@ export function DealCoAgentCard({
         </div>
         <div>
           <h3 className="font-bold text-lg text-slate-800">ข้อมูล Co-Agent</h3>
-          <p className="text-xs text-slate-500">นายหน้าผู้ร่วมงาน</p>
+          <p className="text-xs text-slate-500">
+            {isInternal ? "ผู้ร่วมงานภายในบริษัท" : "นายหน้าผู้ร่วมงานภายนอก"}
+          </p>
         </div>
       </div>
       <div className="p-5">
@@ -33,27 +37,35 @@ export function DealCoAgentCard({
                     <RiUserStarLine className="h-5 w-5 text-slate-500" />
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">
-                      ชื่อ Co-Agent
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground">ชื่อ Co-Agent</p>
+                      {isInternal && (
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 border border-blue-100">
+                          Internal Agent
+                        </span>
+                      )}
+                    </div>
                     <p className="font-semibold">{name}</p>
                   </div>
                 </div>
               )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {contact && (
-                  <div className="flex items-center gap-2 text-sm bg-slate-50 rounded-lg px-3 py-2">
-                    <Phone className="h-4 w-4 text-slate-400" />
-                    <span>{contact}</span>
-                  </div>
-                )}
-                {online && (
-                  <div className="flex items-center gap-2 text-sm bg-slate-50 rounded-lg px-3 py-2">
-                    <Globe className="h-4 w-4 text-slate-400" />
-                    <span>{online}</span>
-                  </div>
-                )}
-              </div>
+              
+              {!isInternal && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {contact && (
+                    <div className="flex items-center gap-2 text-sm bg-slate-50 rounded-lg px-3 py-2">
+                      <Phone className="h-4 w-4 text-slate-400" />
+                      <span>{contact}</span>
+                    </div>
+                  )}
+                  {online && (
+                    <div className="flex items-center gap-2 text-sm bg-slate-50 rounded-lg px-3 py-2">
+                      <Globe className="h-4 w-4 text-slate-400" />
+                      <span>{online}</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ) : (

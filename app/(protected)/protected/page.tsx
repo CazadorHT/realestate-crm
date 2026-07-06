@@ -122,7 +122,6 @@ export default async function DashboardPage(props: {
   const branchId = searchParams.branchId as string | undefined;
   const teamId = searchParams.teamId as string | undefined;
   const agentId = searchParams.agentId as string | undefined;
-  const view = (searchParams.view as "company" | "personal" | "staff" | "branch" | "team") || "company";
 
   const supabase = await createClient();
 
@@ -137,6 +136,9 @@ export default async function DashboardPage(props: {
   const user = userResponse.data.user;
   const staff = profile ? isStaff(profile.role) : false;
   const multiTenantEnabled = config.multi_tenant_enabled;
+
+  const defaultView = profile?.role === "AGENT" ? "personal" : "company";
+  const view = (searchParams.view as "company" | "personal" | "staff" | "branch" | "team") || defaultView;
 
   const showAnalytics = isFeatureEnabled("dashboard_analytics");
   const showSmartSummary = isFeatureEnabled("ai_smart_summary");
@@ -527,7 +529,7 @@ async function SmartSummaryWrapper({
   range?: string;
   branchId?: string;
 }) {
-  const isAdmin = role === "ADMIN" || role === "MANAGER";
+  const isAdmin = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
 
   // 🏢 ดึงการตั้งค่าระบบสำหรับการควบคุมระบบสาขา
   const config = await getSystemConfig();

@@ -18,7 +18,7 @@ import { useSearchParams } from "next/navigation";
 
 export function SmartSummary({ initialStats, role, userId, multiTenantEnabled = true }: SmartSummaryProps) {
   const searchParams = useSearchParams();
-  const isAdmin = role === "ADMIN" || role === "MANAGER";
+  const isAdmin = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
   
   // --- Sync from URL ---
   const view = (searchParams.get("view") || (isAdmin ? "company" : "personal")) as InsightScope;

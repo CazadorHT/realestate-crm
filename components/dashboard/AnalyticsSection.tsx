@@ -60,7 +60,7 @@ export function AnalyticsSection({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const isAdmin = role === "ADMIN" || role === "MANAGER";
+  const isAdmin = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
 
   // --- Sync from URL ---
   const range = searchParams.get("range") || initialRange;

@@ -94,6 +94,8 @@ export function DealFormDialog({
         transaction_end_date: sanitized.transaction_end_date as string | undefined,
         duration_months: duration,
         undetermined_date: !sanitized.transaction_date,
+        partner_co_broker_id: sanitized.partner_co_broker_id as string | undefined,
+        internal_co_agent_id_temp: (sanitized.metadata as any)?.co_agent_id as string | undefined,
       };
     }
 
@@ -109,6 +111,8 @@ export function DealFormDialog({
       co_agent_contact: undefined,
       co_agent_online: undefined,
       undetermined_date: false,
+      partner_co_broker_id: undefined,
+      internal_co_agent_id_temp: undefined,
     };
   };
 

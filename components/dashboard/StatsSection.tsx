@@ -23,7 +23,7 @@ export async function StatsSection({
   branchId,
   teamId
 }: StatsSectionProps) {
-  const isAdmin = role === "ADMIN" || role === "MANAGER";
+  const isAdmin = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
   
   // 🏢 Fetch dynamic system config to know if multi-branch is active
   // 🚀 Fetch stats based on role to avoid initial mismatch and redundant client-side fetching

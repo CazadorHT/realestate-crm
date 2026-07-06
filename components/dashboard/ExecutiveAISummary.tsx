@@ -44,7 +44,7 @@ export function ExecutiveAISummary({
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<AISummaryResult | null>(null);
 
-  const isAdmin = role === "ADMIN" || role === "MANAGER";
+  const isAdmin = role === "ADMIN" || role === "MANAGER" || role === "OWNER";
 
   // --- Global Filter Sync ---
   const currentBranchId = searchParams.get("branchId") || (multiTenantEnabled ? "ALL" : tenantId || "ALL");
