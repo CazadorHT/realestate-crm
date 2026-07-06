@@ -88,21 +88,25 @@ export async function getDashboardStats({
       ? targetId 
       : (!tenantId || tenantId.toUpperCase() === "ALL" ? null : tenantId);
 
+    let myTenantIds: string[] = [];
+
     // 🛡️ RBAC: Only fallback to profileTenantId if NOT an admin selecting "ALL"
     if (!activeTenantId) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: member } = await supabase.from("tenant_members_v3")
+        const { data: members } = await supabase.from("tenant_members_v3")
           .select("role, tenant_id")
-          .eq("identity_id", user.id)
-          .limit(1)
-          .maybeSingle();
+          .eq("identity_id", user.id);
         
-        const isAdmin = member?.role === "ADMIN" || member?.role === "MANAGER" || member?.role === "OWNER";
-        const profileTenantId = member?.tenant_id || null;
+        const firstMember = members?.[0];
+        const isAdmin = members?.some((m: { role: string | null; tenant_id: string | null }) => m.role === "ADMIN" || m.role === "MANAGER" || m.role === "OWNER");
         
-        if (!isAdmin && profileTenantId) {
-          activeTenantId = profileTenantId;
+        if (!isAdmin && firstMember) {
+          // If the agent is not an admin, they can only view data from their member tenants
+          myTenantIds = (members || []).map((m: { role: string | null; tenant_id: string | null }) => m.tenant_id).filter(Boolean) as string[];
+          if (myTenantIds.length > 0) {
+            activeTenantId = myTenantIds[0]; // fallback default first
+          }
         }
       }
     }
@@ -116,9 +120,15 @@ export async function getDashboardStats({
       leadsCurQuery = leadsCurQuery.eq("assigned_to", agentId);
       commissionDealsQuery = commissionDealsQuery.eq("to_identity_id", agentId);
     } else if (activeTenantId) {
+      // If we have a specific active tenant (or first fallback tenant)
       revCurQuery = revCurQuery.eq("tenant_id", activeTenantId);
       leadsCurQuery = leadsCurQuery.eq("tenant_id", activeTenantId);
       commissionDealsQuery = commissionDealsQuery.eq("tenant_id", activeTenantId);
+    } else if (myTenantIds.length > 0) {
+      // If no specific tenant is selected (viewing all) and agent is member of multiple tenants
+      revCurQuery = revCurQuery.in("tenant_id", myTenantIds);
+      leadsCurQuery = leadsCurQuery.in("tenant_id", myTenantIds);
+      commissionDealsQuery = commissionDealsQuery.in("tenant_id", myTenantIds);
     }
     
     if (range !== "all" && range !== "ALL" && startDate) {
@@ -206,21 +216,24 @@ export async function getRevenueChartData(args: DashboardQueryArgs): Promise<Rev
       ? args.targetId 
       : (!args.tenantId || args.tenantId.toUpperCase() === "ALL" ? null : args.tenantId);
 
+    let myTenantIds: string[] = [];
+
     // 🛡️ RBAC: Only fallback to profileTenantId if NOT an admin selecting "ALL"
     if (!activeTenantId) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: member } = await supabase.from("tenant_members_v3")
+        const { data: members } = await supabase.from("tenant_members_v3")
           .select("role, tenant_id")
-          .eq("identity_id", user.id)
-          .limit(1)
-          .maybeSingle();
+          .eq("identity_id", user.id);
         
-        const isAdmin = member?.role === "ADMIN" || member?.role === "MANAGER" || member?.role === "OWNER";
-        const profileTenantId = member?.tenant_id || null;
+        const firstMember = members?.[0];
+        const isAdmin = members?.some((m: { role: string | null; tenant_id: string | null }) => m.role === "ADMIN" || m.role === "MANAGER" || m.role === "OWNER");
         
-        if (!isAdmin && profileTenantId) {
-          activeTenantId = profileTenantId;
+        if (!isAdmin && firstMember) {
+          myTenantIds = (members || []).map((m: { role: string | null; tenant_id: string | null }) => m.tenant_id).filter(Boolean) as string[];
+          if (myTenantIds.length > 0) {
+            activeTenantId = myTenantIds[0];
+          }
         }
       }
     }
@@ -234,6 +247,8 @@ export async function getRevenueChartData(args: DashboardQueryArgs): Promise<Rev
       query = query.eq("to_identity_id", args.agentId);
     } else if (activeTenantId) {
       query = query.eq("tenant_id", activeTenantId);
+    } else if (myTenantIds.length > 0) {
+      query = query.in("tenant_id", myTenantIds);
     }
 
     const { data: rawData } = await query;
