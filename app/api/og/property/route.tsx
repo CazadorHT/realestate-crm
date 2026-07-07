@@ -2,12 +2,28 @@ import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { siteConfig } from "@/lib/site-config";
 import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
+import path from "path";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Cache font data across requests in the same execution unit
 let cachedFont: ArrayBuffer | null = null;
+
+// Try to load a bundled local font once per instance to avoid repeated
+// network downloads and reduce Active CPU from parsing remote fonts.
+try {
+  const fontPath = path.resolve(process.cwd(), "public", "fonts", "Kanit-Bold.ttf");
+  if (fs.existsSync(fontPath)) {
+    const buf = fs.readFileSync(fontPath);
+    // Convert Node Buffer -> ArrayBuffer view expected by ImageResponse fonts
+    cachedFont = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    console.log(`[OG Font] Loaded local font from ${fontPath}`);
+  }
+} catch (e) {
+  console.error("OG Font load error:", e);
+}
 
 export async function GET(req: NextRequest) {
   try {

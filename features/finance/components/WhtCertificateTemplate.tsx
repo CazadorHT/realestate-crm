@@ -8,16 +8,32 @@ import {
   Font,
   Image
 } from '@react-pdf/renderer';
+import fs from 'fs';
+import path from 'path';
 
 // Register Thai Font (Kanit)
 // Note: In a production environment, you should provide the absolute path or URL to the font
-Font.register({
-  family: 'Kanit',
-  fonts: [
-    { src: 'https://fonts.gstatic.com/s/kanit/v15/nK0XWaBzv7DRyLS8_U7M.ttf', fontWeight: 'normal' },
-    { src: 'https://fonts.gstatic.com/s/kanit/v15/nK0YWaBzv7DRyLS8bNj-EO7G.ttf', fontWeight: 'bold' },
-  ],
-});
+const kanitFonts = (() => {
+  try {
+    const localNormal = path.join(process.cwd(), 'public', 'fonts', 'Kanit-Regular.ttf');
+    const localBold = path.join(process.cwd(), 'public', 'fonts', 'Kanit-Bold.ttf');
+    if (fs.existsSync(localNormal) && fs.existsSync(localBold)) {
+      return [
+        { src: localNormal, fontWeight: 400 },
+        { src: localBold, fontWeight: 700 },
+      ];
+    }
+  } catch (e) {
+    console.error('Kanit font check failed:', e);
+  }
+
+  return [
+    { src: 'https://fonts.gstatic.com/s/kanit/v15/nK0XWaBzv7DRyLS8_U7M.ttf', fontWeight: 400 },
+    { src: 'https://fonts.gstatic.com/s/kanit/v15/nK0YWaBzv7DRyLS8bNj-EO7G.ttf', fontWeight: 700 },
+  ];
+})();
+
+Font.register({ family: 'Kanit', fonts: kanitFonts });
 
 const styles = StyleSheet.create({
   page: {

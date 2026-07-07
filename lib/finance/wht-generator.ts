@@ -3,6 +3,9 @@ import fontkit from "@pdf-lib/fontkit";
 import fs from "fs/promises";
 import path from "path";
 
+// Cache embedded font bytes across function calls in the same execution instance
+let cachedKanitBold: Uint8Array | null = null;
+
 export interface WhtData {
   agentName: string;
   agentIdCard?: string;
@@ -22,10 +25,17 @@ export async function generateWhtCertificate(data: WhtData): Promise<Uint8Array>
   const pdfDoc = await PDFDocument.create();
   pdfDoc.registerFontkit(fontkit);
 
-  // Load Thai Font (Kanit-Bold)
+  // Load Thai Font (Kanit-Bold) — cache bytes to avoid repeated disk IO and parsing
   const fontPath = path.join(process.cwd(), "public/fonts/Kanit-Bold.ttf");
-  const fontBytes = await fs.readFile(fontPath);
-  const thaiFont = await pdfDoc.embedFont(fontBytes);
+  if (!cachedKanitBold) {
+    try {
+      cachedKanitBold = await fs.readFile(fontPath);
+    } catch (e) {
+      // Re-throw with context so caller can handle or log appropriately
+      throw new Error(`Unable to load Kanit-Bold font at ${fontPath}: ${(e as Error).message}`);
+    }
+  }
+  const thaiFont = await pdfDoc.embedFont(cachedKanitBold as Uint8Array);
 
   const page = pdfDoc.addPage([595.28, 841.89]); // A4
   const { width, height } = page.getSize();
