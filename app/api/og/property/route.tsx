@@ -77,6 +77,36 @@ export async function GET(req: NextRequest) {
         }
       }
     }
+        // If we still don't have an imageUrl, some rows use `main_image` or
+        // `main_image_url` on the `properties` table — try to read that as a fallback.
+        if (!imageUrl) {
+          try {
+            const supabaseClient = createClient(
+              String(process.env.NEXT_PUBLIC_SUPABASE_URL),
+              String(process.env.SUPABASE_SERVICE_ROLE_KEY),
+              { auth: { persistSession: false } },
+            );
+
+            const { data: propRow } = await supabaseClient
+              .from("properties")
+              .select("main_image, main_image_url")
+              .eq("id", id)
+              .maybeSingle();
+
+            const main = (propRow as any)?.main_image_url || (propRow as any)?.main_image;
+            if (main) {
+              // If it's a storage path, convert to public URL
+              const { getPublicImageUrl } = await import("@/features/properties/image-utils");
+              if (!main.startsWith("http")) {
+                imageUrl = getPublicImageUrl(main);
+              } else {
+                imageUrl = main;
+              }
+            }
+          } catch (propErr) {
+            console.error("OG property main_image lookup failed:", propErr);
+          }
+        }
 
     // Diagnostic logging for Vercel
     console.log(`Generating OG [${id}] - Img: ${imageUrl?.slice(0, 50)}... - Font: ${cachedFont ? "OK" : "MISSING"}`);
