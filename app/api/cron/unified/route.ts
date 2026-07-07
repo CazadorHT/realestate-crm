@@ -278,9 +278,24 @@ async function runContractExpiryCheck() {
         };
 
         if (coverImageUrl) {
+          // If we previously routed images through our local proxy for SSR
+          // (e.g. /api/proxy/image?url=...), unwrap it so LINE fetches the
+          // original public URL directly. This avoids Vercel egress for LINE
+          // pulls and lets LINE download straight from Supabase/CDN.
+          let normalizedCover = coverImageUrl;
+          try {
+            const parsed = new URL(String(coverImageUrl));
+            if (parsed.pathname.includes('/api/proxy/image') && parsed.searchParams.has('url')) {
+              const original = parsed.searchParams.get('url');
+              if (original) normalizedCover = original;
+            }
+          } catch (parseErr) {
+            // ignore parse errors and fall back to original coverImageUrl
+          }
+
           flexMessage.contents.hero = {
             type: "image",
-            url: coverImageUrl,
+            url: normalizedCover,
             size: "full",
             aspectRatio: "20:13",
             aspectMode: "cover",
@@ -295,6 +310,15 @@ async function runContractExpiryCheck() {
         }
 
         try {
+          // Log the final image URL used in the LINE payload for verification
+          try {
+            // @ts-ignore
+            const imgUrlForLine = flexMessage.contents?.hero?.url;
+            console.log('[Cron->LINE] Sending flex message with hero image:', imgUrlForLine);
+          } catch (logErr) {
+            /* ignore */
+          }
+
           await sendLineNotification(flexMessage as any);
           notifications.push({
             contract_id: contract.id,
@@ -470,10 +494,23 @@ async function runRentNotifications(startTime: number) {
           const lang = (rule.language as "th" | "en" | "cn" | "ru") || "th";
           const dateFormat = getLocaleDateFormat(lang);
 
+          // Normalize image URL: if it's a proxied URL like /api/proxy/image?url=..., extract the original
+          let normalizedCover = coverImageUrl;
+          try {
+            if (typeof coverImageUrl === 'string' && coverImageUrl.includes('/api/proxy/image')) {
+              const m = coverImageUrl.match(/[?&]url=([^&]+)/);
+              if (m && m[1]) {
+                normalizedCover = decodeURIComponent(m[1]);
+              }
+            }
+          } catch (e) {
+            console.warn('Failed to normalize coverImageUrl', e);
+          }
+
           const message = generateRentNotificationFlex({
             propertyName,
             price,
-            coverImageUrl,
+            coverImageUrl: normalizedCover,
             bedrooms,
             bathrooms,
             sizeSqm,

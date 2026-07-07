@@ -25,6 +25,13 @@ export async function GET(req: NextRequest) {
   console.log(`[Image Proxy Request] URL: ${imageUrl}, User-Agent: ${userAgent}`);
 
   try {
+    // If the source is already a compatible format (not webp), redirect to it
+    const isWebP = /\.webp(\?|$)/i.test(imageUrl);
+    if (!isWebP) {
+      console.log(`[Image Proxy] Redirecting to origin for ${imageUrl}`);
+      return NextResponse.redirect(imageUrl);
+    }
+
     // 1. Fetch the original image
     console.log(`[Image Proxy State] Fetching source: ${imageUrl}`);
     const response = await fetch(imageUrl);
@@ -62,7 +69,8 @@ export async function GET(req: NextRequest) {
     return new NextResponse(new Uint8Array(jpegBuffer), {
       headers: {
         "Content-Type": "image/jpeg",
-        "Cache-Control": "public, max-age=86400, s-maxage=86400",
+        // Keep a long CDN cache for converted images to avoid repeat egress
+        "Cache-Control": "public, s-maxage=31536000, stale-while-revalidate=86400",
         "Access-Control-Allow-Origin": "*",
       },
     });

@@ -1,8 +1,10 @@
 import { ImageResponse } from "next/og";
 import { NextRequest } from "next/server";
 import { siteConfig } from "@/lib/site-config";
+import { createClient } from "@supabase/supabase-js";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 // Cache font data across requests in the same execution unit
 let cachedFont: ArrayBuffer | null = null;
@@ -24,7 +26,6 @@ export async function GET(req: NextRequest) {
     let imageUrl = overrideImg;
     if (!imageUrl && id && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY) {
       try {
-        const { createClient } = await import("@supabase/supabase-js");
         const supabase = createClient(
           process.env.NEXT_PUBLIC_SUPABASE_URL,
           process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -40,12 +41,11 @@ export async function GET(req: NextRequest) {
 
         if (images?.[0]) {
           imageUrl = images[0].image_url;
-          if (imageUrl && !imageUrl.startsWith("http") && images[0].storage_path) {
+          // ถ้าไม่มี image_url ที่เป็น HTTP ให้ใช้ storage_path มา gen เป็น Public URL เต็มๆ แทน
+          if ((!imageUrl || !imageUrl.startsWith('http')) && images[0].storage_path) {
             imageUrl = supabase.storage
               .from("property-images")
-              .getPublicUrl(images[0].storage_path, {
-                transform: { width: 1200, height: 630, quality: 80 }
-              }).data.publicUrl;
+              .getPublicUrl(images[0].storage_path).data.publicUrl;
           }
         }
       } catch (dbError) {
@@ -81,11 +81,21 @@ export async function GET(req: NextRequest) {
     // Diagnostic logging for Vercel
     console.log(`Generating OG [${id}] - Img: ${imageUrl?.slice(0, 50)}... - Font: ${cachedFont ? "OK" : "MISSING"}`);
 
+    // Convert image URL to a Satori-compatible format.
+    // Satori (the OG image engine) cannot render WebP — only JPEG and PNG.
+    // Since Supabase Image Transform is not enabled, we use wsrv.nl
+    // (a free, open-source image proxy) to convert WebP → JPEG on the fly.
+    // Satori can fetch remote URLs directly — no need for base64 conversion.
+    if (imageUrl && !imageUrl.startsWith('data:')) {
+      imageUrl = `https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&output=jpg&w=1200&h=630&fit=cover&q=80`;
+      console.log(`[OG Image] Using wsrv.nl proxy URL`);
+    }
+
     // Standard colors
     const primaryColor = "#0f172a"; // slate-900
     const accentColor = "#2563eb";  // blue-600
 
-    return new ImageResponse(
+      const imageResponse = new ImageResponse(
       (
         <div
           style={{
@@ -265,6 +275,21 @@ export async function GET(req: NextRequest) {
           : [],
       }
     );
+
+    // Ensure long CDN caching for generated OG images
+    try {
+      // ImageResponse returns a Response-like object
+      if (imageResponse && imageResponse.headers) {
+        imageResponse.headers.set(
+          "Cache-Control",
+          "public, s-maxage=31536000, stale-while-revalidate=86400",
+        );
+      }
+    } catch (e) {
+      console.error("Failed to set OG cache header:", e);
+    }
+
+    return imageResponse;
   } catch (e: any) {
     console.error("OG Generation Error:", e.message);
     return new Response(`Failed to generate the image`, {

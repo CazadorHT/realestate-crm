@@ -7,7 +7,7 @@ import { getServerTranslations } from "@/lib/i18n";
 import { getPublicProperties, GetPropertiesOptions } from "@/lib/services/properties";
 import { publicPropertyFilterSchema } from "@/features/public/schema";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60; // ISR: re-generate page every 60 seconds
 
 function parseSearchParamsToOptions(searchParams: any): GetPropertiesOptions {
   const rawParams: Record<string, any> = {};
