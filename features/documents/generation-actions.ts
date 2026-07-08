@@ -164,15 +164,13 @@ export async function generateDocumentFromTemplateAction(
     const config = { ...siteConfig };
 
     // Process config images in parallel
-    const [logoB64, logoDarkB64, signatureB64, stampB64] = await Promise.all([
+    const [logoB64, signatureB64, stampB64] = await Promise.all([
       getImageBase64(config.logo),
-      getImageBase64(config.logoDark),
       getImageBase64(config.companySignature),
       getImageBase64(config.companyStamp),
     ]);
 
     config.logo = logoB64;
-    config.logoDark = logoDarkB64;
     config.companySignature = signatureB64;
     config.companyStamp = stampB64;
 

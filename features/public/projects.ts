@@ -65,14 +65,26 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
         return [];
       }
 
-      // Fetch properties grouped by project_id to compute stats in memory (highly efficient)
-      const { data: activeProps } = await supabase
-        .from("properties")
-        .select("id, project_id, price, rental_price, status, main_image, listing_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru")
-        .eq("status", "ACTIVE")
-        .is("deleted_at", null);
+      // Fetch properties for the projects we just retrieved (restrict by project ids to avoid full-table scans)
+      const projectIds = (projects || []).map((pr: any) => pr.id).filter(Boolean);
+      let props: any[] = [];
+      if (projectIds.length > 0) {
+        const { data: activeProps, error: propsError } = await supabase
+          .from("properties")
+          .select("id, project_id, price, rental_price, status, main_image, listing_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru")
+          .in("project_id", projectIds)
+          .eq("status", "ACTIVE")
+          .is("deleted_at", null)
+          .limit(10000);
 
-      const props = activeProps || [];
+        if (propsError) {
+          console.error("Error fetching properties for projects:", propsError?.message, { projectCount: projectIds.length });
+          // Fall back to empty list so page can still render
+          props = [];
+        } else {
+          props = activeProps || [];
+        }
+      }
       const projectPropsMap = new Map<string, any[]>();
       for (const p of props) {
         if (p.project_id) {

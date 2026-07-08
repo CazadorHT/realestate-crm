@@ -25,7 +25,7 @@ export const siteConfig = {
   description: "VC Connect Asset นายหน้าอสังหาริมทรัพย์มืออาชีพ บริการรับฝากขาย ฝากเช่า บ้าน คอนโด และที่ดิน ครบวงจร ดูแลและให้คำปรึกษาอย่างใกล้ชิดในทุกขั้นตอน เพื่อให้คุณได้ข้อเสนอที่ดีที่สุด",
   url: siteUrl,
   logo: "/images/branding/vcc-asset/png/logo-dark.png",
-  logoDark: "/images/branding/vcc-asset/png/logo-dark.png",
+  logoDark: "/images/branding/vcc-asset/png/logo-light.png",
   brandCard: "/images/branding/vcc-asset/favicon-animated-light.svg",
   brandCardDark: "/images/branding/vcc-asset/png/favicon-dark.png",
   ogImage: "/images/hero-realestate.png",

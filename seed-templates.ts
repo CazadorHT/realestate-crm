@@ -80,7 +80,7 @@ async function seedTemplates() {
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
       <tr>
         <td style="width: 50%; vertical-align: top; border: none;">
-          <img src="{{config.logoDark}}" alt="Logo" style="height: 60px; margin-bottom: 10px;">
+          <img src="{{config.logo}}" alt="Logo" style="height: 60px; margin-bottom: 10px;">
           <div style="font-size: 11px; color: #666;">
             <strong>{{config.company}}</strong><br>
             {{config.contact.address}}
@@ -163,7 +163,7 @@ async function seedTemplates() {
           <div style="font-size: 10px;">{{t.customer_signature}}</div>
         </div>
         <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
-          <img src="{{config.logoDark}}" style="height: 50px; object-fit: contain; margin-bottom: 5px;" alt="Company">
+          <img src="{{config.logo}}" style="height: 50px; object-fit: contain; margin-bottom: 5px;" alt="Company">
           <div style="font-size: 9px; color: #999;">{{config.company}}</div>
         </div>
         <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
@@ -252,7 +252,7 @@ async function seedTemplates() {
     <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
       <tr>
         <td style="width: 50%; vertical-align: top; border: none;">
-          <img src="{{config.logoDark}}" alt="Logo" style="height: 60px; margin-bottom: 10px;">
+          <img src="{{config.logo}}" alt="Logo" style="height: 60px; margin-bottom: 10px;">
           <div style="font-size: 11px; color: #666;">
             <strong>{{config.company}}</strong><br>
             {{config.contact.address}}
@@ -325,7 +325,7 @@ async function seedTemplates() {
           <div style="font-size: 10px;">{{t.customer_signature}}</div>
         </div>
         <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">
-          <img src="{{config.logoDark}}" style="height: 50px; object-fit: contain; margin-bottom: 5px;" alt="Company">
+          <img src="{{config.logo}}" style="height: 50px; object-fit: contain; margin-bottom: 5px;" alt="Company">
           <div style="font-size: 9px; color: #999;">{{config.company}}</div>
         </div>
         <div style="text-align: center; width: 30%; display: flex; flex-direction: column; align-items: center;">

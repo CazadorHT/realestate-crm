@@ -87,16 +87,40 @@ export async function getAreaBySlug(slug: string): Promise<PublicAreaDetail | nu
     async () => {
       const supabase = await createClient();
 
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from("popular_areas_v3")
         .select("id, name, province, slug, image_url, description, seo_title, seo_description, is_ai_generated")
         .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
 
-      if (error || !data) {
-        console.error("Error fetching popular area by slug:", error?.message);
+      if (error) {
+        console.error("Error fetching popular area by slug", { slug, error, data });
         return null;
+      }
+
+      if (!data) {
+        // If the provided slug looks like a UUID, try a lookup by id as a fallback
+        const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+        if (uuidRegex.test(slug)) {
+          const { data: dataById, error: errorById } = await supabase
+            .from("popular_areas_v3")
+            .select("id, name, province, slug, image_url, description, seo_title, seo_description, is_ai_generated")
+            .eq("id", slug)
+            .eq("is_active", true)
+            .maybeSingle();
+
+          if (errorById || !dataById) {
+            console.error("Fallback lookup by id failed for popular area", { slug, error: errorById, data: dataById });
+            return null;
+          }
+
+          console.info("Fallback: found popular area by id for incoming slug", { incoming: slug, resolvedSlug: dataById.slug });
+          data = dataById as any;
+        } else {
+          console.info("No popular area found for slug", { slug });
+          return null;
+        }
       }
 
       const nameObj = data.name as Record<string, string> | null || {};

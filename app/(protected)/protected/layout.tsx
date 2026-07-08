@@ -25,42 +25,43 @@ export default async function ProtectedLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  // 1. First, get the profile to verify identity and role
-  const profile = await getCurrentProfile();
+    // 1. First, get the profile to verify identity and role
+    const profile = await getCurrentProfile();
 
-  if (!profile) {
-    return redirect("/auth/login");
-  }
+    if (!profile) {
+      return redirect("/auth/login");
+    }
 
-  // 2. Critical: Check staff access BEFORE running any other queries
-  // This prevents the "Error Digest" crash when unauthorized users access the page
-  if (!isStaff(profile.role) || !profile.is_active) {
-    return redirect("/auth/pending");
-  }
+    // 2. Critical: Check staff access BEFORE running any other queries
+    // This prevents the "Error Digest" crash when unauthorized users access the page
+    if (!isStaff(profile.role) || !profile.is_active) {
+      return redirect("/auth/pending");
+    }
 
-  // 3. Parallel Fetching: Now safe to run staff-only queries
-  const [propertyStats, cookieStore] = await Promise.all([
-    getPropertiesDashboardStatsQuery(),
-    cookies(),
-  ]);
+    // 3. Parallel Fetching: Now safe to run staff-only queries
+    const [propertyStats, cookieStore] = await Promise.all([
+      getPropertiesDashboardStatsQuery(),
+      cookies(),
+    ]);
 
-  // Note: Notifications are fetched client-side inside NotificationBell
+    // Note: Notifications are fetched client-side inside NotificationBell
 
-  // อ่านสถานะ Sidebar จาก Cookie (เพื่อให้ตอน Refresh หน้าเว็บ ไม่เกิดอาการกางแล้วหุบ)
-  const initialCollapsed = cookieStore.get("sidebar-collapsed")?.value === "true";
+    // อ่านสถานะ Sidebar จาก Cookie (เพื่อให้ตอน Refresh หน้าเว็บ ไม่เกิดอาการกางแล้วหุบ)
+    const initialCollapsed = cookieStore.get("sidebar-collapsed")?.value === "true";
 
-  return (
-    <TenantProvider>
-      <RealtimeProvider>
-        <ProcessProvider>
-          <div className="flex min-h-screen w-full bg-slate-50/50">
-          <SidebarNav 
-            role={profile.role} 
-            initialCollapsed={initialCollapsed} 
-            aiReviewCount={propertyStats.aiReviewCount}
-          />
+    return (
+      <TenantProvider>
+        <RealtimeProvider>
+          <ProcessProvider>
+            <div className="flex min-h-screen w-full bg-slate-50/50">
+            <SidebarNav 
+              role={profile.role} 
+              initialCollapsed={initialCollapsed} 
+              aiReviewCount={propertyStats.aiReviewCount}
+            />
 
           <div className="flex flex-1 flex-col min-w-0">
             <header className="sticky top-0 z-30 flex h-16 items-center gap-1 sm:gap-4 bg-white px-4 md:px-6 backdrop-blur-md border-b border-slate-100 shadow-sm">
@@ -89,9 +90,23 @@ export default async function ProtectedLayout({
             </main>
             <ProcessMonitor />
           </div>
+          </div>
+          </ProcessProvider>
+        </RealtimeProvider>
+      </TenantProvider>
+    );
+  } catch (error) {
+    console.error("[protected/layout] Server render failed", error);
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-6">
+        <div className="max-w-lg w-full rounded-3xl border border-red-100 bg-white p-6 shadow-sm text-center">
+          <h1 className="text-xl font-bold text-slate-900">ระบบส่วนหลังบ้านขัดข้องชั่วคราว</h1>
+          <p className="mt-2 text-sm text-slate-500">
+            เราพบข้อผิดพลาดระหว่างเตรียมหน้า protected และได้หยุดการ render ไว้อย่างปลอดภัยแล้ว
+          </p>
         </div>
-        </ProcessProvider>
-      </RealtimeProvider>
-    </TenantProvider>
-  );
+      </div>
+    );
+  }
 }

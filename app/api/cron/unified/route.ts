@@ -1,4 +1,3 @@
-import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendLineNotification } from "@/lib/line";
 import { siteConfig } from "@/lib/site-config";
@@ -7,8 +6,8 @@ import {
   getLocaleDateFormat,
   getPropertyDisplayInfo,
 } from "@/features/rent-notifications/utils";
-import type { CronContract, CronRule } from "@/lib/supabase/types-helper";
-
+import type { CronRule } from "@/lib/supabase/types-helper";
+import { NextRequest, NextResponse } from "next/server";
 import { FlexMessage, FlexBubble } from "@line/bot-sdk";
 
 // EXTENDED TYPES FOR LINE SDK
@@ -20,23 +19,22 @@ interface ExtendedFlexMessage extends FlexMessage {
 const BATCH_SIZE = 5;
 const MAX_RUNTIME_MS = 50000; // 50s (Vercel Pro = 60s, Hobby = 60s for cron)
 
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   const startTime = performance.now();
 
-  // 1. Verify Secret
-  const secret = req.nextUrl.searchParams.get("secret");
   const authHeader = req.headers.get("Authorization");
   const expectedSecret = process.env.CRON_SECRET;
 
-  const isValid =
-    !expectedSecret ||
-    secret === expectedSecret ||
-    authHeader === `Bearer ${expectedSecret}`;
-
-  if (!isValid) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!expectedSecret) {
+    return NextResponse.json(
+      { error: "CRON_SECRET is not configured" },
+      { status: 500 },
+    );
   }
 
+  if (authHeader !== `Bearer ${expectedSecret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
   const results: Record<string, unknown> = {};
 
   try {
@@ -64,7 +62,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       success: true,
       duration_ms: Math.round(duration),
-      results,
+      summary: {
+        contractExpiry: results.contractExpiry ? { count: (results.contractExpiry as any).notifications_sent } : null,
+        trashCleanup: results.trashCleanup ? { deleted: (results.trashCleanup as any).deleted_count } : null,
+        rentNotifications: results.rentNotifications ? { sent: (results.rentNotifications as any).sent } : null,
+        marketAlerts: results.marketAlerts ? { alerts: (results.marketAlerts as any).alerts_count } : null,
+      }
     });
   } catch (error: unknown) {
     console.error("Unified Cron Job Error:", error);
@@ -76,6 +79,13 @@ export async function GET(req: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+export async function GET() {
+  return NextResponse.json(
+    { error: "Method Not Allowed" },
+    { status: 405 },
+  );
 }
 
 // ─────────────────────────────────────────────────────
@@ -107,7 +117,8 @@ async function runContractExpiryCheck() {
       return { message: "No expiring contracts", count: 0 };
     }
 
-    const notifications = [];
+    let notificationsSent = 0;
+    let notificationsFailed = 0;
 
     for (const contract of expiringContracts) {
       const endDate = new Date(contract.end_date);
@@ -320,28 +331,18 @@ async function runContractExpiryCheck() {
           }
 
           await sendLineNotification(flexMessage as any);
-          notifications.push({
-            contract_id: contract.id,
-            property: propertyTitle,
-            days_remaining: daysUntilExpiry,
-            status: "sent",
-          });
+          notificationsSent += 1;
         } catch (lineError) {
           console.error(`Contract ${contract.id} LINE error:`, lineError);
-          notifications.push({
-            contract_id: contract.id,
-            status: "failed",
-            error: lineError instanceof Error ? lineError.message : "Unknown",
-          });
+          notificationsFailed += 1;
         }
       }
     }
 
     return {
       total_contracts: expiringContracts.length,
-      notifications_sent: notifications.filter((n) => n.status === "sent")
-        .length,
-      notifications,
+      notifications_sent: notificationsSent,
+      notifications_failed: notificationsFailed,
     };
   } catch (error: unknown) {
     console.error("Contract expiry error:", error);
@@ -520,9 +521,9 @@ async function runRentNotifications(startTime: number) {
             }),
             contractEndDate: activeContract.end_date
               ? new Date(activeContract.end_date).toLocaleDateString(
-                  dateFormat,
-                  { day: "numeric", month: "short", year: "numeric" },
-                )
+                dateFormat,
+                { day: "numeric", month: "short", year: "numeric" },
+              )
               : "-",
             language: lang,
             isTest: false,
@@ -667,7 +668,7 @@ async function runMarketAlerts() {
       marketAverages[key].count += 1;
     });
 
-    const alertsGenerated = [];
+    let alertsCount = 0;
 
     // 4. Compare vs Market Average
     for (const property of activeProperties) {
@@ -693,11 +694,7 @@ async function runMarketAlerts() {
           100;
 
         if (diffPercent > 15) {
-          alertsGenerated.push({
-            property_id: property.id,
-            title: property.title,
-            diff_percent: Math.round(diffPercent),
-          });
+          alertsCount += 1;
 
           // Log to system_audit_logs_v3
           await supabase.from("system_audit_logs_v3").insert({
@@ -719,8 +716,7 @@ async function runMarketAlerts() {
 
     return {
       success: true,
-      alerts_count: alertsGenerated.length,
-      alerts: alertsGenerated,
+      alerts_count: alertsCount,
     };
   } catch (error: unknown) {
     console.error("Market alerts error:", error);

@@ -29,8 +29,8 @@ Sentry.init({
   // 💸 ประหยัด Quota: เก็บวิดีโอ Replay สุ่มแค่ 1% ของคนทั่วไป
   replaysSessionSampleRate: 0.01, 
 
-  // 🔥 จัดเต็ม: แต่ถ้าเกิด Error ให้บันทึกวิดีโอ 100% ทันทีเพื่อเอาไว้ดูตอนซ่อม!
-  replaysOnErrorSampleRate: 1.0, 
+  // 🔥 ลดความหนาแน่นของ payload ตอนเกิด crash storm เพื่อไม่ให้ tunnel ถูกอัดจนล้น
+  replaysOnErrorSampleRate: 0.01, 
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,

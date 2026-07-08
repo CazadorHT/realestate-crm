@@ -10,6 +10,28 @@ interface LogContext {
   [key: string]: any;
 }
 
+function sanitizeForSentry(value: any, depth = 0): any {
+  if (value == null) return value;
+  if (typeof value === "string") return value.length > 500 ? `${value.slice(0, 500)}...` : value;
+  if (typeof value === "number" || typeof value === "boolean") return value;
+  if (value instanceof Error) {
+    return {
+      name: value.name,
+      message: value.message,
+      stack: value.stack ? value.stack.slice(0, 2000) : undefined,
+    };
+  }
+  if (depth >= 2) return Array.isArray(value) ? `[Array(${value.length})]` : "[Object]";
+  if (Array.isArray(value)) {
+    return value.slice(0, 10).map((item) => sanitizeForSentry(item, depth + 1));
+  }
+  if (typeof value === "object") {
+    const entries = Object.entries(value).slice(0, 20);
+    return Object.fromEntries(entries.map(([key, entryValue]) => [key, sanitizeForSentry(entryValue, depth + 1)]));
+  }
+  return String(value);
+}
+
 class Logger {
   private isProduction = process.env.NODE_ENV === "production";
 
@@ -46,22 +68,24 @@ class Logger {
       category: context?.source || "logger",
       message: `[WARN] ${message}`,
       level: "warning",
-      data: context,
+      data: sanitizeForSentry(context),
     });
   }
 
   error(message: string, error?: any, context?: LogContext) {
+    const safeContext = sanitizeForSentry(context);
+    const safeError = sanitizeForSentry(error);
     const formatted = this.formatMessage("error", message, {
-      ...context,
-      error: error?.message || error,
-      stack: error?.stack,
+      ...safeContext,
+      error: error?.message || safeError,
+      stack: error?.stack ? String(error.stack).slice(0, 2000) : undefined,
     });
 
     console.error(formatted);
 
     // 🛡️ ส่ง Exception เข้า Sentry ทันทีเมื่อเกิด Error ระดับ Server
     Sentry.captureException(error || new Error(message), {
-      extra: context,
+      extra: safeContext,
       tags: {
         source: context?.source || "server",
         tenant_id: context?.tenantId,
