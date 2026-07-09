@@ -81,6 +81,29 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
         return [];
       }
 
+      // ดึงรูปภาพ cover (main_image) ยูนิตแรกของแต่ละโครงการมาแสดงเป็นรูปภาพคู่ตัวการ์ดโครงการ (เพื่อความไวสูงสุดแบบ Zero Egress)
+      const { data: recentProps } = await supabase
+        .from("properties")
+        .select("project_id, main_image, popular_area_en, popular_area_cn, popular_area_ru")
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null)
+        .not("main_image", "is", null)
+        .order("created_at", { ascending: false });
+
+      const propDataMap = new Map<string, { main_image: string; popular_area_en?: string | null; popular_area_cn?: string | null; popular_area_ru?: string | null }>();
+      if (recentProps) {
+        for (const p of recentProps) {
+          if (p.project_id && !propDataMap.has(p.project_id)) {
+            propDataMap.set(p.project_id, {
+              main_image: p.main_image,
+              popular_area_en: p.popular_area_en,
+              popular_area_cn: p.popular_area_cn,
+              popular_area_ru: p.popular_area_ru
+            });
+          }
+        }
+      }
+
       // แปลงข้อมูลสถิติให้อยู่ในรูป Map เพื่อความเร็ว O(1) ในการค้นหาจับคู่
       const statsMap = new Map<string, any>();
       (statsData || []).forEach((row: any) => {
@@ -90,10 +113,11 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
       // 3. แมปโครงสร้างโปรเจกต์ส่งกลับให้หน้าบ้านใช้งาน
       return projects.map((p: any) => {
         const stat = statsMap.get(p.id);
+        const propData = propDataMap.get(p.id);
         const propertyCount = stat ? Number(stat.property_count || 0) : 0;
 
-        // ดึงภาพหน้าปกโครงการ (ถ้าไม่มีให้ปล่อยเป็น null เพื่อไป Fallback ที่ฝั่ง Component หน้าบ้านแทน)
-        const coverImage = p.image_url || null;
+        // ดึงภาพหน้าปกโครงการ (ใช้ภาพโครงการเป็นหลัก ถ้าไม่มี ดึงภาพอสังหาฯ ล่าสุดในโครงการนั้นมาเป็น Cover Image)
+        const coverImage = p.image_url || propData?.main_image || null;
 
         return {
           id: p.id,
@@ -122,9 +146,9 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
           rentalMin: stat ? stat.rental_min : null,
           rentalMax: stat ? stat.rental_max : null,
           popularArea: stat ? stat.primary_popular_area : null,
-          popularAreaEn: null, // พารามิเตอร์แปลภาษาเสริมฝั่ง Locale สามารถทำจอยจับคู่ในอนาคตได้ตามความเหมาะสม
-          popularAreaCn: null,
-          popularAreaRu: null,
+          popularAreaEn: propData?.popular_area_en || null,
+          popularAreaCn: propData?.popular_area_cn || null,
+          popularAreaRu: propData?.popular_area_ru || null,
           sortOrder: p.sort_order ?? 0,
         };
       }).filter((p: any) => p.propertyCount > 0); // กรองเอาเฉพาะโครงการที่มีอสังหาฯ พร้อมขายจริง

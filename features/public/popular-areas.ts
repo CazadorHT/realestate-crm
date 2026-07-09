@@ -138,14 +138,13 @@ export const getPopularAreasAction = unstable_cache(
 
       const { data: areaMaster } = await areasQuery;
 
-      // 3. คำนวณรวบยอดสถิติย่านยอดนิยม (กรองเฉพาะย่านที่มีทรัพย์สิน ACTIVE อยู่จริงเท่านั้น)
-      const optimizedAreas = (areaMaster || []).map((area: any) => {
+      // 3. กรองเอาเฉพาะย่านที่มีจำนวนทรัพย์จริงก่อนเพื่อจัดอันดับหา Top 8 ย่านแรก
+      const preMappedAreas = (areaMaster || []).map((area: any) => {
         const areaNameTh = typeof area.name === "string" ? area.name : area.name?.th || "";
         const areaNameEn = typeof area.name === "string" ? null : area.name?.en || null;
         const areaNameCn = typeof area.name === "string" ? null : area.name?.cn || null;
         const areaNameRu = typeof area.name === "string" ? null : area.name?.ru || null;
 
-        // คำนวณนับจำนวนทรัพย์ในโครงการที่โยงอยู่ในย่านยอดนิยมนั้น
         let totalCount = 0;
         if (statsData) {
           for (const s of statsData) {
@@ -156,15 +155,11 @@ export const getPopularAreasAction = unstable_cache(
         }
 
         return {
-          key: `${areaNameTh}__${area.province || ""}`,
-          name: areaNameTh, // Legacy Support
-          popular_area: areaNameTh,
-          popular_area_en: areaNameEn,
-          popular_area_cn: areaNameCn,
-          popular_area_ru: areaNameRu,
-          name_en: areaNameEn, // Legacy Support
-          name_cn: areaNameCn, // Legacy Support
-          name_ru: areaNameRu, // Legacy Support
+          id: area.id,
+          nameTh: areaNameTh,
+          nameEn: areaNameEn,
+          nameCn: areaNameCn,
+          nameRu: areaNameRu,
           province: area.province || "",
           count: totalCount,
           cover: area.image_url || null,
@@ -172,11 +167,57 @@ export const getPopularAreasAction = unstable_cache(
         };
       });
 
-      // กรองเอาเฉพาะย่านที่มีจำนวนทรัพย์จริง จัดลำดับความนิยม และแสดงผลสูงสุด 8 ย่านตามดีไซน์เดิม
-      return optimizedAreas
+      // คัดเลือกเฉพาะ Top 8 ย่านที่มีจำนวนทรัพย์จริงสูงสุด
+      const top8Areas = preMappedAreas
         .filter((a: any) => a.count > 0)
         .sort((a: any, b: any) => b.count - a.count)
         .slice(0, 8);
+
+      if (top8Areas.length === 0) return [];
+
+      // 4. [S-Tier Optimization] ดึงรูปภาพภาพหน้าปก (main_image) จากทรัพย์สินล่าสุดในแต่ละย่าน (เฉพาะปากช่องย่านท็อป 8 เท่านั้น)
+      // การดึงเจาะจงเฉพาะกลุ่ม 8 ย่านนี้ ช่วยเซฟปริมาณดาวน์โหลด Egress เป็นศูนย์และค้นหาเสร็จ in เสี้ยววินาทีครับ
+      const topAreaNames = top8Areas.map((a: any) => a.nameTh);
+      const { data: recentProps } = await client
+        .from("properties")
+        .select("popular_area, main_image")
+        .eq("status", "ACTIVE")
+        .is("deleted_at", null)
+        .not("main_image", "is", null)
+        .in("popular_area", topAreaNames)
+        .order("created_at", { ascending: false });
+
+      const areaCoverMap = new Map<string, string>();
+      if (recentProps) {
+        for (const p of recentProps) {
+          const areaClean = (p.popular_area || "").trim().toLowerCase();
+          if (areaClean && p.main_image && !areaCoverMap.has(areaClean)) {
+            areaCoverMap.set(areaClean, p.main_image);
+          }
+        }
+      }
+
+      // 5. แมปข้อมูลย่านกลับคืนให้ผู้ใช้งานหน้าบ้านครบทุกชุด
+      return top8Areas.map((area: any) => {
+        // ใช้รูปภาพปกจาก Master ย่านก่อน ถ้าไม่มีค่อย Fallback ไปใช้รูปทรัพย์สินล่าสุดในย่านนั้น
+        const coverImage = area.cover || areaCoverMap.get(area.nameTh.trim().toLowerCase()) || null;
+
+        return {
+          key: `${area.nameTh}__${area.province}`,
+          name: area.nameTh, // Legacy Support
+          popular_area: area.nameTh,
+          popular_area_en: area.nameEn,
+          popular_area_cn: area.nameCn,
+          popular_area_ru: area.nameRu,
+          name_en: area.nameEn, // Legacy Support
+          name_cn: area.nameCn, // Legacy Support
+          name_ru: area.nameRu, // Legacy Support
+          province: area.province,
+          count: area.count,
+          cover: coverImage,
+          slug: area.slug,
+        };
+      });
 
     } catch (e) {
       console.error("getPopularAreasAction error via View:", e);

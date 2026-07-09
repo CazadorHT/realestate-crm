@@ -4,7 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { MapPin, ArrowRight, RefreshCw, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  MapPin,
+  ArrowRight,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import AOS from "aos";
 import { useLanguage } from "@/components/providers/LanguageProvider";
 import { getLocaleValue } from "@/lib/utils/locale-utils";
@@ -28,7 +34,10 @@ interface PopularAreasSectionProps {
 
 const LOADING = Array.from({ length: 6 });
 
-export function PopularAreasSection({ initialItems, initialProvinces }: PopularAreasSectionProps) {
+export function PopularAreasSection({
+  initialItems,
+  initialProvinces,
+}: PopularAreasSectionProps) {
   const { language, t } = useLanguage();
   const router = useRouter();
   const [items, setItems] = useState<PopularAreaItem[]>(initialItems || []);
@@ -44,7 +53,8 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
 
   const handleScroll = () => {
     if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+      const { scrollLeft, scrollWidth, clientWidth } =
+        scrollContainerRef.current;
       setShowLeftFade(scrollLeft > 20);
       setShowRightFade(scrollLeft < scrollWidth - clientWidth - 20);
     }
@@ -70,14 +80,26 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
   // Dynamic provinces state (filter out vicinities to avoid redundant options)
   const [provinces, setProvinces] = useState<Province[]>(() => {
     const raw = initialProvinces || [];
-    const vicinities = ["นนทบุรี", "สมุทรปราการ", "ปทุมธานี", "สมุทรสาคร", "นครปฐม"];
-    return raw.filter(p => !vicinities.includes(p.id));
+    const vicinities = [
+      "นนทบุรี",
+      "สมุทรปราการ",
+      "ปทุมธานี",
+      "สมุทรสาคร",
+      "นครปฐม",
+    ];
+    return raw.filter((p) => !vicinities.includes(p.id));
   });
   const [isNextHovered, setIsNextHovered] = useState(false);
   const [activeProvIndex, setActiveProvIndex] = useState(() => {
     const raw = initialProvinces || [];
-    const vicinities = ["นนทบุรี", "สมุทรปราการ", "ปทุมธานี", "สมุทรสาคร", "นครปฐม"];
-    const filtered = raw.filter(p => !vicinities.includes(p.id));
+    const vicinities = [
+      "นนทบุรี",
+      "สมุทรปราการ",
+      "ปทุมธานี",
+      "สมุทรสาคร",
+      "นครปฐม",
+    ];
+    const filtered = raw.filter((p) => !vicinities.includes(p.id));
     const bkkIndex = filtered.findIndex(
       (p) => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร",
     );
@@ -119,7 +141,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
     if (isHorizontalSwipe.current === null && (dx > 5 || dy > 5)) {
       isHorizontalSwipe.current = dx > dy;
     }
-    
+
     // Do NOT modify overflowX here, as it triggers layout shifts.
     // Instead, rely on the browser's touch-action or standard scroll behavior.
   };
@@ -141,8 +163,16 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
         if (res.ok) {
           const data = await res.json();
           if (data && data.length > 0) {
-            const vicinities = ["นนทบุรี", "สมุทรปราการ", "ปทุมธานี", "สมุทรสาคร", "นครปฐม"];
-            const filtered = data.filter((p: any) => !vicinities.includes(p.id));
+            const vicinities = [
+              "นนทบุรี",
+              "สมุทรปราการ",
+              "ปทุมธานี",
+              "สมุทรสาคร",
+              "นครปฐม",
+            ];
+            const filtered = data.filter(
+              (p: any) => !vicinities.includes(p.id),
+            );
             setProvinces(filtered);
             const bkkIndex = filtered.findIndex(
               (p: any) => p.display === "Bangkok" || p.id === "กรุงเทพมหานคร",
@@ -162,7 +192,7 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
   // Handle data fetching for province changes
   useEffect(() => {
     if (provinces.length === 0) return;
-    
+
     // Skip initial fetch if using SSR data (first mount only)
     if (isFirstMount.current && initialItems) {
       isFirstMount.current = false;
@@ -196,10 +226,10 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
         });
         if (!res.ok) throw new Error("failed");
         const data: PopularAreaItem[] = await res.json();
-        
+
         // Save to cache
         areaCache.current[activeProvince] = data;
-        
+
         setItems(data);
         setHasError(false);
       } catch (err) {
@@ -229,7 +259,6 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
       // Silent fail for prefetch
     }
   };
-
 
   // Drag to scroll handlers
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -319,28 +348,44 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                onClick={() => setActiveProvIndex(nextProvIndex)}
+                                onClick={() =>
+                                  setActiveProvIndex(nextProvIndex)
+                                }
                                 onMouseEnter={() => {
-                                  prefetchProvince(provinces[nextProvIndex]?.id);
+                                  prefetchProvince(
+                                    provinces[nextProvIndex]?.id,
+                                  );
                                   setIsNextHovered(true);
                                 }}
                                 onMouseLeave={() => setIsNextHovered(false)}
                                 className="absolute -top-4 md:-top-7 left-0 flex items-center gap-2 group/sup cursor-pointer"
                               >
-                                <span className={cn(
-                                  "text-[10px] md:text-xs font-semibold tracking-[0.3em] text-blue-700 uppercase transition-all duration-500 origin-left italic",
-                                  isNextHovered ? "text-blue-800 tracking-[0.5em] scale-110" : "group-hover/sup:text-blue-800 group-hover/sup:tracking-[0.5em] group-hover/sup:scale-110"
-                                )}>
-                                  {t("home.popular_areas.next_label")}: {nextDisplay}
+                                <span
+                                  className={cn(
+                                    "text-[10px] md:text-xs font-semibold tracking-[0.3em] text-blue-700 uppercase transition-all duration-500 origin-left italic",
+                                    isNextHovered
+                                      ? "text-blue-800 tracking-[0.5em] scale-110"
+                                      : "group-hover/sup:text-blue-800 group-hover/sup:tracking-[0.5em] group-hover/sup:scale-110",
+                                  )}
+                                >
+                                  {t("home.popular_areas.next_label")}:{" "}
+                                  {nextDisplay}
                                 </span>
-                                <div className={cn(
-                                  "h-px w-0 bg-blue-400/20 transition-all duration-700",
-                                  isNextHovered ? "w-12" : "group-hover/sup:w-12"
-                                )} />
+                                <div
+                                  className={cn(
+                                    "h-px w-0 bg-blue-400/20 transition-all duration-700",
+                                    isNextHovered
+                                      ? "w-12"
+                                      : "group-hover/sup:w-12",
+                                  )}
+                                />
                               </button>
                             </TooltipTrigger>
                             <TooltipContent className="bg-slate-900 text-white border-none shadow-xl">
-                              <p className="text-xs font-bold font-heading">{t("home.popular_areas.switch_to")} {nextDisplay}</p>
+                              <p className="text-xs font-bold font-heading">
+                                {t("home.popular_areas.switch_to")}{" "}
+                                {nextDisplay}
+                              </p>
                             </TooltipContent>
                           </Tooltip>
                         </TooltipProvider>
@@ -370,7 +415,11 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                             }}
                             onMouseLeave={() => setIsNextHovered(false)}
                             disabled={isLoading}
-                            aria-label={t("home.popular_areas.switch_to") + " " + nextDisplay}
+                            aria-label={
+                              t("home.popular_areas.switch_to") +
+                              " " +
+                              nextDisplay
+                            }
                             className="p-1.5 xs:p-2 rounded-lg xs:rounded-xl bg-slate-100 hover:bg-blue-600 text-blue-400 hover:text-white transition-all! group-active:scale-90 shadow-sm hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <m.div
@@ -499,7 +548,8 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
                 {t("common.error_loading") || "Error Loading Data"}
               </h3>
               <p className="text-slate-500 font-medium mb-6">
-                {t("common.search_error") || "Something went wrong. Please try again."}
+                {t("common.search_error") ||
+                  "Something went wrong. Please try again."}
               </p>
               <button
                 onClick={() => {
@@ -530,26 +580,30 @@ export function PopularAreasSection({ initialItems, initialProvinces }: PopularA
           ) : (
             <div className="relative group/nav">
               {/* Floating Navigation Arrows - Desktop Only */}
-<button
-  onClick={scrollPrev}
-  disabled={!showLeftFade}
-  aria-label="Previous areas"
-  className="absolute left-4 top-1/2 -translate-y-[calc(50%+16px)] z-20 hidden xl:flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.2)] text-slate-900 hover:text-blue-600 hover:scale-110 transition-all active:scale-95 disabled:opacity-0 disabled:pointer-events-none duration-300 cursor-pointer rounded-full"
->
-  <ChevronLeft className="h-6 w-6 stroke-[2.5]" />
-</button>
-<button
-  onClick={scrollNext}
-  disabled={!showRightFade}
-  aria-label="Next areas"
-  className="absolute right-4 top-1/2 -translate-y-[calc(50%+16px)] z-20 hidden xl:flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.2)] text-slate-900 hover:text-blue-600 hover:scale-110 transition-all active:scale-95 disabled:opacity-0 disabled:pointer-events-none duration-300 cursor-pointer rounded-full"
->
-  <ChevronRight className="h-6 w-6 stroke-[2.5]" />
-</button>
+              <button
+                onClick={scrollPrev}
+                disabled={!showLeftFade}
+                aria-label="Previous areas"
+                className="absolute left-4 top-1/2 -translate-y-[calc(50%+16px)] z-20 hidden xl:flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.2)] text-slate-900 hover:text-blue-600 hover:scale-110 transition-all active:scale-95 disabled:opacity-0 disabled:pointer-events-none duration-300 cursor-pointer rounded-full"
+              >
+                <ChevronLeft className="h-6 w-6 stroke-[2.5]" />
+              </button>
+              <button
+                onClick={scrollNext}
+                disabled={!showRightFade}
+                aria-label="Next areas"
+                className="absolute right-4 top-1/2 -translate-y-[calc(50%+16px)] z-20 hidden xl:flex items-center justify-center w-12 h-12 bg-white/90 backdrop-blur-sm border border-white/20 shadow-[0_4px_12px_rgba(0,0,0,0.2)] text-slate-900 hover:text-blue-600 hover:scale-110 transition-all active:scale-95 disabled:opacity-0 disabled:pointer-events-none duration-300 cursor-pointer rounded-full"
+              >
+                <ChevronRight className="h-6 w-6 stroke-[2.5]" />
+              </button>
 
               {/* Edge Fade Indicators to signal horizontal scrolling */}
-              <div className={`absolute left-0 top-0 bottom-8 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showLeftFade ? "opacity-100" : "opacity-0"}`} />
-              <div className={`absolute right-0 top-0 bottom-8 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showRightFade ? "opacity-100" : "opacity-0"}`} />
+              <div
+                className={`absolute left-0 top-0 bottom-8 w-12 bg-gradient-to-r from-white to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showLeftFade ? "opacity-100" : "opacity-0"}`}
+              />
+              <div
+                className={`absolute right-0 top-0 bottom-8 w-12 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 transition-opacity duration-300 ${showRightFade ? "opacity-100" : "opacity-0"}`}
+              />
 
               <div
                 ref={scrollContainerRef}

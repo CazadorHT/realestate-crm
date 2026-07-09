@@ -904,112 +904,119 @@ export function DesktopFilters({
               )}
 
               {/* Row 3: Popular Areas */}
-              {availableAreas.length > 0 && (
-                <div className="flex items-center gap-3  border-t border-slate-100">
-                  <button
-                    onClick={() => setShowAreaSection(!showAreaSection)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 text-xs font-semibold hover:bg-slate-100 transition-all"
-                  >
-                    {t("search.popular_locations")}
-                    {showAreaSection ? (
-                      <ChevronUp className="w-3 h-3" />
-                    ) : (
-                      <ChevronDown className="w-3 h-3" />
-                    )}
-                  </button>
+{/* Row 3: Popular Areas */}
+{/* Row 3: Popular Areas */}
+{/* Row 3: Popular Areas */}
+{availableAreas.length > 0 && (
+  <div className="flex items-start gap-3 border-t border-slate-100 py-3">
+    {/* ปุ่มกดเปิด-ปิด สลับสถานะซ่อน/แสดงทำเลทั้งหมด */}
+    <button
+      onClick={() => setShowAreaSection(!showAreaSection)}
+      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 text-slate-600 text-xs font-semibold hover:bg-slate-100 transition-all shrink-0"
+    >
+      {t("search.popular_locations")}
+      {showAreaSection ? (
+        <ChevronUp className="w-3 h-3" />
+      ) : (
+        <ChevronDown className="w-3 h-3" />
+      )}
+    </button>
 
-                  {showAreaSection && (
-                    <div className="relative flex-1 overflow-hidden animate-in fade-in slide-in-from-top-1 px-8 py-4">
-                      <div
-                        ref={scrollRef}
-                        className="overflow-x-auto [&::-webkit-scrollbar]:hidden flex items-center gap-5 py-1 scroll-smooth whitespace-nowrap"
-                        style={{ scrollbarWidth: "none" }}
-                      >
-                        <button
-                          onClick={() => setArea("ALL")}
-                          className={`text-xs transition-colors shrink-0 ${area === "ALL" ? "font-semibold text-blue-600" : "text-slate-400 hover:text-blue-600"}`}
-                        >
-                          {t("search.all_locations")}
-                        </button>
-                        {availableAreas.map((a: any) => (
-                          <button
-                            key={a.name}
-                            disabled={a.count === 0}
-                            onClick={() => setArea(area === a.name ? "ALL" : a.name)}
-                            className={`text-xs transition-colors flex items-center gap-1.5 shrink-0 ${
-                              area === a.name
-                                ? "font-bold text-blue-600 bg-blue-50/50 px-2.5 py-1 rounded-lg"
-                                : a.count === 0
-                                  ? "text-slate-300 cursor-not-allowed opacity-60"
-                                  : "text-slate-400 hover:text-blue-600"
-                            }`}
-                          >
-                            {area === a.name && (
-                              <svg
-                                className="w-3.5 h-3.5 animate-in zoom-in-50"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={3}
-                                  d="M5 13l4 4L19 7"
-                                />
-                              </svg>
-                            )}
-                            {getLocaleValue(
-                              {
-                                name: a.name,
-                                name_en: a.name_en,
-                                name_cn: a.name_cn,
-                                name_ru: a.name_ru,
-                              },
-                              "name",
-                              language,
-                            )}
-                            <span
-                              className={`text-xs ${a.count === 0 ? "opacity-30" : "opacity-60 text-blue-600"}`}
-                            >
-                              ({a.count})
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Left Fade Gradient Overlay */}
-                      {showLeftArrow && (
-                        <div className="absolute left-8 top-0 bottom-0 w-12 bg-linear-to-l from-transparent to-white pointer-events-none z-10 animate-in fade-in duration-200" />
-                      )}
-                      
-                      {/* Right Fade Gradient Overlay */}
-                      {showRightArrow && (
-                        <div className="absolute right-8 top-0 bottom-0 w-12 bg-linear-to-r from-transparent to-white pointer-events-none z-10 animate-in fade-in duration-200" />
-                      )}
-
-                      {/* Navigation Arrows */}
-                      {showLeftArrow && (
-                        <button
-                          onClick={() => handleScroll("left")}
-                          className="absolute left-0 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-all z-20 hover:scale-105 active:scale-95 duration-150"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                      )}
-
-                      {showRightArrow && (
-                        <button
-                          onClick={() => handleScroll("right")}
-                          className="absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-all z-20 hover:scale-105 active:scale-95 duration-150"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
+    {/* กล่องบรรจุรายการทำเลทั้งหมด: จะทำงานและแสดงผลก็ต่อเมื่อ showAreaSection เป็น true เท่านั้น */}
+    {showAreaSection && (
+      <div className="relative flex-1 overflow-hidden px-8 animate-in ease-in-out duration-500">
+        {/* กล่องโครงสร้าง 2 แถว เลื่อนซ้าย-ขวา */}
+        <div
+          ref={scrollRef}
+          className="overflow-x-auto flex-wrap flex flex-col content-start gap-3 py-1 h-[76px] scroll-smooth [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: "none" }}
+        >
+          <button
+            onClick={() => setArea("ALL")}
+            className={`text-xs transition-colors shrink-0 px-3 py-1.5 ${area === "ALL" ? "font-semibold text-blue-600" : "text-slate-400 hover:text-blue-600"}`}
+          >
+            {t("search.all_locations")}
+          </button>
+          {availableAreas.map((a: any) => (
+            <button
+              key={a.name}
+              disabled={a.count === 0}
+              onClick={() => setArea(area === a.name ? "ALL" : a.name)}
+              className={`text-xs transition-colors flex items-center gap-1.5 px-3 py-1.5 shrink-0 ${
+                area === a.name
+                  ? "font-bold text-blue-600 bg-blue-50/50 px-2.5 py-1 rounded-lg"
+                  : a.count === 0
+                    ? "text-slate-300 cursor-not-allowed opacity-60"
+                    : "text-slate-500 hover:text-blue-600 bg-slate-50 hover:bg-blue-50/50 rounded-lg"
+              }`}
+            >
+              {area === a.name && (
+                <svg
+                  className="w-3.5 h-3.5 animate-in zoom-in-50"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={3}
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
               )}
+              {getLocaleValue(
+                {
+                  name: a.name,
+                  name_en: a.name_en,
+                  name_cn: a.name_cn,
+                  name_ru: a.name_ru,
+                },
+                "name",
+                language,
+              )}
+              <span
+                className={`text-xs ${a.count === 0 ? "opacity-30" : "opacity-60 text-blue-600"}`}
+              >
+                ({a.count})
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* แถบ Gradient จางๆ ด้านซ้าย */}
+        {showLeftArrow && (
+          <div className="absolute left-8 top-0 bottom-0 w-12 bg-gradient-to-l from-transparent to-white pointer-events-none z-10 animate-in fade-in duration-200" />
+        )}
+        
+        {/* แถบ Gradient จางๆ ด้านขวา */}
+        {showRightArrow && (
+          <div className="absolute right-8 top-0 bottom-0 w-12 bg-gradient-to-r from-transparent to-white pointer-events-none z-10 animate-in fade-in duration-200" />
+        )}
+
+        {/* ปุ่มลูกศรเลื่อนไปทางซ้าย */}
+        {showLeftArrow && (
+          <button
+            onClick={() => handleScroll("left")}
+            className="absolute left-0 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-all z-20 hover:scale-105 active:scale-95 duration-150"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+        )}
+
+        {/* ปุ่มลูกศรเลื่อนไปทางขวา */}
+        {showRightArrow && (
+          <button
+            onClick={() => handleScroll("right")}
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white border border-slate-200 shadow-sm flex items-center justify-center hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-all z-20 hover:scale-105 active:scale-95 duration-150"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+    )}
+  </div>
+)}
             </div>
           </m.div>
         )}

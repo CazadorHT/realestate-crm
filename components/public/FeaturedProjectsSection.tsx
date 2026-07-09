@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { m } from "framer-motion";
 import { ChevronLeft, ChevronRight, Building2, ArrowRight, Sparkles, MapPin } from "lucide-react";
 import type { PublicProject } from "@/features/public/projects";
@@ -221,14 +222,18 @@ export function FeaturedProjectsSection({
             className="flex gap-6 overflow-x-auto pb-6 scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           >
             {projects.map((proj, index) => {
-              const nameText = proj.name[language as keyof typeof proj.name] || proj.name.th;
+              const nameText = 
+                proj.name[language as keyof typeof proj.name] || 
+                proj.name.en || 
+                proj.name.th;
+
               const hasSale = proj.priceMin != null;
               const hasRent = proj.rentalMin != null;
               
               const areaName = (
                 language === "en" ? proj.popularAreaEn :
-                language === "cn" ? proj.popularAreaCn :
-                language === "ru" ? proj.popularAreaRu :
+                language === "cn" ? (proj.popularAreaCn || proj.popularAreaEn) :
+                language === "ru" ? (proj.popularAreaRu || proj.popularAreaEn) :
                 proj.popularArea
               ) || proj.popularArea;
 
@@ -257,9 +262,12 @@ export function FeaturedProjectsSection({
                     {/* Project Image */}
                     <div className="relative aspect-[16/10] w-full overflow-hidden bg-slate-100 shrink-0">
                       {proj.imageUrl ? (
-                        <div
-                          className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
-                          style={{ backgroundImage: `url(${proj.imageUrl})` }}
+                        <Image
+                          src={proj.imageUrl}
+                          alt={nameText}
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-150 flex items-center justify-center text-slate-300">
