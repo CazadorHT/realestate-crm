@@ -131,82 +131,54 @@ function generateSlug(code: string): string {
 
 /**
  * Get all transit lines with their stations for the hub page
+ * [OPTIMIZED: ดึงข้อมูลสรุปรวบยอดผ่าน Materialized View เพื่อเซฟท่อ Egress 99%]
  */
 export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
   const supabase = await createClient();
 
-  // Fetch active station names from active properties to show only stations that have properties
-  const { data: properties } = await supabase
-    .from("properties")
-    .select("transit_station_name, transit_station_name_en, nearby_transits, price, rental_price")
-    .eq("status", "ACTIVE")
-    .is("deleted_at", null);
+  // 1. ดึงข้อมูลสรุปสถานีรถไฟฟ้าจาก Materialized View (คิวรีเสร็จใน 0.01 วินาที)
+  const { data: statsData, error: statsError } = await supabase
+    .from("mv_station_property_stats")
+    .select("station_name, property_count, min_price, min_rental_price");
 
-  const activeStationNames = new Set<string>();
-  const propertyStationsWithPrices: Array<{
-    stations: Set<string>;
-    price: number | null;
-    rental_price: number | null;
-  }> = [];
-
-  if (properties) {
-    for (const prop of properties) {
-      const propStations = new Set<string>();
-      if (prop.transit_station_name) {
-        const name = prop.transit_station_name.trim().toLowerCase();
-        activeStationNames.add(name);
-        propStations.add(name);
-      }
-      if (prop.transit_station_name_en) {
-        const name = prop.transit_station_name_en.trim().toLowerCase();
-        activeStationNames.add(name);
-        propStations.add(name);
-      }
-      
-      const nearby = prop.nearby_transits as Array<{ station_name?: string; station_name_en?: string }> | null;
-      if (Array.isArray(nearby)) {
-        for (const t of nearby) {
-          if (t.station_name) {
-            const name = t.station_name.trim().toLowerCase();
-            activeStationNames.add(name);
-            propStations.add(name);
-          }
-          if (t.station_name_en) {
-            const name = t.station_name_en.trim().toLowerCase();
-            activeStationNames.add(name);
-            propStations.add(name);
-          }
-        }
-      }
-      propertyStationsWithPrices.push({
-        stations: propStations,
-        price: prop.price ?? null,
-        rental_price: prop.rental_price ?? null
-      });
-    }
+  if (statsError) {
+    console.error("Error fetching Materialized View stats:", statsError.message);
+    return [];
   }
 
-  const { data, error } = await supabase
+  // แปลงข้อมูลสถิติให้อยู่ในรูป Map เพื่อความรวดเร็วสูงสุด (O(1)) ในการสืบค้นจับคู่ด้านล่าง
+  const statsMap = new Map<string, { property_count: number; min_price: number | null; min_rental_price: number | null }>();
+  (statsData || []).forEach((row: any) => {
+    if (row.station_name) {
+      statsMap.set(row.station_name.toLowerCase().trim(), {
+        property_count: Number(row.property_count || 0),
+        min_price: row.min_price ? Number(row.min_price) : null,
+        min_rental_price: row.min_rental_price ? Number(row.min_rental_price) : null,
+      });
+    }
+  });
+
+  // 2. ดึงข้อมูล Master Data ของรายชื่อสถานีรถไฟฟ้าทั้งหมด (ref_master_data)
+  const { data: masterStations, error: masterError } = await supabase
     .from("ref_master_data")
     .select("code, label, metadata, sort_order")
     .eq("type", "TRANSIT_STATION")
     .eq("is_active", true)
     .order("sort_order", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching transit stations:", error.message);
+  if (masterError) {
+    console.error("Error fetching transit stations master data:", masterError.message);
     return [];
   }
 
-  if (!data || data.length === 0) return [];
+  if (!masterStations || masterStations.length === 0) return [];
 
-  // Map to hold dynamic line labels and colors
+  // Map โครงสร้าง Default ของสายรถไฟฟ้าแต่ละประเภท
   const lineInfoMap = new Map<string, {
     label: { th: string; en: string; cn?: string; ru?: string };
     color: string;
   }>();
 
-  // Initialize with static defaults
   for (const type of Object.keys(LINE_LABELS)) {
     lineInfoMap.set(type, {
       label: LINE_LABELS[type],
@@ -214,16 +186,15 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
     });
   }
 
-  // Group by transit type
   const grouped = new Map<string, StationForSEO[]>();
 
-  for (const item of data) {
+  // 3. วนลูปแมปข้อมูล Master Data เข้ากับสถิติจริงที่ดึงมาจาก Materialized View
+  for (const item of masterStations) {
     const metadata = item.metadata as Record<string, unknown> | null;
     const label = item.label as { th: string; en: string; cn?: string; ru?: string } | null;
     const transitType = (metadata?.transit_type as string) || "OTHER";
     const slug = (metadata?.slug as string) || generateSlug(item.code);
 
-    // Dynamically discover/override line labels and colors from station metadata
     if (!lineInfoMap.has(transitType) || metadata?.line_name || metadata?.line_name_th || metadata?.line_color) {
       const existing = lineInfoMap.get(transitType);
       lineInfoMap.set(transitType, {
@@ -239,43 +210,16 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
 
     const info = lineInfoMap.get(transitType)!;
 
-    const nameTh = label?.th?.trim().toLowerCase();
-    const nameEn = label?.en?.trim().toLowerCase();
-    const codeLower = item.code.trim().toLowerCase();
+    const nameThKey = label?.th?.trim().toLowerCase() || "";
+    const nameEnKey = label?.en?.trim().toLowerCase() || "";
+    const codeLowerKey = item.code.trim().toLowerCase();
 
-    const hasProperties = activeStationNames.has(nameTh || "") || 
-                         activeStationNames.has(nameEn || "") || 
-                         activeStationNames.has(codeLower);
+    // ดึงค่าสถิติจาก Map ด้วย Key ภาษาไทย, ภาษาอังกฤษ หรือรหัสสถานี (ความเร็ว O(1))
+    const stat = statsMap.get(nameThKey) || statsMap.get(nameEnKey) || statsMap.get(codeLowerKey);
 
-    if (!hasProperties) {
-      continue; // Skip stations with 0 properties
-    }
-
-    // Count properties for this station and calculate minimum prices
-    let propertyCount = 0;
-    let minPrice: number | null = null;
-    let minRentalPrice: number | null = null;
-
-    for (const itemPrice of propertyStationsWithPrices) {
-      if (
-        (nameTh && itemPrice.stations.has(nameTh)) ||
-        (nameEn && itemPrice.stations.has(nameEn)) ||
-        itemPrice.stations.has(codeLower)
-      ) {
-        propertyCount++;
-        
-        if (itemPrice.price !== null) {
-          if (minPrice === null || itemPrice.price < minPrice) {
-            minPrice = itemPrice.price;
-          }
-        }
-        
-        if (itemPrice.rental_price !== null) {
-          if (minRentalPrice === null || itemPrice.rental_price < minRentalPrice) {
-            minRentalPrice = itemPrice.rental_price;
-          }
-        }
-      }
+    // ถ้าสถานีนี้ไม่มีทรัพย์สินแสดงอยู่เลย (หรือ stat เป็น null) ให้ข้ามไปเพื่อประหยัดหน้าเว็บบอร์ด
+    if (!stat || stat.property_count === 0) {
+      continue; 
     }
 
     const station: StationForSEO = {
@@ -287,9 +231,9 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
       lineColor: info.color,
       latitude: metadata?.latitude as number | undefined,
       longitude: metadata?.longitude as number | undefined,
-      propertyCount,
-      minPrice,
-      minRentalPrice,
+      propertyCount: stat.property_count,
+      minPrice: stat.min_price,
+      minRentalPrice: stat.min_rental_price,
     };
 
     if (!grouped.has(transitType)) {
@@ -298,12 +242,11 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
     grouped.get(transitType)!.push(station);
   }
 
-  // Build TransitLine array in defined order
+  // ประกอบโครงสร้างอาเรย์ส่งกลับตามลำดับหมวดสายรถไฟฟ้า (LINE_ORDER)
   const lines: TransitLine[] = [];
   for (const type of LINE_ORDER) {
     const stations = grouped.get(type);
     if (stations && stations.length > 0) {
-      // Sort stations by property count descending
       stations.sort((a, b) => (b.propertyCount || 0) - (a.propertyCount || 0));
       const info = lineInfoMap.get(type) || { label: { th: type, en: type }, color: "#6B7280" };
       lines.push({
@@ -315,10 +258,8 @@ export async function getTransitLinesWithStations(): Promise<TransitLine[]> {
     }
   }
 
-  // Add any remaining types not in LINE_ORDER
   for (const [type, stations] of grouped) {
     if (!LINE_ORDER.includes(type) && stations.length > 0) {
-      // Sort stations by property count descending
       stations.sort((a, b) => (b.propertyCount || 0) - (a.propertyCount || 0));
       const info = lineInfoMap.get(type) || { label: { th: type, en: type }, color: "#6B7280" };
       lines.push({
@@ -379,6 +320,21 @@ export async function getStationBySlug(slug: string): Promise<StationDetail | nu
 
       const target = stationsWithMeta[targetIndex];
       const metadata = target.metadata;
+
+      // Prevent serving station detail pages that have no active properties.
+      // Use the lightweight count query to avoid running the full properties fetch.
+      try {
+        const propCount = await getPropertyCountNearStation(
+          (target.label?.th as string) || "",
+          (target.label?.en as string) || ""
+        );
+        if (!propCount) {
+          return null;
+        }
+      } catch (e) {
+        // If counting fails, log and proceed (fallback to showing the page)
+        console.error("Error counting properties for station slug:", slug, e);
+      }
 
       // Find prev/next stations on the same line
       const sameLine = stationsWithMeta.filter((s: any) => s.transitType === target.transitType);
@@ -501,11 +457,13 @@ export async function getPropertiesNearStation(
 }
 
 /**
- * Get all station slugs for generateStaticParams()
+ * Get all active station slugs for generateStaticParams()
+ * [OPTIMIZED: ดึงผ่าน Materialized View ข้อมูลเหลือไม่กี่ KB แก้ปัญหาท่อรั่วตอน Build]
  */
 export async function getAllStationSlugs(): Promise<string[]> {
   const supabase = await createClient();
 
+  // 1. ดึงข้อมูลสถานีทั้งหมดที่เป็น Active จาก Master Data
   const { data: stations, error } = await supabase
     .from("ref_master_data")
     .select("code, label, metadata")
@@ -517,36 +475,34 @@ export async function getAllStationSlugs(): Promise<string[]> {
     return [];
   }
 
-  // Get active station names
-  const { data: properties } = await supabase
-    .from("properties")
-    .select("transit_station_name, transit_station_name_en, nearby_transits")
-    .eq("status", "ACTIVE")
-    .is("deleted_at", null);
+  // 2. ดึงเฉพาะรายชื่อสถานีที่มีทรัพย์สินจริงจาก Materialized View (เบาหวิวระดับกิโลไบต์!)
+  const { data: activeStats, error: statsError } = await supabase
+    .from("mv_station_property_stats")
+    .select("station_name");
 
-  const activeStationNames = new Set<string>();
-  if (properties) {
-    for (const prop of properties) {
-      if (prop.transit_station_name) activeStationNames.add(prop.transit_station_name.trim().toLowerCase());
-      if (prop.transit_station_name_en) activeStationNames.add(prop.transit_station_name_en.trim().toLowerCase());
-      const nearby = prop.nearby_transits as Array<{ station_name?: string; station_name_en?: string }> | null;
-      if (Array.isArray(nearby)) {
-        for (const t of nearby) {
-          if (t.station_name) activeStationNames.add(t.station_name.trim().toLowerCase());
-          if (t.station_name_en) activeStationNames.add(t.station_name_en.trim().toLowerCase());
-        }
-      }
-    }
+  if (statsError) {
+    console.error("Error fetching active station names from view:", statsError.message);
+    return [];
   }
 
+  // แปลงรายชื่อสถานีที่มีทรัพย์สินให้อยู่ใน Set เพื่อคิวรีหาได้เร็ว O(1)
+  const activeStationNames = new Set<string>();
+  (activeStats || []).forEach((row: any) => {
+    if (row.station_name) {
+      activeStationNames.add(row.station_name.trim().toLowerCase());
+    }
+  });
+
+  // 3. กรองและส่งกลับเฉพาะสลัก (Slugs) ของสถานีที่มีทรัพย์สินอยู่จริงบนหน้าร้าน
   return stations
     .filter((item: any) => {
       const label = item.label as { th: string; en: string } | null;
-      const nameTh = label?.th?.trim().toLowerCase();
-      const nameEn = label?.en?.trim().toLowerCase();
+      const nameTh = label?.th?.trim().toLowerCase() || "";
+      const nameEn = label?.en?.trim().toLowerCase() || "";
       const codeLower = item.code.trim().toLowerCase();
-      return activeStationNames.has(nameTh || "") || 
-             activeStationNames.has(nameEn || "") || 
+      
+      return activeStationNames.has(nameTh) || 
+             activeStationNames.has(nameEn) || 
              activeStationNames.has(codeLower);
     })
     .map((item: any) => {

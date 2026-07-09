@@ -60,6 +60,7 @@ export const getPublicProvincesAction = unstable_cache(
  * [S-Tier] Highly Optimized Popular Areas Fetcher
  * - Supports both Public (Optimized) and Admin (Full List) modes
  * - Dual-layer filtering and sorting
+ * [OPTIMIZED: ปรับมาดึงผ่าน Materialized View สรุปย่านยอดนิยม เพื่อเซฟ Egress เหลือใกล้ 0%]
  */
 export const getPopularAreasAction = unstable_cache(
   async (params?: string | { onlyActive?: boolean; province?: string }): Promise<any> => {
@@ -95,7 +96,7 @@ export const getPopularAreasAction = unstable_cache(
         }).filter(Boolean);
       }
 
-      // 🚀 Public Mode: Full optimization for landing page
+      // 🚀 Public Mode: Full optimization for landing page via Views & Region Mapping
       const bkkVicinity = [
         "กรุงเทพมหานคร",
         "สมุทรปราการ",
@@ -116,43 +117,18 @@ export const getPopularAreasAction = unstable_cache(
         ภูเก็ต: ["ภูเก็ต", "Phuket"],
       };
 
-      let query = client
-        .from("properties")
-        .select("id, popular_area, province, created_at")
-        .eq("status", "ACTIVE");
+      // 1. ดึงสถิติจริงผ่านตารางสรุปวิวโครงการทันที (เบาหวิว ไม่กินแบนด์วิธ)
+      const { data: statsData, error: statsError } = await client
+        .from("mv_project_property_stats")
+        .select("primary_popular_area, property_count, price_min, rental_min");
 
-      if (province && provinceMap[province]) {
-        query = query.in("province", provinceMap[province]);
-      } else if (province) {
-        query = query.eq("province", province);
-      }
+      if (statsError) throw statsError;
 
-      const { data: props, error: propErr } = await query
-        .order("created_at", { ascending: false })
-        .limit(300);
-
-      if (propErr) throw propErr;
-      const properties = Array.isArray(props) ? props : [];
-      const ids = properties.map((p: any) => p.id).filter(Boolean);
-
-      if (ids.length === 0) return [];
-
-      const { data: covers } = await client
-        .from("property_images")
-        .select("property_id, image_url, sort_order, is_cover")
-        .in("property_id", ids)
-        .order("is_cover", { ascending: false })
-        .order("sort_order", { ascending: true });
-
-      const coverByPropertyId = new Map<string, string>();
-      for (const img of (covers ?? []) as any[]) {
-        if (img?.property_id && img?.image_url && !coverByPropertyId.has(img.property_id)) {
-          coverByPropertyId.set(img.property_id, img.image_url);
-        }
-      }
-
-      const map = new Map<string, PopularAreaItem>();
-      let areasQuery = client.from("popular_areas_v3").select("name, province, slug");
+      // 2. ดึงข้อมูล Master Data ของย่านยอดนิยม โดยกรองตามเงื่อนไขจังหวัดที่ส่งมาจากหน้าบ้าน
+      let areasQuery = client
+        .from("popular_areas_v3")
+        .select("id, name, slug, image_url, province, is_active")
+        .eq("is_active", true);
 
       if (province && provinceMap[province]) {
         areasQuery = areasQuery.or(`province.in.(${provinceMap[province].join(",")}),province.is.null`);
@@ -160,56 +136,54 @@ export const getPopularAreasAction = unstable_cache(
         areasQuery = areasQuery.or(`province.eq.${province},province.is.null`);
       }
 
-      const { data: validAreasData } = await areasQuery;
-      const areaTranslations = new Map<string, any>();
-      (validAreasData || []).forEach((a: any) => {
-        const areaNameTh = typeof a.name === "string" ? a.name : a.name?.th || a.name?.default || "";
-        const areaNameEn = typeof a.name === "string" ? null : a.name?.en || null;
-        const areaNameCn = typeof a.name === "string" ? null : a.name?.cn || null;
-        const areaNameRu = typeof a.name === "string" ? null : a.name?.ru || null;
-        areaTranslations.set(areaNameTh, { en: areaNameEn, cn: areaNameCn, ru: areaNameRu, slug: a.slug || "" });
+      const { data: areaMaster } = await areasQuery;
+
+      // 3. คำนวณรวบยอดสถิติย่านยอดนิยม (กรองเฉพาะย่านที่มีทรัพย์สิน ACTIVE อยู่จริงเท่านั้น)
+      const optimizedAreas = (areaMaster || []).map((area: any) => {
+        const areaNameTh = typeof area.name === "string" ? area.name : area.name?.th || "";
+        const areaNameEn = typeof area.name === "string" ? null : area.name?.en || null;
+        const areaNameCn = typeof area.name === "string" ? null : area.name?.cn || null;
+        const areaNameRu = typeof area.name === "string" ? null : area.name?.ru || null;
+
+        // คำนวณนับจำนวนทรัพย์ในโครงการที่โยงอยู่ในย่านยอดนิยมนั้น
+        let totalCount = 0;
+        if (statsData) {
+          for (const s of statsData) {
+            if (s.primary_popular_area && s.primary_popular_area.trim().toLowerCase() === areaNameTh.trim().toLowerCase()) {
+              totalCount += Number(s.property_count || 0);
+            }
+          }
+        }
+
+        return {
+          key: `${areaNameTh}__${area.province || ""}`,
+          name: areaNameTh, // Legacy Support
+          popular_area: areaNameTh,
+          popular_area_en: areaNameEn,
+          popular_area_cn: areaNameCn,
+          popular_area_ru: areaNameRu,
+          name_en: areaNameEn, // Legacy Support
+          name_cn: areaNameCn, // Legacy Support
+          name_ru: areaNameRu, // Legacy Support
+          province: area.province || "",
+          count: totalCount,
+          cover: area.image_url || null,
+          slug: area.slug || encodeURIComponent(areaNameTh),
+        };
       });
 
-      const validAreaNames = new Set(areaTranslations.keys());
+      // กรองเอาเฉพาะย่านที่มีจำนวนทรัพย์จริง จัดลำดับความนิยม และแสดงผลสูงสุด 8 ย่านตามดีไซน์เดิม
+      return optimizedAreas
+        .filter((a: any) => a.count > 0)
+        .sort((a: any, b: any) => b.count - a.count)
+        .slice(0, 8);
 
-      for (const p of properties as any[]) {
-        const area = (p?.popular_area ?? "").trim();
-        const prov = (p?.province ?? "").trim();
-        if (!area || !prov || (validAreaNames.size > 0 && !validAreaNames.has(area))) continue;
-
-        const trans = areaTranslations.get(area);
-        const cover = coverByPropertyId.get(p.id) ?? null;
-
-        const existing = map.get(area);
-        if (!existing) {
-          map.set(area, {
-            key: `${area}__${prov}`,
-            name: area, // Legacy Support
-            popular_area: area,
-            popular_area_en: trans?.en ?? null,
-            popular_area_cn: trans?.cn ?? null,
-            popular_area_ru: trans?.ru ?? null,
-            name_en: trans?.en ?? null, // Legacy Support
-            name_cn: trans?.cn ?? null, // Legacy Support
-            name_ru: trans?.ru ?? null, // Legacy Support
-            province: prov,
-            count: 1,
-            cover,
-            slug: trans?.slug || encodeURIComponent(area),
-          });
-        } else {
-          existing.count += 1;
-          if (!existing.cover && cover) existing.cover = cover;
-        }
-      }
-
-      return Array.from(map.values()).sort((a, b) => b.count - a.count).slice(0, 8);
     } catch (e) {
-      console.error("getPopularAreasAction error:", e);
+      console.error("getPopularAreasAction error via View:", e);
       return [];
     }
   },
-  ["popular-areas-cache-v7"],
-  { revalidate: 60, tags: ["popular-areas", "public-data"] }
+  ["popular-areas-cache-v8"],
+  { revalidate: 3600, tags: ["popular-areas", "public-data"] }
 );
 

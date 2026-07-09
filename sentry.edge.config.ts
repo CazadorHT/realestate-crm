@@ -15,4 +15,21 @@ Sentry.init({
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
+  beforeSend(event, hint) {
+    try {
+      const original = hint?.originalException as any;
+      if (original && typeof original.digest === "string" && original.digest.startsWith("NEXT_REDIRECT")) {
+        return null;
+      }
+
+      const values = event.exception?.values;
+      if (values && values.some((v) => typeof v.value === "string" && v.value.includes("NEXT_REDIRECT"))) {
+        return null;
+      }
+    } catch (e) {
+      // ignore and send
+    }
+
+    return event;
+  },
 });

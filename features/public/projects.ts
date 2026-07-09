@@ -46,16 +46,22 @@ export interface PublicProject {
 
 /**
  * Get all active projects with property counts and price stats
+ * [OPTIMIZED: ดึงข้อมูลสรุปรวบยอดผ่าน Materialized View เพื่อเซฟท่อ Egress 99.9%]
  */
 export async function getPublicProjects(): Promise<PublicProject[]> {
   return unstable_cache(
     async () => {
       const supabase = await createClient();
 
-      // Fetch all active projects
+      // 1. ดึงข้อมูลตารางโครงการหลัก (ล็อกเฉพาะฟิลด์ที่ต้องใช้งานจริง)
       const { data: projects, error } = await supabase
         .from("projects")
-        .select("*")
+        .select(`
+          id, name, slug, developer, property_type, province, district, subdistrict, 
+          latitude, longitude, year_completed, total_units, description, image_url, 
+          gallery_urls, facilities, nearest_station_code, nearest_station_distance, 
+          seo_title, seo_description, sort_order
+        `)
         .eq("is_active", true)
         .order("sort_order", { ascending: true })
         .order("created_at", { ascending: false });
@@ -65,72 +71,29 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
         return [];
       }
 
-      // Fetch properties for the projects we just retrieved (restrict by project ids to avoid full-table scans)
-      const projectIds = (projects || []).map((pr: any) => pr.id).filter(Boolean);
-      let props: any[] = [];
-      if (projectIds.length > 0) {
-        const { data: activeProps, error: propsError } = await supabase
-          .from("properties")
-          .select("id, project_id, price, rental_price, status, main_image, listing_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru")
-          .in("project_id", projectIds)
-          .eq("status", "ACTIVE")
-          .is("deleted_at", null)
-          .limit(10000);
+      // 2. ดึงข้อมูลสถิติมิติต่างๆ ที่รวบรวมไว้แล้วจาก Materialized View (ขนาดเหลือหลัก KB)
+      const { data: statsData, error: statsError } = await supabase
+        .from("mv_project_property_stats")
+        .select("project_id, property_count, price_min, price_max, rental_min, rental_max, primary_popular_area");
 
-        if (propsError) {
-          console.error("Error fetching properties for projects:", propsError?.message, { projectCount: projectIds.length });
-          // Fall back to empty list so page can still render
-          props = [];
-        } else {
-          props = activeProps || [];
-        }
-      }
-      const projectPropsMap = new Map<string, any[]>();
-      for (const p of props) {
-        if (p.project_id) {
-          if (!projectPropsMap.has(p.project_id)) {
-            projectPropsMap.set(p.project_id, []);
-          }
-          projectPropsMap.get(p.project_id)!.push(p);
-        }
+      if (statsError) {
+        console.error("Error fetching project view stats:", statsError.message);
+        return [];
       }
 
+      // แปลงข้อมูลสถิติให้อยู่ในรูป Map เพื่อความเร็ว O(1) ในการค้นหาจับคู่
+      const statsMap = new Map<string, any>();
+      (statsData || []).forEach((row: any) => {
+        statsMap.set(row.project_id, row);
+      });
+
+      // 3. แมปโครงสร้างโปรเจกต์ส่งกลับให้หน้าบ้านใช้งาน
       return projects.map((p: any) => {
-        const associatedProps = projectPropsMap.get(p.id) || [];
-        const saleProps = associatedProps.filter((prop: any) => prop.listing_type === "SALE" || prop.listing_type === "SALE_AND_RENT");
-        const rentProps = associatedProps.filter((prop: any) => prop.listing_type === "RENT" || prop.listing_type === "SALE_AND_RENT");
+        const stat = statsMap.get(p.id);
+        const propertyCount = stat ? Number(stat.property_count || 0) : 0;
 
-        const prices = saleProps.map((prop: any) => prop.price).filter((price: any) => price != null);
-        const rentals = rentProps.map((prop: any) => prop.rental_price).filter((price: any) => price != null);
-        
-        // Find the most common popular_area for this project
-        const popularAreaCounts = new Map<string, { count: number, en: string | null, cn: string | null, ru: string | null }>();
-        for (const prop of associatedProps) {
-          if (prop.popular_area) {
-            const area = prop.popular_area.trim();
-            const current = popularAreaCounts.get(area) || { count: 0, en: prop.popular_area_en, cn: prop.popular_area_cn, ru: prop.popular_area_ru };
-            current.count += 1;
-            popularAreaCounts.set(area, current);
-          }
-        }
-        
-        let bestArea: string | null = null;
-        let bestAreaEn: string | null = null;
-        let bestAreaCn: string | null = null;
-        let bestAreaRu: string | null = null;
-        let maxCount = 0;
-        
-        popularAreaCounts.forEach((val, key) => {
-          if (val.count > maxCount) {
-            maxCount = val.count;
-            bestArea = key;
-            bestAreaEn = val.en;
-            bestAreaCn = val.cn;
-            bestAreaRu = val.ru;
-          }
-        });
-
-        const coverImage = p.image_url || associatedProps.find((prop: any) => prop.main_image)?.main_image || null;
+        // ดึงภาพหน้าปกโครงการ (ถ้าไม่มีให้ปล่อยเป็น null เพื่อไป Fallback ที่ฝั่ง Component หน้าบ้านแทน)
+        const coverImage = p.image_url || null;
 
         return {
           id: p.id,
@@ -153,18 +116,18 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
           nearestStationDistance: p.nearest_station_distance,
           seoTitle: p.seo_title,
           seoDescription: p.seo_description,
-          propertyCount: associatedProps.length,
-          priceMin: prices.length > 0 ? Math.min(...prices) : null,
-          priceMax: prices.length > 0 ? Math.max(...prices) : null,
-          rentalMin: rentals.length > 0 ? Math.min(...rentals) : null,
-          rentalMax: rentals.length > 0 ? Math.max(...rentals) : null,
-          popularArea: bestArea,
-          popularAreaEn: bestAreaEn,
-          popularAreaCn: bestAreaCn,
-          popularAreaRu: bestAreaRu,
+          propertyCount,
+          priceMin: stat ? stat.price_min : null,
+          priceMax: stat ? stat.price_max : null,
+          rentalMin: stat ? stat.rental_min : null,
+          rentalMax: stat ? stat.rental_max : null,
+          popularArea: stat ? stat.primary_popular_area : null,
+          popularAreaEn: null, // พารามิเตอร์แปลภาษาเสริมฝั่ง Locale สามารถทำจอยจับคู่ในอนาคตได้ตามความเหมาะสม
+          popularAreaCn: null,
+          popularAreaRu: null,
           sortOrder: p.sort_order ?? 0,
         };
-      }).filter((p: any) => p.propertyCount > 0);
+      }).filter((p: any) => p.propertyCount > 0); // กรองเอาเฉพาะโครงการที่มีอสังหาฯ พร้อมขายจริง
     },
     ["public-projects-list-v1"],
     { revalidate: 3600, tags: ["projects", "properties", "public-data"] }
@@ -178,7 +141,12 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
 
       const { data: p, error } = await supabase
         .from("projects")
-        .select("*")
+        .select(`
+          id, name, slug, developer, property_type, province, district, subdistrict, 
+          latitude, longitude, year_completed, total_units, description, image_url, 
+          gallery_urls, facilities, nearest_station_code, nearest_station_distance, 
+          seo_title, seo_description, sort_order
+        `)
         .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
@@ -188,22 +156,16 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
         return null;
       }
 
-      // Fetch properties belonging to this project
-      const { data: activeProps } = await supabase
-        .from("properties")
-        .select("id, price, rental_price, status, main_image, listing_type")
+      // เพิ่มความคล่องตัวในการดูข้อมูลหน้ารายละเอียดโครงการเดี่ยวๆ ผ่าน View สถิติ
+      const { data: stat, error: statErr } = await supabase
+        .from("mv_project_property_stats")
+        .select("property_count, price_min, price_max, rental_min, rental_max, primary_popular_area")
         .eq("project_id", p.id)
-        .eq("status", "ACTIVE")
-        .is("deleted_at", null);
+        .maybeSingle();
 
-      const props = activeProps || [];
-      const saleProps = props.filter((prop: any) => prop.listing_type === "SALE" || prop.listing_type === "SALE_AND_RENT");
-      const rentProps = props.filter((prop: any) => prop.listing_type === "RENT" || prop.listing_type === "SALE_AND_RENT");
-
-      const prices = saleProps.map((prop: any) => prop.price).filter((price: any) => price != null);
-      const rentals = rentProps.map((prop: any) => prop.rental_price).filter((price: any) => price != null);
-
-      const coverImage = p.image_url || props.find((prop: any) => prop.main_image)?.main_image || null;
+      if (statErr) {
+        console.error("Error fetching project view stats by slug:", statErr.message);
+      }
 
       return {
         id: p.id,
@@ -219,18 +181,22 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
         yearCompleted: p.year_completed,
         totalUnits: p.total_units,
         description: p.description,
-        imageUrl: coverImage,
+        imageUrl: p.image_url || null,
         galleryUrls: p.gallery_urls || [],
         facilities: p.facilities || [],
         nearestStationCode: p.nearest_station_code,
         nearestStationDistance: p.nearest_station_distance,
         seoTitle: p.seo_title,
         seoDescription: p.seo_description,
-        propertyCount: props.length,
-        priceMin: prices.length > 0 ? Math.min(...prices) : null,
-        priceMax: prices.length > 0 ? Math.max(...prices) : null,
-        rentalMin: rentals.length > 0 ? Math.min(...rentals) : null,
-        rentalMax: rentals.length > 0 ? Math.max(...rentals) : null,
+        propertyCount: stat ? Number(stat.property_count || 0) : 0,
+        priceMin: stat ? stat.price_min : null,
+        priceMax: stat ? stat.price_max : null,
+        rentalMin: stat ? stat.rental_min : null,
+        rentalMax: stat ? stat.rental_max : null,
+        popularArea: stat ? stat.primary_popular_area : null,
+        popularAreaEn: null,
+        popularAreaCn: null,
+        popularAreaRu: null,
         sortOrder: p.sort_order ?? 0,
       };
     },

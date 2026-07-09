@@ -14,4 +14,23 @@ Sentry.init({
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
+  beforeSend(event, hint) {
+    try {
+      const original = hint?.originalException as any;
+      // Next throws a special redirect error with a `digest` like "NEXT_REDIRECT;..."
+      if (original && typeof original.digest === "string" && original.digest.startsWith("NEXT_REDIRECT")) {
+        return null;
+      }
+
+      // Fallback: inspect the captured exception message/value
+      const values = event.exception?.values;
+      if (values && values.some((v) => typeof v.value === "string" && v.value.includes("NEXT_REDIRECT"))) {
+        return null;
+      }
+    } catch (e) {
+      // ignore filtering errors and fall through to send
+    }
+
+    return event;
+  },
 });
