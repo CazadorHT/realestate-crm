@@ -269,7 +269,7 @@ export async function createDealAction(input: CreateDealInput) {
     revalidateTag("dashboard-performance", "seconds");
     return { success: true, message: "สร้างดีลสำเร็จ", data };
   } catch (error: unknown) {
-    if (error && typeof error === "object" && "code" in error && (error as { code: string }).code === "AUTHZ_ERROR") {
+    if (error && typeof error === "object" && (("name" in error && (error as { name: string }).name === "AuthzError") || ("code" in error && (error as { code: string }).code === "AUTHZ_ERROR"))) {
       return authzFail(error);
     }
     console.error("Create Deal Error:", error);
@@ -444,7 +444,7 @@ export async function updateDealAction(input: UpdateDealInput) {
     revalidateTag("dashboard-performance", "seconds");
     return { success: true, message: "อัปเดตดีลสำเร็จ" };
   } catch (error: unknown) {
-    if (error && typeof error === "object" && "code" in error && (error as { code: string }).code === "AUTHZ_ERROR") {
+    if (error && typeof error === "object" && (("name" in error && (error as { name: string }).name === "AuthzError") || ("code" in error && (error as { code: string }).code === "AUTHZ_ERROR"))) {
       return authzFail(error);
     }
     console.error("Update Deal Error:", error);

@@ -75,9 +75,9 @@ export async function restorePropertyVersionAction(
     };
 
   } catch (err: unknown) {
-    const error = err as { code?: string; message?: string };
+    const error = err as { code?: string; message?: string; name?: string };
     console.error("restorePropertyVersionAction error:", error);
-    if (error?.code === "AUTHZ_ERROR") {
+    if (error?.name === "AuthzError" || error?.code === "AUTHZ_ERROR") {
       return { 
         success: false, 
         message: "คุณไม่มีสิทธิ์เข้าถึงฟังก์ชันนี้",

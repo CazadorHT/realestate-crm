@@ -131,6 +131,18 @@ async function resolveTenantId(
     return default_tenant_id;
   }
 
+  // Fallback to the first tenant registered in the system (Bulletproof for global admins / single-tenant layout)
+  const { data: fallbackTenant } = await supabase
+    .from("tenants_v3")
+    .select("id")
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (fallbackTenant?.id) {
+    return fallbackTenant.id;
+  }
+
   throw new Error("Unauthorized: Tenant ID is required but missing");
 }
 

@@ -111,8 +111,15 @@ function translateGenericMessage(message: string): string {
     return "คุณไม่มีสิทธิ์ดำเนินการนี้ หรือถูกจำกัดสิทธิ์โดย RLS";
   if (lower.includes("connection") || lower.includes("timeout"))
     return "การเชื่อมต่อฐานข้อมูลล้มเหลว หรือหมดเวลาการทำงาน (Timeout)";
-  if (lower.includes("jwt") || lower.includes("token") || lower.includes("auth"))
+  if (
+    lower.includes("jwt expired") ||
+    lower.includes("jwt signature") ||
+    lower.includes("invalid oauth") ||
+    (lower.includes("token") && !lower.includes("ai_token"))
+  )
     return "เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่";
+  if (lower.includes("unauthorized") || lower.includes("authz") || lower.includes("forbidden"))
+    return "คุณไม่มีสิทธิ์ดำเนินการในส่วนนี้";
   if (lower.includes("cache") || lower.includes("schema cache"))
     return "ระบบฐานข้อมูลมีความล่าช้าในการอัปเดต (Schema Cache) กรุณารอสักครู่แล้วรีเฟรชหน้าจอหรือลองใหม่";
   if (lower.includes("column") && lower.includes("does not exist"))

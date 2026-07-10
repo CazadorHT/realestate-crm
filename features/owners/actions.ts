@@ -254,7 +254,7 @@ export async function createOwnerAction(input: CreateOwnerInput): Promise<{
     revalidatePath("/protected/owners");
     return { success: true, message: "เพิ่มเจ้าของสำเร็จ", id: owner.id };
   } catch (err: unknown) {
-    if ((err as { code?: string })?.code === "AUTHZ_ERROR") return authzFail(err);
+    if ((err as any)?.name === "AuthzError" || (err as any)?.code === "AUTHZ_ERROR") return authzFail(err);
     console.error("createOwnerAction error:", err);
     return { 
       success: false, 
@@ -353,7 +353,7 @@ export async function updateOwnerAction(id: string, input: CreateOwnerInput) {
     revalidatePath("/protected/properties");
     return { success: true, message: "บันทึกข้อมูลสำเร็จ" };
   } catch (err: unknown) {
-    if ((err as { code?: string })?.code === "AUTHZ_ERROR") return authzFail(err);
+    if ((err as any)?.name === "AuthzError" || (err as any)?.code === "AUTHZ_ERROR") return authzFail(err);
     console.error("updateOwnerAction error:", err);
     return { 
       success: false, 
@@ -460,7 +460,7 @@ export async function deleteOwnerAction(id: string) {
     revalidatePath("/protected/properties");
     return { success: true, message: "ลบเจ้าของสำเร็จ" };
   } catch (err: unknown) {
-    if ((err as { code?: string })?.code === "AUTHZ_ERROR") return authzFail(err);
+    if ((err as any)?.name === "AuthzError" || (err as any)?.code === "AUTHZ_ERROR") return authzFail(err);
     return { success: false, message: mapDbError(err) };
   }
 }

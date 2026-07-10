@@ -585,9 +585,8 @@ export async function updatePropertyAction(
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err: unknown) {
     console.error("updatePropertyAction error:", err);
-    const errorWithCode = err as { code?: string };
-    if (errorWithCode?.code === "AUTHZ_ERROR") {
-      return authzFail(errorWithCode);
+    if ((err as any)?.name === "AuthzError" || (err as any)?.code === "AUTHZ_ERROR") {
+      return authzFail(err);
     }
     return { success: false, message: mapDbError(err) };
   }

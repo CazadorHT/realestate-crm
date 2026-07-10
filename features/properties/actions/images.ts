@@ -197,7 +197,7 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
     return { path, publicUrl: data.publicUrl };
   } catch (error: unknown) {
     console.error("uploadPropertyImageAction → error:", error);
-    if (error && typeof error === "object" && "code" in error && error.code === "AUTHZ_ERROR") {
+    if (error && typeof error === "object" && (("name" in error && error.name === "AuthzError") || ("code" in error && error.code === "AUTHZ_ERROR"))) {
       return { success: false, message: "Unauthorized" };
     }
     return { success: false, message: mapDbError(error) };
