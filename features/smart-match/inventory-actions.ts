@@ -374,7 +374,7 @@ export async function checkTransitAvailability(
     available.add("NEAR_TRANSIT");
   }
 
-  if (totalCount > 0 && nearTransitCount < totalCount) {
+  if (totalCount > 0) {
     available.add("ANY_LOCATION");
   }
 

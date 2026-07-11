@@ -327,6 +327,8 @@ export function useSmartMatchWizard() {
         propertyType:
           propertyType || (isOfficeMode ? "OFFICE_BUILDING" : undefined),
         language: language,
+        sizeMin: officeSize?.min,
+        sizeMax: officeSize?.max,
       });
 
       const timeoutPromise = new Promise((_, reject) =>

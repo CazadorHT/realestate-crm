@@ -17,6 +17,8 @@ export interface SearchCriteria {
   propertyType?: PropertyType;
   allowAirbnb?: boolean;
   language?: "en" | "th" | "cn" | "ru"; // Add language support
+  sizeMin?: number;
+  sizeMax?: number;
 }
 
 export interface PropertyMatch {
@@ -36,6 +38,9 @@ export interface PropertyMatch {
   bathrooms?: number;
   near_transit?: boolean;
   transit_station_name?: string;
+  transit_station_name_en?: string | null;
+  transit_station_name_cn?: string | null;
+  transit_station_name_ru?: string | null;
   transit_type?: string;
   transit_distance_meters?: number;
   property_type?: PropertyType;

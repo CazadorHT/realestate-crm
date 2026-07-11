@@ -108,6 +108,45 @@ export function SmartMatchWizard() {
       ]
     : combinedPropertyTypes;
 
+  const purposeOptions = [
+    { label: t("smart_match.purpose_rent"), value: "RENT" },
+    { label: t("smart_match.purpose_office"), value: "OFFICE" },
+    { label: t("smart_match.purpose_buy"), value: "BUY" },
+    { label: t("smart_match.purpose_invest"), value: "INVEST" },
+  ];
+
+  const sortedPurposeOptions = React.useMemo(() => {
+    return [...purposeOptions].sort((a, b) => {
+      const aAvail = availablePurposes.includes(a.value);
+      const bAvail = availablePurposes.includes(b.value);
+      if (aAvail && !bAvail) return -1;
+      if (!aAvail && bAvail) return 1;
+      return 0;
+    });
+  }, [availablePurposes, purposeOptions]);
+
+  const sortedPropertyTypes = React.useMemo(() => {
+    const availableSet = new Set(availablePropertyTypes);
+    return [...currentPropertyTypes].sort((a, b) => {
+      const aAvail = availableSet.has(a.value);
+      const bAvail = availableSet.has(b.value);
+      if (aAvail && !bAvail) return -1;
+      if (!aAvail && bAvail) return 1;
+      return 0;
+    });
+  }, [currentPropertyTypes, availablePropertyTypes]);
+
+  const sortedBudgetRanges = React.useMemo(() => {
+    const availableSet = new Set(availableBudgetIds);
+    return [...currentBudgetRanges].sort((a, b) => {
+      const aAvail = availableSet.has(a.id);
+      const bAvail = availableSet.has(b.id);
+      if (aAvail && !bAvail) return -1;
+      if (!aAvail && bAvail) return 1;
+      return 0;
+    });
+  }, [currentBudgetRanges, availableBudgetIds]);
+
   if (configLoading) {
     return (
       <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-5 md:p-8 border border-slate-100 h-[450px] flex flex-col items-center justify-center">
@@ -116,13 +155,6 @@ export function SmartMatchWizard() {
       </div>
     );
   }
-
-  const purposeOptions = [
-    { label: t("smart_match.purpose_rent"), value: "RENT" },
-    { label: t("smart_match.purpose_office"), value: "OFFICE" },
-    { label: t("smart_match.purpose_buy"), value: "BUY" },
-    { label: t("smart_match.purpose_invest"), value: "INVEST" },
-  ];
 
   return (
     <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-5 md:p-8 border border-slate-100 h-[450px] flex flex-col ">
@@ -140,8 +172,8 @@ export function SmartMatchWizard() {
               <QuizQuestion
                 title={t("smart_match.purpose_q")}
                 isLoading={isInventoryLoading}
-                options={purposeOptions.map((o) => o.label)}
-                availableOptions={purposeOptions
+                options={sortedPurposeOptions.map((o) => o.label)}
+                availableOptions={sortedPurposeOptions
                   .filter((o) => availablePurposes.includes(o.value))
                   .map((o) => o.label)}
                 onSelect={(val) => {
@@ -164,7 +196,7 @@ export function SmartMatchWizard() {
               <QuizQuestion
                 title={t("smart_match.type_q")}
                 isLoading={isInventoryLoading}
-                options={currentPropertyTypes
+                options={sortedPropertyTypes
                   .filter((t) =>
                     !isOfficeMode ? t.value !== "OFFICE_BUILDING" : true,
                   )
@@ -174,7 +206,7 @@ export function SmartMatchWizard() {
                     return res === key ? pt.label : res;
                   })}
                 availableOptions={
-                  currentPropertyTypes
+                  sortedPropertyTypes
                     .filter((t) =>
                       !isOfficeMode ? t.value !== "OFFICE_BUILDING" : true,
                     )
@@ -219,13 +251,13 @@ export function SmartMatchWizard() {
                     : t("smart_match.budget_buy_q")
                 }
                 isLoading={isInventoryLoading}
-                options={currentBudgetRanges.map((r) => {
+                options={sortedBudgetRanges.map((r) => {
                   const key = `smart_match.budget_labels.${r.id}`;
                   const res = t(key);
                   return res === key ? r.label : res;
                 })}
                 availableOptions={
-                  currentBudgetRanges
+                  sortedBudgetRanges
                     .filter((r) => availableBudgetIds.includes(r.id))
                     .map((r) => {
                       const key = `smart_match.budget_labels.${r.id}`;
@@ -261,9 +293,7 @@ export function SmartMatchWizard() {
                   availableTransitOptions.includes("NEAR_TRANSIT")
                     ? t("smart_match.transit_yes")
                     : "",
-                  availableTransitOptions.includes("ANY_LOCATION")
-                    ? t("smart_match.transit_no")
-                    : "",
+                  t("smart_match.transit_no"),
                 ].filter(Boolean)}
                 onSelect={(val) => {
                   setNearTransit(val === t("smart_match.transit_yes"));
@@ -276,7 +306,7 @@ export function SmartMatchWizard() {
               <QuizQuestion
                 title={t("smart_match.area_q")}
                 isLoading={isInventoryLoading}
-                options={popularAreas.map((a) => {
+                options={availableLocations.map((a) => {
                   const lang = language;
                   return (
                     (lang === "ru"

@@ -279,11 +279,10 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   if (sessionError)
     console.error("Error creating search session:", sessionError);
 
-  // 2. Fetch properties
   let query = (supabase as any)
     .from("properties")
     .select(
-      "id, slug, title, title_en, title_cn, title_ru, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(*), amenities",
+      "id, slug, title, title_en, title_cn, title_ru, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(*), amenities",
     )
     .eq("status", "ACTIVE")
     .is("deleted_at", null);
@@ -297,6 +296,14 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   // Filter Type
   if (criteria.propertyType) {
     query = query.eq("property_type", criteria.propertyType);
+  }
+
+  // Filter Size
+  if (criteria.sizeMin !== undefined) {
+    query = query.gte("size_sqm", criteria.sizeMin);
+  }
+  if (criteria.sizeMax !== undefined) {
+    query = query.lte("size_sqm", criteria.sizeMax);
   }
 
   const { data: properties, error: propertiesError } = await query.limit(100);
@@ -406,6 +413,9 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
         bathrooms: prop.bathrooms,
         near_transit: prop.near_transit,
         transit_station_name: prop.transit_station_name,
+        transit_station_name_en: prop.transit_station_name_en,
+        transit_station_name_cn: prop.transit_station_name_cn,
+        transit_station_name_ru: prop.transit_station_name_ru,
         transit_type: prop.transit_type,
         transit_distance_meters: prop.transit_distance_meters,
         property_type: prop.property_type,

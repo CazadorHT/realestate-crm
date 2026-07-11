@@ -14,7 +14,7 @@ interface ResultCardProps {
 }
 
 export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const PROPERTY_TYPE_NAMES: Partial<Record<PropertyType, string>> = {
     CONDO: t("home.property_types.condo"),
@@ -158,10 +158,17 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
                 <MapPin className="h-3 w-3" />
                 {match.commute_time} {t("smart_match.mins_to_work")}
               </div>
-              {match.near_transit && match.transit_station_name && (
+              {match.near_transit && (match.transit_station_name || match.transit_station_name_en || match.transit_station_name_cn || match.transit_station_name_ru) && (
                 <div className="flex items-center gap-1 text-[10px] text-blue-600 font-bold bg-blue-50 px-1.5 py-0.5 rounded border border-blue-100">
                   <TrendingUp className="h-3 w-3" />
-                  {match.transit_type || "BTS"} {match.transit_station_name}
+                  {match.transit_type || "BTS"}{" "}
+                  {(language === "en"
+                    ? match.transit_station_name_en
+                    : language === "cn"
+                      ? match.transit_station_name_cn
+                      : language === "ru"
+                        ? match.transit_station_name_ru
+                        : null) || match.transit_station_name}
                   {match.transit_distance_meters
                     ? ` (${match.transit_distance_meters} ${t("common.meters_short")})`
                     : ""}
