@@ -233,7 +233,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       <div className="container px-4 md:px-6 -mt-16 relative z-20 max-w-screen-2xl mx-auto">
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-9">
+          <div className="lg:col-span-9 min-w-0">
             <BlogDetailContent post={post} author={author} dict={dictionaries[language as Language]} language={language} />
 
             {/* View Counter (Client-side) */}

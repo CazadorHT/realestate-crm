@@ -97,8 +97,8 @@ export function BlogDetailContent({
       
       // Wrap table tags in a responsive scrollable div
       const responsiveHtml = cleanHtml
-        .replace(/<table([^>]*)>/g, '<div class="overflow-x-auto w-full my-6"><table$1>')
-        .replace(/<\/table>/g, '</table></div>');
+        .replace(/<table([^>]*)>/gi, '<div class="overflow-x-auto w-full my-6"><table$1>')
+        .replace(/<\/table>/gi, '</table></div>');
         
       setSanitizedContent(responsiveHtml);
     });
@@ -129,7 +129,7 @@ export function BlogDetailContent({
   }, []);
 
   return (
-    <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 shadow-xl border border-slate-200 w-full max-w-full">
+    <div className="bg-white rounded-2xl p-4 sm:p-6 md:p-10 shadow-xl border border-slate-200 w-full max-w-full min-w-0">
       {/* Excerpt */}
       {excerpt && (
         <p className="text-xs sm:text-base font-medium text-slate-600 mb-6 md:mb-8 leading-relaxed border-l-4 border-blue-600 pl-4 md:pl-6 py-2 bg-linear-to-r from-blue-50/50 to-transparent">
