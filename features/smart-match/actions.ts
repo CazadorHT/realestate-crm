@@ -273,7 +273,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
       near_transit: criteria.nearTransit,
       preferred_property_type: criteria.propertyType,
     })
-    .select("id, lead_id, property_id, match_score")
+    .select("id, lead_id")
     .single();
 
   if (sessionError)
