@@ -498,7 +498,7 @@ async function replaceInfographicPlaceholders(
 /**
  * Helper to generate image via Google Imagen 4 (or Pollinations fallback) and upload to Supabase.
  */
-async function generateAndUploadAiImage(
+export async function generateAndUploadAiImage(
   prompt: string,
   width: number = 1280,
   height: number = 720,

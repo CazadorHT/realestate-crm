@@ -8,6 +8,8 @@ import { onBlogGenerateRequested } from "@/lib/inngest/functions/blog-functions"
 import { weeklyPartitionMaintenance } from "@/lib/inngest/partition-functions";
 
 // ✅ Export the Inngest API route handler
+export const maxDuration = 300; // 5 minutes max duration for Vercel functions
+
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [

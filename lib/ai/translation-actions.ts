@@ -39,15 +39,19 @@ async function translateToLanguage(
     1. Maintain a professional, premium, and engaging tone suitable for real estate.
     2. ${
       contentType === "html"
-        ? "CRITICAL: Strictly preserve all HTML tags (e.g., <h2>, <p>, <ul>, <li>, <strong>, <a>). Do NOT remove, modify, or translate the tags themselves. Only translate the text content inside the tags."
-        : "Return the result as a clean string."
+        ? "CRITICAL: Strictly preserve all HTML tags (e.g., <h2>, <p>, <ul>, <li>, <strong>, <a>, <table>, <img>, etc.) and attributes (e.g., class, href, alt). Do NOT remove, modify, or translate the HTML tags or attributes themselves. Only translate the human-readable text content inside/between public tags."
+        : "Return the result as a clean text string."
     }
-    3. Return the response ONLY in a valid JSON format with a single key "translation".
-    4. Do not include any Markdown formatting like \`\`\`json or explanations.
+    3. Return ONLY the translated output directly.
+    4. Do not include any Markdown formatting blocks (do NOT wrap in \`\`\` or \`\`\`html) and do not provide any introductory/ending explanations or conversational notes. Just start directly with the translated text.
 
     TEXT TO TRANSLATE:
     ${text}
   `;
+
+  const systemInstruction = `You are a professional real estate and property marketing translator. 
+  Your job is to translate text or HTML content and return ONLY the translated results directly. 
+  Never include introductory texts (like "Here is the translation:"), never include markdown block wrappers (like \`\`\`html or \`\`\`), and never include explanations. Just start with the actual translation.`;
 
   let modelName: string | undefined;
 
@@ -56,38 +60,44 @@ async function translateToLanguage(
     const aiConfig = await getAiModelConfig();
     modelName = aiConfig.translation_model;
 
-    const result = await generateText(prompt, modelName);
+    const result = await generateText(prompt, modelName, 0, { systemInstruction });
     const responseText = result.text;
 
-    const extractJson = (text: string) => {
-      try {
-        const clean = text.trim();
-        if (clean.startsWith('{') && clean.endsWith('}')) return JSON.parse(clean);
-      } catch (e) {}
+    let translatedText = responseText.trim();
 
-      const markdownMatch = text.match(/```json\s?([\s\S]*?)\s?```/);
-      if (markdownMatch && markdownMatch[1]) {
-        try {
-          return JSON.parse(markdownMatch[1].trim());
-        } catch (e) {}
+    // Clean up typical markdown code block formatting first, if any
+    if (translatedText.startsWith("```")) {
+      const match = translatedText.match(/^```(?:html|json|xml|text|plain)?\n([\s\S]*?)\n```$/i);
+      if (match && match[1]) {
+        translatedText = match[1].trim();
+      } else {
+        translatedText = translatedText.replace(/^```[a-zA-Z]*\n?/g, "").replace(/\n?```$/g, "").trim();
       }
+    }
 
-      const start = text.indexOf('{');
-      const end = text.lastIndexOf('}');
-      if (start !== -1 && end !== -1 && end > start) {
-        let candidate = text.substring(start, end + 1);
-        try {
-          return JSON.parse(candidate);
-        } catch (e) {
-          try { return JSON.parse(candidate + '}'); } catch (e2) {}
+    // Fallback: If model completely ignored rules and returned a JSON string anyway
+    if (translatedText.startsWith("{") && translatedText.endsWith("}")) {
+      try {
+        const parsed = JSON.parse(translatedText);
+        if (parsed && typeof parsed.translation === "string") {
+          translatedText = parsed.translation;
+        } else if (parsed && typeof parsed.text === "string") {
+          translatedText = parsed.text;
+        }
+      } catch (e) {
+        // If it starts/ends with { } but fails JSON.parse (due to raw double quotes inside HTML), 
+        // try to extract from inside the key "translation" using regex
+        const translationRegex = /"translation"\s*:\s*"([\s\S]*)"\s*}/i;
+        const match = translatedText.match(translationRegex);
+        if (match && match[1]) {
+          // Unescape quotes if they were escaped
+          translatedText = match[1].replace(/\\"/g, '"').trim();
         }
       }
-      return null;
-    };
+    }
 
-    const parsedResult = extractJson(responseText);
-    if (!parsedResult || typeof parsedResult.translation !== "string") {
-      throw new Error("JSON Extraction Failed");
+    if (!translatedText || translatedText.trim() === "") {
+      throw new Error("Translation Result is empty");
     }
 
     // Log success
@@ -100,7 +110,7 @@ async function translateToLanguage(
       userId,
     });
 
-    return parsedResult.translation;
+    return translatedText;
   } catch (error: any) {
     console.error(`[AI Translation] Failed to translate to ${targetLang}:`, error);
     
