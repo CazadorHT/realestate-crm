@@ -20,7 +20,16 @@ import Image from "next/image";
 import { ServiceGalleryClient } from "./ServiceGalleryClient";
 import { ServiceViewCounter } from "@/components/services/ServiceViewCounter";
 
-export const dynamic = "force-dynamic";
+import { getServices } from "@/features/services/actions";
+
+export const revalidate = 86400; // 1 day cache (ISR)
+
+export async function generateStaticParams() {
+  const res = await getServices(1, 100);
+  return (res.data || []).map((service) => ({
+    slug: service.slug,
+  }));
+}
 
 interface PageProps {
   params: Promise<{ slug: string }>;

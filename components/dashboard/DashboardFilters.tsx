@@ -345,12 +345,73 @@ export function DashboardFilters({
               </Tooltip>
             </>
           ) : (
-            <div className="flex items-center gap-2 px-4 py-2">
-              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-              <span className="text-xs font-semibold text-slate-700">
-                ติดตามผลงานส่วนตัว
-              </span>
-            </div>
+            <>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() =>
+                      updateFilter({
+                        view: "company",
+                        branchId: "ALL",
+                        teamId: "ALL",
+                        agentId: "ALL",
+                      })
+                    }
+                    disabled={isPending || isUpdating}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap",
+                      view === "company"
+                        ? "bg-white text-blue-500 shadow-sm"
+                        : "text-slate-500 hover:text-blue-600",
+                    )}
+                  >
+                    <Building2 size={14} /> บริษัท
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="bottom"
+                  className="bg-slate-900 text-white border-slate-800"
+                >
+                  <p className="font-bold">มุมมองบริษัท</p>
+                  <p className="text-[10px] opacity-70">
+                    ดูภาพรวมแยกตามสาขาที่คุณเป็นสมาชิก
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() =>
+                      updateFilter({
+                        view: "personal",
+                        branchId: "ALL",
+                        teamId: "ALL",
+                        agentId: "ALL",
+                      })
+                    }
+                    disabled={isPending || isUpdating}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap",
+                      view === "personal"
+                        ? "bg-white text-blue-500 shadow-sm"
+                        : "text-slate-500 hover:text-blue-600",
+                    )}
+                  >
+                    <User size={14} /> ส่วนตัว
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="bottom"
+                  className="bg-slate-900 text-white border-slate-800"
+                >
+                  <p className="font-bold">ผลงานส่วนตัว</p>
+                  <p className="text-[10px] opacity-70">
+                    สรุปข้อมูลเฉพาะของคุณเอง
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </>
           )}
         </div>
 

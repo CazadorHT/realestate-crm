@@ -47,7 +47,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
     <div className="h-[300px] w-full relative">
       <div className="h-[280px] w-full relative">
           {mounted ? (
-            <ResponsiveContainer width="99%" height={280}>
+            <ResponsiveContainer width="99%" height={280} minWidth={0}>
               <BarChart
                 data={data}
                 margin={{ top: 10, right: 10, left: 10, bottom: 25 }}

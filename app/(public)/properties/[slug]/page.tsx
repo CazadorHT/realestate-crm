@@ -3,7 +3,7 @@ import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import { Metadata } from "next";
 
-export const revalidate = 3600; // S-Tier Scaling: Revalidate every hour
+export const revalidate = 86400; // S-Tier Scaling: Revalidate every 24 hours (1 day)
 
 // Logic & Helpers
 import { getPublicPropertyDetail } from "@/features/properties/actions/fetch-public-property";

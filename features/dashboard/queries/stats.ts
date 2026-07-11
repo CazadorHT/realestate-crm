@@ -104,8 +104,8 @@ export async function getDashboardStats({
         if (!isAdmin && firstMember) {
           // If the agent is not an admin, they can only view data from their member tenants
           myTenantIds = (members || []).map((m: { role: string | null; tenant_id: string | null }) => m.tenant_id).filter(Boolean) as string[];
-          if (myTenantIds.length > 0) {
-            activeTenantId = myTenantIds[0]; // fallback default first
+          if (activeTenantId && !myTenantIds.includes(activeTenantId)) {
+            activeTenantId = myTenantIds[0] || null;
           }
         }
       }
@@ -113,22 +113,35 @@ export async function getDashboardStats({
 
     let revCurQuery = supabase.from("properties_core").select("sale_price, rent_price, status").in("status", [3, 4, 5]).is("deleted_at", null);
     let leadsCurQuery = supabase.from("crm_leads_v3").select("id", { count: "exact", head: true });
-    let commissionDealsQuery = supabase.from("financial_ledger_v3").select("amount_total, created_at").eq("transaction_type", "deal_closed");
+    let commissionDealsQuery;
     
     if (view === "personal" && agentId) {
       revCurQuery = revCurQuery.eq("assigned_to", agentId);
-      leadsCurQuery = leadsCurQuery.eq("assigned_to", agentId);
-      commissionDealsQuery = commissionDealsQuery.eq("to_identity_id", agentId);
-    } else if (activeTenantId) {
-      // If we have a specific active tenant (or first fallback tenant)
-      revCurQuery = revCurQuery.eq("tenant_id", activeTenantId);
-      leadsCurQuery = leadsCurQuery.eq("tenant_id", activeTenantId);
-      commissionDealsQuery = commissionDealsQuery.eq("tenant_id", activeTenantId);
-    } else if (myTenantIds.length > 0) {
-      // If no specific tenant is selected (viewing all) and agent is member of multiple tenants
-      revCurQuery = revCurQuery.in("tenant_id", myTenantIds);
-      leadsCurQuery = leadsCurQuery.in("tenant_id", myTenantIds);
-      commissionDealsQuery = commissionDealsQuery.in("tenant_id", myTenantIds);
+      if (activeTenantId) {
+        leadsCurQuery = leadsCurQuery.eq("tenant_id", activeTenantId);
+      } else if (myTenantIds.length > 0) {
+        leadsCurQuery = leadsCurQuery.in("tenant_id", myTenantIds);
+      }
+      commissionDealsQuery = supabase
+        .from("crm_deal_commissions_v3")
+        .select("amount, created_at, deal:crm_deals_v3!inner(status)")
+        .eq("recipient_id", agentId)
+        .eq("deal.status", "CLOSED_WIN");
+    } else {
+      commissionDealsQuery = supabase
+        .from("financial_ledger_v3")
+        .select("amount_total, created_at")
+        .eq("transaction_type", "deal_closed");
+
+      if (activeTenantId) {
+        revCurQuery = revCurQuery.eq("tenant_id", activeTenantId);
+        leadsCurQuery = leadsCurQuery.eq("tenant_id", activeTenantId);
+        commissionDealsQuery = commissionDealsQuery.eq("tenant_id", activeTenantId);
+      } else if (myTenantIds.length > 0) {
+        revCurQuery = revCurQuery.in("tenant_id", myTenantIds);
+        leadsCurQuery = leadsCurQuery.in("tenant_id", myTenantIds);
+        commissionDealsQuery = commissionDealsQuery.in("tenant_id", myTenantIds);
+      }
     }
     
     if (range !== "all" && range !== "ALL" && startDate) {
@@ -162,7 +175,7 @@ export async function getDashboardStats({
 
     // status 3 = under contract/reserved, 4 = SOLD, 5 = RENTED
     const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, p: Partial<PropertyRow>) => sum + ([3, 4, 5].includes(p.status as number) ? (Number(p.sale_price) || Number(p.rent_price) || 0) : 0), 0);
-    const totalCommission = (commissionDeals || []).reduce((sum: number, d: Partial<LedgerRow>) => sum + (Number(d.amount_total) || 0), 0);
+    const totalCommission = (commissionDeals || []).reduce((sum: number, d: any) => sum + (Number(d.amount_total ?? d.amount) || 0), 0);
     const dealsWon = (commissionDeals || []).length;
 
     return {
@@ -231,24 +244,29 @@ export async function getRevenueChartData(args: DashboardQueryArgs): Promise<Rev
         
         if (!isAdmin && firstMember) {
           myTenantIds = (members || []).map((m: { role: string | null; tenant_id: string | null }) => m.tenant_id).filter(Boolean) as string[];
-          if (myTenantIds.length > 0) {
-            activeTenantId = myTenantIds[0];
+          if (activeTenantId && !myTenantIds.includes(activeTenantId)) {
+            activeTenantId = myTenantIds[0] || null;
           }
         }
       }
     }
 
-    let query = supabase.from("financial_ledger_v3")
-      .select("amount_total, status, created_at")
-      .eq("transaction_type", "deal_closed");
-
-    // We will filter by date in memory to support fallback
+    let query;
     if (args.view === "personal" && args.agentId) {
-      query = query.eq("to_identity_id", args.agentId);
-    } else if (activeTenantId) {
-      query = query.eq("tenant_id", activeTenantId);
-    } else if (myTenantIds.length > 0) {
-      query = query.in("tenant_id", myTenantIds);
+      query = supabase.from("crm_deal_commissions_v3")
+        .select("amount, created_at, deal:crm_deals_v3!inner(status)")
+        .eq("recipient_id", args.agentId)
+        .eq("deal.status", "CLOSED_WIN");
+    } else {
+      query = supabase.from("financial_ledger_v3")
+        .select("amount_total, status, created_at")
+        .eq("transaction_type", "deal_closed");
+
+      if (activeTenantId) {
+        query = query.eq("tenant_id", activeTenantId);
+      } else if (myTenantIds.length > 0) {
+        query = query.in("tenant_id", myTenantIds);
+      }
     }
 
     const { data: rawData } = await query;
@@ -302,7 +320,7 @@ export async function getRevenueChartData(args: DashboardQueryArgs): Promise<Rev
 
     const todayLabel = `${now.getDate()}/${now.getMonth() + 1} (วันนี้)`;
 
-    (data || []).forEach((d: LedgerRow) => {
+    (data || []).forEach((d: any) => {
       const date = new Date(d.created_at);
       let label = "";
       if (isDaily) {
@@ -315,7 +333,7 @@ export async function getRevenueChartData(args: DashboardQueryArgs): Promise<Rev
       }
       
       if (grouped.has(label)) {
-        const val = Number(d.amount_total) || 0;
+        const val = Number(d.amount_total ?? d.amount) || 0;
         grouped.set(label, (grouped.get(label) || 0) + val);
       }
     });
@@ -343,21 +361,24 @@ export async function getFunnelStats(args: DashboardQueryArgs): Promise<FunnelDa
       ? args.targetId 
       : (!args.tenantId || args.tenantId.toUpperCase() === "ALL" ? null : args.tenantId);
 
+    let myTenantIds: string[] = [];
+
     // 🛡️ RBAC: Only fallback to profileTenantId if NOT an admin selecting "ALL"
     if (!activeTenantId) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: member } = await supabase.from("tenant_members_v3")
+        const { data: members } = await supabase.from("tenant_members_v3")
           .select("role, tenant_id")
-          .eq("identity_id", user.id)
-          .limit(1)
-          .maybeSingle();
+          .eq("identity_id", user.id);
         
-        const isAdmin = member?.role === "ADMIN" || member?.role === "MANAGER" || member?.role === "OWNER";
-        const profileTenantId = member?.tenant_id || null;
+        const firstMember = members?.[0];
+        const isAdmin = members?.some((m: { role: string | null; tenant_id: string | null }) => m.role === "ADMIN" || m.role === "MANAGER" || m.role === "OWNER");
         
-        if (!isAdmin && profileTenantId) {
-          activeTenantId = profileTenantId;
+        if (!isAdmin && firstMember) {
+          myTenantIds = (members || []).map((m: { role: string | null; tenant_id: string | null }) => m.tenant_id).filter(Boolean) as string[];
+          if (activeTenantId && !myTenantIds.includes(activeTenantId)) {
+            activeTenantId = myTenantIds[0] || null;
+          }
         }
       }
     }
@@ -372,11 +393,18 @@ export async function getFunnelStats(args: DashboardQueryArgs): Promise<FunnelDa
     }
 
     if (args.view === "personal" && args.agentId) {
-      query = query.eq("assigned_to", args.agentId);
+      if (activeTenantId) {
+        query = query.eq("tenant_id", activeTenantId);
+      } else if (myTenantIds.length > 0) {
+        query = query.in("tenant_id", myTenantIds);
+      }
       dealsQuery = dealsQuery.eq("agent_id", args.agentId);
     } else if (activeTenantId) {
       query = query.eq("tenant_id", activeTenantId);
       dealsQuery = dealsQuery.eq("tenant_id", activeTenantId);
+    } else if (myTenantIds.length > 0) {
+      query = query.in("tenant_id", myTenantIds);
+      dealsQuery = dealsQuery.in("tenant_id", myTenantIds);
     }
 
     const [
@@ -428,21 +456,24 @@ export async function getPipelineStats(args: DashboardQueryArgs): Promise<Pipeli
       ? args.targetId 
       : (!args.tenantId || args.tenantId.toUpperCase() === "ALL" ? null : args.tenantId);
 
+    let myTenantIds: string[] = [];
+
     // 🛡️ RBAC: Only fallback to profileTenantId if NOT an admin selecting "ALL"
     if (!activeTenantId) {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: member } = await supabase.from("tenant_members_v3")
+        const { data: members } = await supabase.from("tenant_members_v3")
           .select("role, tenant_id")
-          .eq("identity_id", user.id)
-          .limit(1)
-          .maybeSingle();
+          .eq("identity_id", user.id);
         
-        const isAdmin = member?.role === "ADMIN" || member?.role === "MANAGER" || member?.role === "OWNER";
-        const profileTenantId = member?.tenant_id || null;
+        const firstMember = members?.[0];
+        const isAdmin = members?.some((m: { role: string | null; tenant_id: string | null }) => m.role === "ADMIN" || m.role === "MANAGER" || m.role === "OWNER");
         
-        if (!isAdmin && profileTenantId) {
-          activeTenantId = profileTenantId;
+        if (!isAdmin && firstMember) {
+          myTenantIds = (members || []).map((m: { role: string | null; tenant_id: string | null }) => m.tenant_id).filter(Boolean) as string[];
+          if (activeTenantId && !myTenantIds.includes(activeTenantId)) {
+            activeTenantId = myTenantIds[0] || null;
+          }
         }
       }
     }
@@ -462,6 +493,9 @@ export async function getPipelineStats(args: DashboardQueryArgs): Promise<Pipeli
     } else if (activeTenantId) {
       query = query.eq("tenant_id", activeTenantId);
       dealsQuery = dealsQuery.eq("tenant_id", activeTenantId);
+    } else if (myTenantIds.length > 0) {
+      query = query.in("tenant_id", myTenantIds);
+      dealsQuery = dealsQuery.in("tenant_id", myTenantIds);
     }
 
     const [

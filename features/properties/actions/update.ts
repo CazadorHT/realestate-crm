@@ -581,6 +581,8 @@ export async function updatePropertyAction(
     }
 
     revalidatePath("/", "layout");
+    revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
 
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err: unknown) {
@@ -693,6 +695,7 @@ export async function updatePropertyStatusAction(input: {
     }
 
     revalidateTag("properties", "seconds");
+    revalidateTag("public-data", "seconds");
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (err) {
     return { success: false, message: mapDbError(err) };

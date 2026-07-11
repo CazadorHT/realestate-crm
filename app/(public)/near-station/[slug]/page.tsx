@@ -17,7 +17,7 @@ import { StationHero } from "@/components/public/near-station/StationHero";
 import { StationSeoContent } from "@/components/public/near-station/StationSeoContent";
 import { NearbyStationsSection } from "@/components/public/near-station/NearbyStationsSection";
 
-export const revalidate = 3600;
+export const revalidate = 86400; // 24 hours (1 day) cache (ISR)
 
 const DETAIL_LOCALIZATION: Record<string, Record<string, string>> = {
   breadcrumb_home: {

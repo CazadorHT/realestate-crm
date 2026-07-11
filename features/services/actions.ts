@@ -277,6 +277,9 @@ export async function createService(input: CreateServiceInput) {
     });
 
     revalidatePath("/services");
+    if (validated.slug) {
+      revalidatePath(`/services/${validated.slug}`);
+    }
     revalidatePath("/protected/services");
     return { success: true, message: "สร้างบริการใหม่เข้าสู่ระบบเรียบร้อย ✨" };
   } catch (err: unknown) {
@@ -302,7 +305,7 @@ export async function updateService(input: UpdateServiceInput) {
     // 1. Fetch old data to prevent JSONB partial loss
     const { data: old } = await ctx.supabase
       .from("cms_content_v3")
-      .select("title, content, meta_data, status, published_at, seo_score")
+      .select("title, content, meta_data, status, published_at, seo_score, slug")
       .eq("id", id)
       .single();
 
@@ -382,6 +385,12 @@ export async function updateService(input: UpdateServiceInput) {
     });
 
     revalidatePath("/services");
+    if (old.slug) {
+      revalidatePath(`/services/${old.slug}`);
+    }
+    if (validated.slug && validated.slug !== old.slug) {
+      revalidatePath(`/services/${validated.slug}`);
+    }
     revalidatePath("/protected/services");
     return { success: true, message: "อัปเดตข้อมูลบริการเรียบร้อย ✨" };
   } catch (err: unknown) {
@@ -405,6 +414,12 @@ export async function deleteService(id: string) {
     assertStaff(ctx.role);
     if (!ctx.tenantId) throw new Error("Tenant context required");
 
+    const { data: old } = await ctx.supabase
+      .from("cms_content_v3")
+      .select("slug")
+      .eq("id", id)
+      .single();
+
     const { error } = await ctx.supabase
       .from("cms_content_v3")
       .update({ 
@@ -426,6 +441,9 @@ export async function deleteService(id: string) {
     });
 
     revalidatePath("/services");
+    if (old?.slug) {
+      revalidatePath(`/services/${old.slug}`);
+    }
     revalidatePath("/protected/services");
     return { success: true, message: "ย้ายบริการลงถังขยะเรียบร้อย ✅" };
   } catch (err: unknown) {
@@ -442,6 +460,12 @@ export async function restoreServiceAction(id: string) {
     const ctx = await requireAuthContext();
     assertStaff(ctx.role);
     if (!ctx.tenantId) throw new Error("Tenant context required");
+
+    const { data: old } = await ctx.supabase
+      .from("cms_content_v3")
+      .select("slug")
+      .eq("id", id)
+      .single();
 
     const { error } = await ctx.supabase
       .from("cms_content_v3")
@@ -460,6 +484,11 @@ export async function restoreServiceAction(id: string) {
       actor_id: ctx.user.id,
       description: `กู้คืนบริการจากถังขยะ: ${id}`
     });
+
+    revalidatePath("/services");
+    if (old?.slug) {
+      revalidatePath(`/services/${old.slug}`);
+    }
     revalidatePath("/protected/services");
     return { success: true, message: "กู้คืนบริการเรียบร้อย ✨" };
   } catch (err: unknown) {

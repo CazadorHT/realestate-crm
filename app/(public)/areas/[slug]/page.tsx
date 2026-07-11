@@ -17,7 +17,7 @@ import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
 import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
 import { getProvinceName } from "@/lib/utils/provinces";
 
-export const revalidate = 3600; // 1 hour caching
+export const revalidate = 86400; // 24 hours (1 day) cache (ISR)
 
 export async function generateStaticParams() {
   const slugs = await getAllAreaSlugs();

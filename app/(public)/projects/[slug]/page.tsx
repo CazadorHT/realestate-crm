@@ -14,7 +14,7 @@ import { ProjectFacilitiesCard } from "@/components/public/project-detail/Projec
 import { ProjectLocationMapCard } from "@/components/public/project-detail/ProjectLocationMapCard";
 import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
 
-export const revalidate = 3600; // 1 hour
+export const revalidate = 86400; // 24 hours (1 day) cache (ISR)
 
 const DETAIL_LOCALIZATION: Record<string, Record<string, string>> = {
   breadcrumb_home: { th: "หน้าแรก", en: "Home", cn: "首页", ru: "Главная" },

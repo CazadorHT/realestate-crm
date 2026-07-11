@@ -7,7 +7,7 @@ import { getServerTranslations } from "@/lib/i18n";
 import { getPublicProperties, GetPropertiesOptions } from "@/lib/services/properties";
 import { publicPropertyFilterSchema } from "@/features/public/schema";
 
-export const revalidate = 60; // ISR: re-generate page every 60 seconds
+export const revalidate = 86400; // 24 hours (1 day) cache (ISR)
 
 function parseSearchParamsToOptions(searchParams: any): GetPropertiesOptions {
   const rawParams: Record<string, any> = {};
