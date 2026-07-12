@@ -282,7 +282,7 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
   let query = (supabase as any)
     .from("properties")
     .select(
-      "id, slug, title, title_en, title_cn, title_ru, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(*), amenities",
+      "id, slug, title, title_en, title_cn, title_ru, price, rental_price, original_price, original_rental_price, rent_price_per_sqm, price_per_sqm, size_sqm, bedrooms, bathrooms, near_transit, transit_station_name, transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_type, transit_distance_meters, property_type, popular_area, district, province, property_images(image_url, is_cover, sort_order), amenities",
     )
     .eq("status", "ACTIVE")
     .is("deleted_at", null);
@@ -291,6 +291,23 @@ export async function searchPropertiesAction(criteria: SearchCriteria) {
     query = query.in("listing_type", ["SALE", "SALE_AND_RENT"]);
   } else if (criteria.purpose === "RENT") {
     query = query.in("listing_type", ["RENT", "SALE_AND_RENT"]);
+  }
+
+  // Database-level Budget Filtering to minimize egress traffic
+  if (criteria.purpose === "RENT") {
+    if (criteria.budgetMin !== undefined && criteria.budgetMin > 0) {
+      query = query.or(`rental_price.gte.${criteria.budgetMin},original_rental_price.gte.${criteria.budgetMin}`);
+    }
+    if (criteria.budgetMax !== undefined && criteria.budgetMax < 999999999) {
+      query = query.or(`rental_price.lte.${criteria.budgetMax},original_rental_price.lte.${criteria.budgetMax}`);
+    }
+  } else {
+    if (criteria.budgetMin !== undefined && criteria.budgetMin > 0) {
+      query = query.or(`price.gte.${criteria.budgetMin},original_price.gte.${criteria.budgetMin}`);
+    }
+    if (criteria.budgetMax !== undefined && criteria.budgetMax < 999999999) {
+      query = query.or(`price.lte.${criteria.budgetMax},original_price.lte.${criteria.budgetMax}`);
+    }
   }
 
   // Filter Type

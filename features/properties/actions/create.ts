@@ -18,6 +18,7 @@ import {
   DuplicatePropertyResult,
   PropertyRow,
 } from "../types";
+import { purgeCloudflareCache } from "@/lib/cloudflare";
 import {
   PROPERTY_STATUS_DB_VALUE,
   LISTING_TYPE_DB_VALUE,
@@ -484,6 +485,7 @@ export async function createPropertyAction(
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");
@@ -719,6 +721,7 @@ export async function duplicatePropertyAction(
     revalidatePath("/protected/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     revalidateTag("popular-areas", "seconds");
     revalidateTag("dashboard-stats", "seconds");
     revalidateTag("dashboard-charts", "seconds");

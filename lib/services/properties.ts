@@ -97,7 +97,28 @@ export type PropertyRow = {
   }> | null;
 };
 
-const PUBLIC_COLUMNS = `
+const PUBLIC_LIST_COLUMNS = `
+  id, slug, title, title_en, title_cn, title_ru,
+  property_type, price, rental_price, original_price, original_rental_price,
+  verified, min_contract_months, bedrooms, meta_keywords, bathrooms,
+  size_sqm, land_size_sqwah, parking_slots, floor, created_at, updated_at,
+  listing_type, popular_area, popular_area_en, popular_area_cn, popular_area_ru, province, district, subdistrict,
+  address_line1, address_line1_en, address_line1_cn, address_line1_ru,
+  nearby_transits, is_hot_deal,
+  near_transit, transit_type, transit_station_name,
+  transit_station_name_en, transit_station_name_cn, transit_station_name_ru, transit_distance_meters,
+  google_maps_link, is_fully_furnished, is_bare_shell,
+  is_pet_friendly, is_foreigner_quota, is_tax_registered,
+  amenities,
+  property_images (
+    image_url, storage_path, is_cover, sort_order
+  ),
+  property_features (
+    features (id, name, name_en, name_cn, name_ru, icon_key)
+  )
+`;
+
+const PUBLIC_DETAIL_COLUMNS = `
   id, slug, title, title_en, title_cn, title_ru, description, description_en, description_cn, description_ru,
   property_type, price, rental_price, original_price, original_rental_price,
   verified, min_contract_months, bedrooms, meta_keywords, bathrooms,
@@ -165,7 +186,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
         let query = supabase
           .from("properties")
-          .select(PUBLIC_COLUMNS)
+          .select(PUBLIC_LIST_COLUMNS)
           .eq("status", "ACTIVE")
           .is("deleted_at", null);
 
@@ -398,7 +419,7 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
   return unstable_cache(
     async () => {
       const supabase = await createClient();
-      const { data, error } = await supabase.from("properties").select(PUBLIC_COLUMNS).eq("slug", slug).eq("status", "ACTIVE").single();
+      const { data, error } = await supabase.from("properties").select(PUBLIC_DETAIL_COLUMNS).eq("slug", slug).eq("status", "ACTIVE").single();
       if (error || !data) return null;
 
       const typedRow = data as unknown as PropertyRow;

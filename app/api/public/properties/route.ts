@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     const result = await getPublicProperties(options);
     return NextResponse.json(result, {
       headers: {
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+        "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=43200",
       },
     });
   } catch (error) {

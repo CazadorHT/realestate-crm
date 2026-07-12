@@ -28,6 +28,7 @@ import {
   getPropertyTypeFromDb,
 } from "../labels";
 import { PropertyRow } from "@/lib/services/properties";
+import { purgeCloudflareCache } from "@/lib/cloudflare";
 import {
   finalizeUploadSession,
   validatePropertyImagePaths,
@@ -583,6 +584,7 @@ export async function updatePropertyAction(
     revalidatePath("/", "layout");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
 
     return { success: true, message: "อัปเดตข้อมูลสำเร็จ", propertyId: id, slug: seoData.slug };
   } catch (err: unknown) {
@@ -696,6 +698,7 @@ export async function updatePropertyStatusAction(input: {
 
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
+    purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));
     return { success: true, message: "อัปเดตสถานะสำเร็จ" };
   } catch (err) {
     return { success: false, message: mapDbError(err) };
