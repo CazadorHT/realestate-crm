@@ -47,6 +47,7 @@ export function PropertyImageUploader({
   maxFileSizeMB = IMAGE_UPLOAD_POLICY.maxBytes / (1024 * 1024),
   disabled = false,
   cleanupOnUnmount = true,
+  allowPaste = true,
 }: PropertyImageUploaderProps) {
   const [errorDialog, setErrorDialog] = useState<{
     type: "warning" | "error";
@@ -406,7 +407,7 @@ export function PropertyImageUploader({
 
   const handlePaste = useCallback(
     (e: ClipboardEvent) => {
-      if (disabled) return;
+      if (disabled || !allowPaste) return;
 
       // Prevent pasting images when user is typing in a text field
       const activeEl = document.activeElement;
@@ -417,16 +418,29 @@ export function PropertyImageUploader({
           activeEl.getAttribute("contenteditable") === "true");
       if (isInput) return;
 
-      const items = e.clipboardData?.items;
-      if (!items) return;
-
       const files: File[] = [];
-      for (let i = 0; i < items.length; i++) {
-        const item = items[i];
-        if (item.type.indexOf("image") !== -1) {
-          const file = item.getAsFile();
-          if (file) {
+      const items = e.clipboardData?.items;
+      const clipboardFiles = e.clipboardData?.files;
+
+      // 1. Try to get actual files first (e.g. copied from Finder/Explorer)
+      if (clipboardFiles && clipboardFiles.length > 0) {
+        for (let i = 0; i < clipboardFiles.length; i++) {
+          const file = clipboardFiles[i];
+          if (file.type.startsWith("image/") && file.size > 0) {
             files.push(file);
+          }
+        }
+      }
+
+      // 2. Fallback to items (e.g. screenshots / inline copy-paste)
+      if (files.length === 0 && items) {
+        for (let i = 0; i < items.length; i++) {
+          const item = items[i];
+          if (item.kind === "file" && item.type.startsWith("image/")) {
+            const file = item.getAsFile();
+            if (file && file.size > 0) {
+              files.push(file);
+            }
           }
         }
       }

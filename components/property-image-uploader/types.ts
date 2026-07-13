@@ -24,4 +24,5 @@ export interface PropertyImageUploaderProps {
   maxFileSizeMB?: number;
   disabled?: boolean;
   cleanupOnUnmount?: boolean; // ถ้า true → ออกจากหน้านี้โดยไม่ submit ให้ลบรูปทิ้ง
+  allowPaste?: boolean;
 }

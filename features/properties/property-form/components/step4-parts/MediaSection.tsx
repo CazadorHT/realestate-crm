@@ -118,6 +118,7 @@ export const MediaSection = ({
                   maxFiles={5}
                   maxFileSizeMB={IMAGE_UPLOAD_POLICY.maxBytes / (1024 * 1024)}
                   cleanupOnUnmount={false}
+                  allowPaste={false}
                 />
               </FormControl>
               <FormMessage />
