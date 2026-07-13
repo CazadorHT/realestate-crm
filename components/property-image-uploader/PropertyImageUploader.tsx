@@ -57,6 +57,7 @@ export function PropertyImageUploader({
   } | null>(null);
 
   const [isWatermarkEnabled, setIsWatermarkEnabled] = useState(true);
+  const [isConfirmClearOpen, setIsConfirmClearOpen] = useState(false);
 
   const [images, setImages] = useState<ImageItem[]>(() => {
     const valuePaths = value ? value.filter(Boolean) : [];
@@ -508,10 +509,13 @@ export function PropertyImageUploader({
     toast.success("ลบรูปสำเร็จ");
   };
 
-  const handleClearAll = async () => {
+  const handleClearAll = () => {
     if (disabled) return;
-    const confirmClear = window.confirm("คุณต้องการลบรูปภาพทั้งหมดใช่หรือไม่?");
-    if (!confirmClear) return;
+    setIsConfirmClearOpen(true);
+  };
+
+  const executeClearAll = async () => {
+    setIsConfirmClearOpen(false);
 
     const tempImages = images.filter(
       (img) => img.origin === "temp" && img.storage_path && !img.is_uploading
@@ -761,6 +765,44 @@ export function PropertyImageUploader({
           >
             ตกลง
           </Button>
+        </div>
+      </ResponsiveDialog>
+
+      {/* ล้างรูปภาพทั้งหมด Confirm Dialog */}
+      <ResponsiveDialog
+        open={isConfirmClearOpen}
+        onOpenChange={setIsConfirmClearOpen}
+        title="ยืนยันการลบรูปภาพทั้งหมด"
+        description="คุณต้องการลบรูปภาพทั้งหมดใช่หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้"
+        className="sm:max-w-md!"
+      >
+        <div className="flex flex-col gap-4 py-2">
+          <div className="flex items-center gap-3">
+             <div className="p-3 rounded-full shrink-0 bg-red-50 text-red-600">
+               <Trash2 className="w-6 h-6" />
+             </div>
+             <p className="text-sm font-semibold text-slate-800">
+               คุณกำลังจะลบรูปภาพทั้งหมดของประกาศนี้
+             </p>
+          </div>
+
+          <div className="flex gap-3 mt-2">
+            <Button
+              type="button"
+              variant="outline"
+              className="flex-1 rounded-xl h-12 font-bold"
+              onClick={() => setIsConfirmClearOpen(false)}
+            >
+              ยกเลิก
+            </Button>
+            <Button
+              type="button"
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl h-12 font-bold shadow-lg"
+              onClick={executeClearAll}
+            >
+              ลบทั้งหมด
+            </Button>
+          </div>
         </div>
       </ResponsiveDialog>
     </div>
