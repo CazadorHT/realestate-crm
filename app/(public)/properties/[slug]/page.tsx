@@ -6,7 +6,7 @@ import { Metadata } from "next";
 export const revalidate = 86400; // S-Tier Scaling: Revalidate every 24 hours (1 day)
 
 // Logic & Helpers
-import { getPublicPropertyDetail } from "@/features/properties/actions/fetch-public-property";
+import { getPublicPropertyDetail } from "./property-metadata-helper";
 import { generatePropertyMetadataAsync } from "./property-metadata-helper";
 import { generatePropertySEO } from "@/lib/seo-utils";
 import { getPublicAvatarUrl } from "@/features/properties/image-utils";

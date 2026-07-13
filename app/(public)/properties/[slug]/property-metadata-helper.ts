@@ -1,12 +1,15 @@
 import { Metadata } from "next";
 import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations } from "@/lib/i18n";
-import { getPublicPropertyDetail } from "@/features/properties/actions/fetch-public-property";
+import { cache } from "react";
+import { getPublicPropertyDetail as getRawPublicPropertyDetail } from "@/features/properties/actions/fetch-public-property";
 import { 
   generateMetaTitle, 
   generateMetaDescription, 
   generateMetaKeywords 
 } from "@/lib/seo-utils";
+
+export const getPublicPropertyDetail = cache(getRawPublicPropertyDetail);
 
 /**
  * Centered SEO & Metadata Helper for Property Detail Page

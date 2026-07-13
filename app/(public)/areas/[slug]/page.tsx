@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,6 +13,7 @@ import {
   getRelatedAreas,
   getAllAreaSlugs,
 } from "@/features/public/areas";
+const getAreaBySlugCached = cache(getAreaBySlug);
 import { AreaPropertiesClient } from "@/components/public/AreaPropertiesClient";
 import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
 import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
@@ -28,7 +30,7 @@ export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const params = await props.params;
-  const area = await getAreaBySlug(params.slug);
+  const area = await getAreaBySlugCached(params.slug);
 
   if (!area) {
     return { title: "ไม่พบทำเล" };
@@ -105,7 +107,7 @@ export default async function AreaDetailPage(
   props: { params: Promise<{ slug: string }> }
 ) {
   const params = await props.params;
-  const area = await getAreaBySlug(params.slug);
+  const area = await getAreaBySlugCached(params.slug);
 
   if (!area) {
     notFound();

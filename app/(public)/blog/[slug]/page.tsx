@@ -1,8 +1,10 @@
+import { cache } from "react";
 import {
   getBlogPostBySlug,
   getBlogPosts,
   getRelatedPosts,
 } from "@/lib/services/blog";
+const getBlogPostBySlugCached = cache(getBlogPostBySlug);
 import { BlogCard } from "@/components/public/BlogCard";
 import { notFound } from "next/navigation";
 import { Home, ChevronRight } from "lucide-react";
@@ -39,7 +41,7 @@ export async function generateMetadata({
 }: BlogPostPageProps): Promise<Metadata> {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
-  const post = await getBlogPostBySlug(decodedSlug);
+  const post = await getBlogPostBySlugCached(decodedSlug);
   const { t, language } = await getServerTranslations();
 
   if (!post) {
@@ -113,7 +115,7 @@ export async function generateStaticParams() {
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
-  const post = await getBlogPostBySlug(decodedSlug);
+  const post = await getBlogPostBySlugCached(decodedSlug);
 
   if (!post) {
     notFound();

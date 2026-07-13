@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -5,6 +6,7 @@ import { ChevronRight, MapPin, Building2, Calendar, LayoutGrid, CheckCircle } fr
 import { siteConfig } from "@/lib/site-config";
 import { getServerTranslations, getLocalizedField } from "@/lib/i18n";
 import { getProjectBySlug, getPropertiesInProject, getAllProjectSlugs, getRelatedProjects } from "@/features/public/projects";
+const getProjectBySlugCached = cache(getProjectBySlug);
 import { getPopularAreas } from "@/features/public/areas";
 import { ProjectPropertiesClient } from "@/components/public/ProjectPropertiesClient";
 import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
@@ -46,7 +48,7 @@ export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const params = await props.params;
-  const project = await getProjectBySlug(params.slug);
+  const project = await getProjectBySlugCached(params.slug);
   const { language } = await getServerTranslations();
 
   if (!project) {
@@ -96,7 +98,7 @@ export default async function ProjectDetailPage(
   props: { params: Promise<{ slug: string }> }
 ) {
   const params = await props.params;
-  const project = await getProjectBySlug(params.slug);
+  const project = await getProjectBySlugCached(params.slug);
 
   if (!project) {
     notFound();

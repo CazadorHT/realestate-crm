@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -11,6 +12,7 @@ import {
   getTransitLinesWithStations,
   type StationDetail,
 } from "@/features/public/stations";
+const getStationBySlugCached = cache(getStationBySlug);
 import { PropertySearchPage } from "@/components/public/PropertySearchPage";
 import { StationQuickSelector } from "@/components/public/StationQuickSelector";
 import { StationHero } from "@/components/public/near-station/StationHero";
@@ -134,7 +136,7 @@ export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
   const params = await props.params;
-  const station = await getStationBySlug(params.slug);
+  const station = await getStationBySlugCached(params.slug);
   const { language } = await getServerTranslations();
 
   if (!station) {
@@ -186,7 +188,7 @@ export default async function StationDetailPage(
   props: { params: Promise<{ slug: string }> }
 ) {
   const params = await props.params;
-  const station = await getStationBySlug(params.slug);
+  const station = await getStationBySlugCached(params.slug);
 
   if (!station) {
     notFound();

@@ -1,5 +1,6 @@
-import { Suspense } from "react";
+import { cache, Suspense } from "react";
 import { getServiceBySlug } from "@/features/services/actions";
+const getServiceBySlugCached = cache(getServiceBySlug);
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,7 +39,7 @@ interface PageProps {
 async function ServiceDetail({ params }: PageProps) {
   const { slug } = await params;
   const { language, t } = await getServerTranslations();
-  const service = await getServiceBySlug(slug);
+  const service = await getServiceBySlugCached(slug);
 
   if (!service) {
     notFound();
@@ -232,7 +233,7 @@ export async function generateMetadata({
 }: PageProps): Promise<Metadata> {
   const { slug } = await params;
   const { language } = await getServerTranslations();
-  const service = await getServiceBySlug(slug);
+  const service = await getServiceBySlugCached(slug);
   if (!service) return { title: "Service Not Found" };
 
   const title = getLocaleValue(service, "title", language);
