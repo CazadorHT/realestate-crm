@@ -80,6 +80,7 @@ export function QuickInfoSection({
 
   const [areaSearchQuery, setAreaSearchQuery] = React.useState("");
   const [desktopAreaOpen, setDesktopAreaOpen] = React.useState(false);
+  const [highlightedAreaIndex, setHighlightedAreaIndex] = React.useState(0);
 
   React.useEffect(() => {
     if (!areaOpen) {
@@ -93,13 +94,56 @@ export function QuickInfoSection({
     }
   }, [desktopAreaOpen]);
 
-  const filteredAreas = React.useMemo(() => {
+  const sortedFilteredAreas = React.useMemo(() => {
     const query = areaSearchQuery.trim().toLowerCase();
-    if (!query) return popularAreas || [];
-    return (popularAreas || []).filter((a) =>
-      a.toLowerCase().includes(query)
-    );
+    const list = !query
+      ? popularAreas || []
+      : (popularAreas || []).filter((a) => a.toLowerCase().includes(query));
+    return [...list].sort((a, b) => a.localeCompare(b, "th"));
   }, [popularAreas, areaSearchQuery]);
+
+  React.useEffect(() => {
+    setHighlightedAreaIndex(0);
+  }, [sortedFilteredAreas]);
+
+  // Scroll active item into view
+  React.useEffect(() => {
+    const activeEl = document.querySelector('[data-highlighted="true"]');
+    if (activeEl) {
+      activeEl.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+  }, [highlightedAreaIndex]);
+
+  const handleAreaKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    field: any,
+    isMobile: boolean
+  ) => {
+    const totalItems = sortedFilteredAreas.length + 1; // +1 for -- ไม่ระบุ --
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setHighlightedAreaIndex((prev) => (prev + 1) % totalItems);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setHighlightedAreaIndex((prev) => (prev - 1 + totalItems) % totalItems);
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      if (highlightedAreaIndex === 0) {
+        field.onChange(undefined);
+      } else {
+        const selectedArea = sortedFilteredAreas[highlightedAreaIndex - 1];
+        if (selectedArea) {
+          field.onChange(selectedArea);
+        }
+      }
+      if (isMobile) {
+        setAreaOpen(false);
+      } else {
+        setDesktopAreaOpen(false);
+      }
+    }
+  };
 
   React.useEffect(() => {
     const mql = window.matchMedia("(max-width: 1535px)");
@@ -435,6 +479,7 @@ export function QuickInfoSection({
                             placeholder="ค้นหาย่าน / ทำเล..."
                             value={areaSearchQuery}
                             onChange={(e) => setAreaSearchQuery(e.target.value)}
+                            onKeyDown={(e) => handleAreaKeyDown(e, field, true)}
                             className="pl-10 pr-4 py-2 h-10 rounded-xl border-slate-200 focus-visible:ring-blue-500"
                           />
                         </div>
@@ -446,11 +491,13 @@ export function QuickInfoSection({
                               field.onChange(undefined);
                               setAreaOpen(false);
                             }}
+                            data-highlighted={highlightedAreaIndex === 0 ? "true" : "false"}
                             className={cn(
-                              "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left text-sm font-bold text-slate-400",
+                              "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left text-sm font-bold",
                               !field.value
                                 ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                                : "bg-white border-slate-100 hover:bg-slate-50 hover:text-slate-600",
+                                : "bg-white border-slate-100 hover:bg-slate-50 text-slate-400",
+                              highlightedAreaIndex === 0 && "border-blue-500 ring-2 ring-blue-500/20 bg-slate-50 text-slate-700"
                             )}
                           >
                             <span>-- ไม่ระบุ --</span>
@@ -461,16 +508,15 @@ export function QuickInfoSection({
                             )}
                           </button>
                           
-                          {filteredAreas.length === 0 ? (
+                          {sortedFilteredAreas.length === 0 ? (
                             <div className="p-4 text-center text-sm text-slate-400">
                               ไม่พบย่านทำเล
                             </div>
                           ) : (
-                            [...filteredAreas]
-                              .sort((a, b) => a.localeCompare(b, "th"))
-                              .map((a) => {
-                                const isSelected = field.value === a;
-                                return (
+                            sortedFilteredAreas.map((a, i) => {
+                              const isSelected = field.value === a;
+                              const isHighlighted = highlightedAreaIndex === i + 1;
+                              return (
                                   <button
                                     key={a}
                                     type="button"
@@ -478,11 +524,13 @@ export function QuickInfoSection({
                                       field.onChange(a);
                                       setAreaOpen(false);
                                     }}
+                                    data-highlighted={isHighlighted ? "true" : "false"}
                                     className={cn(
                                       "w-full flex items-center justify-between p-4 rounded-xl transition-all active:scale-[0.98] border text-left",
                                       isSelected
                                         ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
                                         : "bg-white border-slate-100 hover:bg-slate-50 hover:border-slate-200 text-slate-700 hover:text-slate-900",
+                                      isHighlighted && "border-blue-500 ring-2 ring-blue-500/20 bg-slate-50 text-slate-900"
                                     )}
                                   >
                                     <span className="text-sm font-bold">{a}</span>
@@ -524,6 +572,7 @@ export function QuickInfoSection({
                             placeholder="ค้นหาย่าน / ทำเล..."
                             value={areaSearchQuery}
                             onChange={(e) => setAreaSearchQuery(e.target.value)}
+                            onKeyDown={(e) => handleAreaKeyDown(e, field, false)}
                             className="pl-10 pr-4 py-2 h-10 rounded-xl border-slate-200 focus-visible:ring-blue-500"
                           />
                         </div>
@@ -535,11 +584,13 @@ export function QuickInfoSection({
                               field.onChange(undefined);
                               setDesktopAreaOpen(false);
                             }}
+                            data-highlighted={highlightedAreaIndex === 0 ? "true" : "false"}
                             className={cn(
-                              "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all active:scale-[0.98] border text-left text-sm font-bold text-slate-400",
+                              "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all active:scale-[0.98] border text-left text-sm font-bold",
                               !field.value
                                 ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
-                                : "bg-white border-transparent hover:bg-slate-50",
+                                : "bg-white border-transparent hover:bg-slate-50 text-slate-400",
+                              highlightedAreaIndex === 0 && "border-blue-500 ring-2 ring-blue-500/20 bg-slate-50 text-slate-700"
                             )}
                           >
                             <span>-- ไม่ระบุ --</span>
@@ -550,15 +601,14 @@ export function QuickInfoSection({
                             )}
                           </button>
 
-                          {filteredAreas.length === 0 ? (
+                          {sortedFilteredAreas.length === 0 ? (
                             <div className="p-4 text-center text-sm text-slate-400">
                               ไม่พบย่านทำเล
                             </div>
                           ) : (
-                            [...filteredAreas]
-                              .sort((a, b) => a.localeCompare(b, "th"))
-                              .map((a) => {
+                            sortedFilteredAreas.map((a, i) => {
                                 const isSelected = field.value === a;
+                                const isHighlighted = highlightedAreaIndex === i + 1;
                                 return (
                                   <button
                                     key={a}
@@ -567,11 +617,13 @@ export function QuickInfoSection({
                                       field.onChange(a);
                                       setDesktopAreaOpen(false);
                                     }}
+                                    data-highlighted={isHighlighted ? "true" : "false"}
                                     className={cn(
                                       "w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-all active:scale-[0.98] border text-left",
                                       isSelected
                                         ? "bg-blue-50 border-blue-200 text-blue-700 font-bold shadow-sm"
                                         : "bg-white border-transparent hover:bg-slate-50 text-slate-700",
+                                      isHighlighted && "border-blue-500 ring-2 ring-blue-500/20 bg-slate-50 text-slate-900"
                                     )}
                                   >
                                     <span className="text-sm font-semibold">{a}</span>

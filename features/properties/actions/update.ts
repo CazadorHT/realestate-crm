@@ -582,6 +582,8 @@ export async function updatePropertyAction(
     }
 
     revalidatePath("/", "layout");
+    revalidatePath(`/properties/${seoData.slug}`);
+    revalidatePath("/properties");
     revalidateTag("properties", "seconds");
     revalidateTag("public-data", "seconds");
     purgeCloudflareCache().catch(e => console.error("[Cloudflare] Auto-purge failed:", e));

@@ -404,7 +404,7 @@ export const ManagementSection = ({
                             placeholder="พิมพ์ค้นหาชื่อ หรือเบอร์..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-transparent placeholder:text-sm placeholder:font-medium border-none text-xs outline-none placeholder:text-slate-400 text-slate-700"
+                            className="w-full bg-white  placeholder:text-sm placeholder:font-medium border-none text-xs outline-none placeholder:text-slate-400 text-slate-700"
                           />
                           {searchTerm && (
                             <button

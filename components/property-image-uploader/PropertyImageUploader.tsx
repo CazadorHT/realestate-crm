@@ -427,7 +427,11 @@ export function PropertyImageUploader({
       if (clipboardFiles && clipboardFiles.length > 0) {
         for (let i = 0; i < clipboardFiles.length; i++) {
           const file = clipboardFiles[i];
-          if (file.type.startsWith("image/") && file.size > 0) {
+          const isImageFile =
+            file.type.startsWith("image/") ||
+            /\.(png|jpe?g|webp)$/i.test(file.name);
+
+          if (isImageFile && file.size > 0) {
             files.push(file);
           }
         }
@@ -437,7 +441,11 @@ export function PropertyImageUploader({
       if (files.length === 0 && items) {
         for (let i = 0; i < items.length; i++) {
           const item = items[i];
-          if (item.kind === "file" && item.type.startsWith("image/")) {
+          const isImageItem =
+            item.type.startsWith("image/") ||
+            (item.kind === "file" && /\.(png|jpe?g|webp)$/i.test(item.type));
+
+          if (item.kind === "file" && isImageItem) {
             const file = item.getAsFile();
             if (file && file.size > 0) {
               files.push(file);
