@@ -64,8 +64,8 @@ export async function generateMetadata(props: { searchParams: Promise<any> }): P
   const searchParams = await props.searchParams;
   const options = parseSearchParamsToOptions(searchParams);
   
-  // Call cached getPublicProperties (limiting to 1 since we only need to check if there are 0 results)
-  const initialData = await getPublicProperties({ ...options, limit: 1 });
+  // Call cached getPublicProperties (using the same options as the page to leverage React cache deduplication)
+  const initialData = await getPublicProperties({ ...options, limit: 60, includeFacets: true });
   const hasNoResults = initialData.properties.length === 0;
 
   return {
