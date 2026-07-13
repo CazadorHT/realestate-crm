@@ -20,7 +20,7 @@ import {
   sortableKeyboardCoordinates,
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Upload, Image as ImageIcon, Sparkles, Loader2 } from "lucide-react";
+import { Upload, Image as ImageIcon, Loader2, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   uploadPropertyImageAction,
@@ -56,50 +56,6 @@ export function PropertyImageUploader({
   } | null>(null);
 
   const [isWatermarkEnabled, setIsWatermarkEnabled] = useState(true);
-  const [isSorting, setIsSorting] = useState(false);
-
-  const handleAiSort = async () => {
-    const uploadedImages = images.filter((img) => !img.is_uploading && img.storage_path);
-    if (uploadedImages.length < 2) return;
-
-    setIsSorting(true);
-    const processId = startProcess("จัดเรียงรูปภาพด้วย AI", {
-      type: "AI_SORT",
-    });
-
-    try {
-      const { sortPropertyImagesAction } = await import("@/features/properties/property-form/actions/ai-actions");
-      const paths = uploadedImages.map((img) => img.storage_path as string);
-      
-      const res = await sortPropertyImagesAction(paths);
-      if (res.success && res.sortedPaths) {
-        const sortedMap = new Map(res.sortedPaths.map((path, idx) => [path, idx]));
-        
-        const sortedImages = [...images].sort((a, b) => {
-          const idxA = sortedMap.has(a.storage_path || "") ? sortedMap.get(a.storage_path || "")! : 999;
-          const idxB = sortedMap.has(b.storage_path || "") ? sortedMap.get(b.storage_path || "")! : 999;
-          return idxA - idxB;
-        });
-
-        const updatedImages = sortedImages.map((img, index) => ({
-          ...img,
-          is_cover: index === 0,
-        }));
-
-        setImages(updatedImages);
-        toast.success("จัดเรียงรูปภาพด้วย AI สำเร็จแล้ว! ✨");
-        finishProcess(processId, "SUCCESS", "จัดเรียงรูปภาพด้วย AI สำเร็จเรียบร้อย ✨");
-      } else {
-        throw new Error(res.message || "เกิดข้อผิดพลาดในการจัดเรียง");
-      }
-    } catch (err: any) {
-      console.error("AI Sort failed:", err);
-      toast.error(err.message || "จัดเรียงล้มเหลว");
-      finishProcess(processId, "ERROR", `จัดเรียงล้มเหลว: ${err.message || "ข้อผิดพลาดระบบ"}`);
-    } finally {
-      setIsSorting(false);
-    }
-  };
 
   const [images, setImages] = useState<ImageItem[]>(() => {
     const valuePaths = value ? value.filter(Boolean) : [];
@@ -448,6 +404,49 @@ export function PropertyImageUploader({
     [disabled, images.length, maxFiles, maxFileSizeMB, sessionId, isWatermarkEnabled],
   );
 
+  const handlePaste = useCallback(
+    (e: ClipboardEvent) => {
+      if (disabled) return;
+
+      // Prevent pasting images when user is typing in a text field
+      const activeEl = document.activeElement;
+      const isInput =
+        activeEl &&
+        (activeEl.tagName === "INPUT" ||
+          activeEl.tagName === "TEXTAREA" ||
+          activeEl.getAttribute("contenteditable") === "true");
+      if (isInput) return;
+
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const files: File[] = [];
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type.indexOf("image") !== -1) {
+          const file = item.getAsFile();
+          if (file) {
+            files.push(file);
+          }
+        }
+      }
+
+      if (files.length > 0) {
+        e.preventDefault();
+        onDrop(files);
+        toast.success(`วางรูปภาพจากคลิปบอร์ดสำเร็จ ${files.length} รูป ✨`);
+      }
+    },
+    [disabled, onDrop],
+  );
+
+  useEffect(() => {
+    window.addEventListener("paste", handlePaste);
+    return () => {
+      window.removeEventListener("paste", handlePaste);
+    };
+  }, [handlePaste]);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     // ✅ รับรูปทั้งหมดก่อน แล้วคุมเข้มด้วย validateImageFile (กันเคสชื่อไฟล์เพี้ยน)
@@ -493,6 +492,37 @@ export function PropertyImageUploader({
     });
 
     toast.success("ลบรูปสำเร็จ");
+  };
+
+  const handleClearAll = async () => {
+    if (disabled) return;
+    const confirmClear = window.confirm("คุณต้องการลบรูปภาพทั้งหมดใช่หรือไม่?");
+    if (!confirmClear) return;
+
+    const tempImages = images.filter(
+      (img) => img.origin === "temp" && img.storage_path && !img.is_uploading
+    );
+
+    for (const img of images) {
+      if (img.preview_url?.startsWith("blob:")) {
+        try {
+          URL.revokeObjectURL(img.preview_url);
+        } catch {}
+      }
+    }
+
+    setImages([]);
+
+    // Delete background files asynchronously
+    for (const img of tempImages) {
+      if (img.storage_path) {
+        deletePropertyImageFromStorage(img.storage_path).catch((error) => {
+          console.error("Failed to delete from storage during clear all:", error);
+        });
+      }
+    }
+
+    toast.success("ลบรูปภาพทั้งหมดเรียบร้อยแล้ว");
   };
 
   const handleSetCover = (imageId: string) => {
@@ -600,21 +630,17 @@ export function PropertyImageUploader({
               <p className="text-xs sm:text-sm font-semibold text-slate-800">
                 รูปภาพทั้งหมด ({images.length}/{maxFiles})
               </p>
-              {images.filter(img => !img.is_uploading && img.storage_path).length >= 2 && (
+              {images.length > 0 && (
                 <Button
                   type="button"
-                  onClick={handleAiSort}
-                  disabled={isSorting || images.some(img => img.is_uploading) || disabled}
-                  variant="outline"
+                  onClick={handleClearAll}
+                  disabled={disabled || images.some((img) => img.is_uploading)}
+                  variant="ghost"
                   size="sm"
-                  className="h-8 text-[11px] font-bold border-blue-200 text-blue-600 bg-blue-50/50 hover:bg-blue-50 hover:text-blue-700 rounded-lg flex items-center gap-1.5 shadow-sm transition-all animate-in fade-in"
+                  className="h-8 text-[11px] font-bold text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg flex items-center gap-1.5 transition-all"
                 >
-                  {isSorting ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <Sparkles className="w-3 h-3" />
-                  )}
-                  {isSorting ? "กำลังจัดเรียงด้วย AI..." : "AI จัดเรียงรูปภาพ"}
+                  <Trash2 className="w-3 h-3" />
+                  ล้างรูปภาพทั้งหมด
                 </Button>
               )}
             </div>

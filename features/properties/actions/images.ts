@@ -106,15 +106,15 @@ export async function uploadPropertyImageAction(formData: FormData): Promise<Upl
           `<svg width="70" height="70" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="vccGradFav" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.2"/>
-                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1"/>
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="0.08"/>
+                <stop offset="100%" stop-color="#ffffff" stop-opacity="0.04"/>
               </linearGradient>
             </defs>
             <g transform="translate(10, 10) scale(0.6)">
               <!-- VCC Brand Isometric Icon Watermark (No font needed) -->
-              <path d="M0 30l40-20v60l-40 20z" fill="#ffffff" fill-opacity="0.12"/>
+              <path d="M0 30l40-20v60l-40 20z" fill="#ffffff" fill-opacity="0.05"/>
               <path d="M40 10l40 20v60l-40-20z" fill="url(#vccGradFav)"/>
-              <path d="M0 30l40-20 40 20-40 20z" fill="#ffffff" fill-opacity="0.15"/>
+              <path d="M0 30l40-20 40 20-40 20z" fill="#ffffff" fill-opacity="0.06"/>
             </g>
           </svg>`
         );
