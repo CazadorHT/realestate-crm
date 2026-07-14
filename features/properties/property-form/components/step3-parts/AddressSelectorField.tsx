@@ -162,11 +162,11 @@ export function AddressSelectorField({
                   <SelectValue placeholder={placeholder} />
                 </SelectTrigger>
               </FormControl>
-              <SelectContent className="max-h-[300px]">
+              <SelectContent className="max-h-[300px] min-w-[200px] bg-white rounded-xl shadow-lg border border-slate-100 p-1">
                 {[...options]
                   .sort((a, b) => a.name_th.localeCompare(b.name_th, "th"))
                   .map((opt) => (
-                    <SelectItem key={opt.id} value={opt.name_th}>
+                    <SelectItem key={opt.id} value={opt.name_th} className="rounded-lg cursor-pointer">
                       {formatOptionName(opt.name_th)}
                     </SelectItem>
                   ))}
