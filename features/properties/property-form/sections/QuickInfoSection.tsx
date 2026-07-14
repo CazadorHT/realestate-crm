@@ -207,8 +207,9 @@ export function QuickInfoSection({
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Main Thai Title - Full Width */}
-        <div className="md:col-span-2 lg:col-span-4">
+        {/* Multi-language Titles Grid (2x2 Layout) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:col-span-2 lg:col-span-4">
+          {/* Main Thai Title */}
           <FormField
             control={form.control}
             name="title"
@@ -236,7 +237,7 @@ export function QuickInfoSection({
                     ) : (
                       <Sparkles className="h-3.5 w-3.5 text-amber-500 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300" />
                     )}
-                    AI แปลเป็น EN/CN/RU
+                    AI แปล
                   </Button>
                 </div>
 
@@ -264,17 +265,14 @@ export function QuickInfoSection({
               </FormItem>
             )}
           />
-        </div>
 
-        {/* Multi-language Titles Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:col-span-2 lg:col-span-4">
           {/* Title (English) */}
           <FormField
             control={form.control}
             name="title_en"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5 h-8">
                   <Languages className="w-3 h-3" /> Title (English)
                 </label>
                 <FormControl>
@@ -296,7 +294,7 @@ export function QuickInfoSection({
             name="title_cn"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5 h-8">
                   <Languages className="w-3 h-3" /> 物业名称 (Chinese)
                 </label>
                 <FormControl>
@@ -318,7 +316,7 @@ export function QuickInfoSection({
             name="title_ru"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+                <label className="font-medium text-[10px] md:text-xs uppercase tracking-wider text-slate-500 flex items-center gap-1.5 h-8">
                   <Languages className="w-3 h-3" /> Название (Russian)
                 </label>
                 <FormControl>
