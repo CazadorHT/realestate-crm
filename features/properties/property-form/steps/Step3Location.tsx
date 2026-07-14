@@ -30,6 +30,7 @@ export function Step3Location({ mode }: Step3Props) {
     const subdistrict = form.getValues("subdistrict");
     const title = form.getValues("title");
     const googleMapsLink = form.getValues("google_maps_link");
+    const projectId = form.getValues("project_id");
 
     if ((!province || !district) && !googleMapsLink) {
       toast.error("กรุณากรอกข้อมูลจังหวัดและอำเภอ/เขต หรือใส่ลิงก์ Google Maps ก่อนใช้ AI ค้นหาครับ");
@@ -45,6 +46,7 @@ export function Step3Location({ mode }: Step3Props) {
         district,
         subdistrict: subdistrict || undefined,
         googleMapsLink: googleMapsLink || undefined,
+        projectId: projectId || undefined,
       });
 
       if (res.success && res.data) {
@@ -54,9 +56,13 @@ export function Step3Location({ mode }: Step3Props) {
         form.setValue("nearby_transits", transits, { shouldDirty: true, shouldTouch: true });
         form.setValue("nearby_places", places, { shouldDirty: true, shouldTouch: true });
         
-        toast.success("AI ค้นหาและกรอกข้อมูลการเดินทางและสถานที่ใกล้เคียงเรียบร้อยแล้ว ✨");
+        if ((res as any).cached) {
+          toast.success("ดึงข้อมูลการเดินทางและสถานที่ใกล้เคียงจากโครงการที่มีอยู่แล้วเรียบร้อย ✨");
+        } else {
+          toast.success("AI ค้นหาและกรอกข้อมูลการเดินทางและสถานที่ใกล้เคียงเรียบร้อยแล้ว ✨");
+        }
       } else {
-        toast.error(res.error || "เกิดข้อผิดพลาดในการค้นหา");
+        toast.error((res as any).error || "เกิดข้อผิดพลาดในการค้นหา");
       }
     } catch (err) {
       toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI");

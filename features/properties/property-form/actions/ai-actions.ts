@@ -221,11 +221,54 @@ export async function suggestNearbyPlacesAndTransitAction(params: {
   district?: string;
   province?: string;
   googleMapsLink?: string;
+  projectId?: string;
 }) {
-  const { title = "", addressLine1 = "", subdistrict = "", district = "", province = "", googleMapsLink = "" } = params;
+  const { title = "", addressLine1 = "", subdistrict = "", district = "", province = "", googleMapsLink = "", projectId } = params;
 
   if (!province && !district && !addressLine1 && !googleMapsLink) {
     throw new Error("กรุณากรอกข้อมูลที่ตั้ง จังหวัด หรือลิงก์แผนที่ก่อนดำเนินการ");
+  }
+
+  // 1. Check if we can reuse transit/nearby places from another property in the same project
+  if (projectId) {
+    try {
+      const supabase = await createClient();
+      const { data: existingPropDetails, error: fetchError } = await supabase
+        .from("properties_core")
+        .select(`
+          id,
+          updated_at,
+          properties_details (
+            transit_info
+          )
+        `)
+        .eq("project_id", projectId)
+        .is("deleted_at", null)
+        .order("updated_at", { ascending: false })
+        .limit(10);
+
+      if (!fetchError && existingPropDetails) {
+        for (const prop of existingPropDetails) {
+          const transitInfo: any = prop.properties_details?.transit_info;
+          if (transitInfo) {
+            const transits = transitInfo.transits || [];
+            const places = transitInfo.places || [];
+            if (transits.length > 0 || places.length > 0) {
+              return {
+                success: true,
+                data: {
+                  transits,
+                  places,
+                },
+                cached: true,
+              };
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("Failed to check existing project transit cache:", e);
+    }
   }
 
   const prompt = `
