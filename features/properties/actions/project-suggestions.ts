@@ -32,6 +32,7 @@ export async function getProjectSuggestions(search: string): Promise<ProjectSugg
         subdistrict,
         latitude,
         longitude,
+        google_maps_url,
         nearest_station_code,
         nearest_station_distance
       `)
@@ -75,7 +76,7 @@ export async function getProjectSuggestions(search: string): Promise<ProjectSugg
         postal_code: "", // projects table does not have postal code directly, can be filled manually or matched
         transit_station_code: item.nearest_station_code || "",
         transit_distance_meters: item.nearest_station_distance || 0,
-        google_maps_link: mapsLink,
+        google_maps_link: item.google_maps_url || mapsLink,
         latitude: item.latitude || undefined,
         longitude: item.longitude || undefined,
       };

@@ -2082,6 +2082,7 @@ export type Database = {
           district: string | null
           facilities: Json | null
           gallery_urls: Json | null
+          google_maps_url: string | null
           id: string
           image_url: string | null
           is_active: boolean | null
@@ -2110,6 +2111,7 @@ export type Database = {
           district?: string | null
           facilities?: Json | null
           gallery_urls?: Json | null
+          google_maps_url?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -2138,6 +2140,7 @@ export type Database = {
           district?: string | null
           facilities?: Json | null
           gallery_urls?: Json | null
+          google_maps_url?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean | null
@@ -4121,13 +4124,6 @@ export type Database = {
           },
           {
             foreignKeyName: "crm_deal_commissions_v3_recipient_id_fkey"
-            columns: ["agent_id"]
-            isOneToOne: false
-            referencedRelation: "identities_v3"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_deal_commissions_v3_recipient_id_fkey"
             columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "identities_v3"
@@ -4136,13 +4132,20 @@ export type Database = {
           {
             foreignKeyName: "crm_deal_commissions_v3_recipient_id_fkey"
             columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "identities_v3"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_deal_commissions_v3_recipient_id_fkey"
+            columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "owners"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "crm_deal_commissions_v3_recipient_id_fkey"
-            columns: ["recipient_id"]
+            columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "owners"
             referencedColumns: ["id"]
@@ -4569,6 +4572,35 @@ export type Database = {
           tenant_id: string | null
           total_inventory_value: number | null
           total_properties: number | null
+        }
+        Relationships: []
+      }
+      mv_project_property_stats: {
+        Row: {
+          price_max: number | null
+          price_min: number | null
+          primary_popular_area: string | null
+          project_id: string | null
+          property_count: number | null
+          rental_max: number | null
+          rental_min: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "properties_core_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mv_station_property_stats: {
+        Row: {
+          min_price: number | null
+          min_rental_price: number | null
+          property_count: number | null
+          station_name: string | null
         }
         Relationships: []
       }

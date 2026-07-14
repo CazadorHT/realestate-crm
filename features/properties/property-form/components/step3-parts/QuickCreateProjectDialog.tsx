@@ -227,6 +227,7 @@ export function QuickCreateProjectDialog({
           const coords = parseCoordinatesFromGoogleMaps(googleMapsUrl);
           return coords ? { latitude: coords.lat, longitude: coords.lng } : { latitude: null, longitude: null };
         })(),
+        google_maps_url: googleMapsUrl.trim() || null,
         year_completed: yearCompleted.trim() ? Number(yearCompleted) : null,
         total_units: totalUnits.trim() ? Number(totalUnits) : null,
         is_active: true,
@@ -473,9 +474,9 @@ export function QuickCreateProjectDialog({
             <span>ตำแหน่งที่ตั้งและพิกัด</span>
           </h4>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
             {/* Google Maps URL */}
-            <div className="col-span-1 sm:col-span-2 space-y-1.5 text-left group">
+            <div className="col-span-1 sm:col-span-3 space-y-1.5 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>พิกัดแผนที่ (Google Maps Link)</span>
@@ -489,42 +490,46 @@ export function QuickCreateProjectDialog({
             </div>
 
             {/* Province */}
-            <AddressCascadeField
-              label="จังหวัด"
-              value={province}
-              options={filteredProvinces}
-              allOptions={provinces}
-              search={provinceSearch}
-              onSearch={setProvinceSearch}
-              loading={addressLoading}
-              onSelect={(opt) => {
-                setProvince(opt.name_th);
-                setDistrict("");
-                setSubdistrict("");
-                setDistrictSearch("");
-                setSubdistrictSearch("");
-              }}
-            />
+            <div className="col-span-1 sm:col-span-1">
+              <AddressCascadeField
+                label="จังหวัด"
+                value={province}
+                options={filteredProvinces}
+                allOptions={provinces}
+                search={provinceSearch}
+                onSearch={setProvinceSearch}
+                loading={addressLoading}
+                onSelect={(opt) => {
+                  setProvince(opt.name_th);
+                  setDistrict("");
+                  setSubdistrict("");
+                  setDistrictSearch("");
+                  setSubdistrictSearch("");
+                }}
+              />
+            </div>
 
             {/* District */}
-            <AddressCascadeField
-              label="เขต / อำเภอ"
-              value={district}
-              options={filteredDistricts}
-              allOptions={districtOptions}
-              search={districtSearch}
-              onSearch={setDistrictSearch}
-              disabled={!activeProvinceId}
-              placeholder={!activeProvinceId ? "เลือกจังหวัดก่อน" : "เลือกเขต / อำเภอ"}
-              onSelect={(opt) => {
-                setDistrict(opt.name_th);
-                setSubdistrict("");
-                setSubdistrictSearch("");
-              }}
-            />
+            <div className="col-span-1 sm:col-span-1">
+              <AddressCascadeField
+                label="เขต / อำเภอ"
+                value={district}
+                options={filteredDistricts}
+                allOptions={districtOptions}
+                search={districtSearch}
+                onSearch={setDistrictSearch}
+                disabled={!activeProvinceId}
+                placeholder={!activeProvinceId ? "เลือกจังหวัดก่อน" : "เลือกเขต / อำเภอ"}
+                onSelect={(opt) => {
+                  setDistrict(opt.name_th);
+                  setSubdistrict("");
+                  setSubdistrictSearch("");
+                }}
+              />
+            </div>
 
             {/* Subdistrict */}
-            <div className="col-span-1 sm:col-span-2">
+            <div className="col-span-1 sm:col-span-1">
               <AddressCascadeField
                 label="แขวง / ตำบล"
                 value={subdistrict}

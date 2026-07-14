@@ -26,6 +26,7 @@ type PageProps = {
     q?: string;
     page?: string;
     all_branches?: string;
+    owner_type?: string;
   }>;
 };
 
@@ -34,6 +35,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
   const page = Number(sp.page) || 1;
   const q = sp.q || "";
   const allBranches = sp.all_branches === "true";
+  const ownerType = sp.owner_type || "ALL";
 
   // [PERFORMANCE] Parallel Fetching: Core Auth & Global Context
   const [authContext, config] = await Promise.all([
@@ -77,6 +79,7 @@ export default async function OwnersPage({ searchParams }: PageProps) {
       <Suspense fallback={<div className="h-96 animate-pulse bg-slate-50 rounded-2xl" />}>
         <OwnersContentWrapper 
           q={q} 
+          ownerType={ownerType}
           page={page} 
           isAdminUser={isAdminUser} 
           allBranches={allBranches} 
@@ -104,6 +107,7 @@ async function OwnersStatsWrapper({ isAdminUser, allBranches, isMultiTenant }: {
 
 async function OwnersContentWrapper({ 
   q, 
+  ownerType,
   page, 
   isAdminUser, 
   allBranches, 
@@ -112,6 +116,7 @@ async function OwnersContentWrapper({
   supabase
 }: { 
   q: string; 
+  ownerType: string;
   page: number; 
   isAdminUser: boolean; 
   allBranches: boolean; 
@@ -123,6 +128,7 @@ async function OwnersContentWrapper({
   const [ownersResult, tenantResult] = await Promise.all([
     getOwnersQuery({
       q,
+      ownerType,
       page,
       pageSize: 10,
       allBranches: isAdminUser && allBranches && isMultiTenant,
@@ -135,7 +141,7 @@ async function OwnersContentWrapper({
   const { data: owners, count } = ownersResult;
   const currentTenantName = tenantResult.data?.name || null;
 
-  if (owners.length === 0 && page === 1 && !q) {
+  if (owners.length === 0 && page === 1 && !q && ownerType === "ALL") {
     return (
       <EmptyState
         icon="userCircle"
@@ -162,6 +168,7 @@ async function OwnersContentWrapper({
         currentTenantName={currentTenantName}
         count={count}
         q={q}
+        ownerType={ownerType}
       />
     </div>
   );

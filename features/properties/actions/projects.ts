@@ -27,6 +27,7 @@ export interface ProjectAdminItem {
   seo_description?: { th?: string; en?: string; cn?: string; ru?: string } | null;
   is_active: boolean;
   sort_order: number;
+  google_maps_url?: string | null;
   property_count?: number;
   created_at?: string;
 }
@@ -104,6 +105,7 @@ export async function upsertProjectAction(input: ProjectAdminItem) {
       subdistrict: input.subdistrict || null,
       latitude: input.latitude || null,
       longitude: input.longitude || null,
+      google_maps_url: input.google_maps_url || null,
       year_completed: input.year_completed || null,
       total_units: input.total_units || null,
       description: (input.description || {}) as Json,

@@ -144,13 +144,17 @@ export async function getOwnerProperties(ownerId: string) {
 
 export type GetOwnersParams = {
   q?: string;
+  ownerType?: string;
   page?: number;
   pageSize?: number;
   allBranches?: boolean;
 };
 
+import { generateBlindIndex } from "@/lib/crypto";
+
 export async function getOwnersQuery({
   q,
+  ownerType,
   page = 1,
   pageSize = 10,
   allBranches = false,
@@ -179,10 +183,23 @@ export async function getOwnersQuery({
     query = query.is("tenant_id", null);
   }
 
+  // Filter by Owner Type
+  if (ownerType && ownerType !== "ALL") {
+    query = query.eq("social_links->>owner_type", ownerType);
+  }
+
+  // Search by keyword
   if (q) {
-    query = query.or(
-      `display_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`,
-    );
+    const blindIndex = generateBlindIndex(q);
+    if (blindIndex) {
+      query = query.or(
+        `social_links->>full_name_hash.eq.${blindIndex},social_links->>phone_hash.eq.${blindIndex},display_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`
+      );
+    } else {
+      query = query.or(
+        `display_name.ilike.%${q}%,phone.ilike.%${q}%,line_id.ilike.%${q}%`
+      );
+    }
   }
 
   const { data, count, error } = await query

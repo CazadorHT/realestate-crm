@@ -192,7 +192,7 @@ export function FeaturesManagementDialog({
           size="sm"
           className="gap-2 bg-white/50 hover:bg-white/80"
         >
-          <Settings className="w-4 h-4" />
+          <Settings className="w-4 h-4 text-blue-500" />
           จัดการสิ่งอำนวยความสะดวก
         </Button>
       }

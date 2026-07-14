@@ -28,6 +28,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectTrigger,
@@ -241,14 +242,15 @@ export function QuickInfoSection({
 
                 <FormControl>
                   <div className="relative">
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    <div className="absolute left-4 top-4 text-slate-400">
                       <FileText className="h-5 w-5" />
                     </div>
-                    <Input
+                    <Textarea
                       {...field}
                       value={field.value ?? ""}
                       onChange={(e) => field.onChange(e.target.value)}
-                      className={`h-14 rounded-2xl bg-white font-normal text-md pl-12 pr-6 ${
+                      rows={2}
+                      className={`min-h-[80px] rounded-2xl bg-white font-normal text-md pl-12 pr-6 py-3.5 resize-none ${
                         fieldState.error
                           ? "border-red-300 focus-visible:ring-red-300!"
                           : "border-slate-200 focus-visible:ring-blue-200!"
@@ -276,10 +278,11 @@ export function QuickInfoSection({
                   <Languages className="w-3 h-3" /> Title (English)
                 </label>
                 <FormControl>
-                  <Input
+                  <Textarea
                     {...field}
                     value={field.value ?? ""}
-                    className="h-14 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md"
+                    rows={2}
+                    className="min-h-[80px] py-3.5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md resize-none"
                     placeholder="English title..."
                   />
                 </FormControl>
@@ -297,10 +300,11 @@ export function QuickInfoSection({
                   <Languages className="w-3 h-3" /> 物业名称 (Chinese)
                 </label>
                 <FormControl>
-                  <Input
+                  <Textarea
                     {...field}
                     value={field.value ?? ""}
-                    className="h-14 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md"
+                    rows={2}
+                    className="min-h-[80px] py-3.5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md resize-none"
                     placeholder="中文名称..."
                   />
                 </FormControl>
@@ -318,10 +322,11 @@ export function QuickInfoSection({
                   <Languages className="w-3 h-3" /> Название (Russian)
                 </label>
                 <FormControl>
-                  <Input
+                  <Textarea
                     {...field}
                     value={field.value ?? ""}
-                    className="h-14 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md"
+                    rows={2}
+                    className="min-h-[80px] py-3.5 rounded-xl bg-slate-50 border-slate-200 focus:bg-white transition-all text-md resize-none"
                     placeholder="Название..."
                   />
                 </FormControl>
