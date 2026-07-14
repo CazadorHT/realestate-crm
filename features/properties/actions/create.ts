@@ -53,7 +53,7 @@ async function syncProjectAddress(supabase: any, projectId: string | null | unde
   try {
     const { data: project } = await supabase
       .from("projects")
-      .select("province, district, subdistrict, latitude, longitude")
+      .select("name, province, district, subdistrict, latitude, longitude, google_maps_url")
       .eq("id", projectId)
       .maybeSingle();
 
@@ -70,7 +70,35 @@ async function syncProjectAddress(supabase: any, projectId: string | null | unde
       updates.subdistrict = values.subdistrict;
     }
 
-    if ((!project.latitude || !project.longitude) && values.google_maps_link) {
+    // Sync project name translations if edited
+    const currentName = (project.name as any) || {};
+    const newName: any = { ...currentName };
+    let nameChanged = false;
+
+    if (values.address_line1 && currentName.th !== values.address_line1) {
+      newName.th = values.address_line1;
+      nameChanged = true;
+    }
+    if (values.address_line1_en && currentName.en !== values.address_line1_en) {
+      newName.en = values.address_line1_en;
+      nameChanged = true;
+    }
+    if (values.address_line1_cn && currentName.cn !== values.address_line1_cn) {
+      newName.cn = values.address_line1_cn;
+      nameChanged = true;
+    }
+    if (values.address_line1_ru && currentName.ru !== values.address_line1_ru) {
+      newName.ru = values.address_line1_ru;
+      nameChanged = true;
+    }
+
+    if (nameChanged) {
+      updates.name = newName;
+    }
+
+    // Sync google maps link and update coordinates
+    if (values.google_maps_link && project.google_maps_url !== values.google_maps_link) {
+      updates.google_maps_url = values.google_maps_link;
       const coords = parseCoordinatesFromGoogleMaps(values.google_maps_link);
       if (coords) {
         updates.latitude = coords.lat;
