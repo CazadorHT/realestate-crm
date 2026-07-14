@@ -491,7 +491,7 @@ export function SidebarNav({
               />
               <m.div
                 layoutId="active-bar"
-                className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full shadow-[0_0_10px_rgba(37,99,235,0.3)] z-10"
+                className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-1 bg-blue-600 rounded-r-full shadow-[0_0_10px_rgba(37,99,235,0.3)] z-10"
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               />
             </>
@@ -668,7 +668,7 @@ export function SidebarNav({
                       />
                       <m.div
                         layoutId="active-bar"
-                        className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 bg-blue-600 rounded-r-full shadow-[0_0_10px_rgba(37,99,235,0.3)] z-10"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-1 bg-blue-600 rounded-r-full shadow-[0_0_10px_rgba(37,99,235,0.3)] z-10"
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       />
                     </>
