@@ -290,40 +290,53 @@ export function PropertyCardImage({
           onScroll={handleScroll}
           className="flex h-full w-full overflow-x-auto snap-x snap-mandatory scrollbar-none"
         >
-          {displayImages.map((img, index) => (
-            <Link
-              key={index}
-              href={`/properties/${property.slug || property.id}`}
-              className="relative h-full w-full shrink-0 snap-start block"
-            >
-              {/* Shimmer placeholder while image is loading */}
-              {!loadedImages[index] && (
-                <div className="absolute inset-0 z-10 bg-slate-200 animate-pulse" />
-              )}
-              <Image
-                src={img}
-                alt={`${
-                  property.listing_type === "RENT"
-                    ? t("common.rent")
-                    : property.listing_type === "SALE"
-                      ? t("common.sale")
-                      : `${t("common.sale")}/${t("common.rent")}`
-                } ${t(
-                  `property_types.${property.property_type?.toLowerCase() || "other"}`,
-                )} - ${property.title}${
-                  areaProvince ? ` ${t("nav.properties")} ${areaProvince}` : ""
-                } - Image ${index + 1}`}
-                fill
-                sizes="(max-width: 640px) 95vw, (max-width: 1024px) 48vw, (max-width: 1280px) 31vw, 23vw"
-                className={`object-cover object-center transition-[filter] duration-500 ${
-                  loadedImages[index] ? "blur-0" : "blur-sm"
-                }`}
-                priority={priority && index === 0}
-                {...(!(priority && index === 0) && { loading: "lazy" })}
-                onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
-              />
-            </Link>
-          ))}
+          {displayImages.map((img, index) => {
+            const shouldRender =
+              index === activeImageIndex ||
+              index === activeImageIndex + 1 ||
+              index === activeImageIndex - 1;
+
+            return (
+              <Link
+                key={index}
+                href={`/properties/${property.slug || property.id}`}
+                className="relative h-full w-full shrink-0 snap-start block"
+              >
+                {shouldRender ? (
+                  <>
+                    {/* Shimmer placeholder while image is loading */}
+                    {!loadedImages[index] && (
+                      <div className="absolute inset-0 z-10 bg-slate-200 animate-pulse" />
+                    )}
+                    <Image
+                      src={img}
+                      alt={`${
+                        property.listing_type === "RENT"
+                          ? t("common.rent")
+                          : property.listing_type === "SALE"
+                            ? t("common.sale")
+                            : `${t("common.sale")}/${t("common.rent")}`
+                      } ${t(
+                        `property_types.${property.property_type?.toLowerCase() || "other"}`,
+                      )} - ${property.title}${
+                        areaProvince ? ` ${t("nav.properties")} ${areaProvince}` : ""
+                      } - Image ${index + 1}`}
+                      fill
+                      sizes="(max-width: 640px) 95vw, (max-width: 1024px) 48vw, (max-width: 1280px) 31vw, 23vw"
+                      className={`object-cover object-center transition-[filter] duration-500 ${
+                        loadedImages[index] ? "blur-0" : "blur-sm"
+                      }`}
+                      priority={priority && index === 0}
+                      {...(!(priority && index === 0) && { loading: "lazy" })}
+                      onLoad={() => setLoadedImages(prev => ({ ...prev, [index]: true }))}
+                    />
+                  </>
+                ) : (
+                  <div className="absolute inset-0 bg-slate-100 animate-pulse" />
+                )}
+              </Link>
+            );
+          })}
         </div>
       ) : (
         <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-400">

@@ -240,8 +240,7 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
         setIsLoading(true);
         setError(null);
 
-        const res = await fetch("/api/public/properties", {
-          cache: "no-store",
+        const res = await fetch("/api/public/properties?sort=NEWEST", {
           signal: controller.signal,
         });
 

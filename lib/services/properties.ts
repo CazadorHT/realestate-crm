@@ -175,6 +175,7 @@ export interface GetPropertiesOptions {
   allowAirbnb?: boolean;
   transitStation?: string;
   includeFacets?: boolean;
+  sort?: "NEWEST" | "PRICE_ASC" | "PRICE_DESC" | "AREA_ASC" | "AREA_DESC";
 }
 
 import { unstable_cache } from "next/cache";
@@ -327,12 +328,35 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
 
         const itemsPerPage = options.limit || 60;
 
-        if (options.filter === "hot_deals") {
-          query = query.order("updated_at", { ascending: false });
-        } else if (options.listingType === "RENT") {
-          query = query.order("rental_price", { ascending: true, nullsFirst: false });
+        if (options.sort === "NEWEST") {
+          query = query.order("created_at", { ascending: false });
+        } else if (options.sort === "PRICE_ASC") {
+          const effectivePriceType = options.priceType || options.listingType;
+          if (effectivePriceType === "RENT") {
+            query = query.order("rental_price", { ascending: true, nullsFirst: false });
+          } else {
+            query = query.order("price", { ascending: true, nullsFirst: false });
+          }
+        } else if (options.sort === "PRICE_DESC") {
+          const effectivePriceType = options.priceType || options.listingType;
+          if (effectivePriceType === "RENT") {
+            query = query.order("rental_price", { ascending: false, nullsFirst: false });
+          } else {
+            query = query.order("price", { ascending: false, nullsFirst: false });
+          }
+        } else if (options.sort === "AREA_ASC") {
+          query = query.order("size_sqm", { ascending: true, nullsFirst: false });
+        } else if (options.sort === "AREA_DESC") {
+          query = query.order("size_sqm", { ascending: false, nullsFirst: false });
         } else {
-          query = query.order("price", { ascending: true, nullsFirst: false });
+          // Default fallbacks
+          if (options.filter === "hot_deals" || (options.filter as string) === "hot_deal") {
+            query = query.order("updated_at", { ascending: false });
+          } else if (options.listingType === "RENT") {
+            query = query.order("rental_price", { ascending: true, nullsFirst: false });
+          } else {
+            query = query.order("price", { ascending: true, nullsFirst: false });
+          }
         }
 
         const { data: propertiesData, error } = await query.limit(itemsPerPage);

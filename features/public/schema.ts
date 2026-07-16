@@ -47,6 +47,7 @@ export const publicPropertyFilterSchema = z.object({
   allowAirbnb: z.coerce.boolean().optional(),
   transitStation: z.string().optional(),
   includeFacets: z.coerce.boolean().default(true).optional(),
+  sort: z.enum(["NEWEST", "PRICE_ASC", "PRICE_DESC", "AREA_ASC", "AREA_DESC"]).optional(),
 });
 
 export const inquiryLeadSchema = z.object({
