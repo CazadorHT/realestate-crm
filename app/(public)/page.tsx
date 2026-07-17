@@ -20,6 +20,7 @@ import { getServerFAQs, type FAQItem } from "@/lib/services/faqs";
 import { getLocalizedField } from "@/lib/i18n";
 import { getPublicProjects } from "@/features/public/projects";
 import { getTransitLinesWithStations } from "@/features/public/stations";
+import { CategoryNavigationCards } from "@/components/public/CategoryNavigationCards";
 
 // Critical Above-the-Fold components (Stay static for visual stability)
 import { HeroSection } from "@/components/public/HeroSection";
@@ -285,6 +286,8 @@ export default async function LandingPage() {
       <div className="min-h-[300px] md:min-h-[350px]">
         <PropertyTypeGrid />
       </div>
+
+      <CategoryNavigationCards language={language} />
       
       <div className="min-h-[80px] md:min-h-[100px]">
         <StatsBand />

@@ -13,6 +13,7 @@ import { Award, Compass, ShieldCheck, Star, Briefcase, Heart, MapPin } from "luc
 import { FaqAccordion } from "@/components/public/FaqAccordion";
 import Link from "next/link";
 import { ScrollToProperties } from "@/components/public/ScrollToProperties";
+import { PopularAreaTags } from "@/components/public/PopularAreaTags";
 
 export const revalidate = 86400; // 24 hours cache (ISR)
 
@@ -157,7 +158,21 @@ export default async function LuxuryVillaPage(props: {
 
   const totalCount = initialData.facets?.availableListingTypes?.ALL || 0;
 
-  const popularAreas = Object.entries(initialData.facets?.availableAreas || {})
+  const areaCounts: Record<string, { count: number; name_en: string | null; name_cn: string | null; name_ru: string | null }> = {};
+  initialData.properties.forEach(p => {
+    if (!p.popular_area) return;
+    if (!areaCounts[p.popular_area]) {
+      areaCounts[p.popular_area] = {
+        count: 0,
+        name_en: p.popular_area_en || p.popular_area,
+        name_cn: p.popular_area_cn || p.popular_area,
+        name_ru: p.popular_area_ru || p.popular_area,
+      };
+    }
+    areaCounts[p.popular_area].count++;
+  });
+
+  const popularAreas = Object.entries(areaCounts)
     .map(([name, info]) => ({
       name,
       count: info.count,
@@ -165,7 +180,6 @@ export default async function LuxuryVillaPage(props: {
       name_cn: info.name_cn,
       name_ru: info.name_ru,
     }))
-    .filter((a) => a.count > 0)
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
@@ -308,33 +322,14 @@ export default async function LuxuryVillaPage(props: {
               </div>
 
               {/* Popular Areas Quick Links */}
-              {popularAreas.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2 pt-4 text-xs font-bold text-slate-400 animate-fade-in-up">
-                  <span>
-                    {language === "en" ? "Popular Areas:" :
-                     language === "cn" ? "热门地段:" :
-                     language === "ru" ? "Популярные районы:" :
-                     "ทำเลยอดนิยม:"}
-                  </span>
-                  {popularAreas.map((area) => {
-                    const localizedLabel = 
-                      language === "en" ? area.name_en || area.name :
-                      language === "cn" ? area.name_cn || area.name :
-                      language === "ru" ? area.name_ru || area.name :
-                      area.name;
-                    return (
-                      <Link 
-                        key={area.name}
-                        href={`/properties/luxury-villa?popular_area=${encodeURIComponent(area.name)}`}
-                        className="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:bg-amber-500 hover:text-white transition-all shadow-3xs flex items-center gap-1.5 group"
-                      >
-                        <span>{localizedLabel}</span>
-                        <span className="text-[10px] opacity-80 text-amber-500 group-hover:text-white transition-all">({area.count})</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
+              <PopularAreaTags 
+                popularAreas={popularAreas} 
+                language={language} 
+                basePath="/properties/luxury-villa" 
+                targetId="villas-list" 
+                themeColor="violet"
+                isDark={true}
+              />
             </div>
 
             {/* Header Image with amber blobs */}
