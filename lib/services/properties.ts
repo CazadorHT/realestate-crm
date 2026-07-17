@@ -173,6 +173,7 @@ export interface GetPropertiesOptions {
   isForeigner?: boolean;
   companyRegistered?: boolean;
   allowAirbnb?: boolean;
+  luxuryVilla?: boolean;
   transitStation?: string;
   includeFacets?: boolean;
   sort?: "NEWEST" | "PRICE_ASC" | "PRICE_DESC" | "AREA_ASC" | "AREA_DESC";
@@ -205,7 +206,15 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
         }
 
         if (options.propertyType && options.propertyType !== "ALL") {
-          query = query.eq("property_type", options.propertyType);
+          if (options.propertyType.includes(",")) {
+            query = query.in("property_type", options.propertyType.split(","));
+          } else {
+            query = query.eq("property_type", options.propertyType);
+          }
+        }
+
+        if (options.luxuryVilla) {
+          query = query.or('and(property_type.in.(VILLA,POOL_VILLA),or(price.gt.0,rental_price.gt.0)),and(property_type.eq.HOUSE,price.gte.8000000)');
         }
 
         if (options.listingType && options.listingType !== "ALL") {

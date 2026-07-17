@@ -325,8 +325,16 @@ export function SearchFilterBar({
     { value: "HOUSE", label: t("home.property_types.house") },
     { value: "CONDO", label: t("home.property_types.condo") },
     {
+      value: "OFFICE_BUILDING,COMMERCIAL_BUILDING,HOME_OFFICE",
+      label: language === "en" ? "Office, Commercial & Home Office" : language === "cn" ? "写字楼、商业楼 & 家庭办公室" : language === "ru" ? "Офис, коммерция и домашний офис" : "ออฟฟิศ, อาคารพาณิชย์ & โฮมออฟฟิศ"
+    },
+    {
       value: "OFFICE_BUILDING",
       label: t("home.property_types.office_building"),
+    },
+    {
+      value: "HOME_OFFICE",
+      label: t("home.property_types.home_office"),
     },
     { value: "VILLA", label: t("home.property_types.villa") },
     { value: "POOL_VILLA", label: t("home.property_types.pool_villa") },

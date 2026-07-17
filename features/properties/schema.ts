@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { Database } from "@/lib/database.types.generated";
 
-export type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL_BUILDING" | "WAREHOUSE" | "OFFICE_BUILDING" | "VILLA" | "POOL_VILLA" | "OTHER";
+export type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL_BUILDING" | "WAREHOUSE" | "OFFICE_BUILDING" | "VILLA" | "POOL_VILLA" | "HOME_OFFICE" | "OTHER";
 export type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
 export type PropertyStatus = "DRAFT" | "ACTIVE" | "UNDER_OFFER" | "RESERVED" | "SOLD" | "RENTED" | "ARCHIVED";
 

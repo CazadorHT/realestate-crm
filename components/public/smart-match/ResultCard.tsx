@@ -21,6 +21,7 @@ export function ResultCard({ match, isRent, onSelect }: ResultCardProps) {
     HOUSE: t("home.property_types.house"),
     TOWNHOME: t("home.property_types.townhome"),
     OFFICE_BUILDING: t("home.property_types.office"),
+    HOME_OFFICE: t("home.property_types.home_office"),
     LAND: t("home.property_types.land"),
     WAREHOUSE: t("home.property_types.warehouse"),
   };

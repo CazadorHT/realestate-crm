@@ -442,7 +442,9 @@ export function DesktopFilters({
             </SelectTrigger>
             <SelectContent align="start">
               {PROPERTY_TYPES.map((pt) => {
-                const count = availableTypes[pt.value] || 0;
+                const count = pt.value.includes(",")
+                  ? pt.value.split(",").reduce((sum, val) => sum + (availableTypes[val] || 0), 0)
+                  : (availableTypes[pt.value] || 0);
                 const isDisabled = count === 0 && pt.value !== "ALL";
                 return (
                   <SelectItem

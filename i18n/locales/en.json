@@ -370,7 +370,13 @@
     "services_title": "Our Services — End-to-End Property Solutions | {siteName}",
     "services_description": "Full-service property management with zero hidden fees. We handle premium marketing, property sourcing, banking coordination, and legal paperwork.",
     "deposit_title": "List Your Property for Sale & Rent — Free Consignment | {siteName}",
-    "deposit_description": "Consign your house, condo, or office with VC Connect Asset for free. Benefit from premium marketing and professional brokerage services with zero upfront costs."
+    "deposit_description": "Consign your house, condo, or office with VC Connect Asset for free. Benefit from premium marketing and professional brokerage services with zero upfront costs.",
+    "pet_friendly_condo_title": "Pet Friendly Condos for Sale & Rent | {siteName}",
+    "pet_friendly_condo_description": "Find pet-friendly condos for sale and rent. Discover top properties allowing dogs and cats, complete with pet amenities and nearby parks.",
+    "office_for_rent_title": "Office Space for Rent | Prime Corporate Workspaces | {siteName}",
+    "office_for_rent_description": "Find premier office spaces, commercial buildings, and home offices for rent. Locations near BTS/MRT, flexible layouts, and company registration ready.",
+    "luxury_villa_title": "Luxury Villas & High-End Houses for Sale | {siteName}",
+    "luxury_villa_description": "Browse premium luxury houses, masterpieces, and private pool villas priced from 8 Million THB. Exquisite design, double volume ceilings, and top security."
   },
   "loading": {
     "search_dream_home": "Finding your dream places...",
@@ -1343,5 +1349,50 @@
   "properties": {
     "not_found": "Premium Property Collections Coming Soon",
     "check_back_later": "We are currently curating a selection of high-end homes, luxury condos, and prime commercial spaces. Check back soon for exclusive listings or register to be the first to know when new properties arrive."
+  },
+  "silo_landing": {
+    "pet_friendly": {
+      "badge": "Pet-Friendly Lifestyle",
+      "title_line1": "Pet-Friendly Condos",
+      "title_line2": "Dogs & Cats Welcome",
+      "description": "Live worry-free with your beloved pets. Explore our handpicked selection of pet-friendly condominiums that officially allow pets, featuring dedicated dog parks, pet runs, and veterinary-friendly communities.",
+      "feature1": "100% Legally Pet Allowed",
+      "feature2": "Dedicated Pet Playgrounds",
+      "intro_title": "Thoughtful Design in Every Square Meter for Your Companions",
+      "intro_desc": "Because we believe pets are family. Every detail of our projects is carefully designed to ensure your four-legged friends live happily, healthily, and safely.",
+      "dog_title": "Dog Playground & Outdoor Zone",
+      "dog_desc": "Outdoor playground designed for natural canine behavior. Features agility obstacles, paw wash stations, waste bins, and double-gated entry for safety.",
+      "cat_title": "Cat Playrooms & Agility Zones",
+      "cat_desc": "Vertical climbing spaces with cat trees, wall walkways, scratching pillars, and wide safety glass windows for cats to enjoy the views securely.",
+      "design_title": "Pet-Friendly Smart Interior Design",
+      "design_desc": "Special scratch-resistant and slip-resistant vinyl floors. Air ventilation systems for odor control, and extra-high safety balcony fences.",
+      "health_title": "Pet-Friendly Community & Rules",
+      "health_desc": "Clear guidelines and community agreements, including breed and weight screenings, annual vaccination updates, and designated leash areas, ensuring a harmonious environment for all residents.",
+      "faq_section_title": "Frequently Asked Questions about Pet-Friendly Condos",
+      "faq_q1": "What is the difference between a pet-friendly condo and a regular condo?",
+      "faq_a1": "A pet-friendly condo officially permits residents to keep pets under community guidelines, whereas regular condos prohibit them entirely. Additionally, pet-friendly properties often feature dedicated amenities such as dog parks, pet lifts, and cleaning stations.",
+      "faq_q2": "What are the common rules for having pets in a condo?",
+      "faq_a2": "Typical rules include registering your pet with property management, providing annual vaccine certificates, complying with weight limits (e.g., under 15kg), and using leashes or pet strollers in all common areas.",
+      "faq_q3": "How can I find a pet-friendly condo near BTS/MRT stations?",
+      "faq_a3": "You can use our platform to filter properties by location, specific BTS or MRT stations, or other nearby landmarks, ensuring you find the perfect pet-allowed home with verified availability."
+    },
+    "office_for_rent": {
+      "badge1": "Premium Workspace",
+      "badge2": "Company Registration Sourcing / Home Office Prime Locations",
+      "title_line1": "Office Space for Rent",
+      "title_line2": "Built for Business Growth",
+      "description": "Drive your business forward in premier commercial spaces. Find Grade A offices, flexible coworking structures, and prime retail storefronts near BTS & MRT lines, ready for company registration.",
+      "feature1": "Company Registration Ready",
+      "feature2": "Flexible & Scalable Layouts"
+    },
+    "luxury_villa": {
+      "badge1": "The Masterpiece Collection",
+      "badge2": "Starting from 8,000,000 THB",
+      "title_line1": "Luxury Villas & Estates",
+      "title_line2": "Ultra-Luxury Living",
+      "description": "Enter the pinnacle of architectural prestige. Discover high-end private residences, pool villas, and mansions featuring double-volume ceilings, private swimming pools, and elite gated security in Thailand's finest neighborhoods.",
+      "feature1": "Double Volume Ceiling Spaces",
+      "feature2": "Private Swimming Pools & Gardens"
+    }
   }
 }

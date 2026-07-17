@@ -32,7 +32,7 @@ import type { Database } from "@/lib/database.types.generated";
 // --- Robust Mapping Constants ---
 const STATUS_MAP: PropertyStatus[] = ["DRAFT", "ACTIVE", "UNDER_OFFER", "RESERVED", "SOLD", "RENTED", "ARCHIVED"];
 const LISTING_TYPE_MAP: ListingType[] = ["SALE", "RENT", "SALE_AND_RENT"];
-const PROPERTY_TYPE_MAP: PropertyType[] = ["OTHER", "CONDO", "HOUSE", "TOWNHOME", "LAND", "COMMERCIAL_BUILDING", "WAREHOUSE", "OFFICE_BUILDING", "VILLA", "POOL_VILLA"];
+const PROPERTY_TYPE_MAP: PropertyType[] = ["OTHER", "CONDO", "HOUSE", "TOWNHOME", "LAND", "COMMERCIAL_BUILDING", "WAREHOUSE", "OFFICE_BUILDING", "VILLA", "POOL_VILLA", "HOME_OFFICE"];
 
 export default async function PropertyDetailsPage({
   params,

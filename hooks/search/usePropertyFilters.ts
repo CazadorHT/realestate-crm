@@ -3,23 +3,46 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 
-export function usePropertyFilters(defaultTransitStation: string = "", basePath?: string) {
+export interface DefaultPropertyFilters {
+  propertyType?: string;
+  listingType?: string;
+  petFriendly?: boolean;
+  minPrice?: string;
+  maxPrice?: string;
+  luxuryVilla?: boolean;
+}
+
+export function usePropertyFilters(
+  defaultTransitStation: string = "", 
+  basePath?: string,
+  defaultFilters?: DefaultPropertyFilters
+) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
+  const normalizePropertyType = (val: string | null | undefined) => {
+    if (!val) return "ALL";
+    if (val === "OFFICE_BUILDING,COMMERCIAL_BUILDING") {
+      return "OFFICE_BUILDING,COMMERCIAL_BUILDING,HOME_OFFICE";
+    }
+    return val;
+  };
+
   // Filters - Init from URL
-  const [keyword, setKeyword] = useState(searchParams.get("keyword") || "");
-  const [type, setType] = useState(searchParams.get("property_type") || "ALL");
+  const [keyword, setKeyword] = useState(() => searchParams.get("keyword") || "");
+  const [type, setType] = useState(
+    () => normalizePropertyType(searchParams.get("property_type") || defaultFilters?.propertyType)
+  );
   const [listingType, setListingType] = useState(
-    searchParams.get("listing_type") || "ALL",
+    () => searchParams.get("listing_type") || defaultFilters?.listingType || "ALL"
   );
-  const [minPrice, setMinPrice] = useState(searchParams.get("min_price") || "");
-  const [maxPrice, setMaxPrice] = useState(searchParams.get("max_price") || "");
+  const [minPrice, setMinPrice] = useState(() => searchParams.get("min_price") || defaultFilters?.minPrice || "");
+  const [maxPrice, setMaxPrice] = useState(() => searchParams.get("max_price") || defaultFilters?.maxPrice || "");
   const [priceType, setPriceType] = useState(
-    searchParams.get("price_type") || "",
+    () => searchParams.get("price_type") || "",
   );
-  const [minSize, setMinSize] = useState(searchParams.get("min_size") || "");
-  const [maxSize, setMaxSize] = useState(searchParams.get("max_size") || "");
+  const [minSize, setMinSize] = useState(() => searchParams.get("min_size") || "");
+  const [maxSize, setMaxSize] = useState(() => searchParams.get("max_size") || "");
   const [sort, setSort] = useState("NEWEST");
   const [transitStation, setTransitStation] = useState(() => {
     const fromUrl = searchParams.get("transit_station") || "";
@@ -33,33 +56,36 @@ export function usePropertyFilters(defaultTransitStation: string = "", basePath?
     return fromUrl;
   });
 
-  const [area, setArea] = useState(searchParams.get("popular_area") || "ALL");
+  const [area, setArea] = useState(() => searchParams.get("popular_area") || "ALL");
   const [province, setProvince] = useState(
-    searchParams.get("province") || "ALL",
+    () => searchParams.get("province") || "ALL",
   );
   const [nearTrain, setNearTrain] = useState(
-    searchParams.get("near_train") === "true",
+    () => searchParams.get("near_train") === "true",
   );
   const [petFriendly, setPetFriendly] = useState(
-    searchParams.get("pet_friendly") === "true",
+    () => searchParams.get("pet_friendly") === "true" || (searchParams.get("pet_friendly") === null && !!defaultFilters?.petFriendly)
   );
   const [fullyFurnished, setFullyFurnished] = useState(
-    searchParams.get("fully_furnished") === "true",
+    () => searchParams.get("fully_furnished") === "true",
   );
   const [bedrooms, setBedrooms] = useState(
-    searchParams.get("bedrooms") || "ALL",
+    () => searchParams.get("bedrooms") || "ALL",
   );
   const [isForeigner, setIsForeigner] = useState(
-    searchParams.get("foreigner") === "true",
+    () => searchParams.get("foreigner") === "true",
   );
   const [companyRegistered, setCompanyRegistered] = useState(
-    searchParams.get("company_registered") === "true",
+    () => searchParams.get("company_registered") === "true",
   );
   const [isHotDeal, setIsHotDeal] = useState(
-    searchParams.get("hot_deal") === "true",
+    () => searchParams.get("hot_deal") === "true",
   );
   const [allowAirbnb, setAllowAirbnb] = useState(
-    searchParams.get("airbnb") === "true",
+    () => searchParams.get("airbnb") === "true",
+  );
+  const [luxuryVilla, setLuxuryVilla] = useState(
+    () => searchParams.get("luxury_villa") === "true" || (searchParams.get("luxury_villa") === null && !!defaultFilters?.luxuryVilla)
   );
 
   // --- Agentic AI State ---
@@ -75,23 +101,25 @@ export function usePropertyFilters(defaultTransitStation: string = "", basePath?
   // Update state when params change (for back/forward navigation)
   useEffect(() => {
     setKeyword(searchParams.get("keyword") || "");
-    setType(searchParams.get("property_type") || "ALL");
-    setListingType(searchParams.get("listing_type") || "ALL");
-    setMinPrice(searchParams.get("min_price") || "");
-    setMaxPrice(searchParams.get("max_price") || "");
+    setType(normalizePropertyType(searchParams.get("property_type") || defaultFilters?.propertyType));
+    setListingType(searchParams.get("listing_type") || defaultFilters?.listingType || "ALL");
+    setMinPrice(searchParams.get("min_price") || defaultFilters?.minPrice || "");
+    setMaxPrice(searchParams.get("max_price") || defaultFilters?.maxPrice || "");
     setPriceType(searchParams.get("price_type") || "");
     setMinSize(searchParams.get("min_size") || "");
     setMaxSize(searchParams.get("max_size") || "");
     setArea(searchParams.get("popular_area") || "ALL");
     setProvince(searchParams.get("province") || "ALL");
     setNearTrain(searchParams.get("near_train") === "true");
-    setPetFriendly(searchParams.get("pet_friendly") === "true");
+    setPetFriendly(searchParams.get("pet_friendly") === "true" || (searchParams.get("pet_friendly") === null && !!defaultFilters?.petFriendly));
     setFullyFurnished(searchParams.get("fully_furnished") === "true");
     setIsForeigner(searchParams.get("foreigner") === "true");
     setCompanyRegistered(searchParams.get("company_registered") === "true");
     setIsHotDeal(searchParams.get("hot_deal") === "true");
     setAllowAirbnb(searchParams.get("airbnb") === "true");
     setBedrooms(searchParams.get("bedrooms") || "ALL");
+    setLuxuryVilla(searchParams.get("luxury_villa") === "true" || (searchParams.get("luxury_villa") === null && !!defaultFilters?.luxuryVilla));
+    
     const fromUrl = searchParams.get("transit_station") || "";
     if (fromUrl) {
       if (defaultTransitStation && defaultTransitStation.includes("|")) {
@@ -110,7 +138,7 @@ export function usePropertyFilters(defaultTransitStation: string = "", basePath?
     
     // Clear AI insight on manual navigation change
     setAiInsight(null);
-  }, [searchParams, defaultTransitStation]);
+  }, [searchParams, defaultTransitStation, defaultFilters]);
  
   // Sync state to URL
   useEffect(() => {
@@ -130,6 +158,7 @@ export function usePropertyFilters(defaultTransitStation: string = "", basePath?
     if (companyRegistered) params.set("company_registered", "true"); else params.delete("company_registered");
     if (isHotDeal) params.set("hot_deal", "true"); else params.delete("hot_deal");
     if (allowAirbnb) params.set("airbnb", "true"); else params.delete("airbnb");
+    if (luxuryVilla) params.set("luxury_villa", "true"); else params.delete("luxury_villa");
     if (transitStation) params.set("transit_station", transitStation); else params.delete("transit_station");
     if (minSize) params.set("min_size", minSize); else params.delete("min_size");
     if (maxSize) params.set("max_size", maxSize); else params.delete("max_size");
@@ -142,32 +171,33 @@ export function usePropertyFilters(defaultTransitStation: string = "", basePath?
   }, [
     keyword, type, listingType, priceType, minPrice, maxPrice, area, province,
     nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner,
-    companyRegistered, isHotDeal, allowAirbnb, minSize, maxSize, transitStation,
+    companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, minSize, maxSize, transitStation,
     basePath, router
   ]);
 
   const clearFilters = useCallback(() => {
     setKeyword("");
-    setType("ALL");
-    setListingType("ALL");
-    setMinPrice("");
-    setMaxPrice("");
+    setType(defaultFilters?.propertyType || "ALL");
+    setListingType(defaultFilters?.listingType || "ALL");
+    setMinPrice(defaultFilters?.minPrice || "");
+    setMaxPrice(defaultFilters?.maxPrice || "");
     setPriceType("");
     setMinSize("");
     setMaxSize("");
     setArea("ALL");
     setProvince("ALL");
     setNearTrain(false);
-    setPetFriendly(false);
+    setPetFriendly(!!defaultFilters?.petFriendly);
     setFullyFurnished(false);
     setBedrooms("ALL");
     setIsForeigner(false);
     setCompanyRegistered(false);
     setIsHotDeal(false);
     setAllowAirbnb(false);
+    setLuxuryVilla(!!defaultFilters?.luxuryVilla);
     setTransitStation("");
     setAiInsight(null);
-  }, []);
+  }, [defaultFilters]);
 
   /**
    * [S-Tier] Bulk Filter Update
@@ -187,6 +217,7 @@ export function usePropertyFilters(defaultTransitStation: string = "", basePath?
     if (updates.bedrooms !== undefined) setBedrooms(updates.bedrooms);
     if (updates.isHotDeal !== undefined) setIsHotDeal(updates.isHotDeal);
     if (updates.allowAirbnb !== undefined) setAllowAirbnb(updates.allowAirbnb);
+    if (updates.luxuryVilla !== undefined) setLuxuryVilla(updates.luxuryVilla);
     if (updates.transitStation !== undefined) setTransitStation(updates.transitStation);
     if (updates.aiInsight !== undefined) setAiInsight(updates.aiInsight);
   }, []);
@@ -212,6 +243,7 @@ export function usePropertyFilters(defaultTransitStation: string = "", basePath?
     companyRegistered, setCompanyRegistered,
     isHotDeal, setIsHotDeal,
     allowAirbnb, setAllowAirbnb,
+    luxuryVilla, setLuxuryVilla,
     transitStation, setTransitStation,
     aiInsight, setAiInsight,
     clearFilters,

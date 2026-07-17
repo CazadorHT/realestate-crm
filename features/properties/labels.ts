@@ -15,7 +15,7 @@ import {
 
 /** === ENUM TYPES === */
 export type PropertyRow = Database["public"]["Tables"]["properties_core"]["Row"];
-export type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL_BUILDING" | "WAREHOUSE" | "OFFICE_BUILDING" | "VILLA" | "POOL_VILLA" | "OTHER";
+export type PropertyType = "CONDO" | "HOUSE" | "TOWNHOME" | "LAND" | "COMMERCIAL_BUILDING" | "WAREHOUSE" | "OFFICE_BUILDING" | "VILLA" | "POOL_VILLA" | "HOME_OFFICE" | "OTHER";
 export type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
 export type PropertyStatus = "DRAFT" | "ACTIVE" | "UNDER_OFFER" | "RESERVED" | "SOLD" | "RENTED" | "ARCHIVED";
 
@@ -72,6 +72,13 @@ export const PROPERTY_TYPE_CONFIG: Record<PropertyType, {
     dbValue: 3,
     icon: Hotel,
     gradient: "from-orange-500 to-orange-600",
+    order: 7
+  },
+  HOME_OFFICE: {
+    label: { th: "โฮมออฟฟิศ", en: "Home Office", cn: "家庭办公室", ru: "Домашний офис" },
+    dbValue: 11,
+    icon: Building2,
+    gradient: "from-blue-600 to-indigo-600",
     order: 6
   },
   LAND: {
@@ -79,28 +86,28 @@ export const PROPERTY_TYPE_CONFIG: Record<PropertyType, {
     dbValue: 4,
     icon: MapIcon,
     gradient: "from-green-500 to-green-600",
-    order: 7
+    order: 8
   },
   WAREHOUSE: {
     label: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
     dbValue: 6,
     icon: Warehouse,
     gradient: "from-yellow-500 to-yellow-600",
-    order: 8
+    order: 9
   },
   COMMERCIAL_BUILDING: {
     label: { th: "อาคารพาณิชย์", en: "Commercial", cn: "商铺", ru: "Коммерция" },
     dbValue: 5,
     icon: Store,
     gradient: "from-indigo-500 to-indigo-600",
-    order: 9
+    order: 10
   },
   OTHER: {
     label: { th: "อื่นๆ", en: "Other", cn: "其他", ru: "Другое" },
     dbValue: 10,
     icon: MoreHorizontal,
     gradient: "from-slate-500 to-slate-600",
-    order: 10
+    order: 11
   }
 };
 
@@ -108,7 +115,7 @@ export const PROPERTY_TYPE_CONFIG: Record<PropertyType, {
  * === STATIC DB MAPPING (ZERO RUNTIME COST) ===
  */
 export const PROPERTY_TYPE_DB_VALUE: Record<PropertyType, number> = {
-  CONDO: 1, HOUSE: 2, TOWNHOME: 3, LAND: 4, COMMERCIAL_BUILDING: 5, WAREHOUSE: 6, OFFICE_BUILDING: 7, VILLA: 8, POOL_VILLA: 9, OTHER: 10
+  CONDO: 1, HOUSE: 2, TOWNHOME: 3, LAND: 4, COMMERCIAL_BUILDING: 5, WAREHOUSE: 6, OFFICE_BUILDING: 7, VILLA: 8, POOL_VILLA: 9, HOME_OFFICE: 11, OTHER: 10
 };
 
 export const LISTING_TYPE_DB_VALUE: Record<ListingType, number> = {
@@ -138,14 +145,14 @@ export const getStatusFromDb = (v: number | null): PropertyStatus => {
 };
 
 export const getPropertyTypeFromDb = (v: number | null): PropertyType => {
-  const map: Record<number, PropertyType> = { 1: "CONDO", 2: "HOUSE", 3: "TOWNHOME", 4: "LAND", 5: "COMMERCIAL_BUILDING", 6: "WAREHOUSE", 7: "OFFICE_BUILDING", 8: "VILLA", 9: "POOL_VILLA", 10: "OTHER" };
+  const map: Record<number, PropertyType> = { 1: "CONDO", 2: "HOUSE", 3: "TOWNHOME", 4: "LAND", 5: "COMMERCIAL_BUILDING", 6: "WAREHOUSE", 7: "OFFICE_BUILDING", 8: "VILLA", 9: "POOL_VILLA", 10: "OTHER", 11: "HOME_OFFICE" };
   return map[v || 1] || "CONDO";
 };
 
 export const getListingTypeFromDb = (v: number | null): ListingType => (v === 1 ? "RENT" : v === 2 ? "SALE_AND_RENT" : "SALE");
 
 /** === UI ORDERING (ZOD COMPATIBLE) === */
-export const PROPERTY_TYPE_ORDER = ["HOUSE", "CONDO", "VILLA", "POOL_VILLA", "OFFICE_BUILDING", "TOWNHOME", "LAND", "WAREHOUSE", "COMMERCIAL_BUILDING", "OTHER"] as const satisfies readonly [PropertyType, ...PropertyType[]];
+export const PROPERTY_TYPE_ORDER = ["HOUSE", "CONDO", "VILLA", "POOL_VILLA", "OFFICE_BUILDING", "HOME_OFFICE", "TOWNHOME", "LAND", "WAREHOUSE", "COMMERCIAL_BUILDING", "OTHER"] as const satisfies readonly [PropertyType, ...PropertyType[]];
 export const LISTING_TYPE_ORDER = ["SALE", "RENT", "SALE_AND_RENT"] as const satisfies readonly [ListingType, ...ListingType[]];
 export const PROPERTY_STATUS_ORDER = ["DRAFT", "ACTIVE", "ARCHIVED", "UNDER_OFFER", "RESERVED", "SOLD", "RENTED"] as const satisfies readonly [PropertyStatus, ...PropertyStatus[]];
 
@@ -164,6 +171,7 @@ export const PROPERTY_TYPE_LABELS: Record<PropertyType, MultiLangLabel> = {
   LAND: { th: "ที่ดิน", en: "Land", cn: "土地", ru: "Земля" },
   WAREHOUSE: { th: "โกดัง", en: "Warehouse", cn: "仓库", ru: "Склад" },
   COMMERCIAL_BUILDING: { th: "อาคารพาณิชย์", en: "Commercial", cn: "商铺", ru: "Коммерция" },
+  HOME_OFFICE: { th: "โฮมออฟฟิศ", en: "Home Office", cn: "家庭办公室", ru: "Домашний офис" },
   OTHER: { th: "อื่นๆ", en: "Other", cn: "其他", ru: "Другое" }
 };
 
@@ -183,8 +191,8 @@ export const PROPERTY_STATUS_LABELS: Record<PropertyStatus, MultiLangLabel> = {
   RENTED: { th: "เช่าแล้ว", en: "Rented", cn: "已出租", ru: "Сдано" }
 };
 
-export const PROPERTY_TYPE_ICONS: Record<PropertyType, LucideIcon> = { HOUSE: Home, CONDO: Building2, VILLA: Palmtree, POOL_VILLA: Waves, OFFICE_BUILDING: Briefcase, TOWNHOME: Hotel, LAND: MapIcon, WAREHOUSE: Warehouse, COMMERCIAL_BUILDING: Store, OTHER: MoreHorizontal };
-export const PROPERTY_TYPE_GRADIENTS: Record<PropertyType, string> = { HOUSE: "from-purple-500 to-purple-600", CONDO: "from-blue-500 to-blue-600", VILLA: "from-rose-500 to-rose-600", POOL_VILLA: "from-cyan-500 to-blue-600", OFFICE_BUILDING: "from-sky-500 to-sky-600", TOWNHOME: "from-orange-500 to-orange-600", LAND: "from-green-500 to-green-600", WAREHOUSE: "from-yellow-500 to-yellow-600", COMMERCIAL_BUILDING: "from-indigo-500 to-indigo-600", OTHER: "from-slate-500 to-slate-600" };
+export const PROPERTY_TYPE_ICONS: Record<PropertyType, LucideIcon> = { HOUSE: Home, CONDO: Building2, VILLA: Palmtree, POOL_VILLA: Waves, OFFICE_BUILDING: Briefcase, HOME_OFFICE: Building2, TOWNHOME: Hotel, LAND: MapIcon, WAREHOUSE: Warehouse, COMMERCIAL_BUILDING: Store, OTHER: MoreHorizontal };
+export const PROPERTY_TYPE_GRADIENTS: Record<PropertyType, string> = { HOUSE: "from-purple-500 to-purple-600", CONDO: "from-blue-500 to-blue-600", VILLA: "from-rose-500 to-rose-600", POOL_VILLA: "from-cyan-500 to-blue-600", OFFICE_BUILDING: "from-sky-500 to-sky-600", HOME_OFFICE: "from-blue-600 to-indigo-600", TOWNHOME: "from-orange-500 to-orange-600", LAND: "from-green-500 to-green-600", WAREHOUSE: "from-yellow-500 to-yellow-600", COMMERCIAL_BUILDING: "from-indigo-500 to-indigo-600", OTHER: "from-slate-500 to-slate-600" };
 
 interface StatusStyle {
   dot: string;

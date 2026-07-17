@@ -107,7 +107,7 @@ export function PropertyTypeGrid({
       image: "/images/property-types/home_office.webp",
       title: t("home.property_types.home_office"),
       count: "135",
-      href: "/?type=TOWNHOME#latest-properties", // TOWNHOME maps to Home Office in filter logic
+      href: "/?type=HOME_OFFICE#latest-properties",
     },
     {
       image: "/images/property-types/commercial.webp",

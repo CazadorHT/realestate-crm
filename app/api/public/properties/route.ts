@@ -27,6 +27,8 @@ export async function GET(request: Request) {
       rawParams["companyRegistered"] = value === "true";
     } else if (key === "airbnb" || key === "allow_airbnb") {
       rawParams["allowAirbnb"] = value === "true";
+    } else if (key === "luxury_villa") {
+      rawParams["luxuryVilla"] = value === "true";
     } else if (key === "hot_deal") {
       rawParams["filter"] = value === "true" ? "hot_deals" : "all";
     } else if (key === "min_price") {

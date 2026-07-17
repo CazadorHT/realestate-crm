@@ -89,6 +89,7 @@ export function InventoryFilters({
     { label: "วิลล่า", value: "VILLA", icon: <Home className="h-4 w-4" />, count: filterCounts?.propertyTypes["VILLA"] || 0 },
     { label: "อาคารพาณิชย์", value: "COMMERCIAL_BUILDING", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["COMMERCIAL_BUILDING"] || 0 },
     { label: "ออฟฟิศ", value: "OFFICE_BUILDING", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["OFFICE_BUILDING"] || 0 },
+    { label: "โฮมออฟฟิศ", value: "HOME_OFFICE", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["HOME_OFFICE"] || 0 },
     { label: "โกดัง", value: "WAREHOUSE", icon: <Building2 className="h-4 w-4" />, count: filterCounts?.propertyTypes["WAREHOUSE"] || 0 },
     { label: "อื่นๆ", value: "OTHER", icon: <Tag className="h-4 w-4" />, count: filterCounts?.propertyTypes["OTHER"] || 0 },
   ];

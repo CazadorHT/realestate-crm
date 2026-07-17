@@ -26,6 +26,7 @@ interface FilteringOptions {
   maxSize: string;
   sort: string;
   transitStation: string;
+  luxuryVilla?: boolean;
 }
 
 /**
@@ -42,6 +43,7 @@ export function usePropertyFiltering(
     nearTrain, petFriendly, fullyFurnished, bedrooms,
     isForeigner, companyRegistered, isHotDeal, allowAirbnb,
     minPrice, maxPrice, minSize, maxSize, sort, transitStation,
+    luxuryVilla,
   } = options;
 
   // --- ⚡ Centralized Search Intent (Diamond Optimization) ---
@@ -112,7 +114,15 @@ export function usePropertyFiltering(
 
     // 2. Base Metadata Filters (Sidebar)
     if (!excludeFilters.includes("province") && province !== "ALL" && p.province !== province) return false;
-    if (!excludeFilters.includes("type") && type !== "ALL" && p.property_type !== type) return false;
+    
+    if (!excludeFilters.includes("type") && type !== "ALL") {
+      if (type.includes(",")) {
+        if (!type.split(",").includes(p.property_type || "")) return false;
+      } else {
+        if (p.property_type !== type) return false;
+      }
+    }
+
     if (!excludeFilters.includes("area") && area !== "ALL" && p.popular_area !== area) return false;
 
     if (!excludeFilters.includes("listingType") && listingType !== "ALL") {
@@ -132,6 +142,12 @@ export function usePropertyFiltering(
     if (!excludeFilters.includes("companyRegistered") && companyRegistered && !p.is_tax_registered) return false;
     if (!excludeFilters.includes("isHotDeal") && isHotDeal && !p.is_hot_deal) return false;
     if (!excludeFilters.includes("allowAirbnb") && allowAirbnb && !p.allow_airbnb) return false;
+
+    if (!excludeFilters.includes("luxuryVilla") && luxuryVilla) {
+      const isVillaOrPoolVilla = (p.property_type === "VILLA" || p.property_type === "POOL_VILLA") && ((p.price || 0) > 0 || (p.rental_price || 0) > 0);
+      const isLuxuryHouse = p.property_type === "HOUSE" && (p.price || 0) >= 8000000;
+      if (!isVillaOrPoolVilla && !isLuxuryHouse) return false;
+    }
 
     if (!excludeFilters.includes("bedrooms") && bedrooms !== "ALL") {
       const beds = p.bedrooms || 0;
@@ -179,7 +195,7 @@ export function usePropertyFiltering(
     }
 
     return true;
-  }, [searchIntent, province, type, listingType, priceType, area, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, allowAirbnb, minPrice, maxPrice, minSize, maxSize, transitStation]);
+  }, [searchIntent, province, type, listingType, priceType, area, nearTrain, petFriendly, fullyFurnished, bedrooms, isForeigner, companyRegistered, isHotDeal, allowAirbnb, luxuryVilla, minPrice, maxPrice, minSize, maxSize, transitStation]);
 
   // Single-Pass Engine (O(N))
   const results = useMemo(() => {

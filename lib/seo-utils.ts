@@ -7,7 +7,7 @@ import type { Database } from "@/lib/database.types.generated";
 import { siteConfig } from "@/lib/site-config";
 import { getLocalizedField } from "@/lib/i18n";
 
-type PropertyType = "HOUSE" | "CONDO" | "TOWNHOME" | "LAND" | "OFFICE_BUILDING" | "COMMERCIAL_BUILDING" | "VILLA" | "POOL_VILLA" | "WAREHOUSE" | "OTHER";
+type PropertyType = "HOUSE" | "CONDO" | "TOWNHOME" | "LAND" | "OFFICE_BUILDING" | "COMMERCIAL_BUILDING" | "VILLA" | "POOL_VILLA" | "WAREHOUSE" | "HOME_OFFICE" | "OTHER";
 type ListingType = "SALE" | "RENT" | "SALE_AND_RENT";
 
 export interface PropertySEOData {
@@ -110,6 +110,12 @@ const SEO_LABELS: Record<string, Record<string, string>> = {
     en: "Office Space",
     cn: "办公楼",
     ru: "Офисное здание",
+  },
+  HOME_OFFICE: {
+    th: "โฮมออฟฟิศ",
+    en: "Home Office",
+    cn: "家庭办公室",
+    ru: "Домашний офис",
   },
   COMMERCIAL_BUILDING: {
     th: "อาคารพาณิชย์",
@@ -817,6 +823,7 @@ export function generateStructuredData(
     OFFICE_BUILDING: "Place",
     COMMERCIAL_BUILDING: "Place",
     WAREHOUSE: "Place",
+    HOME_OFFICE: "Place",
     OTHER: "Accommodation",
   };
 

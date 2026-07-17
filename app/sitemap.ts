@@ -38,6 +38,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       alternates: getAlternates("/properties"),
     },
     {
+      url: `${baseUrl}/properties/pet-friendly-condo`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+      alternates: getAlternates("/properties/pet-friendly-condo"),
+    },
+    {
+      url: `${baseUrl}/properties/office-for-rent`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+      alternates: getAlternates("/properties/office-for-rent"),
+    },
+    {
+      url: `${baseUrl}/properties/luxury-villa`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
+      alternates: getAlternates("/properties/luxury-villa"),
+    },
+    {
       url: `${baseUrl}/near-station`,
       lastModified: new Date(),
       changeFrequency: "daily",

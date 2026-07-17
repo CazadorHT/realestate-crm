@@ -4124,13 +4124,6 @@ export type Database = {
           },
           {
             foreignKeyName: "crm_deal_commissions_v3_recipient_id_fkey"
-            columns: ["recipient_id"]
-            isOneToOne: false
-            referencedRelation: "identities_v3"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "crm_deal_commissions_v3_recipient_id_fkey"
             columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "identities_v3"
@@ -4139,13 +4132,20 @@ export type Database = {
           {
             foreignKeyName: "crm_deal_commissions_v3_recipient_id_fkey"
             columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "identities_v3"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_deal_commissions_v3_recipient_id_fkey"
+            columns: ["agent_id"]
             isOneToOne: false
             referencedRelation: "owners"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "crm_deal_commissions_v3_recipient_id_fkey"
-            columns: ["agent_id"]
+            columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "owners"
             referencedColumns: ["id"]

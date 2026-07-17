@@ -6,7 +6,7 @@ import { useLanguage } from "@/components/providers/LanguageProvider";
 import { pushToDataLayer, GTM_EVENTS } from "@/lib/gtm";
 
 // Hooks
-import { usePropertyFilters } from "@/hooks/search/usePropertyFilters";
+import { usePropertyFilters, DefaultPropertyFilters } from "@/hooks/search/usePropertyFilters";
 import { usePropertyData } from "@/hooks/search/usePropertyData";
 import { usePropertyFiltering } from "@/hooks/search/usePropertyFiltering";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ interface PropertySearchPageProps {
   initialFacets?: PropertyFacets | null;
   initialTransitStation?: string;
   basePath?: string;
+  defaultFilters?: DefaultPropertyFilters;
 }
 
 /**
@@ -41,9 +42,10 @@ export function PropertySearchPage({
   initialFacets,
   initialTransitStation = "",
   basePath,
+  defaultFilters,
 }: PropertySearchPageProps) {
   const { t } = useLanguage();
-  const filters = usePropertyFilters(initialTransitStation, basePath);
+  const filters = usePropertyFilters(initialTransitStation, basePath, defaultFilters);
   
   // 1. Data Access Layer (Fortress Tier)
   const { properties, facets: serverFacets, isLoading, isRefetching } = usePropertyData(initialProperties, initialFacets);

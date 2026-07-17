@@ -1076,7 +1076,9 @@ export function MobileFilters({
                         </label>
                         <div className="flex flex-wrap gap-2">
                           {PROPERTY_TYPES.map((pt) => {
-                            const count = availableTypes[pt.value] || 0;
+                            const count = pt.value.includes(",")
+                              ? pt.value.split(",").reduce((sum, val) => sum + (availableTypes[val] || 0), 0)
+                              : (availableTypes[pt.value] || 0);
                             const hasItems = pt.value === "ALL" || count > 0;
                             const isActive = type === pt.value;
 
