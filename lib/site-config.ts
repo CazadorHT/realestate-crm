@@ -81,7 +81,7 @@ export const siteConfig = {
     tiktok: "E6rcb6VwOKMyZdCIb2Rhv8daRZFnseIs", // https://vccasset.com
     tiktokTerms: "THmI1159aIMINgBLwHXndjlEg1RiEErv", // /terms
     tiktokPrivacy: "jboAcFQJ7goXNfp0CPmq9vN4AqI0nfuK", // /privacy-policy
-    google: "", // Google Search Console verification (if needed)
+    google: "Gn_P1ZHN_8X0e82cqOel5h3gSdL41B5dp4IRtn_y28U", // Google Search Console verification (if needed)
     facebookAppId: process.env.NEXT_PUBLIC_FACEBOOK_APP_ID || "", // Facebook App ID for Open Graph
   },
 };
