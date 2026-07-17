@@ -156,7 +156,9 @@ export default async function LuxuryVillaPage(props: {
     includeFacets: true,
   });
 
-  const totalCount = initialData.facets?.availableListingTypes?.ALL || 0;
+  const totalCount = initialData.properties.length < 60
+    ? initialData.properties.length
+    : (initialData.facets?.availableListingTypes?.ALL || 60);
 
   const areaCounts: Record<string, { count: number; name_en: string | null; name_cn: string | null; name_ru: string | null }> = {};
   initialData.properties.forEach(p => {

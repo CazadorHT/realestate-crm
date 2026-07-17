@@ -153,7 +153,9 @@ export default async function OfficeForRentPage(props: {
     includeFacets: true,
   });
 
-  const totalCount = initialData.facets?.availableListingTypes?.RENT || 0;
+  const totalCount = initialData.properties.length < 60
+    ? initialData.properties.length
+    : (initialData.facets?.availableListingTypes?.RENT || 60);
   
   const areaCounts: Record<string, { count: number; name_en: string | null; name_cn: string | null; name_ru: string | null }> = {};
   initialData.properties.forEach(p => {

@@ -56,12 +56,6 @@ export function PopularAreaTags({
     const target = document.getElementById(targetId);
     if (target) {
       target.scrollIntoView({ behavior: "smooth" });
-      
-      // Focus on the filter input or open areas selector if possible
-      setTimeout(() => {
-        const areaButton = document.querySelector('[data-testid="area-filter-trigger"]') as HTMLButtonElement;
-        if (areaButton) areaButton.click();
-      }, 500);
     }
   };
 
