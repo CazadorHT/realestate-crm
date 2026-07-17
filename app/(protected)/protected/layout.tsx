@@ -95,7 +95,11 @@ export default async function ProtectedLayout({
         </RealtimeProvider>
       </TenantProvider>
     );
-  } catch (error) {
+  } catch (error: any) {
+    // Re-throw Next.js internal errors (redirect, notFound) so they work properly
+    if (error?.digest?.startsWith('NEXT_REDIRECT') || error?.digest?.startsWith('NEXT_NOT_FOUND')) {
+      throw error;
+    }
     console.error("[protected/layout] Server render failed", error);
 
     return (
