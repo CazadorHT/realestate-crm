@@ -93,7 +93,7 @@ export function PublicNav() {
       });
 
       // Only hide/show on scroll for /properties page
-      if (pathname === "/properties" && !mobileMenuOpen) {
+      if (pathname?.startsWith("/properties") && !mobileMenuOpen) {
         // High sensitivity for faster hiding/showing
         if (Math.abs(scrollDelta) > 2) {
           if (currentScrollY > 20 && scrollDelta > 0) {

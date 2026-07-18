@@ -203,11 +203,11 @@ export default async function PublicPropertiesPage(props: { searchParams: Promis
               </div>
             </div>
           </div>
+          {/* Scroll button to property list */}
+          <ScrollToProperties targetId="properties-list-section" theme="light" />
         </section>
 
         <CategoryNavigationCards language={language} />
-        {/* Scroll button to property list */}
-        <ScrollToProperties targetId="properties-list-section" theme="light" />
 
         <div id="properties-list-section" >
           <PropertySearchPage initialProperties={initialData.properties} initialFacets={initialData.facets} />
