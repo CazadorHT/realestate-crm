@@ -167,17 +167,17 @@ export const getPopularAreasAction = unstable_cache(
         };
       });
 
-      // คัดเลือกเฉพาะ Top 8 ย่านที่มีจำนวนทรัพย์จริงสูงสุด
-      const top8Areas = preMappedAreas
+      // คัดเลือกเฉพาะ Top 16 ย่านที่มีจำนวนทรัพย์จริงสูงสุด
+      const top16Areas = preMappedAreas
         .filter((a: any) => a.count > 0)
         .sort((a: any, b: any) => b.count - a.count)
-        .slice(0, 8);
+        .slice(0, 16);
 
-      if (top8Areas.length === 0) return [];
+      if (top16Areas.length === 0) return [];
 
-      // 4. [S-Tier Optimization] ดึงรูปภาพภาพหน้าปก (main_image) จากทรัพย์สินล่าสุดในแต่ละย่าน (เฉพาะปากช่องย่านท็อป 8 เท่านั้น)
-      // การดึงเจาะจงเฉพาะกลุ่ม 8 ย่านนี้ ช่วยเซฟปริมาณดาวน์โหลด Egress เป็นศูนย์และค้นหาเสร็จ in เสี้ยววินาทีครับ
-      const topAreaNames = top8Areas.map((a: any) => a.nameTh);
+      // 4. [S-Tier Optimization] ดึงรูปภาพภาพหน้าปก (main_image) จากทรัพย์สินล่าสุดในแต่ละย่าน (เฉพาะปากช่องย่านท็อป 16 เท่านั้น)
+      // การดึงเจาะจงเฉพาะกลุ่ม 16 ย่านนี้ ช่วยเซฟปริมาณดาวน์โหลด Egress เป็นศูนย์และค้นหาเสร็จ in เสี้ยววินาทีครับ
+      const topAreaNames = top16Areas.map((a: any) => a.nameTh);
       const { data: recentProps } = await client
         .from("properties")
         .select("popular_area, main_image")
@@ -198,7 +198,7 @@ export const getPopularAreasAction = unstable_cache(
       }
 
       // 5. แมปข้อมูลย่านกลับคืนให้ผู้ใช้งานหน้าบ้านครบทุกชุด
-      return top8Areas.map((area: any) => {
+      return top16Areas.map((area: any) => {
         // ใช้รูปภาพปกจาก Master ย่านก่อน ถ้าไม่มีค่อย Fallback ไปใช้รูปทรัพย์สินล่าสุดในย่านนั้น
         const coverImage = area.cover || areaCoverMap.get(area.nameTh.trim().toLowerCase()) || null;
 

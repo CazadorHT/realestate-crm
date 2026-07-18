@@ -225,22 +225,23 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
   // -- End Drag Logic --
 
 
-  // 3. Main Data Fetch
+  // 3. Main Data Fetch (Hybrid Approach: Server renders 12 items instantly, client-side fetches 100 in background)
   useEffect(() => {
     const controller = new AbortController();
 
     async function loadProperties() {
-      // Skip initial fetch if we already have properties from server
-      if (initialProperties && initialProperties.length > 0 && reloadKey === 0) {
-        setIsLoading(false);
-        return;
-      }
-
+      // If we have initialProperties (12 items) from server, we show them immediately
+      // But we still fetch 100 items in the background to populate the full filters
+      const isInitialFetch = reloadKey === 0 && initialProperties && initialProperties.length > 0;
+      
       try {
-        setIsLoading(true);
+        if (!isInitialFetch) {
+          setIsLoading(true);
+        }
         setError(null);
 
-        const res = await fetch("/api/public/properties?sort=NEWEST", {
+        // Fetch 100 properties to cover all categories in the background
+        const res = await fetch("/api/public/properties?sort=NEWEST&limit=100", {
           signal: controller.signal,
         });
 
@@ -253,8 +254,10 @@ function PropertyListingContent({ initialProperties }: { initialProperties?: Pro
         setProperties(Array.isArray(propertiesArray) ? propertiesArray : []);
       } catch (err) {
         if (err instanceof Error && err.name === "AbortError") return;
-        // Use a proper error message translation if available, or fallback
-        setError(t("common.error_loading") || "Failed to load properties. Please try again.");
+        // Only show error if we don't have initialProperties to fallback to
+        if (!initialProperties || initialProperties.length === 0) {
+          setError(t("common.error_loading") || "Failed to load properties. Please try again.");
+        }
       } finally {
         setIsLoading(false);
       }
