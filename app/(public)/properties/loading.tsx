@@ -1,6 +1,6 @@
 export default function PropertiesLoading() {
   return (
-    <div className="min-h-screen bg-slate-50/50 pt-(--nav-offset,0px)">
+    <div className="min-h-screen bg-slate-50/50 pt-(--nav-offset,64px)">
       {/* Skeleton Banner */}
       <section className="relative overflow-hidden w-full border-b border-slate-100 bg-slate-100/30 py-12 md:py-20">
         <div className="max-w-screen-2xl mx-auto px-5 md:px-6 lg:px-8 mt-16">

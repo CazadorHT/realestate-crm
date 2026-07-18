@@ -241,7 +241,7 @@ export default async function OfficeForRentPage(props: {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50/20 pt-(--nav-offset,0px) transition-[padding-top] duration-300 ease-in-out">
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-white to-blue-50/20 pt-(--nav-offset,64px) transition-[padding-top] duration-300 ease-in-out">
       {/* WebPage Schema */}
       <script
         type="application/ld+json"

@@ -99,7 +99,7 @@ export default async function PublicPropertiesPage(props: { searchParams: Promis
 
   return (
     <>
-      <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-50/20 pt-(--nav-offset,0px) transition-[padding-top] duration-300 ease-in-out">
+      <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-blue-50/20 pt-(--nav-offset,64px) transition-[padding-top] duration-300 ease-in-out">
         
         {/* SEO Hero Banner - Premium Directory Landing */}
         <section className="relative overflow-hidden w-full border-b border-slate-200 bg-linear-to-r from-blue-100/40 via-indigo-50/10 to-transparent mb-8">

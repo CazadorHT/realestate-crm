@@ -16,7 +16,7 @@ export function CategoryNavigationCards({ language }: CategoryNavigationCardsPro
         {/* Card 1: Luxury Villa */}
         <Link 
           href="/properties/luxury-villa" 
-          className="group relative overflow-hidden rounded-3xl border border-violet-500/20 bg-linear-to-br from-violet-50/40 to-violet-100/10 p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex items-center justify-between min-h-[160px] gap-4"
+          className="group cursor-pointer relative overflow-hidden rounded-3xl border border-violet-500/20 bg-linear-to-br from-violet-50/40 to-violet-100/10 p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex items-center justify-between min-h-[160px] gap-4"
         >
           <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-violet-500/5 blur-xl group-hover:scale-150 transition-transform duration-500" />
           <div className="space-y-3 flex-1">
@@ -60,7 +60,7 @@ export function CategoryNavigationCards({ language }: CategoryNavigationCardsPro
         {/* Card 2: Pet Friendly Condo */}
         <Link 
           href="/properties/pet-friendly-condo" 
-          className="group relative overflow-hidden rounded-3xl border border-orange-500/20 bg-linear-to-br from-orange-50/40 to-orange-100/10 p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex items-center justify-between min-h-[160px] gap-4"
+          className="group cursor-pointer relative overflow-hidden rounded-3xl border border-orange-500/20 bg-linear-to-br from-orange-50/40 to-orange-100/10 p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex items-center justify-between min-h-[160px] gap-4"
         >
           <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-orange-500/5 blur-xl group-hover:scale-150 transition-transform duration-500" />
           <div className="space-y-3 flex-1">
@@ -104,7 +104,7 @@ export function CategoryNavigationCards({ language }: CategoryNavigationCardsPro
         {/* Card 3: Office for Rent */}
         <Link 
           href="/properties/office-for-rent" 
-          className="group relative overflow-hidden rounded-3xl border border-blue-500/20 bg-linear-to-br from-blue-50/40 to-blue-100/10 p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex items-center justify-between min-h-[160px] gap-4"
+          className="group cursor-pointer relative overflow-hidden rounded-3xl border border-blue-500/20 bg-linear-to-br from-blue-50/40 to-blue-100/10 p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex items-center justify-between min-h-[160px] gap-4"
         >
           <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full bg-blue-500/5 blur-xl group-hover:scale-150 transition-transform duration-500" />
           <div className="space-y-3 flex-1">

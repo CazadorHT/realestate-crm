@@ -244,7 +244,7 @@ export default async function LuxuryVillaPage(props: {
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-[#131b2e] to-slate-950 text-slate-100 pt-(--nav-offset,0px) transition-[padding-top] duration-300 ease-in-out">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 via-[#131b2e] to-slate-950 text-slate-100 pt-(--nav-offset,64px) transition-[padding-top] duration-300 ease-in-out">
       {/* WebPage Schema */}
       <script
         type="application/ld+json"
