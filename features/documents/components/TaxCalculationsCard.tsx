@@ -1,0 +1,215 @@
+import React from "react";
+import { Label } from "@/components/ui/label";
+import { Percent, Calculator } from "lucide-react";
+
+interface TaxCalculationsCardProps {
+  taxCalculationMethod: string;
+  setTaxCalculationMethod: (val: string) => void;
+  vatRate: string;
+  setVatRate: (val: string) => void;
+  withholdingTaxRate: string;
+  setWithholdingTaxRate: (val: string) => void;
+  bookingAmount: string;
+  dealRentalPrice: number | null;
+  reservationFee: string;
+  securityDeposit: string;
+  activeTemplate: { type: string } | null;
+}
+
+export function TaxCalculationsCard({
+  taxCalculationMethod,
+  setTaxCalculationMethod,
+  vatRate,
+  setVatRate,
+  withholdingTaxRate,
+  setWithholdingTaxRate,
+  bookingAmount,
+  dealRentalPrice,
+  reservationFee,
+  securityDeposit,
+  activeTemplate,
+}: TaxCalculationsCardProps) {
+  const previewRent = parseFloat(bookingAmount || "0") || dealRentalPrice || 0;
+  const previewRes = parseFloat(reservationFee || "0") || 0;
+  const previewSec = parseFloat(securityDeposit || "0") || 0;
+  const previewVatRate = parseFloat(vatRate) || 0;
+  const previewWhtRate = parseFloat(withholdingTaxRate) || 0;
+
+  const isRentReceipt = activeTemplate?.type === "RENT_RECEIPT";
+  const hasRent = isRentReceipt && previewRent > 0;
+  const hasRes = previewRes > 0;
+  const hasSec = previewSec > 0;
+  const taxableBase = (hasRent ? previewRent : 0) + (hasRes ? previewRes : 0) + (hasSec ? previewSec : 0);
+
+  let gross = taxableBase;
+  let vatVal = 0;
+  let whtVal = 0;
+  let netTaxable = taxableBase;
+
+  if (taxCalculationMethod === "exclude") {
+    gross = taxableBase;
+    vatVal = gross * (previewVatRate / 100);
+    whtVal = gross * (previewWhtRate / 100);
+    netTaxable = gross + vatVal - whtVal;
+  } else if (taxCalculationMethod === "include") {
+    const divisor = 1 + (previewVatRate / 100) - (previewWhtRate / 100);
+    gross = divisor > 0 ? taxableBase / divisor : taxableBase;
+    vatVal = gross * (previewVatRate / 100);
+    whtVal = gross * (previewWhtRate / 100);
+    netTaxable = taxableBase;
+  }
+
+  const finalTotal = netTaxable;
+
+  const formatNum = (val: number) => 
+    new Intl.NumberFormat("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+
+  const scaleFactor = taxableBase > 0 ? (gross / taxableBase) : 1;
+  const displaySecDep = hasSec ? (previewSec * scaleFactor) : 0;
+
+  let resFeeMonths = 0;
+  let secDepMonths = 0;
+  const baseRentPrice = previewRent || dealRentalPrice || 0;
+  if (baseRentPrice > 0) {
+    const rMonths = Math.round(previewRes / baseRentPrice);
+    if (Math.abs(previewRes - rMonths * baseRentPrice) < 2) {
+      resFeeMonths = rMonths;
+    }
+    const sMonths = Math.round(previewSec / baseRentPrice);
+    if (Math.abs(previewSec - sMonths * baseRentPrice) < 2) {
+      secDepMonths = sMonths;
+    }
+  }
+
+  return (
+    <div className="p-6 rounded-3xl border border-slate-100 bg-slate-50/20 space-y-4 relative overflow-hidden">
+      <div className="absolute -right-4 -bottom-4 opacity-5 pointer-events-none">
+        <Percent className="h-24 w-24 text-slate-900" />
+      </div>
+      <Label className="text-[10px] font-semibold text-slate-700 flex items-center gap-2 uppercase tracking-widest">
+        <Calculator className="h-4 w-4 text-blue-600" />
+        การคำนวณภาษี (Tax Calculations)
+      </Label>
+      <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+        ตั้งค่าภาษีมูลค่าเพิ่ม (VAT) และภาษีหัก ณ ที่จ่าย (Withholding Tax) สำหรับคำนวณในตารางราคา
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">วิธีคำนวณภาษี (Method)</Label>
+          <select
+            value={taxCalculationMethod}
+            onChange={(e) => setTaxCalculationMethod(e.target.value)}
+            className="h-10 text-sm rounded-xl border border-slate-200 bg-white px-3 focus:border-blue-400 focus:outline-none w-full"
+          >
+            <option value="none">ไม่มีภาษี (No Tax)</option>
+            <option value="exclude">หักจากค่าเช่า / ยังไม่รวมภาษี (Exclude)</option>
+            <option value="include">ออกภาษีแทนให้ / รวมภาษีแล้ว (Include/Gross-up)</option>
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">อัตราภาษีมูลค่าเพิ่ม (VAT %)</Label>
+          <select
+            value={vatRate}
+            onChange={(e) => setVatRate(e.target.value)}
+            disabled={taxCalculationMethod === "none"}
+            className="h-10 text-sm rounded-xl border border-slate-200 bg-white px-3 focus:border-blue-400 focus:outline-none w-full disabled:opacity-50 disabled:bg-slate-100"
+          >
+            <option value="0">0%</option>
+            <option value="7">7%</option>
+          </select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">ภาษีหัก ณ ที่จ่าย (WHT %)</Label>
+          <select
+            value={withholdingTaxRate}
+            onChange={(e) => setWithholdingTaxRate(e.target.value)}
+            disabled={taxCalculationMethod === "none"}
+            className="h-10 text-sm rounded-xl border border-slate-200 bg-white px-3 focus:border-blue-400 focus:outline-none w-full disabled:opacity-50 disabled:bg-slate-100"
+          >
+            <option value="0">0%</option>
+            <option value="1">1%</option>
+            <option value="3">3%</option>
+            <option value="5">5%</option>
+            <option value="7">7%</option>
+          </select>
+        </div>
+      </div>
+
+      {taxCalculationMethod !== "none" && taxableBase > 0 && (
+        <div className="mt-3 p-4 bg-white rounded-2xl border border-slate-100 text-[11px] space-y-3 shadow-xs">
+          <div>
+            <p className="font-semibold text-slate-700">คำอธิบายวิธีคำนวณภาษี:</p>
+            {taxCalculationMethod === "exclude" ? (
+              <p className="text-slate-500 font-medium leading-relaxed mt-0.5">
+                👉 <strong>หักจากค่าเช่า / ยังไม่รวมภาษี (Exclude):</strong> ระบบจะหักภาษี ณ ที่จ่ายออกจากยอดตั้งต้น 
+                ทำให้เจ้าของจะได้รับยอดโอนสุทธิลดลง (ยอดโอน = ยอดตั้งต้น + VAT {vatRate}% - หัก ณ ที่จ่าย {withholdingTaxRate}%)
+              </p>
+            ) : (
+              <p className="text-slate-500 font-medium leading-relaxed mt-0.5">
+                👉 <strong>ออกภาษีแทนให้ / รวมภาษีแล้ว (Include / Gross-up):</strong> ยึดตามยอดเงินตั้งต้นเป็นยอดเงินสุทธิที่จะโอนให้เจ้าของจริง 
+                โดยผู้เช่าออกค่าภาษีหัก ณ ที่จ่ายแทนให้ ระบบจะปัดเศษคิดย้อนกลับหาฐานก่อนหักภาษีให้อัตโนมัติ เพื่อให้เจ้าของได้รับยอดโอนสุทธิเต็มตามยอดตั้งต้นพอดี
+              </p>
+            )}
+          </div>
+
+          <div className="border-t border-slate-100 pt-3 space-y-2">
+            <p className="font-semibold text-slate-700 flex items-center gap-1.5">
+              📊 ตัวอย่างผลลัพธ์การคำนวณจริงในบิล (Live Calculation Preview):
+            </p>
+            <div className="bg-slate-50/50 rounded-xl border border-slate-100 overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="bg-slate-100 border-b border-slate-100 text-slate-500 font-medium">
+                    <th className="py-2 px-3">รายการ</th>
+                    <th className="py-2 px-3 text-right">จำนวนเงิน (บาท)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 text-slate-600">
+                  {hasRent && (
+                    <tr>
+                      <td className="py-2 px-3">ค่าเช่าอสังหาริมทรัพย์ (ราคาฐาน: {formatNum(previewRent)})</td>
+                      <td className="py-2 px-3 text-right font-medium">{formatNum(previewRent * scaleFactor)}</td>
+                    </tr>
+                  )}
+                  {hasRes && (
+                    <tr>
+                      <td className="py-2 px-3">เงินมัดจำ / ค่าจอง (ราคาฐาน: {formatNum(previewRes)}){resFeeMonths > 0 ? ` (${resFeeMonths} เดือน)` : ""}</td>
+                      <td className="py-2 px-3 text-right font-medium">{formatNum(previewRes * scaleFactor)}</td>
+                    </tr>
+                  )}
+                  {hasSec && (
+                    <tr>
+                      <td className="py-2 px-3 text-slate-500">เงินประกันสัญญา (Security Deposit){secDepMonths > 0 ? ` (${secDepMonths} เดือน)` : ""}</td>
+                      <td className="py-2 px-3 text-right font-medium text-slate-500">{formatNum(displaySecDep)}</td>
+                    </tr>
+                  )}
+                  
+                  <tr className="bg-slate-100/50 font-semibold text-slate-700">
+                    <td className="py-2 px-3">ฐานภาษีก่อนหัก (Gross Subtotal)</td>
+                    <td className="py-2 px-3 text-right">{formatNum(gross)}</td>
+                  </tr>
+                  {previewVatRate > 0 && (
+                    <tr className="text-slate-600">
+                      <td className="py-2 px-3">ภาษีมูลค่าเพิ่ม / VAT ({previewVatRate}%)</td>
+                      <td className="py-2 px-3 text-right text-blue-600 font-medium">+ {formatNum(vatVal)}</td>
+                    </tr>
+                  )}
+                  {previewWhtRate > 0 && (
+                    <tr className="text-slate-600">
+                      <td className="py-2 px-3">ภาษีหัก ณ ที่จ่าย / WHT ({previewWhtRate}%)</td>
+                      <td className="py-2 px-3 text-right text-red-600 font-medium">- {formatNum(whtVal)}</td>
+                    </tr>
+                  )}
+                  <tr className="bg-blue-50/30 font-bold text-slate-900 border-t border-slate-200">
+                    <td className="py-2.5 px-3 text-blue-900">ยอดโอนสุทธิให้เจ้าของ (Net Transfer)</td>
+                    <td className="py-2.5 px-3 text-right text-blue-900 text-xs">{formatNum(finalTotal)} THB</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

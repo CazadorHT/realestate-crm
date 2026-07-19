@@ -201,7 +201,7 @@ export async function getAllDocuments(
       ? supabase
           .from("deals")
           .select(
-            "id, property:properties(title), lead:leads(id, full_name, email)",
+            "id, deal_type, property:properties(title), lead:leads(id, full_name, email)",
           )
           .in("id", Array.from(ownerIdsByType.DEAL))
       : Promise.resolve({ data: [] }),
@@ -209,7 +209,7 @@ export async function getAllDocuments(
       ? supabase
           .from("rental_contracts")
           .select(
-            "id, deal:deals(id, property:properties(title), lead:leads(id, full_name, email))",
+            "id, deal:deals(id, deal_type, property:properties(title), lead:leads(id, full_name, email))",
           )
           .in("id", Array.from(ownerIdsByType.RENTAL_CONTRACT))
       : Promise.resolve({ data: [] }),

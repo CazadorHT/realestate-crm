@@ -61,6 +61,9 @@ const additionalDataSchema = z
     client_nationality: z.string().optional(),
     unit_number_override: z.string().optional(),
     floor_override: z.string().optional(),
+    vat_rate: z.string().optional(),
+    withholding_tax_rate: z.string().optional(),
+    tax_calculation_method: z.enum(["none", "include", "exclude"]).optional().default("none"),
   })
   .passthrough();
 
@@ -130,7 +133,7 @@ export async function generateDocumentFromTemplateAction(
   templateId: string,
   ownerId: string,
   ownerType: "LEAD" | "PROPERTY" | "DEAL" | "RENTAL_CONTRACT",
-  additionalData: z.infer<typeof additionalDataSchema> = { language: "th" },
+  additionalData: z.input<typeof additionalDataSchema> = { language: "th" },
 ) {
   try {
     // Validate UUIDs
@@ -412,23 +415,73 @@ export async function generateDocumentFromTemplateAction(
       contextData.lead.identity_info = identityInfo;
     }
 
-    // Build financial_table_html block — professional table layout
+    // Build financial_table_html block — professional table layout with VAT and WHT support
     const rawResFee = validData.reservation_fee || "";
     const resFeeNum = parseFloat(rawResFee.replace(/,/g, "")) || 0;
-    const formattedResFee = resFeeNum > 0 ? formatCurrency(resFeeNum) : "";
-    const resFeeWords = resFeeNum > 0
-      ? (lang === "th" ? amountToThaiWords(resFeeNum) : amountToEnglishWords(resFeeNum))
-      : "";
 
     const rawSecDep = validData.security_deposit || "";
     const secDepNum = parseFloat(rawSecDep.replace(/,/g, "")) || 0;
-    const formattedSecDep = secDepNum > 0 ? formatCurrency(secDepNum) : "";
-    const secDepWords = secDepNum > 0
-      ? (lang === "th" ? amountToThaiWords(secDepNum) : amountToEnglishWords(secDepNum))
-      : "";
+
+    const rawBookingAmt = validData.booking_amount || "";
+    const bookingAmtNum = parseFloat(rawBookingAmt.replace(/,/g, "")) || 0;
+
+    const dealPrice = contextData.deal?.price || contextData.property?.rental_price || 0;
+    const rentPrice = bookingAmtNum > 0 ? bookingAmtNum : dealPrice;
+
+    // Tax settings
+    const vatRate = parseFloat(validData.vat_rate || "") || 0;
+    const whtRate = parseFloat(validData.withholding_tax_rate || "") || 0;
+    const taxMethod = validData.tax_calculation_method || "none";
+
+    // Determine what items are present
+    const isRentReceipt = template.type === "RENT_RECEIPT";
+    const hasRent = isRentReceipt && rentPrice > 0;
+    const hasReservation = resFeeNum > 0;
+    const hasSecurityDeposit = secDepNum > 0;
+
+    // Calculate taxable base (Including Security Deposit in the tax base)
+    let taxableBase = 0;
+    if (hasRent) taxableBase += rentPrice;
+    if (hasReservation) taxableBase += resFeeNum;
+    if (hasSecurityDeposit) taxableBase += secDepNum;
+
+    // Calculate tax breakdown
+    let grossAmount = taxableBase;
+    let vatAmount = 0;
+    let whtAmount = 0;
+    let netTaxable = taxableBase;
+
+    if (taxMethod === "exclude") {
+      grossAmount = taxableBase;
+      vatAmount = grossAmount * (vatRate / 100);
+      whtAmount = grossAmount * (whtRate / 100);
+      netTaxable = grossAmount + vatAmount - whtAmount;
+    } else if (taxMethod === "include") {
+      // Gross-up calculation: Net = Gross * (1 + V% - W%)
+      const divisor = 1 + (vatRate / 100) - (whtRate / 100);
+      grossAmount = divisor > 0 ? taxableBase / divisor : taxableBase;
+      vatAmount = grossAmount * (vatRate / 100);
+      whtAmount = grossAmount * (whtRate / 100);
+      netTaxable = taxableBase;
+    } else {
+      // none
+      grossAmount = taxableBase;
+      vatAmount = 0;
+      whtAmount = 0;
+      netTaxable = taxableBase;
+    }
+
+    const grandTotal = netTaxable;
+
+    // Scale factors for itemized display if tax is included/excluded
+    const scaleFactor = taxableBase > 0 ? (grossAmount / taxableBase) : 1;
+
+    // Format individual row prices reflecting their Gross value
+    const displayRentPrice = hasRent ? rentPrice * scaleFactor : 0;
+    const displayResFee = hasReservation ? resFeeNum * scaleFactor : 0;
+    const displaySecDep = hasSecurityDeposit ? secDepNum * scaleFactor : 0;
 
     // Determine month labels based on input compared to rental price
-    const dealPrice = contextData.deal?.price || contextData.property?.rental_price || 0;
     let resFeeMonths = 0;
     let secDepMonths = 0;
 
@@ -448,6 +501,10 @@ export async function generateDocumentFromTemplateAction(
     const unitPriceLabel = translations.unit_price || (lang === "th" ? "ราคาต่อหน่วย" : "Unit Price");
     const totalLabel = translations.total || (lang === "th" ? "ยอดรวม" : "Total");
 
+    const rentLabel = lang === "th"
+      ? `ค่าเช่าอสังหาริมทรัพย์ (Rent Payment)${validData.payment_period ? ` สำหรับงวด ${validData.payment_period}` : ""}`
+      : `Rental Payment${validData.payment_period ? ` for ${validData.payment_period}` : ""}`;
+
     const reservationLabel = lang === "th" 
       ? `เงินมัดจำ / ค่าจอง (Reservation Fee)${resFeeMonths > 0 ? ` (${resFeeMonths} เดือน)` : ""}` 
       : `Reservation Fee${resFeeMonths > 0 ? ` (${resFeeMonths} Month${resFeeMonths > 1 ? "s" : ""})` : ""}`;
@@ -456,42 +513,63 @@ export async function generateDocumentFromTemplateAction(
       ? `เงินประกัน (Security Deposit)${secDepMonths > 0 ? ` (${secDepMonths} เดือน)` : ""}` 
       : `Security Deposit${secDepMonths > 0 ? ` (${secDepMonths} Month${secDepMonths > 1 ? "s" : ""})` : ""}`;
 
-    const grandTotalLabel = lang === "th" ? "รวมทั้งสิ้น / Grand Total" : "Grand Total";
+    const subTotalLabel = lang === "th" ? "ค่าบริการ/ค่าเช่าก่อนภาษี (Gross Amount)" : "Gross Amount";
+    const vatLabel = lang === "th" ? `ภาษีมูลค่าเพิ่ม / VAT (${vatRate}%)` : `VAT (${vatRate}%)`;
+    const whtLabel = lang === "th" ? `หักภาษี ณ ที่จ่าย / Withholding Tax (${whtRate}%)` : `Withholding Tax (${whtRate}%)`;
+    const grandTotalLabel = lang === "th" ? "ยอดโอนสุทธิ / Net Payable" : "Net Payable";
 
     let rowNum = 0;
     let tableRows = "";
-    let grandTotal = 0;
 
-    if (resFeeNum > 0) {
+    if (hasRent) {
       rowNum++;
-      grandTotal += resFeeNum;
+      tableRows += `
+        <tr>
+          <td style="text-align: center; width: 40px;">${rowNum}</td>
+          <td>${rentLabel}</td>
+          <td style="text-align: center; width: 70px;">1</td>
+          <td style="text-align: right; width: 110px;">${formatCurrency(displayRentPrice)}</td>
+          <td style="text-align: right; width: 110px;">${formatCurrency(displayRentPrice)}</td>
+        </tr>`;
+    }
+
+    if (hasReservation) {
+      rowNum++;
       tableRows += `
         <tr>
           <td style="text-align: center; width: 40px;">${rowNum}</td>
           <td>${reservationLabel}</td>
           <td style="text-align: center; width: 70px;">1</td>
-          <td style="text-align: right; width: 110px;">${formattedResFee}</td>
-          <td style="text-align: right; width: 110px;">${formattedResFee}</td>
+          <td style="text-align: right; width: 110px;">${formatCurrency(displayResFee)}</td>
+          <td style="text-align: right; width: 110px;">${formatCurrency(displayResFee)}</td>
         </tr>`;
     }
 
-    if (secDepNum > 0) {
+    if (hasSecurityDeposit) {
       rowNum++;
-      grandTotal += secDepNum;
       tableRows += `
         <tr>
           <td style="text-align: center;">${rowNum}</td>
           <td>${securityLabel}</td>
           <td style="text-align: center;">1</td>
-          <td style="text-align: right;">${formattedSecDep}</td>
-          <td style="text-align: right;">${formattedSecDep}</td>
+          <td style="text-align: right;">${formatCurrency(displaySecDep)}</td>
+          <td style="text-align: right;">${formatCurrency(displaySecDep)}</td>
         </tr>`;
     }
 
-    const formattedGrandTotal = formatCurrency(grandTotal);
     const grandTotalWords = grandTotal > 0
       ? (lang === "th" ? amountToThaiWords(grandTotal) : amountToEnglishWords(grandTotal))
       : "";
+
+    // Set template context variables so they are accessible as normal placeholders in DOCX / HTML templates too
+    contextData.deal.gross_amount = formatCurrency(grossAmount);
+    contextData.deal.vat_amount = formatCurrency(vatAmount);
+    contextData.deal.withholding_tax_amount = formatCurrency(whtAmount);
+    contextData.deal.net_transfer_amount = formatCurrency(grandTotal);
+    contextData.deal.net_payable = formatCurrency(grandTotal);
+    contextData.deal.vat_rate = vatRate;
+    contextData.deal.withholding_tax_rate = whtRate;
+    contextData.deal.tax_calculation_method = taxMethod;
 
     let financial_table_html = "";
     if (rowNum > 0) {
@@ -508,9 +586,31 @@ export async function generateDocumentFromTemplateAction(
         </thead>
         <tbody>
           ${tableRows}
+          
+          ${taxMethod !== "none" && taxableBase > 0 ? `
           <tr style="background-color: #f8fafc;">
+            <td colspan="4" style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; font-weight: bold; color: #475569;">${subTotalLabel}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; color: #1e293b;">${formatCurrency(grossAmount)}</td>
+          </tr>
+          ` : ""}
+
+          ${vatRate > 0 && taxMethod !== "none" ? `
+          <tr style="background-color: #f8fafc;">
+            <td colspan="4" style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; font-weight: bold; color: #475569;">${vatLabel}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; color: #1e293b;">+ ${formatCurrency(vatAmount)}</td>
+          </tr>
+          ` : ""}
+
+          ${whtRate > 0 && taxMethod !== "none" ? `
+          <tr style="background-color: #f8fafc;">
+            <td colspan="4" style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; font-weight: bold; color: #b91c1c;">${whtLabel}</td>
+            <td style="border: 1px solid #cbd5e1; padding: 6px 8px; text-align: right; color: #b91c1c; font-weight: bold;">- ${formatCurrency(whtAmount)}</td>
+          </tr>
+          ` : ""}
+
+          <tr style="background-color: #f1f5f9;">
             <td colspan="4" style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold; color: #1e293b;">${grandTotalLabel}</td>
-            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold; font-size: 14px; color: #4338ca;">${formattedGrandTotal} THB</td>
+            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right; font-weight: bold; font-size: 14px; color: #0c4a6e;">${formatCurrency(grandTotal)} THB</td>
           </tr>
         </tbody>
       </table>
@@ -782,7 +882,7 @@ export async function generateDocxDocumentFromTemplateAction(
   ownerId: string,
   ownerType: "LEAD" | "PROPERTY" | "DEAL" | "RENTAL_CONTRACT",
   docxStoragePath: string,
-  additionalData: z.infer<typeof additionalDataSchema> = { language: "th" },
+  additionalData: z.input<typeof additionalDataSchema> = { language: "th" },
   options?: { templateName?: string },
 ) {
   try {
@@ -977,6 +1077,47 @@ export async function generateDocxDocumentFromTemplateAction(
       contextData.deal.security_deposit_words = secDepNum > 0
         ? (lang === "th" ? amountToThaiWords(secDepNum) : amountToEnglishWords(secDepNum))
         : "";
+
+      // Calculate tax details for DOCX templates
+      const vatRate = parseFloat(validData.vat_rate || "") || 0;
+      const whtRate = parseFloat(validData.withholding_tax_rate || "") || 0;
+      const taxMethod = validData.tax_calculation_method || "none";
+
+      const isRent = contextData.deal?.deal_type === "RENT";
+      const rentPrice = isRent ? (parseFloat(validData.booking_amount?.replace(/,/g, "") || "") || parseFloat(contextData.deal?.price || "") || 0) : 0;
+      
+      let taxableBase = 0;
+      if (rentPrice > 0) taxableBase += rentPrice;
+      if (resFeeNum > 0) taxableBase += resFeeNum;
+
+      let grossAmount = taxableBase;
+      let vatAmount = 0;
+      let whtAmount = 0;
+      let netTaxable = taxableBase;
+
+      if (taxMethod === "exclude") {
+        grossAmount = taxableBase;
+        vatAmount = grossAmount * (vatRate / 100);
+        whtAmount = grossAmount * (whtRate / 100);
+        netTaxable = grossAmount + vatAmount - whtAmount;
+      } else if (taxMethod === "include") {
+        const divisor = 1 + (vatRate / 100) - (whtRate / 100);
+        grossAmount = divisor > 0 ? taxableBase / divisor : taxableBase;
+        vatAmount = grossAmount * (vatRate / 100);
+        whtAmount = grossAmount * (whtRate / 100);
+        netTaxable = taxableBase;
+      }
+
+      const grandTotal = netTaxable + secDepNum;
+
+      contextData.deal.gross_amount = formatCurrency(grossAmount);
+      contextData.deal.vat_amount = formatCurrency(vatAmount);
+      contextData.deal.withholding_tax_amount = formatCurrency(whtAmount);
+      contextData.deal.net_transfer_amount = formatCurrency(grandTotal);
+      contextData.deal.net_payable = formatCurrency(grandTotal);
+      contextData.deal.vat_rate = vatRate;
+      contextData.deal.withholding_tax_rate = whtRate;
+      contextData.deal.tax_calculation_method = taxMethod;
     } else if (ownerType === "RENTAL_CONTRACT") {
       const { data: contract, error: cError } = await supabase
         .from("rental_contracts")

@@ -11,6 +11,7 @@ export type DocumentWithRelations = {
   lead?: { id: string; full_name: string | null; email: string | null } | null;
   deal?: {
     id: string;
+    deal_type?: string | null;
     property: { title: string } | null;
     lead?: {
       id: string;
@@ -22,6 +23,7 @@ export type DocumentWithRelations = {
     id: string;
     deal?: {
       id: string;
+      deal_type?: string | null;
       property: { title: string } | null;
       lead?: {
         id: string;

@@ -49,6 +49,11 @@ import { cn } from "@/lib/utils";
 import { PropertyCombobox } from "@/components/PropertyCombobox";
 import { LeadCombobox } from "@/components/LeadCombobox";
 import { DealCombobox } from "@/features/deals/components/DealCombobox";
+import { ContractFinancialsCard } from "./ContractFinancialsCard";
+import { LandlordPaymentCard } from "./LandlordPaymentCard";
+import { TaxCalculationsCard } from "./TaxCalculationsCard";
+import { TenantOverridesCard } from "./TenantOverridesCard";
+
 
 interface TemplateDialogProps {
   ownerId?: string;
@@ -144,13 +149,17 @@ export function TemplateDialog({
   const [reservationFee, setReservationFee] = useState("");
   const [securityDeposit, setSecurityDeposit] = useState("");
   const [bookingAmount, setBookingAmount] = useState("");
+  const [showOverridePrice, setShowOverridePrice] = useState(false);
   const [contractDueDate, setContractDueDate] = useState("");
   const [unitNumberOverride, setUnitNumberOverride] = useState("");
   const [floorOverride, setFloorOverride] = useState("");
   const [dealRentalPrice, setDealRentalPrice] = useState<number | null>(null);
+  const [vatRate, setVatRate] = useState("0");
+  const [withholdingTaxRate, setWithholdingTaxRate] = useState("0");
+  const [taxCalculationMethod, setTaxCalculationMethod] = useState("none");
   const [selectedBank, setSelectedBank] = useState<{ name_th: string; name_en: string } | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 4;
+  const totalSteps = 6;
 
   const router = useRouter();
   const supabase = createClient();
@@ -183,10 +192,14 @@ export function TemplateDialog({
     setReservationFee("");
     setSecurityDeposit("");
     setBookingAmount("");
+    setShowOverridePrice(false);
     setContractDueDate("");
     setUnitNumberOverride("");
     setFloorOverride("");
     setDealRentalPrice(null);
+    setVatRate("0");
+    setWithholdingTaxRate("0");
+    setTaxCalculationMethod("none");
     setTargetOwnerType(initialOwnerType || "DEAL");
     setCustomFile(null);
     setCurrentStep(initialOwnerId ? 2 : 1);
@@ -417,6 +430,9 @@ export function TemplateDialog({
             client_nationality: clientNationality,
             unit_number_override: unitNumberOverride,
             floor_override: floorOverride,
+            vat_rate: vatRate,
+            withholding_tax_rate: withholdingTaxRate,
+            tax_calculation_method: taxCalculationMethod as any,
           },
         );
       } else {
@@ -459,6 +475,9 @@ export function TemplateDialog({
             client_nationality: clientNationality,
             unit_number_override: unitNumberOverride,
             floor_override: floorOverride,
+            vat_rate: vatRate,
+            withholding_tax_rate: withholdingTaxRate,
+            tax_calculation_method: taxCalculationMethod as any,
           },
           { templateName: customFile!.name.replace(".docx", "") },
         );
@@ -500,11 +519,26 @@ export function TemplateDialog({
         )
       }
       title={
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-blue-50 rounded-xl text-blue-600">
-            <Wand2 className="h-6 w-6" />
+        <div className="w-full">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-50 rounded-xl text-blue-600">
+                <Wand2 className="h-5 w-5" />
+              </div>
+              <span className="text-base font-bold text-slate-900 tracking-tight">สร้างเอกสารอัตโนมัติ</span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-0.5 bg-slate-100 rounded-full text-[9px] font-bold text-slate-500">
+              <span>ขั้นตอน {currentStep} จาก {totalSteps}</span>
+              <div className="w-1 h-1 rounded-full bg-blue-500 animate-pulse" />
+            </div>
           </div>
-          <span className="text-xl font-semibold text-slate-900 tracking-tight">สร้างเอกสารอัตโนมัติ</span>
+          {/* Progress bar in header */}
+          <div className="w-full bg-slate-100 h-1 rounded-full mt-2.5 overflow-hidden">
+            <div 
+              className="bg-blue-600 h-full rounded-full transition-all duration-300"
+              style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+            />
+          </div>
         </div>
       }
       description="เลือกต้นแบบและข้อมูลที่ต้องการ ระบบจะสร้างไฟล์เอกสารให้ทันที"
@@ -568,7 +602,7 @@ export function TemplateDialog({
         <div className="px-6 pb-2">
           <div className="flex items-center justify-between relative">
              <div className="absolute top-1/2 left-0 w-full h-0.5 bg-slate-100 -translate-y-1/2 z-0" />
-             {[1, 2, 3, 4].map((s) => (
+             {[1, 2, 3, 4, 5, 6].map((s) => (
                 <div 
                   key={s} 
                   className={cn(
@@ -584,11 +618,13 @@ export function TemplateDialog({
                 </div>
              ))}
           </div>
-          <div className="flex justify-between mt-2">
-             <span className={cn("text-[10px] font-semibold uppercase tracking-wider", currentStep >= 1 ? "text-blue-600" : "text-slate-400")}>แหล่งข้อมูล</span>
-             <span className={cn("text-[10px] font-semibold uppercase tracking-wider", currentStep >= 2 ? "text-blue-600" : "text-slate-400")}>ต้นแบบ</span>
-             <span className={cn("text-[10px] font-semibold uppercase tracking-wider", currentStep >= 3 ? "text-blue-600" : "text-slate-400")}>รายละเอียด</span>
-             <span className={cn("text-[10px] font-semibold uppercase tracking-wider", currentStep >= 4 ? "text-blue-600" : "text-slate-400")}>ตรวจสอบ</span>
+          <div className="flex justify-between mt-2 text-center">
+             <span className={cn("text-[9px] font-bold uppercase tracking-wider w-12 truncate", currentStep >= 1 ? "text-blue-600" : "text-slate-450")}>แหล่งข้อมูล</span>
+             <span className={cn("text-[9px] font-bold uppercase tracking-wider w-12 truncate", currentStep >= 2 ? "text-blue-600" : "text-slate-450")}>ต้นแบบ</span>
+             <span className={cn("text-[9px] font-bold uppercase tracking-wider w-12 truncate", currentStep >= 3 ? "text-blue-600" : "text-slate-450")}>การชำระเงิน</span>
+             <span className={cn("text-[9px] font-bold uppercase tracking-wider w-12 truncate", currentStep >= 4 ? "text-blue-600" : "text-slate-450")}>ข้อมูลผู้เช่า</span>
+             <span className={cn("text-[9px] font-bold uppercase tracking-wider w-12 truncate", currentStep >= 5 ? "text-blue-600" : "text-slate-450")}>คำนวณภาษี</span>
+             <span className={cn("text-[9px] font-bold uppercase tracking-wider w-12 truncate", currentStep >= 6 ? "text-blue-600" : "text-slate-450")}>ตรวจสอบ</span>
           </div>
         </div>
         {/* Step 1: Owner Selection */}
@@ -909,356 +945,93 @@ export function TemplateDialog({
           </div>
         )}
 
-        {/* Step 3: Financial & Overrides */}
+        {/* Step 3: บัญชีรับเงิน & รายละเอียดสัญญา */}
         {currentStep === 3 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-            <div className="space-y-4 px-6">
-              <div className="flex items-center gap-2 mb-1">
-                <div className="p-1.5 bg-slate-50 rounded-lg text-slate-400">
-                  <Search className="h-4 w-4" />
-                </div>
-                <Label className="text-xs font-semibold text-slate-700 uppercase tracking-widest">
-                  ข้อมูลเจ้าบ้าน / ผู้รับเงิน (Landlord Info)
-                </Label>
-              </div>
-                
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-5">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between ml-1">
-                    <Label htmlFor="bankName" className="text-xs font-semibold text-slate-500">ธนาคารที่รับเงิน</Label>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => setIsManageBanksOpen(true)}
-                      className="h-6 text-[10px] text-indigo-600 hover:text-indigo-700 font-semibold p-0 flex items-center gap-1 hover:bg-transparent"
-                    >
-                      <Plus className="h-3 w-3" /> จัดการธนาคาร
-                    </Button>
-                  </div>
-                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุหรือเลือกชื่อธนาคารสำหรับรับชำระเงิน</p>
-                  
-                  <button
-                    type="button"
-                    onClick={() => setIsBankSelectorOpen(true)}
-                    className="w-full h-11 px-4 text-left rounded-xl border border-slate-200 bg-white hover:bg-slate-50 transition-colors flex items-center justify-between text-sm text-slate-800"
-                  >
-                    <span>{bankName || "เลือกธนาคาร..."}</span>
-                    <Search className="h-4 w-4 text-slate-400" />
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bankAccountNo" className="text-xs font-semibold text-slate-500 ml-1">เลขที่บัญชี</Label>
-                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุเลขที่บัญชีโดยไม่ต้องใส่เครื่องหมายขีด</p>
-                  <Input
-                    id="bankAccountNo"
-                    placeholder="0000000000"
-                    value={bankAccountNo}
-                    onChange={(e) => setBankAccountNo(e.target.value)}
-                    className="h-11 rounded-xl border-slate-200 bg-white"
-                  />
-                </div>
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 max-h-[58vh] overflow-y-auto px-6 py-2">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <LandlordPaymentCard
+              accountName={accountName}
+              setAccountName={setAccountName}
+              bankName={bankName}
+              bankAccountNo={bankAccountNo}
+              setBankAccountNo={setBankAccountNo}
+              paymentMethod={paymentMethod}
+              setPaymentMethod={setPaymentMethod}
+              paymentPeriod={paymentPeriod}
+              setPaymentPeriod={setPaymentPeriod}
+              setIsManageBanksOpen={setIsManageBanksOpen}
+              setIsBankSelectorOpen={setIsBankSelectorOpen}
+              paymentMethodDialogOpen={paymentMethodDialogOpen}
+              setPaymentMethodDialogOpen={setPaymentMethodDialogOpen}
+            />
 
-              <div className="space-y-2">
-                  <Label htmlFor="paymentPeriod" className="text-xs font-semibold text-slate-500 ml-1">รอบการชำระ</Label>
-                  <p className="text-[10px] text-slate-400 ml-1 font-medium">เช่น ทุกวันที่ 5 ของเดือน</p>
-                  <Input
-                    id="paymentPeriod"
-                    placeholder="เช่น 7th of April 2026"
-                    value={paymentPeriod}
-                    onChange={(e) => setPaymentPeriod(e.target.value)}
-                    className="h-11 rounded-xl border-slate-200 bg-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-slate-500 ml-1">วิธีชำระเงิน</Label>
-                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุวิธีที่ลูกค้าจะใช้ชำระเงินสำหรับเอกสารนี้</p>
-                  <ResponsiveDialog
-                    open={paymentMethodDialogOpen}
-                    onOpenChange={setPaymentMethodDialogOpen}
-                    title="เลือกวิธีชำระเงิน"
-                    description="ระบุวิธีที่ลูกค้าจะใช้ชำระเงินสำหรับเอกสารนี้"
-                    className="sm:max-w-md!"
-                    trigger={
-                      <Button
-                        variant="outline"
-                        className="w-full h-11 rounded-xl border-slate-200 bg-white font-semibold flex items-center justify-between px-4 hover:bg-slate-50!"
-                        onClick={() => setPaymentMethodDialogOpen(true)}
-                      >
-                        <span className="text-slate-700 text-sm">
-                          {paymentMethod === "Transfer" ? "โอนเงิน (Transfer)" : 
-                           paymentMethod === "Cash" ? "เงินสด (Cash)" :
-                           paymentMethod === "Cheque" ? "เช็ค (Cheque)" :
-                           paymentMethod === "Credit Card" ? "บัตรเครดิต (Credit Card)" : "เลือกวิธีชำระ..."}
-                        </span>
-                        <div className="flex items-center gap-2">
-                           <div className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
-                           <FileText className="h-4 w-4 text-slate-400" />
-                        </div>
-                      </Button>
-                    }
-                  >
-                    <div className="p-4 space-y-3">
-                       {[
-                         { id: "Transfer", label: "โอนเงิน (Transfer)", icon: "🏦" },
-                         { id: "Cash", label: "เงินสด (Cash)", icon: "💵" },
-                         { id: "Cheque", label: "เช็ค (Cheque)", icon: "📜" },
-                         { id: "Credit Card", label: "บัตรเครดิต (Credit Card)", icon: "💳" },
-                       ].map((method) => (
-                         <div
-                          key={method.id}
-                          className={cn(
-                            "p-4 rounded-2xl border transition-all cursor-pointer flex items-center gap-4",
-                            paymentMethod === method.id
-                              ? "border-blue-600 bg-blue-50/50 shadow-sm"
-                              : "border-slate-100 hover:border-blue-200 hover:bg-slate-50"
-                          )}
-                          onClick={() => {
-                            setPaymentMethod(method.id);
-                            setPaymentMethodDialogOpen(false);
-                          }}
-                         >
-                           <div className={cn(
-                             "h-10 w-10 rounded-xl flex items-center justify-center shrink-0 text-xl",
-                             paymentMethod === method.id ? "bg-blue-600 text-white" : "bg-slate-100"
-                           )}>
-                             {method.icon}
-                           </div>
-                           <span className={cn("font-semibold flex-1", paymentMethod === method.id ? "text-blue-900" : "text-slate-700")}>
-                             {method.label}
-                           </span>
-                           {paymentMethod === method.id && (
-                              <div className="h-5 w-5 rounded-full bg-blue-600 flex items-center justify-center">
-                                 <div className="h-1.5 w-1.5 rounded-full bg-white" />
-                              </div>
-                           )}
-                         </div>
-                       ))}
-                    </div>
-                  </ResponsiveDialog>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="accountName" className="text-xs font-semibold text-slate-500 ml-1">ชื่อบัญชีผู้รับเงิน</Label>
-                <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุชื่อเจ้าของบัญชีสำหรับรับเงิน</p>
-                <Input
-                  id="accountName"
-                  placeholder="กรอกชื่อเจ้าของบัญชี"
-                  value={accountName}
-                  onChange={(e) => setAccountName(e.target.value)}
-                  className="h-11 rounded-xl border-slate-200 bg-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
-                <div className="space-y-2">
-                  <Label htmlFor="reservationFee" className="text-xs font-semibold text-slate-500 ml-1">เงินมัดจำ / ค่าจอง (Reservation Fee)</Label>
-                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุยอดเงินจอง (เช่น 5000)</p>
-                  <Input
-                    id="reservationFee"
-                    placeholder="เช่น 5000"
-                    value={reservationFee}
-                    onChange={(e) => setReservationFee(e.target.value)}
-                    className="h-11 rounded-xl border-slate-200 bg-white"
-                  />
-                  <div className="flex gap-1.5 mt-2">
-                    {[1, 2, 3].map((m) => (
-                      <Button
-                        key={m}
-                        type="button"
-                        variant="outline"
-                        className="h-7 text-[10px] px-2 py-0.5 rounded-lg border-slate-200 text-slate-600! hover:bg-slate-50 transition-colors"
-                        onClick={() => {
-                          if (dealRentalPrice) {
-                            setReservationFee(String(dealRentalPrice * m));
-                          }
-                        }}
-                        disabled={!dealRentalPrice}
-                      >
-                        {m} เดือน
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="securityDeposit" className="text-xs font-semibold text-slate-500 ml-1">เงินประกัน (Security Deposit)</Label>
-                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุยอดเงินประกันสัญญา (เช่น 20000)</p>
-                  <Input
-                    id="securityDeposit"
-                    placeholder="เช่น 20000"
-                    value={securityDeposit}
-                    onChange={(e) => setSecurityDeposit(e.target.value)}
-                    className="h-11 rounded-xl border-slate-200 bg-white"
-                  />
-                  <div className="flex gap-1.5 mt-2">
-                    {[1, 2, 3].map((m) => (
-                      <Button
-                        key={m}
-                        type="button"
-                        variant="outline"
-                        className="h-7 text-[10px] px-2 py-0.5 rounded-lg border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
-                        onClick={() => {
-                          if (dealRentalPrice) {
-                            setSecurityDeposit(String(dealRentalPrice * m));
-                          }
-                        }}
-                        disabled={!dealRentalPrice}
-                      >
-                        {m} เดือน
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bookingAmount" className="text-xs font-semibold text-slate-500 ml-1">ราคาอสังหาฯ / ค่าเช่า (Override Price)</Label>
-                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุเมื่อต้องการแก้ไขราคาจากดีล</p>
-                  <Input
-                    id="bookingAmount"
-                    placeholder="ระบุราคาอสังหาฯ"
-                    value={bookingAmount}
-                    onChange={(e) => setBookingAmount(e.target.value)}
-                    className="h-11 rounded-xl border-slate-200 bg-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contractDueDate" className="text-xs font-semibold text-slate-500 ml-1">กำหนดเซ็นสัญญา (Contract Due Date)</Label>
-                  <p className="text-[10px] text-slate-400 ml-1 font-medium">เช่น 15 กรกฎาคม 2026 หรือ 15th July 2026</p>
-                  <Input
-                    id="contractDueDate"
-                    placeholder="เช่น 15th July 2026"
-                    value={contractDueDate}
-                    onChange={(e) => setContractDueDate(e.target.value)}
-                    className="h-11 rounded-xl border-slate-200 bg-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="unitNumberOverride" className="text-xs font-semibold text-slate-500 ml-1">เลขที่ห้อง (Unit Number Override)</Label>
-                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุเลขที่ห้อง/ยูนิตที่ต้องการแสดงในเอกสาร</p>
-                  <Input
-                    id="unitNumberOverride"
-                    placeholder="เช่น 123/45"
-                    value={unitNumberOverride}
-                    onChange={(e) => setUnitNumberOverride(e.target.value)}
-                    className="h-11 rounded-xl border-slate-200 bg-white"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="floorOverride" className="text-xs font-semibold text-slate-500 ml-1">ชั้น (Floor Override)</Label>
-                  <p className="text-[10px] text-slate-400 ml-1 font-medium">ระบุชั้นที่ต้องการแสดงในเอกสาร</p>
-                  <Input
-                    id="floorOverride"
-                    placeholder="เช่น 18"
-                    value={floorOverride}
-                    onChange={(e) => setFloorOverride(e.target.value)}
-                    className="h-11 rounded-xl border-slate-200 bg-white"
-                  />
-                </div>
-              </div>
+            <ContractFinancialsCard
+              reservationFee={reservationFee}
+              setReservationFee={setReservationFee}
+              securityDeposit={securityDeposit}
+              setSecurityDeposit={setSecurityDeposit}
+              bookingAmount={bookingAmount}
+              setBookingAmount={setBookingAmount}
+              contractDueDate={contractDueDate}
+              setContractDueDate={setContractDueDate}
+              unitNumberOverride={unitNumberOverride}
+              setUnitNumberOverride={setUnitNumberOverride}
+              floorOverride={floorOverride}
+              setFloorOverride={setFloorOverride}
+              dealRentalPrice={dealRentalPrice}
+              showOverridePrice={showOverridePrice}
+              setShowOverridePrice={setShowOverridePrice}
+            />
             </div>
-
-            <div className="px-6">
-              <div className="p-6 rounded-3xl border border-blue-100 bg-blue-50/20 space-y-4 relative overflow-hidden">
-                <div className="absolute -right-4 -bottom-4 opacity-5 pointer-events-none">
-                  <FileText className="h-24 w-24 text-blue-900" />
-                </div>
-                <Label className="text-[10px] font-semibold text-blue-900 flex items-center gap-2 uppercase tracking-widest">
-                  <Wand2 className="h-4 w-4" />
-                  ข้อมูลผู้เช่า / ผู้รับเอกสาร (Tenant Overrides)
-                </Label>
-                <p className="text-[10px] text-blue-700/70 font-medium leading-relaxed">
-                  ระบุข้อมูลผู้เช่าที่ต้องการให้ปรากฏในเอกสาร (กรณีต้องการเปลี่ยนจากข้อมูลลูกค้าในระบบ)
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">ชื่อ-นามสกุล (Tenant Name)</Label>
-                    <Input
-                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
-                      value={clientName}
-                      onChange={(e) => setClientName(e.target.value)}
-                      placeholder="เช่น Marianne"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">สัญชาติ (Nationality)</Label>
-                    <Input
-                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
-                      value={clientNationality}
-                      onChange={(e) => setClientNationality(e.target.value)}
-                      placeholder="เช่น French / Thai"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">เลขบัตรประชาชน (ID Card Number)</Label>
-                    <Input
-                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
-                      value={clientIdCard}
-                      onChange={(e) => setClientIdCard(e.target.value)}
-                      placeholder="เช่น 1100101234567"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">เลขพาสปอร์ต (Passport Number)</Label>
-                    <Input
-                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
-                      value={clientPassport}
-                      onChange={(e) => setClientPassport(e.target.value)}
-                      placeholder="เช่น AA1234567"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">Email Address</Label>
-                    <Input
-                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
-                      value={clientEmail}
-                      onChange={(e) => setClientEmail(e.target.value)}
-                      placeholder="เช่น customer@email.com"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">Line ID</Label>
-                    <Input
-                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
-                      value={clientLine}
-                      onChange={(e) => setClientLine(e.target.value)}
-                      placeholder="เช่น line_id"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">WhatsApp</Label>
-                    <Input
-                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
-                      value={clientWhatsapp}
-                      onChange={(e) => setClientWhatsapp(e.target.value)}
-                      placeholder="เช่น whatsapp number"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] font-semibold text-slate-400 uppercase ml-1">WeChat ID</Label>
-                    <Input
-                      className="h-10 text-sm rounded-xl border-blue-50 bg-white focus:border-blue-400 shadow-sm"
-                      value={clientWechat}
-                      onChange={(e) => setClientWechat(e.target.value)}
-                      placeholder="เช่น wechat_id"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+            
           </div>
         )}
 
-        {/* Step 4: Slip & Final Review */}
+        {/* Step 4: ข้อมูลผู้เช่า / ผู้รับเอกสาร (Tenant Overrides) */}
         {currentStep === 4 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 max-h-[58vh] overflow-y-auto px-6 py-2">
+            <TenantOverridesCard
+              clientName={clientName}
+              setClientName={setClientName}
+              clientEmail={clientEmail}
+              setClientEmail={setClientEmail}
+              clientLine={clientLine}
+              setClientLine={setClientLine}
+              clientWhatsapp={clientWhatsapp}
+              setClientWhatsapp={setClientWhatsapp}
+              clientWechat={clientWechat}
+              setClientWechat={setClientWechat}
+              clientNationality={clientNationality}
+              setClientNationality={setClientNationality}
+              clientIdCard={clientIdCard}
+              setClientIdCard={setClientIdCard}
+              clientPassport={clientPassport}
+              setClientPassport={setClientPassport}
+            />
+          </div>
+        )}
+
+        {/* Step 5: การคำนวณภาษี (Tax Calculations) */}
+        {currentStep === 5 && (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 max-h-[58vh] overflow-y-auto px-6 py-2">
+            <TaxCalculationsCard
+              taxCalculationMethod={taxCalculationMethod}
+              setTaxCalculationMethod={setTaxCalculationMethod}
+              vatRate={vatRate}
+              setVatRate={setVatRate}
+              withholdingTaxRate={withholdingTaxRate}
+              setWithholdingTaxRate={setWithholdingTaxRate}
+              bookingAmount={bookingAmount}
+              dealRentalPrice={dealRentalPrice}
+              reservationFee={reservationFee}
+              securityDeposit={securityDeposit}
+              activeTemplate={activeTemplate}
+            />
+          </div>
+        )}
+
+        {/* Step 6: Slip & Final Review */}        {/* Step 4: Slip & Final Review */}
+        {currentStep === 6 && (
           <div className="space-y-6 px-6 animate-in fade-in slide-in-from-right-4 duration-500">
             {/* Slip Upload - Only for Receipt/Booking */}
             {showSlipUpload && (

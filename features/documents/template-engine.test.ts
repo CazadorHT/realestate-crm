@@ -71,9 +71,9 @@ describe('Document Template Engine - Helpers', () => {
     expect(formatCurrency(1234.5)).toBe('1,234.50');
   });
 
-  it('should format dates based on language', () => {
+  it('should format dates in DD/MM/YYYY format', () => {
     const date = '2024-01-01';
-    expect(formatDate(date, 'en')).toContain('January');
-    expect(formatDate(date, 'th')).toContain('มกราคม');
+    expect(formatDate(date, 'en')).toBe('01/01/2024');
+    expect(formatDate(date, 'th')).toBe('01/01/2024');
   });
 });
