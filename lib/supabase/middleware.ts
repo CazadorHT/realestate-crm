@@ -64,6 +64,30 @@ export async function updateSession(request: NextRequest) {
     };
   }
 
+  // 🛡️ [PHASE 1.2] Block inactive users (Pending Approval)
+  if (user && request.nextUrl.pathname.startsWith("/protected")) {
+    // ข้ามการตรวจหน้า pending เพื่อไม่ให้เกิด redirect loop
+    const isPendingPage = request.nextUrl.pathname.startsWith("/auth/pending");
+    if (!isPendingPage) {
+      const { data: identity } = await supabase
+        .from("identities_v3")
+        .select("is_active")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (identity && !identity.is_active) {
+        console.log(
+          "[AUTH DEBUG] User is not active (pending approval), redirecting to pending page:",
+          user.id
+        );
+        return {
+          response: NextResponse.redirect(new URL("/auth/pending", request.url)),
+          user,
+        };
+      }
+    }
+  }
+
   // 1.5 🛡️ Admin Route Access Control: Protect restricted admin paths from AGENT roles
   if (user && request.nextUrl.pathname.startsWith("/protected/admin")) {
     const isAllowedPath =

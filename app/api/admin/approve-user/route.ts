@@ -54,20 +54,41 @@ export async function GET(request: Request) {
     const rpcResult = result as unknown as { success: boolean; tenant_id: string | null };
     const tenantId = rpcResult.tenant_id;
 
-    // 🛡️ 1.1 Sync to Auth Metadata (The RLS Fast-Path)
-    // This is still needed because Auth Metadata lives outside the DB transaction
-    if (tenantId) {
-      const { error: authError } = await supabase.auth.admin.updateUserById(
-        userId,
-        { 
-          app_metadata: { 
-            role: role,
-            tenant_id: tenantId
-          } 
-        }
-      );
-      if (authError) console.error("⚠️ [AuthSyncError]", authError);
-      else console.log(`✅ [AuthSync] Metadata updated for user ${userId}`);
+    // ✅ FIX 1: Sync profiles.is_active = true
+    // หน้า /auth/pending เช็ค profiles.is_active ดังนั้นต้อง sync ด้วย
+    const { error: profilesError } = await supabase
+      .from("profiles")
+      .update({ role: role, is_active: true })
+      .eq("id", userId);
+    if (profilesError) console.error("⚠️ [ProfileSyncError]", profilesError);
+    else console.log(`✅ [ProfileSync] profiles.is_active=true synced for user ${userId}`);
+
+    // ✅ FIX 2: Sync to Auth Metadata (The RLS Fast-Path)
+    // Always sync regardless of tenantId — agent needs role in JWT claims
+    const { error: authError } = await supabase.auth.admin.updateUserById(
+      userId,
+      { 
+        app_metadata: { 
+          role: role,
+          ...(tenantId ? { tenant_id: tenantId } : {})
+        } 
+      }
+    );
+    if (authError) console.error("⚠️ [AuthSyncError]", authError);
+    else console.log(`✅ [AuthSync] Metadata updated for user ${userId}`);
+
+    // 🔔 Send Push Notification inside the CRM to the agent
+    try {
+      await supabase.from("notifications_v3").insert({
+        user_id: userId,
+        type: "SYSTEM",
+        title: "✅ บัญชีของคุณได้รับการอนุมัติแล้ว!",
+        message: "ยินดีต้อนรับเข้าสู่ระบบ! บัญชีของคุณได้รับการปรับเป็น AGENT และพร้อมทำงานแล้วครับ 🚀",
+        link: "/protected",
+      });
+      console.log(`✅ [LINE Approve] Push notification sent to user ${userId}`);
+    } catch (notifErr) {
+      console.error("❌ [LINE Approve] Failed to send push notification to agent:", notifErr);
     }
 
     // Return a beautiful success page (HTML)

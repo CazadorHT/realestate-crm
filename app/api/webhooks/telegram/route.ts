@@ -114,9 +114,8 @@ export async function POST(request: Request) {
 
         if (!targetTenantId) {
           const { data: firstTenant } = await supabase
-            .from("tenants")
+            .from("tenants_v3")
             .select("id, name")
-            .eq("is_deleted", false)
             .order("created_at", { ascending: true })
             .limit(1)
             .maybeSingle();
@@ -124,19 +123,43 @@ export async function POST(request: Request) {
         }
 
         if (targetTenantId) {
+          // 🏢 ค้นหา default team/branch ของ tenant
+          const { data: firstTeam } = await supabase
+            .from("teams_v3")
+            .select("id, name, branch_id")
+            .eq("tenant_id", targetTenantId)
+            .order("created_at", { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
           await supabase.from("tenant_members_v3").insert({
             tenant_id: targetTenantId,
             identity_id: userId,
             role: "AGENT",
+            team_id: firstTeam?.id || null
           });
           
-          const { data: tenant } = await supabase.from("tenants").select("name").eq("id", targetTenantId).single();
+          const { data: tenant } = await supabase.from("tenants_v3").select("name").eq("id", targetTenantId).single();
           autoBranchText = `\n🏢 เข้าสาขาอัตโนมัติ: <b>${tenant?.name || "สาขาหลัก"}</b>`;
-          console.log(`✅ [Telegram-Auto-Tenant] User ${userId} assigned to tenant ${targetTenantId}`);
+          console.log(`✅ [Telegram-Auto-Tenant] User ${userId} assigned to tenant ${targetTenantId} and team ${firstTeam?.id || "none"}`);
         }
       }
     } catch (atErr) {
       console.error("[TELEGRAM_WEBHOOK] Auto-Tenant Error:", atErr);
+    }
+
+    // 🔔 Send Push Notification inside the CRM to the agent
+    try {
+      await supabase.from("notifications_v3").insert({
+        user_id: userId,
+        type: "SYSTEM",
+        title: "✅ บัญชีของคุณได้รับการอนุมัติแล้ว!",
+        message: "ยินดีต้อนรับเข้าสู่ระบบ! บัญชีของคุณได้รับการปรับเป็น AGENT และพร้อมทำงานแล้วครับ 🚀",
+        link: "/protected",
+      });
+      console.log(`✅ [Telegram Webhook] Push notification sent to user ${userId}`);
+    } catch (notifErr) {
+      console.error("❌ [Telegram Webhook] Failed to send push notification to agent:", notifErr);
     }
 
     // 📝 Log Audit
