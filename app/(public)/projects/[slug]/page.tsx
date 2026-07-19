@@ -40,8 +40,7 @@ const DETAIL_LOCALIZATION: Record<string, Record<string, string>> = {
 };
 
 export async function generateStaticParams() {
-  const slugs = await getAllProjectSlugs();
-  return slugs.map((slug) => ({ slug }));
+  return [];
 }
 
 export async function generateMetadata(

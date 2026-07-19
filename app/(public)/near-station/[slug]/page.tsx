@@ -128,8 +128,7 @@ const formatStationName = (name: string, lang: string) => {
 };
 
 export async function generateStaticParams() {
-  const slugs = await getAllStationSlugs();
-  return slugs.map((slug) => ({ slug }));
+  return [];
 }
 
 export async function generateMetadata(

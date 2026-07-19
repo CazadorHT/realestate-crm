@@ -22,8 +22,7 @@ import { getProvinceName } from "@/lib/utils/provinces";
 export const revalidate = 86400; // 24 hours (1 day) cache (ISR)
 
 export async function generateStaticParams() {
-  const slugs = await getAllAreaSlugs();
-  return slugs.map((slug) => ({ slug }));
+  return [];
 }
 
 export async function generateMetadata(
