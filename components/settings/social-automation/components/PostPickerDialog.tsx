@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,11 +55,14 @@ export function PostPickerDialog({
     }
   };
 
-  // Fetch when dialog opens for the first time
-  const handleOpenChange = (val: boolean) => {
-    if (val && !hasFetched) {
+  // Automatically fetch posts when dialog is opened
+  useEffect(() => {
+    if (open && !hasFetched && !isLoading) {
       fetchPosts();
     }
+  }, [open, hasFetched, isLoading]);
+
+  const handleOpenChange = (val: boolean) => {
     onOpenChange(val);
   };
 
@@ -115,7 +118,7 @@ export function PostPickerDialog({
               placeholder="ค้นหาจาก caption หรือ Post ID..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 h-10 rounded-xl border-slate-200 bg-slate-50/50 focus:bg-white"
+              className="pl-9 h-10 rounded-xl border-slate-200  bg-slate-50/50 focus:bg-white"
             />
             {search && (
               <button
