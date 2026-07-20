@@ -1165,6 +1165,13 @@ async function handleKeywordAutomation(
     const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
     const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
     dmRes = await sendPrivateReply(commentId, dmContent, platform, buttonUrl, buttonTitle);
+    
+    // Fallback: If button template fails (e.g. Meta restrictions), send as plain text
+    if (!dmRes.success) {
+      console.warn(`[Meta Webhook] Button template failed, falling back to plain text DM:`, dmRes.error);
+      const fallbackContent = `${dmContent}\n\n${buttonTitle}: ${buttonUrl}`;
+      dmRes = await sendPrivateReply(commentId, fallbackContent, platform);
+    }
   } else {
     dmRes = await sendPrivateReply(commentId, dmContent, platform);
   }
