@@ -91,14 +91,22 @@ export async function POST(req: NextRequest) {
         if (entry.messaging) {
           for (const messagingEvent of entry.messaging) {
             if (messagingEvent.message && !messagingEvent.message.is_echo) {
-              await handleMetaMessage(messagingEvent, "FACEBOOK");
+              try {
+                await handleMetaMessage(messagingEvent, "FACEBOOK");
+              } catch (err) {
+                console.error("[Meta Webhook] Error handling Facebook message:", err);
+              }
             }
           }
         }
         // Handle Feed, Leadgen, Ratings, etc.
         if (entry.changes) {
           for (const change of entry.changes) {
-            await handleFacebookChange(change, entry.id);
+            try {
+              await handleFacebookChange(change, entry.id);
+            } catch (err) {
+              console.error("[Meta Webhook] Error handling Facebook change:", err);
+            }
           }
         }
       }
@@ -110,14 +118,22 @@ export async function POST(req: NextRequest) {
         if (entry.messaging) {
           for (const messagingEvent of entry.messaging) {
             if (messagingEvent.message && !messagingEvent.message.is_echo) {
-              await handleMetaMessage(messagingEvent, "INSTAGRAM");
+              try {
+                await handleMetaMessage(messagingEvent, "INSTAGRAM");
+              } catch (err) {
+                console.error("[Meta Webhook] Error handling Instagram message:", err);
+              }
             }
           }
         }
         // Handle comments and mentions
         if (entry.changes) {
           for (const change of entry.changes) {
-            await handleInstagramChange(change);
+            try {
+              await handleInstagramChange(change);
+            } catch (err) {
+              console.error("[Meta Webhook] Error handling Instagram change:", err);
+            }
           }
         }
       }
@@ -129,10 +145,14 @@ export async function POST(req: NextRequest) {
           for (const change of entry.changes) {
             if (change.field === "messages" && change.value.messages) {
               for (const message of change.value.messages) {
-                await handleWhatsAppWebhook(
-                  message,
-                  change.value.contacts?.[0],
-                );
+                try {
+                  await handleWhatsAppWebhook(
+                    message,
+                    change.value.contacts?.[0],
+                  );
+                } catch (err) {
+                  console.error("[Meta Webhook] Error handling WhatsApp change:", err);
+                }
               }
             }
           }
@@ -485,6 +505,12 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
 async function handleInstagramChange(change: any) {
   const { field, value } = change;
   if (!value) return;
+
+  const instagramBusinessId = process.env.META_INSTAGRAM_BUSINESS_ID;
+  if (value.from?.id && instagramBusinessId && value.from.id === instagramBusinessId) {
+    console.log(`[Meta Webhook] Ignoring Instagram page's own comment/reply to prevent infinite loop. ID: ${instagramBusinessId}`);
+    return;
+  }
 
   const supabase = createAdminClient() as any;
   let text = "";
