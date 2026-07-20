@@ -321,13 +321,15 @@ export async function sendWhatsAppMessage(
 export async function replyToMetaComment(
   commentId: string,
   content: string,
+  platform?: MetaPlatform,
 ): Promise<MetaApiResponse<{ id: string }>> {
   const token = await getActiveToken();
   if (!token)
     return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
   try {
-    const url = `${metaConfig.graphApiUrl}/${commentId}/comments?access_token=${token}`;
+    const endpoint = platform === "INSTAGRAM" ? "replies" : "comments";
+    const url = `${metaConfig.graphApiUrl}/${commentId}/${endpoint}?access_token=${token}`;
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

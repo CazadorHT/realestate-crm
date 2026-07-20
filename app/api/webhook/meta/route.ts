@@ -10,6 +10,7 @@ import {
   sendMetaCarousel,
 } from "@/lib/meta";
 import { saveOmniMessage } from "@/lib/line"; // reuse same util since it's generic enough
+import { redis } from "@/lib/redis";
 import { getSiteSettings } from "@/features/site-settings/actions";
 import { SocialKeyword } from "@/features/site-settings/schema";
 import { z } from "zod";
@@ -745,6 +746,7 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     nearbyTransits,
     link,
     primaryAgent,
+    projectName,
   } = dynamicValues;
 
   const PROPERTY_TYPE_LABELS: Record<string, Record<string, string>> = {
@@ -925,7 +927,8 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     .replace(/{{details}}/g, detailsSummary)
     .replace(/{{agent_name}}/g, primaryAgent?.nickname || primaryAgent?.full_name || "")
     .replace(/{{agent_phone}}/g, primaryAgent?.phone || "")
-    .replace(/{{agent_line}}/g, primaryAgent?.line_id || "");
+    .replace(/{{agent_line}}/g, primaryAgent?.line_id || "")
+    .replace(/{{project_name}}/g, projectName || "");
 }
 
 /**
@@ -949,6 +952,16 @@ async function handleKeywordAutomation(
   senderId?: string,
 ) {
   if (!text || !commentId) return;
+
+  // Deduplicate request using Upstash Redis to prevent double sends from Meta Webhook retries
+  if (redis) {
+    const redisKey = `meta_webhook_dedup:${commentId}`;
+    const isLocked = await redis.set(redisKey, "1", { nx: true, ex: 10 }); // Lock for 10 seconds
+    if (!isLocked) {
+      console.warn(`[Meta Webhook] Duplicate request detected for comment ${commentId}. Ignoring.`);
+      return;
+    }
+  }
 
   // 1. Fetch dynamic keywords from DB
   const settings = await getSiteSettings();
@@ -1128,10 +1141,15 @@ async function handleKeywordAutomation(
         : null,
     ].filter(Boolean).join(" | ") || "-";
 
+    const projectName = propertyData.project
+      ? getLocaleValue(propertyData.project, "name", lang)
+      : "";
+
     const dynamicValues = {
       priceTag, priceText, originalPriceText, salePrice, rentPrice,
       originalSalePrice, originalRentPrice, detailsSummary, amenities,
-      nearbyPlaces, nearbyTransits, link: platform === "INSTAGRAM" ? "" : link, primaryAgent
+      nearbyPlaces, nearbyTransits, link: platform === "INSTAGRAM" ? "" : link, primaryAgent,
+      projectName
     };
 
     dmContent = replaceTemplateTags(dmContent, propertyData, dynamicValues, lang);
@@ -1198,7 +1216,7 @@ async function handleKeywordAutomation(
 
   // 6. Public Reply (if configured)
   if (publicReply) {
-    const commentRes = await replyToMetaComment(commentId, publicReply);
+    const commentRes = await replyToMetaComment(commentId, publicReply, platform);
     if (!commentRes.success) {
       console.error(`[Meta Webhook] Failed to reply to comment ${commentId}:`, commentRes.error);
     } else {
@@ -1282,6 +1300,17 @@ async function lookupPropertyByPostId(postId: string) {
           };
         }
       }
+    }
+  }
+
+  if (property && property.project_id) {
+    const { data: proj } = await supabase
+      .from("projects")
+      .select("name")
+      .eq("id", property.project_id)
+      .single();
+    if (proj) {
+      property.project = proj;
     }
   }
 
