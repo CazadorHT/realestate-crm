@@ -821,9 +821,8 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
   if (!text) return "";
   let rendered = text;
 
-  // Clean up any emoji prefix in front of {{price_tag}} to avoid duplication since our backend inserts correct ones
-  // ล้างตัวอักษรซ่อน/BOM/Spaces ที่อยู่ติดกับอีโมจิออกทั้งหมด
-  rendered = rendered.replace(/[💰🔑💵💸🔥]\s*{{price_tag}}/g, "{{price_tag}}");  const {
+  // ล้างอีโมจินำหน้าพร้อมตัวอักษรซ่อน/BOM/Spaces ที่อยู่ติดกับอีโมจิออกทั้งหมด เพื่อป้องกันปัญหาถอดรหัสกลายเป็นเครื่องหมายคำถาม
+  rendered = rendered.replace(/[💰🔑💵💸🔥][\s\u200B-\u200D\uFEFF]*{{price_tag}}/g, "{{price_tag}}");  const {
     priceTag,
     priceText,
     originalPriceText,
@@ -1196,24 +1195,24 @@ async function handleKeywordAutomation(
     const formatSale = (price: number, original?: number) => {
       if (original && original > price) {
         return lang === "th"
-          ? `🔥 ลดพิเศษ! ${price.toLocaleString()} บาท (จาก ${original.toLocaleString()} ฿)`
+          ? "\u0e25\u0e14\u0e1e\u0e34\u0e40\u0e28\u0e29! " + price.toLocaleString() + " \u0e1a\u0e32\u0e17 (\u0e0a\u0e32\u0e01 " + original.toLocaleString() + " \u0e3f)"
           : lang === "en"
-            ? `🔥 Hot Deal! ${price.toLocaleString()} THB (Was ${original.toLocaleString()} ฿)`
+            ? "Hot Deal! " + price.toLocaleString() + " THB (Was " + original.toLocaleString() + " \u0e3f)"
             : lang === "ru"
-              ? `🔥 Горячее предложение! ${price.toLocaleString()} THB (Было ${original.toLocaleString()} ฿)`
-              : `🔥 特价! ${price.toLocaleString()} 泰铢 (原价 ${original.toLocaleString()} ฿)`;
+              ? "\u0413\u043e\u0440\u044f\u0447\u0435\u0435 \u043f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u0435! " + price.toLocaleString() + " THB (\u0411\u044b\u043b\u043e " + original.toLocaleString() + " \u0e3f)"
+              : "\u7279\u4ef7! " + price.toLocaleString() + " \u6cf0\u94e2 (\u539f\u4ef7 " + original.toLocaleString() + " \u0e3f)";
       }
       return `${tSale}: ${price.toLocaleString()} ${tBaht}`;
     };
     const formatRent = (price: number, original?: number) => {
       if (original && original > price) {
         return lang === "th"
-          ? `🔥 ดีลดี! เช่า ${price.toLocaleString()} บาท/เดือน (จาก ${original.toLocaleString()} ฿)`
+          ? "\u0e14\u0e35\u0e25\u0e14\u0e35! \u0e40\u0e0a\u0e48\u0e32 " + price.toLocaleString() + " \u0e1a\u0e32\u0e17/\u0e40\u0e14\u0e37\u0e2d\u0e19 (\u0e0a\u0e32\u0e01 " + original.toLocaleString() + " \u0e3f)"
           : lang === "en"
-            ? `🔥 Great Deal! Rent ${price.toLocaleString()} THB/mo (Was ${original.toLocaleString()} ฿)`
+            ? "Great Deal! Rent " + price.toLocaleString() + " THB/mo (Was " + original.toLocaleString() + " \u0e3f)"
             : lang === "ru"
-              ? `🔥 Отличное предложение! Аренда ${price.toLocaleString()} THB/mo (Было ${original.toLocaleString()} ฿)`
-              : `🔥 优选! 租金 ${price.toLocaleString()} 泰铢/月 (原价 ${original.toLocaleString()} ฿)`;
+              ? "\u041e\u0442\u043b\u0438\u0447\u043d\u043e\u0435 \u043f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u0435! \u0410\u0440\u0435\u043d\u0434\u0430 " + price.toLocaleString() + " THB/mo (\u0411\u044b\u043b\u043e " + original.toLocaleString() + " \u0e3f)"
+              : "\u4e18\u9009! \u79df\u91d1 " + price.toLocaleString() + " \u6cf0\u94e2/\u6708 (\u539f\u4ef7 " + original.toLocaleString() + " \u0e3f)";
       }
       return `${tRent}: ${price.toLocaleString()} ${tBaht}${tPerMonth}`;
     };
