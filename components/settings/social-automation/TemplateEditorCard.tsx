@@ -296,11 +296,11 @@ export function TemplateEditorCard({
               </TabsList>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 divide-x divide-slate-100">
-              {/* Left Column: Editor */}
-              <div className="">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 divide-y lg:divide-y-0 lg:divide-x divide-slate-100">
+              {/* Left Column: Editor (lg:col-span-7) */}
+              <div className="lg:col-span-7">
                 {["th", "en", "cn", "ru"].map((lang) => (
-                  <TabsContent key={lang} value={lang} className="m-0 max-h-[550px] overflow-y-auto no-scrollbar border-r border-slate-200/50">
+                  <TabsContent key={lang} value={lang} className="m-0 max-h-[ุ650px] overflow-y-auto no-scrollbar border-r border-slate-200/50">
                     <div className="p-6 space-y-4">
                       <div className="flex items-center justify-between mb-1">
                         <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
@@ -340,12 +340,13 @@ export function TemplateEditorCard({
                         value={templates[activePlatform][lang as "th" | "en" | "cn" | "ru"]|| ""}
                         onChange={(e) =>
                           updateTemplate(
-                            activePlatform,
+                             activePlatform,
                             lang as "th" | "en" | "cn" | "ru",
                             e.target.value,
                           )
                         }
-                        className="min-h-[300px] font-mono text-sm border-slate-200 focus:border-blue-500 focus:ring-blue-100 placeholder:text-slate-300 resize-none pb-8 shadow-sm transition-all"
+                        className="min-h-[350px] font-mono border-slate-200 focus:border-blue-500 focus:ring-blue-100 placeholder:text-slate-300 resize-none pb-8 shadow-sm transition-all"
+                        style={{ fontSize: "11px" }}
                       />
                       <div className="flex flex-col gap-2 mt-2">
                         <div className="flex justify-between items-center px-1">
@@ -406,10 +407,10 @@ export function TemplateEditorCard({
                 ))}
               </div>
 
-              {/* Right Column: Premium Preview */}
-              <div className="bg-slate-50/50 p-6 flex flex-col items-center max-h-[550px] overflow-y-auto no-scrollbar">
-                <div className="w-full flex items-center justify-between mb-6">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              {/* Right Column: Premium Preview (lg:col-span-5, Sticky top) */}
+              <div className="lg:col-span-5 bg-slate-50/20 p-6 flex flex-col items-center sticky top-28 self-start max-h-full overflow-y-auto no-scrollbar w-full">
+                <div className="w-full flex items-center justify-between mb-4">
+                  <label className="text-[10px] font-bold text-slate-450 uppercase tracking-widest">
                     {activePlatform === "facebook"
                       ? "Facebook Post Preview"
                       : activePlatform === "instagram"
@@ -426,7 +427,7 @@ export function TemplateEditorCard({
                   </div>
                 </div>
 
-                <div className="w-full flex justify-center">
+                <div className="w-full flex justify-center scale-95 origin-top">
                   {activePlatform === "facebook" ? (
                     <FacebookPostPreview
                       template={templates.facebook[activeTab]}
@@ -450,7 +451,7 @@ export function TemplateEditorCard({
                   )}
                 </div>
 
-                <div className="mt-8 p-4 bg-blue-50/50 border border-blue-100/50 rounded-2xl text-[11px] text-blue-600/70 text-center max-w-[280px] leading-relaxed">
+                <div className="mt-6 p-4 bg-blue-50/40 border border-blue-100/40 rounded-2xl text-[11px] text-blue-600/70 text-center max-w-[320px] leading-relaxed">
                   💡 <b>Pro Tip:</b> ใช้ตัวแปร {"{{...}}"}{" "}
                   เพื่อดึงข้อมูลทรัพย์สินมาแสดงโดยอัตโนมัติในตอนที่กดโพสต์จริง
                 </div>

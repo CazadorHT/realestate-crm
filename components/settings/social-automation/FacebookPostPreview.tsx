@@ -68,7 +68,7 @@ export function FacebookPostPreview({
       </div>
 
       {/* Content */}
-      <div className="px-4 pb-3 text-[14px] leading-relaxed text-slate-800 whitespace-pre-wrap font-normal">
+      <div className="px-4 pb-3 text-[12px] leading-relaxed text-slate-800 whitespace-pre-wrap font-normal">
         {renderContent(template)}
       </div>
 
@@ -79,53 +79,53 @@ export function FacebookPostPreview({
           alt="Mock Property"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
         />
-        <div className="absolute top-3 left-3 flex gap-2">
-          <Badge className="bg-white/90 text-slate-900 border-0 shadow-sm backdrop-blur-xs font-semibold">
+        <div className="absolute top-2.5 left-2.5 flex gap-1.5">
+          <Badge className="bg-white/90 text-slate-900 border-0 shadow-sm backdrop-blur-xs font-bold text-[9px] px-2 py-0.5 rounded-md">
             {MOCK_PROPERTY_DATA.listing_type === "Sale"
               ? "FOR SALE"
               : "FOR RENT"}
           </Badge>
-          <Badge className="bg-blue-600/90 text-white border-0 shadow-sm backdrop-blur-xs font-semibold">
+          <Badge className="bg-blue-600/90 text-white border-0 shadow-sm backdrop-blur-xs font-bold text-[9px] px-2 py-0.5 rounded-md">
             {MOCK_PROPERTY_DATA.price}
           </Badge>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="px-4 py-3 flex items-center justify-between border-b border-slate-200 text-[13px] text-slate-500 font-semibold tracking-tight">
+      <div className="px-4 py-2 flex items-center justify-between border-b border-slate-200 text-[11px] text-slate-550 font-medium tracking-tight">
         <div className="flex items-center gap-1">
           <div className="flex -space-x-1">
-            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center border-2 border-white">
+            <div className="w-4.5 h-4.5 rounded-full bg-blue-500 flex items-center justify-center border border-white">
               <ThumbsUp className="h-2.5 w-2.5 text-white fill-current" />
             </div>
           </div>
           42
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <span>8 comments</span>
           <span>5 shares</span>
         </div>
       </div>
 
       {/* Actions */}
-      <div className="px-2 py-1 flex justify-between text-slate-500 font-semibold text-[14px]">
+      <div className="px-2 py-0.5 flex justify-between text-slate-500 font-semibold text-[12px]">
         <Button
           variant="ghost"
-          className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10 font-semibold"
+          className="flex-1 gap-1.5 hover:bg-slate-100 p-0 h-9 font-semibold text-[12px]"
         >
-          <ThumbsUp className="h-5 w-5" /> Like
+          <ThumbsUp className="h-4 w-4" /> Like
         </Button>
         <Button
           variant="ghost"
-          className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10 font-semibold"
+          className="flex-1 gap-1.5 hover:bg-slate-100 p-0 h-9 font-semibold text-[12px]"
         >
-          <MessageCircle className="h-5 w-5" /> Comment
+          <MessageCircle className="h-4 w-4" /> Comment
         </Button>
         <Button
           variant="ghost"
-          className="flex-1 gap-2 hover:bg-slate-100 p-0 h-10 font-semibold"
+          className="flex-1 gap-1.5 hover:bg-slate-100 p-0 h-9 font-semibold text-[12px]"
         >
-          <Share2 className="h-5 w-5" /> Share
+          <Share2 className="h-4 w-4" /> Share
         </Button>
       </div>
     </div>
