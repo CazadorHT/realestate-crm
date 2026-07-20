@@ -204,20 +204,49 @@ export function SocialAutomationSettings({
   // Auto-compute isDirty by comparing state to last saved snapshot
   useEffect(() => {
     if (!initialData) return;
-    const kw = JSON.stringify(keywords.map(({ keyword, dm_content, public_reply, public_replies, enabled, language, buttons }) => ({ keyword, dm_content, public_reply, public_replies, enabled, language, buttons })));
-    const savedKw = JSON.stringify((initialData.social_automation_keywords || []).map(({ keyword, dm_content, public_reply, public_replies, enabled, language, buttons }: any) => ({ keyword, dm_content, public_reply, public_replies, enabled, language, buttons })));
+
+    // Helper to normalize keyword fields to avoid mismatch between undefined/null/""
+    const normalizeKeywords = (list: any[]) => {
+      return list.map((k) => ({
+        keyword: (k.keyword || "").trim(),
+        dm_content: (k.dm_content || "").trim(),
+        public_reply: (k.public_reply || "").trim(),
+        public_replies: (k.public_replies || []).map((r: string) => r.trim()).filter(Boolean),
+        enabled: k.enabled !== false,
+        language: k.language || "th",
+        buttons: (k.buttons || []).map((b: any) => ({
+          title: (b.title || "").trim(),
+          type: b.type || "postback",
+          url: (b.url || "").trim() || undefined,
+        })),
+        linked_post_id: k.linked_post_id || undefined,
+        linked_post_preview: k.linked_post_preview || undefined,
+      }));
+    };
+
+    const kw = JSON.stringify(normalizeKeywords(keywords));
+    const savedKw = JSON.stringify(normalizeKeywords(initialData.social_automation_keywords || []));
+
+    const checkTemplate = (p: any, dbTh: any, dbEn: any, dbCn: any, dbRu: any) => {
+      return (
+        (p.th || "").trim() !== (dbTh || "").trim() ||
+        (p.en || "").trim() !== (dbEn || "").trim() ||
+        (p.cn || "").trim() !== (dbCn || "").trim() ||
+        (p.ru || "").trim() !== (dbRu || "").trim()
+      );
+    };
+
     const changed =
       kw !== savedKw ||
       instagramStoryReplyEnabled !== !!initialData.instagram_story_reply_enabled ||
       directDmReplyEnabled !== !!initialData.direct_dm_reply_enabled ||
       followGateEnabled !== !!initialData.follow_gate_enabled ||
       leadCaptureGateEnabled !== !!initialData.lead_capture_gate_enabled ||
-      templates.facebook.th !== (initialData.facebook_post_template || "") ||
-      templates.facebook.en !== (initialData.facebook_post_template_en || "") ||
-      templates.instagram.th !== (initialData.instagram_post_template || "") ||
-      templates.instagram.en !== (initialData.instagram_post_template_en || "") ||
-      templates.line.th !== (initialData.line_post_template || "") ||
-      templates.tiktok.th !== (initialData.tiktok_post_template || "");
+      checkTemplate(templates.facebook, initialData.facebook_post_template, initialData.facebook_post_template_en, initialData.facebook_post_template_cn, initialData.facebook_post_template_ru) ||
+      checkTemplate(templates.instagram, initialData.instagram_post_template, initialData.instagram_post_template_en, initialData.instagram_post_template_cn, initialData.instagram_post_template_ru) ||
+      checkTemplate(templates.tiktok, initialData.tiktok_post_template, initialData.tiktok_post_template_en, initialData.tiktok_post_template_cn, initialData.tiktok_post_template_ru) ||
+      checkTemplate(templates.line, initialData.line_post_template, initialData.line_post_template_en, initialData.line_post_template_cn, initialData.line_post_template_ru);
+
     setIsDirty(changed);
   }, [keywords, instagramStoryReplyEnabled, directDmReplyEnabled, followGateEnabled, leadCaptureGateEnabled, templates, initialData]);
 

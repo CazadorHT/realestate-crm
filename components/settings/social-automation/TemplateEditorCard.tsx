@@ -483,20 +483,29 @@ export function TemplateEditorCard({
               ))}
             </div>
           </div>
-          <div className="p-4 bg-slate-50 border-t border-slate-100 flex justify-end">
-            <Button
-              onClick={handleSave}
-              disabled={isPending || !hasChanges || isInvalid}
-              className="bg-blue-600 hover:bg-blue-700 shadow-md shadow-blue-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isPending ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-4 w-4 mr-2" />
-              )}
-              บันทึกรูปแบบข้อความ
-            </Button>
-          </div>
+          {/* Floating Sticky Save Bar (Renders when hasChanges === true) */}
+          {hasChanges && (
+            <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-md border border-slate-200 shadow-2xl rounded-2xl p-4 flex items-center justify-between gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300 w-11/12 max-w-2xl">
+              <div className="flex items-center gap-3">
+                <div className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-sm font-semibold text-slate-700">มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={handleSave}
+                  disabled={isPending || isInvalid}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl h-10 px-6 shadow-md shadow-blue-200 disabled:opacity-50 transition-all active:scale-95"
+                >
+                  {isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  บันทึกเทมเพลตทั้งหมด
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
