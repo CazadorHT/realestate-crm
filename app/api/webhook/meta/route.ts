@@ -1021,8 +1021,11 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     .replace(/{{agent_line}}/g, primaryAgent?.line_id || "")
     .replace(/{{project_name}}/g, projectName || "");
 
-  const cleanResult = resultText.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
-  return cleanResult.replace(/\?[💰🔑💵💸🔥]/g, (match) => match.charAt(1));
+  let cleanResult = resultText.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+  // ลบเครื่องหมายคำถามที่อาจแฝงมาเนื่องจากอักขระพิเศษถอดรหัสไม่สมบูรณ์
+  cleanResult = cleanResult.replace(/\?([💰🔑💵💸🔥])/g, "$1");
+  cleanResult = cleanResult.replace(/\?(เช่า|ขาย|Rent|Sale|เช่า\/ขาย|Rent\/Sale)/g, "$1");
+  return cleanResult;
 }
 
 /**
