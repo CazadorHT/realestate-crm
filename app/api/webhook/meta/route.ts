@@ -822,8 +822,8 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
   let rendered = text;
 
   // Clean up any emoji prefix in front of {{price_tag}} to avoid duplication since our backend inserts correct ones
-  rendered = rendered.replace(/[💰🔑💵💸🔥]\s*{{price_tag}}/g, "{{price_tag}}");
-  const {
+  // ล้างตัวอักษรซ่อน/BOM/Spaces ที่อยู่ติดกับอีโมจิออกทั้งหมด
+  rendered = rendered.replace(/[💰🔑💵💸🔥]\s*{{price_tag}}/g, "{{price_tag}}");  const {
     priceTag,
     priceText,
     originalPriceText,
@@ -958,7 +958,7 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
   const tLocationClean = cleanForHashtag(tPopularAreaVal || tDistrict || tProvinceName);
   const tTransitClean = cleanForHashtag(propertyData.transit_station_name);
 
-  return rendered
+  const resultText = rendered
     .replace(/{{title}}/g, (lang === "th" ? propertyData.title : propertyData[`title_${lang}`]) || propertyData.title || "")
     .replace(/{{description}}/g, tDescription)
     .replace(/{{price}}/g, priceText)
@@ -1020,6 +1020,9 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
     .replace(/{{agent_phone}}/g, primaryAgent?.phone || "")
     .replace(/{{agent_line}}/g, primaryAgent?.line_id || "")
     .replace(/{{project_name}}/g, projectName || "");
+
+  const cleanResult = resultText.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
+  return cleanResult.replace(/\?[💰🔑💵💸🔥]/g, (match) => match.charAt(1));
 }
 
 /**
@@ -1189,29 +1192,27 @@ async function handleKeywordAutomation(
     let priceTag = "";
     const formatSale = (price: number, original?: number) => {
       if (original && original > price) {
-        const pct = Math.round(((original - price) / original) * 100);
         return lang === "th"
-          ? `🔥 ลดพิเศษ! ${price.toLocaleString()} บาท (จาก ${original.toLocaleString()} - ลด ${pct}%)`
+          ? `🔥 ลดพิเศษ! ${price.toLocaleString()} บาท (จาก ${original.toLocaleString()} ฿)`
           : lang === "en"
-            ? `🔥 Hot Deal! ${price.toLocaleString()} THB (Was ${original.toLocaleString()} - ${pct}% OFF)`
+            ? `🔥 Hot Deal! ${price.toLocaleString()} THB (Was ${original.toLocaleString()} ฿)`
             : lang === "ru"
-              ? `🔥 Горячее предложение! ${price.toLocaleString()} THB (Было ${original.toLocaleString()} - ${pct}% OFF)`
-              : `🔥 特价! ${price.toLocaleString()} 泰铢 (原价 ${original.toLocaleString()} - 优惠 ${pct}%)`;
+              ? `🔥 Горячее предложение! ${price.toLocaleString()} THB (Было ${original.toLocaleString()} ฿)`
+              : `🔥 特价! ${price.toLocaleString()} 泰铢 (原价 ${original.toLocaleString()} ฿)`;
       }
-      return `💰 ${tSale}: ${price.toLocaleString()} ${tBaht}`;
+      return `${tSale}: ${price.toLocaleString()} ${tBaht}`;
     };
     const formatRent = (price: number, original?: number) => {
       if (original && original > price) {
-        const pct = Math.round(((original - price) / original) * 100);
         return lang === "th"
-          ? `🔥 ดีลดี! เช่า ${price.toLocaleString()} บาท/เดือน (จาก ${original.toLocaleString()} - ลด ${pct}%)`
+          ? `🔥 ดีลดี! เช่า ${price.toLocaleString()} บาท/เดือน (จาก ${original.toLocaleString()} ฿)`
           : lang === "en"
-            ? `🔥 Great Deal! Rent ${price.toLocaleString()} THB/mo (Was ${original.toLocaleString()} - ${pct}% OFF)`
+            ? `🔥 Great Deal! Rent ${price.toLocaleString()} THB/mo (Was ${original.toLocaleString()} ฿)`
             : lang === "ru"
-              ? `🔥 Отличное предложение! Аренда ${price.toLocaleString()} THB/mo (Было ${original.toLocaleString()} - ${pct}% OFF)`
-              : `🔥 优选! 租金 ${price.toLocaleString()} 泰铢/月 (原价 ${original.toLocaleString()} - 优惠 ${pct}%)`;
+              ? `🔥 Отличное предложение! Аренда ${price.toLocaleString()} THB/mo (Было ${original.toLocaleString()} ฿)`
+              : `🔥 优选! 租金 ${price.toLocaleString()} 泰铢/月 (原价 ${original.toLocaleString()} ฿)`;
       }
-      return `🔑 ${tRent}: ${price.toLocaleString()} ${tBaht}${tPerMonth}`;
+      return `${tRent}: ${price.toLocaleString()} ${tBaht}${tPerMonth}`;
     };
 
     // Smart Price Detection (Matches social.ts)
