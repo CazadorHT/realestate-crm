@@ -55,7 +55,12 @@ export function KeywordAutomationCard({
     setEditingIndex(keywords.length);
   };
 
-  const closeDialog = () => setEditingIndex(null);
+  const closeDialog = () => {
+    setEditingIndex(null);
+    if (hasChanges && !hasAnyErrors) {
+      handleSave();
+    }
+  };
 
   // Validation Helpers
   const isDuplicate = (index: number) => {
