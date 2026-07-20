@@ -458,30 +458,48 @@ export function TemplateEditorCard({
             </div>
           </Tabs>
 
-          <div className="px-6 pb-6 pt-0 space-y-4">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-              {SMART_TAGS.map((item) => (
-                <div
-                  key={item.tag}
-                  className="flex items-center justify-between p-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] group/tag cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-95"
-                  title={`คลิกเพื่อคัดลอก: ${item.label}`}
-                  onClick={() => {
-                    navigator.clipboard.writeText(item.tag);
-                    toast.success(`คัดลอก ${item.tag} แล้ว`, {
-                      description: `ใช้ปุ่ม Ctrl+V หรือ Cmd+V เพื่อวางในกล่องข้อความ`,
-                      duration: 2000,
-                    });
-                  }}
-                >
-                  <code className="text-blue-600 font-bold group-hover/tag:text-blue-700 transition-colors">
-                    {item.tag}
-                  </code>
-                  <span className="text-slate-400 group-hover/tag:text-slate-500">
-                    {item.label}
-                  </span>
-                </div>
-              ))}
+          {/* Smart Tags Section with Toggle */}
+          <div className="px-6 pb-6 pt-0 border-t border-slate-100 pt-4">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+                รายการตัวแปรที่ใช้ได้ (Smart Tags)
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowSmartTags(!showSmartTags)}
+                className="h-8 text-xs font-semibold rounded-xl text-slate-600 border-slate-200"
+              >
+                {showSmartTags ? "ซ่อนตัวแปร" : "แสดงตัวแปร"}
+                {showSmartTags ? <ChevronUp className="ml-1.5 h-3.5 w-3.5" /> : <ChevronDown className="ml-1.5 h-3.5 w-3.5" />}
+              </Button>
             </div>
+
+            {showSmartTags && (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                {SMART_TAGS.map((item) => (
+                  <div
+                    key={item.tag}
+                    className="flex items-center justify-between p-2 bg-slate-50 border border-slate-100 rounded-lg text-[11px] group/tag cursor-pointer hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-95"
+                    title={`คลิกเพื่อคัดลอก: ${item.label}`}
+                    onClick={() => {
+                      navigator.clipboard.writeText(item.tag);
+                      toast.success(`คัดลอก ${item.tag} แล้ว`, {
+                        description: `ใช้ปุ่ม Ctrl+V หรือ Cmd+V เพื่อวางในกล่องข้อความ`,
+                        duration: 2000,
+                      });
+                    }}
+                  >
+                    <code className="text-blue-600 font-bold group-hover/tag:text-blue-700 transition-colors">
+                      {item.tag}
+                    </code>
+                    <span className="text-slate-400 group-hover/tag:text-slate-500">
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           {/* Floating Sticky Save Bar (Renders when hasChanges === true) */}
           {hasChanges && (

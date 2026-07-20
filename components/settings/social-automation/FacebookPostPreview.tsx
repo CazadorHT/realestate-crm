@@ -43,7 +43,7 @@ export function FacebookPostPreview({
     : "VC";
 
   return (
-    <div className="bg-white border rounded-2xl border-slate-200 shadow-sm overflow-hidden max-w-md mx-auto sticky top-24 italic">
+    <div className="bg-white border rounded-2xl border-slate-200 shadow-sm overflow-hidden max-w-md mx-auto sticky top-24">
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -53,8 +53,8 @@ export function FacebookPostPreview({
           <div>
             <div className="font-semibold text-[15px] flex items-center gap-1">
               {siteConfig.name}
-              <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center">
-                <Badge className="h-2 w-2 p-0 border-0 bg-white" />
+              <div className="w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center">
+                <span className="text-[8px] text-white font-bold">✓</span>
               </div>
             </div>
             <div className="flex items-center gap-1 text-[13px] text-slate-500">
@@ -68,7 +68,7 @@ export function FacebookPostPreview({
       </div>
 
       {/* Content */}
-      <div className="px-4 pb-3 text-[15px] leading-relaxed text-slate-900 whitespace-pre-wrap font-medium">
+      <div className="px-4 pb-3 text-[14px] leading-relaxed text-slate-800 whitespace-pre-wrap font-normal">
         {renderContent(template)}
       </div>
 
