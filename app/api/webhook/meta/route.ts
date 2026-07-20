@@ -758,6 +758,9 @@ function htmlToPlainText(html: string): string {
 function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any, lang: "th" | "en" | "cn" | "ru" = "th") {
   if (!text) return "";
   let rendered = text;
+
+  // Clean up any emoji prefix in front of {{price_tag}} to avoid duplication since our backend inserts correct ones
+  rendered = rendered.replace(/[💰🔑💵💸🔥]\s*{{price_tag}}/g, "{{price_tag}}");
   const {
     priceTag,
     priceText,
@@ -1069,7 +1072,7 @@ async function handleKeywordAutomation(
               ? `🔥 Горячее предложение! ${price.toLocaleString()} THB (Было ${original.toLocaleString()} - ${pct}% OFF)`
               : `🔥 特价! ${price.toLocaleString()} 泰铢 (原价 ${original.toLocaleString()} - 优惠 ${pct}%)`;
       }
-      return `${tSale}: ${price.toLocaleString()} ${tBaht}`;
+      return `💰 ${tSale}: ${price.toLocaleString()} ${tBaht}`;
     };
     const formatRent = (price: number, original?: number) => {
       if (original && original > price) {
@@ -1082,7 +1085,7 @@ async function handleKeywordAutomation(
               ? `🔥 Отличное предложение! Аренда ${price.toLocaleString()} THB/mo (Было ${original.toLocaleString()} - ${pct}% OFF)`
               : `🔥 优选! 租金 ${price.toLocaleString()} 泰铢/月 (原价 ${original.toLocaleString()} - 优惠 ${pct}%)`;
       }
-      return `${tRent}: ${price.toLocaleString()} ${tBaht}${tPerMonth}`;
+      return `🔑 ${tRent}: ${price.toLocaleString()} ${tBaht}${tPerMonth}`;
     };
 
     // Smart Price Detection (Matches social.ts)
