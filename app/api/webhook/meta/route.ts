@@ -1366,7 +1366,7 @@ async function handleKeywordAutomation(
   if (isDirectDM && senderId) {
     if (match.buttons && match.buttons.length > 0) {
       dmRes = await sendMetaMessage(senderId, dmContent, platform, match.buttons);
-    } else if (propertyData && platform === "INSTAGRAM") {
+    } else if (propertyData && (platform === "INSTAGRAM" || platform === "FACEBOOK")) {
       const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
       const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
       const contentWithLink = `${dmContent}\n\n${buttonTitle}: ${buttonUrl}`;
@@ -1377,7 +1377,7 @@ async function handleKeywordAutomation(
   } else {
     if (match.buttons && match.buttons.length > 0) {
       dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, match.buttons);
-    } else if (propertyData && platform === "INSTAGRAM") {
+    } else if (propertyData && (platform === "INSTAGRAM" || platform === "FACEBOOK")) {
       const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
       const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
       dmRes = await sendPrivateReply(commentId, dmContent, platform, buttonUrl, buttonTitle);
