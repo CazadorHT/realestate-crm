@@ -1167,9 +1167,13 @@ async function handleKeywordAutomation(
         : null,
     ].filter(Boolean).join(" | ") || "-";
 
-    const projectName = propertyData.project
-      ? getLocaleValue(propertyData.project, "name", lang)
-      : "";
+    let projectName = "";
+    if (propertyData.project) {
+      projectName = getLocaleValue(propertyData.project, "name", lang);
+    } else if (propertyData.address_info) {
+      const addr = propertyData.address_info as any;
+      projectName = addr[lang] || addr["en"] || addr["th"] || "";
+    }
 
     const dynamicValues = {
       priceTag, priceText, originalPriceText, salePrice, rentPrice,
