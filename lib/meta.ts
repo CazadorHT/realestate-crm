@@ -1,5 +1,6 @@
 import { metaConfig } from "./meta-config";
 import { MetaPlatform, MetaUserProfile, MetaApiResponse } from "@/types/meta";
+import { SocialButton } from "@/features/site-settings/schema";
 
 // Cache bust: Force reload to pick up new database tokens.
 
@@ -48,6 +49,7 @@ export async function sendMetaMessage(
   psid: string,
   content: string,
   platform: MetaPlatform,
+  buttons?: SocialButton[],
 ): Promise<MetaApiResponse> {
   const token = await getActiveToken();
   if (!token)
@@ -58,13 +60,43 @@ export async function sendMetaMessage(
 
   try {
     const url = `${metaConfig.graphApiUrl}/me/messages?access_token=${token}`;
+    
+    let messageObj: any = { text: content };
+
+    if (buttons && buttons.length > 0) {
+      messageObj = {
+        attachment: {
+          type: "template",
+          payload: {
+            template_type: "button",
+            text: content.substring(0, 640),
+            buttons: buttons.map(btn => {
+              if (btn.type === "web_url") {
+                return {
+                  type: "web_url",
+                  url: btn.url,
+                  title: btn.title.substring(0, 20)
+                };
+              } else {
+                return {
+                  type: "postback",
+                  title: btn.title.substring(0, 20),
+                  payload: btn.payload || btn.title
+                };
+              }
+            })
+          }
+        }
+      };
+    }
+
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         recipient: { id: psid },
-        message: { text: content },
-        messaging_type: "RESPONSE", // Required for many types of messages
+        message: messageObj,
+        messaging_type: "RESPONSE",
       }),
     });
 
@@ -360,6 +392,7 @@ export async function sendPrivateReply(
   platform: MetaPlatform,
   buttonUrl?: string,
   buttonTitle?: string,
+  customButtons?: SocialButton[],
 ): Promise<MetaApiResponse> {
   const token = await getActiveToken();
   if (!token)
@@ -377,7 +410,35 @@ export async function sendPrivateReply(
       // Instagram Private Reply uses the normal messages endpoint but with comment_id
       url = `${metaConfig.graphApiUrl}/me/messages?access_token=${token}`;
       
-      if (buttonUrl && buttonTitle) {
+      if (customButtons && customButtons.length > 0) {
+        body = {
+          recipient: { comment_id: commentId },
+          message: {
+            attachment: {
+              type: "template",
+              payload: {
+                template_type: "button",
+                text: content.substring(0, 640),
+                buttons: customButtons.map(btn => {
+                  if (btn.type === "web_url") {
+                    return {
+                      type: "web_url",
+                      url: btn.url,
+                      title: btn.title.substring(0, 20)
+                    };
+                  } else {
+                    return {
+                      type: "postback",
+                      title: btn.title.substring(0, 20),
+                      payload: btn.payload || btn.title
+                    };
+                  }
+                })
+              }
+            }
+          }
+        };
+      } else if (buttonUrl && buttonTitle) {
         body = {
           recipient: { comment_id: commentId },
           message: {

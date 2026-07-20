@@ -8,6 +8,7 @@ import {
   sendPrivateReply,
   replyToMetaComment,
   sendMetaCarousel,
+  sendMetaMessage,
 } from "@/lib/meta";
 import { saveOmniMessage } from "@/lib/line"; // reuse same util since it's generic enough
 import { redis } from "@/lib/redis";
@@ -499,6 +500,62 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
       payload: event,
       direction: "INCOMING",
     });
+
+    // Lead Capture Gate Check
+    if (redis && senderId) {
+      const pendingKey = `lead_capture_pending:${senderId}`;
+      const pendingDataStr = await redis.get(pendingKey) as string | null;
+
+      if (pendingDataStr) {
+        const pendingData = JSON.parse(pendingDataStr);
+        const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+        const phoneRegex = /(\+66|0)[689]\d{8}/;
+
+        const emailMatch = text.match(emailRegex);
+        const phoneMatch = text.match(phoneRegex);
+
+        if (emailMatch || phoneMatch) {
+          const updateData: any = {};
+          if (emailMatch) updateData.email = emailMatch[0];
+          if (phoneMatch) updateData.phone = phoneMatch[0];
+
+          await supabase
+            .from("identities_v3")
+            .update(updateData)
+            .eq("id", identity?.id || lead.id);
+
+          await redis.del(pendingKey);
+
+          const confirmText = "ขอบคุณสำหรับข้อมูลค่ะ! บันทึกข้อมูลเรียบร้อยแล้วค่ะ";
+          await sendMetaMessage(senderId, confirmText, source);
+
+          await handleKeywordAutomation(
+            pendingData.keyword,
+            pendingData.commentId,
+            source,
+            pendingData.postId,
+            senderId,
+          );
+          return;
+        } else {
+          const promptText = "รูปแบบอีเมลหรือเบอร์โทรศัพท์ไม่ถูกต้อง กรุณาลองใหม่อีกครั้งค่ะ";
+          await sendMetaMessage(senderId, promptText, source);
+          return;
+        }
+      }
+    }
+
+    // Direct DM Automation Trigger
+    const settings = await getSiteSettings();
+    if (settings.direct_dm_reply_enabled) {
+      await handleKeywordAutomation(
+        text,
+        event.message.mid,
+        source,
+        undefined,
+        senderId,
+      );
+    }
   }
 }
 
@@ -524,14 +581,19 @@ async function handleInstagramChange(change: any) {
     senderName = value.from?.username || "IG User";
     const mediaId = value.media?.id || value.media_id;
 
-    // Handle Keyword Automation
-    await handleKeywordAutomation(
-      value.text,
-      externalId,
-      "INSTAGRAM",
-      mediaId,
-      senderId,
-    );
+    const settings = await getSiteSettings();
+    const isStory = value.media?.media_product_type === "STORY" || value.media_product_type === "STORY";
+
+    if (!isStory || settings.instagram_story_reply_enabled) {
+      // Handle Keyword Automation
+      await handleKeywordAutomation(
+        value.text,
+        externalId,
+        "INSTAGRAM",
+        mediaId,
+        senderId,
+      );
+    }
   } else if (field === "mentions") {
     text = `[IG Mention]: ${value.text || "Tagged in a post"}`;
     senderId = value.from?.id;
@@ -1000,10 +1062,13 @@ async function handleKeywordAutomation(
 
   const lowerText = text.toLowerCase();
 
-  // 2. Find matching keyword
+  // 2. Find matching keyword (respects linked_post_id if set)
   const match = automationKeywords.find(
     (k: SocialKeyword) =>
-      k.enabled !== false && lowerText.includes(k.keyword.toLowerCase()),
+      k.enabled !== false &&
+      lowerText.includes(k.keyword.toLowerCase()) &&
+      // If keyword is pinned to a specific post, only match that post's comments
+      (!k.linked_post_id || k.linked_post_id === postId),
   );
 
   if (!match) return;
@@ -1011,6 +1076,61 @@ async function handleKeywordAutomation(
   console.log(
     `🤖 Dynamic keyword matched in ${platform} comment: "${text}" matches "${match.keyword}"`,
   );
+
+  const isDirectDM = !postId;
+  let lang = detectLanguage(match.dm_content);
+
+  // 2.1 Follow Gate Check
+  if (settings.follow_gate_enabled && platform === "INSTAGRAM" && senderId) {
+    const tokenToUse = settings.meta_page_access_token || process.env.META_PAGE_ACCESS_TOKEN;
+    if (tokenToUse) {
+      const isFollowing = await checkInstagramFollows(senderId, tokenToUse);
+      if (!isFollowing) {
+        const followPrompt = lang === "th" 
+          ? "กรุณากดติดตามเพจ Instagram ของเราก่อนรับรายละเอียดโครงการนะคะ 😊" 
+          : "Please follow our Instagram page first to receive the details! 😊";
+        if (isDirectDM) {
+          await sendMetaMessage(senderId, followPrompt, platform);
+        } else {
+          await sendPrivateReply(commentId, followPrompt, platform);
+        }
+        return;
+      }
+    }
+  }
+
+  // 2.2 Lead Capture Gate Check
+  if (settings.lead_capture_gate_enabled && senderId) {
+    const supabase = createAdminClient() as any;
+    const senderIdHash = generateBlindIndex(senderId);
+    const idField = platform === "FACEBOOK" ? "facebook_psid_hash" : "instagram_sid_hash";
+
+    const { data: identity } = await supabase
+      .from("identities_v3")
+      .select("id, email, phone")
+      .eq(`social_links->>${idField}`, senderIdHash)
+      .maybeSingle();
+
+    const hasContactInfo = !!(identity?.email || identity?.phone);
+
+    if (!hasContactInfo && redis) {
+      const pendingKey = `lead_capture_pending:${senderId}`;
+      const isPending = await redis.get(pendingKey);
+
+      if (!isPending) {
+        await redis.set(pendingKey, JSON.stringify({ keyword: match.keyword, commentId, postId }), { ex: 300 });
+        const promptText = lang === "th"
+          ? "กรุณาพิมพ์อีเมลหรือเบอร์โทรศัพท์ของคุณเพื่อรับสิทธิ์ดูรายละเอียดโครงการค่ะ 😊"
+          : "Please reply with your email or phone number to receive the property details! 😊";
+        if (isDirectDM) {
+          await sendMetaMessage(senderId, promptText, platform);
+        } else {
+          await sendPrivateReply(commentId, promptText, platform);
+        }
+        return;
+      }
+    }
+  }
 
   // 3. Property Lookup (Optional - only if we have a postId)
   let propertyData: any = null;
@@ -1021,7 +1141,13 @@ async function handleKeywordAutomation(
   // 4. Prepare Message Content
   let dmContent = match.dm_content;
   let publicReply = match.public_reply;
-  const lang = detectLanguage(dmContent);
+  if (match.public_replies && match.public_replies.length > 0) {
+    const validReplies = match.public_replies.filter(Boolean);
+    if (validReplies.length > 0) {
+      publicReply = validReplies[Math.floor(Math.random() * validReplies.length)];
+    }
+  }
+  lang = detectLanguage(dmContent);
 
   if (propertyData) {
     // Price logic
@@ -1212,19 +1338,34 @@ async function handleKeywordAutomation(
 
   // 5. Send Private Reply (DM)
   let dmRes;
-  if (propertyData && platform === "INSTAGRAM") {
-    const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
-    const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
-    dmRes = await sendPrivateReply(commentId, dmContent, platform, buttonUrl, buttonTitle);
-    
-    // Fallback: If button template fails (e.g. Meta restrictions), send as plain text
-    if (!dmRes.success) {
-      console.warn(`[Meta Webhook] Button template failed, falling back to plain text DM:`, dmRes.error);
-      const fallbackContent = `${dmContent}\n\n${buttonTitle}: ${buttonUrl}`;
-      dmRes = await sendPrivateReply(commentId, fallbackContent, platform);
+  if (isDirectDM && senderId) {
+    if (match.buttons && match.buttons.length > 0) {
+      dmRes = await sendMetaMessage(senderId, dmContent, platform, match.buttons);
+    } else if (propertyData && platform === "INSTAGRAM") {
+      const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
+      const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
+      const contentWithLink = `${dmContent}\n\n${buttonTitle}: ${buttonUrl}`;
+      dmRes = await sendMetaMessage(senderId, contentWithLink, platform);
+    } else {
+      dmRes = await sendMetaMessage(senderId, dmContent, platform);
     }
   } else {
-    dmRes = await sendPrivateReply(commentId, dmContent, platform);
+    if (match.buttons && match.buttons.length > 0) {
+      dmRes = await sendPrivateReply(commentId, dmContent, platform, undefined, undefined, match.buttons);
+    } else if (propertyData && platform === "INSTAGRAM") {
+      const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
+      const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
+      dmRes = await sendPrivateReply(commentId, dmContent, platform, buttonUrl, buttonTitle);
+      
+      // Fallback: If button template fails (e.g. Meta restrictions), send as plain text
+      if (!dmRes.success) {
+        console.warn(`[Meta Webhook] Button template failed, falling back to plain text DM:`, dmRes.error);
+        const fallbackContent = `${dmContent}\n\n${buttonTitle}: ${buttonUrl}`;
+        dmRes = await sendPrivateReply(commentId, fallbackContent, platform);
+      }
+    } else {
+      dmRes = await sendPrivateReply(commentId, dmContent, platform);
+    }
   }
   if (dmRes.success && senderId) {
     // 6. Media Support (Albums)
@@ -1348,4 +1489,16 @@ async function lookupPropertyByPostId(postId: string) {
   }
 
   return property;
+}
+
+async function checkInstagramFollows(psid: string, token: string): Promise<boolean> {
+  try {
+    const url = `https://graph.facebook.com/v20.0/${psid}?fields=follows_business_page&access_token=${token}`;
+    const res = await fetch(url);
+    if (!res.ok) return false;
+    const data = await res.json();
+    return !!data.follows_business_page;
+  } catch {
+    return true; // fallback to true to prevent blocking under dev environments
+  }
 }

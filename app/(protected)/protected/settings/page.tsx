@@ -129,6 +129,14 @@ export default async function SettingsPage({
             />
           </TabsContent>
 
+          <TabsContent value="automation" className="space-y-8">
+            <SocialAutomationSettings
+              lineBotInfo={lineBotInfo}
+              initialSettings={allSettings}
+              mode="automation"
+            />
+          </TabsContent>
+
           <TabsContent value="ai" className="space-y-8">
             <AiControlTab />
           </TabsContent>

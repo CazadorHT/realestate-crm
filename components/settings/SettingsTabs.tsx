@@ -9,6 +9,7 @@ import {
   Cpu, 
   ShieldCheck, 
   CircleDollarSign,
+  MessageSquare,
   LucideIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ export function SettingsTabs({ activeTab }: SettingsTabsProps) {
     { value: "general", label: "ทั่วไป (General)", description: "จัดการชื่อองค์กร สถาปัตยกรรม และข้อมูลพื้นฐาน", icon: Settings },
     { value: "branding", label: "แบรนด์ (Branding)", description: "ปรับแต่งโลโก้ สีสัน และอัตลักษณ์ของแบรนด์", icon: Palette },
     { value: "social", label: "Social", description: "เชื่อมต่อ FB, Line, TikTok และระบบแชท", icon: Share2 },
+    { value: "automation", label: "แชทบอท (Automation)", description: "ระบบสุ่มตอบอัตโนมัติและ Live Simulator", icon: MessageSquare },
     { value: "ai", label: "AI Tools", description: "ตั้งค่าระบบปัญญาประดิษฐ์และ SmartMatch", icon: Cpu },
     { value: "admin", label: "Admin", description: "ควบคุมสิทธิ์ สาขา ทีม และความปลอดภัย", icon: ShieldCheck },
     { value: "commission", label: "คอมมิชชั่น", description: "จัดการฐานเงินเดือนและเปอร์เซ็นต์ส่วนแบ่ง", icon: CircleDollarSign },

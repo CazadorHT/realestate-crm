@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, useEffect, useTransition, useRef } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
 import {
   getSiteSettings,
   updateSiteSetting,
   generateSocialAutomationTemplatesAction,
 } from "@/features/site-settings/actions";
 import {
-  SiteSettingKey,
   SocialKeyword,
   SiteSettings,
 } from "@/features/site-settings/schema";
@@ -18,17 +19,34 @@ import {
 // Extracted Components
 import { KeywordAutomationCard } from "./social-automation/KeywordAutomationCard";
 import { TemplateEditorCard } from "./social-automation/TemplateEditorCard";
+import { PhoneSimulator } from "./social-automation/PhoneSimulator";
 
 export function SocialAutomationSettings({
   lineBotInfo,
   initialSettings,
+  mode = "automation",
 }: {
   lineBotInfo?: any;
   initialSettings?: SiteSettings;
+  mode?: "social" | "automation";
 }) {
   const [keywords, setKeywords] = useState<SocialKeyword[]>(
     initialSettings?.social_automation_keywords || [],
   );
+
+  const [instagramStoryReplyEnabled, setInstagramStoryReplyEnabled] = useState(
+    !!initialSettings?.instagram_story_reply_enabled
+  );
+  const [directDmReplyEnabled, setDirectDmReplyEnabled] = useState(
+    !!initialSettings?.direct_dm_reply_enabled
+  );
+  const [followGateEnabled, setFollowGateEnabled] = useState(
+    !!initialSettings?.follow_gate_enabled
+  );
+  const [leadCaptureGateEnabled, setLeadCaptureGateEnabled] = useState(
+    !!initialSettings?.lead_capture_gate_enabled
+  );
+  const [simulatorTab, setSimulatorTab] = useState<"post" | "comments" | "dm">("post");
   const [templates, setTemplates] = useState({
     facebook: {
       th: initialSettings?.facebook_post_template || "",
@@ -80,6 +98,7 @@ export function SocialAutomationSettings({
   const [isLoading, setIsLoading] = useState(!initialSettings);
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [isDirty, setIsDirty] = useState(false);
   const [initialData, setInitialData] = useState<SiteSettings | null>(
     initialSettings || null,
   );
@@ -104,6 +123,10 @@ export function SocialAutomationSettings({
       try {
         const settings = await getSiteSettings();
         setKeywords(settings.social_automation_keywords || []);
+        setInstagramStoryReplyEnabled(!!settings.instagram_story_reply_enabled);
+        setDirectDmReplyEnabled(!!settings.direct_dm_reply_enabled);
+        setFollowGateEnabled(!!settings.follow_gate_enabled);
+        setLeadCaptureGateEnabled(!!settings.lead_capture_gate_enabled);
         setTemplates({
           facebook: {
             th: settings.facebook_post_template || "",
@@ -147,7 +170,7 @@ export function SocialAutomationSettings({
       }
     }
     load();
-  }, [initialSettings, initialData]);
+  }, [initialSettings]);
 
   const addRow = () => {
     setKeywords([
@@ -161,9 +184,7 @@ export function SocialAutomationSettings({
   };
 
   const updateRow = (index: number, data: Partial<SocialKeyword>) => {
-    const newKeywords = [...keywords];
-    newKeywords[index] = { ...newKeywords[index], ...data };
-    setKeywords(newKeywords);
+    setKeywords(keywords.map((k, i) => (i === index ? { ...k, ...data } : k)));
   };
 
   const updateTemplate = (
@@ -180,26 +201,27 @@ export function SocialAutomationSettings({
     }));
   };
 
-  const hasChanges = initialData
-    ? JSON.stringify(keywords) !==
-        JSON.stringify(initialData.social_automation_keywords || []) ||
+  // Auto-compute isDirty by comparing state to last saved snapshot
+  useEffect(() => {
+    if (!initialData) return;
+    const kw = JSON.stringify(keywords.map(({ keyword, dm_content, public_reply, public_replies, enabled, language, buttons }) => ({ keyword, dm_content, public_reply, public_replies, enabled, language, buttons })));
+    const savedKw = JSON.stringify((initialData.social_automation_keywords || []).map(({ keyword, dm_content, public_reply, public_replies, enabled, language, buttons }: any) => ({ keyword, dm_content, public_reply, public_replies, enabled, language, buttons })));
+    const changed =
+      kw !== savedKw ||
+      instagramStoryReplyEnabled !== !!initialData.instagram_story_reply_enabled ||
+      directDmReplyEnabled !== !!initialData.direct_dm_reply_enabled ||
+      followGateEnabled !== !!initialData.follow_gate_enabled ||
+      leadCaptureGateEnabled !== !!initialData.lead_capture_gate_enabled ||
       templates.facebook.th !== (initialData.facebook_post_template || "") ||
       templates.facebook.en !== (initialData.facebook_post_template_en || "") ||
-      templates.facebook.cn !== (initialData.facebook_post_template_cn || "") ||
-      templates.facebook.ru !== (initialData.facebook_post_template_ru || "") ||
       templates.instagram.th !== (initialData.instagram_post_template || "") ||
       templates.instagram.en !== (initialData.instagram_post_template_en || "") ||
-      templates.instagram.cn !== (initialData.instagram_post_template_cn || "") ||
-      templates.instagram.ru !== (initialData.instagram_post_template_ru || "") ||
       templates.line.th !== (initialData.line_post_template || "") ||
-      templates.line.en !== (initialData.line_post_template_en || "") ||
-      templates.line.cn !== (initialData.line_post_template_cn || "") ||
-      templates.line.ru !== (initialData.line_post_template_ru || "") ||
-      templates.tiktok.th !== (initialData.tiktok_post_template || "") ||
-      templates.tiktok.en !== (initialData.tiktok_post_template_en || "") ||
-      templates.tiktok.cn !== (initialData.tiktok_post_template_cn || "") ||
-      templates.tiktok.ru !== (initialData.tiktok_post_template_ru || "")
-    : false;
+      templates.tiktok.th !== (initialData.tiktok_post_template || "");
+    setIsDirty(changed);
+  }, [keywords, instagramStoryReplyEnabled, directDmReplyEnabled, followGateEnabled, leadCaptureGateEnabled, templates, initialData]);
+
+  const hasChanges = isDirty;
 
   const handleSave = (silent = false) => {
     if (!silent && keywords.some((k) => !k.keyword || !k.dm_content)) {
@@ -209,81 +231,35 @@ export function SocialAutomationSettings({
 
     startTransition(async () => {
       try {
-        if (!initialData) return;
+        const results = await Promise.all([
+          updateSiteSetting("social_automation_keywords", keywords as any).then((r) => ({ key: "social_automation_keywords", ...r })),
+          updateSiteSetting("instagram_story_reply_enabled", instagramStoryReplyEnabled).then((r) => ({ key: "instagram_story_reply_enabled", ...r })),
+          updateSiteSetting("direct_dm_reply_enabled", directDmReplyEnabled).then((r) => ({ key: "direct_dm_reply_enabled", ...r })),
+          updateSiteSetting("follow_gate_enabled", followGateEnabled).then((r) => ({ key: "follow_gate_enabled", ...r })),
+          updateSiteSetting("lead_capture_gate_enabled", leadCaptureGateEnabled).then((r) => ({ key: "lead_capture_gate_enabled", ...r })),
+          updateSiteSetting("facebook_post_template", templates.facebook.th).then((r) => ({ key: "facebook_post_template", ...r })),
+          updateSiteSetting("facebook_post_template_en", templates.facebook.en).then((r) => ({ key: "facebook_post_template_en", ...r })),
+          updateSiteSetting("facebook_post_template_cn", templates.facebook.cn).then((r) => ({ key: "facebook_post_template_cn", ...r })),
+          updateSiteSetting("facebook_post_template_ru", templates.facebook.ru).then((r) => ({ key: "facebook_post_template_ru", ...r })),
+          updateSiteSetting("instagram_post_template", templates.instagram.th).then((r) => ({ key: "instagram_post_template", ...r })),
+          updateSiteSetting("instagram_post_template_en", templates.instagram.en).then((r) => ({ key: "instagram_post_template_en", ...r })),
+          updateSiteSetting("instagram_post_template_cn", templates.instagram.cn).then((r) => ({ key: "instagram_post_template_cn", ...r })),
+          updateSiteSetting("instagram_post_template_ru", templates.instagram.ru).then((r) => ({ key: "instagram_post_template_ru", ...r })),
+          updateSiteSetting("line_post_template", templates.line.th).then((r) => ({ key: "line_post_template", ...r })),
+          updateSiteSetting("line_post_template_en", templates.line.en).then((r) => ({ key: "line_post_template_en", ...r })),
+          updateSiteSetting("line_post_template_cn", templates.line.cn).then((r) => ({ key: "line_post_template_cn", ...r })),
+          updateSiteSetting("line_post_template_ru", templates.line.ru).then((r) => ({ key: "line_post_template_ru", ...r })),
+          updateSiteSetting("tiktok_post_template", templates.tiktok.th).then((r) => ({ key: "tiktok_post_template", ...r })),
+          updateSiteSetting("tiktok_post_template_en", templates.tiktok.en).then((r) => ({ key: "tiktok_post_template_en", ...r })),
+          updateSiteSetting("tiktok_post_template_cn", templates.tiktok.cn).then((r) => ({ key: "tiktok_post_template_cn", ...r })),
+          updateSiteSetting("tiktok_post_template_ru", templates.tiktok.ru).then((r) => ({ key: "tiktok_post_template_ru", ...r })),
+        ]);
 
-        const promises = [];
-
-        if (
-          JSON.stringify(keywords) !==
-          JSON.stringify(initialData.social_automation_keywords || [])
-        ) {
-          promises.push(
-            updateSiteSetting(
-              "social_automation_keywords",
-              keywords as any,
-            ).then((r) => ({ key: "social_automation_keywords", ...r }))
-          );
-        }
-
-        const templateMappings: { key: SiteSettingKey; value: string; initial: string }[] = [
-          { key: "facebook_post_template", value: templates.facebook.th, initial: initialData.facebook_post_template || "" },
-          { key: "facebook_post_template_en", value: templates.facebook.en, initial: initialData.facebook_post_template_en || "" },
-          { key: "facebook_post_template_cn", value: templates.facebook.cn, initial: initialData.facebook_post_template_cn || "" },
-          { key: "facebook_post_template_ru", value: templates.facebook.ru, initial: initialData.facebook_post_template_ru || "" },
-          { key: "instagram_post_template", value: templates.instagram.th, initial: initialData.instagram_post_template || "" },
-          { key: "instagram_post_template_en", value: templates.instagram.en, initial: initialData.instagram_post_template_en || "" },
-          { key: "instagram_post_template_cn", value: templates.instagram.cn, initial: initialData.instagram_post_template_cn || "" },
-          { key: "instagram_post_template_ru", value: templates.instagram.ru, initial: initialData.instagram_post_template_ru || "" },
-          { key: "line_post_template", value: templates.line.th, initial: initialData.line_post_template || "" },
-          { key: "line_post_template_en", value: templates.line.en, initial: initialData.line_post_template_en || "" },
-          { key: "line_post_template_cn", value: templates.line.cn, initial: initialData.line_post_template_cn || "" },
-          { key: "line_post_template_ru", value: templates.line.ru, initial: initialData.line_post_template_ru || "" },
-          { key: "tiktok_post_template", value: templates.tiktok.th, initial: initialData.tiktok_post_template || "" },
-          { key: "tiktok_post_template_en", value: templates.tiktok.en, initial: initialData.tiktok_post_template_en || "" },
-          { key: "tiktok_post_template_cn", value: templates.tiktok.cn, initial: initialData.tiktok_post_template_cn || "" },
-          { key: "tiktok_post_template_ru", value: templates.tiktok.ru, initial: initialData.tiktok_post_template_ru || "" },
-        ];
-
-        for (const mapping of templateMappings) {
-          if (mapping.value !== mapping.initial) {
-            promises.push(
-              updateSiteSetting(mapping.key, mapping.value).then((r) => ({
-                key: mapping.key,
-                ...r,
-              }))
-            );
-          }
-        }
-
-        if (promises.length === 0) {
-          return;
-        }
-
-        const results = await Promise.all(promises);
         const allSuccess = results.every((r) => r.success);
 
         if (allSuccess) {
-          if (!silent) toast.success("บันทึกการตั้งค่าเรียบร้อย");
-          setInitialData({
-            ...initialData,
-            social_automation_keywords: keywords,
-            facebook_post_template: templates.facebook.th,
-            facebook_post_template_en: templates.facebook.en,
-            facebook_post_template_cn: templates.facebook.cn,
-            facebook_post_template_ru: templates.facebook.ru,
-            instagram_post_template: templates.instagram.th,
-            instagram_post_template_en: templates.instagram.en,
-            instagram_post_template_cn: templates.instagram.cn,
-            instagram_post_template_ru: templates.instagram.ru,
-            line_post_template: templates.line.th,
-            line_post_template_en: templates.line.en,
-            line_post_template_cn: templates.line.cn,
-            line_post_template_ru: templates.line.ru,
-            tiktok_post_template: templates.tiktok.th,
-            tiktok_post_template_en: templates.tiktok.en,
-            tiktok_post_template_cn: templates.tiktok.cn,
-            tiktok_post_template_ru: templates.tiktok.ru,
-          });
+          if (!silent) toast.success("บันทึกการตั้งค่าเรียบร้อย ✅");
+          setIsDirty(false);
         } else if (!silent) {
           const failedKeys = results
             .filter((r) => !r.success)
@@ -297,20 +273,7 @@ export function SocialAutomationSettings({
     });
   };
 
-  // Debounced Auto-Save Logic
-  useEffect(() => {
-    if (!hasChanges) return;
-
-    // Check validation before auto-saving
-    const isValid = !keywords.some((k) => !k.keyword || !k.dm_content);
-    if (!isValid) return;
-
-    const timer = setTimeout(() => {
-      handleSave(true);
-    }, 3000); // 3 seconds delay for auto-save
-
-    return () => clearTimeout(timer);
-  }, [keywords, templates, hasChanges]);
+  // Auto-Save disabled by user request. Saving is now fully manual.
 
   const handleAiGenerate = async (
     type: "SOCIAL_POST" | "INSTAGRAM_POST" | "KEYWORD_DM" | "LINE_POST" | "TIKTOK_POST",
@@ -398,21 +361,8 @@ export function SocialAutomationSettings({
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <KeywordAutomationCard
-        keywords={keywords}
-        addRow={addRow}
-        removeRow={removeRow}
-        updateRow={updateRow}
-        handleSave={handleSave}
-        handleAiGenerate={handleAiGenerate}
-        isPending={isPending}
-        hasChanges={hasChanges}
-        isGenerating={isGenerating}
-        scrollToTemplate={scrollToTemplate}
-      />
-
+  if (mode === "social") {
+    return (
       <TemplateEditorCard
         activePlatform={activePlatform}
         setActivePlatform={setActivePlatform}
@@ -432,6 +382,144 @@ export function SocialAutomationSettings({
         metaConnected={metaConnected}
         metaPageName={metaPageName}
       />
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* Left Column: Form Editor */}
+      <div className="lg:col-span-8 space-y-6">
+        <KeywordAutomationCard
+          keywords={keywords}
+          addRow={addRow}
+          removeRow={removeRow}
+          updateRow={updateRow}
+          handleSave={handleSave}
+          handleAiGenerate={handleAiGenerate}
+          isPending={isPending}
+          hasChanges={hasChanges}
+          isGenerating={isGenerating}
+          scrollToTemplate={scrollToTemplate}
+        />
+
+        {/* Triggers and Gates Advanced Options */}
+        <Card className="border-slate-200 shadow-xl shadow-slate-200/50 overflow-hidden ring-1 ring-slate-900/5">
+          <CardHeader className="bg-linear-to-b from-white to-slate-50/50 border-b border-slate-200 pb-6">
+            <CardTitle className="text-lg font-semibold text-slate-900">
+              เงื่อนไขทริกเกอร์และฟีเจอร์ขั้นสูง (Triggers & Gates)
+            </CardTitle>
+            <CardDescription className="text-slate-500 font-medium">
+              เปิด/ปิดจุดเชื่อมโยงทริกเกอร์และฟีเจอร์พรีเมียมสำหรับเพจของคุณ
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 space-y-6">
+            {/* Triggers Section */}
+            <div>
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">เงื่อนไขทริกเกอร์ (Automation Triggers)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-700">ตอบกลับเมื่อคอมเมนต์ใต้สตอรี่</div>
+                    <div className="text-xs text-slate-400">Replies to a story</div>
+                  </div>
+                  <Switch
+                    checked={instagramStoryReplyEnabled}
+                    onCheckedChange={(v) => { setInstagramStoryReplyEnabled(v); setIsDirty(true); }}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-700">ตอบกลับข้อความตรงทันที</div>
+                    <div className="text-xs text-slate-400">Direct DMs response</div>
+                  </div>
+                  <Switch
+                    checked={directDmReplyEnabled}
+                    onCheckedChange={(v) => { setDirectDmReplyEnabled(v); setIsDirty(true); }}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Premium Gates Section */}
+            <div className="pt-4 border-t border-slate-100">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">ระบบประตูกรองแชต (Premium Automation Gates)</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-700">Follow Gate</div>
+                    <div className="text-xs text-slate-400">ต้องติดตามบัญชีก่อนรับข้อมูล</div>
+                  </div>
+                  <Switch
+                    checked={followGateEnabled}
+                    onCheckedChange={(v) => { setFollowGateEnabled(v); setIsDirty(true); }}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-4 bg-slate-50/50 rounded-xl border border-slate-100">
+                  <div>
+                    <div className="text-sm font-semibold text-slate-700">Lead Capture Gate</div>
+                    <div className="text-xs text-slate-400">ขออีเมล/เบอร์โทรศัพท์ลูกค้าก่อนเฉลยส่งลิงก์</div>
+                  </div>
+                  <Switch
+                    checked={leadCaptureGateEnabled}
+                    onCheckedChange={(v) => { setLeadCaptureGateEnabled(v); setIsDirty(true); }}
+                    className="data-[state=checked]:bg-blue-600"
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Right Column: Live Phone Simulator */}
+      <div className="lg:col-span-4 bg-slate-50/60 dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 dark:border-slate-800">
+        <div className="mb-4">
+          <h3 className="text-base font-bold flex items-center gap-2 text-slate-900 dark:text-white">
+            <span>Live Phone Preview</span>
+            <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full dark:bg-blue-900/30 dark:text-blue-400 uppercase tracking-wider">Real-time</span>
+          </h3>
+          <p className="text-xs text-slate-500 mt-1">จำลองการแสดงผลของแชทบอทและการตอบกลับอัตโนมัติบนโซเชียลมีเดีย</p>
+        </div>
+        <PhoneSimulator
+          activeTab={simulatorTab}
+          setActiveTab={setSimulatorTab}
+          instagramTemplate={templates.instagram[activeTab] || ""}
+          keywords={keywords}
+          followGateEnabled={followGateEnabled}
+          leadCaptureGateEnabled={leadCaptureGateEnabled}
+          instagramStoryReplyEnabled={instagramStoryReplyEnabled}
+          directDmReplyEnabled={directDmReplyEnabled}
+        />
+      </div>
+
+      {/* Floating Sticky Save Bar */}
+      {hasChanges && (
+        <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50 bg-white/90 backdrop-blur-md border border-slate-200  shadow-2xl rounded-2xl p-4 flex items-center justify-between gap-8 animate-in fade-in slide-in-from-bottom-4 duration-300 w-11/12 max-w-2xl">
+          <div className="flex items-center gap-3">
+            <div className="h-2.5 w-2.5 rounded-full bg-amber-500 animate-pulse" />
+            <span className="text-sm font-semibold text-slate-700 dark:text-slate-250">มีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Button
+              onClick={() => handleSave()}
+              disabled={isPending}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl h-10 px-6 shadow-md shadow-blue-200 disabled:opacity-50 transition-all active:scale-95"
+            >
+              {isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              บันทึกการตั้งค่าทั้งหมด
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

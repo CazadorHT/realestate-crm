@@ -29,11 +29,13 @@ export const MOCK_PROPERTY_DATA = {
   details: "4 ห้องนอน | 5 ห้องน้ำ | 320 ตร.ม. | ชั้น 2",
   description:
     "บ้านเดี่ยวสุดหรู 2 ชั้น พร้อมสระว่ายน้ำส่วนตัว ทำเลทองย่านห้วยขวาง พื้นที่ใช้สอยกว้างขวาง ตกแต่งครบครัน...",
+  project_name: "เดอะ พาร์ค สุขุมวิท 24",
 };
 
 export const SMART_TAGS = [
   // Core Info
   { tag: "{{title}}", label: "ชื่อทรัพย์" },
+  { tag: "{{project_name}}", label: "ชื่อโครงการ" },
   { tag: "{{price}}", label: "ราคาสรุป (แนะนำ)" },
   { tag: "{{price_tag}}", label: "ป้ายราคาอัจฉริยะ (ลดราคา/ขาย-เช่า)" },
   { tag: "{{location}}", label: "ทำเล (เขต/จังหวัด)" },

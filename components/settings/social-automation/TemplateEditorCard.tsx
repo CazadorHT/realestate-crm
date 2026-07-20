@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Card,
   CardHeader,
@@ -10,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { FaMeta, FaTiktok, FaLine, FaInstagram, FaFacebook } from "react-icons/fa6";
-import { Sparkles, Loader2, Save } from "lucide-react";
+import { Sparkles, Loader2, Save, ChevronDown, ChevronUp } from "lucide-react";
 import { FacebookPostPreview } from "./FacebookPostPreview";
 import { InstagramPostPreview } from "@/components/settings/social-automation/InstagramPostPreview";
 import { TikTokPostPreview } from "./TikTokPostPreview";
@@ -38,7 +39,7 @@ interface TemplateEditorCardProps {
     value: string,
   ) => void;
   handleAiGenerate: (
-    type: "SOCIAL_POST" | "INSTAGRAM_POST" | "LINE_POST" | "TIKTOK_POST",
+    type: "SOCIAL_POST" | "INSTAGRAM_POST" | "KEYWORD_DM" | "LINE_POST" | "TIKTOK_POST",
   ) => void;
   isGenerating: string | null;
   isPending: boolean;
@@ -78,6 +79,8 @@ export function TemplateEditorCard({
   metaConnected,
   metaPageName,
 }: TemplateEditorCardProps) {
+  const [showSmartTags, setShowSmartTags] = useState(false);
+
   const isInvalid = (activePlatform === "instagram" && 
     Object.values(templates.instagram).some(text => text.length > 2200)) ||
     (activePlatform === "tiktok" &&

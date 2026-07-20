@@ -206,6 +206,7 @@ export function SocialIntegrationsTab({
         <SocialAutomationSettings
           lineBotInfo={lineBotInfo}
           initialSettings={allSettings}
+          mode="social"
         />
       </div>
     </div>

@@ -57,9 +57,6 @@ export function KeywordAutomationCard({
 
   const closeDialog = () => {
     setEditingIndex(null);
-    if (hasChanges && !hasAnyErrors) {
-      handleSave();
-    }
   };
 
   // Validation Helpers
@@ -166,7 +163,7 @@ export function KeywordAutomationCard({
                 </Button>
               </div>
 
-              <div className="pt-6 border-t border-slate-100 flex items-center gap-3 text-slate-400 text-sm italic font-medium text-balance">
+              <div className="pt-6 border-t border-slate-100 flex items-center gap-3 text-slate-400 text-xs italic font-medium text-balance">
                 💡 กดที่ Keyword ด้านบนเพื่อเข้าไปแก้ไขข้อความตอบกลับและการทำงาน
               </div>
             </div>
@@ -175,7 +172,7 @@ export function KeywordAutomationCard({
 
         {/* Global Save Section */}
         {keywords.length > 0 && (
-          <div className="px-8 py-6 border-t border-slate-200 bg-linear-to-b from-white to-slate-50 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ">
             <div className="flex items-center gap-3">
               <div className="flex -space-x-1.5 items-center">
                 <div className="w-6 h-6 rounded-full border border-white bg-blue-600 flex items-center justify-center shadow-xs">
@@ -193,18 +190,6 @@ export function KeywordAutomationCard({
                 ที่พร้อมทำงาน
               </p>
             </div>
-            <Button
-              onClick={handleSave}
-              disabled={isPending || !hasChanges || hasAnyErrors}
-              className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold h-11 px-10 rounded-full shadow-lg shadow-blue-200 ring-2 ring-blue-100 ring-offset-2 transition-all disabled:opacity-50 disabled:grayscale disabled:shadow-none"
-            >
-              {isPending ? (
-                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-              ) : (
-                <Save className="h-5 w-5 mr-2" />
-              )}
-              บันทึกการตั้งค่าทั้งหมด
-            </Button>
           </div>
         )}
       </CardContent>

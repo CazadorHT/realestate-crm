@@ -8,6 +8,10 @@ export type SiteSettingKey =
   | "isolation_leads_enabled"
   | "isolation_deals_enabled"
   | "social_automation_keywords"
+  | "instagram_story_reply_enabled"
+  | "direct_dm_reply_enabled"
+  | "follow_gate_enabled"
+  | "lead_capture_gate_enabled"
   | "facebook_post_template"
   | "facebook_post_template_en"
   | "facebook_post_template_cn"
@@ -57,11 +61,23 @@ export type SiteSettingKey =
   | "partners_description_cn"
   | "partners_description_ru";
 
+export interface SocialButton {
+  title: string;
+  url?: string;
+  type?: "web_url" | "postback";
+  payload?: string;
+}
+
 export interface SocialKeyword {
   keyword: string;
   dm_content: string;
   public_reply?: string;
+  public_replies?: string[]; // Multiple options for spintax
+  language?: "th" | "en" | "cn" | "ru";
+  buttons?: SocialButton[]; // Buttons configuration for direct messages
   enabled?: boolean;
+  linked_post_id?: string;      // Optional: restrict to a specific IG/FB post media_id
+  linked_post_preview?: string; // Thumbnail URL for UI display
 }
 
 export interface SiteSettings {
@@ -72,6 +88,10 @@ export interface SiteSettings {
   isolation_leads_enabled: boolean;
   isolation_deals_enabled: boolean;
   social_automation_keywords: SocialKeyword[];
+  instagram_story_reply_enabled?: boolean;
+  direct_dm_reply_enabled?: boolean;
+  follow_gate_enabled?: boolean;
+  lead_capture_gate_enabled?: boolean;
   facebook_post_template?: string;
   facebook_post_template_en?: string;
   facebook_post_template_cn?: string;
@@ -179,6 +199,10 @@ export const siteSettingsSchema = z.object({
   isolation_properties_enabled: z.boolean().optional(),
   isolation_leads_enabled: z.boolean().optional(),
   isolation_deals_enabled: z.boolean().optional(),
+  instagram_story_reply_enabled: z.boolean().optional(),
+  direct_dm_reply_enabled: z.boolean().optional(),
+  follow_gate_enabled: z.boolean().optional(),
+  lead_capture_gate_enabled: z.boolean().optional(),
   onboarding_line_skipped: z.boolean().optional(),
   onboarding_staff_skipped: z.boolean().optional(),
   google_tag_manager_id: z.string().max(20).optional(),
