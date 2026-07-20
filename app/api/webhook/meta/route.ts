@@ -1023,8 +1023,8 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
 
   let cleanResult = resultText.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
   // ลบเครื่องหมายคำถามที่อาจแฝงมาเนื่องจากอักขระพิเศษถอดรหัสไม่สมบูรณ์
-  cleanResult = cleanResult.replace(/\?([💰🔑💵💸🔥])/g, "$1");
-  cleanResult = cleanResult.replace(/\?(เช่า|ขาย|Rent|Sale|เช่า\/ขาย|Rent\/Sale)/g, "$1");
+  cleanResult = cleanResult.replace(/\?\s*([💰🔑💵💸🔥])/g, "$1");
+  cleanResult = cleanResult.replace(/\?\s*(เช่า|ขาย|Rent|Sale|เช่า\/ขาย|Rent\/Sale|Price|ราคา)/gi, "$1");
   return cleanResult;
 }
 
