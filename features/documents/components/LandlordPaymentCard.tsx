@@ -240,7 +240,7 @@ export function LandlordPaymentCard({
           </Label>
           <Input
             id="paymentPeriod"
-            placeholder="เช่น ทุกวันที่ 5 ของเดือน"
+            placeholder="เช่น งวดที่ 1 / 12"
             value={paymentPeriod}
             onChange={(e) => setPaymentPeriod(e.target.value)}
             className="h-10 px-3 rounded-xl border-slate-200 bg-white text-xs text-slate-700 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-100 focus-visible:border-blue-400 transition-all"
