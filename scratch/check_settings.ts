@@ -1,28 +1,21 @@
-import { createClient } from "@supabase/supabase-js";
-import * as dotenv from "dotenv";
-import path from "path";
+import { createAdminClient } from "../lib/supabase/admin";
 
-dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+async function main() {
+  const supabase = createAdminClient();
+  
+  const { data: settings, error } = await supabase
+    .from("site_settings")
+    .select("value")
+    .eq("key", "system_config")
+    .maybeSingle();
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-async function checkSettings() {
-  const { data, error } = await supabase.from("site_settings").select("key");
   if (error) {
-    console.error(error);
+    console.error("Error fetching settings:", error);
     return;
   }
-  console.log("Keys in site_settings:", data.map(d => d.key));
 
-  const { data: branding } = await supabase.from("site_settings").select("value").eq("key", "branding").single();
-  if (branding) {
-    console.log("Branding value:", JSON.stringify(branding.value, null, 2));
-  } else {
-    console.log("No branding key found in site_settings.");
-  }
+  console.log("System Config Value:");
+  console.log(JSON.stringify(settings?.value, null, 2));
 }
 
-checkSettings();
+main().catch(console.error);

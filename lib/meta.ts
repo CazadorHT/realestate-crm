@@ -402,12 +402,8 @@ export async function sendPrivateReply(
     let url = "";
     let body: any = {};
 
-    if (platform === "FACEBOOK") {
-      // FB Private Reply endpoint
-      url = `${metaConfig.graphApiUrl}/${commentId}/private_replies?access_token=${token}`;
-      body = { message: content };
-    } else if (platform === "INSTAGRAM") {
-      // Instagram Private Reply uses the normal messages endpoint but with comment_id
+    if (platform === "FACEBOOK" || platform === "INSTAGRAM") {
+      // Both FB and IG Private Replies use the me/messages endpoint with comment_id in recipient
       url = `${metaConfig.graphApiUrl}/me/messages?access_token=${token}`;
       
       if (customButtons && customButtons.length > 0) {
