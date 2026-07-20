@@ -1343,8 +1343,11 @@ async function handleKeywordAutomation(
   const finalizeSanitation = (str: string): string => {
     if (!str) return "";
     let cleaned = str.replace(/[\u200B-\u200D\uFEFF\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, "");
-    // ลบเครื่องหมายคำถาม ? ที่นำหน้าอีโมจิ หรือนำหน้าคำราคา/เช่า/ขาย/Rent/Sale ทุกจุดแบบเด็ดขาด
+    // ลบเครื่องหมายคำถาม ? ที่นำหน้าอีโมจิ
     cleaned = cleaned.replace(/\?\s*([💰🔑💵💸🔥])/g, "$1");
+    // ลบเครื่องหมายคำถาม ? ทุกตัวที่นำหน้าคีย์เวิร์ดราคา (เช่น ?ขาย:, ?เช่า:, ?Rent:)
+    cleaned = cleaned.replace(/\?\s*([a-zA-Z0-9\u0e00-\u0e7f]+)\s*:/g, "$1:");
+    // ลบเครื่องหมายคำถาม ? ที่นำหน้าคำสำคัญราคาอื่นๆ ทั่วไป
     cleaned = cleaned.replace(/\?\s*(เช่า|ขาย|Rent|Sale|เช่า\/ขาย|Rent\/Sale|Price|ราคา)/gi, "$1");
     return cleaned.trim();
   };
