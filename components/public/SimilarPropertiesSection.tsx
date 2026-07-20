@@ -30,7 +30,7 @@ const getCachedSimilarProperties = unstable_cache(
     });
   },
   ["similar-properties-cache"],
-  { revalidate: 3600, tags: ["properties"] },
+  { revalidate: 604800, tags: ["properties"] },
 );
 
 /**

@@ -154,7 +154,7 @@ export async function getPublicProjects(): Promise<PublicProject[]> {
       }).filter((p: any) => p.propertyCount > 0); // กรองเอาเฉพาะโครงการที่มีอสังหาฯ พร้อมขายจริง
     },
     ["public-projects-list-v1"],
-    { revalidate: 3600, tags: ["projects", "properties", "public-data"] }
+    { revalidate: 604800, tags: ["projects", "properties", "public-data"] }
   )();
 }
 
@@ -225,7 +225,7 @@ export async function getProjectBySlug(slug: string): Promise<PublicProject | nu
       };
     },
     ["public-project-by-slug", slug],
-    { revalidate: 3600, tags: ["projects", "public-data"] }
+    { revalidate: 604800, tags: ["projects", "public-data"] }
   )();
 }
 
@@ -286,7 +286,7 @@ export async function getPropertiesInProject(
       };
     },
     ["public-properties-in-project", projectId, JSON.stringify(filters || {})],
-    { revalidate: 3600, tags: ["properties", "public-data"] }
+    { revalidate: 604800, tags: ["properties", "public-data"] }
   )();
 }
 

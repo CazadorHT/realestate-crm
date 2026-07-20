@@ -66,7 +66,7 @@ const getActiveLocations = unstable_cache(
     }
   },
   ["active-property-locations"],
-  { revalidate: 3600, tags: ["active-property-locations"] }
+  { revalidate: 604800, tags: ["active-property-locations"] }
 );
 
 export async function generateMetadata(): Promise<Metadata> {

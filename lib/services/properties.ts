@@ -441,7 +441,7 @@ export const getPublicProperties = cache(async (options: GetPropertiesOptions = 
       },
       [`public-properties-${JSON.stringify(options)}`],
       {
-        revalidate: 86400,
+        revalidate: 604800,
         tags: ["properties", "public-data"],
       }
     )();
@@ -491,6 +491,6 @@ export const getPublicPropertyBySlug = cache(async (slug: string) => {
       };
     },
     ["public-property-by-slug", slug],
-    { revalidate: 86400, tags: ["properties", "public-data"] }
+    { revalidate: 604800, tags: ["properties", "public-data"] }
   )();
 });

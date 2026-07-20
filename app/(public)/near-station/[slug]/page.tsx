@@ -19,7 +19,7 @@ import { StationHero } from "@/components/public/near-station/StationHero";
 import { StationSeoContent } from "@/components/public/near-station/StationSeoContent";
 import { NearbyStationsSection } from "@/components/public/near-station/NearbyStationsSection";
 
-export const revalidate = 86400; // 24 hours (1 day) cache (ISR)
+export const dynamic = "force-dynamic";
 
 const DETAIL_LOCALIZATION: Record<string, Record<string, string>> = {
   breadcrumb_home: {
@@ -127,9 +127,7 @@ const formatStationName = (name: string, lang: string) => {
   return `สถานี${name}`;
 };
 
-export async function generateStaticParams() {
-  return [];
-}
+
 
 export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }

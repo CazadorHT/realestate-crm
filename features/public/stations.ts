@@ -368,7 +368,7 @@ export async function getStationBySlug(slug: string): Promise<StationDetail | nu
       };
     },
     ["public-station-by-slug", slug],
-    { revalidate: 3600, tags: ["stations", "public-data"] }
+    { revalidate: 604800, tags: ["stations", "public-data"] }
   )();
 }
 
@@ -452,7 +452,7 @@ export async function getPropertiesNearStation(
       };
     },
     ["public-properties-near-station", stationNameTh, stationNameEn, JSON.stringify(filters || {})],
-    { revalidate: 3600, tags: ["properties", "stations", "public-data"] }
+    { revalidate: 604800, tags: ["properties", "stations", "public-data"] }
   )();
 }
 

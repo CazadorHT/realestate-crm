@@ -143,7 +143,7 @@ export async function getAreaBySlug(slug: string): Promise<PublicAreaDetail | nu
       };
     },
     ["public-area-by-slug", slug],
-    { revalidate: 3600, tags: ["popular-areas", "public-data"] }
+    { revalidate: 604800, tags: ["popular-areas", "public-data"] }
   )();
 }
 
@@ -222,7 +222,7 @@ export async function getAreaMarketInsights(areaNameTh: string): Promise<AreaMar
       };
     },
     ["public-area-market-insights", areaNameTh],
-    { revalidate: 3600, tags: ["popular-areas", "public-data"] }
+    { revalidate: 604800, tags: ["popular-areas", "public-data"] }
   )();
 }
 
@@ -369,7 +369,7 @@ export async function getTransitAndProjectsInArea(
       };
     },
     ["public-transit-and-projects-in-area", areaNameTh],
-    { revalidate: 3600, tags: ["popular-areas", "public-data"] }
+    { revalidate: 604800, tags: ["popular-areas", "public-data"] }
   )();
 }
 
@@ -448,7 +448,7 @@ export async function getPopularAreas(limit = 6): Promise<any[]> {
       return result;
     },
     ["public-popular-areas", String(limit)],
-    { revalidate: 3600, tags: ["popular-areas", "public-data"] }
+    { revalidate: 604800, tags: ["popular-areas", "public-data"] }
   )();
 }
 
@@ -529,7 +529,7 @@ export async function getRelatedAreas(excludeId: string, limit = 50): Promise<an
       return result;
     },
     ["public-related-areas", excludeId, String(limit)],
-    { revalidate: 3600, tags: ["popular-areas", "public-data"] }
+    { revalidate: 604800, tags: ["popular-areas", "public-data"] }
   )();
 }
 
@@ -587,6 +587,6 @@ export async function getPropertiesInArea(
       }) as PublicPropertyNearStation[];
     },
     ["public-properties-in-area", areaNameTh],
-    { revalidate: 3600, tags: ["properties", "public-data"] }
+    { revalidate: 604800, tags: ["properties", "public-data"] }
   )();
 }

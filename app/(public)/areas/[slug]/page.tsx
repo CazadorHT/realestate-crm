@@ -19,11 +19,7 @@ import { AreaProjectsCarousel } from "@/components/public/AreaProjectsCarousel";
 import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
 import { getProvinceName } from "@/lib/utils/provinces";
 
-export const revalidate = 86400; // 24 hours (1 day) cache (ISR)
-
-export async function generateStaticParams() {
-  return [];
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }

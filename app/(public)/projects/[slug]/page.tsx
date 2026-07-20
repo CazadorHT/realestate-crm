@@ -16,7 +16,7 @@ import { ProjectFacilitiesCard } from "@/components/public/project-detail/Projec
 import { ProjectLocationMapCard } from "@/components/public/project-detail/ProjectLocationMapCard";
 import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
 
-export const revalidate = 86400; // 24 hours (1 day) cache (ISR)
+export const dynamic = "force-dynamic";
 
 const DETAIL_LOCALIZATION: Record<string, Record<string, string>> = {
   breadcrumb_home: { th: "หน้าแรก", en: "Home", cn: "首页", ru: "Главная" },
@@ -39,9 +39,7 @@ const DETAIL_LOCALIZATION: Record<string, Record<string, string>> = {
   view_project: { th: "ดูโครงการ", en: "View Project", cn: "查看项目", ru: "Посмотреть проект" },
 };
 
-export async function generateStaticParams() {
-  return [];
-}
+
 
 export async function generateMetadata(
   props: { params: Promise<{ slug: string }> }
