@@ -1025,7 +1025,9 @@ function replaceTemplateTags(text: string, propertyData: any, dynamicValues: any
 
   let cleanResult = resultText.replace(/[\u200B-\u200D\uFEFF]/g, "").trim();
   // ลบเครื่องหมายคำถามที่อาจแฝงมาเนื่องจากอักขระพิเศษถอดรหัสไม่สมบูรณ์
-  cleanResult = cleanResult.replace(/\?\s*([💰🔑💵💸🔥])/g, "$1");
+  cleanResult = cleanResult.replace(/\?\s*([💰🔑💵💸🔥🔴🟢🔵🟡🏷️🔄📢🏠🏡✨⚡⭐🌟📌📍👇])/g, "$1");
+  cleanResult = cleanResult.replace(/\?\s*(\[.*?\])/g, "$1");
+  cleanResult = cleanResult.replace(/\?\s*([a-zA-Z0-9\u0e00-\u0e7f]+)\s*:/g, "$1:");
   cleanResult = cleanResult.replace(/\?\s*(เช่า|ขาย|Rent|Sale|เช่า\/ขาย|Rent\/Sale|Price|ราคา)/gi, "$1");
   return cleanResult;
 }
@@ -1199,27 +1201,27 @@ async function handleKeywordAutomation(
     let priceTag = "";
     const formatSale = (price: number, original?: number) => {
       if (original && original > price) {
-        return lang === "th"
-          ? "\u0e25\u0e14\u0e1e\u0e34\u0e40\u0e28\u0e29! " + price.toLocaleString() + " \u0e1a\u0e32\u0e17 (\u0e0a\u0e32\u0e01 " + original.toLocaleString() + " \u0e3f)"
+        return "💰 " + (lang === "th"
+          ? "ลดพิเศษ! " + price.toLocaleString() + " บาท (จาก " + original.toLocaleString() + " ฿)"
           : lang === "en"
-            ? "Hot Deal! " + price.toLocaleString() + " THB (Was " + original.toLocaleString() + " \u0e3f)"
+            ? "Hot Deal! " + price.toLocaleString() + " THB (Was " + original.toLocaleString() + " ฿)"
             : lang === "ru"
-              ? "\u0413\u043e\u0440\u044f\u0447\u0435\u0435 \u043f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u0435! " + price.toLocaleString() + " THB (\u0411\u044b\u043b\u043e " + original.toLocaleString() + " \u0e3f)"
-              : "\u7279\u4ef7! " + price.toLocaleString() + " \u6cf0\u94e2 (\u539f\u4ef7 " + original.toLocaleString() + " \u0e3f)";
+              ? "Горячее предложение! " + price.toLocaleString() + " THB (Было " + original.toLocaleString() + " ฿)"
+              : "特价! " + price.toLocaleString() + " 泰铢 (原价 " + original.toLocaleString() + " ฿)");
       }
-      return `${tSale}: ${price.toLocaleString()} ${tBaht}`;
+      return `💰 ${tSale}: ${price.toLocaleString()} ${tBaht}`;
     };
     const formatRent = (price: number, original?: number) => {
       if (original && original > price) {
-        return lang === "th"
-          ? "\u0e14\u0e35\u0e25\u0e14\u0e35! \u0e40\u0e0a\u0e48\u0e32 " + price.toLocaleString() + " \u0e1a\u0e32\u0e17/\u0e40\u0e14\u0e37\u0e2d\u0e19 (\u0e0a\u0e32\u0e01 " + original.toLocaleString() + " \u0e3f)"
+        return "💸 " + (lang === "th"
+          ? "ดีลดลดดี! เช่า " + price.toLocaleString() + " บาท/เดือน (จาก " + original.toLocaleString() + " ฿)"
           : lang === "en"
-            ? "Great Deal! Rent " + price.toLocaleString() + " THB/mo (Was " + original.toLocaleString() + " \u0e3f)"
+            ? "Great Deal! Rent " + price.toLocaleString() + " THB/mo (Was " + original.toLocaleString() + " ฿)"
             : lang === "ru"
-              ? "\u041e\u0442\u043b\u0438\u0447\u043d\u043e\u0435 \u043f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u0435! \u0410\u0440\u0435\u043d\u0434\u0430 " + price.toLocaleString() + " THB/mo (\u0411\u044b\u043b\u043e " + original.toLocaleString() + " \u0e3f)"
-              : "\u4e18\u9009! \u79df\u91d1 " + price.toLocaleString() + " \u6cf0\u94e2/\u6708 (\u539f\u4ef7 " + original.toLocaleString() + " \u0e3f)";
+              ? "Отличное предложение! Аренда " + price.toLocaleString() + " THB/mo (Было " + original.toLocaleString() + " ฿)"
+              : "优选! 租金 " + price.toLocaleString() + " 泰铢/月 (原价 " + original.toLocaleString() + " ฿)");
       }
-      return `${tRent}: ${price.toLocaleString()} ${tBaht}${tPerMonth}`;
+      return `💸 ${tRent}: ${price.toLocaleString()} ${tBaht}${tPerMonth}`;
     };
 
     // Smart Price Detection (Matches social.ts)
@@ -1344,9 +1346,11 @@ async function handleKeywordAutomation(
     if (!str) return "";
     let cleaned = str.replace(/[\u200B-\u200D\uFEFF\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, "");
     // ลบเครื่องหมายคำถาม ? ที่นำหน้าอีโมจิ
-    cleaned = cleaned.replace(/\?\s*([💰🔑💵💸🔥])/g, "$1");
+    cleaned = cleaned.replace(/\?\s*([💰🔑💵💸🔥🔴🟢🔵🟡🏷️🔄📢🏠🏡✨⚡⭐🌟📌📍👇])/g, "$1");
     // ลบเครื่องหมายคำถาม ? ทุกตัวที่นำหน้าคีย์เวิร์ดราคา (เช่น ?ขาย:, ?เช่า:, ?Rent:)
     cleaned = cleaned.replace(/\?\s*([a-zA-Z0-9\u0e00-\u0e7f]+)\s*:/g, "$1:");
+    // ลบเครื่องหมายคำถาม ? ที่นำหน้าวงเล็บเหลี่ยม (เช่น ?[ขาย/เช่า])
+    cleaned = cleaned.replace(/\?\s*(\[.*?\])/g, "$1");
     // ลบเครื่องหมายคำถาม ? ที่นำหน้าคำสำคัญราคาอื่นๆ ทั่วไป
     cleaned = cleaned.replace(/\?\s*(เช่า|ขาย|Rent|Sale|เช่า\/ขาย|Rent\/Sale|Price|ราคา)/gi, "$1");
     return cleaned.trim();
