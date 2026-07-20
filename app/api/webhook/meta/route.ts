@@ -1144,15 +1144,17 @@ async function handleKeywordAutomation(
   }
 
   // 4. Prepare Message Content
-  let dmContent = match.dm_content;
-  let publicReply = match.public_reply;
+  // ล้างอักขระซ่อนเร้น BOM/Zero-width space ทันทีที่ดึงมาจาก DB เพื่อป้องกันปัญหาถอดรหัสล้มเหลวกลายเป็นเครื่องหมายคำถาม
+  let dmContent = (match.dm_content || "").replace(/[\u200B-\u200D\uFEFF]/g, "");
+  let publicReply = (match.public_reply || "").replace(/[\u200B-\u200D\uFEFF]/g, "");
+  
   if (match.public_replies && match.public_replies.length > 0) {
     const validReplies = match.public_replies.filter(Boolean);
     if (validReplies.length > 0) {
-      publicReply = validReplies[Math.floor(Math.random() * validReplies.length)];
+      const picked = validReplies[Math.floor(Math.random() * validReplies.length)];
+      publicReply = (picked || "").replace(/[\u200B-\u200D\uFEFF]/g, "");
     }
   }
-  // Do not re-detect language from dmContent to prevent overrides from Thai property variables
 
   if (propertyData) {
     // Price logic
