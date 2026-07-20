@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { NextRequest, NextResponse } from "next/server";
 import { metaConfig } from "@/lib/meta-config";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -1336,9 +1339,19 @@ async function handleKeywordAutomation(
     });
   };
 
-  dmContent = parseSpintax(dmContent);
+  // ฟังก์ชันช่วยล้างอักขระพิเศษ/BOM/Zero-Width Space ที่อาจหลงเหลือจากการเข้ารหัสรอบสุดท้าย
+  const finalizeSanitation = (str: string): string => {
+    if (!str) return "";
+    let cleaned = str.replace(/[\u200B-\u200D\uFEFF\u00A0\u2000-\u200A\u202F\u205F\u3000]/g, "");
+    // ลบเครื่องหมายคำถาม ? ที่นำหน้าอีโมจิ หรือนำหน้าคำราคา/เช่า/ขาย/Rent/Sale ทุกจุดแบบเด็ดขาด
+    cleaned = cleaned.replace(/\?\s*([💰🔑💵💸🔥])/g, "$1");
+    cleaned = cleaned.replace(/\?\s*(เช่า|ขาย|Rent|Sale|เช่า\/ขาย|Rent\/Sale|Price|ราคา)/gi, "$1");
+    return cleaned.trim();
+  };
+
+  dmContent = finalizeSanitation(parseSpintax(dmContent));
   if (publicReply) {
-    publicReply = parseSpintax(publicReply);
+    publicReply = finalizeSanitation(parseSpintax(publicReply));
   }
 
   // 5. Send Private Reply (DM)

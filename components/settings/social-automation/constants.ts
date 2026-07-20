@@ -6,7 +6,7 @@ export const MOCK_PROPERTY_DATA = {
   rental_price: "65,000 บาท/เดือน",
   original_sale_price: "18,500,000 บาท",
   original_rental_price: "75,000 บาท/เดือน",
-  price_tag: "🔥 ลดพิเศษ! 15,900,000 บาท (จาก 18,500,000 - ลด 14%)",
+  price_tag: "ลดพิเศษ! 15,900,000 บาท (จาก 18,500,000 - ลด 14%)",
   bedrooms: "2",
   bathrooms: "2",
   size_sqm: "85",
