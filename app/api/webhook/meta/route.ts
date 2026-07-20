@@ -979,10 +979,9 @@ async function handleKeywordAutomation(
   // 4. Prepare Message Content
   let dmContent = match.dm_content;
   let publicReply = match.public_reply;
+  const lang = detectLanguage(dmContent);
 
   if (propertyData) {
-    const lang = detectLanguage(dmContent);
-
     // Price logic
     const tSale = lang === "th" ? "ขาย" : lang === "en" ? "Sale" : lang === "ru" ? "Продажа" : "售价";
     const tRent = lang === "th" ? "เช่า" : lang === "en" ? "Rent" : lang === "ru" ? "Аренда" : "租金";
@@ -1132,7 +1131,7 @@ async function handleKeywordAutomation(
     const dynamicValues = {
       priceTag, priceText, originalPriceText, salePrice, rentPrice,
       originalSalePrice, originalRentPrice, detailsSummary, amenities,
-      nearbyPlaces, nearbyTransits, link, primaryAgent
+      nearbyPlaces, nearbyTransits, link: platform === "INSTAGRAM" ? "" : link, primaryAgent
     };
 
     dmContent = replaceTemplateTags(dmContent, propertyData, dynamicValues, lang);
@@ -1161,8 +1160,14 @@ async function handleKeywordAutomation(
   }
 
   // 5. Send Private Reply (DM)
-  const dmRes = await sendPrivateReply(commentId, dmContent, platform);
-
+  let dmRes;
+  if (propertyData && platform === "INSTAGRAM") {
+    const buttonUrl = `${process.env.NEXT_PUBLIC_SITE_URL || ""}/properties/${propertyData.slug || propertyData.id}`;
+    const buttonTitle = lang === "th" ? "ดูรายละเอียด" : lang === "cn" ? "查看详情" : lang === "ru" ? "Подробнее" : "View Details";
+    dmRes = await sendPrivateReply(commentId, dmContent, platform, buttonUrl, buttonTitle);
+  } else {
+    dmRes = await sendPrivateReply(commentId, dmContent, platform);
+  }
   if (dmRes.success && senderId) {
     // 6. Media Support (Albums)
     if (propertyData && propertyData.images) {
@@ -1180,13 +1185,18 @@ async function handleKeywordAutomation(
         await sendMetaCarousel(senderId, carouselElements, platform);
       }
     }
-
-    // 6. Public Reply (if configured)
-    if (publicReply) {
-      await replyToMetaComment(commentId, publicReply);
-    }
   } else {
     console.error(`Failed to send private reply for ${platform}:`, dmRes.error);
+  }
+
+  // 6. Public Reply (if configured)
+  if (publicReply) {
+    const commentRes = await replyToMetaComment(commentId, publicReply);
+    if (!commentRes.success) {
+      console.error(`[Meta Webhook] Failed to reply to comment ${commentId}:`, commentRes.error);
+    } else {
+      console.log(`[Meta Webhook] Successfully replied to comment ${commentId}`);
+    }
   }
 }
 

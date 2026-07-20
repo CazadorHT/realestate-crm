@@ -134,7 +134,7 @@ export async function sendMetaMedia(
 }
 
 /**
- * Send Carousel (Generic Template) to FB or multiple images to IG
+ * Send Carousel (Generic Template) to FB or Instagram
  */
 export async function sendMetaCarousel(
   psid: string,
@@ -151,20 +151,24 @@ export async function sendMetaCarousel(
   if (!token)
     return { success: false, error: "ไม่พบ Token สำหรับการเชื่อมต่อ" };
 
-  // Instagram doesn't support Generic Template (Carousel) in the same way FB does via API
-  // Best practice for IG is to send separate images
-  if (platform === "INSTAGRAM") {
-    // Limit to first 5 images for IG to avoid spamming
-    const images = elements.slice(0, 5);
-    for (const item of images) {
-      await sendMetaMedia(psid, item.image_url, "image", "INSTAGRAM");
-    }
-    return { success: true };
-  }
-
-  // Facebook Generic Template
   try {
     const url = `${metaConfig.graphApiUrl}/me/messages?access_token=${token}`;
+    
+    // Map elements to the correct structure for Meta API
+    const genericElements = elements.slice(0, 10).map((item) => ({
+      title: item.title.substring(0, 80),
+      subtitle: item.subtitle?.substring(0, 80),
+      image_url: item.image_url,
+      default_action: item.default_action,
+      buttons: item.buttons || [
+        {
+          type: "web_url",
+          url: item.default_action?.url || "",
+          title: platform === "INSTAGRAM" ? "ดูรายละเอียด" : "View Details",
+        }
+      ],
+    }));
+
     const response = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -175,7 +179,7 @@ export async function sendMetaCarousel(
             type: "template",
             payload: {
               template_type: "generic",
-              elements: elements.slice(0, 20), // FB Carousel max 20
+              elements: genericElements,
             },
           },
         },
@@ -352,6 +356,8 @@ export async function sendPrivateReply(
   commentId: string,
   content: string,
   platform: MetaPlatform,
+  buttonUrl?: string,
+  buttonTitle?: string,
 ): Promise<MetaApiResponse> {
   const token = await getActiveToken();
   if (!token)
@@ -368,10 +374,33 @@ export async function sendPrivateReply(
     } else if (platform === "INSTAGRAM") {
       // Instagram Private Reply uses the normal messages endpoint but with comment_id
       url = `${metaConfig.graphApiUrl}/me/messages?access_token=${token}`;
-      body = {
-        recipient: { comment_id: commentId },
-        message: { text: content },
-      };
+      
+      if (buttonUrl && buttonTitle) {
+        body = {
+          recipient: { comment_id: commentId },
+          message: {
+            attachment: {
+              type: "template",
+              payload: {
+                template_type: "button",
+                text: content.substring(0, 640), // Meta button template text limit is 640 chars
+                buttons: [
+                  {
+                    type: "web_url",
+                    url: buttonUrl,
+                    title: buttonTitle.substring(0, 20), // Button title limit is 20 chars
+                  }
+                ]
+              }
+            }
+          }
+        };
+      } else {
+        body = {
+          recipient: { comment_id: commentId },
+          message: { text: content },
+        };
+      }
     } else {
       return {
         success: false,
