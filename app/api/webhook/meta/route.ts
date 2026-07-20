@@ -1084,7 +1084,7 @@ async function handleKeywordAutomation(
   );
 
   const isDirectDM = !postId;
-  let lang = detectLanguage(match.dm_content);
+  let lang = match.language || detectLanguage(match.dm_content || "");
 
   // 2.1 Follow Gate Check
   if (settings.follow_gate_enabled && platform === "INSTAGRAM" && senderId) {
@@ -1153,7 +1153,7 @@ async function handleKeywordAutomation(
       publicReply = validReplies[Math.floor(Math.random() * validReplies.length)];
     }
   }
-  lang = detectLanguage(dmContent);
+  // Do not re-detect language from dmContent to prevent overrides from Thai property variables
 
   if (propertyData) {
     // Price logic
