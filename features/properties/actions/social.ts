@@ -1122,9 +1122,9 @@ export async function postPropertyToMetaAction(
     } else {
       return { success: false, message: `ข้อผิดพลาด: ${result.error}` };
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error("postPropertyToMetaAction error:", err);
-    return { success: false, message: "เกิดข้อผิดพลาดในการเชื่อมต่อ" };
+    return { success: false, message: `เกิดข้อผิดพลาด: ${err?.message || err || "ในการเชื่อมต่อ"}` };
   }
 }
 
