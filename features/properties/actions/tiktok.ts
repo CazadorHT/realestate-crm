@@ -76,14 +76,6 @@ export async function postPropertyToTikTokAction(
     const supportedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
     
     // Get the current app URL for the image proxy
-    // We prefer NEXT_PUBLIC_SUPABASE_URL domain for verification, 
-    // but the proxy is on the App domain.
-    const { headers } = await import("next/headers");
-    const reqHost = (await headers()).get("host") || "";
-    const isLocalhost = reqHost.includes("localhost") || reqHost.includes("127.0.0.1");
-    const productionDomain = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://vccasset.com";
-    const appUrl = isLocalhost || !reqHost ? productionDomain.replace(/\/$/, "") : `https://${reqHost}`;
-
     const imagesToPost = rawImages
       .map(url => {
         const cleanUrl = url.split("?")[0].toLowerCase();
@@ -92,9 +84,9 @@ export async function postPropertyToTikTokAction(
         
         if (isCompatible) return url;
         
-        // If it's WebP, route it through our magic proxy converter
-        if (isWebp && appUrl) {
-          return `${appUrl}/api/proxy/image?url=${encodeURIComponent(url)}`;
+        // Serve WebP directly via Render Endpoint with format=origin (100% Free - zero transformation quota used)
+        if (isWebp && url.includes("/storage/v1/object/public/")) {
+          return url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + "?format=origin";
         }
         
         return null;
