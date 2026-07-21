@@ -39,7 +39,7 @@ export function AgendaList({ agenda = [], role, view = "personal" }: AgendaListP
   const isAdminView = (role === "ADMIN" || role === "MANAGER" || role === "OWNER") && view !== "personal";
 
   return (
-    <Card className="shadow-sm min-h-[350px] max-h-[520px] h-auto border-slate-200 overflow-hidden flex flex-col rounded-3xl transition-all duration-500">
+    <Card className="shadow-sm min-h-[250px] max-h-[520px] h-auto border-slate-200 overflow-hidden flex flex-col rounded-3xl transition-all duration-500">
       <CardHeader className="pb-3 border-b border-slate-50 shrink-0">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base font-bold flex items-center gap-2 text-slate-800">
@@ -57,7 +57,7 @@ export function AgendaList({ agenda = [], role, view = "personal" }: AgendaListP
       <CardContent className="p-0 flex-1 overflow-y-auto custom-scrollbar relative">
         <div className="px-6 py-5">
           {agenda.length === 0 ? (
-            <div className="h-32 flex flex-col items-center justify-center text-center space-y-2">
+            <div className="flex flex-col items-center justify-center text-center space-y-2">
               <div className="p-3 bg-slate-50 rounded-full">
                 <Clock className="h-6 w-6 text-slate-300" />
               </div>

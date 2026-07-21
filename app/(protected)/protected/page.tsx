@@ -320,6 +320,34 @@ export default async function DashboardPage(props: {
                       </Suspense>
                     </ErrorBoundary>
                   )}
+                  {/* การจัดการรายวัน */}
+              <ErrorBoundary fallback={<MiniErrorFallback />}>
+                <Suspense
+                  fallback={
+                    <div className="h-40 animate-shimmer bg-slate-50 rounded-3xl" />
+                  }
+                >
+                  <UpcomingEventsWrapper
+                    promise={upcomingPromise}
+                    role={profile?.role}
+                    view={view}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+              <ErrorBoundary fallback={<MiniErrorFallback />}>
+                <Suspense
+                  fallback={
+                    <div className="h-40 animate-shimmer bg-slate-50 rounded-3xl" />
+                  }
+                >
+                  <AgendaWrapper
+                    promise={agendaPromise}
+                    role={profile?.role}
+                    view={view}
+                  />
+                </Suspense>
+              </ErrorBoundary>
+              
                 </>
               ) : (
                 <div className="p-8 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col items-center justify-center text-center">
@@ -359,34 +387,6 @@ export default async function DashboardPage(props: {
                   />
                 </Suspense>
               </ErrorBoundary>
-
-              {/* การจัดการรายวัน */}
-              <ErrorBoundary fallback={<MiniErrorFallback />}>
-                <Suspense
-                  fallback={
-                    <div className="h-40 animate-shimmer bg-slate-50 rounded-3xl" />
-                  }
-                >
-                  <UpcomingEventsWrapper
-                    promise={upcomingPromise}
-                    role={profile?.role}
-                    view={view}
-                  />
-                </Suspense>
-              </ErrorBoundary>
-              <ErrorBoundary fallback={<MiniErrorFallback />}>
-                <Suspense
-                  fallback={
-                    <div className="h-40 animate-shimmer bg-slate-50 rounded-3xl" />
-                  }
-                >
-                  <AgendaWrapper
-                    promise={agendaPromise}
-                    role={profile?.role}
-                    view={view}
-                  />
-                </Suspense>
-              </ErrorBoundary>
               <ErrorBoundary fallback={<MiniErrorFallback />}>
                 <Suspense
                   fallback={
@@ -400,6 +400,7 @@ export default async function DashboardPage(props: {
                   />
                 </Suspense>
               </ErrorBoundary>
+              
             </div>
           </div>
         </MotionStaggerItem>
