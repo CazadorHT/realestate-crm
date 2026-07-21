@@ -5,7 +5,7 @@ import { type Language } from "@/lib/i18n";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, AlertCircle, ImageIcon, Settings, Zap, X } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, ImageIcon, Settings, Zap, X, Copy, Edit } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Link from "next/link";
@@ -16,6 +16,8 @@ import {
 import { postPropertyToLineAction } from "@/features/properties/actions/line";
 import { postPropertyToTikTokAction, getTikTokPostStatusAction } from "@/features/properties/actions/tiktok";
 import { FaFacebook, FaInstagram, FaLine, FaTiktok } from "react-icons/fa";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { startProcess, finishProcess } from "@/lib/process-monitor";
 import { v4 as uuidv4 } from "uuid";
@@ -91,6 +93,8 @@ export function SocialPostDialog({
 }: SocialPostDialogProps) {
   const isMobile = useIsMobile();
   const [content, setContent] = useState("");
+  const [isCustomContent, setIsCustomContent] = useState(false);
+  const [customContent, setCustomContent] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [previewData, setPreviewData] = useState<Record<string, any> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -103,6 +107,8 @@ export function SocialPostDialog({
   const [publishId, setPublishId] = useState<string | null>(null);
   const [tiktokStatus, setTiktokStatus] = useState<Record<string, any> | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(false);
+
+  const activeContent = isCustomContent ? customContent : content;
 
   const loadContent = useCallback(async () => {
     if (!isOpen || !propertyId || selectedLangs.length === 0) return;
@@ -148,14 +154,40 @@ export function SocialPostDialog({
     }
   }, [isOpen, propertyId, selectedLangs, platform]);
 
-  const langsString = selectedLangs.join(",");
   useEffect(() => {
     if (isOpen && propertyId) {
       setStatus("IDLE");
       setResultMessage("");
+      
+      // Load saved draft if exists
+      const savedDraft = localStorage.getItem(`social_post_draft:${propertyId}:${platform}`);
+      if (savedDraft) {
+        setCustomContent(savedDraft);
+        setIsCustomContent(true);
+      } else {
+        setIsCustomContent(false);
+        setCustomContent("");
+      }
+    }
+  }, [isOpen, propertyId, platform]);
+
+  const langsString = selectedLangs.join(",");
+  useEffect(() => {
+    if (isOpen && propertyId) {
       loadContent();
     }
   }, [isOpen, propertyId, langsString, platform, loadContent]);
+
+  // Save custom content drafts to localStorage
+  useEffect(() => {
+    if (isOpen && propertyId) {
+      if (isCustomContent && customContent) {
+        localStorage.setItem(`social_post_draft:${propertyId}:${platform}`, customContent);
+      } else {
+        localStorage.removeItem(`social_post_draft:${propertyId}:${platform}`);
+      }
+    }
+  }, [customContent, isCustomContent, isOpen, propertyId, platform]);
 
   const toggleLang = (l: Language) => {
     setSelectedLangs((prev) =>
@@ -179,19 +211,19 @@ export function SocialPostDialog({
         res = await postPropertyToMetaAction(
           propertyId,
           platform,
-          content,
+          activeContent,
           selectedLangs[0] || "th"
         );
       } else if (platform === "LINE") {
         res = await postPropertyToLineAction(
           propertyId,
-          content,
+          activeContent,
           selectedLangs[0] || "th"
         );
       } else if (platform === "TIKTOK") {
         res = await postPropertyToTikTokAction(
           propertyId,
-          content,
+          activeContent,
           selectedLangs[0] || "th"
         );
       }
@@ -200,6 +232,10 @@ export function SocialPostDialog({
         finishProcess(processId, "SUCCESS", res.message || "โพสต์สำเร็จเรียบร้อย ✨");
         setStatus("SUCCESS");
         setResultMessage(res.message || "โพสต์สำเร็จเรียบร้อย");
+        
+        // Clear saved draft on success
+        localStorage.removeItem(`social_post_draft:${propertyId}:${platform}`);
+        
         if (platform === "TIKTOK" && res.publish_id) {
           setPublishId(res.publish_id);
         }
@@ -302,6 +338,51 @@ export function SocialPostDialog({
                   </div>
                 </div>
 
+                {/* Custom Content Options */}
+                <div className="space-y-3 pt-2 border-t border-slate-100">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="mobile-custom-content"
+                      checked={isCustomContent}
+                      onCheckedChange={(checked) => setIsCustomContent(!!checked)}
+                    />
+                    <Label
+                      htmlFor="mobile-custom-content"
+                      className="text-sm font-semibold text-slate-700 cursor-pointer select-none"
+                    >
+                      เขียนเนื้อหาเอง (Custom Content)
+                    </Label>
+                  </div>
+
+                  {isCustomContent && (
+                    <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-bold text-slate-500 uppercase tracking-[2px] ml-1">
+                          Custom Content
+                        </Label>
+                        {content && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            type="button"
+                            onClick={() => setCustomContent(content)}
+                            className="h-7 px-2 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1 rounded-lg"
+                          >
+                            <Copy className="h-3 w-3" />
+                            คัดลอกข้อความเทมเพลต
+                          </Button>
+                        )}
+                      </div>
+                      <Textarea
+                        placeholder="กรอกเนื้อหาโพสต์ที่นี่..."
+                        value={customContent}
+                        onChange={(e) => setCustomContent(e.target.value)}
+                        className="min-h-[120px] text-sm"
+                      />
+                    </div>
+                  )}
+                </div>
+
                 {/* Preview Section */}
                 <div className="space-y-3">
                   <Label className="text-xs font-bold text-slate-500 uppercase tracking-[2px] ml-1">
@@ -330,7 +411,7 @@ export function SocialPostDialog({
                         {status === "POSTING" ? "กำลังทำการโพสต์..." : "กำลังเตรียมข้อมูล..."}
                       </p>
                     </div>
-                  ) : !content && platform !== "LINE" ? (
+                  ) : !isCustomContent && !content && platform !== "LINE" ? (
                     <div className="py-12 px-6 rounded-2xl border border-dashed border-orange-200 bg-orange-50/50 flex flex-col items-center text-center space-y-4 animate-in fade-in duration-300">
                       <div className="h-14 w-14 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center shadow-sm">
                         <Settings className="h-7 w-7" />
@@ -352,11 +433,11 @@ export function SocialPostDialog({
                       {platform === "LINE" && previewData ? (
                         <LinePreview images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
                       ) : platform === "FACEBOOK" ? (
-                        <FacebookPreview content={content} images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
+                        <FacebookPreview content={activeContent} images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
                       ) : platform === "INSTAGRAM" ? (
-                        <InstagramPreview content={content} images={images} previewData={previewData} />
+                        <InstagramPreview content={activeContent} images={images} previewData={previewData} />
                       ) : (
-                        <GenericPreview content={content} images={images} />
+                        <GenericPreview content={activeContent} images={images} />
                       )}
                     </div>
                   )}
@@ -419,7 +500,7 @@ export function SocialPostDialog({
                   
                   <Button
                     className={cn("flex-1 h-12 rounded-2xl font-bold text-white shadow-lg gap-2", config.btnColor)}
-                    disabled={isLoading || status === "POSTING" || !isConnected || (platform !== "LINE" && content.length === 0)}
+                    disabled={isLoading || status === "POSTING" || !isConnected || (platform !== "LINE" && activeContent.length === 0)}
                     onClick={handlePost}
                   >
                     {status === "POSTING" ? (
@@ -444,7 +525,7 @@ export function SocialPostDialog({
       open={isOpen}
       onOpenChange={onOpenChange}
       className={cn(
-        "sm:max-w-[90vw] md:max-w-[700px] lg:max-w-[900px] xl:max-w-[950px] ",
+        "sm:max-w-[95vw] md:max-w-[850px] lg:max-w-[1100px] xl:max-w-[1250px]",
         className
       )}
       snapPoints={["0.7", "0.95"]}
@@ -466,12 +547,31 @@ export function SocialPostDialog({
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-slate-100/80 border border-slate-200">
-              <span className="text-[9px] uppercase tracking-[2px] font-bold text-slate-500">
-                {selectedLangs.join(" + ").toUpperCase()}
-              </span>
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          <div className="flex items-center gap-2 mr-6 xs:mr-8">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200">
+              {[
+                { id: "th", label: "TH", flag: "🇹🇭" },
+                { id: "en", label: "EN", flag: "🇺🇸" },
+                { id: "cn", label: "CN", flag: "🇨🇳" },
+                { id: "ru", label: "RU", flag: "🇷🇺" },
+              ].map((l) => {
+                const isActive = selectedLangs.includes(l.id as any);
+                return (
+                  <button
+                    key={l.id}
+                    onClick={() => toggleLang(l.id as any)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs xs:text-sm transition-all duration-200 font-bold",
+                      isActive
+                        ? "bg-white border border-slate-200 shadow-xs text-slate-800"
+                        : "text-slate-400 hover:text-slate-600"
+                    )}
+                  >
+                    <span className="text-sm xs:text-base">{l.flag}</span>
+                    <span>{l.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -518,7 +618,7 @@ export function SocialPostDialog({
                       : "bg-pink-600 hover:bg-pink-700",
               )}
               onClick={handlePost}
-              disabled={isLoading || status === "POSTING" || !isConnected || (platform !== "LINE" && content.length === 0)}
+              disabled={isLoading || status === "POSTING" || !isConnected || (platform !== "LINE" && activeContent.length === 0)}
             >
               {status === "POSTING" ? (
                 <Loader2 className="h-5 w-5 animate-spin" />
@@ -531,40 +631,68 @@ export function SocialPostDialog({
         </div>
       }
     >
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-4 md:gap-6 lg:gap-8 py-2">
+      <div className="grid grid-cols-1 md:grid-cols-[1.1fr_1fr] gap-4 md:gap-6 lg:gap-8 py-2">
         {/* Left Column: Settings/Info */}
         <div className="space-y-4 xs:space-y-6">
-          <div className="space-y-3">
-            <Label className="text-xs font-bold text-slate-500 uppercase tracking-[2px] ml-1">
-              Language Selection
-            </Label>
-            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2 xs:gap-3">
-              {[
-                { id: "th", label: "Thai", flag: "🇹🇭" },
-                { id: "en", label: "English", flag: "🇺🇸" },
-                { id: "cn", label: "Chinese", flag: "🇨🇳" },
-                { id: "ru", label: "Russian", flag: "🇷🇺" },
-              ].map((l) => {
-                const isActive = selectedLangs.includes(l.id as any);
-                return (
-                  <button
-                    key={l.id}
-                    onClick={() => toggleLang(l.id as any)}
-                    className={cn(
-                      "flex flex-col items-center gap-1 py-1.5 xs:py-3 px-1 xs:px-2 rounded-xl border transition-all duration-200",
-                      isActive
-                        ? "bg-blue-50 border-blue-200 shadow-sm text-blue-700"
-                        : "bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100"
-                    )}
-                  >
-                    <span className="text-xl xs:text-2xl">{l.flag}</span>
-                    <span className="text-[8px] xs:text-[10px] uppercase font-bold tracking-wider">
-                      {l.label}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+          {/* Custom Content Options */}
+          <div className="space-y-4">
+            <button
+              type="button"
+              onClick={() => setIsCustomContent(!isCustomContent)}
+              className={cn(
+                "flex items-center justify-between w-full p-4 rounded-2xl border transition-all duration-300 text-left shadow-sm",
+                isCustomContent
+                  ? "bg-blue-50/60 border-blue-200 text-blue-900"
+                  : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50/50"
+              )}
+            >
+              <div className="flex items-center gap-3">
+                <div className={cn(
+                  "p-2 rounded-xl transition-colors duration-300",
+                  isCustomContent ? "bg-blue-500 text-white" : "bg-slate-100 text-slate-500"
+                )}>
+                  <Edit className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold">เขียนเนื้อหาเอง (Custom Content)</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">พิมพ์ข้อความอิสระโดยไม่ใช้เทมเพลตระบบ</p>
+                </div>
+              </div>
+              <div className={cn(
+                "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-300",
+                isCustomContent ? "border-blue-500 bg-blue-500" : "border-slate-300 bg-white"
+              )}>
+                {isCustomContent && <div className="w-1.5 h-1.5 rounded-full bg-white animate-scale-in" />}
+              </div>
+            </button>
+
+            {isCustomContent && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-bold text-slate-500 uppercase tracking-[2px] ml-1">
+                    Custom Content
+                  </Label>
+                  {content && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      type="button"
+                      onClick={() => setCustomContent(content)}
+                      className="h-7 px-2 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 gap-1 rounded-lg"
+                    >
+                      <Copy className="h-3 w-3" />
+                      คัดลอกข้อความเทมเพลต
+                    </Button>
+                  )}
+                </div>
+                <Textarea
+                  placeholder="กรอกเนื้อหาโพสต์ที่นี่..."
+                  value={customContent}
+                  onChange={(e) => setCustomContent(e.target.value)}
+                  className="min-h-[350px] text-sm md:text-base leading-relaxed"
+                />
+              </div>
+            )}
           </div>
         </div>
 
@@ -611,17 +739,7 @@ export function SocialPostDialog({
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {platform === "LINE" && previewData ? (
-                <LinePreview images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
-              ) : platform === "FACEBOOK" ? (
-                <FacebookPreview content={content} images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
-              ) : platform === "INSTAGRAM" ? (
-                <InstagramPreview content={content} images={images} previewData={previewData} />
-              ) : (
-                <GenericPreview content={content} images={images} />
-              )}
-
+            <div className="space-y-2">
               <div className="w-full space-y-3 px-2">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[11px] text-slate-400 italic">
@@ -633,17 +751,25 @@ export function SocialPostDialog({
                   </div>
                   <div className={cn(
                     "text-[10px] font-bold px-2 py-0.5 rounded-full border",
-                    (platform === "INSTAGRAM" && content.length > 2200) || (platform === "TIKTOK" && content.length > 4000)
+                    (platform === "INSTAGRAM" && activeContent.length > 2200) || (platform === "TIKTOK" && activeContent.length > 4000)
                       ? "bg-red-50 text-red-600 border-red-100 animate-pulse"
                       : "bg-white text-slate-400 border-slate-200"
                   )}>
-                    {content.length.toLocaleString()} /{" "}
+                    {activeContent.length.toLocaleString()} /{" "}
                     {platform === "INSTAGRAM" ? "2,200" : platform === "TIKTOK" ? "4,000" : "63,000"}
                   </div>
                 </div>
-
-                
               </div>
+              {platform === "LINE" && previewData ? (
+                <LinePreview images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
+              ) : platform === "FACEBOOK" ? (
+                <FacebookPreview content={activeContent} images={images} previewData={previewData} lang={selectedLangs[0] || "th"} />
+              ) : platform === "INSTAGRAM" ? (
+                <InstagramPreview content={activeContent} images={images} previewData={previewData} />
+              ) : (
+                <GenericPreview content={activeContent} images={images} />
+              )}
+
             </div>
           )}
         </div>

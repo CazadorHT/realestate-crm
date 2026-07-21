@@ -41,7 +41,7 @@ export function FacebookPreview({
     : "VC";
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden w-full transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 max-w-[300px] xs:max-w-[340px] sm:max-w-[380px] mx-auto">
+    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden w-full transition-all duration-500 animate-in fade-in slide-in-from-bottom-2 max-w-[300px] xs:max-w-[340px] sm:max-w-[400px] mx-auto">
       {/* Header */}
       <div className="p-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -53,7 +53,7 @@ export function FacebookPreview({
             </div>
           )}
           <div>
-            <div className="font-bold text-[14px] flex items-center gap-1.5 text-slate-900 leading-none">
+            <div className="font-bold text-xs flex items-center gap-1.5 text-slate-900 leading-none">
               {displayName}
               {previewData?.verified && (
                 <div className="w-3 h-3 bg-blue-500 rounded-full flex items-center justify-center -mt-0.5 border border-white shadow-xs">
@@ -70,7 +70,7 @@ export function FacebookPreview({
       </div>
 
       {/* Content */}
-      <div className="px-3 pb-2.5 text-[14px] leading-relaxed text-slate-900 whitespace-pre-wrap wrap-break-word">
+      <div className="px-3 pb-2.5 text-xs leading-relaxed text-slate-900 whitespace-pre-wrap wrap-break-word">
         {displayContent || "Loading content..."}
         {isTooLong && (
           <button
@@ -99,7 +99,7 @@ export function FacebookPreview({
           <div
             key={i}
             className={cn(
-              "relative aspect-square bg-slate-200 overflow-hidden",
+              "relative aspect-[4/3] bg-slate-200 overflow-hidden",
               images.length === 3 && i === 0 ? "row-span-2 h-full" : "",
             )}
           >

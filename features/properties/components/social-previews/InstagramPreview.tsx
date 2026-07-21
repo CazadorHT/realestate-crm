@@ -62,7 +62,7 @@ export function InstagramPreview({
       </div>
 
       {/* Main Media (Carousel type) */}
-      <div className="relative aspect-square bg-slate-100 overflow-hidden group">
+      <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden group">
         {images.length > 0 ? (
           <Image src={images[0]} alt="preview" fill className="object-cover" />
         ) : (
