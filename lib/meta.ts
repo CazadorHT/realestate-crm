@@ -579,10 +579,16 @@ export async function postToMetaPage(
             mediaIds.push(uploadData.id);
           } else {
             console.warn("[meta.ts] Failed to upload photo to FB:", uploadData);
-            if (uploadData.error?.code === 190 || uploadData.error?.type === "OAuthException" || uploadData.error?.message?.toLowerCase().includes("access token")) {
+            if (uploadData.error?.code === 190 || uploadData.error?.message?.toLowerCase().includes("access token") || uploadData.error?.message?.toLowerCase().includes("session")) {
               return {
                 success: false,
-                error: `Token การเชื่อมต่อหมดอายุหรือไม่มีสิทธิ์ใช้งาน (กรุณากดอัปเดต Token ในหน้าตั้งค่า) [รายละเอียด: ${uploadData.error.message || "Session has expired"}]`,
+                error: `Token การเชื่อมต่อหมดอายุหรือไม่มีสิทธิ์ใช้งาน (กรุณากดอัปเดต Token ในหน้าตั้งค่า) [รายละเอียด: ${uploadData.error.message}]`,
+              };
+            }
+            if (uploadData.error?.message?.toLowerCase().includes("invalid image") || uploadData.error?.message?.toLowerCase().includes("missing")) {
+              return {
+                success: false,
+                error: `Facebook ไม่สามารถเข้าถึงไฟล์รูปภาพได้ (${uploadData.error.message}) - หากเปิดระบบบน Localhost กรุณา Deploy โค้ดขึ้น Production เพื่อให้ Facebook ดึงรูปภาพได้`,
               };
             }
           }

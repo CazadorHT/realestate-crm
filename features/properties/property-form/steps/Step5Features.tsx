@@ -147,7 +147,8 @@ function Step5FeaturesComponent() {
     const presetMatchers = {
       condo: [
         "สระว่ายน้ำ", "ฟิตเนส", "cctv", "รักษาความปลอดภัย", "ที่จอดรถ", 
-        "สวนหย่อม", "ลิฟต์", "lobby", "คีย์การ์ด", "pool", "gym", "elevator"
+        "สวนหย่อม", "ลิฟต์", "lobby", "คีย์การ์ด", "pool", "gym", "elevator",
+        "เฟอร์", "เฟอร์นิเจอร์", "เครื่องปรับอากาศ", "แอร์", "กล้องวงจรปิด", "รปภ", "security", "air"
       ],
       house: [
         "ที่จอดรถ", "สวนหย่อม", "สวน", "สนามเด็กเล่น", "สระว่ายน้ำ", 
@@ -163,6 +164,10 @@ function Step5FeaturesComponent() {
     const matchedIds = features
       .filter((f) => {
         const nameLower = f.name.toLowerCase();
+        // ถ้าเป็นคอนโด ไม่เลือก "สระว่ายน้ำส่วนตัว" หรือ "สระส่วนตัว"
+        if (type === "condo" && (nameLower.includes("ส่วนตัว") || nameLower.includes("private"))) {
+          return false;
+        }
         return matchers.some((keyword) => nameLower.includes(keyword.toLowerCase()));
       })
       .map((f) => f.id);

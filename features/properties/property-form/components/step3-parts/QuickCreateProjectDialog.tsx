@@ -284,27 +284,27 @@ export function QuickCreateProjectDialog({
       isLoading={isSaving}
       loadingText="กำลังบันทึกและสร้างโครงการ..."
       title={
-        <span className="flex items-center gap-2.5 text-slate-900 font-bold">
-          <span className="p-2 bg-indigo-50 text-indigo-600 rounded-xl shrink-0">
-            <Building2 className="h-5 w-5" />
+        <span className="flex items-center gap-2 text-slate-900 font-semibold text-base">
+          <span className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+            <Building2 className="h-4.5 w-4.5" />
           </span>
           สร้างโครงการใหม่เข้าระบบ
         </span>
       }
       description={
-        <div className="space-y-4 text-left">
-          <p className="text-slate-450 text-xs leading-relaxed">
+        <div className="space-y-3 text-left">
+          <p className="text-slate-450 text-[11px] leading-relaxed">
             ระบุข้อมูลที่จำเป็นขั้นต้น โครงการจะถูกเพิ่มลงระบบส่วนกลางเพื่อให้คุณผูกกับทรัพย์สินได้ทันที
           </p>
           
           {/* AI Autofill banner inside Header to prevent scroll! */}
-          <div className="bg-linear-to-r from-violet-600 via-indigo-600 to-blue-600 p-4 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-md shadow-indigo-100 text-white border border-indigo-500/20">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-white/10 rounded-xl text-white shrink-0">
-                <Sparkles className="w-5 h-5 animate-pulse" />
+          <div className="bg-linear-to-r from-violet-600 via-indigo-600 to-blue-600 p-3 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md shadow-indigo-100 text-white border border-indigo-500/20">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-white/10 rounded-lg text-white shrink-0">
+                <Sparkles className="w-4 h-4 animate-pulse" />
               </div>
               <div className="text-left">
-                <h4 className="text-xs font-bold text-white tracking-wide">กรอกข้อมูลอัตโนมัติด้วย AI</h4>
+                <h4 className="text-[11px] font-semibold text-white tracking-wide">กรอกข้อมูลอัตโนมัติด้วย AI</h4>
                 <p className="text-[10px] text-indigo-100 mt-0.5 leading-relaxed">
                   ระบุชื่อโครงการหลัก (ไทย/อังกฤษ) และให้ Gemini ช่วยค้นหาพิกัด ค้นหาผู้พัฒนา และสิ่งอำนวยความสะดวกทั้งหมดลงฟอร์มให้ทันที
                 </p>
@@ -315,16 +315,16 @@ export function QuickCreateProjectDialog({
               size="sm"
               onClick={handleAiAutoFill}
               disabled={isAiGenerating || isSaving}
-              className="w-full sm:w-auto bg-white hover:bg-indigo-50 text-indigo-700 font-bold rounded-lg shrink-0 transition-all hover:scale-[1.02] active:scale-95 shadow-xs"
+              className="w-full sm:w-auto bg-white hover:bg-indigo-50 text-indigo-700 font-semibold text-xs rounded-lg shrink-0 transition-all hover:scale-[1.02] active:scale-95 shadow-xs h-8 px-3"
             >
               {isAiGenerating ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin mr-1.5" />
+                  <Loader2 className="w-3 h-3 animate-spin mr-1.5" />
                   กำลังดึงข้อมูล...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-3.5 h-3.5 mr-1.5 text-indigo-600" />
+                  <Sparkles className="w-3 h-3 mr-1.5 text-indigo-600" />
                   ดึงข้อมูลด้วย AI
                 </>
               )}
@@ -334,13 +334,13 @@ export function QuickCreateProjectDialog({
       }
       className="sm:max-w-2xl"
       footer={
-        <div className="flex justify-end gap-3 w-full border-t border-slate-100 pt-4 mt-2">
+        <div className="flex justify-end gap-2.5 w-full border-t border-slate-100 pt-3 mt-1">
           <Button
             type="button"
             variant="outline"
             onClick={() => onClose(false)}
             disabled={isSaving}
-            className="rounded-xl font-bold px-5 h-11 text-slate-600 border-slate-200 hover:bg-slate-50 transition-all active:scale-95"
+            className="rounded-xl font-semibold text-xs px-4 h-9 text-slate-600 border-slate-200 hover:bg-slate-50 transition-all active:scale-95"
           >
             ยกเลิก
           </Button>
@@ -348,11 +348,11 @@ export function QuickCreateProjectDialog({
             type="button"
             onClick={handleSave}
             disabled={isSaving || isAiGenerating}
-            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold px-6 h-11 transition-all active:scale-95 shadow-sm shadow-indigo-100 hover:shadow-md"
+            className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold text-xs px-5 h-9 transition-all active:scale-95 shadow-sm shadow-indigo-100 hover:shadow-md"
           >
             {isSaving ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
                 กำลังสร้าง...
               </>
             ) : (
@@ -362,83 +362,83 @@ export function QuickCreateProjectDialog({
         </div>
       }
     >
-      <div className="space-y-6 p-1 max-h-[48vh] overflow-y-auto pr-2 scrollbar-thin">
+      <div className="space-y-4 p-1 max-h-[48vh] overflow-y-visible pr-2 scrollbar-thin">
         {/* Section 1: Basic Info */}
-        <div className="space-y-4 rounded-2xl border border-slate-200/80 bg-slate-50/30 p-5">
-          <h4 className="text-xs font-semibold text-slate-800 flex items-center gap-2 pb-1 border-b border-slate-100">
-            <Building2 className="w-4 h-4 text-indigo-500" />
+        <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-slate-50/30 p-4">
+          <h4 className="text-[11px] font-semibold text-slate-800 flex items-center gap-2 pb-1 border-b border-slate-100">
+            <Building2 className="w-3.5 h-3.5 text-indigo-500" />
             <span>ข้อมูลโครงการพื้นฐาน</span>
           </h4>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Name TH */}
-            <div className="space-y-1.5 text-left group">
+            <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
+                <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ชื่อโครงการภาษาไทย *</span>
               </Label>
               <Input 
                 value={nameTh} 
                 onChange={(e) => setNameTh(e.target.value)} 
                 placeholder="เช่น เอลิโอ เดล เนสท์" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
             {/* Name EN */}
-            <div className="space-y-1.5 text-left group">
+            <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
+                <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ชื่อโครงการภาษาอังกฤษ *</span>
               </Label>
               <Input 
                 value={nameEn} 
                 onChange={(e) => setNameEn(e.target.value)} 
                 placeholder="เช่น Elio Del Nest" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
             {/* Property Type */}
-            <div className="space-y-1.5 text-left group">
+            <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
+                <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ประเภทโครงการ</span>
               </Label>
               <div className="relative">
                 <select
                   value={propertyType}
                   onChange={(e) => setPropertyType(e.target.value)}
-                  className="w-full h-11 rounded-xl border border-slate-200 bg-white px-3.5 pr-10 text-sm font-semibold text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-150 focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-xs"
+                  className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 pr-9 text-xs font-medium text-slate-800 focus:outline-hidden focus:ring-2 focus:ring-indigo-150 focus:border-indigo-500 transition-all appearance-none cursor-pointer shadow-xs"
                 >
                   {PROPERTY_TYPES.map(t => (
                     <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
-                <div className="absolute right-3.5 top-3.5 pointer-events-none text-slate-400">
-                  <ChevronDown className="w-4 h-4" />
+                <div className="absolute right-3 top-2.5 pointer-events-none text-slate-400">
+                  <ChevronDown className="w-3.5 h-3.5" />
                 </div>
               </div>
             </div>
 
             {/* Developer */}
-            <div className="space-y-1.5 text-left group">
+            <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
+                <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ผู้พัฒนา (Developer)</span>
               </Label>
               <Input 
                 value={developer} 
                 onChange={(e) => setDeveloper(e.target.value)} 
                 placeholder="เช่น Ananda Development" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
             {/* Year Completed */}
-            <div className="space-y-1.5 text-left group">
+            <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
+                <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>ปีที่สร้างเสร็จ</span>
               </Label>
               <Input 
@@ -446,14 +446,14 @@ export function QuickCreateProjectDialog({
                 value={yearCompleted} 
                 onChange={(e) => setYearCompleted(e.target.value)} 
                 placeholder="เช่น 2020" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
             {/* Total Units */}
-            <div className="space-y-1.5 text-left group">
+            <div className="space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <Building2 className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
+                <Building2 className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>จำนวนยูนิตทั้งหมด</span>
               </Label>
               <Input 
@@ -461,31 +461,31 @@ export function QuickCreateProjectDialog({
                 value={totalUnits} 
                 onChange={(e) => setTotalUnits(e.target.value)} 
                 placeholder="เช่น 1459" 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
           </div>
         </div>
 
         {/* Section 2: Location & Address */}
-        <div className="space-y-4 rounded-2xl border border-slate-200/80 bg-slate-50/30 p-5">
-          <h4 className="text-xs font-semibold text-slate-800 flex items-center gap-2 pb-1 border-b border-slate-100">
-            <MapPin className="w-4 h-4 text-indigo-500" />
+        <div className="space-y-3 rounded-2xl border border-slate-200/80 bg-slate-50/30 p-4">
+          <h4 className="text-[11px] font-semibold text-slate-800 flex items-center gap-2 pb-1 border-b border-slate-100">
+            <MapPin className="w-3.5 h-3.5 text-indigo-500" />
             <span>ตำแหน่งที่ตั้งและพิกัด</span>
           </h4>
 
-          <div className="grid grid-cols-1 sm:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-6 gap-3">
             {/* Google Maps URL */}
-            <div className="col-span-1 sm:col-span-3 space-y-1.5 text-left group">
+            <div className="col-span-1 sm:col-span-3 space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
-                <MapPin className="w-3.5 h-3.5 text-slate-400 group-focus-within:text-indigo-600" />
+                <MapPin className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>พิกัดแผนที่ (Google Maps Link)</span>
               </Label>
               <Input 
                 value={googleMapsUrl} 
                 onChange={(e) => handleGoogleMapsUrlChange(e.target.value)} 
                 placeholder="วางลิงก์ Google Maps เช่น https://maps.app.goo.gl/..." 
-                className="h-11 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
+                className="h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-indigo-150 focus-visible:border-indigo-500 transition-all duration-200 shadow-xs"
               />
             </div>
 
@@ -594,9 +594,9 @@ function AddressCascadeField({
   }, [open, onSearch]);
 
   return (
-    <div className="space-y-1.5 text-left" ref={ref}>
+    <div className="space-y-1 text-left" ref={ref}>
       <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-        <MapPin className="w-3.5 h-3.5" />
+        <MapPin className="w-3 h-3" />
         <span>{label}</span>
         {loading && <span className="animate-pulse text-slate-300">...</span>}
       </Label>
@@ -606,7 +606,7 @@ function AddressCascadeField({
           disabled={disabled}
           onClick={() => !disabled && setOpen((o) => !o)}
           className={cn(
-            "w-full h-11 rounded-xl border px-3.5 text-sm font-semibold text-left transition-all duration-200 flex items-center justify-between gap-2 shadow-xs",
+            "w-full h-9 rounded-xl border px-3 text-xs font-medium text-left transition-all duration-200 flex items-center justify-between gap-1.5 shadow-xs",
             disabled
               ? "border-slate-200 bg-slate-50 text-slate-300 cursor-not-allowed"
               : open
@@ -617,28 +617,28 @@ function AddressCascadeField({
           )}
         >
           <span className="truncate">{value || placeholder}</span>
-          <ChevronDown className={cn("w-4 h-4 shrink-0 text-slate-400 transition-transform", open && "rotate-180")} />
+          <ChevronDown className={cn("w-3.5 h-3.5 shrink-0 text-slate-400 transition-transform", open && "rotate-180")} />
         </button>
 
         {open && (
-          <div className="absolute z-50 mt-1.5 w-full rounded-xl border border-slate-200 bg-white shadow-lg overflow-hidden">
+          <div className="absolute z-50 mt-1 w-full min-w-[190px] left-0 sm:left-auto sm:right-0 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
             {/* Search box */}
-            <div className="flex items-center gap-2 px-3 py-2.5 border-b border-slate-100 bg-slate-50/60">
+            <div className="flex items-center gap-2 px-2.5 py-2 border-b border-slate-100 bg-slate-50/60">
               <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
               <input
                 autoFocus
                 value={search}
                 onChange={(e) => onSearch(e.target.value)}
                 placeholder={`ค้นหา${label}...`}
-                className="flex-1 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 outline-none font-medium"
+                className="flex-1 bg-transparent text-xs text-slate-800 placeholder:text-slate-400 outline-none font-medium"
               />
             </div>
             {/* Options list */}
-            <div className="max-h-52 overflow-y-auto py-1">
+            <div className="max-h-48 overflow-y-auto py-1">
               {allOptions.length === 0 ? (
-                <p className="px-4 py-6 text-center text-xs text-slate-400">กรุณาเลือกข้อมูลก่อนหน้า</p>
+                <p className="px-3 py-5 text-center text-xs text-slate-400">กรุณาเลือกข้อมูลก่อนหน้า</p>
               ) : options.length === 0 ? (
-                <p className="px-4 py-6 text-center text-xs text-slate-400">ไม่พบ{label}ที่ค้นหา</p>
+                <p className="px-3 py-5 text-center text-xs text-slate-400">ไม่พบ{label}ที่ค้นหา</p>
               ) : (
                 options.map((opt) => {
                   const selected = opt.name_th === value;
@@ -652,9 +652,9 @@ function AddressCascadeField({
                         setOpen(false);
                       }}
                       className={cn(
-                        "w-full flex items-center justify-between px-4 py-2.5 text-sm transition-colors text-left",
+                        "w-full flex items-center justify-between px-3 py-2 text-xs transition-colors text-left",
                         selected
-                          ? "bg-indigo-50 text-indigo-700 font-bold"
+                          ? "bg-indigo-50 text-indigo-700 font-semibold"
                           : "text-slate-700 hover:bg-slate-50 font-medium"
                       )}
                     >

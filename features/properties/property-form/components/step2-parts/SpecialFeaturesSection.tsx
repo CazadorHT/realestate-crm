@@ -336,13 +336,6 @@ export function SpecialFeaturesSection({
               disabled={isReadOnly}
             />
             <FeatureChip
-              name="has_private_pool"
-              label="สระว่ายน้ำส่วนตัว"
-              icon={Waves}
-              color="cyan"
-              disabled={isReadOnly}
-            />
-            <FeatureChip
               name="has_unblocked_view"
               label="วิวไม่บล็อก"
               icon={Scan}

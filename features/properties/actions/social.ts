@@ -1057,8 +1057,11 @@ export async function postPropertyToMetaAction(
     const rawImages = contentData.images;
 
     const { headers } = await import("next/headers");
-    const host = (await headers()).get("host") || "vccasset.com";
-    const appUrl = `https://${host}`;
+    const reqHost = (await headers()).get("host") || "";
+    // If running on localhost or missing host, fallback to production domain so Meta/FB servers can fetch the proxied JPG image
+    const isLocalhost = reqHost.includes("localhost") || reqHost.includes("127.0.0.1");
+    const productionDomain = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://vccasset.com";
+    const appUrl = isLocalhost || !reqHost ? productionDomain.replace(/\/$/, "") : `https://${reqHost}`;
 
     const images = rawImages
       .map((url) => {

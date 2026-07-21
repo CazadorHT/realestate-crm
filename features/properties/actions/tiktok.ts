@@ -79,8 +79,10 @@ export async function postPropertyToTikTokAction(
     // We prefer NEXT_PUBLIC_SUPABASE_URL domain for verification, 
     // but the proxy is on the App domain.
     const { headers } = await import("next/headers");
-    const host = (await headers()).get("host") || "vccasset.com";
-    const appUrl = `https://${host}`;
+    const reqHost = (await headers()).get("host") || "";
+    const isLocalhost = reqHost.includes("localhost") || reqHost.includes("127.0.0.1");
+    const productionDomain = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://vccasset.com";
+    const appUrl = isLocalhost || !reqHost ? productionDomain.replace(/\/$/, "") : `https://${reqHost}`;
 
     const imagesToPost = rawImages
       .map(url => {

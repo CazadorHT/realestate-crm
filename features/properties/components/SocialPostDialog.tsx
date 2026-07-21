@@ -689,7 +689,7 @@ export function SocialPostDialog({
                   placeholder="กรอกเนื้อหาโพสต์ที่นี่..."
                   value={customContent}
                   onChange={(e) => setCustomContent(e.target.value)}
-                  className="min-h-[350px] text-sm md:text-base leading-relaxed"
+                  className="max-h-[390px] text-sm md:text-base leading-relaxed"
                 />
               </div>
             )}
