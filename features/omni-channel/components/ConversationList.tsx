@@ -20,6 +20,7 @@ import {
 import { FaComment, FaLine } from "react-icons/fa6";
 import { useTenant } from "@/components/providers/TenantProvider";
 import { Conversation } from "../types";
+import { AvatarImageWithFallback } from "./AvatarImageWithFallback";
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
@@ -165,36 +166,17 @@ export function ConversationList({
               )} />
               <div className="relative shrink-0">
                 <div className="relative h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-100 shadow-inner text-slate-400">
-                  {lastMsg?.payload?.profile?.pictureUrl ? (
-                    <Image
-                      src={lastMsg.payload.profile.pictureUrl}
-                      className="h-full w-full object-cover"
-                      fill
-                      sizes="40px"
-                      unoptimized
-                      alt={conv.full_name || "Lead Avatar"}
-                    />
-                  ) : lastMsg?.payload?.pictureUrl ? (
-                    <Image
-                      src={lastMsg.payload.pictureUrl}
-                      className="h-full w-full object-cover"
-                      fill
-                      sizes="40px"
-                      unoptimized
-                      alt={conv.full_name || "Lead Avatar"}
-                    />
-                  ) : conv.note?.includes("Photo: http") ? (
-                    <Image
-                      src={conv.note.match(/Photo: (https?:\/\/[^\s\n]+)/)?.[1] || ""}
-                      className="h-full w-full object-cover"
-                      fill
-                      sizes="40px"
-                      unoptimized
-                      alt={conv.full_name || "Lead Avatar"}
-                    />
-                  ) : (
-                    <User className="h-6 w-6" />
-                  )}
+                  <AvatarImageWithFallback
+                    src={
+                      conv.avatar_url ||
+                      lastMsg?.payload?.profile?.pictureUrl ||
+                      lastMsg?.payload?.pictureUrl ||
+                      (conv.note?.includes("Photo: http")
+                        ? conv.note.match(/Photo: (https?:\/\/[^\s\n]+)/)?.[1]
+                        : null)
+                    }
+                    alt={conv.full_name || "Lead Avatar"}
+                  />
                 </div>
                 {/* Category Badge Dot */}
                 <div className={cn(

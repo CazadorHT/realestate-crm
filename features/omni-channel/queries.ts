@@ -29,6 +29,7 @@ export async function getInboxConversationsQuery(): Promise<Conversation[]> {
         line_id,
         phone,
         social_links,
+        avatar_url,
         communications_hub_v3!inner (
           id,
           content,
@@ -73,6 +74,7 @@ export async function getInboxConversationsQuery(): Promise<Conversation[]> {
       line_id: string | null;
       phone: string | null;
       social_links: Json | null;
+      avatar_url: string | null;
       communications_hub_v3: Array<{
         id: string;
         content: string | null;
@@ -126,7 +128,9 @@ export async function getInboxConversationsQuery(): Promise<Conversation[]> {
 
     return {
       id: lead.id,
+      identity_id: identity?.id || "",
       full_name: decrypt(rawDisplayName) || rawDisplayName,
+      avatar_url: identity?.avatar_url || null,
       source: lead.source,
       tenant_id: lead.tenant_id,
       note: rawNote ? decrypt(rawNote) || rawNote : null,

@@ -62,6 +62,18 @@ const nextConfig: NextConfig = {
           protocol: "https",
           hostname: "**.freepik.com",
         },
+        {
+          protocol: "https",
+          hostname: "platform-lookaside.fbsbx.com",
+        },
+        {
+          protocol: "https",
+          hostname: "**.fbcdn.net",
+        },
+        {
+          protocol: "https",
+          hostname: "**.instagram.com",
+        },
       ];
     })(),
   },

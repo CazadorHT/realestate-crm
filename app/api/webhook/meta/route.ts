@@ -261,10 +261,30 @@ async function handleFacebookChange(change: any, pageId?: string) {
 
   let lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;
 
+  // Deduplicate request using Upstash Redis to prevent double leads from Meta Webhook retries
+  if (redis && senderId) {
+    const lockKey = `lead_create_lock:${senderId}`;
+    const isLocked = await redis.set(lockKey, "1", { nx: true, ex: 5 });
+    if (!isLocked) {
+      console.warn(`[Meta Webhook] Duplicate lead creation lock hit for sender ${senderId}. Retrying lookup.`);
+      // Wait 1 second and re-query
+      await new Promise((r) => setTimeout(r, 1000));
+      const { data: retryIdentity } = await supabase
+        .from("identities_v3")
+        .select("id, crm_leads_v3(id)")
+        .eq("social_links->>facebook_psid_hash", facebookPsidHash)
+        .maybeSingle();
+      const retryLead = retryIdentity?.crm_leads_v3?.[0] as { id: string } | undefined;
+      if (retryLead) {
+        lead = retryLead;
+      }
+    }
+  }
+
   if (!lead) {
     // Check for duplicate Facebook lead by name
     if (senderName && !PLACEHOLDER_NAMES.includes(senderName)) {
-      const fullNameHash = generateBlindIndex(senderName);
+      const fullNameHash = generateBlindIndex(senderName.toLowerCase().trim());
       const { data: existingIdentity } = await supabase
         .from("identities_v3")
         .select("id, social_links, crm_leads_v3(id)")
@@ -394,7 +414,7 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
     // Check for duplicate lead by name
     let existingLead = null;
     if (displayName && !PLACEHOLDER_NAMES.includes(displayName)) {
-      const fullNameHash = generateBlindIndex(displayName);
+      const fullNameHash = generateBlindIndex(displayName.toLowerCase().trim());
       const { data: existingIdentity } = await supabase
         .from("identities_v3")
         .select("id, social_links, crm_leads_v3(id)")
@@ -435,7 +455,7 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
 
       // Create Identity
       const socialLinks: any = {
-        full_name_hash: generateBlindIndex(displayName),
+        full_name_hash: generateBlindIndex(displayName.toLowerCase().trim()),
       };
       socialLinks[hashKey] = senderIdHash;
       socialLinks[idField] = encryptedSenderId;
@@ -618,6 +638,56 @@ async function handleInstagramChange(change: any) {
 
   let lead = identity?.crm_leads_v3?.[0] as { id: string } | undefined;
 
+  // Deduplicate request using Upstash Redis to prevent double leads from Meta Webhook retries
+  if (redis && senderId) {
+    const lockKey = `lead_create_lock:${senderId}`;
+    const isLocked = await redis.set(lockKey, "1", { nx: true, ex: 5 });
+    if (!isLocked) {
+      console.warn(`[Meta Webhook] Duplicate Instagram lead creation lock hit for sender ${senderId}. Retrying lookup.`);
+      // Wait 1 second and re-query
+      await new Promise((r) => setTimeout(r, 1000));
+      const { data: retryIdentity } = await supabase
+        .from("identities_v3")
+        .select("id, crm_leads_v3(id)")
+        .eq("social_links->>instagram_sid_hash", instagramSidHash)
+        .maybeSingle();
+      const retryLead = retryIdentity?.crm_leads_v3?.[0] as { id: string } | undefined;
+      if (retryLead) {
+        lead = retryLead;
+      }
+    }
+  }
+
+  if (!lead) {
+    // Check for duplicate Instagram lead by username/name
+    if (senderName && !PLACEHOLDER_NAMES.includes(senderName)) {
+      const fullNameHash = generateBlindIndex(senderName.toLowerCase().trim());
+      const { data: existingIdentity } = await supabase
+        .from("identities_v3")
+        .select("id, social_links, crm_leads_v3(id)")
+        .eq("social_links->>full_name_hash", fullNameHash)
+        .eq("role", "LEAD")
+        .maybeSingle();
+
+      if (existingIdentity?.crm_leads_v3?.[0]) {
+        lead = existingIdentity.crm_leads_v3[0] as { id: string };
+
+        // Bind the new Instagram SID to the existing identity
+        const currentSocialLinks = (existingIdentity.social_links as Record<string, any>) || {};
+        const updatedSocialLinks = {
+          ...currentSocialLinks,
+          instagram_sid_hash: instagramSidHash,
+          instagram_sid: encrypt(senderId),
+        };
+
+        await supabase
+          .from("identities_v3")
+          .update({ social_links: updatedSocialLinks })
+          .eq("id", existingIdentity.id);
+      }
+    }
+  }
+
   if (!lead) {
     const { data: tenant } = await supabase
       .from("tenants_v3")
@@ -640,7 +710,7 @@ async function handleInstagramChange(change: any) {
         social_links: {
           instagram_sid_hash: instagramSidHash,
           instagram_sid: encryptedInstagramSid,
-          full_name_hash: generateBlindIndex(senderName),
+          full_name_hash: generateBlindIndex(senderName.toLowerCase().trim()),
         },
         is_active: true,
       })

@@ -29,7 +29,9 @@ export interface OmniMessage {
 
 export interface Conversation {
   id: string;
+  identity_id: string;
   full_name: string;
+  avatar_url?: string | null;
   source: string | null;
   tenant_id: string | null;
   note: string | null;

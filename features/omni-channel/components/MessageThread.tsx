@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { playChatPop } from "@/lib/audio";
 import { OmniMessage, Conversation } from "../types";
+import { AvatarImageWithFallback } from "./AvatarImageWithFallback";
 import { v4 as uuidv4 } from "uuid";
 import { useRealtime } from "@/components/providers/RealtimeProvider";
 
@@ -125,7 +126,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
     const unsubscribe = subscribe(
       {
           table: "communications_hub_v3",
-          filter: `lead_id=eq.${lead.id}`,
+          filter: `identity_id=eq.${lead.identity_id}`,
         },
       {
         onData: (payload) => {
@@ -135,7 +136,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
               newMessage.status = "sent";
 
               setMessages((prev) => {
-                // If we have an optimistic version of this message (matched by content and lead_id)
+                // If we have an optimistic version of this message (matched by content and identity_id)
                 // we swap it. Otherwise we append.
                 const existingIndex = prev.findIndex(m => m.status === 'sending' && m.content === newMessage.content);
                 if (existingIndex !== -1) {
@@ -181,7 +182,7 @@ export function MessageThread({ lead }: { lead: Conversation }) {
     );
 
     // Track presence (Masterclass Payload)
-    trackPresence("communications_hub_v3", `lead_id=eq.${lead.id}`, {
+    trackPresence("communications_hub_v3", `identity_id=eq.${lead.identity_id}`, {
       user_id: lead.id,
       agent_id: "Me", // Should come from useUser in real app
       last_active_at: new Date().toISOString()
@@ -192,12 +193,12 @@ export function MessageThread({ lead }: { lead: Conversation }) {
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lead.id, subscribe, trackPresence]);
+  }, [lead.id, lead.identity_id, subscribe, trackPresence]);
 
   const handleTyping = () => {
     const now = Date.now();
     if (now - lastBroadcastRef.current > 2000) {
-      broadcast("communications_hub_v3", `lead_id=eq.${lead.id}`, "typing", { name: "Agent" });
+      broadcast("communications_hub_v3", `identity_id=eq.${lead.identity_id}`, "typing", { name: "Agent" });
       lastBroadcastRef.current = now;
     }
   };
@@ -344,36 +345,17 @@ export function MessageThread({ lead }: { lead: Conversation }) {
       <div id="tour-inbox-thread-header" className="p-4 border-b border-slate-100 flex items-center justify-between bg-white shadow-sm z-10">
         <div className="flex items-center gap-3">
           <div className="relative h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden shadow-inner text-slate-400">
-            {messages?.[0]?.payload?.profile?.pictureUrl ? (
-              <Image
-                src={messages[0].payload.profile.pictureUrl!}
-                className="h-full w-full object-cover"
-                fill
-                sizes="40px"
-                unoptimized
-                alt={lead.full_name || "Lead Avatar"}
-              />
-            ) : messages?.[0]?.payload?.pictureUrl ? (
-              <Image
-                src={messages[0].payload.pictureUrl!}
-                className="h-full w-full object-cover"
-                fill
-                sizes="40px"
-                unoptimized
-                alt={lead.full_name || "Lead Avatar"}
-              />
-            ) : lead.note?.includes("Photo: http") ? (
-              <Image
-                src={lead.note.match(/Photo: (https?:\/\/[^\s\n]+)/)?.[1]!}
-                className="h-full w-full object-cover"
-                fill
-                sizes="40px"
-                unoptimized
-                alt={lead.full_name || "Lead Avatar"}
-              />
-            ) : (
-              <User className="h-6 w-6" />
-            )}
+            <AvatarImageWithFallback
+              src={
+                lead.avatar_url ||
+                messages?.[0]?.payload?.profile?.pictureUrl ||
+                messages?.[0]?.payload?.pictureUrl ||
+                (lead.note?.includes("Photo: http")
+                  ? lead.note.match(/Photo: (https?:\/\/[^\s\n]+)/)?.[1]
+                  : null)
+              }
+              alt={lead.full_name || "Lead Avatar"}
+            />
           </div>
           <div>
             <h2 className="font-bold text-sm uppercase tracking-tight text-slate-800">
