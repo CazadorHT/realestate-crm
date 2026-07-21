@@ -56,7 +56,7 @@ import {
 } from "@/components/ui/tooltip";
 import { isFeatureEnabled } from "@/lib/features";
 import { RiTeamLine } from "react-icons/ri";
-import {m, AnimatePresence, LayoutGroup } from "framer-motion";
+import { m, AnimatePresence, LayoutGroup } from "framer-motion";
 
 export function SidebarNav({
   role,
@@ -245,7 +245,7 @@ export function SidebarNav({
       href: "/protected/admin/popular-areas",
       icon: MapPin,
       active: pathname?.startsWith("/protected/admin/popular-areas") ?? false,
-      roles: ["ADMIN" ,"MANAGER", "AGENT"],
+      roles: ["ADMIN", "MANAGER", "AGENT"],
       description: "กำหนดจุดทำเลทองและพื้นที่ยอดนิยมในคลังข้อมูลแบรนด์",
     },
     {
@@ -260,7 +260,8 @@ export function SidebarNav({
       title: "SEO สถานีรถไฟฟ้า",
       href: "/protected/admin/transit-stations",
       icon: Train,
-      active: pathname?.startsWith("/protected/admin/transit-stations") ?? false,
+      active:
+        pathname?.startsWith("/protected/admin/transit-stations") ?? false,
       roles: ["ADMIN", "MANAGER"],
       description: "จัดการ URL Slug และข้อมูล SEO ของแต่ละสถานีรถไฟฟ้า",
     },
@@ -270,7 +271,8 @@ export function SidebarNav({
       icon: Building2,
       active: pathname?.startsWith("/protected/admin/projects") ?? false,
       roles: ["ADMIN", "MANAGER"],
-      description: "จัดการข้อมูลโครงการ อสังหาริมทรัพย์ สิ่งอำนวยความสะดวก และ SEO",
+      description:
+        "จัดการข้อมูลโครงการ อสังหาริมทรัพย์ สิ่งอำนวยความสะดวก และ SEO",
     },
   ];
 
@@ -410,8 +412,15 @@ export function SidebarNav({
         if (!role) return false;
         const r = role.toUpperCase();
         if (r === "ADMIN") return true;
-        if (r === "OWNER" && (item.roles.includes("MANAGER") || item.roles.includes("AGENT") || item.roles.includes("OWNER"))) return true;
-        if (!item.roles.includes(role) && !item.roles.includes(r as any)) return false;
+        if (
+          r === "OWNER" &&
+          (item.roles.includes("MANAGER") ||
+            item.roles.includes("AGENT") ||
+            item.roles.includes("OWNER"))
+        )
+          return true;
+        if (!item.roles.includes(role) && !item.roles.includes(r as any))
+          return false;
       }
 
       // Feature Gating Checks
@@ -448,8 +457,15 @@ export function SidebarNav({
           if (!role) return false;
           const r = role.toUpperCase();
           if (r === "ADMIN") return true;
-          if (r === "OWNER" && (group.roles.includes("MANAGER") || group.roles.includes("AGENT") || group.roles.includes("OWNER"))) return true;
-          if (!group.roles.includes(role) && !group.roles.includes(r as any)) return false;
+          if (
+            r === "OWNER" &&
+            (group.roles.includes("MANAGER") ||
+              group.roles.includes("AGENT") ||
+              group.roles.includes("OWNER"))
+          )
+            return true;
+          if (!group.roles.includes(role) && !group.roles.includes(r as any))
+            return false;
         }
         return isStaff(role);
       });
@@ -496,12 +512,15 @@ export function SidebarNav({
               />
             </>
           )}
-          
-          <div className={cn(
-            "relative z-10 flex items-center gap-3",
-            !isCollapsed && "w-full",
-            isCollapsed && "flex-col gap-1 items-center justify-center w-full"
-          )}>
+
+          <div
+            className={cn(
+              "relative z-10 flex items-center gap-3",
+              !isCollapsed && "w-full",
+              isCollapsed &&
+                "flex-col gap-1 items-center justify-center w-full",
+            )}
+          >
             {navigatingTo === item.href ? (
               <Loader2 className="h-4.5 w-4.5 animate-spin text-blue-600 shrink-0" />
             ) : (
@@ -514,21 +533,21 @@ export function SidebarNav({
                 )}
               />
             )}
-            
+
             {isCollapsed && item.badge !== undefined && (
-              <m.div 
+              <m.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className="absolute top-0 right-3 h-2 w-2 rounded-full bg-blue-500 border-2 border-white shadow-sm" 
+                className="absolute top-0 right-3 h-2 w-2 rounded-full bg-blue-500 border-2 border-white shadow-sm"
               />
             )}
-            
+
             {isCollapsed ? (
               <span className="text-[9px] text-center font-medium leading-tight truncate w-full px-1">
                 {item.title}
               </span>
             ) : (
-              <m.span 
+              <m.span
                 initial={false}
                 animate={{ opacity: 1, x: 0 }}
                 className="truncate flex-1"
@@ -536,7 +555,7 @@ export function SidebarNav({
                 {item.title}
               </m.span>
             )}
-            
+
             {!isCollapsed && item.badge !== undefined && (
               <span
                 className={cn(
@@ -572,7 +591,7 @@ export function SidebarNav({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         initial={false}
-        animate={{ 
+        animate={{
           width: isCollapsed ? 80 : 288,
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30, mass: 0.8 }}
@@ -581,10 +600,10 @@ export function SidebarNav({
           !hasMounted && (isCollapsed ? "w-20" : "w-72"),
         )}
       >
-        <LayoutGroup >
+        <LayoutGroup>
           <div
             className={cn(
-              "py-6 relative px-4 ",
+              "py-6 relative px-4] ",
               isCollapsed && "flex justify-center",
             )}
           >
@@ -606,7 +625,7 @@ export function SidebarNav({
               </m.div>
               <AnimatePresence mode="wait">
                 {!isCollapsed && (
-                  <m.div 
+                  <m.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10 }}
@@ -629,7 +648,9 @@ export function SidebarNav({
               aria-label={isCollapsed ? "ขยายเมนู" : "ย่อเมนู"}
               className={cn(
                 "absolute -right-4 top-14 h-8 w-8 rounded-full border border-slate-200 bg-white items-center justify-center flex text-slate-500 hover:text-blue-600 shadow-lg hover:shadow-blue-500/20 transition-all duration-300 z-52 hover:scale-110 active:scale-90 group/toggle",
-                isHovered ? "opacity-100 translate-x-0" : "opacity-40 translate-x-0",
+                isHovered
+                  ? "opacity-100 translate-x-0"
+                  : "opacity-40 translate-x-0",
               )}
               title={isCollapsed ? "ขยายเมนู" : "ย่อเมนู"}
             >
@@ -642,7 +663,7 @@ export function SidebarNav({
           </div>
 
           {/* Dashboard - Fixed Top Level */}
-          <div className="px-4 pb-2">
+          <div className="px-4 pb-2 ">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
@@ -656,7 +677,8 @@ export function SidebarNav({
                     isCollapsed && "justify-center px-0",
                   )}
                   onClick={() => {
-                    if (pathname !== "/protected") setNavigatingTo("/protected");
+                    if (pathname !== "/protected")
+                      setNavigatingTo("/protected");
                   }}
                 >
                   {pathname === "/protected" && (
@@ -664,19 +686,29 @@ export function SidebarNav({
                       <m.div
                         layoutId="active-pill"
                         className="absolute inset-0 bg-blue-600/10 shadow-[0_0_0_1px_rgba(37,99,235,0.1)] rounded-xl"
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 30,
+                        }}
                       />
                       <m.div
                         layoutId="active-bar"
                         className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-1 bg-blue-600 rounded-r-full shadow-[0_0_10px_rgba(37,99,235,0.3)] z-10"
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 30,
+                        }}
                       />
                     </>
                   )}
-                  <div className={cn(
-                    "relative z-10 flex items-center gap-4",
-                    isCollapsed && "justify-center"
-                  )}>
+                  <div
+                    className={cn(
+                      "relative z-10 flex items-center gap-4",
+                      isCollapsed && "justify-center",
+                    )}
+                  >
                     {navigatingTo === "/protected" ? (
                       <Loader2 className="h-4.5 w-4.5 animate-spin text-blue-600 shrink-0" />
                     ) : (
@@ -700,9 +732,8 @@ export function SidebarNav({
               )}
             </Tooltip>
           </div>
-
-          <nav className="flex flex-col gap-3 p-4 flex-1 overflow-y-auto h-[calc(100vh-200px)] custom-scrollbar pr-2 pb-20 ">
-            {/* Grouped Menus */}
+          <nav className="flex flex-col gap-3 p-4 overflow-y-auto h-[calc(100vh-300px)] custom-scrollbar pr-2 pb-20">
+            {" "}
             {filteredGroups.map((group) => {
               const isOpen = openGroups.includes(group.id);
               const hasActiveItem = group.items.some((item) => item.active);
@@ -735,7 +766,7 @@ export function SidebarNav({
 
                     <AnimatePresence>
                       {isOpen && (
-                        <m.div 
+                        <m.div
                           initial={{ opacity: 0, scale: 0.95 }}
                           animate={{ opacity: 1, scale: 1 }}
                           exit={{ opacity: 0, scale: 0.95 }}
@@ -756,15 +787,15 @@ export function SidebarNav({
               }
 
               return (
-                <div 
-                  key={group.id} 
+                <div
+                  key={group.id}
                   className={cn(
                     "rounded-xl p-1 transition-all duration-300",
                     hasActiveItem
                       ? "bg-blue-50/60 border border-blue-100/50 shadow-[0_2px_8px_-3px_rgba(59,130,246,0.05)]"
                       : isOpen
-                      ? "bg-slate-50 border border-slate-100/60"
-                      : "border border-transparent"
+                        ? "bg-slate-50 border border-slate-100/60"
+                        : "border border-transparent",
                   )}
                 >
                   {/* Group Header */}
@@ -776,8 +807,8 @@ export function SidebarNav({
                       hasActiveItem
                         ? "text-blue-700 font-bold"
                         : isOpen
-                        ? "text-slate-700 font-bold"
-                        : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/50",
+                          ? "text-slate-700 font-bold"
+                          : "text-slate-400 hover:text-slate-600 hover:bg-slate-50/50",
                     )}
                   >
                     <div className="flex items-center gap-3">
@@ -801,7 +832,7 @@ export function SidebarNav({
                   {/* Group Items */}
                   <AnimatePresence initial={false}>
                     {isOpen && (
-                      <m.div 
+                      <m.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
