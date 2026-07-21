@@ -415,12 +415,30 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
     let existingLead = null;
     if (displayName && !PLACEHOLDER_NAMES.includes(displayName)) {
       const fullNameHash = generateBlindIndex(displayName.toLowerCase().trim());
-      const { data: existingIdentity } = await supabase
+      let { data: existingIdentity } = await supabase
         .from("identities_v3")
         .select("id, social_links, crm_leads_v3(id)")
         .eq("social_links->>full_name_hash", fullNameHash)
         .eq("role", "LEAD")
         .maybeSingle();
+
+      // Fallback: If hash search missed, scan identities directly by decrypting display_name
+      if (!existingIdentity) {
+        const { data: allLeadIdentities } = await supabase
+          .from("identities_v3")
+          .select("id, display_name, social_links, crm_leads_v3(id)")
+          .eq("role", "LEAD");
+
+        if (allLeadIdentities) {
+          const matched = allLeadIdentities.find((i: any) => {
+            const decName = decrypt(i.display_name) || i.display_name;
+            return decName?.toLowerCase().trim() === displayName.toLowerCase().trim();
+          });
+          if (matched) {
+            existingIdentity = matched;
+          }
+        }
+      }
 
       if (existingIdentity?.crm_leads_v3?.[0]) {
         existingLead = existingIdentity.crm_leads_v3[0] as { id: string };
@@ -429,6 +447,7 @@ async function handleMetaMessage(event: any, source: MetaPlatform) {
         const currentSocialLinks = (existingIdentity.social_links as Record<string, any>) || {};
         const updatedSocialLinks = {
           ...currentSocialLinks,
+          full_name_hash: fullNameHash,
           [hashKey]: senderIdHash,
           [idField]: encrypt(senderId),
         };

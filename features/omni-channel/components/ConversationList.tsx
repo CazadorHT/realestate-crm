@@ -17,7 +17,7 @@ import {
   LayoutGrid,
   Check,
 } from "lucide-react";
-import { FaComment, FaLine } from "react-icons/fa6";
+import { FaComment, FaFacebook, FaGlobe, FaInstagram, FaLine } from "react-icons/fa6";
 import { useTenant } from "@/components/providers/TenantProvider";
 import { Conversation } from "../types";
 import { AvatarImageWithFallback } from "./AvatarImageWithFallback";
@@ -126,13 +126,13 @@ export function ConversationList({
             conv.source === "LINE"
               ? FaLine
               : conv.source === "FACEBOOK"
-                ? Facebook
+                ? FaFacebook
                 : conv.source === "INSTAGRAM"
-                  ? Instagram
+                  ? FaInstagram
                   : conv.source === "WHATSAPP"
                     ? FaComment
                     : conv.source === "WEBSITE"
-                      ? Globe
+                      ? FaGlobe
                       : User;
 
           const category = conv.preferences?.category || "CUSTOMER";
