@@ -1058,18 +1058,30 @@ export async function postPropertyToMetaAction(
 
     const images = rawImages
       .map((url) => {
-        const cleanUrl = url.split("?")[0].toLowerCase();
+        let activeUrl = url;
+        // Rewrite localhost URLs in production to prevent Facebook from failing to fetch them
+        if (process.env.NODE_ENV === "production" && (activeUrl.includes("localhost") || activeUrl.includes("127.0.0.1"))) {
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+          if (supabaseUrl && activeUrl.includes("/storage/v1/object/public/")) {
+            const pathParts = activeUrl.split("/storage/v1/object/public/");
+            if (pathParts.length === 2) {
+              activeUrl = `${supabaseUrl.replace(/\/$/, "")}/storage/v1/object/public/${pathParts[1]}`;
+            }
+          }
+        }
+
+        const cleanUrl = activeUrl.split("?")[0].toLowerCase();
         const isCompatible = [".jpg", ".jpeg", ".png"].some((ext) => cleanUrl.endsWith(ext));
         const isWebp = cleanUrl.endsWith(".webp");
 
-        if (isCompatible) return url;
+        if (isCompatible) return activeUrl;
 
         // Serve WebP directly via Render Endpoint with format=origin (100% Free - zero transformation quota used)
-        if (isWebp && url.includes("/storage/v1/object/public/")) {
-          return url.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + "?format=origin";
+        if (isWebp && activeUrl.includes("/storage/v1/object/public/")) {
+          return activeUrl.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/") + "?format=origin";
         }
 
-        return url;
+        return activeUrl;
       })
       .filter(Boolean) as string[];
 

@@ -15,6 +15,8 @@ import { ProjectAboutCard } from "@/components/public/project-detail/ProjectAbou
 import { ProjectFacilitiesCard } from "@/components/public/project-detail/ProjectFacilitiesCard";
 import { ProjectLocationMapCard } from "@/components/public/project-detail/ProjectLocationMapCard";
 import { NearbyAreasSection } from "@/components/public/project-detail/NearbyAreasSection";
+import { CategoryNavigationCards } from "@/components/public/CategoryNavigationCards";
+
 
 export const dynamic = "force-dynamic";
 
@@ -228,6 +230,9 @@ export default async function ProjectDetailPage(
           </section>
         </div>
       )}
+
+      {/* Category Navigation Cards */}
+      <CategoryNavigationCards language={language} />
 
       {/* Nearby Areas Section */}
       {nearbyAreas.length > 0 && (

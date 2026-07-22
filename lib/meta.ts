@@ -564,9 +564,8 @@ export async function postToMetaPage(
       }
 
       // Multi-photo Post
-      // 1. Upload photos as unpublished
-      const mediaIds: string[] = [];
-      for (const imgUrl of images.slice(0, 50)) {
+      // 1. Upload photos as unpublished in parallel
+      const uploadPromises = images.slice(0, 50).map(async (imgUrl) => {
         const uploadUrl = `${metaConfig.graphApiUrl}/me/photos?access_token=${token}`;
         try {
           const uploadRes = await fetch(uploadUrl, {
@@ -576,26 +575,34 @@ export async function postToMetaPage(
           });
           const uploadData = await uploadRes.json();
           if (uploadRes.ok && uploadData.id) {
-            mediaIds.push(uploadData.id);
+            return { success: true, id: uploadData.id };
           } else {
             console.warn("[meta.ts] Failed to upload photo to FB:", uploadData);
             if (uploadData.error?.code === 190 || uploadData.error?.message?.toLowerCase().includes("access token") || uploadData.error?.message?.toLowerCase().includes("session")) {
               return {
                 success: false,
+                isTokenError: true,
                 error: `Token การเชื่อมต่อหมดอายุหรือไม่มีสิทธิ์ใช้งาน (กรุณากดอัปเดต Token ในหน้าตั้งค่า) [รายละเอียด: ${uploadData.error.message}]`,
               };
             }
-            if (uploadData.error?.message?.toLowerCase().includes("invalid image") || uploadData.error?.message?.toLowerCase().includes("missing")) {
-              return {
-                success: false,
-                error: `Facebook ไม่สามารถเข้าถึงไฟล์รูปภาพได้ (${uploadData.error.message}) - หากเปิดระบบบน Localhost กรุณา Deploy โค้ดขึ้น Production เพื่อให้ Facebook ดึงรูปภาพได้`,
-              };
-            }
+            return { success: false, error: uploadData.error?.message || "Unknown error" };
           }
-        } catch (err) {
+        } catch (err: any) {
           console.error("[meta.ts] Error uploading photo to FB:", err);
+          return { success: false, error: err.message || "Network error" };
         }
+      });
+
+      const uploadResults = await Promise.all(uploadPromises);
+      
+      const tokenError = uploadResults.find((r) => !r.success && r.isTokenError);
+      if (tokenError) {
+        return { success: false, error: tokenError.error };
       }
+
+      const mediaIds = uploadResults
+        .filter((r) => r.success && r.id)
+        .map((r) => r.id as string);
 
       if (mediaIds.length === 0) {
         return {
@@ -674,32 +681,53 @@ export async function postToMetaPage(
       }
 
       // Multi-image (Carousel) - Support up to 10 images (API Limit)
-      // 1. Create items
+      // 1. Create items in parallel
       const childIds: string[] = [];
       let lastError = "";
       const imagesToUpload = images.slice(0, 10);
       console.log(
-        `[meta.ts] Processing ${imagesToUpload.length} images for Instagram carousel...`,
+        `[meta.ts] Processing ${imagesToUpload.length} images for Instagram carousel in parallel...`,
       );
 
-      for (const imgUrl of imagesToUpload) {
+      const igUploadPromises = imagesToUpload.map(async (imgUrl) => {
         const itemUrl = `${metaConfig.graphApiUrl}/${igId}/media?image_url=${encodeURIComponent(imgUrl)}&is_carousel_item=true&access_token=${token}`;
-        const itemRes = await fetch(itemUrl, { method: "POST" });
-        const itemData = await itemRes.json();
-        if (itemRes.ok && itemData.id) {
-          childIds.push(itemData.id);
-        } else {
-          lastError = itemData.error?.message || "Unknown error";
-          console.error(
-            `[meta.ts] Failed to create carousel item for ${imgUrl}:`,
-            itemData,
-          );
-          if (itemData.error?.code === 190 || itemData.error?.type === "OAuthException" || itemData.error?.message?.toLowerCase().includes("access token")) {
-            return {
-              success: false,
-              error: `Token การเชื่อมต่อหมดอายุหรือไม่มีสิทธิ์ใช้งาน (กรุณากดอัปเดต Token ในหน้าตั้งค่า) [รายละเอียด: ${itemData.error.message || "Session has expired"}]`,
-            };
+        try {
+          const itemRes = await fetch(itemUrl, { method: "POST" });
+          const itemData = await itemRes.json();
+          if (itemRes.ok && itemData.id) {
+            return { success: true, id: itemData.id };
+          } else {
+            console.error(
+              `[meta.ts] Failed to create carousel item for ${imgUrl}:`,
+              itemData,
+            );
+            if (itemData.error?.code === 190 || itemData.error?.type === "OAuthException" || itemData.error?.message?.toLowerCase().includes("access token")) {
+              return {
+                success: false,
+                isTokenError: true,
+                error: `Token การเชื่อมต่อหมดอายุหรือไม่มีสิทธิ์ใช้งาน (กรุณากดอัปเดต Token ในหน้าตั้งค่า) [รายละเอียด: ${itemData.error.message || "Session has expired"}]`,
+              };
+            }
+            return { success: false, error: itemData.error?.message || "Unknown error" };
           }
+        } catch (err: any) {
+          console.error(`[meta.ts] Error uploading carousel item for ${imgUrl}:`, err);
+          return { success: false, error: err.message || "Network error" };
+        }
+      });
+
+      const igUploadResults = await Promise.all(igUploadPromises);
+
+      const igTokenError = igUploadResults.find((r) => !r.success && r.isTokenError);
+      if (igTokenError) {
+        return { success: false, error: igTokenError.error };
+      }
+
+      for (const r of igUploadResults) {
+        if (r.success && r.id) {
+          childIds.push(r.id);
+        } else if (!r.success && r.error) {
+          lastError = r.error;
         }
       }
 
