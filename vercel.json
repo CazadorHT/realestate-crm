@@ -1,4 +1,12 @@
 {
+  "functions": {
+    "api/**/*.ts": {
+      "maxDuration": 60
+    },
+    "app/protected/**/*": {
+      "maxDuration": 60
+    }
+  },
   "crons": [
     { "path": "/api/cron/unified", "schedule": "0 9 * * *" }
   ]

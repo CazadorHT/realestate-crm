@@ -246,6 +246,7 @@ export function SocialPostDialog({
         setResultMessage(res?.message || "เกิดข้อผิดพลาดในการโพสต์");
       }
     } catch (error: any) {
+      console.error("[SocialPostDialog] Post failed with client-side/network error:", error);
       const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
       finishProcess(processId, "ERROR", errorMessage);
       setStatus("ERROR");

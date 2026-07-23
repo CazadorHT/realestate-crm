@@ -564,17 +564,20 @@ export async function postToMetaPage(
       }
 
       // Multi-photo Post
-      // 1. Upload photos as unpublished in batches of 4
+      // 1. Upload photos as unpublished in batches of 10
       const mediaIds: string[] = [];
-      const batchSize = 4;
+      const batchSize = 10;
       const imagesToUpload = images.slice(0, 50);
+
+      console.log(`[FB-POST] Starting upload of ${imagesToUpload.length} photos in batches of ${batchSize}...`);
 
       for (let i = 0; i < imagesToUpload.length; i += batchSize) {
         const batch = imagesToUpload.slice(i, i + batchSize);
+        console.log(`[FB-POST] Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(imagesToUpload.length / batchSize)}:`, batch);
         const uploadPromises = batch.map(async (imgUrl) => {
           const uploadUrl = `${metaConfig.graphApiUrl}/me/photos?access_token=${token}`;
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
           try {
             const uploadRes = await fetch(uploadUrl, {
@@ -586,9 +589,10 @@ export async function postToMetaPage(
             clearTimeout(timeoutId);
             const uploadData = await uploadRes.json();
             if (uploadRes.ok && uploadData.id) {
+              console.log(`[FB-POST] Successfully uploaded photo: ${imgUrl} -> ID: ${uploadData.id}`);
               return { success: true, id: uploadData.id };
             } else {
-              console.warn("[meta.ts] Failed to upload photo to FB:", uploadData);
+              console.warn(`[FB-POST] Failed to upload photo (${imgUrl}) to FB:`, uploadData);
               if (uploadData.error?.code === 190 || uploadData.error?.message?.toLowerCase().includes("access token") || uploadData.error?.message?.toLowerCase().includes("session")) {
                 return {
                   success: false,
@@ -600,7 +604,7 @@ export async function postToMetaPage(
             }
           } catch (err: any) {
             clearTimeout(timeoutId);
-            console.error("[meta.ts] Error uploading photo to FB:", err);
+            console.error(`[FB-POST] Error uploading photo (${imgUrl}) to FB:`, err);
             return { success: false, error: err.message || "Network/Timeout error" };
           }
         });
@@ -609,6 +613,7 @@ export async function postToMetaPage(
 
         const tokenError = batchResults.find((r) => !r.success && r.isTokenError);
         if (tokenError) {
+          console.error(`[FB-POST] Aborting batch due to Token Error:`, tokenError.error);
           return { success: false, error: tokenError.error };
         }
 
@@ -618,6 +623,8 @@ export async function postToMetaPage(
           }
         }
       }
+
+      console.log(`[FB-POST] All batch uploads completed. Successfully uploaded ${mediaIds.length}/${imagesToUpload.length} photos.`);
 
       if (mediaIds.length === 0) {
         return {
@@ -696,21 +703,22 @@ export async function postToMetaPage(
       }
 
       // Multi-image (Carousel) - Support up to 10 images (API Limit)
-      // 1. Create items in batches of 4
+      // 1. Create items in batches of 10
       const childIds: string[] = [];
       let lastError = "";
       const imagesToUpload = images.slice(0, 10);
       console.log(
-        `[meta.ts] Processing ${imagesToUpload.length} images for Instagram carousel in batches...`,
+        `[IG-POST] Processing ${imagesToUpload.length} images for Instagram carousel in batches...`,
       );
 
-      const batchSize = 4;
+      const batchSize = 10;
       for (let i = 0; i < imagesToUpload.length; i += batchSize) {
         const batch = imagesToUpload.slice(i, i + batchSize);
+        console.log(`[IG-POST] Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(imagesToUpload.length / batchSize)}:`, batch);
         const igUploadPromises = batch.map(async (imgUrl) => {
           const itemUrl = `${metaConfig.graphApiUrl}/${igId}/media?image_url=${encodeURIComponent(imgUrl)}&is_carousel_item=true&access_token=${token}`;
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 6000); // 6s timeout
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
           try {
             const itemRes = await fetch(itemUrl, { 
@@ -720,10 +728,11 @@ export async function postToMetaPage(
             clearTimeout(timeoutId);
             const itemData = await itemRes.json();
             if (itemRes.ok && itemData.id) {
+              console.log(`[IG-POST] Successfully uploaded carousel item: ${imgUrl} -> ID: ${itemData.id}`);
               return { success: true, id: itemData.id };
             } else {
               console.error(
-                `[meta.ts] Failed to create carousel item for ${imgUrl}:`,
+                `[IG-POST] Failed to create carousel item for ${imgUrl}:`,
                 itemData,
               );
               if (itemData.error?.code === 190 || itemData.error?.type === "OAuthException" || itemData.error?.message?.toLowerCase().includes("access token")) {
@@ -737,7 +746,7 @@ export async function postToMetaPage(
             }
           } catch (err: any) {
             clearTimeout(timeoutId);
-            console.error(`[meta.ts] Error uploading carousel item for ${imgUrl}:`, err);
+            console.error(`[IG-POST] Error uploading carousel item for ${imgUrl}:`, err);
             return { success: false, error: err.message || "Network/Timeout error" };
           }
         });
@@ -746,6 +755,7 @@ export async function postToMetaPage(
 
         const igTokenError = igUploadResults.find((r) => !r.success && r.isTokenError);
         if (igTokenError) {
+          console.error(`[IG-POST] Aborting batch due to Token Error:`, igTokenError.error);
           return { success: false, error: igTokenError.error };
         }
 
@@ -757,6 +767,8 @@ export async function postToMetaPage(
           }
         }
       }
+
+      console.log(`[IG-POST] All batch uploads completed. Successfully created ${childIds.length}/${imagesToUpload.length} carousel items.`);
 
       if (childIds.length === 0) {
         return {
