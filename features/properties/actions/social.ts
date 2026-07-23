@@ -730,7 +730,6 @@ export async function getPropertySocialContent(
     .select(
       `
       *,
-      project:projects!properties_core_project_id_fkey ( name, name_en, name_cn, name_ru ),
       property_images ( image_url, storage_path ),
       property_agents ( agent_id, profiles:identities_v3 ( full_name:display_name, phone, line_id ) ),
       property_features ( features ( name, name_en, name_cn, name_ru, icon_key ) )
@@ -744,6 +743,20 @@ export async function getPropertySocialContent(
   }
 
   const property = propData as any;
+
+  // Fetch project separately to bypass view join restrictions
+  if (property.project_id) {
+    try {
+      const { data: projData } = await supabase
+        .from("projects")
+        .select("name, name_en, name_cn, name_ru")
+        .eq("id", property.project_id)
+        .single();
+      property.project = projData;
+    } catch (err) {
+      console.warn("[Social] Failed to fetch project relation:", err);
+    }
+  }
 
   await populateAgentProfiles(supabase, property);
 
@@ -1053,7 +1066,7 @@ export async function postPropertyToMetaAction(
     const { data: p, error: propError } = await supabase
       .from("properties")
       .select(
-        `*, project:projects!properties_core_project_id_fkey ( name, name_en, name_cn, name_ru ), property_images(image_url, storage_path), property_agents(profiles:identities_v3(*)), property_features(features(*))`,
+        `*, property_images(image_url, storage_path), property_agents(profiles:identities_v3(*)), property_features(features(*))`,
       )
       .eq("id", propertyId)
       .single();
