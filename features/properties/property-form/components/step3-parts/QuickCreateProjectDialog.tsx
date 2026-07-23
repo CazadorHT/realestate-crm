@@ -59,6 +59,11 @@ interface QuickCreateProjectDialogProps {
   }) => void;
 }
 
+const cleanAddressWord = (val: string) => {
+  if (!val) return "";
+  return val.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim();
+};
+
 export function QuickCreateProjectDialog({
   isOpen,
   onClose,
@@ -149,9 +154,9 @@ export function QuickCreateProjectDialog({
       }
       setDeveloper("");
       setPropertyType("1");
-      setProvince(defaultProvince || "กรุงเทพมหานคร");
-      setDistrict(defaultDistrict || "");
-      setSubdistrict(defaultSubdistrict || "");
+      setProvince(cleanAddressWord(defaultProvince || "กรุงเทพมหานคร"));
+      setDistrict(cleanAddressWord(defaultDistrict || ""));
+      setSubdistrict(cleanAddressWord(defaultSubdistrict || ""));
       setGoogleMapsUrl("");
       setYearCompleted("");
       setTotalUnits("");
@@ -184,9 +189,9 @@ export function QuickCreateProjectDialog({
         if (d.propertyType) setPropertyType(d.propertyType.toString());
         if (d.yearCompleted) setYearCompleted(d.yearCompleted.toString());
         if (d.totalUnits) setTotalUnits(d.totalUnits.toString());
-        if (d.province) setProvince(d.province);
-        if (d.district) setDistrict(d.district);
-        if (d.subdistrict) setSubdistrict(d.subdistrict);
+        if (d.province) setProvince(cleanAddressWord(d.province));
+        if (d.district) setDistrict(cleanAddressWord(d.district));
+        if (d.subdistrict) setSubdistrict(cleanAddressWord(d.subdistrict));
         // Google Maps URL — ให้ user กรอกเอง ไม่ให้ AI override
         setAiData(d);
         toast.success("AI กรอกข้อมูลโครงการสำเร็จเสร็จสิ้น! ✨", { id: toastId });
@@ -220,9 +225,9 @@ export function QuickCreateProjectDialog({
         slug: generatedSlug,
         developer: developer.trim() || null,
         property_type: Number(propertyType),
-        province: province.trim() || "กรุงเทพมหานคร",
-        district: district.trim() || null,
-        subdistrict: subdistrict.trim() || null,
+        province: cleanAddressWord(province) || "กรุงเทพมหานคร",
+        district: cleanAddressWord(district) || null,
+        subdistrict: cleanAddressWord(subdistrict) || null,
         ...(() => {
           const coords = parseCoordinatesFromGoogleMaps(googleMapsUrl);
           return coords ? { latitude: coords.lat, longitude: coords.lng } : { latitude: null, longitude: null };
@@ -260,9 +265,9 @@ export function QuickCreateProjectDialog({
           id: res.id || "",
           nameTh: nameTh.trim(),
           nameEn: nameEn.trim(),
-          province: province.trim(),
-          district: district.trim(),
-          subdistrict: subdistrict.trim(),
+          province: cleanAddressWord(province),
+          district: cleanAddressWord(district),
+          subdistrict: cleanAddressWord(subdistrict),
           googleMapsUrl: googleMapsUrl.trim() || undefined,
         });
         onClose(false);
@@ -520,8 +525,9 @@ export function QuickCreateProjectDialog({
                 onSearch={setDistrictSearch}
                 disabled={!activeProvinceId}
                 placeholder={!activeProvinceId ? "เลือกจังหวัดก่อน" : "เลือกเขต / อำเภอ"}
+                formatOptionName={(n) => n.replace(/^(เขต|อำเภอ)/, "")}
                 onSelect={(opt) => {
-                  setDistrict(opt.name_th);
+                  setDistrict(cleanAddressWord(opt.name_th));
                   setSubdistrict("");
                   setSubdistrictSearch("");
                 }}
@@ -539,7 +545,8 @@ export function QuickCreateProjectDialog({
                 onSearch={setSubdistrictSearch}
                 disabled={!activeDistrictId}
                 placeholder={!activeDistrictId ? "เลือกเขต / อำเภอก่อน" : "เลือกแขวง / ตำบล"}
-                onSelect={(opt) => setSubdistrict(opt.name_th)}
+                formatOptionName={(n) => n.replace(/^(แขวง|ตำบล)/, "")}
+                onSelect={(opt) => setSubdistrict(cleanAddressWord(opt.name_th))}
               />
             </div>
           </div>
@@ -563,6 +570,7 @@ interface AddressCascadeFieldProps {
   disabled?: boolean;
   placeholder?: string;
   loading?: boolean;
+  formatOptionName?: (name: string) => string;
 }
 
 function AddressCascadeField({
@@ -576,6 +584,7 @@ function AddressCascadeField({
   disabled = false,
   placeholder = "เลือก...",
   loading = false,
+  formatOptionName = (n) => n,
 }: AddressCascadeFieldProps) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
@@ -641,7 +650,9 @@ function AddressCascadeField({
                 <p className="px-3 py-5 text-center text-xs text-slate-400">ไม่พบ{label}ที่ค้นหา</p>
               ) : (
                 options.map((opt) => {
-                  const selected = opt.name_th === value;
+                  const cleanedOptName = opt.name_th.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim();
+                  const cleanedValue = value.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim();
+                  const selected = cleanedOptName === cleanedValue;
                   return (
                     <button
                       key={opt.id}
@@ -658,7 +669,7 @@ function AddressCascadeField({
                           : "text-slate-700 hover:bg-slate-50 font-medium"
                       )}
                     >
-                      <span>{opt.name_th}</span>
+                      <span>{formatOptionName(opt.name_th)}</span>
                       {selected && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
                     </button>
                   );

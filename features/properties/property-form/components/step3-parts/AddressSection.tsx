@@ -103,9 +103,47 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
       form.setValue("address_line1_en", proj.address_line1_en, { shouldValidate: true });
     }
     form.setValue("project_id", proj.id, { shouldValidate: true });
-    form.setValue("province", proj.province, { shouldValidate: true });
-    form.setValue("district", proj.district, { shouldValidate: true });
-    form.setValue("subdistrict", proj.subdistrict, { shouldValidate: true });
+    
+    const cleanWord = (val: string) => {
+      if (!val) return "";
+      return val.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim();
+    };
+
+    if (proj.province) {
+      const provOpt = provinces.find(p => cleanWord(p.name_th) === cleanWord(proj.province));
+      if (provOpt) {
+        form.setValue("province", provOpt.name_th, { shouldValidate: true });
+        if (proj.district) {
+          const dists = getDistricts(provOpt.id);
+          const distOpt = dists.find(d => cleanWord(d.name_th) === cleanWord(proj.district));
+          if (distOpt) {
+            form.setValue("district", distOpt.name_th, { shouldValidate: true });
+            if (proj.subdistrict) {
+              const subs = getSubDistricts(distOpt.id);
+              const subOpt = subs.find(s => cleanWord(s.name_th) === cleanWord(proj.subdistrict));
+              if (subOpt) {
+                form.setValue("subdistrict", subOpt.name_th, { shouldValidate: true });
+                form.setValue("postal_code", String(subOpt.zip_code), { shouldValidate: true });
+              } else {
+                form.setValue("subdistrict", cleanWord(proj.subdistrict), { shouldValidate: true });
+              }
+            }
+          } else {
+            form.setValue("district", cleanWord(proj.district), { shouldValidate: true });
+            form.setValue("subdistrict", cleanWord(proj.subdistrict), { shouldValidate: true });
+          }
+        }
+      } else {
+        form.setValue("province", proj.province, { shouldValidate: true });
+        form.setValue("district", proj.district, { shouldValidate: true });
+        form.setValue("subdistrict", proj.subdistrict, { shouldValidate: true });
+      }
+    } else {
+      form.setValue("province", proj.province, { shouldValidate: true });
+      form.setValue("district", proj.district, { shouldValidate: true });
+      form.setValue("subdistrict", proj.subdistrict, { shouldValidate: true });
+    }
+
     if (proj.postal_code) {
       form.setValue("postal_code", proj.postal_code, { shouldValidate: true });
     }
@@ -137,8 +175,13 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const cleanWordGlobal = (val: string) => {
+    if (!val) return "";
+    return val.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim();
+  };
+
   const activeProvinceId = provinces.find(
-    (p) => p.name_th === watchedProvince,
+    (p) => cleanWordGlobal(p.name_th) === cleanWordGlobal(watchedProvince),
   )?.id;
 
   const districtOptions = activeProvinceId
@@ -146,7 +189,7 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
     : [];
 
   const activeDistrictId = districtOptions.find(
-    (d) => d.name_th === watchedDistrict,
+    (d) => cleanWordGlobal(d.name_th) === cleanWordGlobal(watchedDistrict),
   )?.id;
 
   const subDistrictOptions = activeDistrictId
@@ -492,35 +535,49 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
             form.setValue("address_line1_en", proj.nameEn, { shouldValidate: true, shouldDirty: true });
           }
           form.setValue("project_id", proj.id, { shouldValidate: true, shouldDirty: true });
-          if (proj.province) {
-            form.setValue("province", proj.province, { shouldValidate: true, shouldDirty: true });
-          }
-          if (proj.district) {
-            form.setValue("district", proj.district, { shouldValidate: true, shouldDirty: true });
-          }
-          if (proj.subdistrict) {
-            const subName = proj.subdistrict;
-            form.setValue("subdistrict", subName, { shouldValidate: true, shouldDirty: true });
-            
-            // Resolve postal code from subdistrict name
-            if (proj.province && proj.district) {
-              const provId = provinces.find(p => p.name_th === proj.province)?.id;
-              if (provId) {
-                const dists = getDistricts(provId);
-                const distId = dists.find(d => d.name_th === proj.district)?.id;
-                if (distId) {
-                  const subs = getSubDistricts(distId);
-                  const matchedSub = subs.find(s => 
-                    s.name_th === subName || 
-                    s.name_th.replace(/^(แขวง|ตำบล)/, "") === subName.replace(/^(แขวง|ตำบล)/, "")
-                  );
-                  if (matchedSub?.zip_code) {
-                    form.setValue("postal_code", String(matchedSub.zip_code), { shouldValidate: true, shouldDirty: true });
+          
+          const cleanWord = (val: string) => {
+            if (!val) return "";
+            return val.replace(/^(จังหวัด|เขต|อำเภอ|แขวง|ตำบล)/, "").trim();
+          };
+
+          const rawProvince = proj.province;
+          const rawDistrict = proj.district;
+          const rawSubdistrict = proj.subdistrict;
+
+          if (rawProvince) {
+            const provOpt = provinces.find(p => cleanWord(p.name_th) === cleanWord(rawProvince));
+            if (provOpt) {
+              form.setValue("province", provOpt.name_th, { shouldValidate: true, shouldDirty: true });
+              if (rawDistrict) {
+                const dists = getDistricts(provOpt.id);
+                const distOpt = dists.find(d => cleanWord(d.name_th) === cleanWord(rawDistrict));
+                if (distOpt) {
+                  form.setValue("district", distOpt.name_th, { shouldValidate: true, shouldDirty: true });
+                  if (rawSubdistrict) {
+                    const subs = getSubDistricts(distOpt.id);
+                    const subOpt = subs.find(s => cleanWord(s.name_th) === cleanWord(rawSubdistrict));
+                    if (subOpt) {
+                      form.setValue("subdistrict", subOpt.name_th, { shouldValidate: true, shouldDirty: true });
+                      form.setValue("postal_code", String(subOpt.zip_code), { shouldValidate: true, shouldDirty: true });
+                    } else {
+                      form.setValue("subdistrict", cleanWord(rawSubdistrict), { shouldValidate: true, shouldDirty: true });
+                    }
+                  }
+                } else {
+                  form.setValue("district", cleanWord(rawDistrict), { shouldValidate: true, shouldDirty: true });
+                  if (rawSubdistrict) {
+                    form.setValue("subdistrict", cleanWord(rawSubdistrict), { shouldValidate: true, shouldDirty: true });
                   }
                 }
               }
+            } else {
+              form.setValue("province", rawProvince, { shouldValidate: true, shouldDirty: true });
+              if (rawDistrict) form.setValue("district", rawDistrict, { shouldValidate: true, shouldDirty: true });
+              if (rawSubdistrict) form.setValue("subdistrict", rawSubdistrict, { shouldValidate: true, shouldDirty: true });
             }
           }
+
           if (proj.googleMapsUrl) {
             form.setValue("google_maps_link", proj.googleMapsUrl, { shouldValidate: true, shouldDirty: true });
           }

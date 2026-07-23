@@ -239,9 +239,9 @@ Provide all details in a strictly valid JSON format. Follow this JSON schema exa
   "propertyType": 1, // Integer value matching one of these: 1: Condo, 2: House, 3: Townhome, 4: Land, 5: Commercial, 6: Warehouse, 7: Office, 8: Villa, 9: Pool Villa, 10: Other
   "yearCompleted": 2020, // Estimated completion year (4-digit integer, e.g., 2020)
   "totalUnits": 1459, // Estimated total units (integer, e.g., 1459)
-  "province": "Province name (usually 'กรุงเทพมหานคร' or 'Bangkok', or other provinces in Thai)",
-  "district": "District name in Thai (e.g., เขตบางนา)",
-  "subdistrict": "Subdistrict name in Thai (e.g., แขวงบางนาเหนือ)",
+  "province": "Province name (usually 'กรุงเทพมหานคร' or 'Bangkok', or other provinces in Thai without 'จังหวัด')",
+  "district": "District name in Thai WITHOUT 'เขต' or 'อำเภอ' prefix (e.g., 'บางนา', 'เมืองเชียงใหม่')",
+  "subdistrict": "Subdistrict name in Thai WITHOUT 'แขวง' or 'ตำบล' prefix (e.g., 'บางนาเหนือ', 'สุเทพ')",
   "googleMapsUrl": "Google Maps place link if known, or a search link like https://www.google.com/maps/place/13.6791,100.6125",
   "latitude": 13.6791, // Decimal latitude
   "longitude": 100.6125, // Decimal longitude
