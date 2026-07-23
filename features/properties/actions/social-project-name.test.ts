@@ -10,10 +10,12 @@ describe("renderPropertySocialTemplate - Project Name replacement", () => {
     property_type: "CONDO",
     price: 5000000,
     project: {
-      name: "เดอะ ไลน์ สุขุมวิท",
-      name_en: "The Line Sukhumvit",
-      name_cn: "素坤逸线公寓",
-      name_ru: "Линия Сухумвит",
+      name: {
+        th: "เดอะ ไลน์ สุขุมวิท",
+        en: "The Line Sukhumvit",
+        cn: "素坤逸线公寓",
+        ru: "Линия Сухумвит",
+      }
     },
   };
 
@@ -49,7 +51,9 @@ describe("renderPropertySocialTemplate - Project Name replacement", () => {
     const propertyWithPartialProject: any = {
       ...mockProperty,
       project: {
-        name: "เดอะ ไลน์ สุขุมวิท",
+        name: {
+          th: "เดอะ ไลน์ สุขุมวิท",
+        }
       },
     };
     const template = "Project: {{project_name}}";

@@ -12,6 +12,17 @@ import { generateText } from "@/lib/ai/gemini";
 import { createClient } from "@/lib/supabase/server";
 import { decrypt } from "@/lib/crypto";
 import { getPublicImageUrl } from "../image-utils";
+import { LOCATION_MAP } from "@/lib/line-flex-builders";
+
+function getDistrictName(districtName: string | null | undefined, lang: string): string {
+  if (!districtName) return "";
+  const cleanName = districtName.replace(/^เขต/, "").trim();
+  const mapped = (LOCATION_MAP as any)[cleanName] || (LOCATION_MAP as any)[districtName];
+  if (mapped && mapped[lang as any]) {
+    return mapped[lang as any];
+  }
+  return districtName;
+}
 
 export interface SocialProperty {
   [key: string]: unknown;
@@ -531,12 +542,13 @@ export async function renderPropertySocialTemplate(
           : "🌟 Exclusive"
     : "";
 
-  const tDistrict =
+  const dbDistrict =
     (lang === "th"
       ? property.district
       : (property[`district_${lang}`] as string)) ||
     property.district ||
     "";
+  const tDistrict = lang === "th" ? dbDistrict : getDistrictName(dbDistrict, lang);
   const tProvinceName = getProvinceName(property.province || "", lang);
 
   const cleanForHashtag = (str: string | null | undefined): string => {
@@ -545,12 +557,14 @@ export async function renderPropertySocialTemplate(
   };
 
   const projectObj = (property as any).project || null;
-  const tProjectName =
-    projectObj
-      ? (lang === "th"
-          ? projectObj.name
-          : projectObj[`name_${lang}`] || projectObj.name || "")
-      : "";
+  let tProjectName = "";
+  if (projectObj && projectObj.name) {
+    if (typeof projectObj.name === "object" && projectObj.name !== null) {
+      tProjectName = (projectObj.name as any)[lang] || (projectObj.name as any).th || (projectObj.name as any).en || "";
+    } else {
+      tProjectName = String(projectObj.name || "");
+    }
+  }
 
   const tPropertyTypeClean = cleanForHashtag(tPropertyType);
   const tListingTypeClean = cleanForHashtag(tListingType);
@@ -758,6 +772,25 @@ export async function getPropertySocialContent(
     }
   }
 
+  // Fetch popular area translations separately from master table
+  if (property.popular_area) {
+    try {
+      const { data: areaData } = await supabase
+        .from("popular_areas")
+        .select("name, name_en, name_cn, name_ru")
+        .eq("name", property.popular_area)
+        .limit(1);
+      if (areaData && areaData[0]) {
+        const area = areaData[0];
+        property.popular_area_en = area.name_en || property.popular_area_en;
+        property.popular_area_cn = area.name_cn || property.popular_area_cn;
+        property.popular_area_ru = area.name_ru || property.popular_area_ru;
+      }
+    } catch (err) {
+      console.warn("[Social] Failed to fetch popular area translation:", err);
+    }
+  }
+
   await populateAgentProfiles(supabase, property);
 
   const settings = await getSiteSettings();
@@ -939,12 +972,13 @@ export async function getPropertySocialContent(
       : (property[`title_${lang}`] as string)) ||
     (property.title as string) ||
     "";
-  const tDistrict =
+  const dbDistrictVal =
     (lang === "th"
       ? (property.district as string)
       : (property[`district_${lang}`] as string)) ||
     (property.district as string) ||
     "";
+  const tDistrict = lang === "th" ? dbDistrictVal : getDistrictName(dbDistrictVal, lang);
   const tProvince =
     (lang === "th"
       ? (property.province as string)

@@ -84,6 +84,10 @@ export const LOCATION_MAP: Record<string, Record<BotLang, string>> = {
   บางกะปิ: { th: "บางกะปิ", en: "Bang Kapi", cn: "邦甲必", ru: "Банг Капи" },
   ลาดพร้าว: { th: "ลาดพร้าว", en: "Lat Phrao", cn: "叻拋", ru: "Лат Пхрао" },
   จตุจักร: { th: "จตุจักร", en: "Chatuchak", cn: "恰图恰", ru: "Чатучак" },
+  เพชรบุรี: { th: "เพชรบุรี", en: "Phetchaburi", cn: "碧武里", ru: "Пхетчабури" },
+  บางรัก: { th: "บางรัก", en: "Bang Rak", cn: "挽叻", ru: "Банг Рак" },
+  ดินแดง: { th: "ดินแดง", en: "Din Daeng", cn: "丁登", ru: "Дин Дэнг" },
+  คลองสาน: { th: "คลองสาน", en: "Khlong San", cn: "空讪", ru: "Клонг Сан" },
 };
 
 // ============================
