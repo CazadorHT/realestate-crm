@@ -94,3 +94,47 @@ describe("renderPropertySocialTemplate - Agent Name replacement", () => {
     expect(result).toBe("Agent: Patarapol Boonrit");
   });
 });
+
+describe("renderPropertySocialTemplate - Instagram SEO hashtags", () => {
+  it("should generate a complete, structured SEO hashtag block", async () => {
+    const mockProperty: any = {
+      listing_type: "RENT",
+      property_type: "CONDO",
+      rental_price: 18500,
+      province: "กรุงเทพมหานคร",
+      district: "วัฒนา",
+      popular_area: "อโศก",
+      transit_station_name: "อโศก",
+      transit_type: "BTS",
+      nearby_places: [
+        { name: "Terminal 21" }
+      ],
+      project: {
+        name: { th: "เดอะ ไลน์ อโศก" }
+      }
+    };
+    const template = "{{instagram_seo}}";
+    const result = await renderPropertySocialTemplate(template, mockProperty, "th");
+    
+    // Group 1: Project & Location
+    expect(result).toContain("#เดอะไลน์อโศก");
+    expect(result).toContain("#อโศก");
+    expect(result).toContain("#คอนโดอโศก");
+    expect(result).toContain("#เดอะไลน์อโศกอโศก");
+    
+    // Group 2: Transit
+    expect(result).toContain("#BTSอโศก");
+    expect(result).toContain("#คอนโดใกล้อโศก");
+    
+    // Group 3: Landmark
+    expect(result).toContain("#ใกล้Terminal21");
+    
+    // Group 4: Budget
+    expect(result).toContain("#ให้เช่าคอนโด");
+    expect(result).toContain("#เช่าคอนโดไม่เกิน20000");
+    
+    // Group 5: Expats
+    expect(result).toContain("#BangkokCondoForRent");
+    expect(result).toContain("#ExpatBangkok");
+  });
+});

@@ -575,7 +575,69 @@ export async function renderPropertySocialTemplate(
   const tTransitClean = cleanForHashtag(property.transit_station_name);
   const tProjectClean = cleanForHashtag(tProjectName);
 
+  // --- Dynamic Instagram SEO Hashtags ---
+  // Group 1: Project & Location
+  const projectTag = tProjectClean ? `#${tProjectClean}` : "";
+  const projectLocationTag = tProjectClean && tLocationClean ? `#${tProjectClean}${tLocationClean}` : "";
+  const locationTag = tLocationClean ? `#${tLocationClean}` : "";
+  const propertyLocationTag = tPropertyTypeClean && tLocationClean ? `#${tPropertyTypeClean}${tLocationClean}` : "";
+
+  // Group 2: Transit
+  const transitTag = tTransitClean ? `#${tTransitClean}` : "";
+  const transitType = property.transit_type || "";
+  const transitTypeTag = tTransitClean && transitType ? `#${transitType}${tTransitClean}` : "";
+  const transitCondoTag = tPropertyTypeClean && tTransitClean ? `#${tPropertyTypeClean}ใกล้${tTransitClean}` : "";
+
+  // Group 3: Landmark
+  const landmarkTags = (property.nearby_places || [])
+    .slice(0, 2)
+    .map((p: any) => p.name ? `#ใกล้${cleanForHashtag(p.name)}` : "")
+    .filter(Boolean)
+    .join(" ");
+
+  // Group 4: Budget & Rent Type
+  let budgetTag = "";
+  if (property.listing_type === "RENT" && property.rental_price) {
+    const priceVal = Number(property.rental_price);
+    if (!isNaN(priceVal)) {
+      const tier = Math.ceil(priceVal / 5000) * 5000;
+      budgetTag = `#เช่า${tPropertyTypeClean}ไม่เกิน${tier}`;
+    }
+  } else if (property.listing_type === "SALE" && property.price) {
+    const priceVal = Number(property.price);
+    if (!isNaN(priceVal)) {
+      const millions = priceVal / 1000000;
+      if (millions < 10) {
+        const tier = Math.ceil(millions);
+        budgetTag = `#ซื้อ${tPropertyTypeClean}ไม่เกิน${tier}ล้าน`;
+      }
+    }
+  }
+
+  // Group 5: Expat & Foreigner Search
+  const propTypeEn = property.property_type === "CONDO" ? "Condo" : "House";
+  const expatTagsList = [];
+  if (property.listing_type === "RENT") {
+    expatTagsList.push(`#BangkokCondoForRent`, `#ExpatBangkok`, `#RentCondoBangkok`);
+    if (tProvinceClean) expatTagsList.push(`#Rent${propTypeEn}${cleanForHashtag(tProvinceName)}`);
+  } else {
+    expatTagsList.push(`#BangkokCondoForSale`, `#BangkokProperty`, `#ThailandRealEstate`);
+    if (tProvinceClean) expatTagsList.push(`#Buy${propTypeEn}${cleanForHashtag(tProvinceName)}`);
+  }
+  const expatTags = expatTagsList.join(" ");
+
+  // Combine into SEO string
+  const seoHashtagsStr = [
+    `#vconnectasset ${projectTag} ${locationTag} ${propertyLocationTag} ${projectLocationTag}`.trim(),
+    `${transitTag} ${transitTypeTag} ${transitCondoTag}`.trim(),
+    landmarkTags.trim(),
+    `#${tListingTypeClean}${tPropertyTypeClean} ${budgetTag}`.trim(),
+    expatTags.trim()
+  ].filter(Boolean).join(" ").replace(/\s+/g, " ").trim();
+
   return template
+    .replace(/{{instagram_seo}}/g, seoHashtagsStr)
+    .replace(/{{seo_hashtags}}/g, seoHashtagsStr)
     .replace(/{{project_name}}/g, tProjectName)
     .replace(/{{project_name_clean}}/g, tProjectClean)
     .replace(/{{title}}/g, tTitle)
