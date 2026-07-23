@@ -476,7 +476,7 @@ export function QuickCreateProjectDialog({
 
           <div className="grid grid-cols-1 sm:grid-cols-6 gap-3">
             {/* Google Maps URL */}
-            <div className="col-span-1 sm:col-span-3 space-y-1 text-left group">
+            <div className="col-span-1 sm:col-span-6 space-y-1 text-left group">
               <Label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 group-focus-within:text-indigo-600 transition-colors">
                 <MapPin className="w-3 h-3 text-slate-400 group-focus-within:text-indigo-600" />
                 <span>พิกัดแผนที่ (Google Maps Link)</span>
@@ -490,7 +490,7 @@ export function QuickCreateProjectDialog({
             </div>
 
             {/* Province */}
-            <div className="col-span-1 sm:col-span-1">
+            <div className="col-span-1 sm:col-span-2">
               <AddressCascadeField
                 label="จังหวัด"
                 value={province}
@@ -510,7 +510,7 @@ export function QuickCreateProjectDialog({
             </div>
 
             {/* District */}
-            <div className="col-span-1 sm:col-span-1">
+            <div className="col-span-1 sm:col-span-2">
               <AddressCascadeField
                 label="เขต / อำเภอ"
                 value={district}
@@ -529,7 +529,7 @@ export function QuickCreateProjectDialog({
             </div>
 
             {/* Subdistrict */}
-            <div className="col-span-1 sm:col-span-1">
+            <div className="col-span-1 sm:col-span-2">
               <AddressCascadeField
                 label="แขวง / ตำบล"
                 value={subdistrict}
@@ -621,7 +621,7 @@ function AddressCascadeField({
         </button>
 
         {open && (
-          <div className="absolute z-50 mt-1 w-full min-w-[190px] left-0 sm:left-auto sm:right-0 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+          <div className="absolute z-50 mt-1 w-full left-0 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden">
             {/* Search box */}
             <div className="flex items-center gap-2 px-2.5 py-2 border-b border-slate-100 bg-slate-50/60">
               <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
