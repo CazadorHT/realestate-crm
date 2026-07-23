@@ -763,7 +763,7 @@ export async function getPropertySocialContent(
     try {
       const { data: projData } = await supabase
         .from("projects")
-        .select("name, name_en, name_cn, name_ru")
+        .select("name")
         .eq("id", property.project_id)
         .single();
       property.project = projData;
