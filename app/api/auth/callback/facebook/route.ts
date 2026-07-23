@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
     }
 
     const { revalidatePath, revalidateTag } = await import("next/cache");
-    revalidatePath("/(protected)/protected/settings", "page");
+    revalidatePath("/protected/settings");
     revalidateTag("site-settings", "hours");
     if (tenantId) {
       revalidateTag(`site-settings-${tenantId}`, "hours");

@@ -1118,7 +1118,7 @@ export async function postPropertyToMetaAction(
           .eq("id", propertyId);
       }
 
-      revalidatePath("/(protected)/protected/properties", "page");
+      revalidatePath("/protected/properties");
 
       return {
         success: true,

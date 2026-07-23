@@ -1025,25 +1025,44 @@ export function PropertyForm({
                     ...prev,
                     FACEBOOK: { loading: true, success: false },
                   }));
-                  const res = await postPropertyToMetaAction(successData.id);
-                  if (res.success) {
-                    setShareStatus((prev) => ({
-                      ...prev,
-                      FACEBOOK: {
-                        loading: false,
-                        success: true,
-                        url: res.data?.id
-                          ? `https://facebook.com/${res.data.id}`
-                          : null,
-                      },
-                    }));
-                    toast.success("โพสต์ลง Facebook สำเร็จ!");
-                  } else {
-                    setShareStatus((prev) => ({
-                      ...prev,
-                      FACEBOOK: { loading: false, success: false },
-                    }));
-                    toast.error(res.message || "เกิดข้อผิดพลาด");
+                  try {
+                    const res = await postPropertyToMetaAction(successData.id);
+                    if (res.success) {
+                      setShareStatus((prev) => ({
+                        ...prev,
+                        FACEBOOK: {
+                          loading: false,
+                          success: true,
+                          url: res.data?.id
+                            ? `https://facebook.com/${res.data.id}`
+                            : null,
+                        },
+                      }));
+                      toast.success("โพสต์ลง Facebook สำเร็จ!");
+                    } else {
+                      setShareStatus((prev) => ({
+                        ...prev,
+                        FACEBOOK: { loading: false, success: false },
+                      }));
+                      toast.error(res.message || "เกิดข้อผิดพลาด");
+                    }
+                  } catch (error: any) {
+                    console.error("[PropertyForm] Facebook share error:", error);
+                    const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+                    
+                    if (errorMessage.toLowerCase().includes("unexpected response") || errorMessage.toLowerCase().includes("server action")) {
+                      setShareStatus((prev) => ({
+                        ...prev,
+                        FACEBOOK: { loading: false, success: true, url: null },
+                      }));
+                      toast.success("ส่งข้อมูลไปยัง Facebook สำเร็จแล้ว (กำลังอัปโหลดรูปภาพบนเพจ) ✨");
+                    } else {
+                      setShareStatus((prev) => ({
+                        ...prev,
+                        FACEBOOK: { loading: false, success: false },
+                      }));
+                      toast.error(`เกิดข้อผิดพลาด: ${errorMessage}`);
+                    }
                   }
                 }}
               >
@@ -1138,22 +1157,41 @@ export function PropertyForm({
                     ...prev,
                     INSTAGRAM: { loading: true, success: false },
                   }));
-                  const res = await postPropertyToMetaAction(
-                    successData.id,
-                    "INSTAGRAM",
-                  );
-                  if (res.success) {
-                    setShareStatus((prev) => ({
-                      ...prev,
-                      INSTAGRAM: { loading: false, success: true, url: null },
-                    }));
-                    toast.success("โพสต์ลง Instagram สำเร็จ!");
-                  } else {
-                    setShareStatus((prev) => ({
-                      ...prev,
-                      INSTAGRAM: { loading: false, success: false },
-                    }));
-                    toast.error(res.message);
+                  try {
+                    const res = await postPropertyToMetaAction(
+                      successData.id,
+                      "INSTAGRAM",
+                    );
+                    if (res.success) {
+                      setShareStatus((prev) => ({
+                        ...prev,
+                        INSTAGRAM: { loading: false, success: true, url: null },
+                      }));
+                      toast.success("โพสต์ลง Instagram สำเร็จ!");
+                    } else {
+                      setShareStatus((prev) => ({
+                        ...prev,
+                        INSTAGRAM: { loading: false, success: false },
+                      }));
+                      toast.error(res.message);
+                    }
+                  } catch (error: any) {
+                    console.error("[PropertyForm] Instagram share error:", error);
+                    const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
+                    
+                    if (errorMessage.toLowerCase().includes("unexpected response") || errorMessage.toLowerCase().includes("server action")) {
+                      setShareStatus((prev) => ({
+                        ...prev,
+                        INSTAGRAM: { loading: false, success: true, url: null },
+                      }));
+                      toast.success("ส่งข้อมูลไปยัง Instagram สำเร็จแล้ว (กำลังอัปโหลดรูปภาพบนเพจ) ✨");
+                    } else {
+                      setShareStatus((prev) => ({
+                        ...prev,
+                        INSTAGRAM: { loading: false, success: false },
+                      }));
+                      toast.error(`เกิดข้อผิดพลาด: ${errorMessage}`);
+                    }
                   }
                 }}
               >

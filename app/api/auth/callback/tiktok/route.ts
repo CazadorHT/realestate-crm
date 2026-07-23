@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     console.log(`[TikTok Callback] Successfully connected: ${userInfo?.display_name || 'Unknown'}`);
 
     const { revalidatePath } = await import("next/cache");
-    revalidatePath("/(protected)/protected/profile", "page");
+    revalidatePath("/protected/profile");
 
     return NextResponse.redirect(
       new URL(

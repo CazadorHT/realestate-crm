@@ -145,7 +145,7 @@ export async function postPropertyToTikTokAction(
       .update({ posted_to_tiktok_at: new Date().toISOString() })
       .eq("id", propertyId);
 
-    revalidatePath("/(protected)/protected/properties", "page");
+    revalidatePath("/protected/properties");
 
     return {
       success: true,

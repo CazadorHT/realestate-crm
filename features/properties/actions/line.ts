@@ -101,7 +101,7 @@ export async function postPropertyToLineAction(
       .update({ posted_to_line_at: new Date().toISOString() })
       .eq("id", propertyId);
 
-    revalidatePath("/(protected)/protected/properties", "page");
+    revalidatePath("/protected/properties");
 
     return { success: true, message: "บรอดแคสต์ลง Line เรียบร้อย" };
   } catch (err) {
