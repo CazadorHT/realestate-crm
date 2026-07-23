@@ -61,3 +61,36 @@ describe("renderPropertySocialTemplate - Project Name replacement", () => {
     expect(result).toContain("Project: เดอะ ไลน์ สุขุมวิท");
   });
 });
+
+describe("renderPropertySocialTemplate - Agent Name replacement", () => {
+  it("should replace {{agent_name}} with nickname if available", async () => {
+    const mockProperty: any = {
+      property_agents: [
+        {
+          profiles: {
+            full_name: "Patarapol Boonrit",
+            nickname: "Aof",
+          },
+        },
+      ],
+    };
+    const template = "Agent: {{agent_name}}";
+    const result = await renderPropertySocialTemplate(template, mockProperty, "th");
+    expect(result).toBe("Agent: Aof");
+  });
+
+  it("should fallback to full_name if nickname is missing", async () => {
+    const mockProperty: any = {
+      property_agents: [
+        {
+          profiles: {
+            full_name: "Patarapol Boonrit",
+          },
+        },
+      ],
+    };
+    const template = "Agent: {{agent_name}}";
+    const result = await renderPropertySocialTemplate(template, mockProperty, "th");
+    expect(result).toBe("Agent: Patarapol Boonrit");
+  });
+});

@@ -58,7 +58,7 @@ export interface SocialProperty {
   verified: boolean | null;
   is_exclusive: boolean | null;
   property_agents?: {
-    profiles: { full_name?: string; phone?: string; line_id?: string };
+    profiles: { full_name?: string; nickname?: string; phone?: string; line_id?: string };
   }[];
   property_features?: {
     features: {
@@ -651,7 +651,7 @@ export async function renderPropertySocialTemplate(
     .replace(/{{verified}}/g, tVerified)
     .replace(/{{exclusive}}/g, tExclusive)
     .replace(/{{link}}/g, publicUrl)
-    .replace(/{{agent_name}}/g, primaryAgent.full_name || "")
+    .replace(/{{agent_name}}/g, primaryAgent.nickname || primaryAgent.full_name || "")
     .replace(/{{agent_phone}}/g, primaryAgent.phone || "")
     .replace(/{{agent_line}}/g, primaryAgent.line_id || "");
 }
@@ -678,13 +678,13 @@ export async function populateAgentProfiles(supabase: any, property: any) {
     if (fallbackId) {
       const { data: identityData } = await supabase
         .from("identities_v3")
-        .select("display_name, phone, line_id")
+        .select("display_name, nickname, phone, line_id")
         .eq("id", fallbackId)
         .maybeSingle();
 
       const { data: staffProfile } = await supabase
         .from("profiles")
-        .select("full_name, phone, line_id")
+        .select("full_name, nickname, phone, line_id")
         .eq("id", fallbackId)
         .maybeSingle();
 
@@ -693,6 +693,7 @@ export async function populateAgentProfiles(supabase: any, property: any) {
           agent_id: fallbackId,
           profiles: {
             full_name: decryptOrRaw(identityData?.display_name) || staffProfile?.full_name || identityData?.display_name || "",
+            nickname: decryptOrRaw(identityData?.nickname) || staffProfile?.nickname || identityData?.nickname || "",
             phone: decryptOrRaw(identityData?.phone) || staffProfile?.phone || identityData?.phone || "",
             line_id: decryptOrRaw(identityData?.line_id) || staffProfile?.line_id || identityData?.line_id || "",
           },
@@ -704,7 +705,7 @@ export async function populateAgentProfiles(supabase: any, property: any) {
       if (pa.agent_id) {
         const { data: staffProfile } = await supabase
           .from("profiles")
-          .select("full_name, phone, line_id")
+          .select("full_name, nickname, phone, line_id")
           .eq("id", pa.agent_id)
           .maybeSingle();
 
@@ -712,6 +713,7 @@ export async function populateAgentProfiles(supabase: any, property: any) {
           pa.profiles = {
             ...pa.profiles,
             full_name: decryptOrRaw(pa.profiles?.full_name) || staffProfile.full_name || pa.profiles?.full_name || "",
+            nickname: decryptOrRaw(pa.profiles?.nickname) || staffProfile.nickname || pa.profiles?.nickname || "",
             phone: decryptOrRaw(pa.profiles?.phone) || staffProfile.phone || pa.profiles?.phone || "",
             line_id: decryptOrRaw(pa.profiles?.line_id) || staffProfile.line_id || pa.profiles?.line_id || "",
           };
@@ -719,6 +721,7 @@ export async function populateAgentProfiles(supabase: any, property: any) {
           pa.profiles = {
             ...pa.profiles,
             full_name: decryptOrRaw(pa.profiles.full_name) || "",
+            nickname: decryptOrRaw(pa.profiles.nickname) || "",
             phone: decryptOrRaw(pa.profiles.phone) || "",
             line_id: decryptOrRaw(pa.profiles.line_id) || "",
           };
@@ -745,7 +748,7 @@ export async function getPropertySocialContent(
       `
       *,
       property_images ( image_url, storage_path ),
-      property_agents ( agent_id, profiles:identities_v3 ( full_name:display_name, phone, line_id ) ),
+      property_agents ( agent_id, profiles:identities_v3 ( full_name:display_name, nickname, phone, line_id ) ),
       property_features ( features ( name, name_en, name_cn, name_ru, icon_key ) )
     `,
     )
