@@ -735,7 +735,7 @@ export async function postToMetaPage(
                 `[IG-POST] Failed to create carousel item for ${imgUrl}:`,
                 itemData,
               );
-              if (itemData.error?.code === 190 || itemData.error?.type === "OAuthException" || itemData.error?.message?.toLowerCase().includes("access token")) {
+              if (itemData.error?.code === 190 || itemData.error?.message?.toLowerCase().includes("access token") || itemData.error?.message?.toLowerCase().includes("session")) {
                 return {
                   success: false,
                   isTokenError: true,
