@@ -11,6 +11,7 @@ import { PropertyRow } from "@/lib/services/properties";
 import { generateText } from "@/lib/ai/gemini";
 import { createClient } from "@/lib/supabase/server";
 import { decrypt } from "@/lib/crypto";
+import { getPublicImageUrl } from "../image-utils";
 
 export interface SocialProperty {
   [key: string]: unknown;
@@ -543,6 +544,14 @@ export async function renderPropertySocialTemplate(
     return str.toString().replace(/[\s,()\-./]/g, "");
   };
 
+  const projectObj = (property as any).project || null;
+  const tProjectName =
+    projectObj
+      ? (lang === "th"
+          ? projectObj.name
+          : projectObj[`name_${lang}`] || projectObj.name || "")
+      : "";
+
   const tPropertyTypeClean = cleanForHashtag(tPropertyType);
   const tListingTypeClean = cleanForHashtag(tListingType);
   const tPopularAreaClean = cleanForHashtag(tPopularArea);
@@ -550,8 +559,11 @@ export async function renderPropertySocialTemplate(
   const tProvinceClean = cleanForHashtag(tProvinceName);
   const tLocationClean = cleanForHashtag(tPopularArea || tDistrict || tProvinceName);
   const tTransitClean = cleanForHashtag(property.transit_station_name);
+  const tProjectClean = cleanForHashtag(tProjectName);
 
   return template
+    .replace(/{{project_name}}/g, tProjectName)
+    .replace(/{{project_name_clean}}/g, tProjectClean)
     .replace(/{{title}}/g, tTitle)
     .replace(/{{description}}/g, tDescription)
     .replace(/{{price}}/g, priceText)
@@ -718,7 +730,8 @@ export async function getPropertySocialContent(
     .select(
       `
       *,
-      property_images ( image_url ),
+      project:projects!properties_core_project_id_fkey ( name, name_en, name_cn, name_ru ),
+      property_images ( image_url, storage_path ),
       property_agents ( agent_id, profiles:identities_v3 ( full_name:display_name, phone, line_id ) ),
       property_features ( features ( name, name_en, name_cn, name_ru, icon_key ) )
     `,
@@ -984,14 +997,14 @@ export async function getPropertySocialContent(
   );
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const rawImages =
-    ((property.property_images as { image_url: string }[])
+    ((property.property_images as { image_url: string; storage_path?: string }[])
       ?.map((img) => {
-        const url = img.image_url;
-        if (!url) return null;
-        if (url.startsWith("http")) return url;
-        // Fallback for relative paths in Supabase (Hardened against double slashes)
-        const baseUrl = supabaseUrl?.replace(/\/$/, "");
-        return `${baseUrl}/storage/v1/object/public/property-images/${url}`;
+        const path = img.storage_path || img.image_url;
+        if (!path) return null;
+        if (path.startsWith("http")) return path;
+        
+        // Return original high-resolution public URL using storage_path
+        return getPublicImageUrl(path);
       })
       .filter(Boolean) as string[]) || [];
 
@@ -1040,7 +1053,7 @@ export async function postPropertyToMetaAction(
     const { data: p, error: propError } = await supabase
       .from("properties")
       .select(
-        `*, property_images(image_url), property_agents(profiles:identities_v3(*)), property_features(features(*))`,
+        `*, project:projects!properties_core_project_id_fkey ( name, name_en, name_cn, name_ru ), property_images(image_url, storage_path), property_agents(profiles:identities_v3(*)), property_features(features(*))`,
       )
       .eq("id", propertyId)
       .single();
