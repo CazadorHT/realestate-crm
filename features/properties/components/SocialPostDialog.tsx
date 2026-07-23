@@ -1,6 +1,7 @@
 "use client";
 
 import { type Language } from "@/lib/i18n";
+import { useRouter } from "next/navigation";
 
 import { ResponsiveDialog } from "@/components/ui/responsive-dialog";
 import React, { useState, useEffect, useRef, useCallback } from "react";
@@ -92,6 +93,7 @@ export function SocialPostDialog({
   className,
 }: SocialPostDialogProps) {
   const isMobile = useIsMobile();
+  const router = useRouter();
   const [content, setContent] = useState("");
   const [isCustomContent, setIsCustomContent] = useState(false);
   const [customContent, setCustomContent] = useState("");
@@ -239,6 +241,7 @@ export function SocialPostDialog({
         if (platform === "TIKTOK" && res.publish_id) {
           setPublishId(res.publish_id);
         }
+        router.refresh();
         onSuccess?.();
       } else {
         finishProcess(processId, "ERROR", res?.message || "เกิดข้อผิดพลาดในการโพสต์ ❌");
@@ -255,6 +258,7 @@ export function SocialPostDialog({
         setStatus("SUCCESS");
         setResultMessage("ระบบได้ส่งข้อมูลไปยังโซเชียลมีเดียเรียบร้อยแล้ว แต่อาจใช้เวลา 1-2 นาทีในประมวลผลรูปภาพบนหน้าเพจของคุณครับ");
         localStorage.removeItem(`social_post_draft:${propertyId}:${platform}`);
+        router.refresh();
         onSuccess?.();
         return;
       }

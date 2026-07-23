@@ -1039,6 +1039,7 @@ export function PropertyForm({
                         },
                       }));
                       toast.success("โพสต์ลง Facebook สำเร็จ!");
+                      router.refresh();
                     } else {
                       setShareStatus((prev) => ({
                         ...prev,
@@ -1056,6 +1057,7 @@ export function PropertyForm({
                         FACEBOOK: { loading: false, success: true, url: null },
                       }));
                       toast.success("ส่งข้อมูลไปยัง Facebook สำเร็จแล้ว (กำลังอัปโหลดรูปภาพบนเพจ) ✨");
+                      router.refresh();
                     } else {
                       setShareStatus((prev) => ({
                         ...prev,
@@ -1168,6 +1170,7 @@ export function PropertyForm({
                         INSTAGRAM: { loading: false, success: true, url: null },
                       }));
                       toast.success("โพสต์ลง Instagram สำเร็จ!");
+                      router.refresh();
                     } else {
                       setShareStatus((prev) => ({
                         ...prev,
@@ -1185,6 +1188,7 @@ export function PropertyForm({
                         INSTAGRAM: { loading: false, success: true, url: null },
                       }));
                       toast.success("ส่งข้อมูลไปยัง Instagram สำเร็จแล้ว (กำลังอัปโหลดรูปภาพบนเพจ) ✨");
+                      router.refresh();
                     } else {
                       setShareStatus((prev) => ({
                         ...prev,
