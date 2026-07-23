@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useTransition } from "react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,10 @@ import { FaLine, FaMeta } from "react-icons/fa6";
 import { IntegrationDisconnectButton } from "@/components/settings/IntegrationDisconnectButton";
 import { SocialAutomationSettings } from "@/components/settings/SocialAutomationSettings";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { saveManualMetaTokenAction } from "../actions";
 
 interface SocialIntegrationsTabProps {
   allSettings: any;
@@ -25,6 +29,30 @@ export function SocialIntegrationsTab({
   isTikTokConnected,
   isFacebookConnected,
 }: SocialIntegrationsTabProps) {
+  const router = useRouter();
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualToken, setManualToken] = useState("");
+  const [isPending, startTransition] = useTransition();
+
+  const handleSaveManualToken = async () => {
+    if (!manualToken.trim()) {
+      toast.error("กรุณากรอก Token");
+      return;
+    }
+
+    startTransition(async () => {
+      const res = await saveManualMetaTokenAction(manualToken);
+      if (res.success) {
+        toast.success(res.message);
+        setManualToken("");
+        setShowManualInput(false);
+        router.refresh();
+      } else {
+        toast.error(res.message);
+      }
+    });
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -63,51 +91,48 @@ export function SocialIntegrationsTab({
           <CardContent className="space-y-6">
             {isLineConnected ? (
               <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-[20px] bg-emerald-50/50 border border-emerald-100/50">
+                <div className="flex items-center justify-between p-4 rounded-[20px] bg-emerald-50/80 border border-emerald-100/50 backdrop-blur-md">
                   <div className="flex items-center gap-3">
-                    <div className="relative">
-                      <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse pointer-events-none absolute inset-0" />
-                      <div className="h-3 w-3 rounded-full bg-emerald-500" />
-                    </div>
+                    <div className="h-3 w-3 rounded-full bg-emerald-500 animate-pulse" />
                     <span className="text-sm font-bold text-emerald-700">
-                      Connected
+                      Line OA Active
                     </span>
                   </div>
                   {lineBotInfo?.displayName && (
                     <Badge
                       variant="outline"
-                      className="bg-white/80 border-emerald-200 text-emerald-700 font-bold px-3 py-1"
+                      className="bg-white/95 border-emerald-200 text-emerald-700 font-bold px-3 py-1 text-[10px]"
                     >
                       {lineBotInfo.displayName}
                     </Badge>
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Link href="/protected/line-manager" className="flex-1">
-                    <Button className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl shadow-lg shadow-emerald-200 border-none transition-all active:scale-95">
-                      Manage Bot
+                  <Link
+                    href="/protected/line-manager"
+                    className="flex-1"
+                  >
+                    <Button className="w-full h-12 bg-linear-to-r from-emerald-500 to-teal-500 text-white font-black rounded-xl hover:opacity-90 transition-all shadow-md active:scale-95">
+                      Manage Line Broadcasts
                     </Button>
                   </Link>
                   <IntegrationDisconnectButton
                     provider="line"
                     variant="outline"
                     showLabel={false}
-                    className="h-12 w-12 p-0 flex items-center justify-center rounded-xl bg-slate-50 border-slate-200 text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-95"
+                    className="h-12 w-12 p-0 flex items-center justify-center rounded-xl bg-white/50 border-emerald-200 text-emerald-400 hover:text-red-500 hover:bg-red-50 transition-all active:scale-95 shadow-sm"
                   />
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
                 <p className="text-sm text-slate-500 leading-relaxed font-medium">
-                  เชื่อมต่อ Line OA
-                  เพื่อรับการแจ้งเตือนและแชทกับลูกค้าผ่านระบบ CRM ได้ทันที
+                  เชื่อมต่อ LINE Official Account
+                  เพื่อยิงบรอดแคสต์ข้อมูลทรัพย์และสื่อสารกับลูกค้าได้โดยตรง
                 </p>
-                <Link href="/protected/line-manager">
-                  <Button
-                    variant="outline"
-                    className="w-full h-12 rounded-xl border-dashed border-2 border-emerald-200 text-emerald-600 hover:bg-emerald-50 font-bold"
-                  >
-                    Connect LINE
+                <Link href="/protected/settings/branches" className="w-full block">
+                  <Button className="w-full h-12 rounded-xl bg-linear-to-r from-emerald-500 to-teal-500 text-white font-black hover:opacity-90 shadow-md active:scale-95">
+                    Configure Line
                   </Button>
                 </Link>
               </div>
@@ -198,6 +223,41 @@ export function SocialIntegrationsTab({
                 </a>
               </div>
             )}
+
+            {/* Manual Token Input Accordion */}
+            <div className="pt-2 border-t border-slate-100/50">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowManualInput(!showManualInput)}
+                className="text-xs text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 p-0 h-auto font-bold"
+              >
+                {showManualInput ? "✕ ปิดหน้าจอระบุ Token เอง" : "✎ กรอก Page Access Token ด้วยตนเอง (Manual)"}
+              </Button>
+
+              {showManualInput && (
+                <div className="mt-4 space-y-3 p-4 rounded-2xl bg-white/60 border border-slate-200/60 shadow-inner">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-bold text-slate-500">Facebook Page Access Token (Long-life)</label>
+                    <Input
+                      type="password"
+                      placeholder="EAA..."
+                      value={manualToken}
+                      onChange={(e) => setManualToken(e.target.value)}
+                      className="h-10 text-xs rounded-xl bg-white border-slate-200"
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    disabled={isPending}
+                    onClick={handleSaveManualToken}
+                    className="w-full h-9 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 shadow-sm active:scale-95 transition-all"
+                  >
+                    {isPending ? "กำลังบันทึกและตรวจสอบ..." : "บันทึกและเชื่อมต่อ"}
+                  </Button>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

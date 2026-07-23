@@ -704,3 +704,58 @@ export async function uploadSiteAssetAction(
     return { success: false, message: mapDbError(error) };
   }
 }
+
+/**
+ * Validates and saves a manually entered Meta Page Access Token.
+ * Fetches Page ID and Page Name from Facebook Graph API using the token.
+ */
+export async function saveManualMetaTokenAction(
+  token: string
+): Promise<{ success: boolean; message: string; pageName?: string }> {
+  try {
+    const { getCurrentProfile } = await import("@/lib/supabase/getCurrentProfile");
+    const user = await getCurrentProfile();
+
+    if (!user || !["ADMIN", "MANAGER"].includes(user.role)) {
+      return { success: false, message: "Unauthorized" };
+    }
+
+    if (!token || token.trim() === "") {
+      return { success: false, message: "กรุณากรอก Token" };
+    }
+
+    // Call Facebook Graph API to validate token and fetch page details
+    const fbUrl = `https://graph.facebook.com/v19.0/me?fields=id,name&access_token=${token.trim()}`;
+    const fbRes = await fetch(fbUrl);
+    
+    if (!fbRes.ok) {
+      const fbError = await fbRes.json().catch(() => ({}));
+      return { 
+        success: false, 
+        message: `Token ไม่ถูกต้องหรือหมดอายุ: ${fbError.error?.message || "ไม่สามารถเชื่อมต่อ Facebook ได้"}` 
+      };
+    }
+
+    const fbData = await fbRes.json();
+    const pageId = fbData.id;
+    const pageName = fbData.name;
+
+    if (!pageId || !pageName) {
+      return { success: false, message: "ไม่พบข้อมูลเพจ Facebook จาก Token นี้" };
+    }
+
+    // Save tokens and page info to site settings
+    await updateSiteSetting("meta_page_access_token", token.trim());
+    await updateSiteSetting("meta_page_id" as any, pageId);
+    await updateSiteSetting("meta_page_name", pageName);
+
+    return { 
+      success: true, 
+      message: `เชื่อมต่อกับเพจ "${pageName}" สำเร็จแล้ว!`,
+      pageName 
+    };
+  } catch (error: any) {
+    console.error("Error in saveManualMetaTokenAction:", error);
+    return { success: false, message: error.message || "เกิดข้อผิดพลาดไม่ทราบสาเหตุ" };
+  }
+}
