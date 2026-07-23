@@ -358,11 +358,11 @@ export const ManagementSection = ({
                                   : "bg-white border-slate-100 hover:bg-slate-50 text-slate-700",
                               )}
                             >
-                              <span className="text-xs font-bold">
-                                <span className="text-slate-500 mr-1.5">K.</span>
-                                {o.full_name}{" "}
+                              <span className="text-xs font-bold flex items-center gap-1.5 min-w-0">
+                                <span className="text-slate-500 mr-1.5 shrink-0">K.</span>
+                                <span className="inline-block truncate flex-1 min-w-0 align-bottom">{o.full_name}</span>{" "}
                                 {o.phone && (
-                                  <span className="text-[10px] text-slate-400 font-normal ml-2 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                                  <span className="text-[10px] text-slate-400 font-normal ml-2 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 shrink-0">
                                     {o.phone}
                                   </span>
                                 )}
@@ -450,16 +450,16 @@ export const ManagementSection = ({
                                 value={o.id}
                                 className="py-3 font-medium text-sm rounded-lg"
                               >
-                                <span className="flex items-center gap-1.5">
-                                  <span className="text-slate-500">K.</span>
-                                  <span>{o.full_name}</span>
+                                <span className="flex items-center gap-1.5 min-w-0">
+                                  <span className="text-slate-500 shrink-0">K.</span>
+                                  <span className="inline-block truncate flex-1 min-w-0 align-bottom">{o.full_name}</span>
                                   {isNew && (
-                                    <span className="px-1.5 py-0.5 text-[9px] font-extrabold tracking-wider text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200">
+                                    <span className="px-1.5 py-0.5 text-[9px] font-extrabold tracking-wider text-emerald-700 bg-emerald-50 rounded-full border border-emerald-200 shrink-0">
                                       NEW
                                     </span>
                                   )}
                                   {o.phone && (
-                                    <span className="text-[11px] text-slate-400 font-normal ml-2 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100">
+                                    <span className="text-[11px] text-slate-400 font-normal ml-2 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 shrink-0">
                                       {o.phone}
                                     </span>
                                   )}

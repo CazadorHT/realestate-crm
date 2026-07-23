@@ -2,7 +2,7 @@
 
 import { requireAuthContext, assertStaff } from "@/lib/authz";
 import { revalidatePath } from "next/cache";
-import { getPropertySocialContent, renderPropertySocialTemplate } from "./social";
+import { getPropertySocialContent, renderPropertySocialTemplate, populateAgentProfiles } from "./social";
 import { refreshTikTokTokenIfNeeded, publishTikTokPhotoPost, getTikTokPublishStatus } from "@/lib/tiktok";
 import { getPublicImageUrl } from "../image-utils";
 
@@ -28,22 +28,58 @@ export async function postPropertyToTikTokAction(
       };
     }
 
-    // 2. ดึงข้อมูลทรัพย์ พร้อมรูป
-    const { data: property, error: propError } = await supabase
+    // 2. ดึงข้อมูลทรัพย์ พร้อมรูป, เอเจนต์, และฟีเจอร์ต่างๆ
+    const { data: propData, error: propError } = await supabase
       .from("properties")
       .select(`
         *,
-        property_images (
-          image_url,
-          storage_path
-        )
+        property_images ( image_url, storage_path ),
+        property_agents ( agent_id, profiles:identities_v3 ( full_name:display_name, phone, line_id ) ),
+        property_features ( features ( name, name_en, name_cn, name_ru, icon_key ) )
       `)
       .eq("id", propertyId)
       .single();
 
-    if (propError || !property) {
+    if (propError || !propData) {
       return { success: false, message: "ไม่พบข้อมูลทรัพย์" };
     }
+
+    const property = propData as any;
+
+    // Fetch project separately to bypass view join restrictions
+    if (property.project_id) {
+      try {
+        const { data: projData } = await supabase
+          .from("projects")
+          .select("name, name_en, name_cn, name_ru")
+          .eq("id", property.project_id)
+          .single();
+        property.project = projData;
+      } catch (err) {
+        console.warn("[TikTok] Failed to fetch project relation:", err);
+      }
+    }
+
+    // Fetch popular area translations separately from master table
+    if (property.popular_area) {
+      try {
+        const { data: areaData } = await supabase
+          .from("popular_areas")
+          .select("name, name_en, name_cn, name_ru")
+          .eq("name", property.popular_area)
+          .limit(1);
+        if (areaData && areaData[0]) {
+          const area = areaData[0];
+          property.popular_area_en = area.name_en || property.popular_area_en;
+          property.popular_area_cn = area.name_cn || property.popular_area_cn;
+          property.popular_area_ru = area.name_ru || property.popular_area_ru;
+        }
+      } catch (err) {
+        console.warn("[TikTok] Failed to fetch popular area translation:", err);
+      }
+    }
+
+    await populateAgentProfiles(supabase, property);
 
     // 3. จัดเตรียม Caption (Robust Logic)
     let finalCaption = caption || "";
