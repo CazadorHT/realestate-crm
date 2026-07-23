@@ -37,6 +37,7 @@ import {
   getPopularAreasAction,
   postPropertyToMetaAction,
   postPropertyToLineAction,
+  updateSocialPostTimestampAction,
 } from "./actions";
 import { Form } from "@/components/ui/form";
 import {
@@ -1052,6 +1053,13 @@ export function PropertyForm({
                     const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
                     
                     if (errorMessage.toLowerCase().includes("unexpected response") || errorMessage.toLowerCase().includes("server action")) {
+                      // Fallback: Update database timestamp directly via a fast, non-timeout query
+                      try {
+                        await updateSocialPostTimestampAction(successData.id, "FACEBOOK");
+                      } catch (dbErr) {
+                        console.error("[PropertyForm] Failed to update Facebook post timestamp fallback:", dbErr);
+                      }
+                      
                       setShareStatus((prev) => ({
                         ...prev,
                         FACEBOOK: { loading: false, success: true, url: null },
@@ -1183,6 +1191,13 @@ export function PropertyForm({
                     const errorMessage = error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเชื่อมต่อ";
                     
                     if (errorMessage.toLowerCase().includes("unexpected response") || errorMessage.toLowerCase().includes("server action")) {
+                      // Fallback: Update database timestamp directly via a fast, non-timeout query
+                      try {
+                        await updateSocialPostTimestampAction(successData.id, "INSTAGRAM");
+                      } catch (dbErr) {
+                        console.error("[PropertyForm] Failed to update Instagram post timestamp fallback:", dbErr);
+                      }
+                      
                       setShareStatus((prev) => ({
                         ...prev,
                         INSTAGRAM: { loading: false, success: true, url: null },

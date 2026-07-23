@@ -13,6 +13,7 @@ import Link from "next/link";
 import {
   getPropertySocialContent,
   postPropertyToMetaAction,
+  updateSocialPostTimestampAction,
 } from "@/features/properties/actions/social";
 import { postPropertyToLineAction } from "@/features/properties/actions/line";
 import { postPropertyToTikTokAction, getTikTokPostStatusAction } from "@/features/properties/actions/tiktok";
@@ -254,6 +255,13 @@ export function SocialPostDialog({
       
       // If it is the unexpected response error from Next.js server actions (typically timeout/502 but the action itself completed)
       if (errorMessage.toLowerCase().includes("unexpected response") || errorMessage.toLowerCase().includes("server action")) {
+        // Fallback: Update database timestamp directly via a fast, non-timeout query
+        try {
+          await updateSocialPostTimestampAction(propertyId, platform);
+        } catch (dbErr) {
+          console.error("[SocialPostDialog] Failed to update post timestamp fallback:", dbErr);
+        }
+        
         finishProcess(processId, "SUCCESS", "ส่งข้อมูลไปยังโซเชียลมีเดียเรียบร้อยแล้ว (กำลังประมวลผลบนหน้าเพจ) ✨");
         setStatus("SUCCESS");
         setResultMessage("ระบบได้ส่งข้อมูลไปยังโซเชียลมีเดียเรียบร้อยแล้ว แต่อาจใช้เวลา 1-2 นาทีในประมวลผลรูปภาพบนหน้าเพจของคุณครับ");

@@ -1187,3 +1187,41 @@ export async function generateSocialCaptionsAction(propertyId: string, platform:
     throw e;
   }
 }
+
+/**
+ * Update social post timestamp directly (used as fallback when main action times out)
+ */
+export async function updateSocialPostTimestampAction(
+  propertyId: string,
+  platform: "FACEBOOK" | "INSTAGRAM" | "LINE" | "TIKTOK"
+) {
+  try {
+    const { supabase, role } = await requireAuthContext();
+    assertStaff(role);
+
+    const columnName = 
+      platform === "FACEBOOK" 
+        ? "posted_to_facebook_at" 
+        : platform === "INSTAGRAM"
+          ? "posted_to_instagram_at"
+          : platform === "LINE"
+            ? "posted_to_line_at"
+            : "posted_to_tiktok_at";
+
+    const updatePayload: any = {};
+    updatePayload[columnName] = new Date().toISOString();
+
+    const { error } = await supabase
+      .from("properties_core")
+      .update(updatePayload)
+      .eq("id", propertyId);
+
+    if (error) throw error;
+    
+    revalidatePath("/protected/properties");
+    return { success: true };
+  } catch (err: any) {
+    console.error("updateSocialPostTimestampAction error:", err);
+    return { success: false, error: err.message };
+  }
+}
