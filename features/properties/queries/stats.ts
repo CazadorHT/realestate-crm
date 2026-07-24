@@ -76,11 +76,22 @@ export async function getPropertiesDashboardStatsQuery(
 
   closedDeals?.forEach((d: any) => {
     const gross = Number(d.commission_total) || 0;
-    const coAgentSum = ((d as any).commissions || [])
+    const commissions = (d as any).commissions || [];
+    const coAgentSum = commissions
       .filter((c: any) => c.recipient_role === "CO_AGENT")
       .reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0);
-    totalRealizedCommission += gross;
-    totalNetRealizedCommission += gross - coAgentSum;
+    
+    totalRealizedCommission += Math.max(0, gross - coAgentSum);
+
+    const agencyComm = commissions.find((c: any) => c.recipient_role === "AGENCY");
+    if (agencyComm) {
+      totalNetRealizedCommission += Number(agencyComm.net_amount ?? agencyComm.amount) || 0;
+    } else {
+      const agentSplits = commissions
+        .filter((c: any) => c.recipient_role !== "AGENCY")
+        .reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0);
+      totalNetRealizedCommission += Math.max(0, gross - agentSplits);
+    }
   });
 
   financialData?.forEach((p) => {

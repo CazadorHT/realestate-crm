@@ -256,8 +256,18 @@ export async function getDealsPageStats(timeRange: string = "all") {
 
   rawData.forEach((d) => {
     if (d.status === "CLOSED_WIN") {
+      const commissionsList = (d as any).commissions || [];
+      const hasAgencyCommission = commissionsList.some(
+        (c: any) => c.recipient_role === "AGENCY" && (Number(c.amount) || 0) > 0
+      );
+
+      // If splits are defined but none are allocated to the company (AGENCY), skip including this deal's commission in stats
+      if (commissionsList.length > 0 && !hasAgencyCommission) {
+        return;
+      }
+
       const gross = Number(d.commission_total) || 0;
-      const coAgentSum = ((d as any).commissions || [])
+      const coAgentSum = commissionsList
         .filter((c: any) => c.recipient_role === "CO_AGENT")
         .reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0);
       totalGross += gross;

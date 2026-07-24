@@ -555,7 +555,7 @@ export function DealFinancials({
                             variant="outline"
                             size="sm"
                             type="button"
-                            className="w-full sm:w-44 h-8 justify-start text-xs font-semibold px-2 py-1 text-slate-700 bg-white hover:bg-slate-50 border-slate-200 shadow-xs"
+                            className="w-full sm:w-44 h-8 justify-start text-xs font-semibold px-2 py-1 text-slate-700! bg-white hover:bg-slate-50 border-slate-200 shadow-xs"
                             onClick={() => setActiveEditIndex(idx)}
                           >
                             {comm.recipient_id ? (

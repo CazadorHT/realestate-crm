@@ -130,7 +130,7 @@ export async function getDashboardStats({
     } else {
       commissionDealsQuery = supabase
         .from("financial_ledger_v3")
-        .select("amount_total, created_at")
+        .select("amount_net, amount_total, created_at")
         .eq("transaction_type", "deal_closed");
 
       if (activeTenantId) {
@@ -175,11 +175,12 @@ export async function getDashboardStats({
 
     // status 3 = under contract/reserved, 4 = SOLD, 5 = RENTED
     const totalRevenueCurrent = (revenueCurrent || []).reduce((sum: number, p: Partial<PropertyRow>) => sum + ([3, 4, 5].includes(p.status as number) ? (Number(p.sale_price) || Number(p.rent_price) || 0) : 0), 0);
+    const companyNetRevenue = (commissionDeals || []).reduce((sum: number, d: any) => sum + (Number(d.amount_net ?? d.amount) || 0), 0);
     const totalCommission = (commissionDeals || []).reduce((sum: number, d: any) => sum + (Number(d.amount_total ?? d.amount) || 0), 0);
     const dealsWon = (commissionDeals || []).length;
 
     return {
-      revenueThisMonth: totalCommission,
+      revenueThisMonth: companyNetRevenue,
       revenueChange: "+0%",
       leadsThisMonth: leadsCurrent || 0,
       leadsChange: "+0%",

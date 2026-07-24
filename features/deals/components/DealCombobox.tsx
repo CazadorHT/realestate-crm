@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 
 export type DealItem = {
   id: string;
+  property_id?: string | null;
   property_title: string;
   lead_name: string;
   deal_type: string;
@@ -27,6 +28,7 @@ export type DealItem = {
   duration_months?: number | null;
   cover_image_url?: string | null;
   location?: string | null;
+  tenant_id?: string | null;
 };
 
 type Props = {
@@ -76,6 +78,7 @@ export function DealCombobox({
       const payload = await res.json();
       const pageItems: DealItem[] = (payload.data ?? []).map((x: DealWithProperty) => ({
         id: x.id,
+        property_id: x.property_id || x.property?.id,
         property_title: x.property?.title ?? "ไม่ระบุทรัพย์",
         lead_name: x.lead?.full_name ?? "ไม่ระบุลูกค้า",
         deal_type: x.deal_type,

@@ -31,6 +31,7 @@ export function PayoutAdjustmentDialog({
   payouts
 }: PayoutAdjustmentDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCompanyExpense, setIsCompanyExpense] = useState(false);
   const [type, setType] = useState<"EARNING" | "DEDUCTION">("EARNING");
   const [selectedCommissionId, setSelectedCommissionId] = useState<string>("");
   const [isSelectCommissionOpen, setIsSelectCommissionOpen] = useState(false);
@@ -41,7 +42,7 @@ export function PayoutAdjustmentDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCommissionId) {
+    if (!isCompanyExpense && !selectedCommissionId) {
       toast.error("กรุณาเลือกรายการคอมมิชชันเอเยนต์");
       return;
     }
@@ -54,30 +55,31 @@ export function PayoutAdjustmentDialog({
     setIsSubmitting(true);
     
     // Deductions must be stored as negative numbers in financial_ledger_v3
-    const finalAmount = type === "EARNING" ? numAmount : -numAmount;
-    const adjustmentType = type === "EARNING" ? "BONUS" : "FEE";
+    const finalAmount = (isCompanyExpense || type === "DEDUCTION") ? -numAmount : numAmount;
+    const adjustmentType = isCompanyExpense ? "FEE" : (type === "EARNING" ? "BONUS" : "FEE");
 
     try {
       const res = await createCommissionAdjustmentAction({
-        commission_id: selectedCommissionId,
+        commission_id: isCompanyExpense ? "COMPANY" : selectedCommissionId,
         description,
         amount: finalAmount,
         adjustment_type: adjustmentType
       });
 
       if (res.success) {
-        toast.success("บันทึกรายการปรับปรุงเรียบร้อยแล้ว");
+        toast.success(isCompanyExpense ? "บันทึกรายจ่ายบริษัทเรียบร้อยแล้ว" : "บันทึกรายการปรับปรุงเรียบร้อยแล้ว");
         // Reset state
         setAmount("");
         setDescription("");
         setSelectedCommissionId("");
+        setIsCompanyExpense(false);
         onSuccess();
         onClose();
       } else {
-        toast.error(res.error || "เกิดข้อผิดพลาดในการบันทึกรายการปรับปรุง");
+        toast.error(res.error || "เกิดข้อผิดพลาดในการบันทึกรายการ");
       }
     } catch (err) {
-      toast.error("ไม่สามารถบันทึกรายการปรับปรุงได้");
+      toast.error("ไม่สามารถบันทึกรายการได้");
     } finally {
       setIsSubmitting(false);
     }
@@ -104,12 +106,12 @@ export function PayoutAdjustmentDialog({
           <Button 
             type="submit" 
             form="payout-adjustment-form"
-            disabled={isSubmitting || !selectedCommissionId}
+            disabled={isSubmitting || (!isCompanyExpense && !selectedCommissionId)}
             className={cn(
               "flex-2 h-14 text-white shadow-xl rounded-2xl transition-all font-bold group",
-              !selectedCommissionId 
+              (!isCompanyExpense && !selectedCommissionId) 
                 ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none" 
-                : (type === "EARNING" ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100" : "bg-rose-600 hover:bg-rose-700 shadow-rose-100")
+                : (isCompanyExpense || type === "DEDUCTION" ? "bg-rose-600 hover:bg-rose-700 shadow-rose-100" : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100")
             )}
           >
             {isSubmitting ? (
@@ -120,7 +122,7 @@ export function PayoutAdjustmentDialog({
             ) : (
               <div className="flex items-center justify-center gap-2">
                 <Save className="w-4 h-4 transition-transform group-hover:scale-110" /> 
-                ยืนยันการปรับปรุง
+                ยืนยันการบันทึก
               </div>
             )}
           </Button>
@@ -146,36 +148,65 @@ export function PayoutAdjustmentDialog({
         </div>
 
         <div className="space-y-4">
-          {/* 📂 Commission Selection Dropdown (using nested ResponsiveDialog) */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">เลือกคอมมิชชันที่ต้องการปรับปรุง</label>
-            <button
-              type="button"
-              onClick={() => setIsSelectCommissionOpen(true)}
-              className="w-full flex items-center justify-between h-14 rounded-2xl bg-slate-50/50 border border-slate-200 px-4 text-left hover:bg-slate-50 transition-all focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
-            >
-              <div className="flex flex-col min-w-0 pr-2">
-                {selectedCommissionId ? (
-                  <>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">คอมมิชชันที่เลือก</span>
-                    <span className="text-sm font-bold text-slate-800 truncate max-w-[280px]">
-                      {payouts.find(p => p.id === selectedCommissionId)?.agent?.full_name || payouts.find(p => p.id === selectedCommissionId)?.recipient_name || "ไม่ระบุชื่อเอเยนต์"} - {payouts.find(p => p.id === selectedCommissionId)?.property?.title || "ไม่ระบุทรัพย์สิน"}
-                    </span>
-                  </>
-                ) : (
-                  <span className="text-sm text-slate-400 font-medium">
-                    {eligiblePayouts.length === 0 ? "ไม่มีรายการที่สามารถปรับปรุงได้ในขณะนี้" : "เลือกเอเยนต์และทรัพย์สิน..."}
-                  </span>
-                )}
-              </div>
-              <span className="text-xs font-bold text-indigo-600 shrink-0 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-all">เลือก</span>
-            </button>
+          {/* 🏢 Company Expense Toggle */}
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100/80">
+            <div className="space-y-0.5">
+              <label className="text-xs font-bold text-slate-700">รายจ่ายกองกลางบริษัท</label>
+              <p className="text-[10px] text-slate-400">บันทึกตรงเข้าบัญชีกองกลาง (ไม่ผูกกับดีล/คอมมิชชันเอเยนต์)</p>
+            </div>
+            <input
+              type="checkbox"
+              checked={isCompanyExpense}
+              disabled={isSubmitting}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setIsCompanyExpense(checked);
+                if (checked) {
+                  setSelectedCommissionId("COMPANY");
+                  setType("DEDUCTION");
+                } else {
+                  setSelectedCommissionId("");
+                  setType("EARNING");
+                }
+              }}
+              className="h-5 w-5 rounded-md border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+            />
           </div>
 
+          {/* 📂 Commission Selection Dropdown */}
+          {!isCompanyExpense && (
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">เลือกคอมมิชชันที่ต้องการปรับปรุง</label>
+              <button
+                type="button"
+                onClick={() => setIsSelectCommissionOpen(true)}
+                disabled={isSubmitting}
+                className="w-full flex items-center justify-between h-14 rounded-2xl bg-slate-50/50 border border-slate-200 px-4 text-left hover:bg-slate-50 transition-all focus:outline-hidden focus:ring-2 focus:ring-indigo-500/20"
+              >
+                <div className="flex flex-col min-w-0 pr-2">
+                  {selectedCommissionId && selectedCommissionId !== "COMPANY" ? (
+                    <>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">คอมมิชชันที่เลือก</span>
+                      <span className="text-sm font-bold text-slate-800 truncate max-w-[280px]">
+                        {payouts.find(p => p.id === selectedCommissionId)?.agent?.full_name || payouts.find(p => p.id === selectedCommissionId)?.recipient_name || "ไม่ระบุชื่อเอเยนต์"} - {payouts.find(p => p.id === selectedCommissionId)?.property?.title || "ไม่ระบุทรัพย์สิน"}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-sm text-slate-400 font-medium">
+                      {eligiblePayouts.length === 0 ? "ไม่มีรายการที่สามารถปรับปรุงได้ในขณะนี้" : "เลือกเอเยนต์และทรัพย์สิน..."}
+                    </span>
+                  )}
+                </div>
+                <span className="text-xs font-bold text-indigo-600 shrink-0 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-xl transition-all">เลือก</span>
+              </button>
+            </div>
+          )}
+
           {/* 🔘 Type Selector */}
-          <div className="space-y-3">
-             <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">ประเภทการปรับปรุง</label>
-             <div className="grid grid-cols-2 gap-3">
+          {!isCompanyExpense && (
+            <div className="space-y-3">
+               <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">ประเภทการปรับปรุง</label>
+               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => setType("EARNING")}
@@ -218,6 +249,83 @@ export function PayoutAdjustmentDialog({
                   <span className={cn("text-xs font-bold", type === "DEDUCTION" && selectedCommissionId ? "text-rose-700" : "text-slate-500")}>หักรายได้ (-)</span>
                 </button>
              </div>
+          </div>
+          )}
+
+          {/* ⚡ Quick Presets */}
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">
+              รายการแนะนำ (Quick Presets)
+            </label>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl text-xs border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 h-9 font-medium"
+                onClick={() => {
+                  if (!isCompanyExpense) setType("EARNING");
+                  setDescription(isCompanyExpense ? "รายจ่ายบริษัท: ค่าน้ำมัน" : "เบิกค่าน้ำมันสำรองจ่าย");
+                }}
+                disabled={!selectedCommissionId}
+              >
+                🚗 ค่าน้ำมัน
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl text-xs border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 h-9 font-medium"
+                onClick={() => {
+                  if (!isCompanyExpense) setType("EARNING");
+                  setDescription(isCompanyExpense ? "รายจ่ายบริษัท: ค่าของใช้ทั่วไป" : "เบิกค่าของใช้สำรองจ่าย");
+                }}
+                disabled={!selectedCommissionId}
+              >
+                📦 ค่าของใช้
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl text-xs border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 h-9 font-medium"
+                onClick={() => {
+                  setType("DEDUCTION");
+                  setDescription(isCompanyExpense ? "รายจ่ายบริษัท: ค่าโฆษณา Ads" : "หักค่า Ads โฆษณา");
+                }}
+                disabled={!selectedCommissionId}
+              >
+                📢 ค่า Ads โฆษณา
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="rounded-xl text-xs border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 h-9 font-medium"
+                onClick={() => {
+                  setType("DEDUCTION");
+                  setDescription(isCompanyExpense ? "รายจ่ายบริษัท: ค่าทางด่วน" : "หักค่าทางด่วน");
+                }}
+                disabled={!selectedCommissionId}
+              >
+                🛣️ ค่าทางด่วน
+              </Button>
+              {!isCompanyExpense && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl text-xs border-slate-200 text-slate-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200 h-9 font-medium"
+                  onClick={() => {
+                    setType("DEDUCTION");
+                    setDescription("หักส่วนแบ่งเข้ากองกลางบริษัท");
+                  }}
+                  disabled={!selectedCommissionId}
+                >
+                  🏢 ส่วนแบ่งบริษัท
+                </Button>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">

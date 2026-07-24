@@ -28,6 +28,9 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { PropertyCombobox } from "@/components/PropertyCombobox";
+import { DealCombobox } from "@/features/deals/components/DealCombobox";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Building2, Handshake } from "lucide-react";
 import {
   rentNotificationRuleSchema,
   RentNotificationRuleInput,
@@ -68,8 +71,10 @@ export function AddRuleDialog({
   const [pendingValues, setPendingValues] =
     useState<RentNotificationRuleInput | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
+  const [targetType, setTargetType] = useState<"property" | "deal">("property");
   const steps = [
-    { title: "เลือกทรัพย์", desc: "Property" },
+    { title: targetType === "deal" ? "เลือกดีล" : "เลือกทรัพย์", desc: targetType === "deal" ? "Deal" : "Property" },
     { title: "ตั้งค่ากลุ่ม LINE", desc: "Communication" },
     { title: "กำหนดเวลา", desc: "Schedule" },
   ];
@@ -88,6 +93,8 @@ export function AddRuleDialog({
     if (!val) {
       form.reset();
       setCurrentStep(1);
+      setTargetType("property");
+      setSelectedDealId(null);
     }
   };
 
@@ -200,7 +207,7 @@ export function AddRuleDialog({
                 type="button"
                 onClick={() => {
                   if (currentStep === 1 && !form.getValues("property_id")) {
-                    toast.error("กรุณาเลือกทรัพย์ก่อนไปขั้นตอนถัดไป");
+                    toast.error(targetType === "deal" ? "กรุณาเลือกดีลก่อนไปขั้นตอนถัดไป" : "กรุณาเลือกทรัพย์ก่อนไปขั้นตอนถัดไป");
                     return;
                   }
                   if (currentStep === 2 && !form.getValues("line_group_id")) {
@@ -275,32 +282,86 @@ export function AddRuleDialog({
           >
             <div className="max-h-[60vh] overflow-y-auto pr-4 -mr-4 no-scrollbar">
               <div className="space-y-6 pb-4">
-                {/* Step 1: Property Select */}
+                {/* Step 1: Target Select (Property / Deal) */}
                 {currentStep === 1 && (
-                  <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                  <div className="animate-in fade-in slide-in-from-right-4 duration-300 space-y-4">
+                    <div className="flex flex-col gap-2">
+                      <FormLabel className="text-sm font-bold text-slate-700 ml-1">เลือกประเภทข้อมูลที่ต้องการสร้างการแจ้งเตือน</FormLabel>
+                      <Tabs
+                        value={targetType}
+                        onValueChange={(val) => {
+                          setTargetType(val as "property" | "deal");
+                          form.setValue("property_id", "");
+                        }}
+                        className="w-full"
+                      >
+                        <TabsList className="grid grid-cols-2 w-full h-11 bg-slate-100 p-1 rounded-xl">
+                          <TabsTrigger
+                            value="property"
+                            className="rounded-lg font-bold gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                          >
+                            <Building2 className="w-4 h-4" />
+                            เลือกจากทรัพย์
+                          </TabsTrigger>
+                          <TabsTrigger
+                            value="deal"
+                            className="rounded-lg font-bold gap-2 data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm"
+                          >
+                            <Handshake className="w-4 h-4" />
+                            เลือกจากดีล
+                          </TabsTrigger>
+                        </TabsList>
+                      </Tabs>
+                    </div>
+
                     <FormField
                       control={form.control as any}
                       name="property_id"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel className="text-sm font-bold text-slate-700 ml-1">เลือกทรัพย์ (Property)</FormLabel>
+                          <FormLabel className="text-sm font-bold text-slate-700 ml-1">
+                            {targetType === "deal" ? "เลือกดีล (Deal)" : "เลือกทรัพย์ (Property)"}
+                          </FormLabel>
                           <FormControl>
-                            <PropertyCombobox
-                              value={field.value}
-                              onChangeAction={(id) => {
-                                field.onChange(id);
-                              }}
-                              placeholder="ค้นหาและเลือกทรัพย์..."
-                              className="w-full"
-                              initialProperty={existingRule?.properties ? {
-                                id: existingRule.properties.id,
-                                title: existingRule.properties.title,
-                                cover_image_url: (existingRule.properties as any).cover_image,
-                              } : null}
-                            />
+                            {targetType === "property" ? (
+                              <PropertyCombobox
+                                value={field.value}
+                                onChangeAction={(id) => {
+                                  field.onChange(id);
+                                }}
+                                placeholder="ค้นหาและเลือกทรัพย์..."
+                                className="w-full"
+                                initialProperty={existingRule?.properties ? {
+                                  id: existingRule.properties.id,
+                                  title: existingRule.properties.title,
+                                  cover_image_url: (existingRule.properties as any).cover_image,
+                                } : null}
+                              />
+                            ) : (
+                              <DealCombobox
+                                value={selectedDealId}
+                                onChange={(dealId, picked) => {
+                                  setSelectedDealId(dealId);
+                                  if (picked) {
+                                    if (picked.property_id) {
+                                      field.onChange(picked.property_id);
+                                    }
+                                    if (picked.tenant_id) {
+                                      form.setValue("tenant_id", picked.tenant_id);
+                                    }
+                                  } else {
+                                    field.onChange("");
+                                  }
+                                }}
+                                placeholder="ค้นหาและเลือกดีล..."
+                              />
+                            )}
                           </FormControl>
                           <FormDescription className="text-[11px] text-rose-500 font-medium ml-1">
-                            * แสดงเฉพาะทรัพย์ที่มีสัญญาเช่า (Active Contract) เท่านั้น
+                            {targetType === "property" 
+                              ? "* แสดงเฉพาะทรัพย์ที่มีสัญญาเช่า (Active Contract) เท่านั้น"
+                              : "* แสดงเฉพาะดีลในระบบ"
+                            }
                           </FormDescription>
                           <FormMessage />
                         </FormItem>

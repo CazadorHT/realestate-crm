@@ -224,144 +224,146 @@ export const PayoutTableRow = React.memo(({
                           <TableCell className="text-right font-bold text-slate-800 text-xs">
                             {FinanceMath.format(split.net_transfer_amount || split.net_amount)}
                           </TableCell>
-                          <TableCell className="text-right space-x-1.5 pr-4">
-                            <Button 
-                              variant="outline" 
-                              size="icon" 
-                              className="h-8 w-8 rounded-lg border-slate-200 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-xs" 
-                              onClick={() => onOpenHistory(split)}
-                              title="ดูประวัติการเบิกจ่าย"
-                            >
-                              <HistoryIcon className="w-3.5 h-3.5" />
-                            </Button>
-
-                            {split.status === 'PAID' && (
-                              <>
-                                <Button 
-                                  variant="outline" 
-                                  size="icon" 
-                                  className="h-8 w-8 rounded-lg border-emerald-200 text-emerald-600 hover:bg-emerald-50 transition-all shadow-xs"
-                                  onClick={async () => {
-                                    const { getSignedSlipUrlAction } = await import("../actions");
-                                    const res = await getSignedSlipUrlAction(split.slip_url);
-                                    if (res.success && res.url) {
-                                      window.open(res.url, "_blank");
-                                    }
-                                  }}
-                                  title="ดูสลิปโอนเงิน"
-                                >
-                                  <ShieldCheck className="w-3.5 h-3.5" />
-                                </Button>
-
-                                <Button 
-                                  variant="outline" 
-                                  size="icon" 
-                                  className="h-8 w-8 rounded-lg border-indigo-200 text-indigo-600 hover:bg-indigo-50 transition-all shadow-xs"
-                                  onClick={async () => {
-                                     const { generateWhtPdfAction } = await import("../actions");
-                                     const processId = startProcess("กำลังสร้างใบ 50 ทวิ (WHT Certificate)", {
-                                       type: "EXPORT"
-                                     });
-                                     try {
-                                       const res = await generateWhtPdfAction(split.id);
-                                       if (res.success && res.content) {
-                                          const byteCharacters = atob(res.content);
-                                          const byteNumbers = new Array(byteCharacters.length);
-                                          for (let i = 0; i < byteCharacters.length; i++) {
-                                            byteNumbers[i] = byteCharacters.charCodeAt(i);
-                                          }
-                                          const byteArray = new Uint8Array(byteNumbers);
-                                          const blob = new Blob([byteArray], { type: "application/pdf" });
-                                          const blobUrl = URL.createObjectURL(blob);
-                                          const link = document.createElement("a");
-                                          link.href = blobUrl;
-                                          link.download = res.fileName || "WHT_Certificate.pdf";
-                                          link.click();
-                                          finishProcess(processId, "SUCCESS", "ดาวน์โหลดใบ 50 ทวิสำเร็จ ✨", {
-                                            resultLink: blobUrl
-                                          });
-                                       } else {
-                                          finishProcess(processId, "ERROR", res.error || "เกิดข้อผิดพลาดในการสร้าง PDF");
-                                       }
-                                     } catch (e: unknown) {
-                                       finishProcess(processId, "ERROR", e instanceof Error ? e.message : "เกิดข้อผิดพลาด");
-                                     }
-                                  }}
-                                  title="ดาวน์โหลดใบ 50 ทวิ"
-                                >
-                                  <FileDown className="w-3.5 h-3.5" />
-                                </Button>
-                              </>
-                            )}
-
-                            {split.status === 'UNPAID' && (
+                          <TableCell className="text-right pr-4">
+                            <div className="flex items-center justify-end gap-1.5 whitespace-nowrap">
                               <Button 
-                                size="sm" 
-                                className="bg-amber-600 hover:bg-amber-700 text-white h-8 px-3 rounded-lg text-xs font-semibold shadow-md shadow-amber-100 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center" 
-                                onClick={async () => {
-                                  setApprovingIds(prev => {
-                                    const next = new Set(prev);
-                                    next.add(split.id);
-                                    return next;
-                                  });
-                                  try {
-                                    const { markAsReadyToPayAction } = await import("../actions");
-                                    const res = await markAsReadyToPayAction(split.id);
-                                    if (res.success) {
-                                      toast.success("อนุมัติพร้อมจ่ายสำเร็จ ✨");
-                                      if (onUpdate) onUpdate();
-                                    } else {
-                                      toast.error(res.error || "เกิดข้อผิดพลาดในการอนุมัติ");
-                                    }
-                                  } catch (e: any) {
-                                    toast.error(e.message || "เกิดข้อผิดพลาด");
-                                  } finally {
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-xs shrink-0" 
+                                onClick={() => onOpenHistory(split)}
+                                title="ดูประวัติการเบิกจ่าย"
+                              >
+                                <HistoryIcon className="w-3.5 h-3.5" />
+                              </Button>
+
+                              {split.status === 'PAID' && (
+                                <>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 rounded-lg border border-emerald-200 bg-white text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition-all shadow-xs shrink-0"
+                                    onClick={async () => {
+                                      const { getSignedSlipUrlAction } = await import("../actions");
+                                      const res = await getSignedSlipUrlAction(split.slip_url);
+                                      if (res.success && res.url) {
+                                        window.open(res.url, "_blank");
+                                      }
+                                    }}
+                                    title="ดูสลิปโอนเงิน"
+                                  >
+                                    <ShieldCheck className="w-3.5 h-3.5" />
+                                  </Button>
+
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8 rounded-lg border border-indigo-200 bg-white text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700 hover:border-indigo-300 transition-all shadow-xs shrink-0"
+                                    onClick={async () => {
+                                       const { generateWhtPdfAction } = await import("../actions");
+                                       const processId = startProcess("กำลังสร้างใบ 50 ทวิ (WHT Certificate)", {
+                                         type: "EXPORT"
+                                       });
+                                       try {
+                                         const res = await generateWhtPdfAction(split.id);
+                                         if (res.success && res.content) {
+                                            const byteCharacters = atob(res.content);
+                                            const byteNumbers = new Array(byteCharacters.length);
+                                            for (let i = 0; i < byteCharacters.length; i++) {
+                                              byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                            }
+                                            const byteArray = new Uint8Array(byteNumbers);
+                                            const blob = new Blob([byteArray], { type: "application/pdf" });
+                                            const blobUrl = URL.createObjectURL(blob);
+                                            const link = document.createElement("a");
+                                            link.href = blobUrl;
+                                            link.download = res.fileName || "WHT_Certificate.pdf";
+                                            link.click();
+                                            finishProcess(processId, "SUCCESS", "ดาวน์โหลดใบ 50 ทวิสำเร็จ ✨", {
+                                              resultLink: blobUrl
+                                            });
+                                         } else {
+                                            finishProcess(processId, "ERROR", res.error || "เกิดข้อผิดพลาดในการสร้าง PDF");
+                                         }
+                                       } catch (e: unknown) {
+                                         finishProcess(processId, "ERROR", e instanceof Error ? e.message : "เกิดข้อผิดพลาด");
+                                       }
+                                    }}
+                                    title="ดาวน์โหลดใบ 50 ทวิ"
+                                  >
+                                    <FileDown className="w-3.5 h-3.5" />
+                                  </Button>
+                                </>
+                              )}
+
+                              {split.status === 'UNPAID' && (
+                                <Button 
+                                  size="sm" 
+                                  className="bg-amber-600 hover:bg-amber-700 text-white h-8 px-3 rounded-lg text-xs font-semibold shadow-md shadow-amber-100 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center shrink-0" 
+                                  onClick={async () => {
                                     setApprovingIds(prev => {
                                       const next = new Set(prev);
-                                      next.delete(split.id);
+                                      next.add(split.id);
                                       return next;
                                     });
-                                  }
-                                }}
-                                disabled={disabledAction || approvingIds.has(split.id)}
-                                title={disabledAction ? "กรุณาสลับสาขาก่อนอนุมัติ" : "อนุมัติพร้อมจ่าย"}
-                              >
-                                {approvingIds.has(split.id) ? (
-                                  <>
-                                    <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
-                                    กำลังอนุมัติ...
-                                  </>
-                                ) : (
-                                  "อนุมัติ"
-                                )}
-                              </Button>
-                            )}
+                                    try {
+                                      const { markAsReadyToPayAction } = await import("../actions");
+                                      const res = await markAsReadyToPayAction(split.id);
+                                      if (res.success) {
+                                        toast.success("อนุมัติพร้อมจ่ายสำเร็จ ✨");
+                                        if (onUpdate) onUpdate();
+                                      } else {
+                                        toast.error(res.error || "เกิดข้อผิดพลาดในการอนุมัติ");
+                                      }
+                                    } catch (e: any) {
+                                      toast.error(e.message || "เกิดข้อผิดพลาด");
+                                    } finally {
+                                      setApprovingIds(prev => {
+                                        const next = new Set(prev);
+                                        next.delete(split.id);
+                                        return next;
+                                      });
+                                    }
+                                  }}
+                                  disabled={disabledAction || approvingIds.has(split.id)}
+                                  title={disabledAction ? "กรุณาสลับสาขาก่อนอนุมัติ" : "อนุมัติพร้อมจ่าย"}
+                                >
+                                  {approvingIds.has(split.id) ? (
+                                    <>
+                                      <Loader2 className="w-3.5 h-3.5 mr-1 animate-spin" />
+                                      กำลังอนุมัติ...
+                                    </>
+                                  ) : (
+                                    "อนุมัติ"
+                                  )}
+                                </Button>
+                              )}
 
-                            {split.status === 'READY_TO_PAY' && (
-                              <Button 
-                                size="sm" 
-                                className="bg-indigo-600 hover:bg-indigo-700 text-white h-8 px-3 rounded-lg text-xs font-semibold shadow-md shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50" 
-                                onClick={() => onOpenPaidDialog(split)}
-                                disabled={disabledAction}
-                                title={disabledAction ? "กรุณาสลับสาขาก่อนโอนเงิน" : "บันทึกการโอนเงิน"}
-                              >
-                                <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
-                                โอนเงิน
-                              </Button>
-                            )}
+                              {split.status === 'READY_TO_PAY' && (
+                                <Button 
+                                  size="sm" 
+                                  className="bg-indigo-600 hover:bg-indigo-700 text-white h-8 px-3 rounded-lg text-xs font-semibold shadow-md shadow-indigo-100 transition-all active:scale-95 disabled:opacity-50 shrink-0" 
+                                  onClick={() => onOpenPaidDialog(split)}
+                                  disabled={disabledAction}
+                                  title={disabledAction ? "กรุณาสลับสาขาก่อนโอนเงิน" : "บันทึกการโอนเงิน"}
+                                >
+                                  <ArrowUpRight className="w-3.5 h-3.5 mr-1" />
+                                  โอนเงิน
+                                </Button>
+                              )}
 
-                            {split.status !== 'PAID' && (
-                              <Button 
-                                variant="outline" 
-                                size="icon" 
-                                className="h-8 w-8 rounded-lg border-slate-200 text-slate-600 hover:bg-slate-50 transition-all shadow-xs"
-                                onClick={() => onRecalculate(split.id)}
-                                disabled={isRecalculating || disabledAction}
-                                title="คำนวณสัดส่วนใหม่"
-                              >
-                                <RefreshCw className={cn("w-3 h-3", isRecalculating && "animate-spin")} />
-                              </Button>
-                            )}
+                              {split.status !== 'PAID' && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-8 w-8 rounded-lg border border-slate-200 bg-white text-slate-500 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 transition-all shadow-xs shrink-0"
+                                  onClick={() => onRecalculate(split.id)}
+                                  disabled={isRecalculating || disabledAction}
+                                  title="คำนวณสัดส่วนใหม่"
+                                >
+                                  <RefreshCw className={cn("w-3 h-3", isRecalculating && "animate-spin")} />
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       );

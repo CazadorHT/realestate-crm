@@ -218,7 +218,7 @@ export function PropertiesDashboard({ stats }: PropertiesDashboardProps) {
               }).format(stats.totalNetRealizedCommission || 0)}
             </div>
             <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-1">
-              บาท (หลังหัก Co-Broker)
+              บาท (ส่วนของบริษัท สุทธิ)
             </p>
           </CardContent>
         </Card>

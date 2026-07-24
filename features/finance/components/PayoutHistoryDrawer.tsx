@@ -23,7 +23,7 @@ export function PayoutHistoryDrawer({
   onClose,
   selectedPayout
 }: PayoutHistoryDrawerProps) {
-  if (!selectedPayout) return null;
+  if (!selectedPayout || Array.isArray(selectedPayout)) return null;
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>

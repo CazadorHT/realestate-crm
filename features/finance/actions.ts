@@ -85,20 +85,18 @@ export async function bulkMarkAsReadyToPayAction(
       }
 
       for (const [tId, ids] of Object.entries(commissionsByTenant)) {
-        const { data, error } = await (
-          supabase.rpc as unknown as (
-            name: string,
-            args: Record<string, unknown>,
-          ) => Promise<{ data: { updated_count: number } | null; error: unknown }>
-        )("bulk_mark_commissions_as_ready_to_pay", {
-          p_commission_ids: ids,
-          p_tenant_id: tId,
-          p_user_id: user.id,
-          p_user_full_name: profile?.full_name || "System Admin",
-        });
+        const { data, error } = await supabase
+          .from("crm_deal_commissions_v3")
+          .update({
+            status: "READY_TO_PAY",
+          })
+          .in("id", ids)
+          .eq("tenant_id", tId)
+          .eq("status", "UNPAID")
+          .select("id");
 
         if (error) throw new Error(mapDbError(error));
-        processedCount += data?.updated_count || 0;
+        processedCount += (data || []).length;
       }
     }
 
@@ -193,20 +191,30 @@ export async function createCommissionAdjustmentAction(payload: {
     const { supabase, user, role, tenantId } = await requireAuthContext();
     assertAdmin(role); // Only admins can adjust financials
 
-    const { data: currentCommission } = await supabase
-      .from("crm_deal_commissions_v3")
-      .select("tenant_id")
-      .eq("id", payload.commission_id)
-      .single();
+    let targetTenantId = tenantId;
 
-    if (!currentCommission) {
-      throw new Error("ไม่พบรายการคอมมิชชันที่ต้องการปรับปรุง");
-    }
+    if (payload.commission_id === "COMPANY") {
+      if (!tenantId || tenantId === "ALL") {
+        throw new Error("กรุณาสลับสาขาให้ถูกต้องก่อนดำเนินการบันทึกรายจ่ายกองกลางบริษัท");
+      }
+      targetTenantId = tenantId;
+    } else {
+      const { data: currentCommission } = await supabase
+        .from("crm_deal_commissions_v3")
+        .select("tenant_id")
+        .eq("id", payload.commission_id)
+        .single();
 
-    if (tenantId && tenantId !== "ALL" && currentCommission.tenant_id !== tenantId) {
-      throw new Error(
-        "ไม่สามารถเพิ่มรายการปรับปรุงข้ามสาขาได้ กรุณาสลับสาขาให้ถูกต้อง",
-      );
+      if (!currentCommission) {
+        throw new Error("ไม่พบรายการคอมมิชชันที่ต้องการปรับปรุง");
+      }
+
+      if (tenantId && tenantId !== "ALL" && currentCommission.tenant_id !== tenantId) {
+        throw new Error(
+          "ไม่สามารถเพิ่มรายการปรับปรุงข้ามสาขาได้ กรุณาสลับสาขาให้ถูกต้อง",
+        );
+      }
+      targetTenantId = currentCommission.tenant_id;
     }
 
     const { data, error } = await supabase
@@ -215,9 +223,9 @@ export async function createCommissionAdjustmentAction(payload: {
         amount_net: payload.amount,
         amount_total: payload.amount,
         transaction_type: payload.adjustment_type,
-        reference_entity: "COMMISSION",
-        reference_id: payload.commission_id,
-        tenant_id: currentCommission.tenant_id,
+        reference_entity: payload.commission_id === "COMPANY" ? "COMPANY_EXPENSE" : "COMMISSION",
+        reference_id: payload.commission_id === "COMPANY" ? "COMPANY_EXPENSE" : payload.commission_id,
+        tenant_id: targetTenantId,
         metadata: {
           description: payload.description,
           created_by: user.id
@@ -229,11 +237,13 @@ export async function createCommissionAdjustmentAction(payload: {
     if (error) throw new Error(mapDbError(error));
 
     await logAudit({ supabase, user, role }, {
-      action: "finance.adjustment_created",
-      entity: "COMMISSION",
-      entityId: payload.commission_id,
+      action: payload.commission_id === "COMPANY" ? "finance.company_expense_created" : "finance.adjustment_created",
+      entity: payload.commission_id === "COMPANY" ? "FINANCE" : "COMMISSION",
+      entityId: payload.commission_id === "COMPANY" ? "COMPANY" : payload.commission_id,
       metadata: { 
-        summary: `เพิ่มรายการปรับปรุง: ${payload.description} (${payload.amount} บ.)`,
+        summary: payload.commission_id === "COMPANY"
+          ? `บันทึกรายจ่ายกองกลางบริษัท: ${payload.description} (${payload.amount} บ.)`
+          : `เพิ่มรายการปรับปรุง: ${payload.description} (${payload.amount} บ.)`,
         ...payload 
       },
     });
@@ -244,7 +254,7 @@ export async function createCommissionAdjustmentAction(payload: {
     logger.error("createAdjustment Error", error, { source: "finance-actions", payload });
     return {
       success: false,
-      error: "ไม่สามารถบันทึกรายการปรับปรุงได้: " + (error as Error).message,
+      error: "ไม่สามารถบันทึกได้: " + (error as Error).message,
     };
   }
 }
@@ -1067,6 +1077,146 @@ export async function generateWhtPdfAction(commissionId: string) {
     };
   } catch (error: unknown) {
     logger.error("generateWhtPdf Error", error, { source: "finance-actions", commissionId });
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+/**
+ * Marks multiple commissions as PAID simultaneously.
+ */
+export async function bulkMarkAsPaidAction(
+  commissionIds: string[],
+  payload?: { slip_url?: string; payment_reference?: string },
+) {
+  try {
+    const { supabase, user, role, tenantId } = await requireAuthContext();
+    assertStaff(role);
+    const isStaffControl = role === "ADMIN" || role === "MANAGER";
+    if (!isStaffControl && (!tenantId || tenantId === "ALL")) {
+      throw new Error("กรุณาสลับสาขาให้ถูกต้องก่อนดำเนินการบันทึกการโอนเงิน");
+    }
+
+    if (commissionIds.length === 0) {
+      return { success: true, message: "ไม่มีรายการที่เลือก" };
+    }
+
+    // 1. Fetch all records that are READY_TO_PAY
+    let query = supabase
+      .from("crm_deal_commissions_v3")
+      .select("*, recipient:identities_v3!crm_deal_commissions_v3_recipient_id_fkey(display_name, line_id)")
+      .in("id", commissionIds)
+      .eq("status", "READY_TO_PAY");
+
+    if (tenantId && tenantId !== "ALL") {
+      query = query.eq("tenant_id", tenantId);
+    }
+
+    const { data: rawComms, error: fetchErr } = await query;
+    if (fetchErr) throw new Error(mapDbError(fetchErr));
+    if (!rawComms || rawComms.length === 0) throw new Error("ไม่พบรายการที่พร้อมโอนเงิน");
+
+    let processedCount = 0;
+
+    for (const current of (rawComms as any[] || [])) {
+      const commissionId = current.id;
+      // Fetch adjustments explicitly from financial_ledger_v3
+      const { data: adjustmentsData } = await supabase
+        .from("financial_ledger_v3")
+        .select("*")
+        .eq("reference_entity", "COMMISSION")
+        .eq("reference_id", commissionId);
+      const adjustments = (adjustmentsData as any[]) || [];
+
+      // Precision Calculation
+      const netTransfer = FinanceMath.calculateNetPayout(
+        current.amount || 0,
+        current.tax_amount || 0,
+        adjustments,
+      );
+
+      const ref = payload?.payment_reference || `TRF-BULK-${commissionId.slice(0, 8).toUpperCase()}`;
+
+      // Execution with Metadata Snapshot + ATOMIC CHECK
+      const { data: updated, error: updateErr } = await supabase
+        .from("crm_deal_commissions_v3")
+        .update({
+          status: "PAID",
+          paid_at: new Date().toISOString(),
+          metadata: {
+            ...(current.metadata as Record<string, unknown> || {}),
+            slip_url: payload?.slip_url || "",
+            payment_reference: ref,
+            idempotency_key: `${current.deal_id}-${commissionId}`,
+            payout_metadata: {
+              calculation_snapshot: {
+                gross: current.amount,
+                wht: current.tax_amount,
+                tax_rate_snapshot: current.tax_rate || 0.03,
+                net_base: Number(current.amount || 0) - Number(current.tax_amount || 0),
+                adjustments,
+                final_net: netTransfer.toNumber(),
+              },
+              processed_by: user.id,
+            },
+          },
+        })
+        .eq("id", commissionId)
+        .neq("status", "PAID") // 🛡️ ATOMIC PROTECTION: Prevent double payment at SQL level
+        .select("id, paid_at")
+        .single();
+
+      if (updateErr) continue;
+
+      processedCount++;
+
+      await logAudit({ supabase, user, role }, {
+        action: "finance.commission_paid",
+        entity: "COMMISSION",
+        entityId: commissionId,
+        metadata: { 
+          summary: `ยืนยันการโอนเงินสุทธิ ${FinanceMath.format(netTransfer)} บ. (Ref: ${ref}) [โอนแบบกลุ่ม]`,
+          payment_reference: ref,
+          slip_url: payload?.slip_url || "",
+          netAmount: netTransfer.toNumber() 
+        },
+      });
+
+      // Background Automation
+      try {
+        const { inngest } = await import("@/lib/inngest/client");
+        const recipientName =
+          (current.recipient as any)?.display_name || "Unknown Partner";
+
+        await inngest.send({
+          name: "finance.commission_paid",
+          data: {
+            commissionId,
+            agentName: recipientName,
+            amount: Number(current.amount),
+            taxAmount: Number(current.tax_amount),
+            netAmount: netTransfer.toNumber(),
+            dealId: current.deal_id,
+            reference: ref,
+            paidAt: updated?.paid_at || new Date().toISOString(),
+            lineUserId: (current.recipient as any)?.line_id,
+            telegramId: null,
+            idempotencyKey: `${current.deal_id}-${commissionId}`,
+          },
+        });
+      } catch (inngestErr: any) {
+        console.warn("Inngest commission_paid skip:", inngestErr.message);
+      }
+    }
+
+    revalidatePath("/protected/finance/payouts");
+    revalidatePath("/protected/wallet");
+
+    return {
+      success: true,
+      message: `บันทึกการจ่ายเงินสำเร็จจำนวน ${processedCount} รายการ`,
+    };
+  } catch (error: unknown) {
+    logger.error("bulkMarkAsPaid Error", error, { source: "finance-actions", commissionIds });
     return { success: false, error: (error as Error).message };
   }
 }

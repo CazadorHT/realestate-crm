@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   bulkMarkAsReadyToPayAction,
+  bulkMarkAsPaidAction,
   createCommissionAdjustmentAction,
   markAsPaidAction,
   markAsReadyToPayAction,
@@ -82,7 +83,7 @@ export default function PayoutDashboardPage() {
   const getTotalSelectedAmount = usePayoutStore(state => state.getTotalSelectedAmount);
   
   // Modals / Sheets State
-  const [selectedPayout, setSelectedPayout] = useState<CommissionPayoutRecord | null>(null);
+  const [selectedPayout, setSelectedPayout] = useState<CommissionPayoutRecord | CommissionPayoutRecord[] | null>(null);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isAdjustmentOpen, setIsAdjustmentOpen] = useState(false);
   const [isReceiptDialogOpen, setIsReceiptDialogOpen] = useState(false);
@@ -388,46 +389,74 @@ export default function PayoutDashboardPage() {
       />
 
       {/* 🟢 Bulk Action Floating Bar */}
-      {selectedIds.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-md text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom duration-300 border border-slate-800">
-          <div className="flex flex-col">
-            <span className="text-[10px] font-semibold text-slate-400">เลือกแล้ว {selectedIds.size} รายการ</span>
-            <span className="text-sm font-bold text-indigo-400">
-              ยอดสุทธิรวม: {formatCurrency(currentTotal)}
-            </span>
+      {selectedIds.size > 0 && (() => {
+        const selectedPayoutsList = payouts.filter(p => selectedIds.has(p.id));
+        const allUnpaid = selectedPayoutsList.length > 0 && selectedPayoutsList.every(p => p.status === 'UNPAID');
+        const allReadyToPay = selectedPayoutsList.length > 0 && selectedPayoutsList.every(p => p.status === 'READY_TO_PAY');
+
+        return (
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-md text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom duration-300 border border-slate-800">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-semibold text-slate-400">เลือกแล้ว {selectedIds.size} รายการ</span>
+              <span className="text-sm font-bold text-indigo-400">
+                ยอดสุทธิรวม: {formatCurrency(currentTotal)}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              {allUnpaid && (
+                <Button
+                  size="sm"
+                  className="bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-xl px-4 h-10 border-none"
+                  onClick={async () => {
+                    const ids = Array.from(selectedIds);
+                    setLoading(true);
+                    const res = await bulkMarkAsReadyToPayAction(ids);
+                    if (res.success) {
+                      toast.success(res.message || "อนุมัติรายการสำเร็จ");
+                      clearSelection();
+                      fetchPayouts();
+                    } else {
+                      toast.error(res.error || "เกิดข้อผิดพลาดในการอนุมัติ");
+                    }
+                    setLoading(false);
+                  }}
+                  disabled={loading || isAllBranches}
+                >
+                  อนุมัติพร้อมจ่าย (Approve Ready)
+                </Button>
+              )}
+
+              {allReadyToPay && (
+                <Button
+                  size="sm"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl px-4 h-10 border-none flex items-center gap-1"
+                  onClick={() => {
+                    setSelectedPayout(selectedPayoutsList);
+                    setIsReceiptDialogOpen(true);
+                  }}
+                  disabled={loading || isAllBranches}
+                >
+                  <ArrowUpRight className="w-4 h-4" />
+                  บันทึกการโอนเงิน (Bulk Pay)
+                </Button>
+              )}
+
+              {!allUnpaid && !allReadyToPay && (
+                <span className="text-[11px] text-slate-400 bg-slate-800/50 px-3 py-1.5 rounded-xl border border-slate-700/50">กรุณาเลือกสถานะเดียวเพื่อทำรายการกลุ่ม</span>
+              )}
+
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl px-4 h-10 font-semibold"
+                onClick={clearSelection}
+              >
+                ยกเลิก
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl px-4 h-10 border-none"
-              onClick={async () => {
-                const ids = Array.from(selectedIds);
-                setLoading(true);
-                const res = await bulkMarkAsReadyToPayAction(ids);
-                if (res.success) {
-                  toast.success(res.message || "อนุมัติรายการสำเร็จ");
-                  clearSelection();
-                  fetchPayouts();
-                } else {
-                  toast.error(res.error || "เกิดข้อผิดพลาดในการอนุมัติ");
-                }
-                setLoading(false);
-              }}
-              disabled={loading || isAllBranches}
-            >
-              อนุมัติพร้อมจ่าย (Approve Ready)
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl px-4 h-10 font-semibold"
-              onClick={clearSelection}
-            >
-              ยกเลิก
-            </Button>
-          </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

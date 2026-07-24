@@ -242,7 +242,7 @@ export function StatsOverview({
       value: stats.totalCommission,
       compareValue: compareStats?.totalCommission,
       change: stats.revenueChange,
-      context: "รายได้ค่าคอมฯ ทั้งหมด",
+      context: "ค่าคอมฯ ทุกดีลในองค์กร (ก่อนหัก)",
       icon: DollarSign,
       isCurrency: true,
       color: "amber",

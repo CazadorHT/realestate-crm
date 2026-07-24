@@ -24,7 +24,7 @@ import {
   Wallet
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
-import { markAsPaidAction } from "../actions";
+import { markAsPaidAction, bulkMarkAsPaidAction } from "../actions";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -52,15 +52,19 @@ export function PayoutCompletionDialog({
 
   if (!selectedPayout) return null;
 
-  const isPaid = selectedPayout.status === 'PAID';
-  const recipient = selectedPayout.agent || selectedPayout.co_broker;
+  const isBulk = Array.isArray(selectedPayout);
+  const isPaid = !isBulk && selectedPayout.status === 'PAID';
+  const recipient = !isBulk ? (selectedPayout.agent || selectedPayout.co_broker) : null;
   
-  const bankName = recipient?.bank?.name_th || recipient?.bank_code || "ไม่ได้ระบุ";
-  const bankAccNo = recipient?.bank_account_no || "ไม่ได้ระบุ";
-  const bankAccName = recipient?.bank_account_name || recipient?.full_name || recipient?.name || "ไม่ได้ระบุ";
+  const bankName = !isBulk ? (recipient?.bank?.name_th || recipient?.bank_code || "ไม่ได้ระบุ") : "";
+  const bankAccNo = !isBulk ? (recipient?.bank_account_no || "ไม่ได้ระบุ") : "";
+  const bankAccName = !isBulk ? (recipient?.bank_account_name || recipient?.full_name || recipient?.name || "ไม่ได้ระบุ") : "";
+  const totalAmount = isBulk 
+    ? selectedPayout.reduce((sum: number, p: any) => sum + (Number(p.net_amount || p.net_transfer_amount) || 0), 0)
+    : (selectedPayout.net_amount || selectedPayout.net_transfer_amount || 0);
 
   const handleCopyAccNo = () => {
-    if (!bankAccNo || bankAccNo === "ไม่ได้ระบุ") return;
+    if (isBulk || !bankAccNo || bankAccNo === "ไม่ได้ระบุ") return;
     navigator.clipboard.writeText(bankAccNo);
     setIsCopied(true);
     setTimeout(() => setIsCopied(false), 2000);
@@ -81,8 +85,10 @@ export function PayoutCompletionDialog({
 
     try {
       const fileExt = file.name.split(".").pop();
-      const fileName = `${selectedPayout.id}-${Date.now()}.${fileExt}`;
-      const filePath = `${selectedPayout.tenant_id}/${fileName}`;
+      const firstId = isBulk ? selectedPayout[0].id : selectedPayout.id;
+      const tenantId = isBulk ? selectedPayout[0].tenant_id : selectedPayout.tenant_id;
+      const fileName = `${firstId}-${isBulk ? 'bulk-' : ''}${Date.now()}.${fileExt}`;
+      const filePath = `${tenantId}/${fileName}`;
 
       const { data, error } = await supabase.storage
         .from("payout-slips")
@@ -106,16 +112,23 @@ export function PayoutCompletionDialog({
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      const res = await markAsPaidAction(selectedPayout.id, {
-        slip_url: slipUrl,
-        payment_reference: paymentRef || `TRF-${selectedPayout.id.slice(0, 8).toUpperCase()}`
-      });
+      let res;
+      if (isBulk) {
+        const ids = selectedPayout.map((p: any) => p.id);
+        res = await bulkMarkAsPaidAction(ids, {
+          slip_url: slipUrl,
+          payment_reference: paymentRef || `TRF-BULK-${Date.now()}`
+        });
+      } else {
+        res = await markAsPaidAction(selectedPayout.id, {
+          slip_url: slipUrl,
+          payment_reference: paymentRef || `TRF-${selectedPayout.id.slice(0, 8).toUpperCase()}`
+        });
+      }
 
       if (res.success) {
-        toast.success("บันทึกการชำระเงินเรียบร้อยแล้ว");
+        toast.success(res.message || "บันทึกการชำระเงินเรียบร้อยแล้ว");
         onSuccess?.();
-        // Keep dialog open to show success state if needed, or close
-        // Let's close and let the parent refresh
         onClose();
       } else {
         toast.error(res.error || "เกิดข้อผิดพลาด");
@@ -178,52 +191,101 @@ export function PayoutCompletionDialog({
                     <div className="h-10 w-10 rounded-xl bg-blue-100 flex items-center justify-center">
                       <Wallet className="h-5 w-5 text-blue-600" />
                     </div>
-                    ดำเนินการโอนเงิน
+                    {isBulk ? "ดำเนินการโอนเงินแบบกลุ่ม" : "ดำเนินการโอนเงิน"}
                   </DialogTitle>
                   <DialogDescription>
-                    ตรวจสอบข้อมูลธนาคารและอัปโหลดหลักฐานการโอนเงิน
+                    {isBulk ? "ตรวจสอบสัดส่วนบัญชีและยอดโอนรวม" : "ตรวจสอบข้อมูลธนาคารและอัปโหลดหลักฐานการโอนเงิน"}
                   </DialogDescription>
                 </DialogHeader>
 
                 <div className="px-8 pb-8 space-y-6">
                   {/* Bank Information Card */}
-                  <div className="p-5 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
-                    <div className="flex justify-between items-start">
+                  {isBulk ? (
+                    <div className="p-5 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">บัญชีธนาคารผู้รับโอน ({selectedPayout.length} รายการ)</p>
+                      <div className="max-h-48 overflow-y-auto space-y-3 pr-1">
+                        {selectedPayout.map((p: any) => {
+                          const rec = p.agent || p.co_broker;
+                          const bName = rec?.bank?.name_th || rec?.bank_code || "ไม่ได้ระบุ";
+                          const bAccNo = rec?.bank_account_no || "ไม่ได้ระบุ";
+                          const bAccName = rec?.bank_account_name || rec?.full_name || rec?.name || "ไม่ได้ระบุ";
+                          const bAmt = p.net_amount || p.net_transfer_amount || 0;
+                          return (
+                            <div key={p.id} className="text-xs border-b border-slate-200/40 pb-2 last:border-none last:pb-0 space-y-0.5">
+                              <div className="flex justify-between font-bold text-slate-900">
+                                <span>{p.recipient_name || rec?.full_name || rec?.name || "ไม่ระบุชื่อ"}</span>
+                                <span className="text-blue-600">{formatCurrency(bAmt)}</span>
+                              </div>
+                              <div className="text-slate-500 flex items-center justify-between text-[10px]">
+                                <span className="truncate max-w-[150px]">{bName} • {bAccName}</span>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <span className="font-mono">{bAccNo}</span>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-5 w-5 text-slate-400 hover:text-blue-600 p-0"
+                                    onClick={() => {
+                                      if (bAccNo && bAccNo !== "ไม่ได้ระบุ") {
+                                        navigator.clipboard.writeText(bAccNo);
+                                        toast.success(`คัดลอกเลขบัญชีของ ${p.recipient_name || rec?.full_name || rec?.name} แล้ว`);
+                                      }
+                                    }}
+                                    disabled={bAccNo === "ไม่ได้ระบุ"}
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div className="pt-2 border-t border-slate-200 flex justify-between items-center">
+                        <p className="text-sm font-bold text-slate-500">ยอดเงินรวมที่ต้องโอน</p>
+                        <p className="text-2xl font-black text-slate-900 underline decoration-blue-500/30">
+                          {formatCurrency(totalAmount)}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-5 rounded-3xl bg-slate-50 border border-slate-100 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ธนาคารผู้รับ</p>
+                          <p className="font-bold text-slate-900">{bankName}</p>
+                        </div>
+                        <Badge className="bg-blue-600 text-white border-none">PromptPay / Bank</Badge>
+                      </div>
+
                       <div className="space-y-1">
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ธนาคารผู้รับ</p>
-                        <p className="font-bold text-slate-900">{bankName}</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">เลขที่บัญชี</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xl font-mono font-bold text-blue-600 tracking-tighter">{bankAccNo}</p>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-slate-400 hover:text-blue-600"
+                            onClick={handleCopyAccNo}
+                            disabled={bankAccNo === "ไม่ได้ระบุ"}
+                          >
+                            {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                          </Button>
+                        </div>
                       </div>
-                      <Badge className="bg-blue-600 text-white border-none">PromptPay / Bank</Badge>
-                    </div>
 
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">เลขที่บัญชี</p>
-                      <div className="flex items-center gap-2">
-                        <p className="text-xl font-mono font-bold text-blue-600 tracking-tighter">{bankAccNo}</p>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-slate-400 hover:text-blue-600"
-                          onClick={handleCopyAccNo}
-                          disabled={bankAccNo === "ไม่ได้ระบุ"}
-                        >
-                          {isCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                        </Button>
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ชื่อบัญชี</p>
+                        <p className="font-bold text-slate-700">{bankAccName}</p>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-200/50 flex justify-between items-center">
+                        <p className="text-sm font-bold text-slate-500">ยอดเงินที่ต้องโอน</p>
+                        <p className="text-2xl font-black text-slate-900 underline decoration-blue-500/30">
+                          {formatCurrency(totalAmount)}
+                        </p>
                       </div>
                     </div>
-
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ชื่อบัญชี</p>
-                      <p className="font-bold text-slate-700">{bankAccName}</p>
-                    </div>
-
-                    <div className="pt-2 border-t border-slate-200/50 flex justify-between items-center">
-                      <p className="text-sm font-bold text-slate-500">ยอดเงินที่ต้องโอน</p>
-                      <p className="text-2xl font-black text-slate-900 underline decoration-blue-500/30">
-                        {formatCurrency(selectedPayout.net_amount || selectedPayout.net_transfer_amount)}
-                      </p>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Payment Form */}
                   <div className="space-y-4">

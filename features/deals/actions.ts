@@ -74,9 +74,25 @@ async function syncDealToLedger(
         .reduce((sum: number, c: { amount: number | null }) => sum + (Number(c.amount) || 0), 0);
     }
 
-    // ยอดสุทธิบริษัท = ยอดคอมมิชชันรวม - ส่วนที่จ่ายให้ Co-Agent ภายนอก
-    const netCompanyAmount = grossCommission - coAgentGross;
+    // ยอดสุทธิขั้นต้นก่อนหัก Agent Cut (ค่าคอมฯ รวม - ส่วน Co-Agent ภายนอก)
+    const netCompanyAmount = Math.max(0, grossCommission - coAgentGross);
     if (netCompanyAmount <= 0) return;
+
+    let agencyNet = 0;
+    if (commissions && commissions.length > 0) {
+      const agencyComm = commissions.find((c: { recipient_role: string }) => c.recipient_role === "AGENCY");
+      if (agencyComm) {
+        agencyNet = Number(agencyComm.net_amount ?? agencyComm.amount) || 0;
+      } else {
+        // If no AGENCY role record, calculate total minus non-AGENCY (agent splits)
+        const agentSplits = commissions
+          .filter((c: { recipient_role: string }) => c.recipient_role !== "AGENCY")
+          .reduce((sum: number, c: { amount: number | null }) => sum + (Number(c.amount) || 0), 0);
+        agencyNet = Math.max(0, grossCommission - agentSplits);
+      }
+    } else {
+      agencyNet = netCompanyAmount;
+    }
 
     // 4. บันทึกลง financial_ledger_v3
     await supabase.from("financial_ledger_v3").insert({
@@ -85,7 +101,7 @@ async function syncDealToLedger(
       transaction_type: "deal_closed",
       reference_entity: "DEAL",
       reference_id: dealId,
-      amount_net: netCompanyAmount,
+      amount_net: agencyNet,
       amount_total: netCompanyAmount,
       tax_amount: 0,
       wht_amount: 0,
@@ -93,6 +109,7 @@ async function syncDealToLedger(
       metadata: {
         gross_commission: grossCommission,
         co_agent_deduction: coAgentGross,
+        agency_net: agencyNet,
         synced_at: new Date().toISOString(),
       },
     });

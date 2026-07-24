@@ -99,8 +99,8 @@ export async function getExecutiveStats(
     // 1. Fetch CLOSED_WIN deals for commission and deal counts
     const { data: deals, error: dealsError } = await applyTenantFilter(
       supabase
-        .from("deals")
-        .select("status, deal_type, commission_amount, created_at")
+        .from("crm_deals_v3")
+        .select("status, deal_type, commission_total, created_at, commissions:crm_deal_commissions_v3(recipient_role, amount)")
         .eq("status", "CLOSED_WIN")
         .gte("created_at", startDate)
         .lte("created_at", endDate),
@@ -137,8 +137,18 @@ export async function getExecutiveStats(
     rentalCount: 0,
   };
 
-  deals?.forEach((d: DealQueryResult) => {
-    const comm = d.commission_amount || 0;
+  deals?.forEach((d: any) => {
+    const commissionsList = d.commissions || [];
+    const hasAgencyCommission = commissionsList.some(
+      (c: any) => c.recipient_role === "AGENCY" && (Number(c.amount) || 0) > 0
+    );
+
+    // If splits are defined but none are allocated to the company (AGENCY), skip including this deal's commission in stats
+    if (commissionsList.length > 0 && !hasAgencyCommission) {
+      return;
+    }
+
+    const comm = d.commission_total || 0;
     stats.totalCommission += comm;
     if (d.deal_type === "SALE") {
       stats.salesCount++;
