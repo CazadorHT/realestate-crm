@@ -223,7 +223,7 @@ export function StatsOverview({
       value: stats.revenueThisMonth,
       compareValue: compareStats?.revenueThisMonth,
       change: stats.revenueChange,
-      context: "ยอดขาย + เช่า (สุทธิ)",
+      context: `ยอดขาย + เช่าสุทธิ (${stats.dealsWon} ดีล)`,
       icon: DollarSign,
       isCurrency: true,
       color: "blue",

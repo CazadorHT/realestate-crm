@@ -144,13 +144,13 @@ export async function getTopAgents({
       return [];
     }
 
-    // Fetch profiles separately
-    const { data: profiles, error: profilesError } = await supabase
-      .from("profiles")
-      .select("id, full_name, avatar_url");
+    // Fetch identities separately
+    const { data: identities, error: identitiesError } = await supabase
+      .from("identities_v3")
+      .select("id, display_name, avatar_url, email");
 
-    if (profilesError) {
-      console.error("getTopAgents profiles query error:", profilesError);
+    if (identitiesError) {
+      console.error("getTopAgents identities query error:", identitiesError);
       return [];
     }
 
@@ -175,8 +175,8 @@ export async function getTopAgents({
       return [];
     }
 
-    const profileMap = new Map<string, any>();
-    (profiles || []).forEach((p: any) => profileMap.set(p.id, p));
+    const identityMap = new Map<string, any>();
+    (identities || []).forEach((p: any) => identityMap.set(p.id, p));
 
     const memberMap = new Map<string, any>();
     (members || []).forEach((m: any) => memberMap.set(m.identity_id, m));
@@ -196,9 +196,8 @@ export async function getTopAgents({
       const agentId = d.recipient_id;
       if (!agentId) return;
 
-      const profile = profileMap.get(agentId);
+      const identity = identityMap.get(agentId);
       const member = memberMap.get(agentId);
-      if (!profile) return;
 
       // Filter by team if requested
       if (!isAllTeam && member?.team_id !== teamId) {
@@ -211,8 +210,8 @@ export async function getTopAgents({
       const current = agentStats.get(agentId) || {
         count: 0,
         commission: 0,
-        name: profile.full_name || "Unknown Agent",
-        avatar: profile.avatar_url || null,
+        name: identity?.display_name || identity?.email || "Unknown Agent",
+        avatar: identity?.avatar_url || null,
         branchName: tenantData?.name || "ยังไม่ได้สังกัด",
         teamName: teamData?.name || "ไม่มีทีม",
       };

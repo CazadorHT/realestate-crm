@@ -60,11 +60,17 @@ export async function getAgentKpiStats(
     const now = new Date();
     const start = new Date();
     
-    if (timeframe === "month") start.setMonth(now.getMonth(), 1);
-    else if (timeframe === "quarter") start.setMonth(now.getMonth() - 3);
-    else if (timeframe === "year") start.setFullYear(now.getFullYear(), 0, 1);
+    start.setHours(0, 0, 0, 0);
+    if (timeframe === "month") start.setDate(1);
+    else if (timeframe === "quarter") {
+      start.setMonth(now.getMonth() - 3);
+      start.setDate(1);
+    }
+    else if (timeframe === "year") {
+      start.setMonth(0, 1);
+    }
     else if (timeframe === "all") startDate = null;
-    else start.setMonth(now.getMonth(), 1); // default month
+    else start.setDate(1); // default month
     
     if (timeframe !== "all") {
       startDate = start.toISOString();
@@ -83,7 +89,7 @@ export async function getAgentKpiStats(
           avatar_url
         )
       `)
-      .in("role", ["owner", "admin", "manager", "agent"]);
+      .in("role", ["OWNER", "ADMIN", "MANAGER", "AGENT", "owner", "admin", "manager", "agent"]);
 
     if (tenantId && tenantId !== "ALL") {
       agentQuery = agentQuery.eq("tenant_id", tenantId);
@@ -99,35 +105,43 @@ export async function getAgentKpiStats(
       return [];
     }
 
-    // Map to normalized AgentRow (Strict Typing)
-    const agents: AgentRow[] = rawAgents.map(m => {
-      const iden = Array.isArray(m.identity) ? m.identity[0] : m.identity;
-      const identityObj = (iden as Record<string, unknown> | null) || {};
-      return {
-        id: m.identity_id,
-        display_name: (identityObj.display_name as string) || "Unknown",
-        email: (identityObj.email as string) || null,
-        avatar_url: (identityObj.avatar_url as string) || null
-      };
+    // Map to normalized AgentRow & Deduplicate by identity_id
+    const agentMap = new Map<string, AgentRow>();
+    rawAgents.forEach(m => {
+      if (!agentMap.has(m.identity_id)) {
+        const iden = Array.isArray(m.identity) ? m.identity[0] : m.identity;
+        const identityObj = (iden as Record<string, unknown> | null) || {};
+        agentMap.set(m.identity_id, {
+          id: m.identity_id,
+          display_name: (identityObj.display_name as string) || "Unknown",
+          email: (identityObj.email as string) || null,
+          avatar_url: (identityObj.avatar_url as string) || null
+        });
+      }
     });
+    const agents: AgentRow[] = Array.from(agentMap.values());
 
     // Step 3: Fetch financial records for revenue/deals from crm_deals_v3
     let dealsQuery = supabase
       .from("crm_deals_v3")
-      .select("id, agent_id, total_amount, commission_total, deal_type, status, closed_at")
+      .select("id, agent_id, total_amount, commission_total, deal_type, status, closed_at, created_at, commissions:crm_deal_commissions_v3(recipient_id, recipient_role, amount, net_amount)")
       .eq("status", "CLOSED_WIN");
     
     if (tenantId && tenantId !== "ALL") {
       dealsQuery = dealsQuery.eq("tenant_id", tenantId);
     }
-    if (startDate) {
-      dealsQuery = dealsQuery.gte("closed_at", startDate);
-    }
-    const { data: deals, error: dealsError } = await dealsQuery;
+    const { data: dealsRaw, error: dealsError } = await dealsQuery;
 
     if (dealsError) {
       console.error("[getAgentKpiStats] Deals Error:", dealsError);
     }
+
+    // Filter deals in memory by date (handling null closed_at with fallback to created_at)
+    const deals = (dealsRaw || []).filter((d: any) => {
+      if (!startDate) return true;
+      const dealDate = d.closed_at || d.created_at;
+      return dealDate && new Date(dealDate).getTime() >= new Date(startDate).getTime();
+    });
 
     // Step 4: Fetch assigned leads count for conversion rate (V3 Direct)
     let leadsQuery = supabase
@@ -163,21 +177,37 @@ export function calculateAgentStats(
   leads: LeadRow[]
 ): AgentKpiStats[] {
   return agents.map((agent) => {
-    const agentDeals = (deals || []).filter(
-      (d) => d.agent_id === agent.id,
-    );
+    // A deal belongs to agent if agent is primary agent_id or recipient in commissions
+    const agentDeals = (deals || []).filter((d: any) => {
+      if (d.agent_id === agent.id) return true;
+      const comms = d.commissions || [];
+      return comms.some((c: any) => c.recipient_id === agent.id);
+    });
+
     const agentLeads = (leads || []).filter(
       (l) => l.assigned_to === agent.id,
     );
 
-    const totalRevenue = agentDeals.reduce(
-      (sum, d) => sum + (d.total_amount || 0),
-      0,
-    );
-    const totalCommission = agentDeals.reduce(
-      (sum, d) => sum + (d.commission_total || 0),
-      0,
-    );
+    let totalCommission = 0;
+    let totalRevenue = 0;
+
+    agentDeals.forEach((d: any) => {
+      totalRevenue += d.total_amount || 0;
+      const comms = d.commissions || [];
+      const myComms = comms.filter((c: any) => c.recipient_id === agent.id);
+      if (myComms.length > 0) {
+        myComms.forEach((c: any) => {
+          totalCommission += Number(c.net_amount ?? c.amount) || 0;
+        });
+      } else if (d.agent_id === agent.id) {
+        // Fallback: if no recipient_id matches, check if deal has agent splits
+        const otherSplits = comms
+          .filter((c: any) => c.recipient_id && c.recipient_id !== agent.id)
+          .reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0);
+        totalCommission += Math.max(0, (Number(d.commission_total) || 0) - otherSplits);
+      }
+    });
+
     const salesCount = agentDeals.filter(
       (d) => d.deal_type === "SALE",
     ).length;

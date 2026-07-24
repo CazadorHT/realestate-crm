@@ -96,15 +96,15 @@ export async function getExecutiveStats(
       return query;
     };
 
-    // 1. Fetch CLOSED_WIN deals for commission and deal counts
-    const { data: deals, error: dealsError } = await applyTenantFilter(
-      supabase
-        .from("crm_deals_v3")
-        .select("status, deal_type, commission_total, created_at, commissions:crm_deal_commissions_v3(recipient_role, amount)")
-        .eq("status", "CLOSED_WIN")
-        .gte("created_at", startDate)
-        .lte("created_at", endDate),
-    );
+  // 1. Fetch CLOSED_WIN deals for commission and deal counts
+  const { data: deals, error: dealsError } = await applyTenantFilter(
+    supabase
+      .from("crm_deals_v3")
+      .select("status, deal_type, commission_total, created_at, commissions:crm_deal_commissions_v3(recipient_role, amount, net_amount)")
+      .eq("status", "CLOSED_WIN")
+      .gte("created_at", startDate)
+      .lte("created_at", endDate),
+  );
 
   if (dealsError) {
     console.error("[getExecutiveStats] Deals error:", dealsError);
@@ -139,24 +139,31 @@ export async function getExecutiveStats(
 
   deals?.forEach((d: any) => {
     const commissionsList = d.commissions || [];
-    const hasAgencyCommission = commissionsList.some(
-      (c: any) => c.recipient_role === "AGENCY" && (Number(c.amount) || 0) > 0
-    );
-
-    // If splits are defined but none are allocated to the company (AGENCY), skip including this deal's commission in stats
-    if (commissionsList.length > 0 && !hasAgencyCommission) {
-      return;
+    const gross = Number(d.commission_total) || 0;
+    
+    let agencyNet = 0;
+    if (commissionsList.length > 0) {
+      const agencyComm = commissionsList.find((c: any) => c.recipient_role === "AGENCY");
+      if (agencyComm) {
+        agencyNet = Number(agencyComm.net_amount ?? agencyComm.amount) || 0;
+      } else {
+        const agentSplits = commissionsList
+          .filter((c: any) => c.recipient_role !== "AGENCY")
+          .reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0);
+        agencyNet = Math.max(0, gross - agentSplits);
+      }
+    } else {
+      agencyNet = gross;
     }
 
-    const comm = d.commission_total || 0;
-    stats.totalCommission += comm;
+    stats.totalCommission += agencyNet;
     if (d.deal_type === "SALE") {
       stats.salesCount++;
-      stats.salesCommission += comm;
+      stats.salesCommission += agencyNet;
     }
     if (d.deal_type === "RENT") {
       stats.rentalCount++;
-      stats.rentalCommission += comm;
+      stats.rentalCommission += agencyNet;
     }
   });
 

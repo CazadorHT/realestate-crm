@@ -207,6 +207,7 @@ export async function createDealAction(input: CreateDealInput) {
       commission_percent, 
       duration_months, 
       internal_co_agent_id_temp,
+      partner_co_broker_ids,
       ...insertData 
     } = {
       ...validated,
@@ -365,6 +366,7 @@ export async function updateDealAction(input: UpdateDealInput) {
       commission_percent, 
       duration_months, 
       internal_co_agent_id_temp,
+      partner_co_broker_ids,
       ...updateData 
     } = {
       ...validated,

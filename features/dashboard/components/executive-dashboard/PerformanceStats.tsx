@@ -46,7 +46,7 @@ export function PerformanceStats({
         title="ยอดขายรวม (Revenue)"
         value={stats.totalRevenue}
         icon={DollarSign}
-        description="รวมยอดขายและยอดเช่าทั้งหมด"
+        description={`รวมยอดขายและยอดเช่าทั้งหมด (${stats.totalDeals} ดีล)`}
         trend={revenueTrend.text}
         trendValue={revenueTrend.value}
         color="blue"

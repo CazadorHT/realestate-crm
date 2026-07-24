@@ -26,6 +26,7 @@ export const createDealSchema = z.object({
   duration_months: z.coerce.number().min(1, "ระยะเวลาอย่างน้อย 1 เดือน").optional(),
   undetermined_date: z.boolean().optional(),
   partner_co_broker_id: z.string().uuid().optional().nullable(),
+  partner_co_broker_ids: z.array(z.string()).optional(),
   internal_co_agent_id_temp: z.string().optional().nullable(),
 });
 

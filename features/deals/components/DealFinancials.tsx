@@ -144,7 +144,7 @@ export function DealFinancials({
       const agent = agents.find(a => a.id === selectionValue);
       if (agent) {
         item.recipient_id = agent.id;
-        item.recipient_role = "LISTING";
+        item.recipient_role = agent.role === "CO_BROKER" ? "CO_AGENT" : "LISTING";
         item.tax_rate = 3;
         item.agent = {
           id: agent.id,
@@ -755,7 +755,7 @@ export function DealFinancials({
                   size="sm"
                   variant="outline"
                   onClick={handleAddRow}
-                  className="gap-2 text-xs font-semibold text-blue-600 border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50"
+                  className="gap-2 text-xs font-semibold text-blue-600! border-dashed border-blue-300 hover:border-blue-500 hover:bg-blue-50"
                 >
                   <Plus className="h-4 w-4" />
                   เพิ่มผู้รับส่วนแบ่ง
@@ -841,37 +841,97 @@ export function DealFinancials({
             </div>
           </div>
 
-          {/* Active Agents list */}
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">เอเจ้นท์ภายในบริษัท</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {agents.map((agent) => (
-                <Button
-                  key={agent.id}
-                  variant="outline"
-                  type="button"
-                  className="h-14 justify-start gap-3 px-3 border-slate-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all text-left"
-                  onClick={() => {
-                    if (activeEditIndex !== null) {
-                      handleRecipientSelectionChange(activeEditIndex, agent.id);
-                      setActiveEditIndex(null);
-                    }
-                  }}
-                >
-                  <Avatar className="h-8 w-8 border border-slate-200">
-                    <AvatarImage src={agent.avatar_url || ""} />
-                    <AvatarFallback className="text-xs bg-slate-100 text-slate-500 font-bold">
-                      {agent.display_name?.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-bold text-slate-700 truncate">{agent.display_name}</span>
-                    <span className="text-[10px] text-slate-400 truncate uppercase">{agent.role}</span>
+          {/* Internal Staff vs External Co-Brokers */}
+          {(() => {
+            const internalAgents = agents.filter((a) => a.role !== "CO_BROKER");
+            const coBrokers = agents.filter((a) => a.role === "CO_BROKER");
+
+            return (
+              <>
+                {/* 🏢 Internal Staff List */}
+                <div className="space-y-2 pt-2">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5 text-blue-500" />
+                    พนักงาน / เอเจ้นท์ภายในบริษัท ({internalAgents.length})
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {internalAgents.map((agent) => (
+                      <Button
+                        key={agent.id}
+                        variant="outline"
+                        type="button"
+                        className="h-14 justify-start gap-3 px-3 border-slate-200 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all text-left"
+                        onClick={() => {
+                          if (activeEditIndex !== null) {
+                            handleRecipientSelectionChange(activeEditIndex, agent.id);
+                            setActiveEditIndex(null);
+                          }
+                        }}
+                      >
+                        <Avatar className="h-8 w-8 border border-slate-200">
+                          <AvatarImage src={agent.avatar_url || ""} />
+                          <AvatarFallback className="text-xs bg-slate-100 text-slate-500 font-bold">
+                            {agent.display_name?.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-bold text-slate-700 truncate">
+                            {agent.display_name}
+                          </span>
+                          <span className="text-[10px] text-slate-400 truncate uppercase font-semibold">
+                            {agent.role}
+                          </span>
+                        </div>
+                      </Button>
+                    ))}
                   </div>
-                </Button>
-              ))}
-            </div>
-          </div>
+                </div>
+
+                {/* 🤝 External Co-Brokers List */}
+                <div className="space-y-2 pt-3 border-t border-slate-100">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-emerald-600" />
+                    พาร์ทเนอร์ / เอเจ้นท์ภายนอก (Co-Broker) ({coBrokers.length})
+                  </h4>
+                  {coBrokers.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic py-2">ยังไม่มีรายชื่อ Co-Broker ในระบบ</p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {coBrokers.map((agent) => (
+                        <Button
+                          key={agent.id}
+                          variant="outline"
+                          type="button"
+                          className="h-14 justify-start gap-3 px-3 border-emerald-100 bg-emerald-50/30 hover:bg-emerald-100/60 hover:border-emerald-300 hover:text-emerald-800 transition-all text-left"
+                          onClick={() => {
+                            if (activeEditIndex !== null) {
+                              handleRecipientSelectionChange(activeEditIndex, agent.id);
+                              setActiveEditIndex(null);
+                            }
+                          }}
+                        >
+                          <Avatar className="h-8 w-8 border border-emerald-200">
+                            <AvatarImage src={agent.avatar_url || ""} />
+                            <AvatarFallback className="text-xs bg-emerald-100 text-emerald-700 font-bold">
+                              {agent.display_name?.charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs font-bold text-slate-800 truncate">
+                              {agent.display_name}
+                            </span>
+                            <span className="text-[10px] text-emerald-600 truncate uppercase font-bold">
+                              Co-Broker ภายนอก
+                            </span>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </>
+            );
+          })()}
         </div>
       </ResponsiveDialog>
     </div>

@@ -309,25 +309,74 @@ export async function getInvoicesByDealId(dealId: string): Promise<InvoiceRow[]>
 }
 
 export async function getTenantAgents(): Promise<{ id: string; display_name: string; role: string; avatar_url: string | null }[]> {
-  const { supabase, role } = await requireAuthContext();
+  const { supabase, role, tenantId } = await requireAuthContext();
   assertStaff(role);
 
-  const { data, error } = await supabase
-    .from("profiles")
-    .select("id, full_name, display_name, role, avatar_url")
+  // 1. Fetch internal staff members via tenant_members_v3
+  let membersQuery = supabase
+    .from("tenant_members_v3")
+    .select(`
+      identity_id,
+      role,
+      identity:identities_v3!identity_id (
+        id,
+        display_name,
+        email,
+        avatar_url,
+        is_active,
+        deleted_at
+      )
+    `);
+
+  if (tenantId && tenantId !== "ALL") {
+    membersQuery = membersQuery.eq("tenant_id", tenantId);
+  }
+
+  const { data: staffMembers } = await membersQuery;
+
+  // 2. Fetch Co-Brokers (Category 2, Role CO_BROKER)
+  let coBrokersQuery = supabase
+    .from("identities_v3")
+    .select("id, display_name, email, role, avatar_url")
+    .eq("category", 2)
+    .eq("role", "CO_BROKER")
     .eq("is_active", true)
     .is("deleted_at", null);
 
-  if (error) {
-    console.error("Error fetching tenant agents:", error);
-    return [];
+  if (tenantId && tenantId !== "ALL") {
+    coBrokersQuery = coBrokersQuery.eq("tenant_id", tenantId);
   }
 
-  return (data || []).map((p) => ({
-    id: p.id,
-    display_name: p.display_name || p.full_name || "Unnamed Agent",
-    role: p.role || "AGENT",
-    avatar_url: p.avatar_url,
-  }));
+  const { data: coBrokers } = await coBrokersQuery;
+
+  const resultList: { id: string; display_name: string; role: string; avatar_url: string | null }[] = [];
+  const addedIds = new Set<string>();
+
+  (staffMembers || []).forEach((m: any) => {
+    const iden = Array.isArray(m.identity) ? m.identity[0] : m.identity;
+    if (iden && iden.is_active && !iden.deleted_at && !addedIds.has(m.identity_id)) {
+      addedIds.add(m.identity_id);
+      resultList.push({
+        id: m.identity_id,
+        display_name: iden.display_name || iden.email || "Unnamed Agent",
+        role: m.role || "AGENT",
+        avatar_url: iden.avatar_url || null,
+      });
+    }
+  });
+
+  (coBrokers || []).forEach((cb: any) => {
+    if (!addedIds.has(cb.id)) {
+      addedIds.add(cb.id);
+      resultList.push({
+        id: cb.id,
+        display_name: cb.display_name || cb.email || "Unnamed Co-Broker",
+        role: "CO_BROKER",
+        avatar_url: cb.avatar_url || null,
+      });
+    }
+  });
+
+  return resultList;
 }
 
