@@ -31,6 +31,8 @@ import { useFormContext, type UseFormReturn } from "react-hook-form";
 import type { PropertyFormValues } from "@/features/properties/schema";
 
 import { getProjectSuggestions } from "../../../actions/project-suggestions";
+import { getExistingProjectLocationAction } from "../../actions/ai-actions";
+import { toast } from "sonner";
 import { AddressSelectorField } from "./AddressSelectorField";
 import { QuickCreateProjectDialog } from "./QuickCreateProjectDialog";
 
@@ -182,6 +184,22 @@ export function AddressSection({ form: formProp }: AddressSectionProps) {
         form.setValue("transit_distance_meters", proj.transit_distance_meters, { shouldValidate: true });
       }
     }
+
+    // Auto-fetch existing transit & nearby places from project if available
+    getExistingProjectLocationAction({
+      projectId: proj.id,
+      addressLine1: proj.address_line1,
+    }).then((res) => {
+      if (res.success && res.data) {
+        const { transits = [], places = [] } = res.data;
+        if (transits.length > 0 || places.length > 0) {
+          form.setValue("nearby_transits", transits, { shouldDirty: true, shouldTouch: true });
+          form.setValue("nearby_places", places, { shouldDirty: true, shouldTouch: true });
+          toast.success("ดึงข้อมูลการเดินทางและสถานที่ใกล้เคียงจากโครงการเดิมสำเร็จ ✨");
+        }
+      }
+    });
+
     setShowDropdown(false);
   };
 

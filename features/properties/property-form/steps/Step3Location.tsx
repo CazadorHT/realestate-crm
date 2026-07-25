@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFormContext } from "react-hook-form";
 import { PropertyFormValues } from "../../schema";
 import type { Step3Props } from "../types";
@@ -12,7 +12,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Sparkles, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { suggestNearbyPlacesAndTransitAction } from "../actions/ai-actions";
+import {
+  suggestNearbyPlacesAndTransitAction,
+  getExistingProjectLocationAction,
+} from "../actions/ai-actions";
 
 /**
  * Step 3: Location
@@ -22,6 +25,30 @@ import { suggestNearbyPlacesAndTransitAction } from "../actions/ai-actions";
 export function Step3Location({ mode }: Step3Props) {
   const form = useFormContext<PropertyFormValues>();
   const [isSearching, setIsSearching] = useState(false);
+
+  // Auto-fetch saved project transport & nearby places if empty
+  useEffect(() => {
+    const projectId = form.getValues("project_id");
+    const address = form.getValues("address_line1");
+    const transits = form.getValues("nearby_transits") || [];
+    const places = form.getValues("nearby_places") || [];
+
+    if ((projectId || address) && transits.length === 0 && places.length === 0) {
+      getExistingProjectLocationAction({
+        projectId: projectId || undefined,
+        addressLine1: address || undefined,
+      }).then((res) => {
+        if (res.success && res.data) {
+          const { transits: fetchedTransits = [], places: fetchedPlaces = [] } = res.data;
+          if (fetchedTransits.length > 0 || fetchedPlaces.length > 0) {
+            form.setValue("nearby_transits", fetchedTransits, { shouldDirty: true, shouldTouch: true });
+            form.setValue("nearby_places", fetchedPlaces, { shouldDirty: true, shouldTouch: true });
+            toast.success("ดึงข้อมูลการเดินทางและสถานที่ใกล้เคียงจากโครงการเดิมสำเร็จ ✨");
+          }
+        }
+      });
+    }
+  }, [form]);
 
   const handleAISearch = async () => {
     const address = form.getValues("address_line1");

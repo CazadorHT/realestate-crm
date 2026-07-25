@@ -214,6 +214,105 @@ function normalizePlaceCategory(category: string): string {
   return "Other";
 }
 
+export async function getExistingProjectLocationAction(params: {
+  projectId?: string;
+  addressLine1?: string;
+}) {
+  const { projectId, addressLine1 } = params;
+
+  if (!projectId && (!addressLine1 || !addressLine1.trim())) {
+    return { success: false, data: null };
+  }
+
+  try {
+    const supabase = await createClient();
+
+    // 1. Check by projectId first
+    if (projectId) {
+      const { data: props, error: fetchError } = await supabase
+        .from("properties_core")
+        .select(`
+          id,
+          updated_at,
+          properties_details (
+            transit_info
+          )
+        `)
+        .eq("project_id", projectId)
+        .is("deleted_at", null)
+        .order("updated_at", { ascending: false })
+        .limit(10);
+
+      if (!fetchError && props && props.length > 0) {
+        for (const prop of props) {
+          const transitInfo: any = (prop as any).properties_details?.transit_info;
+          if (transitInfo) {
+            const transits = transitInfo.transits || [];
+            const places = transitInfo.places || [];
+            if (transits.length > 0 || places.length > 0) {
+              return {
+                success: true,
+                data: { transits, places },
+                source: "project_id",
+              };
+            }
+          }
+        }
+      }
+    }
+
+    // 2. Check by matching project name or addressLine1
+    const cleanAddress = (addressLine1 || "").trim();
+    if (cleanAddress) {
+      const { data: matchedProjects } = await supabase
+        .from("projects")
+        .select("id")
+        .or(`name->>th.ilike.%${cleanAddress}%,name->>en.ilike.%${cleanAddress}%,slug.ilike.%${cleanAddress}%`)
+        .limit(5);
+
+      const projectIds = (matchedProjects || []).map((p: any) => p.id);
+
+      if (projectIds.length > 0) {
+        const { data: propsByProj } = await supabase
+          .from("properties_core")
+          .select(`
+            id,
+            updated_at,
+            properties_details (
+              transit_info
+            )
+          `)
+          .in("project_id", projectIds)
+          .is("deleted_at", null)
+          .order("updated_at", { ascending: false })
+          .limit(10);
+
+        if (propsByProj && propsByProj.length > 0) {
+          for (const prop of propsByProj) {
+            const transitInfo: any = (prop as any).properties_details?.transit_info;
+            if (transitInfo) {
+              const transits = transitInfo.transits || [];
+              const places = transitInfo.places || [];
+              if (transits.length > 0 || places.length > 0) {
+                return {
+                  success: true,
+                  data: { transits, places },
+                  source: "project_name",
+                };
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return { success: false, data: null };
+  } catch (e) {
+    console.error("Failed to check existing project transit cache:", e);
+    return { success: false, data: null };
+  }
+}
+
 export async function suggestNearbyPlacesAndTransitAction(params: {
   title?: string;
   addressLine1?: string;
@@ -229,45 +328,19 @@ export async function suggestNearbyPlacesAndTransitAction(params: {
     throw new Error("กรุณากรอกข้อมูลที่ตั้ง จังหวัด หรือลิงก์แผนที่ก่อนดำเนินการ");
   }
 
-  // 1. Check if we can reuse transit/nearby places from another property in the same project
-  if (projectId) {
-    try {
-      const supabase = await createClient();
-      const { data: existingPropDetails, error: fetchError } = await supabase
-        .from("properties_core")
-        .select(`
-          id,
-          updated_at,
-          properties_details (
-            transit_info
-          )
-        `)
-        .eq("project_id", projectId)
-        .is("deleted_at", null)
-        .order("updated_at", { ascending: false })
-        .limit(10);
-
-      if (!fetchError && existingPropDetails) {
-        for (const prop of existingPropDetails) {
-          const transitInfo: any = prop.properties_details?.transit_info;
-          if (transitInfo) {
-            const transits = transitInfo.transits || [];
-            const places = transitInfo.places || [];
-            if (transits.length > 0 || places.length > 0) {
-              return {
-                success: true,
-                data: {
-                  transits,
-                  places,
-                },
-                cached: true,
-              };
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.error("Failed to check existing project transit cache:", e);
+  // 1. Check if we can reuse transit/nearby places from another property in the same project or matching name
+  const existingLoc = await getExistingProjectLocationAction({ projectId, addressLine1 });
+  if (existingLoc.success && existingLoc.data) {
+    const { transits = [], places = [] } = existingLoc.data;
+    if (transits.length > 0 || places.length > 0) {
+      return {
+        success: true,
+        data: {
+          transits,
+          places,
+        },
+        cached: true,
+      };
     }
   }
 
