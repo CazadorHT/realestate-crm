@@ -369,14 +369,14 @@ export function PropertyForm({
     return () => subscription.unsubscribe();
   }, [form]);
 
-  // === HANDLERS ===
   const handleAddArea = async () => {
-    if (!newArea.trim()) return;
+    if (!newArea.trim()) return false;
     setIsAddingArea(true);
     try {
       const province = form.getValues("province");
+      const addedAreaName = newArea.trim();
       const res = await addPopularAreaAction({
-        name: newArea,
+        name: addedAreaName,
         name_en: newAreaEn,
         name_cn: newAreaCn,
         name_ru: newAreaRu,
@@ -384,18 +384,33 @@ export function PropertyForm({
       });
       if (res.success) {
         toast.success("เพิ่มย่านสำเร็จ");
-        await refreshPopularAreas();
+        await refreshPopularAreas(province);
+        form.setValue("popular_area", addedAreaName, {
+          shouldValidate: true,
+          shouldDirty: true,
+          shouldTouch: true,
+        });
+        if (newAreaEn.trim()) {
+          form.setValue("popular_area_en", newAreaEn.trim(), { shouldDirty: true });
+        }
+        if (newAreaCn.trim()) {
+          form.setValue("popular_area_cn", newAreaCn.trim(), { shouldDirty: true });
+        }
+        if (newAreaRu.trim()) {
+          form.setValue("popular_area_ru", newAreaRu.trim(), { shouldDirty: true });
+        }
         setNewArea("");
         setNewAreaEn("");
         setNewAreaCn("");
         setNewAreaRu("");
-        // Optional: close after add if needed
-        // setIsQuickInfoOpen(false);
+        return true;
       } else {
         toast.error(res.message || "เกิดข้อผิดพลาด");
+        return false;
       }
     } catch (e) {
       toast.error("เกิดข้อผิดพลาดในการเพิ่มย่าน");
+      return false;
     } finally {
       setIsAddingArea(false);
     }

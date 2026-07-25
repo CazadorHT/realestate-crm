@@ -646,13 +646,19 @@ export async function generateAreaSeoContentAction(
       Province: ${province}
       
       Tasks:
-      1. Write a short, engaging description/guide for this area in 4 languages: Thai (th), English (en), Chinese (cn), and Russian (ru). Focus on location highlights, premium lifestyle, transportation connectivity (like BTS/MRT), and residential attractiveness. Keep each translation around 80-120 words. Use simple HTML tags (<p>, <strong>, <ul>, <li>).
-      2. Write a highly optimized SEO Title and SEO Meta Description for this area page in all 4 languages.
-      3. Generate a clean URL slug in English (lowercase, alphanumeric characters and hyphens only, e.g., "sukhumvit" or "bang-na").
+      1. Translate the area name accurately into English (en), Chinese (cn), and Russian (ru).
+      2. Write a short, engaging description/guide for this area in 4 languages: Thai (th), English (en), Chinese (cn), and Russian (ru). Focus on location highlights, premium lifestyle, transportation connectivity (like BTS/MRT), and residential attractiveness. Keep each translation around 80-120 words. Use simple HTML tags (<p>, <strong>, <ul>, <li>).
+      3. Write a highly optimized SEO Title and SEO Meta Description for this area page in all 4 languages.
+      4. Generate a clean URL slug in English (lowercase, alphanumeric characters and hyphens only, e.g., "sukhumvit" or "bang-na").
       
       Format the response as a strict JSON object matching this schema exactly:
       {
         "slug": "url-slug",
+        "name": {
+          "en": "English area name",
+          "cn": "Chinese area name",
+          "ru": "Russian area name"
+        },
         "description": {
           "th": "Thai description...",
           "en": "English description...",

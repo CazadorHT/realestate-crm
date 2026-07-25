@@ -189,6 +189,17 @@ function SortableRow({
       <TableCell className="text-slate-600 px-6 font-medium text-sm">
         {item.name_ru || <span className="text-slate-300">-</span>}
       </TableCell>
+      <TableCell className="text-slate-500 px-6 font-medium text-xs whitespace-nowrap">
+        {item.created_at ? (
+          new Date(item.created_at).toLocaleDateString("th-TH", {
+            day: "numeric",
+            month: "short",
+            year: "2-digit",
+          })
+        ) : (
+          <span className="text-slate-300">-</span>
+        )}
+      </TableCell>
       <TableCell className="px-6 text-center">
         <button
           type="button"
@@ -544,6 +555,9 @@ export function PopularAreasTable({
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษาอังกฤษ <span className="opacity-50 font-normal">(EN)</span></TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษาจีน <span className="opacity-50 font-normal">(CN)</span></TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6">ภาษารัสเซีย <span className="opacity-50 font-normal">(RU)</span></TableHead>
+                <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("created_at")}>
+                  <div className="flex items-center">สร้างเมื่อ <span className="ml-1 opacity-50 font-normal">(Created)</span> <SortIcon column="created_at" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} /></div>
+                </TableHead>
                 <TableHead className="font-semibold text-slate-400 uppercase tracking-widest text-[10px] px-6 text-center cursor-pointer hover:text-slate-900 transition-colors" onClick={() => toggleSort("property_count")}>
                   <div className="flex items-center justify-center">ทรัพย์ <span className="ml-1 opacity-50 font-normal">(Stock)</span> <SortIcon column="property_count" navigatingSort={navigatingSort} sortBy={sortBy} sortOrder={sortOrder} /></div>
                 </TableHead>
@@ -553,7 +567,7 @@ export function PopularAreasTable({
             <TableBody>
               {isAllSelected && totalCount > data.length && (
                 <TableRow className="bg-indigo-50/30 border-b border-indigo-100/50 hover:bg-indigo-50/50 transition-colors italic">
-                  <TableCell colSpan={8} className="py-4 px-6 text-center">
+                  <TableCell colSpan={9} className="py-4 px-6 text-center">
                     <div className="flex items-center justify-center gap-2 text-[13px]">
                       <span className="text-slate-500 font-semibold">เลือกทำเล {data.length} รายการในหน้านี้แล้ว</span>
                       <button 
@@ -567,7 +581,7 @@ export function PopularAreasTable({
                 </TableRow>
               )}
               {data.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-32 text-slate-400 bg-white font-semibold italic">ไม่พบข้อมูลที่ต้องการ (No Records Found)</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-32 text-slate-400 bg-white font-semibold italic">ไม่พบข้อมูลที่ต้องการ (No Records Found)</TableCell></TableRow>
               ) : (
                 <SortableContext items={allIds} strategy={verticalListSortingStrategy}>
                   {data.map((item, index) => (
@@ -619,7 +633,14 @@ export function PopularAreasTable({
                        </button>
                     </div>
                    <h4 className="font-semibold text-slate-900 truncate mt-1.5 text-lg">{item.name}</h4>
-                   <p className="text-[11px] text-blue-600 font-semibold uppercase tracking-wider">{item.province}</p>
+                   <div className="flex items-center gap-2 mt-0.5">
+                     <p className="text-[11px] text-blue-600 font-semibold uppercase tracking-wider">{item.province}</p>
+                     {item.created_at && (
+                       <span className="text-[10px] text-slate-400 font-medium">
+                         • สร้างเมื่อ {new Date(item.created_at).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "2-digit" })}
+                       </span>
+                     )}
+                   </div>
                 </div>
               </div>
               <div className="flex gap-1.5 shrink-0">
@@ -644,7 +665,7 @@ export function PopularAreasTable({
 
       <EditPopularAreaDialog area={editingItem} open={!!editingItem} onOpenChange={(open) => !open && setEditingItem(null)} onSuccess={() => router.refresh()} />
 
-      <ResponsiveDialog open={!!deleteConfirmItem} onOpenChange={(open) => !open && setDeleteConfirmItem(null)} title="ยืนยันการลบทำเล (Delete Confirm)" className="md:max-w-md">
+      <ResponsiveDialog open={!!deleteConfirmItem} onOpenChange={(open) => !open && setDeleteConfirmItem(null)} title="ยืนยันการลบทำเล (Delete Confirm)" className="md:max-w-md!">
         <div className="p-8 text-center space-y-5 italic">
           <div className="mx-auto w-14 h-14 rounded-full bg-rose-50 flex items-center justify-center text-rose-600 mb-2 border border-rose-100 shadow-sm"><TriangleAlert className="h-7 w-7" /></div>
           <div>

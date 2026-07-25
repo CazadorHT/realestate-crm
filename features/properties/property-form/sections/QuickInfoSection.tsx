@@ -53,7 +53,7 @@ type Props = {
   setNewAreaCnAction: (v: string) => void;
   newAreaRu: string;
   setNewAreaRuAction: (v: string) => void;
-  onAddAreaAction: () => void;
+  onAddAreaAction: () => Promise<boolean | void> | void;
 };
 
 export function QuickInfoSection({
@@ -154,7 +154,7 @@ export function QuickInfoSection({
     return () => mql.removeEventListener("change", onChange);
   }, []);
 
-  // AI Translation for New Area
+  // AI Translation for New Area & SEO Generation
   const handleTranslateArea = async () => {
     if (!newArea.trim()) {
       toast.error("กรุณากรอกชื่อย่านภาษาไทยก่อนกดแปลครับ");
@@ -162,14 +162,33 @@ export function QuickInfoSection({
     }
     setIsTranslatingArea(true);
     const toastId = toast.loading(
-      "กำลังแปลชื่อย่านเป็นภาษาอังกฤษ จีน และรัสเซีย...",
+      "กำลังแปลชื่อย่านและเตรียมข้อมูล SEO 4 ภาษาด้วย AI...",
     );
     try {
-      const result = await translateTextAction(newArea, "plain");
-      setNewAreaEnAction(result.en);
-      setNewAreaCnAction(result.cn);
-      setNewAreaRuAction(result.ru);
-      toast.success("แปลชื่อย่านเรียบร้อยแล้ว ✨", { id: toastId });
+      const { generateAreaSeoContentAction } = await import(
+        "@/features/admin/popular-areas-actions"
+      );
+      const province = form.getValues("province") || "กรุงเทพมหานคร";
+      const aiRes = await generateAreaSeoContentAction(
+        newArea.trim(),
+        newAreaEn.trim() || newArea.trim(),
+        province,
+      );
+      if (aiRes.success && aiRes.data) {
+        const d = aiRes.data;
+        if (d.name?.en) setNewAreaEnAction(d.name.en);
+        if (d.name?.cn) setNewAreaCnAction(d.name.cn);
+        if (d.name?.ru) setNewAreaRuAction(d.name.ru);
+        toast.success("แปลชื่อย่านและสร้างข้อมูลทำเล 4 ภาษาเรียบร้อยแล้ว ✨", {
+          id: toastId,
+        });
+      } else {
+        const result = await translateTextAction(newArea, "plain");
+        setNewAreaEnAction(result.en);
+        setNewAreaCnAction(result.cn);
+        setNewAreaRuAction(result.ru);
+        toast.success("แปลชื่อย่านเรียบร้อยแล้ว ✨", { id: toastId });
+      }
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "การแปลขัดข้อง", {
         id: toastId,
@@ -749,8 +768,11 @@ export function QuickInfoSection({
                 <div className="flex justify-end pt-2">
                   <Button
                     type="button"
-                    onClick={() => {
-                      onAddAreaAction();
+                    onClick={async () => {
+                      const success = await onAddAreaAction();
+                      if (success) {
+                        setShowAddArea(false);
+                      }
                     }}
                     disabled={isAddingArea}
                     className="h-14 rounded-2xl font-medium px-8 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-100 min-w-[150px]"

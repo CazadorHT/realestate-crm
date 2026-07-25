@@ -23,7 +23,7 @@ export interface Step1Props extends BaseStepProps {
   setNewAreaCnAction: (val: string) => void;
   newAreaRu: string;
   setNewAreaRuAction: (val: string) => void;
-  onAddAreaAction: () => Promise<void>;
+  onAddAreaAction: () => Promise<boolean | void>;
   isQuickInfoOpen: boolean;
   setIsQuickInfoOpen: (val: boolean) => void;
   branches: Array<{ id: string; name: any }>;

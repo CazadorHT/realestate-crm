@@ -267,18 +267,50 @@ export async function addPopularAreaAction(data: {
   // 🛡️ Staff Authorization: Popular Areas are GLOBAL. All staff members (Admins, Managers, Agents) can add them.
   assertStaff(role);
 
-  if (!data.name || data.name.trim() === "") {
+  const nameTh = data.name.trim();
+  if (!nameTh) {
     return { success: false, message: "กรุณาระบุชื่อย่าน" };
+  }
+
+  let nameEn = data.name_en?.trim() || "";
+  let nameCn = data.name_cn?.trim() || "";
+  let nameRu = data.name_ru?.trim() || "";
+  const province = data.province || "กรุงเทพมหานคร";
+
+  // Auto-generate complete Popular Area Information (Description + SEO Title + SEO Description + Slug in 4 languages) via AI
+  let aiData: any = null;
+  try {
+    const { generateAreaSeoContentAction } = await import(
+      "@/features/admin/popular-areas-actions"
+    );
+    const aiRes = await generateAreaSeoContentAction(
+      nameTh,
+      nameEn || nameTh,
+      province,
+    );
+    if (aiRes.success && aiRes.data) {
+      aiData = aiRes.data;
+      if (!nameEn && aiData.name?.en) nameEn = aiData.name.en;
+      if (!nameCn && aiData.name?.cn) nameCn = aiData.name.cn;
+      if (!nameRu && aiData.name?.ru) nameRu = aiData.name.ru;
+    }
+  } catch (err) {
+    console.error("Auto AI generation for popular area error:", err);
   }
 
   const { error } = await supabase.from("popular_areas_v3").insert({
     name: {
-      th: data.name.trim(),
-      en: data.name_en?.trim() || null,
-      cn: data.name_cn?.trim() || null,
-      ru: data.name_ru?.trim() || null,
+      th: nameTh,
+      en: nameEn || null,
+      cn: nameCn || null,
+      ru: nameRu || null,
     },
-    province: data.province || "กรุงเทพมหานคร",
+    province: province,
+    slug: aiData?.slug || null,
+    description: aiData?.description || {},
+    seo_title: aiData?.seoTitle || {},
+    seo_description: aiData?.seoDescription || {},
+    is_ai_generated: true,
   });
 
   if (error) {

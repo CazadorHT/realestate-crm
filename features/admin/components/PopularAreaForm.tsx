@@ -118,6 +118,12 @@ export function PopularAreaForm({
         if (d.slug) {
           form.setValue("slug", d.slug, { shouldValidate: true, shouldDirty: true });
         }
+
+        if (d.name) {
+          if (d.name.en) form.setValue("name_en", d.name.en, { shouldDirty: true });
+          if (d.name.cn) form.setValue("name_cn", d.name.cn, { shouldDirty: true });
+          if (d.name.ru) form.setValue("name_ru", d.name.ru, { shouldDirty: true });
+        }
         
         if (d.description) {
           form.setValue("description.th", d.description.th || "", { shouldDirty: true });
@@ -255,7 +261,7 @@ export function PopularAreaForm({
                   type="button"
                   size="sm"
                   variant="outline"
-                  disabled={isGeneratingAi || !form.watch("name") || !form.watch("name_en")}
+                  disabled={isGeneratingAi || !form.watch("name")}
                   onClick={handleGenerateAiContent}
                   className="h-8 text-[11px] font-bold text-indigo-600! border-indigo-200 bg-white hover:bg-indigo-50 shrink-0 transition-all"
                 >
