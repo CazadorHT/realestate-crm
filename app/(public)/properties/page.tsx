@@ -71,7 +71,7 @@ export async function generateMetadata(props: { searchParams: Promise<any> }): P
   const options = parseSearchParamsToOptions(searchParams);
   
   // Call cached getPublicProperties (using the same options as the page to leverage React cache deduplication)
-  const initialData = await getPublicProperties({ ...options, limit: 60, includeFacets: true });
+  const initialData = await getPublicProperties({ limit: 36, ...options, includeFacets: true });
   const hasNoResults = initialData.properties.length === 0;
 
   return {
@@ -93,7 +93,7 @@ export default async function PublicPropertiesPage(props: { searchParams: Promis
   const options = parseSearchParamsToOptions(searchParams);
   
   // ⚡ Prefetch initial data on the server
-  const initialData = await getPublicProperties({ ...options, limit: 60, includeFacets: true });
+  const initialData = await getPublicProperties({ limit: 36, ...options, includeFacets: true });
   
   const totalCount = initialData.facets?.availableListingTypes?.ALL || 0;
 
